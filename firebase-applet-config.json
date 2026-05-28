@@ -1,10 +1,9 @@
 {
-  "projectId": "gen-lang-client-0138678797",
-  "appId": "1:888663020221:web:47b56d3186e37dab431dd4",
-  "apiKey": "AIzaSyDRuuwLX1VVR1NqpWRw8lysYuC2b_bfO50",
-  "authDomain": "gen-lang-client-0138678797.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-c78bb822-6a8a-4ad7-a26a-488f6d8b0aa7",
-  "storageBucket": "gen-lang-client-0138678797.firebasestorage.app",
-  "messagingSenderId": "888663020221",
+  "projectId": "ya-gombo-music",
+  "appId": "1:953766968848:web:173a4b2ea336ecf50a9495",
+  "apiKey": "AIzaSyAMF-0VndIVU9BREb4IpFgMvjVdICzScBQ",
+  "authDomain": "ya-gombo-music.firebaseapp.com",
+  "storageBucket": "ya-gombo-music.firebasestorage.app",
+  "messagingSenderId": "953766968848",
   "measurementId": ""
 }

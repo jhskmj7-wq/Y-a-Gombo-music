@@ -14,6 +14,11 @@ interface DashboardsProps {
 
 export default function Dashboards({ currentUserProfile, onRefreshProfile }: DashboardsProps) {
   const [activeTab, setActiveTab] = useState<"gombos" | "applications" | "reservations" | "admin" | "waiting">("gombos");
+
+  // Keep scrolls independent and not mixed by scrolling to top of page on activeTab transition
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [activeTab]);
   
   // Mock Mode reactive state
   const [mockMode, setMockMode] = useState(isFirebaseMock);
@@ -92,8 +97,65 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
   };
 
   useEffect(() => {
-    loadDashboardData();
-  }, [currentUserProfile]);
+    setLoading(true);
+    console.log("🔗 [Dashboard Live Link] Subscribing to real-time resources...");
+    
+    let unsubGombos: (() => void) | null = null;
+    let unsubApps: (() => void) | null = null;
+
+    const initDashboardListeners = async () => {
+      try {
+        const reservations = await gomboDB.getReservations();
+
+        // 1. Live Gombos
+        unsubGombos = gomboDB.listenAllGombos((gombos) => {
+          // 2. Live Applications
+          unsubApps = gomboDB.listenApplications(async (applications) => {
+            console.log("⚡ [Dashboard Live Sync] Live sync triggered. Gombos:", gombos.length, "Apps:", applications.length);
+            
+            if (currentUserProfile.role === "client") {
+              const clientGombos = gombos.filter(g => g.clientId === currentUserProfile.uid);
+              setMyGombos(clientGombos);
+
+              const clientGomboIDs = clientGombos.map(g => g.id);
+              const appsReceived = applications.filter(app => clientGomboIDs.includes(app.gomboId));
+              setReceivedApplications(appsReceived);
+
+              const clientReservations = reservations.filter(r => r.clientId === currentUserProfile.uid);
+              setMyReservations(clientReservations);
+            } else if (currentUserProfile.role === "musicien") {
+              const musicianApps = applications.filter(app => app.musicianId === currentUserProfile.uid);
+              setMyApplications(musicianApps);
+
+              const musicianReservations = reservations.filter(r => r.musicianId === currentUserProfile.uid);
+              setMyReservations(musicianReservations);
+            }
+
+            if (currentUserProfile.role === "admin") {
+              const users = await gomboDB.getAllUsers();
+              setAllUsers(users);
+              setAllGombosList(gombos);
+              const waitings = await gomboDB.getWaitingFeaturesCount();
+              setWaitingAnalytics(waitings);
+              setActiveTab("admin");
+            }
+            setLoading(false);
+          });
+        });
+      } catch (err) {
+        console.error("❌ [Dashboard Live Sync] Error binding listeners:", err);
+        setLoading(false);
+      }
+    };
+
+    initDashboardListeners();
+
+    return () => {
+      console.log("🔌 [Dashboard Live Link] Cleaning up active live link subscriptions...");
+      if (unsubGombos) unsubGombos();
+      if (unsubApps) unsubApps();
+    };
+  }, [currentUserProfile?.uid, currentUserProfile]);
 
   // Handle client accepting musician application
   const handleAcceptCandidacy = async (app: Application) => {
@@ -108,6 +170,18 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
 
       // Update application status to 'accepte'
       await gomboDB.updateApplicationStatus(app.id, "accepte");
+
+      // Send real-time notification to the accepted musician
+      try {
+        await gomboDB.sendNotification({
+          userId: app.musicianId,
+          title: "Candidature Acceptée ! 🎉",
+          message: `Votre candidature pour le gombo "${app.gomboTitle}" a été acceptée par le client. Vous pouvez maintenant démarrer !`,
+          type: "application_accepted"
+        });
+      } catch (notifErr) {
+        console.warn("⚠️ Notification could not be sent:", notifErr);
+      }
 
       // Auto-reject other applications for this exact same single-musician gombo (optional UX touch)
       if (targetGombo.musiciansCount === 1) {

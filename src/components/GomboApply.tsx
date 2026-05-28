@@ -35,7 +35,7 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
         musicianId: currentUserProfile.uid,
         musicianName: `${currentUserProfile.firstName} ${currentUserProfile.lastName}`,
         musicianSpecialty: currentUserProfile.specialty || "Musicien polyvalent",
-        musicianPhone: currentUserProfile.phone,
+        musicianPhone: currentUserProfile.phone || "Non renseigné",
         musicianAvatar: currentUserProfile.avatarUrl,
         message,
         mediaUrl
@@ -129,7 +129,7 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
             <div className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-300">
               <p>🎛️ Spécialité : <strong className="text-gray-900 dark:text-white">{currentUserProfile.specialty || "Musicien"}</strong></p>
               <p>🏅 Expérience : <strong className="text-gray-900 dark:text-white">{currentUserProfile.experience || "Pro"}</strong></p>
-              <p>📞 Téléphone : <strong className="text-gray-900 dark:text-white">{currentUserProfile.phone}</strong></p>
+              <p>📞 Téléphone : <strong className="text-gray-900 dark:text-white">{currentUserProfile.phone || "Non renseigné"}</strong></p>
               <p>📍 Commune : <strong className="text-gray-900 dark:text-white">{currentUserProfile.commune}</strong></p>
             </div>
           </div>

@@ -6,6 +6,8 @@ import {
   signOut as firebaseSignOut, 
   signInWithPopup, 
   GoogleAuthProvider, 
+  FacebookAuthProvider,
+  GithubAuthProvider,
   onAuthStateChanged,
   sendPasswordResetEmail,
   User as FirebaseUser
@@ -21,16 +23,31 @@ import {
   where, 
   deleteDoc,
   serverTimestamp,
-  getDocFromServer
+  getDocFromServer,
+  onSnapshot
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
-import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost } from "./types";
+import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification } from "./types";
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
 export let isFirebaseMock = true;
+export let isFirebaseForceReal = false;
+export let pendingSignUpProfile: UserProfile | null = null;
+
+export function getPendingSignUpProfile(): UserProfile | null {
+  return pendingSignUpProfile;
+}
+
+export function setPendingSignUpProfile(profile: UserProfile | null) {
+  pendingSignUpProfile = profile;
+}
 
 export function setIsFirebaseMock(val: boolean) {
+  if (val === true && isFirebaseForceReal) {
+    console.warn("⚠️ Firestore operation failed, but Firebase was verified online. Restant en Mode production réel.");
+    return;
+  }
   isFirebaseMock = val;
   window.dispatchEvent(new Event("gomboFirebaseMockChange"));
 }
@@ -40,6 +57,8 @@ let db: any = null;
 let auth: any = null;
 
 const GOOGLE_PROVIDER = new GoogleAuthProvider();
+const FACEBOOK_PROVIDER = new FacebookAuthProvider();
+const GITHUB_PROVIDER = new GithubAuthProvider();
 
 try {
   // If we have a real non-mock projectId and active config, try to boot real Firebase
@@ -54,10 +73,16 @@ try {
     } else {
       app = getApps()[0];
     }
-    db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+    // Handle either custom database ID (blueprint) or default database
+    if ("firestoreDatabaseId" in firebaseConfig && (firebaseConfig as any).firestoreDatabaseId) {
+      db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+      console.log("🔥 Successfully initialized real Firebase service with custom DB ID: " + (firebaseConfig as any).firestoreDatabaseId);
+    } else {
+      db = getFirestore(app);
+      console.log("🔥 Successfully initialized real Firebase service using default DB");
+    }
     auth = getAuth(app);
     isFirebaseMock = false;
-    console.log("🔥 Successfully initialized real Firebase service with custom DB ID: " + firebaseConfig.firestoreDatabaseId);
   } else {
     console.log("ℹ️ Using local reactive storage engine (Firebase terms or keys not yet fully set up).");
   }
@@ -79,11 +104,28 @@ if (!isFirebaseMock && db) {
         timeoutPromise
       ]);
       console.log("⚡ Connexion Firebase validée avec succès !");
-    } catch (error) {
-      console.warn("⚠️ Impossible de joindre Firestore. Passage automatique au mode Bac à Sable local / Hors-ligne.", error);
-      setIsFirebaseMock(true);
-      if (error instanceof Error && error.message.includes("the client is offline")) {
-        console.error("Please check your Firebase configuration. Client is offline.");
+      isFirebaseForceReal = true;
+      setIsFirebaseMock(false);
+    } catch (error: any) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const errCode = error && typeof error === "object" && "code" in error ? error.code : "";
+      
+      const isPermissionDenied = 
+        errCode === "permission-denied" || 
+        errMsg.includes("permission-denied") || 
+        errMsg.includes("insufficient permissions") || 
+        errMsg.includes("Missing or insufficient permissions");
+
+      if (isPermissionDenied) {
+        console.log("⚡ Connexion Firebase validée (Bloquée par les règles de sécurité, Firebase en ligne et actif).");
+        isFirebaseForceReal = true;
+        setIsFirebaseMock(false);
+      } else {
+        console.warn("⚠️ Impossible de joindre Firestore. Passage automatique au mode Bac à Sable local / Hors-ligne.", error);
+        setIsFirebaseMock(true);
+        if (errMsg.includes("the client is offline")) {
+          console.error("Please check your Firebase configuration. Client is offline.");
+        }
       }
     }
   };
@@ -148,6 +190,7 @@ const LOCAL_APPLICATIONS_KEY = "gombo_applications";
 const LOCAL_RESERVATIONS_KEY = "gombo_reservations";
 const LOCAL_WAITING_KEY = "gombo_waiting";
 const LOCAL_AUTH_KEY = "gombo_logged_in_user";
+const LOCAL_NOTIFICATIONS_KEY = "gombo_notifications";
 
 // Initialize mock local data if empty
 const initMockDB = () => {
@@ -277,6 +320,9 @@ const initMockDB = () => {
   if (!localStorage.getItem(LOCAL_WAITING_KEY)) {
     localStorage.setItem(LOCAL_WAITING_KEY, JSON.stringify([]));
   }
+  if (!localStorage.getItem(LOCAL_NOTIFICATIONS_KEY)) {
+    localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify([]));
+  }
 };
 
 initMockDB();
@@ -323,23 +369,42 @@ export const gomboAuth = {
 
   async signUp(email: string, password: string, role: "musicien" | "client", details: { firstName: string; lastName: string; phone: string; commune: string }) {
     if (!isFirebaseMock && auth && db) {
-      const res = await createUserWithEmailAndPassword(auth, email, password);
+      // Pre-assemble the full template profile with original registration details
       const userProfile: UserProfile = {
-        uid: res.user.uid,
+        uid: "", // Will be populated with res.user.uid post-creation
         email,
         firstName: details.firstName,
         lastName: details.lastName,
         phone: details.phone,
         commune: details.commune,
         role: role,
+        avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+        isProfileComplete: true,
+        balance: 25000,
+        totalRevenue: 25000,
+        totalWithdrawals: 0,
+        gigsCompleted: 0,
+        applicationsSent: 0,
+        acceptanceRate: 100,
         createdAt: new Date().toISOString()
       };
+
+      // Expose to real-time Auth context listener before initiating the Firebase Auth step
+      pendingSignUpProfile = userProfile;
+
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      userProfile.uid = res.user.uid;
+
       // Save record in Firestore
       try {
         await setDoc(doc(db, "users", res.user.uid), userProfile);
+        console.log("🔥 Successfully stored custom user profile to Firestore:", userProfile);
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
       }
+
+      // Clear pending state
+      pendingSignUpProfile = null;
       return { uid: res.user.uid, email };
     } else {
       // Local Mock DB
@@ -440,6 +505,114 @@ export const gomboAuth = {
     }
   },
 
+  async loginWithFacebook() {
+    if (!isFirebaseMock && auth) {
+      const res = await signInWithPopup(auth, FACEBOOK_PROVIDER);
+      // Create user profile if not exists
+      try {
+        const uDoc = await getDoc(doc(db, "users", res.user.uid));
+        if (!uDoc.exists()) {
+          const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Facebook"];
+          const userProfile: UserProfile = {
+            uid: res.user.uid,
+            email: res.user.email || "",
+            firstName: names[0],
+            lastName: names.slice(1).join(" ") || "Ivoirien",
+            phone: "+225 00 00 00 00",
+            commune: "Cocody",
+            role: "musicien", // default
+            createdAt: new Date().toISOString()
+          };
+          await setDoc(doc(db, "users", res.user.uid), userProfile);
+        }
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
+      }
+      return { uid: res.user.uid, email: res.user.email };
+    } else {
+      // Mock Facebook Login
+      const mockFbEmails = ["fb_artiste@gombo.ci", "fb_client@gombo.ci"];
+      const randomEmail = mockFbEmails[Math.floor(Math.random() * mockFbEmails.length)];
+      const randomId = "fb_" + Math.random().toString(36).substring(2, 9);
+      
+      const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+      let matched = users.find(u => u.email === randomEmail);
+      if (!matched) {
+        matched = {
+          uid: randomId,
+          email: randomEmail,
+          firstName: "Artiste",
+          lastName: "Facebook-Abidjan",
+          commune: "Cocody",
+          phone: "+225 05 00 99 88 77",
+          role: "musicien",
+          createdAt: new Date().toISOString()
+        };
+        users.push(matched);
+        localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+      }
+
+      const authData = { uid: matched.uid, email: matched.email, emailVerified: true };
+      localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(authData));
+      window.dispatchEvent(new Event("gomboAuthChange"));
+      return authData;
+    }
+  },
+
+  async loginWithGitHub() {
+    if (!isFirebaseMock && auth) {
+      const res = await signInWithPopup(auth, GITHUB_PROVIDER);
+      // Create user profile if not exists
+      try {
+        const uDoc = await getDoc(doc(db, "users", res.user.uid));
+        if (!uDoc.exists()) {
+          const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "GitHub"];
+          const userProfile: UserProfile = {
+            uid: res.user.uid,
+            email: res.user.email || "",
+            firstName: names[0],
+            lastName: names.slice(1).join(" ") || "Ivoirien",
+            phone: "+225 00 00 00 00",
+            commune: "Cocody",
+            role: "musicien", // default
+            createdAt: new Date().toISOString()
+          };
+          await setDoc(doc(db, "users", res.user.uid), userProfile);
+        }
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
+      }
+      return { uid: res.user.uid, email: res.user.email };
+    } else {
+      // Mock GitHub Login
+      const mockGitEmails = ["git_dj@gombo.ci", "git_client@gombo.ci"];
+      const randomEmail = mockGitEmails[Math.floor(Math.random() * mockGitEmails.length)];
+      const randomId = "git_" + Math.random().toString(36).substring(2, 9);
+      
+      const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+      let matched = users.find(u => u.email === randomEmail);
+      if (!matched) {
+        matched = {
+          uid: randomId,
+          email: randomEmail,
+          firstName: "Artiste",
+          lastName: "GitHub-Abidjan",
+          commune: "Cocody",
+          phone: "+225 01 00 44 55 66",
+          role: "musicien",
+          createdAt: new Date().toISOString()
+        };
+        users.push(matched);
+        localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+      }
+
+      const authData = { uid: matched.uid, email: matched.email, emailVerified: true };
+      localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(authData));
+      window.dispatchEvent(new Event("gomboAuthChange"));
+      return authData;
+    }
+  },
+
   async sendPasswordReset(email: string) {
     if (!isFirebaseMock && auth) {
       await sendPasswordResetEmail(auth, email);
@@ -462,6 +635,11 @@ export const gomboAuth = {
 // --- Unified GomboDB Storage Layer ---
 // ==========================================
 export const gomboDB = {
+  // PENDING SIGN-UP TRACKER
+  getPendingSignUpProfile(): UserProfile | null {
+    return pendingSignUpProfile;
+  },
+
   // USERS
   async getUserProfile(uid: string): Promise<UserProfile | null> {
     if (!isFirebaseMock && db) {
@@ -493,7 +671,43 @@ export const gomboDB = {
       users[index] = { ...users[index], ...profile };
       localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
       triggerStorageEvent();
+      window.dispatchEvent(new Event("gomboUserProfileChange"));
     }
+  },
+
+  listenUserProfile(uid: string, callback: (profile: UserProfile | null) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const unsubscribe = onSnapshot(doc(db, "users", uid), (docSnap) => {
+          if (docSnap.exists()) {
+            callback(docSnap.data() as UserProfile);
+          } else {
+            callback(null);
+          }
+        }, (error) => {
+          console.warn("⚠️ Error in listenUserProfile snapshot:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour listenUserProfile. Repli local.", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+      const matched = users.find(u => u.uid === uid) || null;
+      callback(matched);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboUserProfileChange", triggerLocal as EventListener);
+    
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboUserProfileChange", triggerLocal as EventListener);
+    };
   },
 
   async getAllUsers(): Promise<UserProfile[]> {
@@ -539,6 +753,37 @@ export const gomboDB = {
     return JSON.parse(localStorage.getItem(LOCAL_GOMBOS_KEY) || "[]");
   },
 
+  listenAllGombos(callback: (gombos: Gombo[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "gombos"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as Gombo);
+          callback(list);
+        }, (error) => {
+          console.error("⚠️ Firestore listenAllGombos Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour listenAllGombos. Repli.", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const gombos: Gombo[] = JSON.parse(localStorage.getItem(LOCAL_GOMBOS_KEY) || "[]");
+      callback(gombos);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboGomboChange", triggerLocal as EventListener);
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboGomboChange", triggerLocal as EventListener);
+    };
+  },
+
   async publishGombo(gombo: Omit<Gombo, "id" | "createdAt" | "status">): Promise<Gombo> {
     const id = "gom_" + Math.random().toString(36).substring(2, 9);
     const newGombo: Gombo = {
@@ -562,6 +807,7 @@ export const gomboDB = {
     gombos.unshift(newGombo);
     localStorage.setItem(LOCAL_GOMBOS_KEY, JSON.stringify(gombos));
     triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboGomboChange"));
     return newGombo;
   },
 
@@ -581,6 +827,7 @@ export const gomboDB = {
       gombos[idx] = { ...gombos[idx], ...updates };
       localStorage.setItem(LOCAL_GOMBOS_KEY, JSON.stringify(gombos));
       triggerStorageEvent();
+      window.dispatchEvent(new Event("gomboGomboChange"));
     }
   },
 
@@ -598,6 +845,7 @@ export const gomboDB = {
     gombos = gombos.filter(g => g.id !== id);
     localStorage.setItem(LOCAL_GOMBOS_KEY, JSON.stringify(gombos));
     triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboGomboChange"));
   },
 
   // APPLICATIONS
@@ -612,6 +860,37 @@ export const gomboDB = {
       }
     }
     return JSON.parse(localStorage.getItem(LOCAL_APPLICATIONS_KEY) || "[]");
+  },
+
+  listenApplications(callback: (applications: Application[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "applications"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as Application);
+          callback(list);
+        }, (error) => {
+          console.error("⚠️ Firestore listenApplications Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour listenApplications. Repli.", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const apps: Application[] = JSON.parse(localStorage.getItem(LOCAL_APPLICATIONS_KEY) || "[]");
+      callback(apps);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboApplicationsChange", triggerLocal as EventListener);
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboApplicationsChange", triggerLocal as EventListener);
+    };
   },
 
   async applyToGombo(appData: Omit<Application, "id" | "createdAt" | "status">): Promise<Application> {
@@ -637,6 +916,7 @@ export const gomboDB = {
     apps.push(newApp);
     localStorage.setItem(LOCAL_APPLICATIONS_KEY, JSON.stringify(apps));
     triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboApplicationsChange"));
     return newApp;
   },
 
@@ -656,6 +936,7 @@ export const gomboDB = {
       apps[idx].status = status;
       localStorage.setItem(LOCAL_APPLICATIONS_KEY, JSON.stringify(apps));
       triggerStorageEvent();
+      window.dispatchEvent(new Event("gomboApplicationsChange"));
     }
   },
 
@@ -850,5 +1131,100 @@ export const gomboDB = {
       localStorage.setItem("gombo_social_posts", JSON.stringify(posts));
       triggerStorageEvent();
     }
+  },
+
+  async sendNotification(notification: Omit<GomboNotification, "id" | "createdAt" | "read">): Promise<GomboNotification> {
+    const id = "notif_" + Math.random().toString(36).substring(2, 10);
+    const newNotif: GomboNotification = {
+      ...notification,
+      id,
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "notifications", id), newNotif);
+        return newNotif;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible. Repli sur le Bac à Sable Local pour sendNotification.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const notifs: GomboNotification[] = JSON.parse(localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) || "[]");
+    notifs.unshift(newNotif);
+    localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify(notifs));
+    triggerStorageEvent();
+    window.dispatchEvent(new CustomEvent("gomboNotificationChange", { detail: notifs }));
+    return newNotif;
+  },
+
+  async getNotifications(userId: string): Promise<GomboNotification[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(query(collection(db, "notifications"), where("userId", "==", userId)));
+        return snap.docs.map(d => d.data() as GomboNotification).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible. Repli sur le Bac à Sable Local pour getNotifications.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+    const notifs: GomboNotification[] = JSON.parse(localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) || "[]");
+    return notifs.filter(n => n.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async markNotificationAsRead(id: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "notifications", id), { read: true }, { merge: true });
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible. Repli sur le Bac à Sable Local pour markNotificationAsRead.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+    const notifs: GomboNotification[] = JSON.parse(localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) || "[]");
+    const idx = notifs.findIndex(n => n.id === id);
+    if (idx !== -1) {
+      notifs[idx].read = true;
+      localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify(notifs));
+      triggerStorageEvent();
+      window.dispatchEvent(new CustomEvent("gomboNotificationChange", { detail: notifs }));
+    }
+  },
+
+  listenToNotifications(userId: string, callback: (notifications: GomboNotification[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "notifications"), where("userId", "==", userId));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as GomboNotification);
+          list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          callback(list);
+        }, (error) => {
+          console.error("⚠️ Firestore Listener Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour listenToNotifications. Repli local.", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const all: GomboNotification[] = JSON.parse(localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) || "[]");
+      const userNotifs = all.filter(n => n.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      callback(userNotifs);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboNotificationChange", triggerLocal as EventListener);
+    
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboNotificationChange", triggerLocal as EventListener);
+    };
   }
 };

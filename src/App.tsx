@@ -4,11 +4,42 @@ import {
   Music, Calendar, Clock, MapPin, Search, Plus, User, LogOut, 
   Flame, Sparkles, LayoutDashboard, Settings, Menu, X, Sun, Moon, 
   Star, Award, BookOpen, Users2, ShoppingBag, ShieldCheck, Info,
-  ExternalLink, ChevronRight, AlertCircle, Heart, MessageSquare, 
-  Share2, Bookmark, Play, Pause, Volume2, Lock, Eye, Check, ChevronLeft, Send, Briefcase
+  ExternalLink, ChevronRight, Heart, MessageSquare, 
+  Share2, Bookmark, Play, Pause, Volume2, Lock, Eye, Check, ChevronLeft, Send, Briefcase, Bell
 } from "lucide-react";
 import { gomboAuth, gomboDB, isFirebaseMock } from "./firebase";
-import { UserProfile, Gombo, SocialPost } from "./types";
+import { UserProfile, Gombo, SocialPost, GomboNotification } from "./types";
+import { useAuth } from "./AuthContext";
+
+const ProfileSkeleton = () => (
+  <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 animate-pulse" id="profile-skeleton-element">
+    <div className="bg-white dark:bg-[#121214] border border-gray-150 dark:border-gray-800 rounded-3xl p-6 flex flex-col md:flex-row items-center gap-6 justify-between">
+      <div className="flex flex-col sm:flex-row items-center gap-5 w-full">
+        <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-800 shrink-0" />
+        <div className="space-y-3 w-full max-w-sm">
+          <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded-lg w-3/4" />
+          <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded-lg w-1/2" />
+        </div>
+      </div>
+      <div className="w-28 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl" />
+    </div>
+    
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="md:col-span-1 bg-white dark:bg-[#121214] border border-gray-150 dark:border-gray-800 rounded-3xl p-6 space-y-4">
+        <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/3" />
+        <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
+        <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-full" />
+      </div>
+      <div className="md:col-span-2 bg-white dark:bg-[#121214] border border-gray-150 dark:border-gray-800 rounded-3xl p-6 space-y-4">
+        <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-1/4" />
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full" />
+          <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-5/6" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 // Component Imports
 import AuthScreen from "./components/AuthScreen";
@@ -18,6 +49,9 @@ import GomboApply from "./components/GomboApply";
 import ComingSoon from "./components/ComingSoon";
 import Dashboards from "./components/Dashboards";
 import SocialPostCard from "./components/SocialPostCard";
+import SettingsModal from "./components/SettingsModal";
+import CompleteProfile from "./components/CompleteProfile";
+import GomboProfile from "./components/GomboProfile";
 
 const ABIDJAN_COMMUNES = [
   "Abidjan (Toutes)",
@@ -60,6 +94,7 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Listing page Filters & Selection
   const [gombos, setGombos] = useState<Gombo[]>([]);
@@ -77,6 +112,11 @@ export default function App() {
   const [socialPosts, setSocialPosts] = useState<SocialPost[]>([]);
   const [loadingSocial, setLoadingSocial] = useState(false);
   const [playingPostId, setPlayingPostId] = useState<string | null>(null);
+
+  // Keep scrolls independent and not mixed by scrolling to top of page on view or tab transition
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [view, currentHomeTab]);
   
   // Followed artists
   const [followedArtists, setFollowedArtists] = useState<string[]>(() => {
@@ -95,6 +135,49 @@ export default function App() {
   const [newPostCover, setNewPostCover] = useState("");
   const [newPostAudio, setNewPostAudio] = useState("");
   const [newPostTags, setNewPostTags] = useState("");
+
+  // Real-time notifications state
+  const [notifications, setNotifications] = useState<GomboNotification[]>([]);
+  const [showNotifTray, setShowNotifTray] = useState(false);
+  const [activeToast, setActiveToast] = useState<{ id: string; title: string; message: string } | null>(null);
+
+  // Real-time notification listener
+  useEffect(() => {
+    if (!profile?.uid) {
+      setNotifications([]);
+      return;
+    }
+
+    console.log("🔔 Subscribing to real-time notifications for user:", profile.uid);
+    let isInitial = true;
+    const unsubscribe = gomboDB.listenToNotifications(profile.uid, (newList) => {
+      setNotifications(newList);
+
+      // Trigger toast only on subsequent new notifications
+      if (!isInitial) {
+        const unread = newList.filter(n => !n.read);
+        if (unread.length > 0) {
+          const latest = unread[0];
+          setActiveToast({
+            id: latest.id,
+            title: latest.title,
+            message: latest.message
+          });
+
+          // Self-dismiss toast
+          setTimeout(() => {
+            setActiveToast(prev => prev?.id === latest.id ? null : prev);
+          }, 6000);
+        }
+      }
+      isInitial = false;
+    });
+
+    return () => {
+      console.log("🔕 Unsubscribing from notifications for user:", profile.uid);
+      unsubscribe();
+    };
+  }, [profile?.uid]);
 
   // Social loading trigger
   const loadSocialPosts = async () => {
@@ -125,46 +208,48 @@ export default function App() {
     }
   }, [darkMode]);
 
-  // Auth Listener
-  useEffect(() => {
-    const unsubscribe = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
-      setUser(firebaseUser);
-      if (firebaseUser) {
-        const uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
-        setProfile(uProfile);
-      } else {
-        setProfile(null);
-      }
-      setAuthReady(true);
-    });
-    return () => unsubscribe();
-  }, []);
+  // Auth Context Global Synchronization
+  const { currentUser, profile: authProfile, loading: authLoading, refreshProfile: doRefreshProfile, logout: doLogout } = useAuth();
 
-  // Fetch Gombos
-  const loadGombos = async () => {
+  useEffect(() => {
+    console.log("🔍 [App Debug] Syncing state from useAuth context:");
+    console.log("🔍 [App Debug] - currentUser:", currentUser);
+    console.log("🔍 [App Debug] - uid:", currentUser?.uid);
+    console.log("🔍 [App Debug] - profile:", authProfile);
+    console.log("🔍 [App Debug] - loading:", authLoading);
+
+    setUser(currentUser);
+    setProfile(authProfile);
+    setAuthReady(!authLoading);
+
+    // OBLIGATORY REDIRECTION BEHAVIOR for incomplete profiles
+    if (currentUser && authProfile && !authProfile.isProfileComplete && view !== "complete_profile") {
+      console.log("⚠️ [App Debug] Profile is incomplete! Redirecting to complete_profile");
+      setView("complete_profile");
+    }
+  }, [currentUser, authProfile, authLoading]);
+
+  // Live Gombos Synchronization
+  useEffect(() => {
     setLoadingGombos(true);
-    try {
-      const allGombos = await gomboDB.getAllGombos();
-      // Sort by creation date (newest first)
+    console.log("🔗 [App Feed Live] Subscribing to real-time Gombos list observer...");
+    const unsubscribe = gomboDB.listenAllGombos((allGombos) => {
+      console.log("⚡ [App Feed Live Sync] Live sync fetched latest Gombos:", allGombos.length);
       const sorted = allGombos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setGombos(sorted);
-    } catch (err) {
-      console.error(err);
-    } finally {
       setLoadingGombos(false);
-    }
-  };
+    });
 
-  useEffect(() => {
-    loadGombos();
-  }, [view]);
+    return () => {
+      console.log("🔌 [App Feed Live] Disposing of Gombos feed sync.");
+      unsubscribe();
+    };
+  }, []);
 
   // Refresh current Profile
   const refreshProfile = async () => {
-    if (user) {
-      const uProfile = await gomboDB.getUserProfile(user.uid);
-      setProfile(uProfile);
-    }
+    console.log("🔄 [App Debug] Manual profile refresh requested.");
+    await doRefreshProfile();
   };
 
   // Profile setup safeguard
@@ -180,7 +265,7 @@ export default function App() {
   // Log Out Wrapper
   const handleLogout = async () => {
     if (window.confirm("Se déconnecter de Y’A GOMBO MUSIC ?")) {
-      await gomboAuth.signOut();
+      await doLogout();
       setView("home");
       setMobileMenuOpen(false);
     }
@@ -213,6 +298,45 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-[#0F0F0F] dark:text-gray-100 transition-colors duration-300 pb-20 md:pb-0">
+      
+      {/* Real-time Toast Notifications Alert */}
+      <AnimatePresence>
+        {activeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 z-[100] w-[90%] max-w-sm bg-gray-900 border border-gray-800 text-white rounded-2xl shadow-2xl p-4 flex gap-3.5 items-start shadow-orange-500/10"
+          >
+            <div className="bg-orange-500 text-white p-2 rounded-xl shrink-0">
+              <Bell className="w-5 h-5 animate-pulse" />
+            </div>
+            <div className="flex-1 space-y-1 text-left">
+              <h4 className="text-xs font-black uppercase tracking-wider text-orange-400">
+                {activeToast.title}
+              </h4>
+              <p className="text-xs text-gray-200 leading-relaxed">
+                {activeToast.message}
+              </p>
+              <button
+                onClick={() => {
+                  setActiveToast(null);
+                  setView("dashboard");
+                }}
+                className="text-[10px] font-black text-[#FF7A00] hover:underline uppercase tracking-wide block pt-1.5"
+              >
+                👉 Voir mon Tableau de Bord
+              </button>
+            </div>
+            <button
+              onClick={() => setActiveToast(null)}
+              className="text-gray-400 hover:text-white p-1 rounded-lg"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* --- TOP NAVBAR --- */}
       <nav className="sticky top-0 z-40 bg-white/90 dark:bg-[#121214]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-colors">
@@ -299,9 +423,105 @@ export default function App() {
                 onClick={() => setDarkMode(!darkMode)}
                 className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 aria-label="Toggle theme"
+                title={darkMode ? "Activer le mode clair" : "Activer le mode sombre"}
               >
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
+
+              {/* Settings / Paramètres */}
+              <button
+                onClick={() => setShowSettingsModal(true)}
+                className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
+                aria-label="Application Settings"
+                title="Paramètres de l'application"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+
+              {/* Real-time Notifications Bell Dropdown */}
+              {user && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowNotifTray(!showNotifTray)}
+                    className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors relative"
+                    aria-label="Notifications"
+                    title="Mes notifications en temps réel"
+                  >
+                    <Bell className="w-5 h-5" />
+                    {notifications.filter(n => !n.read).length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black h-5 w-5 rounded-full flex items-center justify-center animate-pulse border-2 border-white dark:border-[#121214]">
+                        {notifications.filter(n => !n.read).length}
+                      </span>
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {showNotifTray && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-2.5 w-80 bg-white dark:bg-[#121214] border border-gray-150 dark:border-gray-800 rounded-2xl shadow-xl z-50 overflow-hidden"
+                      >
+                        <div className="p-4 border-b border-gray-100 dark:border-gray-850 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/10">
+                          <span className="text-xs font-black tracking-wider text-gray-800 dark:text-white uppercase flex items-center gap-1.5">
+                            🔔 Notifications {notifications.filter(n => !n.read).length > 0 && `(${notifications.filter(n => !n.read).length})`}
+                          </span>
+                          {notifications.filter(n => !n.read).length > 0 && (
+                            <button
+                              onClick={() => {
+                                notifications.forEach(async (n) => {
+                                  if (!n.read) await gomboDB.markNotificationAsRead(n.id);
+                                });
+                              }}
+                              className="text-[10px] font-black uppercase text-orange-600 hover:underline"
+                            >
+                              Tout lire
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="max-h-72 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-850">
+                          {notifications.length === 0 ? (
+                            <div className="p-6 text-center text-xs text-gray-400 dark:text-gray-500">
+                              Aucune notification pour le moment.
+                            </div>
+                          ) : (
+                            notifications.map((notif) => (
+                              <div
+                                key={notif.id}
+                                onClick={async () => {
+                                  if (!notif.read) {
+                                    await gomboDB.markNotificationAsRead(notif.id);
+                                  }
+                                  setShowNotifTray(false);
+                                  setView("dashboard");
+                                }}
+                                className={`p-4 hover:bg-gray-50/50 dark:hover:bg-gray-850 transition-colors cursor-pointer text-left ${
+                                  !notif.read ? "bg-orange-500/5 dark:bg-orange-950/20 border-l-2 border-orange-500" : ""
+                                }`}
+                              >
+                                <span className="text-xs font-bold text-gray-950 dark:text-white block">
+                                  {notif.title}
+                                </span>
+                                <span className="text-[11px] text-gray-550 dark:text-gray-400 mt-1 block leading-relaxed">
+                                  {notif.message}
+                                </span>
+                                <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1.5 block font-medium">
+                                  {new Date(notif.createdAt).toLocaleDateString("fr-FR", {
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                  })}
+                                </span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
 
               {/* Dynamic User Profile or Trigger login */}
               {authReady && (
@@ -455,19 +675,6 @@ export default function App() {
 
       {/* --- MASTER LAYOUT BODY CONTAINER --- */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-
-        {/* WARN BANNER FOR DEV ENVIRONMENT WITHOUT CONFIG */}
-        {mockMode && (
-          <div className="mb-6 p-4 bg-orange-50 dark:bg-amber-950/20 border border-orange-100 dark:border-orange-900 rounded-2xl flex items-start gap-3">
-            <AlertCircle className="w-5.5 h-5.5 text-orange-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-extrabold text-orange-850 dark:text-orange-400">Y’A GOMBO MUSIC tourne actuellement en mode Bac à Sable local.</p>
-              <p className="text-xs text-orange-700/80 dark:text-orange-400/80 mt-1 leading-relaxed">
-                Les comptes et données de simulation sont actifs au premier plan. Vos modifications sont conservées de manière persistante dans votre navigateur, ce qui est parfait pour inspecter le produit. Une fois que vous aurez provisionné Firebase, la transition vers les serveurs cloud de Côte d'Ivoire s'effectuera automatiquement !
-              </p>
-            </div>
-          </div>
-        )}
 
         <AnimatePresence mode="wait">
           {/* A. ACCUEIL VIEW: FIL D’ACTUALITÉ & MARCHÉ DU COIN */}
@@ -1099,39 +1306,72 @@ export default function App() {
           )}
 
           {/* C. DASHBOARD VIEW (PERSONALIZED DEPENDING ON ROLE) */}
-          {view === "dashboard" && profile && (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <Dashboards 
-                currentUserProfile={profile}
-                onRefreshProfile={refreshProfile}
-              />
-            </motion.div>
+          {view === "dashboard" && (
+            !profile ? (
+              <ProfileSkeleton />
+            ) : (
+              <motion.div
+                key="dashboard"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <Dashboards 
+                  currentUserProfile={profile}
+                  onRefreshProfile={refreshProfile}
+                />
+              </motion.div>
+            )
           )}
 
-          {/* D. EDIT PROFILE VIEW */}
-          {view === "profile_edit" && profile && (
-            <motion.div
-              key="profile_edit"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className="max-w-2xl mx-auto"
-            >
-              <ProfileEdit
-                initialProfile={profile}
-                onSave={() => {
-                  refreshProfile();
-                  alert("Profil mis à jour avec succès !");
-                  setView("dashboard");
-                }}
-                onCancel={() => setView("dashboard")}
-              />
-            </motion.div>
+          {/* D. COMPLETE PROFILE VIEW */}
+          {view === "complete_profile" && (
+            !profile ? (
+              <ProfileSkeleton />
+            ) : (
+              <motion.div
+                key="complete_profile"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <CompleteProfile
+                  currentUserProfile={profile}
+                  onComplete={async () => {
+                    await refreshProfile();
+                    // once complete, redirect to home or edit profile center
+                    setView("home");
+                    alert("Profil completé avec succès ! Bienvenue au showbiz ya gombo music.");
+                  }}
+                />
+              </motion.div>
+            )
+          )}
+
+          {/* E. PREMIUM DETAILED PROFILE CONTROL CENTER */}
+          {view === "profile_edit" && (
+            !profile ? (
+              <ProfileSkeleton />
+            ) : (
+              <motion.div
+                key="profile_edit"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <GomboProfile
+                  currentUserProfile={profile}
+                  onRefreshProfile={refreshProfile}
+                  onNavigateView={(targetView) => setView(targetView)}
+                  onLogout={async () => {
+                    await doLogout();
+                    setView("home");
+                  }}
+                  darkMode={darkMode}
+                  setDarkMode={setDarkMode}
+                />
+              </motion.div>
+            )
           )}
 
           {/* E. COMING SOON PATHS (DYNAMICALLY CAPTURING INTERACTION) */}
@@ -1146,6 +1386,33 @@ export default function App() {
                 featureId={view as any}
                 onBack={() => setView("home")}
               />
+            </motion.div>
+          )}
+
+          {/* F. CLEAN 404 FALLBACK ROUTE */}
+          {!["home", "gombo_list", "publish", "dashboard", "complete_profile", "profile_edit", "academie", "groupe", "marche", "certification"].includes(view) && (
+            <motion.div
+              key="404"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-xl mx-auto text-center py-20 px-4 space-y-6"
+            >
+              <div className="w-20 h-20 bg-red-50 dark:bg-rose-950/20 text-red-500 rounded-3xl flex items-center justify-center mx-auto text-4xl shadow-inner">
+                ⚠️
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Oups ! Erreur Gombo 404</h2>
+                <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed">
+                  Cette partie de la scène est pour le moment introuvable ou en cours de répétition à Cocody.
+                </p>
+              </div>
+              <button
+                onClick={() => setView("home")}
+                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl text-xs shadow-md transition-all uppercase tracking-wider"
+              >
+                Retourner sur le Fil 🇨🇮
+              </button>
             </motion.div>
           )}
 
@@ -1186,8 +1453,7 @@ export default function App() {
                 onSuccess={() => {
                   setShowAuthModal(false);
                   refreshProfile();
-                  // Re-evaluate or load homepage
-                  loadGombos();
+                  // Re-evaluate or load homepage (automatically handled by the active real-time snapshot listeners)
                 }}
               />
             </div>
@@ -1271,6 +1537,14 @@ export default function App() {
           <span className="text-[9px] font-bold tracking-tight mt-1">Tableau</span>
         </button>
       </div>
+
+      {/* --- SETTINGS MODAL DIALOG --- */}
+      <SettingsModal 
+        isOpen={showSettingsModal} 
+        onClose={() => setShowSettingsModal(false)} 
+        darkMode={darkMode} 
+        setDarkMode={setDarkMode} 
+      />
 
     </div>
   );

@@ -1,4 +1,4 @@
-export type UserRole = "musicien" | "client" | "admin";
+export type UserRole = "musicien" | "client" | "groupe" | "admin";
 
 export type PaymentProvider = "Wave" | "Orange Money" | "MTN Momo" | "Moov Money";
 
@@ -7,17 +7,35 @@ export interface UserProfile {
   email: string;
   firstName: string;
   lastName: string;
+  artistName?: string;
   commune: string;
   phone: string;
   bio?: string;
   role: UserRole;
-  specialty?: string; // Standard list e.g. "Chanteur", "Guitariste", "Pianiste", "Batteur", "DJ", "Cuivres", "Bassiste", etc.
-  experience?: string; // e.g. "Débutant", "Intermédiaire", "Professionnel", "Légende du showbiz"
+  specialty?: string; // e.g. "Chanteur", "Guitariste", "Pianiste", "Batteur", "DJ", "Cuivres", "Bassiste", etc.
+  experience?: string;
+  // New specific fields:
+  speciality?: string; // musical specialty
+  experienceYears?: string; // Years of experience
+  musicGenre?: string; // Genre of music
+  waveNumber?: string;
+  orangeMoneyNumber?: string;
+  balance?: number; // solde disponible
+  totalRevenue?: number; // revenus reçus
+  totalWithdrawals?: number; // retraits effectués
+  gigsCompleted?: number; // gombos réalisés
+  applicationsSent?: number; // candidatures envoyées
+  acceptanceRate?: number; // taux d'acceptation
+  isProfileComplete?: boolean; // toggle if all mandatory fields are filled
+  isAvailableNow?: boolean; // disponível maintenant
+  updatedAt?: string;
+
   paymentNumber?: string; // Orange / Wave number
   paymentProvider?: PaymentProvider;
-  avatarUrl?: string; // profile picture
-  createdAt: string; // ISO String
+  avatarUrl?: string; // profile picture (we support bot avatarUrl and photoURL for compatibility)
+  photoURL?: string; 
   isVerified?: boolean;
+  createdAt: string; // ISO String
 }
 
 export type GomboStatus = "publie" | "reserve" | "termine";
@@ -107,5 +125,15 @@ export interface SocialPost {
   savedBy: string[]; // user UIDs
   audioUrl?: string; // Optional soundtrack link
   imageUrl?: string; // Cover artwork link
+  createdAt: string;
+}
+
+export interface GomboNotification {
+  id: string;
+  userId: string; // The user receiving the notification
+  title: string;
+  message: string;
+  type: "application_accepted" | "general" | "booking";
+  read: boolean;
   createdAt: string;
 }

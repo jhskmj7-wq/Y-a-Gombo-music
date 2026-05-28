@@ -103,7 +103,8 @@ service cloud.firestore {
              data.userId is string && data.userId.size() <= 128 &&
              data.type is string && data.type.size() <= 100 &&
              data.message is string && data.message.size() <= 1000 &&
-             data.isRead is bool &&
+             (!('title' in data) || (data.title is string && data.title.size() <= 200)) &&
+             (data.read is bool || data.isRead is bool) &&
              data.createdAt is string && data.createdAt.size() <= 50;
     }
 
@@ -145,7 +146,7 @@ service cloud.firestore {
 
     // --- 1. USERS COLLECTION RULES ---
     match /users/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow read: if isSignedIn();
       allow create: if isSignedIn() && isOwner(userId) && 
         isValidUser(request.resource.data) &&
         request.resource.data.role != 'admin'; // Prevent self-promoting to admin at signup
@@ -199,7 +200,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && isValidNotification(request.resource.data);
       allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin()) &&
-        request.resource.data.isRead is bool;
+        (request.resource.data.read is bool || request.resource.data.isRead is bool);
       allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
