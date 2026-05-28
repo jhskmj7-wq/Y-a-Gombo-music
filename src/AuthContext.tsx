@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { Lock } from "lucide-react";
 import { gomboAuth, gomboDB } from "./firebase";
 import { UserProfile } from "./types";
 

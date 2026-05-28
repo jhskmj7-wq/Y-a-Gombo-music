@@ -32,8 +32,8 @@ import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPos
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
-export let isFirebaseMock = true;
-export let isFirebaseForceReal = false;
+export let isFirebaseMock = firebaseConfig && firebaseConfig.projectId === "ya-gombo-music" ? false : true;
+export let isFirebaseForceReal = firebaseConfig && firebaseConfig.projectId === "ya-gombo-music" ? true : false;
 export let pendingSignUpProfile: UserProfile | null = null;
 
 export function getPendingSignUpProfile(): UserProfile | null {
@@ -45,6 +45,12 @@ export function setPendingSignUpProfile(profile: UserProfile | null) {
 }
 
 export function setIsFirebaseMock(val: boolean) {
+  if (firebaseConfig && firebaseConfig.projectId === "ya-gombo-music") {
+    isFirebaseMock = false;
+    isFirebaseForceReal = true;
+    window.dispatchEvent(new Event("gomboFirebaseMockChange"));
+    return;
+  }
   if (val === true && isFirebaseForceReal) {
     console.warn("⚠️ Firestore operation failed, but Firebase was verified online. Restant en Mode production réel.");
     return;
@@ -53,44 +59,11 @@ export function setIsFirebaseMock(val: boolean) {
   window.dispatchEvent(new Event("gomboFirebaseMockChange"));
 }
 
-let app;
-let db: any = null;
-let auth: any = null;
+import { app, auth, db, storage } from "./lib/firebase";
 
 const GOOGLE_PROVIDER = new GoogleAuthProvider();
 const FACEBOOK_PROVIDER = new FacebookAuthProvider();
 const GITHUB_PROVIDER = new GithubAuthProvider();
-
-try {
-  // If we have a real non-mock projectId and active config, try to boot real Firebase
-  if (
-    firebaseConfig && 
-    firebaseConfig.projectId && 
-    firebaseConfig.projectId !== "gombo-musik-mock" &&
-    !firebaseConfig.projectId.includes("YOUR_PROJECT_ID")
-  ) {
-    if (getApps().length === 0) {
-      app = initializeApp(firebaseConfig);
-    } else {
-      app = getApps()[0];
-    }
-    // Handle either custom database ID (blueprint) or default database
-    if ("firestoreDatabaseId" in firebaseConfig && (firebaseConfig as any).firestoreDatabaseId) {
-      db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
-      console.log("🔥 Successfully initialized real Firebase service with custom DB ID: " + (firebaseConfig as any).firestoreDatabaseId);
-    } else {
-      db = getFirestore(app);
-      console.log("🔥 Successfully initialized real Firebase service using default DB");
-    }
-    auth = getAuth(app);
-    isFirebaseMock = false;
-  } else {
-    console.log("ℹ️ Using local reactive storage engine (Firebase terms or keys not yet fully set up).");
-  }
-} catch (e) {
-  console.error("⚠️ Firebase initialization fell back to mock mode:", e);
-  isFirebaseMock = true;
-}
 
 // Ensure the required connection test run from the skill
 if (!isFirebaseMock && db) {
@@ -123,7 +96,11 @@ if (!isFirebaseMock && db) {
         setIsFirebaseMock(false);
       } else {
         console.warn("⚠️ Impossible de joindre Firestore. Passage automatique au mode Bac à Sable local / Hors-ligne.", error);
-        setIsFirebaseMock(true);
+        if (firebaseConfig && firebaseConfig.projectId === "ya-gombo-music") {
+          setIsFirebaseMock(false);
+        } else {
+          setIsFirebaseMock(true);
+        }
         if (errMsg.includes("the client is offline")) {
           console.error("Please check your Firebase configuration. Client is offline.");
         }

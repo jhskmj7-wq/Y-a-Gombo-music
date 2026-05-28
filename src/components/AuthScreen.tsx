@@ -277,32 +277,32 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
           <p className="text-[10px] text-center font-bold text-gray-400 uppercase tracking-wider">
             Connexion Rapide en 1 clic
           </p>
-          <div className="grid grid-cols-2 gap-2.5">
-            {/* Facebook Quick Login */}
-            <button
-              type="button"
-              onClick={handleFacebookLogin}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 border border-[#1877F2]/20 text-[#1877F2] dark:text-[#3b5998] rounded-xl transition-all font-bold text-xs active:scale-98"
-            >
-              <Facebook className="w-4.5 h-4.5 fill-current" />
-              <span>Facebook</span>
-            </button>
-
+          <div className="flex flex-col gap-2">
             {/* Google Quick Login */}
             <button
               type="button"
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="flex items-center justify-center gap-2 py-2.5 px-3 bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800/80 hover:bg-gray-100 text-gray-800 dark:text-gray-200 rounded-xl transition-all font-bold text-xs active:scale-98"
+              className="w-full h-11 flex items-center justify-center gap-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800/85 hover:bg-gray-100 text-gray-900 dark:text-gray-100 rounded-2xl transition-all font-bold text-sm active:scale-98 cursor-pointer"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                 <path
                   fill="#EA4335"
                   d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.529-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.1C18.28 1.844 15.485 1 12.24 1 6.05 1 1.042 6.01 1.042 12.185S6.05 23.37 12.24 23.37c6.46 0 10.755-4.54 10.755-10.95 0-.735-.08-1.3-.175-1.833h-10.58z"
                 />
               </svg>
-              <span>Google</span>
+              <span>Continuer avec Google</span>
+            </button>
+
+            {/* Facebook Quick Login */}
+            <button
+              type="button"
+              onClick={handleFacebookLogin}
+              disabled={loading}
+              className="w-full h-11 flex items-center justify-center gap-2.5 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 border border-[#1877F2]/20 text-[#1877F2] dark:text-[#2d88ff] rounded-2xl transition-all font-bold text-sm active:scale-98 cursor-pointer"
+            >
+              <Facebook className="w-5 h-5 fill-current shrink-0" />
+              <span>Continuer avec Facebook</span>
             </button>
           </div>
         </div>
