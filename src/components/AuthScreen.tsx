@@ -17,9 +17,12 @@ import {
   ShieldCheck, 
   CheckCircle2,
   ArrowLeft,
-  Facebook
+  Facebook,
+  Grid
 } from "lucide-react";
 import { gomboAuth, gomboDB } from "../firebase";
+import { auth } from "../lib/firebase";
+import { RecaptchaVerifier } from "firebase/auth";
 import { UserProfile } from "../types";
 
 const ABIDJAN_COMMUNES = [
@@ -43,10 +46,10 @@ interface AuthScreenProps {
 }
 
 export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
-  // Traditional login/signup option toggle: "login" or "register"
-  const [emailMode, setEmailMode] = useState<"login" | "register">("register");
+  // Tabs for Auth: "register" | "login" | "phone"
+  const [authMethod, setAuthMethod] = useState<"register" | "login" | "phone">("register");
   
-  // Form fields state
+  // Traditional form fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -54,37 +57,46 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
   const [phone, setPhone] = useState("");
   const [commune, setCommune] = useState("Cocody");
   const [role, setRole] = useState<"musicien" | "client">("musicien");
-  
   const [showPassword, setShowPassword] = useState(false);
+
+  // Phone Authentication Flow state
+  const [phoneInput, setPhoneInput] = useState("");
+  const [phoneAuthStep, setPhoneAuthStep] = useState<"request" | "verify">("request");
+  const [otpCode, setOtpCode] = useState("");
+  const [confirmResult, setConfirmResult] = useState<any>(null);
+  
   const [loading, setLoading] = useState(false);
   const [errorMSG, setErrorMSG] = useState("");
   const [successMSG, setSuccessMSG] = useState("");
 
-  // Storage and User tracking post-authentication
-  const [authedUser, setAuthedUser] = useState<{ uid: string; email: string } | null>(null);
-
-  // Advanced Troubleshoot States for OAuth inside AI Studio Iframe
+  // Clean troubleshooting tooltips for sandbox / iframe errors
   const [showTroubleshoot, setShowTroubleshoot] = useState(false);
   const [activeErrorCode, setActiveErrorCode] = useState("");
 
-  // Handle successful login/auth transition to onboarding check
+  // Post-Authentication profile initialization and sync to Firestore
   const handlePostAuthSuccess = async (uid: string, userEmail: string) => {
     setLoading(true);
     try {
-      // Fetch user profile to ensure it is registered
+      console.log("🛠️ [AuthScreen Debug] Syncing user profile data for", uid);
       const profile = await gomboDB.getUserProfile(uid);
-      setAuthedUser({ uid, email: userEmail });
       
+      const isComplete = profile ? (profile.isProfileComplete ?? false) : false;
+      const isFormRegister = authMethod === "register" && firstName.trim() !== "";
+
       const updatedProfileData: any = {
         uid,
-        email: userEmail,
-        firstName: firstName.trim() || profile?.firstName || "Artiste",
-        lastName: lastName.trim() || profile?.lastName || "Gombo",
-        phone: phone.trim() || profile?.phone || "+225 07 00 00 00 00",
-        commune: commune,
-        role: role,
-        isProfileComplete: true,
-        avatarUrl: profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+        email: userEmail || profile?.email || "",
+        firstName: isFormRegister ? firstName.trim() : (profile?.firstName || "Artiste"),
+        lastName: isFormRegister ? lastName.trim() : (profile?.lastName || "Gombo"),
+        displayName: isFormRegister 
+          ? `${firstName.trim()} ${lastName.trim()}`
+          : (profile?.displayName || profile?.firstName ? `${profile.firstName} ${profile.lastName || ""}`.trim() : "Artiste Gombo"),
+        phone: (isFormRegister ? phone.trim() : null) || phoneInput.trim() || profile?.phone || "",
+        commune: (isFormRegister ? commune : null) || profile?.commune || "Cocody",
+        role: (isFormRegister ? role : null) || profile?.role || "musicien",
+        provider: profile?.provider || (authMethod === "phone" ? "phone" : (authMethod === "login" ? "password" : "email")),
+        isProfileComplete: isComplete, // Preserve profile completion status
+        avatarUrl: profile?.avatarUrl || profile?.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
         balance: profile?.balance ?? 25000,
         totalRevenue: profile?.totalRevenue ?? 25000,
         totalWithdrawals: profile?.totalWithdrawals ?? 0,
@@ -94,27 +106,51 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         createdAt: profile?.createdAt || new Date().toISOString()
       };
 
-      // Save complete profile
+      // Ensure that if it has specialty or bio or other markers, we keep them
+      if (profile?.specialty || profile?.speciality) {
+        updatedProfileData.specialty = profile.specialty || profile.speciality;
+        updatedProfileData.speciality = profile.specialty || profile.speciality;
+      }
+      if (profile?.experience || profile?.experienceYears) {
+        updatedProfileData.experience = profile.experience || profile.experienceYears;
+        updatedProfileData.experienceYears = profile.experience || profile.experienceYears;
+      }
+      if (profile?.musicGenre) {
+        updatedProfileData.musicGenre = profile.musicGenre;
+      }
+      if (profile?.bio) {
+        updatedProfileData.bio = profile.bio;
+      }
+      if (profile?.artistName) {
+        updatedProfileData.artistName = profile.artistName;
+      }
+      if (profile?.waveNumber || profile?.paymentNumber) {
+        updatedProfileData.waveNumber = profile.waveNumber || profile.paymentNumber;
+        updatedProfileData.paymentNumber = profile.waveNumber || profile.paymentNumber;
+      }
+      if (profile?.orangeMoneyNumber) {
+        updatedProfileData.orangeMoneyNumber = profile.orangeMoneyNumber;
+      }
+
       await gomboDB.updateUserProfile(uid, updatedProfileData);
       
-      // Persist auth tokens
-      const LOCAL_AUTH_KEY = "gombo_auth";
-      localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify({ uid, email: userEmail, emailVerified: true }));
+      // Save local reference for session persistence
+      localStorage.setItem("gombo_auth", JSON.stringify({ uid: uid, email: userEmail || email, emailVerified: true }));
       window.dispatchEvent(new Event("gomboAuthChange"));
       
-      setSuccessMSG("Accès autorisé ! Bienvenue sur Gombo Musik 🎉");
+      setSuccessMSG("Connexion réussie ! Bienvenue dans l'arène Y'A GOMBO MUSIC 🌟");
       setTimeout(() => {
         onSuccess();
-      }, 800);
+      }, 700);
     } catch (err: any) {
-      console.warn("⚠️ Profile sync error, calling success handler directly", err);
+      console.error("❌ Profile syncing error:", err);
       onSuccess();
     } finally {
       setLoading(false);
     }
   };
 
-  // Google Sign-In Method
+  // Google SSO Click Action
   const handleGoogleLogin = async () => {
     setErrorMSG("");
     setLoading(true);
@@ -126,17 +162,17 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         await handlePostAuthSuccess(res.uid, res.email || "");
       }
     } catch (err: any) {
-      console.error("Google Auth error details:", err);
+      console.error("Google SSO Failure:", err);
       const code = err.code || "auth/unknown";
       setActiveErrorCode(code);
       setShowTroubleshoot(true);
-      setErrorMSG("Échec de la connexion Google réelle : " + (err.message || "Erreur de connexion"));
+      setErrorMSG("Échec de connexion Google : " + (err.message || "Erreur inconnue"));
     } finally {
       setLoading(false);
     }
   };
 
-  // Facebook Sign-In Method
+  // Facebook SSO Click Action
   const handleFacebookLogin = async () => {
     setErrorMSG("");
     setLoading(true);
@@ -148,18 +184,18 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         await handlePostAuthSuccess(res.uid, res.email || "");
       }
     } catch (err: any) {
-      console.error("Facebook Auth error details:", err);
+      console.error("Facebook SSO Failure:", err);
       const code = err.code || "auth/unknown";
       setActiveErrorCode(code);
       setShowTroubleshoot(true);
-      setErrorMSG("Échec de la connexion Facebook réelle : " + (err.message || "Erreur de connexion"));
+      setErrorMSG("Échec de connexion Facebook : " + (err.message || "Erreur de connexion"));
     } finally {
       setLoading(false);
     }
   };
 
-  // Traditional Email & Details Auth Handler
-  const handleTraditionalAuth = async (e: React.FormEvent) => {
+  // Form submit handler for register / login email auth
+  const handleEmailAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMSG("");
     setSuccessMSG("");
@@ -170,26 +206,28 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         throw new Error("Veuillez saisir une adresse email valide !");
       }
       if (password.length < 6) {
-        throw new Error("Le mot de passe doit faire au moins 6 caractères !");
+        throw new Error("Le mot de passe doit comporter au moins 6 caractères.");
       }
 
-      if (emailMode === "login") {
+      if (authMethod === "login") {
+        console.log("🔑 Logging in standard email user...");
         await gomboAuth.signIn(email.trim().toLowerCase(), password);
-        const saved = JSON.parse(localStorage.getItem("gombo_auth") || "null");
-        if (saved && saved.uid) {
-          await handlePostAuthSuccess(saved.uid, saved.email);
+        const authRef = JSON.parse(localStorage.getItem("gombo_auth") || "null");
+        if (authRef && authRef.uid) {
+          await handlePostAuthSuccess(authRef.uid, authRef.email);
         } else {
           onSuccess();
         }
       } else {
+        // Register sequence
         if (!firstName.trim() || !lastName.trim()) {
-          throw new Error("Veuillez remplir votre Prénom et votre Nom !");
+          throw new Error("Veuillez remplir votre Prénom et votre Nom de famille !");
         }
         if (!phone.trim()) {
-          throw new Error("Le numéro de téléphone est obligatoire !");
+          throw new Error("Le numéro de téléphone est obligatoire pour organiser les gombos.");
         }
 
-        // SignUp via Auth Engine
+        console.log("✨ Creating a brand new email profile...");
         await gomboAuth.signUp(email.trim().toLowerCase(), password, role, {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
@@ -197,15 +235,98 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
           commune: commune
         });
 
-        const saved = JSON.parse(localStorage.getItem("gombo_auth") || "null");
-        if (saved && saved.uid) {
-          await handlePostAuthSuccess(saved.uid, saved.email);
+        // Autologin sync triggers automatically through auth listener, fallback is manual triggers
+        const authRef = JSON.parse(localStorage.getItem("gombo_auth") || "null");
+        if (authRef && authRef.uid) {
+          await handlePostAuthSuccess(authRef.uid, authRef.email);
         } else {
-          onSuccess();
+          setSuccessMSG("Votre compte showbizz a été créé avec succès ! Connectez-vous maintenant.");
+          setAuthMethod("login");
+          setLoading(false);
         }
       }
     } catch (err: any) {
+      console.error("Email authentication failed:", err);
       setErrorMSG(err.message || "Une erreur est survenue lors de l'authentification.");
+      setLoading(false);
+    }
+  };
+
+  // Send Phone SMS OTP Validation Code Handler
+  const handleSendSMS = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMSG("");
+    setSuccessMSG("");
+    setLoading(true);
+
+    try {
+      if (!phoneInput.trim()) {
+        throw new Error("Veuillez entrer un numéro de téléphone valide.");
+      }
+
+      // Convert local format (e.g. 07...) to standard Côte d'Ivoire global code (+225...)
+      let cleanedPhone = phoneInput.trim().replace(/\s+/g, "");
+      if (!cleanedPhone.startsWith("+")) {
+        if (cleanedPhone.startsWith("0")) {
+          cleanedPhone = "+225" + cleanedPhone.substring(1);
+        } else {
+          cleanedPhone = "+225" + cleanedPhone;
+        }
+      }
+
+      console.log("📱 Dispatching OTP code for phone: ", cleanedPhone);
+      
+      // Initialize reCAPTCHA verifier dynamically on empty anchor container
+      let verifier: RecaptchaVerifier | null = null;
+      try {
+        if (auth) {
+          const anchor = document.getElementById("recaptcha-invisible-anchor");
+          if (anchor) anchor.innerHTML = ""; // reset previous
+          
+          verifier = new RecaptchaVerifier(auth, "recaptcha-invisible-anchor", {
+            size: "invisible",
+            callback: (res: any) => {
+              console.log("Recaptcha verifier passed successfully", res);
+            }
+          });
+        }
+      } catch (recapErr) {
+        console.warn("Recaptcha instantiating failure, falling back.", recapErr);
+      }
+
+      const confirmationResult = await gomboAuth.loginWithPhoneCode(cleanedPhone, verifier);
+      setConfirmResult(confirmationResult);
+      setPhoneAuthStep("verify");
+      setSuccessMSG("📱 Code SMS envoyé ! Veuillez saisir le code à 6 chiffres reçu.");
+    } catch (err: any) {
+      console.error("SMS Dispatch error:", err);
+      setErrorMSG("Impossible d'envoyer le code SMS. Vérifiez le format (CIV) : " + (err.message || "Erreur Firebase"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verify Phone OTP Submit Click Handler
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMSG("");
+    setSuccessMSG("");
+    setLoading(true);
+
+    try {
+      if (!otpCode || otpCode.length < 4) {
+        throw new Error("Veuillez entrer le code à 6 chiffres reçu par SMS.");
+      }
+
+      console.log("🔑 Confirming OTP code...", otpCode);
+      const res = await confirmResult.confirm(otpCode);
+      const user = res.user;
+      
+      console.log("✅ Authenticated via OTP! User:", user);
+      await handlePostAuthSuccess(user.uid, user.email || `${user.uid}@gombo.ci`);
+    } catch (err: any) {
+      console.error("OTP Verification failed:", err);
+      setErrorMSG("Le code saisi est incorrect ou a expiré. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -216,15 +337,19 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       <motion.div 
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.2 }}
-        className="relative w-full bg-white dark:bg-[#151518] rounded-3xl border border-gray-150 dark:border-gray-800/80 p-4 sm:p-5 md:p-6 shadow-2xl overflow-hidden"
+        transition={{ duration: 0.25 }}
+        className="relative w-full bg-[#0F172A] text-slate-100 rounded-3xl border border-[#D4A373]/20 p-5 sm:p-6 shadow-2xl overflow-hidden"
       >
-        {/* Floating Close Button X in the top-right corner */}
+        {/* Soft Gold Ambient Glow Detailing */}
+        <div className="absolute top-0 left-1/4 w-32 h-32 bg-[#D4A373]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-[#7C3AED]/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Floating Close Button */}
         {onClose && (
           <button
             onClick={onClose}
             type="button"
-            className="absolute top-4 right-4 z-40 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            className="absolute top-4 right-4 z-40 p-2 text-slate-400 hover:text-[#D4A373] hover:bg-slate-800/40 rounded-full transition-colors"
             id="auth-close-btn"
             aria-label="Fermer"
           >
@@ -233,26 +358,26 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         )}
 
         {/* Brand Banner Header */}
-        <div className="text-center mb-4 mt-1">
-          <div className="inline-flex items-center justify-center p-2.5 bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 rounded-2xl mb-1.5">
-            <Flame className="w-6.5 h-6.5 fill-current" />
+        <div className="text-center mb-5 mt-1">
+          <div className="inline-flex items-center justify-center p-3.5 bg-[#7C3AED]/20 hover:bg-[#7C3AED]/30 text-[#D4A373] rounded-2xl mb-2.5 border border-[#D4A373]/20 shadow-lg">
+            <Flame className="w-7 h-7 fill-current text-[#D4A373]" />
           </div>
-          <h2 className="text-lg sm:text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-50 tracking-wide uppercase font-display">
             Y'A GOMBO MUSIC
           </h2>
-          <p className="text-[9px] text-orange-605 font-black tracking-widest uppercase dark:text-orange-400">
-            Showbiz Ivoirien & Contrats Rapides
+          <p className="text-[10px] text-[#D4A373] font-extrabold tracking-widest uppercase mt-0.5">
+            L'Élite du Showbiz & Contrats d'Artistes
           </p>
         </div>
 
-        {/* Error/Success Feedback Alerts */}
+        {/* Error / Success Feedback banner */}
         <AnimatePresence mode="wait">
           {errorMSG && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="p-3 mb-3 bg-red-50 dark:bg-red-950/10 border-l-4 border-red-500 rounded-r-xl text-red-750 dark:text-red-400 text-xs font-semibold leading-relaxed"
+              className="p-3 mb-4 bg-red-950/30 border border-red-500/30 rounded-xl text-red-200 text-xs font-semibold leading-relaxed"
             >
               {errorMSG}
             </motion.div>
@@ -263,35 +388,33 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="p-3 mb-3 bg-emerald-50 dark:bg-emerald-950/10 border-l-4 border-emerald-500 rounded-r-xl text-emerald-800 dark:text-emerald-400 text-xs font-semibold"
+              className="p-3 mb-4 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-emerald-200 text-xs font-semibold"
             >
               {successMSG}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* ========================================== */}
-        {/* EN-TÊTE : LES BOUTONS DE CONNEXION RAPIDE  */}
-        {/* ========================================== */}
-        <div className="space-y-2 mb-4">
-          <p className="text-[10px] text-center font-bold text-gray-400 uppercase tracking-wider">
-            Connexion Rapide en 1 clic
+        {/* Quick Connexion Buttons in grid */}
+        <div className="space-y-2 mb-5">
+          <p className="text-[9px] text-center font-bold text-[#D4A373]/75 uppercase tracking-wider">
+            Connexion Express
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             {/* Google Quick Login */}
             <button
               type="button"
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full h-11 flex items-center justify-center gap-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800/85 hover:bg-gray-100 text-gray-900 dark:text-gray-100 rounded-2xl transition-all font-bold text-sm active:scale-98 cursor-pointer"
+              className="h-11 flex items-center justify-center gap-2 bg-slate-900 border border-slate-800 hover:border-[#D4A373]/30 hover:bg-slate-800/80 text-slate-100 rounded-xl transition-all font-semibold text-xs active:scale-98 cursor-pointer"
             >
-              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+              <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">
                 <path
                   fill="#EA4335"
                   d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.529-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.1C18.28 1.844 15.485 1 12.24 1 6.05 1 1.042 6.01 1.042 12.185S6.05 23.37 12.24 23.37c6.46 0 10.755-4.54 10.755-10.95 0-.735-.08-1.3-.175-1.833h-10.58z"
                 />
               </svg>
-              <span>Continuer avec Google</span>
+              <span>Google</span>
             </button>
 
             {/* Facebook Quick Login */}
@@ -299,238 +422,353 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
               type="button"
               onClick={handleFacebookLogin}
               disabled={loading}
-              className="w-full h-11 flex items-center justify-center gap-2.5 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 border border-[#1877F2]/20 text-[#1877F2] dark:text-[#2d88ff] rounded-2xl transition-all font-bold text-sm active:scale-98 cursor-pointer"
+              className="h-11 flex items-center justify-center gap-2 bg-slate-900 border border-slate-800 hover:border-[#D4A373]/30 hover:bg-slate-800/80 text-slate-100 rounded-xl transition-all font-semibold text-xs active:scale-98 cursor-pointer"
             >
-              <Facebook className="w-5 h-5 fill-current shrink-0" />
-              <span>Continuer avec Facebook</span>
+              <Facebook className="w-4.5 h-4.5 fill-[#1877F2] stroke-none shrink-0" />
+              <span>Facebook</span>
             </button>
           </div>
         </div>
 
-        {/* Divider text in the middle */}
-        <div className="relative flex py-2 items-center">
-          <div className="flex-grow border-t border-gray-150 dark:border-gray-800/50"></div>
-          <span className="flex-shrink mx-3 text-[10px] text-gray-400 uppercase font-black tracking-widest">OU FORMULAIRE</span>
-          <div className="flex-grow border-t border-gray-150 dark:border-gray-800/50"></div>
+        {/* Divider text */}
+        <div className="relative flex pb-3 items-center">
+          <div className="flex-grow border-t border-slate-800"></div>
+          <span className="flex-shrink mx-3 text-[9px] text-slate-500 uppercase font-black tracking-widest">OU PAR FORMULAIRE</span>
+          <div className="flex-grow border-t border-slate-800"></div>
         </div>
 
-        {/* Form Mode Tabs */}
-        <div className="flex bg-gray-50 dark:bg-gray-900 p-1 rounded-xl text-[11px] font-bold mb-3.5">
+        {/* Form Selection Premium Tabs */}
+        <div className="flex bg-slate-900 border border-slate-800 p-1 rounded-xl text-[10px] font-bold mb-4">
           <button
             type="button"
-            onClick={() => setEmailMode("register")}
+            onClick={() => { setAuthMethod("register"); setErrorMSG(""); setSuccessMSG(""); }}
             className={`flex-1 py-1.5 rounded-lg transition-all ${
-              emailMode === "register" 
-                ? "bg-white dark:bg-gray-800 text-orange-600 dark:text-orange-400 shadow-sm font-black" 
-                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              authMethod === "register" 
+                ? "bg-[#7C3AED] text-white shadow-sm font-black" 
+                : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            Nouveau Compte (Inscription)
+            Créer Compte
           </button>
           <button
             type="button"
-            onClick={() => setEmailMode("login")}
+            onClick={() => { setAuthMethod("login"); setErrorMSG(""); setSuccessMSG(""); }}
             className={`flex-1 py-1.5 rounded-lg transition-all ${
-              emailMode === "login" 
-                ? "bg-white dark:bg-gray-800 text-orange-600 dark:text-orange-400 shadow-sm font-black" 
-                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              authMethod === "login" 
+                ? "bg-[#7C3AED] text-white shadow-sm font-black" 
+                : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            Se Connecter (Déjà Inscrit)
+            Se Connecter
+          </button>
+          <button
+            type="button"
+            onClick={() => { setAuthMethod("phone"); setErrorMSG(""); setSuccessMSG(""); }}
+            className={`flex-1 py-1.5 rounded-lg transition-all ${
+              authMethod === "phone" 
+                ? "bg-[#7C3AED] text-white shadow-sm font-black" 
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            🔑 Code SMS
           </button>
         </div>
 
-        {/* ========================================== */}
-        {/* CORPS : LE FORMULAIRE COMPLET (SCROLLABLE) */}
-        {/* ========================================== */}
-        <form onSubmit={handleTraditionalAuth} className="space-y-4">
-          <div className="max-h-[50vh] sm:max-h-[55vh] md:max-h-[62vh] overflow-y-auto pr-1.5 space-y-3.5 divide-y divide-gray-50 dark:divide-gray-850">
-            
-            {/* Field Section 1: Role Selection (Only shown/relevant for Registration mode) */}
-            {emailMode === "register" && (
-              <div className="space-y-1.5 pt-0">
-                <label className="block text-[10px] font-extrabold text-gray-400 dark:text-gray-500 uppercase">
-                  Je m'inscris en tant que :
-                </label>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setRole("musicien")}
-                    className={`p-2.5 rounded-xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1 ${
-                      role === "musicien"
-                        ? "border-orange-500 bg-orange-50/5 text-orange-650 dark:text-orange-400 dark:border-orange-500 font-extrabold"
-                        : "border-gray-100 dark:border-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-800/10 text-gray-400"
-                    }`}
-                  >
-                    <Flame className="w-4 h-4 shrink-0 fill-current text-orange-500" />
-                    <span className="text-[11px]">Musicien / DJ</span>
-                  </button>
+        {/* Main interactive form */}
+        <div className="space-y-4">
+          {/* 1. Phone Auth Interactive Flow */}
+          {authMethod === "phone" ? (
+            <div className="space-y-4 py-1">
+              {phoneAuthStep === "request" ? (
+                <form onSubmit={handleSendSMS} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-[#D4A373] uppercase tracking-wider">
+                      Numéro de téléphone
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-bold">
+                        🇨🇮 +225
+                      </span>
+                      <input
+                        type="tel"
+                        required
+                        className="w-full pl-16 pr-3 py-2.5 bg-slate-900 border border-slate-800 focus:border-[#D4A373]/60 rounded-xl text-xs font-bold focus:outline-none text-slate-50"
+                        placeholder="07 45 89 12..."
+                        value={phoneInput}
+                        onChange={(e) => setPhoneInput(e.target.value)}
+                      />
+                    </div>
+                    <p className="text-[9px] text-slate-400">
+                      Entrez votre numéro à 10 chiffres. Un SMS OTP sécurisé vous sera instantanément envoyé par Firebase.
+                    </p>
+                  </div>
 
                   <button
-                    type="button"
-                    onClick={() => setRole("client")}
-                    className={`p-2.5 rounded-xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1 ${
-                      role === "client"
-                        ? "border-orange-500 bg-orange-50/5 text-orange-650 dark:text-orange-400 dark:border-orange-500 font-extrabold"
-                        : "border-gray-100 dark:border-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-800/10 text-gray-400"
-                    }`}
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 mt-2 bg-gradient-to-r from-[#7C3AED] to-indigo-600 hover:from-[#6D28D9] hover:to-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center gap-2"
                   >
-                    <User className="w-4 h-4 shrink-0 text-orange-500" />
-                    <span className="text-[11px]">Recruteur d'Artistes</span>
+                    {loading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Smartphone className="w-4 h-4" />
+                        <span>Recevoir mon code par SMS</span>
+                      </>
+                    )}
                   </button>
-                </div>
-              </div>
-            )}
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOTP} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-[#D4A373] uppercase tracking-wider">
+                      Saisir le Code OTP Reçu
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                        <ShieldCheck className="w-4 h-4" />
+                      </span>
+                      <input
+                        type="text"
+                        required
+                        maxLength={6}
+                        className="w-full pl-9 pr-3 py-2.5 bg-slate-900 border border-slate-800 focus:border-[#D4A373]/60 rounded-xl text-center text-sm font-mono font-semibold tracking-widest focus:outline-none text-slate-50"
+                        placeholder="123456"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[9px] text-slate-400 pt-1">
+                      <span>Code reçu sur {phoneInput}</span>
+                      <button 
+                        type="button" 
+                        onClick={() => { setPhoneAuthStep("request"); setOtpCode(""); }} 
+                        className="text-[#D4A373] hover:underline"
+                      >
+                        Changer de numéro
+                      </button>
+                    </div>
+                  </div>
 
-            {/* Field Section 2: User Identification names (Only shown in Register Mode) */}
-            {emailMode === "register" && (
-              <div className="grid grid-cols-2 gap-2.5 pt-3">
-                <div className="space-y-0.5">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase">Prénom</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800/60 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-orange-500 dark:text-white"
-                    placeholder="Didier"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-0.5">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase">Nom</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800/60 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-orange-500 dark:text-white"
-                    placeholder="Drogba"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 mt-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Valider & Se Connecter</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
+          ) : (
+            /* 2. Standard Email/Password form flow */
+            <form onSubmit={handleEmailAuthSubmit} className="space-y-3.5">
+              <div className="max-h-[46vh] overflow-y-auto pr-1 space-y-3">
+                {/* User Role selection ONLY during registration */}
+                {authMethod === "register" && (
+                  <div className="space-y-1 pt-1">
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wide">
+                      Mon rôle showbiz :
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setRole("musicien")}
+                        className={`p-2 rounded-xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1 ${
+                          role === "musicien"
+                            ? "border-[#7C3AED] bg-[#7C3AED]/10 text-slate-50 font-black"
+                            : "border-slate-800/80 hover:bg-slate-800/30 text-slate-400"
+                        }`}
+                      >
+                        <Flame className="w-4 h-4 shrink-0 text-[#D4A373]" />
+                        <span className="text-[10px]">Musicien / DJ</span>
+                      </button>
 
-            {/* Field Section 3: Primary Contact & Abidjan Commune Location */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
-              {emailMode === "register" && (
-                <div className="space-y-0.5">
-                  <label className="block text-[10px] font-extrabold text-orange-550 uppercase">
-                    Téléphone (CIV - Obligatoire)
-                  </label>
+                      <button
+                        type="button"
+                        onClick={() => setRole("client")}
+                        className={`p-2 rounded-xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1 ${
+                          role === "client"
+                            ? "border-[#7C3AED] bg-[#7C3AED]/10 text-slate-50 font-black"
+                            : "border-slate-800/80 hover:bg-slate-800/30 text-slate-400"
+                        }`}
+                      >
+                        <User className="w-4 h-4 shrink-0 text-[#D4A373]" />
+                        <span className="text-[10px]">Recruteur / Organisateur</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Name inputs during registration */}
+                {authMethod === "register" && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-bold text-slate-400 uppercase">Prénom</label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-800 focus:border-[#D4A373]/60 rounded-xl text-xs font-semibold focus:outline-none text-slate-200"
+                        placeholder="Arthur"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-bold text-slate-400 uppercase">Nom</label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-800 focus:border-[#D4A373]/60 rounded-xl text-xs font-semibold focus:outline-none text-slate-200"
+                        placeholder="Koffi"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Telephone Contact registration only */}
+                {authMethod === "register" && (
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-bold text-[#D4A373] uppercase">
+                      Numéro de Téléphone (CIV)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                        <Phone className="w-3.5 h-3.5" />
+                      </span>
+                      <input
+                        type="tel"
+                        required
+                        className="w-full pl-8 pr-3 py-2 text-xs bg-slate-900 border border-slate-800 focus:border-[#D4A373]/60 rounded-xl focus:outline-none text-slate-100"
+                        placeholder="07 45 67 11 ..."
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Abidjan Commune Location selector */}
+                {authMethod === "register" && (
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase">
+                      Commune d'Abidjan
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                        <MapPin className="w-3.5 h-3.5" />
+                      </span>
+                      <select
+                        required
+                        className="w-full pl-8 pr-3 py-2 bg-slate-900 border border-slate-800 focus:border-[#D4A373]/60 rounded-xl text-xs font-bold focus:outline-none text-slate-205 appearance-none cursor-pointer"
+                        value={commune}
+                        onChange={(e) => setCommune(e.target.value)}
+                      >
+                        {ABIDJAN_COMMUNES.map((com) => (
+                          <option key={com} value={com}>{com}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Email address field */}
+                <div className="space-y-1">
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase">Adresse Email</label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                      <Phone className="w-3.5 h-3.5" />
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                      <Mail className="w-3.5 h-3.5" />
                     </span>
                     <input
-                      type="tel"
+                      type="email"
                       required
-                      className="w-full pl-8 pr-3 py-2 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl focus:outline-none dark:text-white focus:ring-1 focus:ring-orange-500"
-                      placeholder="07 45 89 12 00"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full pl-8 pr-3 py-2 text-xs bg-slate-900 border border-slate-800 focus:border-[#D4A373]/60 rounded-xl focus:outline-none text-slate-100"
+                      placeholder="monartiste@gombo.ci"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
                 </div>
-              )}
 
-              <div className="space-y-0.5 sm:col-span-1">
-                <label className="block text-[10px] font-bold text-gray-400 uppercase">
-                  Commune d'Abidjan
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                    <MapPin className="w-3.5 h-3.5" />
-                  </span>
-                  <select
-                    required
-                    className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-bold focus:outline-none dark:text-white appearance-none"
-                    value={commune}
-                    onChange={(e) => setCommune(e.target.value)}
-                  >
-                    {ABIDJAN_COMMUNES.map((com) => (
-                      <option key={com} value={com}>{com}</option>
-                    ))}
-                  </select>
+                {/* Password field */}
+                <div className="space-y-1">
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase">Mot de passe</label>
+                  <div className="relative flex items-center">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                      <Lock className="w-3.5 h-3.5" />
+                    </span>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      className="w-full pl-8 pr-8 py-2 text-xs bg-slate-900 border border-slate-800 focus:border-[#D4A373]/60 rounded-xl focus:outline-none text-slate-100"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-500 hover:text-slate-100"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Field Section 4: Email Address */}
-            <div className="space-y-0.5 pt-3">
-              <label className="block text-[10px] font-bold text-gray-400 uppercase">Adresse Email</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                  <Mail className="w-3.5 h-3.5" />
-                </span>
-                <input
-                  type="email"
-                  required
-                  className="w-full pl-8 pr-3 py-2 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl focus:outline-none dark:text-white focus:ring-1 focus:ring-orange-500"
-                  placeholder="junior_spectacle@gombo.ci"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Field Section 5: Security Password */}
-            <div className="space-y-0.5 pt-3">
-              <label className="block text-[10px] font-bold text-gray-400 uppercase">Mot de passe</label>
-              <div className="relative flex items-center">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                  <Lock className="w-3.5 h-3.5" />
-                </span>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  className="w-full pl-8 pr-8 py-2 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl focus:outline-none dark:text-white focus:ring-1 focus:ring-orange-500"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+              {/* Action and Validate button */}
+              <div className="space-y-2 pt-2 border-t border-slate-800">
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-gradient-to-r from-[#7C3AED] to-indigo-600 hover:from-[#6D28D9] hover:to-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center"
                 >
-                  {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : authMethod === "register" ? (
+                    "Créer mon Compte Showbiz"
+                  ) : (
+                    "Se Connecter en Sécurité"
+                  )}
                 </button>
               </div>
+            </form>
+          )}
+
+          {/* Invisible Recaptcha Element */}
+          <div id="recaptcha-invisible-anchor"></div>
+
+          {/* Frame Redirect troubleshooting help tooltip */}
+          {showTroubleshoot && (
+            <div className="p-3 bg-amber-950/20 border border-amber-500/20 rounded-xl text-amber-200 mt-2 text-[10px]">
+              <p className="font-extrabold pb-0.5">💡 Problème d'ouverture de l'authentification (Navigateur/Iframe) ?</p>
+              <p className="leading-relaxed text-slate-350">
+                Si vous obtenez un refus ou un "popup bloqué", utilisez un login classique par adresse e-mail ou par téléphone, ou ouvrez l'application dans un nouvel onglet complet à l'aide de l'icône de navigation.
+              </p>
             </div>
+          )}
 
-          </div>
-
-          {/* ========================================== */}
-          {/* PIED DE PAGE : LES ACTIONS DE VALIDATION   */}
-          {/* ========================================== */}
-          <div className="space-y-2.5 pt-3 border-t border-gray-100 dark:border-gray-800/80">
-            {/* Main Validation Button */}
+          {/* Escape hatch pass button */}
+          {onClose && (
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center"
+              type="button"
+              onClick={onClose}
+              className="w-full py-2.5 bg-transparent hover:bg-slate-800/30 text-slate-400 hover:text-slate-200 font-bold text-xs transition-colors rounded-xl flex items-center justify-center gap-1"
             >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : emailMode === "register" ? (
-                "Créer mon Compte"
-              ) : (
-                "Se Connecter"
-              )}
+              <span>Continuer en Mode Invité / Explorer</span>
+              <ChevronRight className="w-3 h-3" />
             </button>
-
-            {/* Secondary Bypass Button: Passer pour plus tard */}
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full py-2 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800/20 text-gray-550 dark:text-gray-450 hover:text-gray-900 dark:hover:text-white font-bold text-xs transition-colors rounded-xl"
-              >
-                Passer pour plus tard
-              </button>
-            )}
-          </div>
-        </form>
+          )}
+        </div>
       </motion.div>
     </div>
   );

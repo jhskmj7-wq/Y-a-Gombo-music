@@ -11,7 +11,9 @@ import {
   GithubAuthProvider,
   onAuthStateChanged,
   sendPasswordResetEmail,
-  User as FirebaseUser
+  User as FirebaseUser,
+  RecaptchaVerifier,
+  signInWithPhoneNumber
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -357,7 +359,7 @@ export const gomboAuth = {
         commune: details.commune,
         role: role,
         avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-        isProfileComplete: true,
+        isProfileComplete: false,
         balance: 25000,
         totalRevenue: 25000,
         totalWithdrawals: 0,
@@ -430,37 +432,51 @@ export const gomboAuth = {
   },
 
   async loginWithGoogle() {
+    console.log("🚀 [Firebase Auth Debug] Initializing Google Login popup...");
     if (!isFirebaseMock && auth) {
       try {
         const res = await signInWithPopup(auth, GOOGLE_PROVIDER);
-        // Create user profile if not exists
+        console.log("✅ [Firebase Auth Debug] Google Login Success. UID:", res.user.uid, "Email:", res.user.email);
+        
+        // Ensure user profile details are populated in Firestore users/{uid} if missing
         try {
           const uDoc = await getDoc(doc(db, "users", res.user.uid));
           if (!uDoc.exists()) {
+            console.log("💾 [Firebase Auth Debug] Creating automated user profile in Firestore for Google Sign-In...");
             const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Showbiz"];
             const userProfile: UserProfile = {
               uid: res.user.uid,
               email: res.user.email || "",
               firstName: names[0],
               lastName: names.slice(1).join(" ") || "Ivoirien",
-              phone: "+225 00 00 00 00",
+              displayName: res.user.displayName || "",
+              photoURL: res.user.photoURL || "",
+              avatarUrl: res.user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+              phone: res.user.phoneNumber || "",
               commune: "Cocody",
               role: "musicien", // default
+              provider: "google.com",
+              isProfileComplete: false,
+              balance: 25000,
+              totalRevenue: 25000,
+              totalWithdrawals: 0,
+              gigsCompleted: 0,
+              applicationsSent: 0,
+              acceptanceRate: 100,
               createdAt: new Date().toISOString()
             };
             await setDoc(doc(db, "users", res.user.uid), userProfile);
+            console.log("✅ [Firebase Auth Debug] Firestore user profile stored successfully.");
+          } else {
+            console.log("📦 [Firebase Auth Debug] User profile already exists in Firestore. Skipping auto-onboarding.");
           }
         } catch (err) {
+          console.error("❌ [Firebase Auth Debug] Error syncing user profile on Google auth:", err);
           handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
         }
         return { uid: res.user.uid, email: res.user.email };
       } catch (e: any) {
-        console.error("Popup failed, trying redirect auth...", e);
-        try {
-          await signInWithRedirect(auth, GOOGLE_PROVIDER);
-        } catch (redirErr) {
-          console.error("Redirect auth also failed", redirErr);
-        }
+        console.error("❌ [Firebase Auth Debug] Google Popup failed:", e);
         throw e;
       }
     } else {
@@ -477,9 +493,12 @@ export const gomboAuth = {
           email: randomEmail,
           firstName: "Artiste",
           lastName: "Google-Abidjan",
+          displayName: "Artiste Google-Abidjan",
+          provider: "google.com",
           commune: "Cocody",
           phone: "+225 07 00 11 22 33",
           role: "musicien",
+          isProfileComplete: true,
           createdAt: new Date().toISOString()
         };
         users.push(matched);
@@ -494,29 +513,53 @@ export const gomboAuth = {
   },
 
   async loginWithFacebook() {
+    console.log("🚀 [Firebase Auth Debug] Initializing Facebook Login popup...");
     if (!isFirebaseMock && auth) {
-      const res = await signInWithPopup(auth, FACEBOOK_PROVIDER);
-      // Create user profile if not exists
       try {
-        const uDoc = await getDoc(doc(db, "users", res.user.uid));
-        if (!uDoc.exists()) {
-          const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Facebook"];
-          const userProfile: UserProfile = {
-            uid: res.user.uid,
-            email: res.user.email || "",
-            firstName: names[0],
-            lastName: names.slice(1).join(" ") || "Ivoirien",
-            phone: "+225 00 00 00 00",
-            commune: "Cocody",
-            role: "musicien", // default
-            createdAt: new Date().toISOString()
-          };
-          await setDoc(doc(db, "users", res.user.uid), userProfile);
+        const res = await signInWithPopup(auth, FACEBOOK_PROVIDER);
+        console.log("✅ [Firebase Auth Debug] Facebook Login Success. UID:", res.user.uid, "Email:", res.user.email);
+        
+        // Ensure user profile details are populated in Firestore users/{uid} if missing
+        try {
+          const uDoc = await getDoc(doc(db, "users", res.user.uid));
+          if (!uDoc.exists()) {
+            console.log("💾 [Firebase Auth Debug] Creating automated user profile in Firestore for Facebook Sign-In...");
+            const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Facebook"];
+            const userProfile: UserProfile = {
+              uid: res.user.uid,
+              email: res.user.email || "",
+              firstName: names[0],
+              lastName: names.slice(1).join(" ") || "Ivoirien",
+              displayName: res.user.displayName || "",
+              photoURL: res.user.photoURL || "",
+              avatarUrl: res.user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+              phone: res.user.phoneNumber || "",
+              commune: "Cocody",
+              role: "musicien", // default
+              provider: "facebook.com",
+              isProfileComplete: false,
+              balance: 25000,
+              totalRevenue: 25000,
+              totalWithdrawals: 0,
+              gigsCompleted: 0,
+              applicationsSent: 0,
+              acceptanceRate: 100,
+              createdAt: new Date().toISOString()
+            };
+            await setDoc(doc(db, "users", res.user.uid), userProfile);
+            console.log("✅ [Firebase Auth Debug] Firestore user profile stored successfully.");
+          } else {
+            console.log("📦 [Firebase Auth Debug] User profile already exists in Firestore. Skipping auto-onboarding.");
+          }
+        } catch (err) {
+          console.error("❌ [Firebase Auth Debug] Error syncing user profile on Facebook auth:", err);
+          handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
         }
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
+        return { uid: res.user.uid, email: res.user.email };
+      } catch (e: any) {
+        console.error("❌ [Firebase Auth Debug] Facebook popup failed:", e);
+        throw e;
       }
-      return { uid: res.user.uid, email: res.user.email };
     } else {
       // Mock Facebook Login
       const mockFbEmails = ["fb_artiste@gombo.ci", "fb_client@gombo.ci"];
@@ -531,9 +574,12 @@ export const gomboAuth = {
           email: randomEmail,
           firstName: "Artiste",
           lastName: "Facebook-Abidjan",
+          displayName: "Artiste Facebook-Abidjan",
+          provider: "facebook.com",
           commune: "Cocody",
           phone: "+225 05 00 99 88 77",
           role: "musicien",
+          isProfileComplete: true,
           createdAt: new Date().toISOString()
         };
         users.push(matched);
@@ -548,29 +594,39 @@ export const gomboAuth = {
   },
 
   async loginWithGitHub() {
+    console.log("🚀 [Firebase Auth Debug] Initializing GitHub Login popup...");
     if (!isFirebaseMock && auth) {
-      const res = await signInWithPopup(auth, GITHUB_PROVIDER);
-      // Create user profile if not exists
       try {
-        const uDoc = await getDoc(doc(db, "users", res.user.uid));
-        if (!uDoc.exists()) {
-          const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "GitHub"];
-          const userProfile: UserProfile = {
-            uid: res.user.uid,
-            email: res.user.email || "",
-            firstName: names[0],
-            lastName: names.slice(1).join(" ") || "Ivoirien",
-            phone: "+225 00 00 00 00",
-            commune: "Cocody",
-            role: "musicien", // default
-            createdAt: new Date().toISOString()
-          };
-          await setDoc(doc(db, "users", res.user.uid), userProfile);
+        const res = await signInWithPopup(auth, GITHUB_PROVIDER);
+        console.log("✅ [Firebase Auth Debug] GitHub Login Success. UID:", res.user.uid);
+        try {
+          const uDoc = await getDoc(doc(db, "users", res.user.uid));
+          if (!uDoc.exists()) {
+            const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "GitHub"];
+            const userProfile: UserProfile = {
+              uid: res.user.uid,
+              email: res.user.email || "",
+              firstName: names[0],
+              lastName: names.slice(1).join(" ") || "Ivoirien",
+              displayName: res.user.displayName || "",
+              photoURL: res.user.photoURL || "",
+              role: "musicien", // default
+              provider: "github.com",
+              commune: "Cocody",
+              phone: "",
+              isProfileComplete: false,
+              createdAt: new Date().toISOString()
+            };
+            await setDoc(doc(db, "users", res.user.uid), userProfile);
+          }
+        } catch (err) {
+          handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
         }
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
+        return { uid: res.user.uid, email: res.user.email };
+      } catch (e: any) {
+        console.error("❌ [Firebase Auth Debug] GitHub popup failed:", e);
+        throw e;
       }
-      return { uid: res.user.uid, email: res.user.email };
     } else {
       // Mock GitHub Login
       const mockGitEmails = ["git_dj@gombo.ci", "git_client@gombo.ci"];
@@ -585,9 +641,12 @@ export const gomboAuth = {
           email: randomEmail,
           firstName: "Artiste",
           lastName: "GitHub-Abidjan",
+          displayName: "Artiste GitHub-Abidjan",
+          provider: "github.com",
           commune: "Cocody",
           phone: "+225 01 00 44 55 66",
           role: "musicien",
+          isProfileComplete: true,
           createdAt: new Date().toISOString()
         };
         users.push(matched);
@@ -601,21 +660,80 @@ export const gomboAuth = {
     }
   },
 
+  async loginWithPhoneCode(phoneNumber: string, recaptchaVerifier: any) {
+    console.log("🚀 [Firebase Auth Debug] signInWithPhoneNumber with Recaptcha for:", phoneNumber);
+    if (!isFirebaseMock && auth) {
+      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+      console.log("📱 [Firebase Auth Debug] SMS Code verification sent ! Link: confirmationResult ready.");
+      return confirmationResult;
+    } else {
+      console.log("📱 [MOCK Auth Debug] Mock Delivery sent to phone", phoneNumber);
+      return {
+        confirm: async (otp: string) => {
+          console.log("📱 [MOCK Auth Debug] Testing confirmation with OTP code:", otp);
+          if (otp !== "123456" && otp !== "000000") {
+            throw new Error("Code de validation SMS OTP incorrect !");
+          }
+          // Mock login
+          const mockPhoneUid = "phone_" + Math.random().toString(36).substring(2, 9);
+          const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+          let matched = users.find(u => u.phone === phoneNumber);
+          if (!matched) {
+            matched = {
+              uid: mockPhoneUid,
+              email: `${mockPhoneUid}@gombo.ci`,
+              firstName: "Showman",
+              lastName: "Gombo",
+              displayName: "Showman Gombo",
+              phone: phoneNumber,
+              provider: "phone",
+              commune: "Cocody",
+              role: "musicien",
+              isProfileComplete: false,
+              createdAt: new Date().toISOString()
+            };
+            users.push(matched);
+            localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+          }
+
+          const authData = { uid: matched.uid, email: matched.email, emailVerified: true };
+          localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(authData));
+          window.dispatchEvent(new Event("gomboAuthChange"));
+          return {
+            user: {
+              uid: matched.uid,
+              phoneNumber: phoneNumber,
+              email: matched.email,
+              displayName: matched.displayName
+            }
+          };
+        }
+      };
+    }
+  },
+
   async sendPasswordReset(email: string) {
+    console.log("🚀 [Firebase Auth Debug] Sending password reset email to:", email);
     if (!isFirebaseMock && auth) {
       await sendPasswordResetEmail(auth, email);
     } else {
-      console.log(`[MOCK RESET] Email envoyée à ${email}`);
+      console.log(`[MOCK RESET] Reset code emailed to ${email}`);
     }
   },
 
   async signOut() {
+    console.log("🚀 [Firebase Auth Debug] Requesting Sign-Out...");
     if (!isFirebaseMock && auth) {
       await firebaseSignOut(auth);
+      localStorage.removeItem("gombo_auth");
+      localStorage.removeItem("gombo_active_profile");
     } else {
       localStorage.removeItem(LOCAL_AUTH_KEY);
+      localStorage.removeItem("gombo_auth");
+      localStorage.removeItem("gombo_active_profile");
       window.dispatchEvent(new Event("gomboAuthChange"));
     }
+    console.log("✅ [Firebase Auth Debug] Local and Cloud Session cleared.");
   }
 };
 

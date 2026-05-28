@@ -1,28 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", "Poppins", system-ui, -apple-system, sans-serif;
+  --font-display: "Poppins", "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   
-  --color-gombo-orange: #FF7A00;
-  --color-gombo-orange-hover: #E06C00;
-  --color-gombo-green: #00C896;
-  --color-gombo-green-bg: #e6fcf7;
-  --color-gombo-dark: #0F0F0F;
-  --color-gombo-card-dark: #18181B;
+  /* Map standard Orange color scale to Royal Violet so existing elements adapt beautifully */
+  --color-orange-50: #f5f3ff;
+  --color-orange-100: #ede9fe;
+  --color-orange-200: #ddd6fe;
+  --color-orange-300: #c4b5fd;
+  --color-orange-400: #a78bfa;
+  --color-orange-500: #7c3aed;
+  --color-orange-600: #6d28d9;
+  --color-orange-605: #5b21b6;
+  --color-orange-650: #4c1d95;
+  --color-orange-700: #4c1d95;
+  --color-orange-850: #2e1065;
+  --color-orange-905: #1e1b4b;
+  --color-orange-955: #120e36;
+  --color-orange-900: #1e1b4b;
+  --color-orange-950: #120e36;
+  
+  /* Map Gold Accents */
+  --color-gold-50: #fcf8f2;
+  --color-gold-100: #f4eae0;
+  --color-gold-200: #ebd8c1;
+  --color-gold-300: #dfbf9b;
+  --color-gold-400: #d4a373;
+  --color-gold-500: #d4a373;
+  --color-gold-600: #c59262;
+  --color-gold-700: #a37243;
+  --color-gold-950: #2d1e11;
+
+  --color-gombo-orange: #7c3aed;
+  --color-gombo-orange-hover: #6d28d9;
+  --color-gombo-dark: #0f172a;
+  --color-gombo-card-dark: #1e293b;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #fcfcfd;
-  color: #1a1a1e;
+  background-color: #f8fafc;
+  color: #0f172a;
   transition: background-color 0.3s, color 0.3s;
 }
 
 .dark body {
   background-color: var(--color-gombo-dark);
-  color: #f3f4f6;
+  color: #f8fafc;
 }
 
 /* Perfect Custom Scrollbar style */
@@ -41,5 +68,5 @@ body {
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: #334155;
 }

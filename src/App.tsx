@@ -365,59 +365,59 @@ export default function App() {
               <button 
                 onClick={() => setView("home")}
                 className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "home" ? "text-orange-600 dark:text-orange-400" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "home" ? "text-[#7C3AED] dark:text-[#A78BFA]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
-                Accueil
+                Le Terrain
               </button>
 
               <button 
                 onClick={() => setView("gombo_list")}
                 className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "gombo_list" ? "text-orange-600 dark:text-orange-400" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "gombo_list" ? "text-[#7C3AED] dark:text-[#A78BFA]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
-                💼 Gombos
+                Les Vibes
               </button>
               
               <button 
                 onClick={() => setView("academie")}
                 className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "academie" ? "text-orange-500" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "academie" ? "text-[#7C3AED]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
-                Académie
-                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-orange-600 bg-orange-50 px-1 rounded-md">Prévu</span>
+                La Base
+                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Bientôt</span>
               </button>
 
               <button 
                 onClick={() => setView("groupe")}
                 className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "groupe" ? "text-orange-500" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "groupe" ? "text-[#7C3AED]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 Coin des Groupes
-                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-orange-600 bg-orange-50 px-1 rounded-md">Prévu</span>
+                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Bientôt</span>
               </button>
 
               <button 
                 onClick={() => setView("marche")}
                 className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "marche" ? "text-orange-500" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "marche" ? "text-[#7C3AED]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 Marché du Coin
-                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-orange-600 bg-orange-50 px-1 rounded-md">Prévu</span>
+                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Bientôt</span>
               </button>
 
               <button 
                 onClick={() => setView("certification")}
                 className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "certification" ? "text-orange-500" : "text-gray-500 hover:text-gray-400 dark:hover:text-white"
+                  view === "certification" ? "text-[#7C3AED]" : "text-gray-500 hover:text-gray-400 dark:hover:text-white"
                 }`}
               >
-                Certification
-                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-orange-600 bg-orange-50 px-1 rounded-md">Prévu</span>
+                Talent Certifié
+                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Niveau Boss</span>
               </button>
             </div>
 
@@ -615,17 +615,17 @@ export default function App() {
                       onClick={() => handleProtectedAction("dashboard")}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-bold ${
                         view === "dashboard"
-                          ? "bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-950/20 dark:border-orange-900"
+                          ? "bg-purple-50 border-purple-200 text-[#7C3AED] dark:text-[#A78BFA] dark:bg-purple-950/20 dark:border-purple-900"
                           : "bg-white dark:bg-[#1a1a1c] border-gray-150 dark:border-gray-800 hover:bg-gray-50 text-gray-700 dark:text-gray-300"
                       }`}
                     >
                       <LayoutDashboard className="w-4 h-4" />
-                      Dashboard
+                      Mes Plans
                     </button>
 
                     <button
                       onClick={() => handleProtectedAction("profile_edit")}
-                      className="w-8.5 h-8.5 rounded-xl overflow-hidden bg-gray-100 hover:ring-2 hover:ring-orange-500 transition-all"
+                      className="w-8.5 h-8.5 rounded-xl overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[#7C3AED] transition-all"
                     >
                       <img 
                         src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
@@ -677,46 +677,46 @@ export default function App() {
                 onClick={() => { setView("home"); setMobileMenuOpen(false); }}
                 className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850"
               >
-                Accueil
+                Le Terrain
               </button>
 
               <button 
                 onClick={() => { setView("gombo_list"); setMobileMenuOpen(false); }}
                 className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850"
               >
-                💼 Gombos / Offres
+                Les Vibes
               </button>
               
               <button 
                 onClick={() => { setView("academie"); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 text-left text-gray-600 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
+                className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
               >
-                <span>Académie</span>
-                <span className="text-[9px] font-black text-orange-650 bg-orange-50 px-1 rounded-sm">Bientôt</span>
+                <span>La Base</span>
+                <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">Bientôt</span>
               </button>
 
               <button 
                 onClick={() => { setView("groupe"); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 text-left text-gray-600 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
+                className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
               >
                 <span>Coin des Groupes</span>
-                <span className="text-[9px] font-black text-orange-650 bg-orange-50 px-1 rounded-sm">Bientôt</span>
+                <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">Bientôt</span>
               </button>
 
               <button 
                 onClick={() => { setView("marche"); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 text-left text-gray-600 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
+                className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
               >
                 <span>Marché du Coin</span>
-                <span className="text-[9px] font-black text-orange-650 bg-orange-50 px-1 rounded-sm">Bientôt</span>
+                <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">Bientôt</span>
               </button>
 
               <button 
                 onClick={() => { setView("certification"); setMobileMenuOpen(false); }}
                 className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 flex justify-between items-center"
               >
-                <span>Certification Pro</span>
-                <span className="text-[9px] font-black text-orange-650 bg-orange-50 px-1 rounded-sm">Bientôt</span>
+                <span>Talent Certifié</span>
+                <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm">Niveau Boss</span>
               </button>
 
               {/* Dynamic user options inside mobile menu */}
@@ -725,15 +725,15 @@ export default function App() {
                   <div className="pt-4 border-t border-gray-100 dark:border-gray-850 space-y-2">
                     <button
                       onClick={() => handleProtectedAction("dashboard")}
-                      className="w-full py-2.5 text-left text-orange-600 hover:text-orange-700 font-bold flex items-center gap-1.5"
+                      className="w-full py-2.5 text-left text-[#7C3AED] hover:text-[#6D28D9] font-bold flex items-center gap-1.5"
                     >
-                      <LayoutDashboard className="w-4.5 h-4.5" /> Dashboard Personnel
+                      <LayoutDashboard className="w-4.5 h-4.5" /> Mes Plans
                     </button>
                     <button
                       onClick={() => handleProtectedAction("profile_edit")}
-                      className="w-full py-2.5 text-left text-gray-600 dark:text-gray-300 font-bold flex items-center gap-1.5"
+                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 font-bold flex items-center gap-1.5"
                     >
-                      <User className="w-4.5 h-4.5" /> Mon Profil Gombo
+                      <User className="w-4.5 h-4.5" /> Mon Coin
                     </button>
                     <button
                       onClick={handleLogout}
@@ -1562,63 +1562,64 @@ export default function App() {
       </AnimatePresence>
 
       {/* --- MOBILE BOTTOM NAVIGATION BAR (Y’A GOMBO MUSIC REQUIRED) --- */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-md border-t border-gray-150 dark:border-gray-800/80 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-5px_20px_rgba(0,0,0,0.3)] flex items-center justify-around h-16 pb-safe px-2 transition-colors">
-        {/* Item 1: Accueil */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md border-t border-gray-150 dark:border-gray-800/80 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-5px_20px_rgba(0,0,0,0.3)] flex items-center justify-around h-16 pb-safe px-2 transition-colors">
+        {/* Item 1: Le Terrain */}
         <button
           onClick={() => setView("home")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "home" ? "text-[#FF7A00] font-black" : "text-gray-400 dark:text-gray-500"
+            view === "home" ? "text-[#7C3AED] font-black" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           <Flame className="w-5 h-5 fill-current" />
-          <span className="text-[9px] font-bold tracking-tight mt-1">Accueil</span>
+          <span className="text-[9px] font-bold tracking-tight mt-1">Le Terrain</span>
         </button>
 
-        {/* Item 2: Gombos Offers */}
+        {/* Item 2: Les Vibes */}
         <button
           onClick={() => setView("gombo_list")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "gombo_list" ? "text-[#FF7A00] font-black" : "text-gray-400 dark:text-gray-500"
+            view === "gombo_list" ? "text-[#7C3AED] font-black" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           <Search className="w-5 h-5" />
-          <span className="text-[9px] font-bold tracking-tight mt-1">Gombos</span>
+          <span className="text-[9px] font-bold tracking-tight mt-1">Les Vibes</span>
         </button>
 
-        {/* Item 3: Publier Selector (Big Floating Orange Circle) */}
+        {/* Item 3: Lancer Gombo Selector (Big Floating Orange Circle) */}
         <div className="relative -mt-6">
           <button
             onClick={() => handleProtectedAction("publish")}
-            className="w-13 h-13 bg-[#FF7A00] hover:bg-[#E06C00] text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform border-4 border-white dark:border-[#0F0F0F]"
+            className="w-13 h-13 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform border-4 border-white dark:border-[#0F172A]"
+            title="Lancer Gombo"
           >
             <Plus className="w-6 h-6 stroke-[3px]" />
           </button>
         </div>
 
-        {/* Item 4: Academie (locked) */}
+        {/* Item 4: La Base (locked) */}
         <button
           onClick={() => setView("academie")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "academie" ? "text-[#FF7A00] font-black" : "text-gray-400 dark:text-gray-500"
+            view === "academie" ? "text-[#7C3AED] font-black" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           <BookOpen className="w-5 h-5" />
-          <span className="text-[9px] font-bold tracking-tight mt-1">Académie</span>
+          <span className="text-[9px] font-bold tracking-tight mt-1">La Base</span>
         </button>
 
-        {/* Item 5: Dashboard / Profile context */}
+        {/* Item 5: Mes Plans / profile context */}
         <button
           onClick={() => handleProtectedAction("dashboard")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "dashboard" ? "text-[#FF7A00] font-black" : "text-gray-400 dark:text-gray-500"
+            view === "dashboard" ? "text-[#7C3AED] font-black" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           {profile?.avatarUrl ? (
-            <img src={profile.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover border border-[#FF7A00]" />
+            <img src={profile.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover border border-[#7C3AED]" />
           ) : (
             <User className="w-5 h-5" />
           )}
-          <span className="text-[9px] font-bold tracking-tight mt-1">Tableau</span>
+          <span className="text-[9px] font-bold tracking-tight mt-1">Mes Plans</span>
         </button>
       </div>
 

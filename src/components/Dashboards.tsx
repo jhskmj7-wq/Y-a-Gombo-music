@@ -298,7 +298,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
               onClick={() => setActiveTab("gombos")}
               className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
                 activeTab === "gombos"
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                  ? "border-[#7C3AED] text-[#7C3AED] dark:text-[#A78BFA]"
                   : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
@@ -306,9 +306,9 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
             </button>
             <button
               onClick={() => setActiveTab("applications")}
-              className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
+              className={`px-5 py-3 text-sm font-bold border-[#7C3AED] transition-colors shrink-0 ${
                 activeTab === "applications"
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                  ? "border-b-2 text-[#7C3AED] dark:text-[#A78BFA]"
                   : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
@@ -318,7 +318,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
               onClick={() => setActiveTab("reservations")}
               className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
                 activeTab === "reservations"
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                  ? "border-[#7C3AED] text-[#7C3AED] dark:text-[#A78BFA]"
                   : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
@@ -333,21 +333,21 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
               onClick={() => setActiveTab("applications")}
               className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
                 activeTab === "applications"
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                  ? "border-[#7C3AED] text-[#7C3AED] dark:text-[#A78BFA]"
                   : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
-              Candidatures Envoyées ({myApplications.length})
+              Plans Envoyés ({myApplications.length})
             </button>
             <button
               onClick={() => setActiveTab("reservations")}
               className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
                 activeTab === "reservations"
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                  ? "border-[#7C3AED] text-[#7C3AED] dark:text-[#A78BFA]"
                   : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
-              Gombos Obtenus ({myReservations.length})
+              Les Cachets d'Abidjan ({myReservations.length})
             </button>
           </>
         )}

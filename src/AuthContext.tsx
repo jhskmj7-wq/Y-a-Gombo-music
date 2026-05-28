@@ -85,6 +85,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
               console.log("⚠️ [AuthContext] Profile does not exist in Firestore. Let's create one...");
               const nameParts = firebaseUser.displayName ? firebaseUser.displayName.split(" ") : ["", ""];
+              const primaryProvider = firebaseUser.providerData && firebaseUser.providerData[0] 
+                ? firebaseUser.providerData[0].providerId 
+                : "email";
               uProfile = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email || "",
@@ -95,6 +98,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 role: "musicien", // Default starting role
                 avatarUrl: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
                 photoURL: firebaseUser.photoURL || "",
+                displayName: firebaseUser.displayName || `${nameParts[0]} ${nameParts.slice(1).join(" ")}`.trim() || "Artiste Gombo",
+                provider: primaryProvider,
                 isProfileComplete: false,
                 balance: 25000,
                 totalRevenue: 25000,

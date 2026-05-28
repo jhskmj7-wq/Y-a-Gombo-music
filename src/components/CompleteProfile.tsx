@@ -115,14 +115,14 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
         className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 md:p-8 shadow-xl"
       >
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3 bg-orange-50 dark:bg-orange-950/20 text-[#FF7A00] rounded-2xl mb-4">
+          <div className="inline-flex items-center justify-center p-3 bg-purple-50 dark:bg-purple-950/20 text-[#7C3AED] rounded-2xl mb-4">
             <Sparkles className="w-8 h-8 fill-current animate-pulse" />
           </div>
           <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white uppercase">
-            COMPLÉTER MON PROFIL
+            COMPLÉTER MON COIN
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-md mx-auto leading-relaxed">
-            Bienvenue sur la plateforme showbiz de Côte d'Ivoire ! Renseignez vos infos pour débloquer votre solde, vos réservations et vos gombos.
+            Bienvenue sur la plateforme showbiz officielle de Côte d'Ivoire ! Renseignez vos infos pour débloquer votre solde, vos cachets et vos gombos de scène.
           </p>
         </div>
 
@@ -150,7 +150,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   onClick={() => setRole(roleOpt.id as UserRole)}
                   className={`p-4 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center gap-2 ${
                     role === roleOpt.id
-                      ? "border-[#FF7A00] bg-orange-50/10 text-[#FF7A00] dark:border-[#FF7A00]"
+                      ? "border-[#7C3AED] bg-purple-50/10 text-[#7C3AED] dark:border-[#7C3AED]"
                       : "border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 text-gray-500 dark:text-gray-400"
                   }`}
                 >
@@ -167,7 +167,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
               2. CHOISIR VOTRE PHOTO DE PROFIL CHIC
             </label>
             <div className="flex flex-wrap gap-4 items-center justify-center md:justify-start">
-              <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-orange-500 shadow-inner">
+              <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[#7C3AED] shadow-inner">
                 <img src={avatarUrl} alt="Preview" className="w-full h-full object-cover" />
               </div>
               <div className="flex flex-wrap gap-2">
@@ -177,7 +177,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     type="button"
                     onClick={() => setAvatarUrl(url)}
                     className={`relative w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
-                      avatarUrl === url ? "border-[#FF7A00] scale-105 shadow-md" : "border-transparent"
+                      avatarUrl === url ? "border-[#7C3AED] scale-105 shadow-md" : "border-transparent"
                     }`}
                   >
                     <img src={url} alt={`Avatar ${index}`} className="w-full h-full object-cover" />
@@ -207,7 +207,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   placeholder="e.g. Didier"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#121214] dark:text-white"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#7C3AED] focus:bg-white dark:focus:bg-[#121214] dark:text-white"
                 />
               </div>
 
@@ -219,7 +219,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   placeholder="e.g. Drogba"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#121214] dark:text-white"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#7C3AED] focus:bg-white dark:focus:bg-[#121214] dark:text-white"
                 />
               </div>
 
@@ -230,7 +230,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   placeholder="Laisser vide si non applicable"
                   value={artistName}
                   onChange={(e) => setArtistName(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#121214] dark:text-white"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#7C3AED] focus:bg-white dark:focus:bg-[#121214] dark:text-white"
                 />
               </div>
 
@@ -246,7 +246,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     placeholder="e.g. 0745891200"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#121214] dark:text-white"
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#7C3AED] focus:bg-white dark:focus:bg-[#121214] dark:text-white"
                   />
                 </div>
               </div>
@@ -260,7 +260,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <select
                     value={commune}
                     onChange={(e) => setCommune(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#121214] dark:text-white"
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#7C3AED] focus:bg-white dark:focus:bg-[#121214] dark:text-white"
                   >
                     {ABIDJAN_COMMUNES.map((com) => (
                       <option key={com} value={com}>{com}</option>
@@ -295,7 +295,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <select
                     value={speciality}
                     onChange={(e) => setSpeciality(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-805 rounded-xl text-sm focus:outline-none focus:ring-[#FF7A00]"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-805 rounded-xl text-sm focus:outline-none focus:ring-[#7C3AED] focus:bg-white dark:focus:bg-[#121214] dark:text-white"
                   >
                     {SPECIALTIES.map((spec) => (
                       <option key={spec} value={spec}>{spec}</option>
@@ -308,7 +308,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <select
                     value={musicGenre}
                     onChange={(e) => setMusicGenre(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-805 rounded-xl text-sm focus:outline-none focus:ring-[#FF7A00]"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-805 rounded-xl text-sm focus:outline-none focus:ring-[#7C3AED] focus:bg-white dark:focus:bg-[#121214] dark:text-white"
                   >
                     {GENRES.map((g) => (
                       <option key={g} value={g}>{g}</option>
@@ -321,7 +321,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <select
                     value={experienceYears}
                     onChange={(e) => setExperienceYears(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-805 rounded-xl text-sm focus:outline-none focus:ring-[#FF7A00]"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-805 rounded-xl text-sm focus:outline-none focus:ring-[#7C3AED] focus:bg-white dark:focus:bg-[#121214] dark:text-white"
                   >
                     {EXPERIENCES.map((exp) => (
                       <option key={exp} value={exp}>{exp}</option>
@@ -338,7 +338,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
               <label className="block text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 5. coordonnées MOBILE MONEY POUR VOS GOMBOS
               </label>
-              <span className="text-[10px] font-bold bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded-md uppercase">Sécurisé</span>
+              <span className="text-[10px] font-bold bg-purple-100 dark:bg-purple-950/40 text-[#7C3AED] dark:text-[#A78BFA] px-1.5 py-0.5 rounded-md uppercase">Sécurisé</span>
             </div>
             <p className="text-xs text-gray-450 dark:text-gray-500">
               Ces numéros restent strictement confidentiels et ne seront affichés au recruteur qu'une fois votre prestation validée par un contrat.
@@ -354,12 +354,12 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   placeholder="e.g. 0745891200"
                   value={waveNumber}
                   onChange={(e) => setWaveNumber(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#7C3AED] focus:bg-white dark:focus:bg-[#121214] dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-650 dark:text-gray-400 mb-1 flex items-center gap-1.5">
+                <label className="block text-xs font-bold text-gray-655 dark:text-gray-400 mb-1 flex items-center gap-1.5">
                   🍊 Numéro ORANGE MONEY
                 </label>
                 <input
@@ -367,7 +367,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   placeholder="e.g. 0545891200"
                   value={orangeMoneyNumber}
                   onChange={(e) => setOrangeMoneyNumber(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#7C3AED] focus:bg-white dark:focus:bg-[#121214] dark:text-white"
                 />
               </div>
             </div>
@@ -377,7 +377,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
             <button
               type="submit"
               disabled={loading}
-              className="w-full md:w-auto px-10 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold rounded-2xl shadow-xl transition-all active:scale-98 flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
+              className="w-full md:w-auto px-10 py-3.5 bg-gradient-to-r from-[#7C3AED] to-indigo-600 hover:from-[#6D28D9] hover:to-indigo-700 text-white font-extrabold rounded-2xl shadow-xl transition-all active:scale-98 flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

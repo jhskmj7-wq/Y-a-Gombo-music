@@ -35,6 +35,8 @@ export interface UserProfile {
   avatarUrl?: string; // profile picture (we support bot avatarUrl and photoURL for compatibility)
   photoURL?: string; 
   isVerified?: boolean;
+  displayName?: string;
+  provider?: string;
   createdAt: string; // ISO String
 }
 

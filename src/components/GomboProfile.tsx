@@ -506,12 +506,12 @@ export default function GomboProfile({
             <span className="text-[10px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-widest block">⚡ ACTIONS RAPIDES</span>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
-                { label: "Modifier Profil", icon: User, action: () => setPanelView("edit"), color: "hover:border-[#FF7A00] hover:text-[#FF7A00]" },
-                { label: "Mes Candidatures", icon: FileText, action: () => onNavigateView("dashboard"), color: "hover:border-blue-500 hover:text-blue-500" },
-                { label: "Mes Réservations", icon: Calendar, action: () => onNavigateView("dashboard"), color: "hover:border-emerald-500 hover:text-emerald-500" },
-                { label: "Mes Gombos", icon: Award, action: () => onNavigateView("dashboard"), color: "hover:border-purple-500 hover:text-purple-500" },
-                { label: "Paramètres", icon: Settings, action: () => setPanelView("settings"), color: "hover:border-orange-500 hover:text-orange-500" },
-                { label: "Support", icon: HelpCircle, action: () => setPanelView("support"), color: "hover:border-teal-500 hover:text-teal-500" }
+                { label: "Modifier Mon Coin", icon: User, action: () => setPanelView("edit"), color: "hover:border-[#7C3AED] hover:text-[#7C3AED]" },
+                { label: "Mes Plans", icon: FileText, action: () => onNavigateView("dashboard"), color: "hover:border-purple-500 hover:text-purple-500" },
+                { label: "Les Cachets", icon: Calendar, action: () => onNavigateView("dashboard"), color: "hover:border-emerald-500 hover:text-emerald-500" },
+                { label: "Le Terrain", icon: Award, action: () => onNavigateView("dashboard"), color: "hover:border-[#7C3AED] hover:text-[#7C3AED]" },
+                { label: "Réglages", icon: Settings, action: () => setPanelView("settings"), color: "hover:border-[#7C3AED] hover:text-[#7C3AED]" },
+                { label: "On est là", icon: HelpCircle, action: () => setPanelView("support"), color: "hover:border-teal-500 hover:text-teal-500" }
               ].map((act, index) => {
                 const IconComp = act.icon;
                 return (

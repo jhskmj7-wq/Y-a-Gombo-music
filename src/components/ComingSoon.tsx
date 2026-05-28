@@ -10,19 +10,19 @@ interface ComingSoonProps {
 
 const FEATURE_INFOS = {
   academie: {
-    title: "L'Académie Y’A GOMBO MUSIC",
+    title: "La Base - Formations",
     badge: "Formations & Masterclass",
     description: "Améliorez vos compétences de scène, apprenez la gestion des contrats artistiques, le solfège moderne et bénéficiez de conseils de légendes de la musique ivoirienne.",
     incentive: "Déjà plus de 150 artistes inscrits sur la liste d'attente d'Abidjan !",
-    color: "from-orange-500 to-amber-600",
-    bgPattern: "bg-grid-orange"
+    color: "from-[#7C3AED] to-indigo-600",
+    bgPattern: "bg-grid-purple"
   },
   groupe: {
     title: "Le Coin des Groupes",
     badge: "Orchestration & Band Matching",
     description: "Créez votre orchestre, trouvez un batteur ou claviériste régulier pour vos répétitions, ou proposez les services complets de votre groupe d'animation woyo ou rumba.",
     incentive: "Idéal pour recruter un groupe complet pour les maquis chics et mariages.",
-    color: "from-purple-500 to-indigo-600",
+    color: "from-[#7C3AED] to-indigo-600",
     bgPattern: "bg-grid-purple"
   },
   marche: {
@@ -34,12 +34,12 @@ const FEATURE_INFOS = {
     bgPattern: "bg-grid-teal"
   },
   certification: {
-    title: "Certification Musicien Pro",
+    title: "Talent Certifié - Niveau Boss",
     badge: "Badge de Vérification Gombo",
     description: "Obtenez le badge vert 'Certifié Gombo Pro'. Notre équipe d'experts showbiz auditionne vos vidéos de scène pour rassurer instantanément les clients fortunés du milieu.",
     incentive: "Les artistes certifiés reçoivent en moyenne 3 fois plus de propositions !",
-    color: "from-blue-500 to-indigo-600",
-    bgPattern: "bg-grid-blue"
+    color: "from-[#7C3AED] to-indigo-600",
+    bgPattern: "bg-grid-purple"
   }
 };
 
@@ -149,7 +149,7 @@ export default function ComingSoon({ featureId, onBack }: ComingSoonProps) {
             <button
               onClick={handleNotifyMe}
               disabled={loading}
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
+              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#7C3AED] to-indigo-600 hover:from-[#6D28D9] hover:to-indigo-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
