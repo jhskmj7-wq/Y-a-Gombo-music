@@ -130,103 +130,29 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       const code = err.code || "auth/unknown";
       setActiveErrorCode(code);
       setShowTroubleshoot(true);
-      
-      // Simple bypass backup triggered automatically for iframe popup restrictions
-      setErrorMSG("Connexion Google bloquée par le navigateur. Activation du bypass automatique...");
-      setTimeout(() => {
-        handleGoogleExpressBypass();
-      }, 1000);
+      setErrorMSG("Échec de la connexion Google réelle : " + (err.message || "Erreur de connexion"));
     } finally {
       setLoading(false);
     }
   };
 
-  // Facebook Sign-In Mock / Integration Method
+  // Facebook Sign-In Method
   const handleFacebookLogin = async () => {
     setErrorMSG("");
     setLoading(true);
+    setShowTroubleshoot(false);
+    setActiveErrorCode("");
     try {
-      // Simulate OAuth pop-up success or use express bypass with Facebook Identity
-      const emailChoice = "marly_son@facebook.ci";
-      const LOCAL_USERS_KEY = "gombo_users";
-      const LOCAL_AUTH_KEY = "gombo_auth";
-      
-      const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
-      let userObj = users.find((u: any) => u.email === emailChoice);
-      if (!userObj) {
-        userObj = {
-          uid: "fb_sim_" + Math.random().toString(36).substring(2, 9),
-          email: emailChoice,
-          firstName: "Star",
-          lastName: "Facebook",
-          commune: commune,
-          phone: phone || "+225 05 11 22 33 44",
-          role: role,
-          avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
-          balance: 25000,
-          totalRevenue: 25000,
-          totalWithdrawals: 0,
-          gigsCompleted: 0,
-          applicationsSent: 0,
-          acceptanceRate: 100,
-          isProfileComplete: true,
-          createdAt: new Date().toISOString()
-        };
-        users.push(userObj);
-        localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+      const res = await gomboAuth.loginWithFacebook();
+      if (res && res.uid) {
+        await handlePostAuthSuccess(res.uid, res.email || "");
       }
-      
-      localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify({ uid: userObj.uid, email: userObj.email, emailVerified: true }));
-      window.dispatchEvent(new Event("gomboAuthChange"));
-      
-      await handlePostAuthSuccess(userObj.uid, userObj.email);
-    } catch (err) {
-      setErrorMSG("Échec de l'auto-connexion Facebook Express.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Google Express simulation bypass
-  const handleGoogleExpressBypass = async () => {
-    setErrorMSG("");
-    setLoading(true);
-    try {
-      const emailChoice = "marly_son@gmail.com";
-      const LOCAL_USERS_KEY = "gombo_users";
-      const LOCAL_AUTH_KEY = "gombo_auth";
-      
-      const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
-      let userObj = users.find((u: any) => u.email === emailChoice);
-      if (!userObj) {
-        userObj = {
-          uid: "goog_sim_marly",
-          email: emailChoice,
-          firstName: "Marly",
-          lastName: "Express",
-          commune: commune,
-          phone: phone || "+225 07 45 89 12 00",
-          role: role,
-          avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-          balance: 25000,
-          totalRevenue: 25000,
-          totalWithdrawals: 0,
-          gigsCompleted: 0,
-          applicationsSent: 0,
-          acceptanceRate: 100,
-          isProfileComplete: true,
-          createdAt: new Date().toISOString()
-        };
-        users.push(userObj);
-        localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
-      }
-      
-      localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify({ uid: userObj.uid, email: userObj.email, emailVerified: true }));
-      window.dispatchEvent(new Event("gomboAuthChange"));
-      
-      await handlePostAuthSuccess(userObj.uid, userObj.email);
-    } catch (err) {
-      setErrorMSG("Échec de l'auto-connexion Google Express.");
+    } catch (err: any) {
+      console.error("Facebook Auth error details:", err);
+      const code = err.code || "auth/unknown";
+      setActiveErrorCode(code);
+      setShowTroubleshoot(true);
+      setErrorMSG("Échec de la connexion Facebook réelle : " + (err.message || "Erreur de connexion"));
     } finally {
       setLoading(false);
     }

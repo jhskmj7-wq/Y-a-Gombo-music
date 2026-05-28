@@ -223,6 +223,11 @@ export default function App() {
     setProfile(authProfile);
     setAuthReady(!authLoading);
 
+    // Close the auth screen/modal when user is successfully authenticated
+    if (currentUser) {
+      setShowAuthModal(false);
+    }
+
     // OBLIGATORY REDIRECTION BEHAVIOR for incomplete profiles
     if (currentUser && authProfile && !authProfile.isProfileComplete && view !== "complete_profile") {
       console.log("⚠️ [App Debug] Profile is incomplete! Redirecting to complete_profile");
