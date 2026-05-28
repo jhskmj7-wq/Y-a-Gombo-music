@@ -139,6 +139,7 @@ export default function App() {
   // Real-time notifications state
   const [notifications, setNotifications] = useState<GomboNotification[]>([]);
   const [showNotifTray, setShowNotifTray] = useState(false);
+  const [groupNotifications, setGroupNotifications] = useState(false);
   const [activeToast, setActiveToast] = useState<{ id: string; title: string; message: string } | null>(null);
 
   // Real-time notification listener
@@ -481,11 +482,88 @@ export default function App() {
                           )}
                         </div>
 
-                        <div className="max-h-72 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-850">
+                        {/* Selector Segmented Control for Grouping Format */}
+                        <div className="px-4 py-2 bg-gray-50/70 dark:bg-gray-900/40 border-b border-gray-100 dark:border-gray-850 flex items-center justify-between text-[11px]">
+                          <span className="text-gray-500 dark:text-gray-400 font-bold">Thème d'affichage</span>
+                          <button
+                            type="button"
+                            onClick={() => setGroupNotifications(!groupNotifications)}
+                            className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all select-none ${
+                              groupNotifications 
+                                ? "bg-orange-500 text-white shadow-sm"
+                                : "bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                            }`}
+                          >
+                            {groupNotifications ? "🗂️ Groupé" : "🕘 Chrono"}
+                          </button>
+                        </div>
+
+                        <div className="max-h-80 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-850">
                           {notifications.length === 0 ? (
                             <div className="p-6 text-center text-xs text-gray-400 dark:text-gray-500">
                               Aucune notification pour le moment.
                             </div>
+                          ) : groupNotifications ? (
+                            (() => {
+                              // Group notifications by type
+                              const groups: Record<string, { label: string; items: GomboNotification[] }> = {
+                                application_accepted: { label: "🎉 Candidatures acceptées", items: [] },
+                                booking: { label: "📅 Demandes de Booking", items: [] },
+                                general: { label: "🔔 Informations Générales", items: [] }
+                              };
+                              notifications.forEach(n => {
+                                if (groups[n.type]) {
+                                  groups[n.type].items.push(n);
+                                } else {
+                                  groups.general.items.push(n);
+                                }
+                              });
+                              const activeGroups = Object.entries(groups).filter(([_, group]) => group.items.length > 0);
+                              return (
+                                <div className="divide-y divide-gray-100 dark:divide-gray-800/60 pb-1">
+                                  {activeGroups.map(([key, group]) => (
+                                    <div key={key} className="p-1">
+                                      <div className="px-3 py-1.5 text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest bg-orange-500/5 rounded-lg mb-1 flex justify-between items-center">
+                                        <span>{group.label}</span>
+                                        <span className="bg-orange-500/10 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded-full text-[9px]">
+                                          {group.items.length}
+                                        </span>
+                                      </div>
+                                      <div className="space-y-1">
+                                        {group.items.map((notif) => (
+                                          <div
+                                            key={notif.id}
+                                            onClick={async () => {
+                                              if (!notif.read) {
+                                                await gomboDB.markNotificationAsRead(notif.id);
+                                              }
+                                              setShowNotifTray(false);
+                                              setView("dashboard");
+                                            }}
+                                            className={`p-3 hover:bg-gray-50/50 dark:hover:bg-gray-850/60 transition-all cursor-pointer text-left rounded-xl ${
+                                              !notif.read ? "bg-orange-500/5 dark:bg-orange-950/15 border-l-2 border-orange-500" : ""
+                                            }`}
+                                          >
+                                            <span className="text-xs font-bold text-gray-900 dark:text-white block">
+                                              {notif.title}
+                                            </span>
+                                            <span className="text-[10.5px] text-gray-500 dark:text-gray-400 mt-0.5 block leading-relaxed">
+                                              {notif.message}
+                                            </span>
+                                            <span className="text-[8.5px] text-gray-400 dark:text-gray-500 mt-1 block">
+                                              {new Date(notif.createdAt).toLocaleDateString("fr-FR", {
+                                                hour: "2-digit",
+                                                minute: "2-digit"
+                                              })}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()
                           ) : (
                             notifications.map((notif) => (
                               <div
@@ -1455,6 +1533,7 @@ export default function App() {
                   refreshProfile();
                   // Re-evaluate or load homepage (automatically handled by the active real-time snapshot listeners)
                 }}
+                onClose={() => setShowAuthModal(false)}
               />
             </div>
           </div>

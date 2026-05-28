@@ -15,8 +15,22 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [currentUser, setCurrentUser] = useState<any | null>(() => {
+    try {
+      const saved = localStorage.getItem("gombo_auth");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem("gombo_active_profile");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   const refreshProfile = async () => {
@@ -26,6 +40,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const uProfile = await gomboDB.getUserProfile(currentUser.uid);
         console.log("🔍 [AuthContext] Firestore response for user profile:", uProfile);
         setProfile(uProfile);
+        if (uProfile) {
+          localStorage.setItem("gombo_active_profile", JSON.stringify(uProfile));
+        }
       } catch (err) {
         console.error("❌ [AuthContext] Error retrieving user profile:", err);
       }
@@ -47,6 +64,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (firebaseUser) {
+        localStorage.setItem("gombo_auth", JSON.stringify({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          emailVerified: firebaseUser.emailVerified
+        }));
         setLoading(true);
         try {
           console.log("🔍 [AuthContext] Checking if profile exists in Firestore for uid:", firebaseUser.uid);
@@ -91,11 +113,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log("⚡ [AuthContext Real-time Sync] Profile updated live:", updatedProfile);
             if (updatedProfile) {
               setProfile(updatedProfile);
+              localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile));
               setLoading(false);
             } else if (uProfile) {
               // Fallback to local representation if Firestore is still propagating
               console.log("🕒 [AuthContext Real-time Sync] Profile document is temporarily unavailable. Using initial user data...");
               setProfile(uProfile);
+              localStorage.setItem("gombo_active_profile", JSON.stringify(uProfile));
               setLoading(false);
             } else {
               setProfile(null);
@@ -109,6 +133,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         setProfile(null);
+        localStorage.removeItem("gombo_auth");
+        localStorage.removeItem("gombo_active_profile");
         setLoading(false);
       }
     });

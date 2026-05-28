@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword, 
   signOut as firebaseSignOut, 
   signInWithPopup, 
+  signInWithRedirect,
   GoogleAuthProvider, 
   FacebookAuthProvider,
   GithubAuthProvider,
@@ -453,28 +454,38 @@ export const gomboAuth = {
 
   async loginWithGoogle() {
     if (!isFirebaseMock && auth) {
-      const res = await signInWithPopup(auth, GOOGLE_PROVIDER);
-      // Create user profile if not exists
       try {
-        const uDoc = await getDoc(doc(db, "users", res.user.uid));
-        if (!uDoc.exists()) {
-          const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Showbiz"];
-          const userProfile: UserProfile = {
-            uid: res.user.uid,
-            email: res.user.email || "",
-            firstName: names[0],
-            lastName: names.slice(1).join(" ") || "Ivoirien",
-            phone: "+225 00 00 00 00",
-            commune: "Cocody",
-            role: "musicien", // default
-            createdAt: new Date().toISOString()
-          };
-          await setDoc(doc(db, "users", res.user.uid), userProfile);
+        const res = await signInWithPopup(auth, GOOGLE_PROVIDER);
+        // Create user profile if not exists
+        try {
+          const uDoc = await getDoc(doc(db, "users", res.user.uid));
+          if (!uDoc.exists()) {
+            const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Showbiz"];
+            const userProfile: UserProfile = {
+              uid: res.user.uid,
+              email: res.user.email || "",
+              firstName: names[0],
+              lastName: names.slice(1).join(" ") || "Ivoirien",
+              phone: "+225 00 00 00 00",
+              commune: "Cocody",
+              role: "musicien", // default
+              createdAt: new Date().toISOString()
+            };
+            await setDoc(doc(db, "users", res.user.uid), userProfile);
+          }
+        } catch (err) {
+          handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
         }
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
+        return { uid: res.user.uid, email: res.user.email };
+      } catch (e: any) {
+        console.error("Popup failed, trying redirect auth...", e);
+        try {
+          await signInWithRedirect(auth, GOOGLE_PROVIDER);
+        } catch (redirErr) {
+          console.error("Redirect auth also failed", redirErr);
+        }
+        throw e;
       }
-      return { uid: res.user.uid, email: res.user.email };
     } else {
       // Mock Google Login
       const mockGoogleEmails = ["star_mali@gombo.ci", "ivoire_dj@gombo.ci", "spectateur@gmail.com"];
