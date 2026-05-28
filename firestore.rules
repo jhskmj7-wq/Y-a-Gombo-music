@@ -1,0 +1,238 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net: Default-deny all requests
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- REUSABLE SECURITY & IDENTITY PRIMITIVES ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Role lookups using get() on user profile
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        getUserRole() == 'admin';
+    }
+
+    // --- STRUCTURAL VALIDATORS (ANTI-UPDATE-GAP SPECS) ---
+    
+    // Strict schema & identity checks for user profiles
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.role in ['client', 'musicien', 'admin'] &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('id' in data) || (data.id is string && data.id.size() <= 128)) &&
+             (!('name' in data) || (data.name is string && data.name.size() <= 200)) &&
+             (!('firstName' in data) || (data.firstName is string && data.firstName.size() <= 100)) &&
+             (!('lastName' in data) || (data.lastName is string && data.lastName.size() <= 100)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 2083)) &&
+             (!('avatarUrl' in data) || (data.avatarUrl is string && data.avatarUrl.size() <= 2083)) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 2000)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 51)) &&
+             (!('commune' in data) || (data.commune is string && data.commune.size() <= 100)) &&
+             (!('orangeMoneyNumber' in data) || (data.orangeMoneyNumber is string && data.orangeMoneyNumber.size() <= 51)) &&
+             (!('moovMoneyNumber' in data) || (data.moovMoneyNumber is string && data.moovMoneyNumber.size() <= 51)) &&
+             (!('waveNumber' in data) || (data.waveNumber is string && data.waveNumber.size() <= 51)) &&
+             (!('paymentMethods' in data) || (data.paymentMethods is list && data.paymentMethods.size() <= 10)) &&
+             (!('experience' in data) || (data.experience is string && data.experience.size() <= 100)) &&
+             (!('specialty' in data) || (data.specialty is string && data.specialty.size() <= 100)) &&
+             (!('isVerified' in data) || (data.isVerified is bool));
+    }
+
+    // Validate a Show Gombo Prestation
+    function isValidGombo(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.status in ['open', 'closed', 'publie', 'reserve', 'termine'] &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (data.createdBy == request.auth.uid || data.clientId == request.auth.uid) &&
+             (!('clientName' in data) || (data.clientName is string && data.clientName.size() <= 200)) &&
+             (!('type' in data) || (data.type is string && data.type.size() <= 100)) &&
+             (!('eventType' in data) || (data.eventType is string && data.eventType.size() <= 50)) &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 300)) &&
+             (!('commune' in data) || (data.commune is string && data.commune.size() <= 100)) &&
+             (!('date' in data) || (data.date is string && data.date.size() <= 20)) &&
+             (!('time' in data) || (data.time is string && data.time.size() <= 20)) &&
+             (!('budget' in data) || (data.budget is int && data.budget >= 0)) &&
+             (!('mediaURL' in data) || (data.mediaURL is string && data.mediaURL.size() <= 2083)) &&
+             (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 2083)) &&
+             (!('applicationsCount' in data) || (data.applicationsCount is int && data.applicationsCount >= 0)) &&
+             (!('musiciansCount' in data) || (data.musiciansCount is int && data.musiciansCount >= 0)) &&
+             (!('urgent' in data) || (data.urgent is bool));
+    }
+
+    // Validate an application Candidacy
+    function isValidApplication(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.gomboId is string && data.gomboId.size() <= 128 &&
+             (data.userId == request.auth.uid || data.musicianId == request.auth.uid) &&
+             data.message is string && data.message.size() <= 2000 &&
+             data.status in ['pending', 'accepted', 'rejected', 'en_attente', 'accepte', 'rejete'] &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('gomboTitle' in data) || (data.gomboTitle is string && data.gomboTitle.size() <= 200)) &&
+             (!('musicianName' in data) || (data.musicianName is string && data.musicianName.size() <= 200)) &&
+             (!('musicianSpecialty' in data) || (data.musicianSpecialty is string && data.musicianSpecialty.size() <= 100)) &&
+             (!('musicianPhone' in data) || (data.musicianPhone is string && data.musicianPhone.size() <= 51)) &&
+             (!('musicianAvatar' in data) || (data.musicianAvatar is string && data.musicianAvatar.size() <= 2083)) &&
+             (!('mediaURL' in data) || (data.mediaURL is string && data.mediaURL.size() <= 2083)) &&
+             (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 2083));
+    }
+
+    // Validate a notification document
+    function isValidNotification(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.type is string && data.type.size() <= 100 &&
+             data.message is string && data.message.size() <= 1000 &&
+             data.isRead is bool &&
+             data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    // Validate waiting feature analytics collections
+    function isValidWaitingFeature(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.featureName is string && data.featureName.size() <= 100 &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (data.uid == request.auth.uid || data.userId == request.auth.uid) &&
+             (!('userEmail' in data) || (data.userEmail is string && data.userEmail.size() <= 200)) &&
+             (!('name' in data) || (data.name is string && data.name.size() <= 100)) &&
+             (!('status' in data) || (data.status == 'locked')) &&
+             (!('message' in data) || (data.message is string && data.message.size() <= 1000));
+    }
+
+    // Validate secure administrator trace logs
+    function isValidAdminLog(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.action is string && data.action.size() <= 100 &&
+             data.targetId is string && data.targetId.size() <= 128 &&
+             data.performedBy == request.auth.uid &&
+             data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    // Validate reservations
+    function isValidReservation(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.gomboId is string && data.gomboId.size() <= 128 &&
+             data.clientId is string && data.clientId.size() <= 128 &&
+             data.musicianId is string && data.musicianId.size() <= 128 &&
+             data.amount is int && data.amount >= 0 &&
+             data.status in ['confirme', 'complete', 'annule'] &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('gomboTitle' in data) || (data.gomboTitle is string && data.gomboTitle.size() <= 200)) &&
+             (!('musicianName' in data) || (data.musicianName is string && data.musicianName.size() <= 200)) &&
+             (!('musicianPhone' in data) || (data.musicianPhone is string && data.musicianPhone.size() <= 51));
+    }
+
+
+    // --- 1. USERS COLLECTION RULES ---
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(userId) && 
+        isValidUser(request.resource.data) &&
+        request.resource.data.role != 'admin'; // Prevent self-promoting to admin at signup
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin()) &&
+        isValidUser(request.resource.data) &&
+        // Block standard users from promoting themselves to system roles
+        (isOwner(userId) ? (request.resource.data.role == resource.data.role) : true);
+      allow delete: if isAdmin();
+    }
+
+    // --- 2. GOMBOS COLLECTION RULES ---
+    match /gombos/{gomboId} {
+      allow read: if true;
+      allow create: if isSignedIn() && 
+        isValidGombo(request.resource.data) &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)); // Global Consistency: check creator user profile exists
+      allow update: if isSignedIn() && (
+        ( (resource.data.createdBy == request.auth.uid || resource.data.clientId == request.auth.uid) && 
+          resource.data.status != 'termine' && 
+          resource.data.status != 'closed' &&
+          isValidGombo(request.resource.data) ) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin() || (isSignedIn() && (resource.data.createdBy == request.auth.uid || resource.data.clientId == request.auth.uid));
+    }
+
+    // --- 3. APPLICATIONS COLLECTION RULES ---
+    match /applications/{applicationId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.musicianId == request.auth.uid ||
+        get(/databases/$(database)/documents/gombos/$(resource.data.gomboId)).data.createdBy == request.auth.uid ||
+        get(/databases/$(database)/documents/gombos/$(resource.data.gomboId)).data.clientId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && 
+        isValidApplication(request.resource.data) &&
+        exists(/databases/$(database)/documents/gombos/$(request.resource.data.gomboId)); // Global Consistency: Check linked gombo exists
+      allow update: if isSignedIn() && (
+        ( (resource.data.userId == request.auth.uid || resource.data.musicianId == request.auth.uid) && isValidApplication(request.resource.data) ) ||
+        ( (get(/databases/$(database)/documents/gombos/$(resource.data.gomboId)).data.createdBy == request.auth.uid || 
+           get(/databases/$(database)/documents/gombos/$(resource.data.gomboId)).data.clientId == request.auth.uid) && 
+          request.resource.data.status in ['accepted', 'rejected', 'en_attente', 'accepte', 'rejete'] ) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.musicianId == request.auth.uid));
+    }
+
+    // --- 4. NOTIFICATIONS COLLECTION RULES ---
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidNotification(request.resource.data);
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin()) &&
+        request.resource.data.isRead is bool;
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // --- 5. WAITING FEATURES COLLECTION RULES ---
+    match /waiting_features/{waitingId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && isValidWaitingFeature(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    // --- 6. ADMIN LOGS COLLECTION RULES ---
+    match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // --- 7. RESERVATIONS COLLECTION RULES ---
+    match /reservations/{reservationId} {
+      allow read: if isSignedIn() && (
+        resource.data.clientId == request.auth.uid ||
+        resource.data.musicianId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && 
+        isValidReservation(request.resource.data) &&
+        ( get(/databases/$(database)/documents/gombos/$(request.resource.data.gomboId)).data.clientId == request.auth.uid ||
+          get(/databases/$(database)/documents/gombos/$(request.resource.data.gomboId)).data.createdBy == request.auth.uid ||
+          isAdmin() );
+      allow update: if isSignedIn() && (
+        ( (resource.data.clientId == request.auth.uid || resource.data.musicianId == request.auth.uid) && isValidReservation(request.resource.data) ) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+  }
+}

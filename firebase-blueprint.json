@@ -1,0 +1,172 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Information about musicians and clients for Y’A GOMBO MUSIC",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique user ID from Firebase Auth (alternate key)" },
+        "uid": { "type": "string", "description": "The unique user ID from Firebase Auth" },
+        "name": { "type": "string", "description": "Full name of the user" },
+        "firstName": { "type": "string", "description": "User first name" },
+        "lastName": { "type": "string", "description": "User last name" },
+        "email": { "type": "string", "description": "User email address" },
+        "role": { "type": "string", "enum": ["client", "musicien", "admin"], "description": "User role" },
+        "photoURL": { "type": "string", "description": "Optional profile photo URL" },
+        "avatarUrl": { "type": "string", "description": "Optional profile photo URL alias" },
+        "bio": { "type": "string", "description": "Optional user biography" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "commune": { "type": "string", "description": "Location / Commune in Abidjan" },
+        "orangeMoneyNumber": { "type": "string", "description": "Orange Money wallet number" },
+        "moovMoneyNumber": { "type": "string", "description": "Moov Money wallet number" },
+        "waveNumber": { "type": "string", "description": "Wave Mobile Money wallet number" },
+        "paymentMethods": { "type": "array", "description": "List of active payment methods" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp" },
+        "isVerified": { "type": "boolean", "description": "Admin verification status" }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    },
+    "Gombo": {
+      "title": "Gombo Prestation",
+      "description": "Showbiz Gig postings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Gombo identifier" },
+        "clientId": { "type": "string", "description": "UID of the client who posted (compatibility alias)" },
+        "clientName": { "type": "string", "description": "Name of the client who posted" },
+        "title": { "type": "string", "description": "Prestation title" },
+        "description": { "type": "string", "description": "Event description and requirements" },
+        "type": { "type": "string", "enum": ["musique", "prestation", "événement", "Mariage", "Concert", "Anniversaire", "Bar/Resto", "Privé/Soirée", "Autre"], "description": "Prestation type" },
+        "eventType": { "type": "string", "description": "Prestation type alias for backward compatibility" },
+        "location": { "type": "string", "description": "Physical venue" },
+        "commune": { "type": "string", "description": "Location / Commune in Abidjan" },
+        "date": { "type": "string", "format": "date", "description": "Date of the event" },
+        "time": { "type": "string", "description": "Time of the event" },
+        "budget": { "type": "integer", "description": "Salary/budget in FCFA (CFA francs)" },
+        "createdBy": { "type": "string", "description": "UID of the creator (user ID)" },
+        "mediaURL": { "type": "string", "description": "Reference media or poster URL" },
+        "mediaUrl": { "type": "string", "description": "Reference media URL alias" },
+        "status": { "type": "string", "enum": ["open", "closed", "publie", "reserve", "termine"], "description": "Gombo status state" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "applicationsCount": { "type": "integer", "description": "Count of candidacies received" },
+        "musiciansCount": { "type": "integer", "description": "Number of musicians needed" },
+        "urgent": { "type": "boolean", "description": "Is this an urgent gig" }
+      },
+      "required": ["id", "title", "description", "createdBy", "status", "createdAt"]
+    },
+    "Application": {
+      "title": "Gombo Application",
+      "description": "Candidacies submitted for Gombos",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Application identifier" },
+        "gomboId": { "type": "string", "description": "ID of the associated Gombo" },
+        "gomboTitle": { "type": "string", "description": "Title of the associated Gombo" },
+        "userId": { "type": "string", "description": "UID of the applicant musician" },
+        "musicianId": { "type": "string", "description": "UID of the applicant musician alias" },
+        "musicianName": { "type": "string", "description": "Full name of the musician" },
+        "musicianSpecialty": { "type": "string", "description": "Musician specialty" },
+        "musicianPhone": { "type": "string", "description": "Musician phone number" },
+        "musicianAvatar": { "type": "string", "description": "Musician avatar link" },
+        "message": { "type": "string", "description": "Application message or pitch" },
+        "mediaURL": { "type": "string", "description": "Optional audition audio or video link" },
+        "mediaUrl": { "type": "string", "description": "Optional audition link alias" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "en_attente", "accepte", "rejete"], "description": "Candidacy status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Application date" }
+      },
+      "required": ["id", "gomboId", "userId", "message", "status", "createdAt"]
+    },
+    "Notification": {
+      "title": "User Notification",
+      "description": "Alerts or notifications for platform updates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Notification identifier" },
+        "userId": { "type": "string", "description": "Recipient User ID" },
+        "type": { "type": "string", "description": "Type of event triggering this alert" },
+        "message": { "type": "string", "description": "Content description of notification in French" },
+        "isRead": { "type": "boolean", "description": "Has user seen it yet" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Date notification was issued" }
+      },
+      "required": ["id", "userId", "type", "message", "isRead", "createdAt"]
+    },
+    "Reservation": {
+      "title": "Booking Reservation",
+      "description": "A successful match and reservation of a gombo by a client with a musician",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Reservation identifier" },
+        "gomboId": { "type": "string", "description": "ID of the related gombo" },
+        "gomboTitle": { "type": "string", "description": "Title of the related gombo" },
+        "clientId": { "type": "string", "description": "UID of the client" },
+        "musicianId": { "type": "string", "description": "UID of the booked musician" },
+        "musicianName": { "type": "string", "description": "Name of the booked musician" },
+        "musicianPhone": { "type": "string", "description": "Phone number of the musician for Mobile Money / arrangements" },
+        "amount": { "type": "integer", "description": "Price or gig budget agreed in FCFA" },
+        "status": { "type": "string", "enum": ["confirme", "complete", "annule"], "description": "Reservation status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Booking timestamp" }
+      },
+      "required": ["id", "gomboId", "clientId", "musicianId", "amount", "status", "createdAt"]
+    },
+    "WaitingFeature": {
+      "title": "Waiting Feature Signup",
+      "description": "Records user interest in coming soon premium sections",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique record id" },
+        "uid": { "type": "string", "description": "UID of interested user (alternate key)" },
+        "userId": { "type": "string", "description": "UID of interested user (standard key)" },
+        "name": { "type": "string", "description": "Name of feature interest group" },
+        "userEmail": { "type": "string", "description": "Email of user" },
+        "featureName": { "type": "string", "description": "Name of the coming-soon feature (e.g. academie, groupe, marche, certification)" },
+        "status": { "type": "string", "enum": ["locked"], "description": "Status of interest" },
+        "message": { "type": "string", "description": "Message description / notes" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of interest collection" }
+      },
+      "required": ["id", "createdAt"]
+    },
+    "AdminLog": {
+      "title": "Admin Activity Log",
+      "description": "Traceability logs recording admin updates and moderation actions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Log entry identifier" },
+        "action": { "type": "string", "description": "Descriptive action label (e.g. DELETE_USER, RESTRICT_GOMBO, UPDATE_STATUS)" },
+        "targetId": { "type": "string", "description": "Document ID that was processed" },
+        "performedBy": { "type": "string", "description": "UID of the administrator performing the moderator action" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Event occurrence timestamp" }
+      },
+      "required": ["id", "action", "targetId", "performedBy", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles for musicians and clients"
+    },
+    "/gombos/{gomboId}": {
+      "schema": "Gombo",
+      "description": "Showbiz Gig postings (gombos)"
+    },
+    "/applications/{applicationId}": {
+      "schema": "Application",
+      "description": "Musician applications to gombos"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Instant messaging alerts and transaction states"
+    },
+    "/reservations/{reservationId}": {
+      "schema": "Reservation",
+      "description": "Confirmed music bookings and transactions"
+    },
+    "/waiting_features/{waitingId}": {
+      "schema": "WaitingFeature",
+      "description": "Analytics for locked features early demand"
+    },
+    "/admin_logs/{logId}": {
+      "schema": "AdminLog",
+      "description": "Traceability record logs for administrative and oversight actions"
+    }
+  }
+}
