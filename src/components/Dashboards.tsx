@@ -459,7 +459,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
             </div>
           )}
 
-          {/* 2. CANDIDATURES (MUSICIAN OR CLIENT) */}
+           {/* 2. CANDIDATURES (MUSICIAN OR CLIENT) */}
           {activeTab === "applications" && (
             <div className="space-y-4">
               
@@ -477,31 +477,50 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
                         <div className="flex justify-between items-start gap-4 mb-2">
                           <div>
                             <h4 className="font-extrabold text-[#111] dark:text-white text-base">{app.gomboTitle}</h4>
-                            <p className="text-[10px] text-gray-400 uppercase mt-0.5">Candidature postée le {new Date(app.createdAt).toLocaleDateString()}</p>
+                            <p className="text-[10px] text-gray-400 uppercase mt-0.5 font-medium tracking-wide">Candidature postée le {new Date(app.createdAt).toLocaleDateString("fr-FR")}</p>
                           </div>
                           <span className={`text-xs font-bold px-3 py-1 rounded-full ${
                             app.status === "en_attente" 
                               ? "bg-amber-50 text-amber-600 dark:bg-amber-950/20" 
                               : app.status === "accepte" 
-                              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" 
-                              : "bg-red-50 text-red-600 dark:bg-red-950/20"
+                              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20" 
+                              : "bg-red-50 text-red-650 dark:bg-red-950/20"
                           }`}>
                             {app.status === "en_attente" ? "En attente" : app.status === "accepte" ? "Sélectionné ✅" : "Non retenu ❌"}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap leading-relaxed mt-2 p-3 bg-gray-50 dark:bg-gray-800/30 rounded-xl">
+                        <p className="text-xs text-gray-650 dark:text-gray-300 whitespace-pre-wrap leading-relaxed mt-2 p-3 bg-gray-55/60 dark:bg-gray-800/30 rounded-xl border border-gray-100 dark:border-gray-800">
                           💬 Message : "{app.message}"
                         </p>
-                        {app.mediaUrl && (
-                          <div className="mt-2 text-xs text-orange-600 dark:text-orange-400 font-medium">
-                            🎥 Démo scène : <a href={app.mediaUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-orange-700">{app.mediaUrl}</a>
-                          </div>
-                        )}
+
+                        {/* Audio & Video rendering */}
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {(app.audioUrl || app.mediaUrl) && (
+                            <a 
+                              href={app.audioUrl || app.mediaUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="px-3 py-1 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 text-[11px] text-purple-700 dark:text-purple-300 font-bold rounded-lg border border-purple-100/25 transition-all flex items-center gap-1"
+                            >
+                              🎵 Écouter Démo Audio
+                            </a>
+                          )}
+                          {app.videoUrl && (
+                            <a 
+                              href={app.videoUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="px-3 py-1 bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/40 text-[11px] text-orange-700 dark:text-orange-300 font-bold rounded-lg border border-orange-100/25 transition-all flex items-center gap-1"
+                            >
+                              🎥 Voir Vidéo de Scène
+                            </a>
+                          )}
+                        </div>
                         
                         {app.status === "accepte" && (
-                          <div className="mt-4 p-4.5 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900 text-xs text-emerald-800 dark:text-emerald-400 space-y-2">
+                          <div className="mt-4 p-4 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-2xl border border-emerald-100/40 dark:border-emerald-900/35 text-xs text-emerald-800 dark:text-emerald-400 space-y-2">
                             <p className="font-bold flex items-center gap-1.5"><Sparkles className="w-4 h-4 fill-current text-emerald-600" /> Félicitations ! Votre profil a été validé pour ce gombo.</p>
-                            <p>Le client va vous joindre par téléphone ou transférer l'avance Mobile Money de réservation.</p>
+                            <p>Le client va vous joindre par téléphone ou vous envoyer directement l'avance convenue par Wave ou Mobile Money.</p>
                           </div>
                         )}
                       </div>
@@ -519,76 +538,127 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {receivedApplications.map((app) => (
-                      <div key={app.id} className="bg-white dark:bg-[#1e1e24] p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
-                        <div className="flex justify-between items-start gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                              <img src={app.musicianAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150"} alt="" className="w-full h-full object-cover" />
+                    {receivedApplications.map((app) => {
+                      // Formatting WhatsApp link directly
+                      const waPhone = app.whatsapp || app.musicianPhone || "";
+                      const cleanDigits = waPhone.replace(/\D/g, "");
+                      let normalizedPhone = cleanDigits;
+                      if (normalizedPhone.startsWith("0") && normalizedPhone.length === 10) {
+                        normalizedPhone = "225" + normalizedPhone;
+                      } else if (normalizedPhone.length === 10 && !normalizedPhone.startsWith("225")) {
+                        normalizedPhone = "225" + normalizedPhone;
+                      } else if (normalizedPhone.length === 10 && normalizedPhone.startsWith("225")) {
+                        // Already includes 225
+                      } else if (normalizedPhone.length === 8) {
+                        normalizedPhone = "225" + normalizedPhone;
+                      }
+                      
+                      const prefilledText = `Bonjour ${app.musicianName}, j'ai reçu votre superbe candidature sur Y'A GOMBO MUSIC pour le plan "${app.gomboTitle}". Votre démo musicale m'intéresse !`;
+                      const waLink = `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(prefilledText)}`;
+
+                      return (
+                        <div key={app.id} className="bg-white dark:bg-[#1e1e24] p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0 border border-purple-100 dark:border-purple-900/30">
+                                <img src={app.musicianAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150"} alt="" className="w-full h-full object-cover" />
+                              </div>
+                              <div>
+                                <h4 className="font-extrabold text-gray-950 dark:text-white text-base leading-snug">
+                                  {app.musicianName}
+                                </h4>
+                                <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
+                                  {app.musicianSpecialty} • {app.gomboTitle}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-extrabold text-gray-950 dark:text-white text-base leading-snug">
-                                {app.musicianName}
-                              </h4>
-                              <p className="text-xs text-orange-600 dark:text-orange-400 font-semibold">
-                                {app.musicianSpecialty} • {app.gomboTitle}
-                              </p>
-                            </div>
+                            
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                              app.status === "en_attente" 
+                                ? "bg-amber-50 text-amber-600 dark:bg-amber-950/20" 
+                                : app.status === "accepte" 
+                                ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" 
+                                : "bg-red-50 text-red-600 dark:bg-red-950/20"
+                            }`}>
+                              {app.status === "en_attente" ? "En suspens" : app.status === "accepte" ? "Réservé" : "Décliné"}
+                            </span>
                           </div>
-                          
-                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                            app.status === "en_attente" 
-                              ? "bg-amber-50 text-amber-600" 
-                              : app.status === "accepte" 
-                              ? "bg-emerald-50 text-emerald-600" 
-                              : "bg-red-50 text-red-600"
-                          }`}>
-                            {app.status === "en_attente" ? "En suspens" : app.status === "accepte" ? "Réservé" : "Décliné"}
-                          </span>
+
+                          {/* Message/motivation presentation */}
+                          <div className="mt-3 p-3 bg-gray-55/40 dark:bg-gray-800/20 rounded-xl text-xs text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-800">
+                            <p className="font-semibold text-gray-400 dark:text-gray-500 mb-1 uppercase tracking-wider text-[10px]">Présentation de l'artiste :</p>
+                            <blockquote className="italic">"{app.message}"</blockquote>
+                          </div>
+
+                          {/* Demos and Audio / Video rendering */}
+                          <div className="mt-3 flex flex-wrap gap-2.5 items-center">
+                            {(app.audioUrl || app.mediaUrl) && (
+                              <a 
+                                href={app.audioUrl || app.mediaUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="px-3 py-1 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 text-[11px] text-purple-700 dark:text-purple-300 font-bold rounded-lg border border-purple-100/25 transition-all flex items-center gap-1"
+                              >
+                                🎵 Écouter la démo audio
+                              </a>
+                            )}
+                            {app.videoUrl && (
+                              <a 
+                                href={app.videoUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-[11px] text-indigo-700 dark:text-indigo-300 font-bold rounded-lg border border-indigo-100/25 transition-all flex items-center gap-1"
+                              >
+                                🎥 Regarder la vidéo scène
+                              </a>
+                            )}
+                          </div>
+
+                          {/* Action CTA Buttons */}
+                          <div className="flex flex-wrap gap-2 justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                            
+                            {/* Always available WhatsApp direct Chat MVP block */}
+                            {waPhone && (
+                              <a
+                                href={waLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-650 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition-all hover:scale-102"
+                              >
+                                <Phone className="w-3.5 h-3.5 fill-current" /> Discuter sur WhatsApp
+                              </a>
+                            )}
+
+                            {app.status === "en_attente" && (
+                              <>
+                                <button
+                                  onClick={() => handleRejectCandidacy(app)}
+                                  className="px-4 py-2 text-xs font-bold text-gray-500 hover:text-red-500 transition-colors"
+                                >
+                                  Décliner
+                                </button>
+                                <button
+                                  onClick={() => handleAcceptCandidacy(app)}
+                                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs"
+                                >
+                                  <UserCheck className="w-3.5 h-3.5" /> Réserver cet artiste
+                                </button>
+                              </>
+                            )}
+                          </div>
+
+                          {app.status === "accepte" && (
+                            <div className="mt-3.5 pt-3 border-t border-gray-100 dark:border-gray-800 text-xs">
+                              <span className="font-bold text-gray-500 block uppercase mb-1.5">COORDONNÉES ET CONTACTS RETENUS :</span>
+                              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/10 rounded-xl space-y-1 text-emerald-800 dark:text-emerald-400 border border-emerald-100/30">
+                                <p>📞 Phone de prise de contact : <strong className="underline text-gray-900 dark:text-white">{app.musicianPhone}</strong></p>
+                                <p>💬 Utilisez le bouton "Discuter" pour lui envoyer un message, l'appeler pour finaliser les morceaux, ou lui déposer l'avance de blocage sur son Wave/OM.</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
-
-                        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800/20 rounded-xl text-xs text-gray-700 dark:text-gray-300">
-                          <p className="font-semibold text-gray-400 mb-1 uppercase tracking-wider text-[10px]">Présentation de l'artiste :</p>
-                          <blockquote className="italic">"{app.message}"</blockquote>
-                        </div>
-
-                        {app.mediaUrl && (
-                          <div className="mt-3 text-xs flex items-center gap-1.5">
-                            <span className="text-gray-400">🔗 Démo Scène / Enregistrement:</span>
-                            <a href={app.mediaUrl} target="_blank" rel="noopener noreferrer" className="text-orange-600 dark:text-orange-400 font-bold hover:underline">
-                              Cliquez ici pour regarder ↗
-                            </a>
-                          </div>
-                        )}
-
-                        {app.status === "en_attente" && (
-                          <div className="flex gap-3 justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
-                            <button
-                              onClick={() => handleRejectCandidacy(app)}
-                              className="px-4 py-2 text-xs font-bold text-gray-500 hover:text-red-500 transition-colors"
-                            >
-                              Décliner
-                            </button>
-                            <button
-                              onClick={() => handleAcceptCandidacy(app)}
-                              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs"
-                            >
-                              <UserCheck className="w-3.5 h-3.5" /> Réserver cet artiste
-                            </button>
-                          </div>
-                        )}
-
-                        {app.status === "accepte" && (
-                          <div className="mt-3.5 pt-3 border-t border-gray-100 dark:border-gray-800 text-xs">
-                            <span className="font-bold text-gray-500 block uppercase mb-1.5">COORDONNÉES ET MOBILE MONEY RÉVÉLÉS :</span>
-                            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl space-y-1 text-emerald-800 dark:text-emerald-400">
-                              <p>📞 Phone de prise de contact : <strong className="underline text-gray-900 dark:text-white">{app.musicianPhone}</strong></p>
-                              <p>💬 Utilisez ce numéro pour l'appeler pour caler les morceaux / les horaires de balance, ou lui envoyer directement l'avance convenue par Wave ou Orange Money.</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )
               )}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { Check, Send, AlignLeft, Video, X } from "lucide-react";
+import { Check, Send, AlignLeft, Video, X, Music, Phone } from "lucide-react";
 import { gomboDB } from "../firebase";
 import { Gombo, UserProfile } from "../types";
 
@@ -13,7 +13,9 @@ interface GomboApplyProps {
 
 export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCancel }: GomboApplyProps) {
   const [message, setMessage] = useState("");
-  const [mediaUrl, setMediaUrl] = useState("");
+  const [whatsapp, setWhatsapp] = useState(currentUserProfile.phone || "");
+  const [audioUrl, setAudioUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMSG, setErrorMSG] = useState("");
 
@@ -22,27 +24,54 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
     setErrorMSG("");
     setLoading(true);
 
-    if (!message) {
-      setErrorMSG("Veuillez rédiger un court message d'introduction !");
+    if (!message.trim()) {
+      setErrorMSG("Veuillez rédiger un court message de motivation (Pitch) !");
+      setLoading(false);
+      return;
+    }
+
+    if (!whatsapp.trim()) {
+      setErrorMSG("Veuillez renseigner votre numéro WhatsApp de contact direct !");
       setLoading(false);
       return;
     }
 
     try {
-      await gomboDB.applyToGombo({
+      // Apply real-time gombo application through database layer
+      const applicantName = `${currentUserProfile.firstName} ${currentUserProfile.lastName}`;
+      const app = await gomboDB.applyToGombo({
         gomboId: gombo.id,
         gomboTitle: gombo.title,
         musicianId: currentUserProfile.uid,
-        musicianName: `${currentUserProfile.firstName} ${currentUserProfile.lastName}`,
+        userId: currentUserProfile.uid,
+        musicianName: applicantName,
         musicianSpecialty: currentUserProfile.specialty || "Musicien polyvalent",
-        musicianPhone: currentUserProfile.phone || "Non renseigné",
+        musicianPhone: whatsapp.trim(),
         musicianAvatar: currentUserProfile.avatarUrl,
-        message,
-        mediaUrl
+        message: message.trim(),
+        mediaUrl: videoUrl.trim() || audioUrl.trim() || "",
+        
+        applicantId: currentUserProfile.uid,
+        applicantName: applicantName,
+        applicantPhoto: currentUserProfile.avatarUrl,
+        whatsapp: whatsapp.trim(),
+        audioUrl: audioUrl.trim(),
+        videoUrl: videoUrl.trim()
       });
+
+      // Send a high-fidelity real-time notification to the gombo creator client
+      if (gombo.clientId) {
+        await gomboDB.sendNotification({
+          userId: gombo.clientId,
+          type: "general",
+          title: "Nouvelle candidature ! 🔥",
+          message: `${applicantName} a postulé à votre gombo "${gombo.title}" ! Visitez votre dashboard pour étudier sa démo.`
+        });
+      }
+
       onSuccess();
     } catch (err: any) {
-      console.error(err);
+      console.error("Candidature Submission Error:", err);
       setErrorMSG("Échec de la soumission de votre candidature. Veuillez réessayer.");
     } finally {
       setLoading(false);
@@ -66,8 +95,8 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
         </button>
 
         <div className="mb-5 pr-8">
-          <span className="text-[10px] font-bold tracking-wider text-orange-600 bg-orange-50 dark:bg-orange-950/40 dark:text-orange-400 px-2.5 py-1 rounded-full uppercase">
-            Candidature rapide
+          <span className="text-[10px] font-bold tracking-wider text-purple-600 bg-purple-50 dark:bg-purple-950/40 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
+            Candidature Gombo
           </span>
           <h3 className="mt-2 text-xl font-extrabold text-gray-950 dark:text-white leading-tight">
             Postuler à : {gombo.title}
@@ -85,52 +114,87 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
 
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          {/* Pitch Message */}
+          {/* Motivation Message */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Votre message d'intérêt (Pitch)</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Message de motivation (Pitch)</label>
             <div className="relative">
               <span className="absolute top-3 left-3 text-gray-450">
                 <AlignLeft className="w-4 h-4" />
               </span>
               <textarea
-                rows={4}
+                rows={3}
                 required
-                placeholder="Présentez-vous brièvement : vos morceaux phares, vos disponibilités, pourquoi vous êtes la personne idéale pour Y’A GOMBO MUSIC..."
+                maxLength={1000}
+                placeholder="Présentez-vous : pourquoi vous êtes chaud pour ce gombo, votre rigueur, votre matériel de scène..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
               />
             </div>
           </div>
 
-          {/* Media Link (Optional) */}
+          {/* WhatsApp Field */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Lien Vidéo / Audio de scène (Optionnel)</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Numéro WhatsApp de contact</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
-                <Video className="w-4 h-4" />
+                <Phone className="w-4 h-4" />
               </span>
               <input
-                type="url"
-                placeholder="e.g. YouTube, SoundCloud ou Google Drive de vos démos"
-                value={mediaUrl}
-                onChange={(e) => setMediaUrl(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+                type="text"
+                required
+                placeholder="Ex: 07 45 89 12 00"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
               />
             </div>
-            <p className="mt-1 text-[10px] text-gray-400 leading-normal">
-              Partagez une vidéo en live pour rassurer le client sur votre présence scénique et votre justesse musicale.
-            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Audio demo link */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Lien Audio démo (Optionnel)</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-450">
+                  <Music className="w-3.5 h-3.5" />
+                </span>
+                <input
+                  type="url"
+                  placeholder="e.g. SoundCloud, Drive..."
+                  value={audioUrl}
+                  onChange={(e) => setAudioUrl(e.target.value)}
+                  className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+                />
+              </div>
+            </div>
+
+            {/* Video performance link */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Lien Vidéo scène (Optionnel)</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-450">
+                  <Video className="w-3.5 h-3.5" />
+                </span>
+                <input
+                  type="url"
+                  placeholder="e.g. YouTube, TikTok, Drive..."
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Dynamic Profile Summary preview */}
-          <div className="bg-gray-55/40 dark:bg-gray-800/20 p-3.5 rounded-2xl border border-gray-100 dark:border-gray-800 text-xs">
-            <span className="font-bold text-gray-500 block uppercase mb-1">Résumé de vos coordonnées attachées :</span>
+          <div className="bg-purple-50/30 dark:bg-purple-950/10 p-3.5 rounded-2xl border border-purple-100/50 dark:border-purple-900/20 text-xs">
+            <span className="font-bold text-purple-700 dark:text-purple-400 block uppercase mb-1">Coordonnées de l'artiste :</span>
             <div className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-300">
               <p>🎛️ Spécialité : <strong className="text-gray-900 dark:text-white">{currentUserProfile.specialty || "Musicien"}</strong></p>
-              <p>🏅 Expérience : <strong className="text-gray-900 dark:text-white">{currentUserProfile.experience || "Pro"}</strong></p>
-              <p>📞 Téléphone : <strong className="text-gray-900 dark:text-white">{currentUserProfile.phone || "Non renseigné"}</strong></p>
-              <p>📍 Commune : <strong className="text-gray-900 dark:text-white">{currentUserProfile.commune}</strong></p>
+              <p>🏅 Expérience : <strong className="text-gray-900 dark:text-white">{currentUserProfile.experienceYears ? `${currentUserProfile.experienceYears} ans` : (currentUserProfile.experience || "Pro")}</strong></p>
+              <p>📍 Commune : <strong className="text-gray-900 dark:text-white">{currentUserProfile.commune || "Abidjan"}</strong></p>
+              <p>📅 Membre depuis : <strong className="text-gray-900 dark:text-white">{currentUserProfile.createdAt ? new Date(currentUserProfile.createdAt).toLocaleDateString("fr-FR") : "Récemment"}</strong></p>
             </div>
           </div>
 
@@ -139,14 +203,14 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
             <button
               type="button"
               onClick={onCancel}
-              className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl transition-all text-sm"
+              className="px-5 py-2.5 bg-gray-105 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl transition-all text-sm"
             >
               Fermer
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-98 flex items-center gap-1.5 text-sm"
+              className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-98 flex items-center gap-1.5 text-sm"
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

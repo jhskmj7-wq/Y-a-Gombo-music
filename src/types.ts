@@ -75,6 +75,15 @@ export interface Application {
   mediaUrl?: string; // YouTube, Soundcloud or Drive link
   status: ApplicationStatus;
   createdAt: string; // ISO String
+  
+  // Custom applicant fields for Gombo matching flow
+  applicantId?: string;
+  applicantName?: string;
+  applicantPhoto?: string;
+  whatsapp?: string;
+  audioUrl?: string;
+  videoUrl?: string;
+  userId?: string; // matches security rules
 }
 
 export type ReservationStatus = "confirme" | "complete" | "annule";
