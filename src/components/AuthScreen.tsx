@@ -52,7 +52,7 @@ const getFriendlyErrorMessage = (error: any): string => {
     return "Ce numéro est déjà utilisé.";
   }
   if (code === "auth/unauthorized-domain" || msg.includes("unauthorized-domain") || msg.includes("unauthorized_client") || msg.includes("auth/unauthorized_client")) {
-    return "Domaine non autorisé : Ce domaine d'aperçu d'AI Studio n'est pas encore enregistré dans l'onglet 'Domaines autorisés' de votre console Firebase Auth. Vous pouvez utiliser le formulaire classique d'inscription par mail/téléphone ci-dessous, ou cliquer ci-dessous pour utiliser l'Accès Test Démo.";
+    return "Domaine non autorisé : Ce domaine d'aperçu d'AI Studio n'est pas configuré dans votre Console Firebase. Suivez les étapes ci-dessous pour l'autoriser.";
   }
   if (code === "auth/invalid-credential" || code === "auth/wrong-password" || msg.includes("wrong-password") || msg.includes("invalid-credential") || msg.includes("invalid-password")) {
     return "Identifiants incorrects. Veuillez vérifier votre adresse email et votre mot de passe.";
@@ -452,53 +452,26 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="p-3 mb-4 bg-red-950/30 border border-red-500/30 rounded-xl text-red-200 text-xs font-semibold leading-relaxed"
+              className="p-4 mb-4 bg-red-950/40 border border-red-500/30 rounded-xl text-red-100 text-xs font-medium leading-relaxed"
             >
-              <div className="flex flex-col gap-2.5">
-                <p>{errorMSG}</p>
+              <div className="flex flex-col gap-3">
+                <p className="font-semibold text-red-200">{errorMSG}</p>
                 {(errorMSG.includes("Domaine non autorisé") || errorMSG.includes("unauthorized-domain") || errorMSG.includes("unauthorized_client")) && (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setErrorMSG("");
-                      setLoading(true);
-                      try {
-                        const mockGoogleEmails = ["star_mali@gombo.ci", "ivoire_dj@gombo.ci", "spectateur@gmail.com"];
-                        const randomEmail = mockGoogleEmails[Math.floor(Math.random() * mockGoogleEmails.length)];
-                        const randomId = "test_sso_" + Math.random().toString(36).substring(2, 9);
-                        const users = JSON.parse(localStorage.getItem("gombo_users") || "[]");
-                        let matched = users.find((u: any) => u.email === randomEmail);
-                        if (!matched) {
-                          matched = {
-                            uid: randomId,
-                            email: randomEmail,
-                            firstName: "Artiste",
-                            lastName: "Démo",
-                            displayName: "Gombo Démo",
-                            provider: "google.com",
-                            commune: "Cocody",
-                            phone: "+225 07 00 11 22 33",
-                            role: "musicien",
-                            isProfileComplete: true,
-                            createdAt: new Date().toISOString()
-                          };
-                          users.push(matched);
-                          localStorage.setItem("gombo_users", JSON.stringify(users));
-                        }
-                        const authData = { uid: matched.uid, email: matched.email, emailVerified: true };
-                        localStorage.setItem("gombo_auth", JSON.stringify(authData));
-                        window.dispatchEvent(new Event("gomboAuthChange"));
-                        await handlePostAuthSuccess(matched.uid, matched.email);
-                      } catch (demoErr: any) {
-                        setErrorMSG("Échec du bypass démo : " + demoErr.message);
-                      } finally {
-                        setLoading(false);
-                      }
-                    }}
-                    className="mt-1 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black uppercase text-[10px] tracking-wider rounded-lg transition-all shadow-md active:scale-95 text-center cursor-pointer"
-                  >
-                    ⚡ ACTIVER L'ACCÈS TEST DÉMO (MOCK-SSO BYPASS)
-                  </button>
+                  <div className="mt-1 p-2.5 rounded-lg bg-slate-950/70 border border-red-500/20 text-slate-300 font-sans space-y-2">
+                    <p className="font-bold text-red-400 text-[10px] uppercase tracking-wider">🛠️ CONFIGURATION REQUISE POUR LE MODE RÉEL :</p>
+                    <p className="text-[11px] leading-relaxed">
+                      Pour utiliser la connexion sécurisée Google ou Facebook sur l'environnement de build AI Studio, veuillez autoriser ces domaines d'aperçu dans votre projet Firebase :
+                    </p>
+                    <div className="font-mono text-[9.5px] bg-slate-900/90 p-2 rounded border border-gray-800 select-all text-orange-400 space-y-1">
+                      <div>ais-dev-ft4dcfebiheopao5youqan-162624868358.europe-west3.run.app</div>
+                      <div>ais-pre-ft4dcfebiheopao5youqan-162624868358.europe-west3.run.app</div>
+                    </div>
+                    <ol className="list-decimal pl-4.5 space-y-1 text-[11px] text-slate-400">
+                      <li>Ouvrez votre <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="underline text-[#D4A373] hover:text-white font-bold">Console Firebase</a>.</li>
+                      <li>Allez dans <span className="text-white font-bold">Authentication</span> &gt; onglet <span className="text-white font-bold">Paramètres</span> &gt; <span className="text-white font-bold">Domaines autorisés</span>.</li>
+                      <li>Cliquez sur <span className="text-[#D4A373] font-bold">"Ajouter un domaine"</span> et saisissez les adresses ci-dessus.</li>
+                    </ol>
+                  </div>
                 )}
               </div>
             </motion.div>
