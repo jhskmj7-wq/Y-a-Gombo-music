@@ -284,6 +284,23 @@ export default function GomboProfile({
     }
   };
 
+  const handleDeleteOwnAccount = async () => {
+    if (!currentUserProfile?.uid) return;
+    const confirmDelete = window.confirm(
+      "🔑 Sécurité Y’A GOMBO MUSIC :\n\nÊtes-vous sûr de vouloir supprimer définitivement votre compte de la plateforme ?\n\nCette action est irréversible et supprimera instantanément :\n- Vos données Firebase d'Authentification\n- Votre profil public et privé d'artiste/recruteur\n- Toutes vos candidatures et médias associés.\n\nConfirmer ?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await gomboDB.deleteUserProfile(currentUserProfile.uid);
+      alert("Votre compte et toutes vos données associées ont été supprimés avec succès.");
+      onLogout();
+    } catch (error) {
+      console.error("Erreur de suppression du compte :", error);
+      alert("Une erreur est survenue lors de la suppression de votre compte.");
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 text-[#1A1A1A] dark:text-gray-100">
       
@@ -790,9 +807,9 @@ export default function GomboProfile({
                 <button
                   key={subTab.id}
                   onClick={() => { setSettingsTab(subTab.id as any); setSettingsStatusMsg(""); }}
-                  className={`px-4 py-2.5 text-xs font-extrabold rounded-xl transition-all text-left flex items-center gap-2 ${
+                  className={`px-4 py-2.5 text-xs font-extrabold rounded-xl transition-all text-left flex items-center gap-2 cursor-pointer ${
                     settingsTab === subTab.id
-                      ? "bg-orange-100 text-[#FF7A00] dark:bg-orange-950/20"
+                      ? "bg-purple-100/70 text-[#7C3AED] dark:bg-purple-950/20 dark:text-[#A78BFA]"
                       : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
                 >
@@ -810,7 +827,7 @@ export default function GomboProfile({
                 </div>
               )}
 
-              <form onSubmit={handleSettingsUpdate} className="space-y-4">
+              <form onSubmit={handleSettingsUpdate} className="space-y-4 font-sans">
                 {settingsTab === "compte" && (
                   <div className="space-y-4">
                     <span className="text-xs font-black text-gray-400 uppercase tracking-widest block">Paramètres du compte</span>
@@ -831,6 +848,21 @@ export default function GomboProfile({
                         onChange={(e) => setNewPhone(e.target.value)}
                         className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold dark:text-white"
                       />
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
+                      <span className="text-xs font-black text-rose-500 uppercase tracking-widest block">Zone de Danger ⚠️</span>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed font-semibold">
+                        La suppression de votre compte effacera de manière irréversible votre profil d'artiste showbiz, vos coordonnées mobile money pour les gombos, vos candidatures et vos médias de la base Firebase de Y'A GOMBO MUSIC.
+                      </p>
+                      <button
+                        type="button"
+                        id="btn-delete-account-settings"
+                        onClick={handleDeleteOwnAccount}
+                        className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/40 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all"
+                      >
+                        Supprimer mon compte
+                      </button>
                     </div>
                   </div>
                 )}
@@ -932,7 +964,7 @@ export default function GomboProfile({
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-[#FF7A00] hover:bg-orange-600 text-white text-xs font-extrabold rounded-xl uppercase tracking-wider shadow-xs transition-colors"
+                  className="w-full py-2.5 bg-[#7C3AED] hover:bg-purple-700 text-white text-xs font-extrabold rounded-xl uppercase tracking-wider shadow-xs transition-colors cursor-pointer"
                 >
                   Sauvegarder les paramètres
                 </button>

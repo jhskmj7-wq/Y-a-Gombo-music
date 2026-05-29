@@ -75,6 +75,13 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
       return;
     }
 
+    const cleanedDigits = phone.trim().replace(/\D/g, "");
+    if (cleanedDigits.length < 9) {
+      setErrorMSG("Le numéro de téléphone saisi est trop court. Un format valide de contact complet doit faire 10 chiffres pour la Côte d'Ivoire (ex: 07 45 89 12 00).");
+      setLoading(false);
+      return;
+    }
+
     const updates: Partial<UserProfile> = {
       role,
       firstName: firstName.trim(),

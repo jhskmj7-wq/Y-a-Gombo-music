@@ -143,10 +143,32 @@ service cloud.firestore {
              (!('musicianPhone' in data) || (data.musicianPhone is string && data.musicianPhone.size() <= 51));
     }
 
+    // Validate a Social Post
+    function isValidSocialPost(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.userName is string && data.userName.size() <= 200 &&
+             data.title is string && data.title.size() <= 300 &&
+             data.caption is string && data.caption.size() <= 3000 &&
+             (!('userAvatar' in data) || (data.userAvatar is string && data.userAvatar.size() <= 2083)) &&
+             (!('userRole' in data) || (data.userRole is string && data.userRole.size() <= 200)) &&
+             (!('beatProd' in data) || (data.beatProd is string && data.beatProd.size() <= 200)) &&
+             (!('audioUrl' in data) || (data.audioUrl is string && data.audioUrl.size() <= 2083)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 2083)) &&
+             (!('likesCount' in data) || (data.likesCount is int && data.likesCount >= 0)) &&
+             (!('sharesCount' in data) || (data.sharesCount is int && data.sharesCount >= 0)) &&
+             (!('savesCount' in data) || (data.savesCount is int && data.savesCount >= 0)) &&
+             (!('tags' in data) || (data.tags is list && data.tags.size() <= 50)) &&
+             (!('likedBy' in data) || (data.likedBy is list && data.likedBy.size() <= 10000)) &&
+             (!('savedBy' in data) || (data.savedBy is list && data.savedBy.size() <= 10000)) &&
+             (!('comments' in data) || (data.comments is list && data.comments.size() <= 1000)) &&
+             data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
 
     // --- 1. USERS COLLECTION RULES ---
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow create: if isSignedIn() && isOwner(userId) && 
         isValidUser(request.resource.data) &&
         request.resource.data.role != 'admin'; // Prevent self-promoting to admin at signup
@@ -233,6 +255,19 @@ service cloud.firestore {
         isAdmin()
       );
       allow delete: if isAdmin();
+    }
+
+    // --- 8. POSTS COLLECTION RULES ---
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn() && 
+        isValidSocialPost(request.resource.data) &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isSignedIn() && (
+        ( resource.data.userId == request.auth.uid && isValidSocialPost(request.resource.data) ) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 
   }

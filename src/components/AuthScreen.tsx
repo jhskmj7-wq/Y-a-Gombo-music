@@ -265,12 +265,51 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       }
 
       // Convert local format (e.g. 07...) to standard Côte d'Ivoire global code (+225...)
-      let cleanedPhone = phoneInput.trim().replace(/\s+/g, "");
+      let rawPhone = phoneInput.trim().replace(/\s+/g, "");
+      
+      // Basic check, remove non-numeric except +
+      let digitsOnly = rawPhone.replace(/[^\d+]/g, "");
+      let cleanedPhone = digitsOnly;
+      
       if (!cleanedPhone.startsWith("+")) {
-        if (cleanedPhone.startsWith("0")) {
-          cleanedPhone = "+225" + cleanedPhone.substring(1);
+        // Côte d'Ivoire local format
+        if (cleanedPhone.startsWith("225")) {
+          const remaining = cleanedPhone.substring(3);
+          if (remaining.startsWith("0")) {
+            cleanedPhone = "+225" + remaining.substring(1);
+          } else {
+            cleanedPhone = "+" + cleanedPhone;
+          }
         } else {
-          cleanedPhone = "+225" + cleanedPhone;
+          if (cleanedPhone.startsWith("0")) {
+            cleanedPhone = "+225" + cleanedPhone.substring(1);
+          } else {
+            cleanedPhone = "+225" + cleanedPhone;
+          }
+        }
+      } else {
+        // Starts with +
+        if (cleanedPhone.startsWith("+2250")) {
+          cleanedPhone = "+225" + cleanedPhone.substring(5);
+        }
+      }
+
+      // Check number of digits after country-code to avoid dispatching a TOO_SHORT invalid-phone-number
+      if (cleanedPhone.startsWith("+225")) {
+        const suffix = cleanedPhone.substring(4);
+        if (suffix.length < 9) {
+          throw new Error("Le numéro de téléphone saisi est trop court (" + suffix.length + " chiffres). Un numéro de Côte d'Ivoire valide doit faire 10 chiffres au format local (ex: 07 45 89 12 00).");
+        }
+        if (suffix.length > 10) {
+          throw new Error("Le numéro de téléphone saisi est trop long (" + suffix.length + " chiffres). Saisissez un numéro valide de 10 chiffres.");
+        }
+      } else {
+        const suffix = cleanedPhone.substring(1);
+        if (suffix.length < 7) {
+          throw new Error("Le numéro de téléphone saisi est trop court pour être valide.");
+        }
+        if (suffix.length > 15) {
+          throw new Error("Le numéro de téléphone saisi est trop long pour être valide.");
         }
       }
 
@@ -300,7 +339,11 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       setSuccessMSG("📱 Code SMS envoyé ! Veuillez saisir le code à 6 chiffres reçu.");
     } catch (err: any) {
       console.error("SMS Dispatch error:", err);
-      setErrorMSG("Impossible d'envoyer le code SMS. Vérifiez le format (CIV) : " + (err.message || "Erreur Firebase"));
+      let message = err.message || "Erreur Firebase";
+      if (message.includes("TOO_SHORT") || message.includes("invalid-phone-number") || message.includes("auth/invalid-phone-number")) {
+        message = "Le numéro de téléphone est trop court ou invalide. Renseignez un numéro de 10 chiffres (ex: 07 45 89 12 00).";
+      }
+      setErrorMSG("Impossible d'envoyer le code SMS : " + message);
     } finally {
       setLoading(false);
     }

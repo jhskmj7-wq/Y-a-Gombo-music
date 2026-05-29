@@ -52,6 +52,7 @@ import SocialPostCard from "./components/SocialPostCard";
 import SettingsModal from "./components/SettingsModal";
 import CompleteProfile from "./components/CompleteProfile";
 import GomboProfile from "./components/GomboProfile";
+import { PrivacyPage, TermsPage, DeleteAccountPage } from "./components/PublicPages";
 
 const ABIDJAN_COMMUNES = [
   "Abidjan (Toutes)",
@@ -86,8 +87,56 @@ export default function App() {
   }, []);
 
   // Navigation / View State
-  // 'home' | 'publish' | 'dashboard' | 'profile_edit' | 'academie' | 'groupe' | 'marche' | 'certification'
-  const [view, setView] = useState<string>("home");
+  // 'home' | 'publish' | 'dashboard' | 'profile_edit' | 'academie' | 'groupe' | 'marche' | 'certification' | 'privacy' | 'terms' | 'delete-account'
+  const [view, setView] = useState<string>(() => {
+    const path = window.location.pathname;
+    if (path === "/privacy") return "privacy";
+    if (path === "/terms") return "terms";
+    if (path === "/delete-account") return "delete-account";
+    
+    // Fallback hash routing
+    const hash = window.location.hash;
+    if (hash === "#/privacy") return "privacy";
+    if (hash === "#/terms") return "terms";
+    if (hash === "#/delete-account") return "delete-account";
+    
+    return "home";
+  });
+
+  // URL synchronization for public policy pages
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === "/privacy") {
+        setView("privacy");
+      } else if (path === "/terms") {
+        setView("terms");
+      } else if (path === "/delete-account") {
+        setView("delete-account");
+      } else {
+        const hash = window.location.hash;
+        if (hash === "#/privacy") setView("privacy");
+        else if (hash === "#/terms") setView("terms");
+        else if (hash === "#/delete-account") setView("delete-account");
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const navigateTo = (targetView: string) => {
+    setView(targetView);
+    if (targetView === "privacy") {
+      window.history.pushState(null, "", "/privacy");
+    } else if (targetView === "terms") {
+      window.history.pushState(null, "", "/terms");
+    } else if (targetView === "delete-account") {
+      window.history.pushState(null, "", "/delete-account");
+    } else {
+      window.history.pushState(null, "", "/");
+    }
+  };
   
   // Auth state
   const [authReady, setAuthReady] = useState(false);
@@ -180,21 +229,21 @@ export default function App() {
     };
   }, [profile?.uid]);
 
-  // Social loading trigger
-  const loadSocialPosts = async () => {
-    setLoadingSocial(true);
-    try {
-      const posts = await gomboDB.getSocialPosts();
-      setSocialPosts(posts);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingSocial(false);
-    }
-  };
-
+  // Real-time synchronization for social posts feed (Le Terrain)
   useEffect(() => {
-    loadSocialPosts();
+    setLoadingSocial(true);
+    console.log("🔗 [App Feed Live] Subscribing to real-time social posts observer...");
+    const unsubscribe = gomboDB.listenSocialPosts((allPosts) => {
+      console.log("⚡ [App Feed Live Sync] Live sync fetched latest social posts:", allPosts.length);
+      const sorted = [...allPosts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setSocialPosts(sorted);
+      setLoadingSocial(false);
+    });
+
+    return () => {
+      console.log("🔌 [App Feed Live] Disposing of social posts feed sync.");
+      unsubscribe();
+    };
   }, []);
 
   // Light/Dark toggle effect
@@ -301,6 +350,16 @@ export default function App() {
 
   const urgentGombos = filteredGombos.filter(g => g.urgent);
   const normalGombos = filteredGombos.filter(g => !g.urgent);
+
+  if (["privacy", "terms", "delete-account"].includes(view)) {
+    return (
+      <div className={darkMode ? "dark" : ""}>
+        {view === "privacy" && <PrivacyPage onBack={() => navigateTo("home")} />}
+        {view === "terms" && <TermsPage onBack={() => navigateTo("home")} />}
+        {view === "delete-account" && <DeleteAccountPage onBack={() => navigateTo("home")} />}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-[#0F0F0F] dark:text-gray-100 transition-colors duration-300 pb-20 md:pb-0">
@@ -1313,7 +1372,6 @@ export default function App() {
                           audioUrl: chosenAudio
                         });
                         alert("Votre démo a bien été diffusée sur le Fil d'actualité musical ! 🚀");
-                        loadSocialPosts();
                         setView("home");
                         setCurrentHomeTab("fil");
                         setNewPostTitle("");
@@ -1505,15 +1563,25 @@ export default function App() {
 
       {/* --- FOOTER DESIGNS --- */}
       <footer className="bg-white dark:bg-[#151518] border-t border-gray-100 dark:border-gray-800 transition-colors py-12 mt-12 text-xs text-gray-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4 font-sans">
           <div className="flex justify-center items-center gap-2">
-            <Flame className="w-5 h-5 text-orange-500 fill-current" />
+            <Flame className="w-5 h-5 text-[#7C3AED] fill-current" />
             <span className="font-extrabold text-xs text-gray-900 dark:text-white tracking-widest uppercase">Y’A GOMBO MUSIC 🇨🇮</span>
           </div>
-          <p className="max-w-md mx-auto leading-relaxed">
+          <p className="max-w-md mx-auto leading-relaxed text-[11px] text-gray-500 dark:text-gray-400">
             La plateforme d'Abidjan pour accélérer et sécuriser les contrats musicaux, facilitée par les transferts instantanés Wave & Orange Money.
           </p>
-          <p className="text-[10px] text-gray-500">
+          
+          {/* Legal navigation links */}
+          <div className="flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-[10px] font-extrabold uppercase tracking-widest text-[#7C3AED] dark:text-[#A78BFA] pt-2 border-t border-gray-50 dark:border-gray-800 max-w-sm mx-auto">
+            <button onClick={() => navigateTo("privacy")} className="hover:underline hover:text-purple-700 dark:hover:text-purple-300 cursor-pointer">Confidentialité</button>
+            <span className="text-gray-200 dark:text-gray-800">•</span>
+            <button onClick={() => navigateTo("terms")} className="hover:underline hover:text-purple-700 dark:hover:text-purple-300 cursor-pointer">Conditions (CGU)</button>
+            <span className="text-gray-200 dark:text-gray-800">•</span>
+            <button onClick={() => navigateTo("delete-account")} className="hover:underline hover:text-rose-500 text-rose-600 dark:text-rose-450 cursor-pointer">Supprimer Compte</button>
+          </div>
+
+          <p className="text-[10px] text-gray-400 dark:text-gray-600 pt-1">
             © 2026 Y’A GOMBO MUSIC Corp. Tous droits réservés. Développé pour le showbiz ivoirien.
           </p>
         </div>

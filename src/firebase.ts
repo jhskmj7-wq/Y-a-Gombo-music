@@ -774,11 +774,13 @@ export const gomboDB = {
     const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
     const index = users.findIndex(u => u.uid === uid);
     if (index !== -1) {
-      users[index] = { ...users[index], ...profile };
-      localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
-      triggerStorageEvent();
-      window.dispatchEvent(new Event("gomboUserProfileChange"));
+      users[index] = { ...users[index], ...profile } as UserProfile;
+    } else {
+      users.push({ uid, ...profile } as UserProfile);
     }
+    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+    triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboUserProfileChange"));
   },
 
   listenUserProfile(uid: string, callback: (profile: UserProfile | null) => void): () => void {
@@ -1142,6 +1144,17 @@ export const gomboDB = {
 
   // SOCIAL POSTS FEED (FIL D'ACTUALITÉ)
   async getSocialPosts(): Promise<SocialPost[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "posts"));
+        if (!snap.empty) {
+          return snap.docs.map(d => d.data() as SocialPost);
+        }
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible. Repli local pour getSocialPosts.", error);
+      }
+    }
+
     if (!localStorage.getItem("gombo_social_posts")) {
       const initialPosts: SocialPost[] = [
         {
@@ -1208,6 +1221,37 @@ export const gomboDB = {
     return JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
   },
 
+  listenSocialPosts(callback: (posts: SocialPost[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "posts"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as SocialPost);
+          callback(list);
+        }, (error) => {
+          console.error("⚠️ Firestore listenSocialPosts Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour listenSocialPosts. Repli.", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const posts: SocialPost[] = JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
+      callback(posts);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboSocialPostsChange", triggerLocal as EventListener);
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboSocialPostsChange", triggerLocal as EventListener);
+    };
+  },
+
   async publishSocialPost(post: Omit<SocialPost, "id" | "createdAt" | "likesCount" | "sharesCount" | "savesCount" | "likedBy" | "savedBy" | "comments">): Promise<SocialPost> {
     const id = "post_" + Math.random().toString(36).substring(2, 9);
     const newPost: SocialPost = {
@@ -1222,20 +1266,42 @@ export const gomboDB = {
       createdAt: new Date().toISOString()
     };
     
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "posts", id), newPost);
+        return newPost;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible. Repli local pour publishSocialPost.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
     const posts: SocialPost[] = JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
     posts.unshift(newPost);
     localStorage.setItem("gombo_social_posts", JSON.stringify(posts));
     triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboSocialPostsChange"));
     return newPost;
   },
 
   async updateSocialPost(id: string, updates: Partial<SocialPost>): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "posts", id), updates, { merge: true });
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible. Repli local pour updateSocialPost.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
     const posts: SocialPost[] = JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
     const idx = posts.findIndex(p => p.id === id);
     if (idx !== -1) {
       posts[idx] = { ...posts[idx], ...updates };
       localStorage.setItem("gombo_social_posts", JSON.stringify(posts));
       triggerStorageEvent();
+      window.dispatchEvent(new Event("gomboSocialPostsChange"));
     }
   },
 

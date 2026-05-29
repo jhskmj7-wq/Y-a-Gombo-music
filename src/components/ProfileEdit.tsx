@@ -56,19 +56,31 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !commune) {
+      alert("Veuillez remplir les informations obligatoires (Prénom, Nom, Téléphone, Commune).");
+      return;
+    }
+
+    const cleanedDigits = phone.trim().replace(/\D/g, "");
+    if (cleanedDigits.length < 9) {
+      alert("Le numéro de téléphone saisi est trop court. Un format valide de contact complet doit faire 10 chiffres pour la Côte d'Ivoire (ex: 07 45 89 12 00).");
+      return;
+    }
+
     setLoading(true);
 
     const updates: Partial<UserProfile> = {
-      firstName,
-      lastName,
-      phone,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      phone: phone.trim(),
       commune,
-      bio,
+      bio: bio.trim(),
       avatarUrl,
       ...(initialProfile.role === "musicien" ? {
         specialty,
         experience,
-        paymentNumber,
+        paymentNumber: paymentNumber.trim(),
         paymentProvider
       } : {})
     };
