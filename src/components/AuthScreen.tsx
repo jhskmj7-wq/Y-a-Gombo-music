@@ -41,6 +41,37 @@ const ABIDJAN_COMMUNES = [
   "Bingerville"
 ];
 
+const getFriendlyErrorMessage = (error: any): string => {
+  const code = error?.code || "";
+  const msg = error?.message || "";
+  
+  if (code === "auth/email-already-in-use" || msg.includes("auth/email-already-in-use") || msg.includes("email-already-in-use") || msg.includes("already registered") || msg.includes("already-in-use")) {
+    return "Ce mail possède déjà un compte.";
+  }
+  if (code === "auth/phone-already-in-use" || msg.includes("auth/phone-already-in-use") || msg.includes("phone-already-in-use") || msg.includes("déjà utilisé") || msg.includes("déjà assigné") || msg.includes("numéro est déjà utilisé")) {
+    return "Ce numéro est déjà utilisé.";
+  }
+  if (code === "auth/unauthorized-domain" || msg.includes("unauthorized-domain") || msg.includes("unauthorized_client") || msg.includes("auth/unauthorized_client")) {
+    return "Domaine non autorisé : Ce domaine d'aperçu d'AI Studio n'est pas encore enregistré dans l'onglet 'Domaines autorisés' de votre console Firebase Auth. Vous pouvez utiliser le formulaire classique d'inscription par mail/téléphone ci-dessous, ou cliquer ci-dessous pour utiliser l'Accès Test Démo.";
+  }
+  if (code === "auth/invalid-credential" || code === "auth/wrong-password" || msg.includes("wrong-password") || msg.includes("invalid-credential") || msg.includes("invalid-password")) {
+    return "Identifiants incorrects. Veuillez vérifier votre adresse email et votre mot de passe.";
+  }
+  if (code === "auth/user-not-found" || msg.includes("user-not-found")) {
+    return "Aucun compte Showbiz n'est associé à cette adresse email.";
+  }
+  if (code === "auth/popup-closed-by-user" || msg.includes("popup-closed-by-user") || msg.includes("cancelled-by-user")) {
+    return "La fenêtre de connexion Google a été fermée.";
+  }
+  if (code === "auth/network-request-failed" || msg.includes("network-request-failed")) {
+    return "Erreur réseau. Veuillez vérifier votre connexion internet et réessayer.";
+  }
+  if (code === "auth/too-many-requests" || msg.includes("too-many-requests")) {
+    return "Trop de tentatives infructueuses. Veuillez réessayer dans quelques instants.";
+  }
+  return error?.message || "Une erreur inattendue s'est produite lors de la connexion.";
+};
+
 interface AuthScreenProps {
   onSuccess: () => void;
   onClose?: () => void;
@@ -168,8 +199,7 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       console.error("Google SSO Failure:", err);
       const code = err.code || "auth/unknown";
       setActiveErrorCode(code);
-      setShowTroubleshoot(true);
-      setErrorMSG("Échec de connexion Google : " + (err.message || "Erreur inconnue"));
+      setErrorMSG(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -190,8 +220,7 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       console.error("Facebook SSO Failure:", err);
       const code = err.code || "auth/unknown";
       setActiveErrorCode(code);
-      setShowTroubleshoot(true);
-      setErrorMSG("Échec de connexion Facebook : " + (err.message || "Erreur de connexion"));
+      setErrorMSG(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -250,7 +279,7 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       }
     } catch (err: any) {
       console.error("Email authentication failed:", err);
-      setErrorMSG(err.message || "Une erreur est survenue lors de l'authentification.");
+      setErrorMSG(getFriendlyErrorMessage(err));
       setLoading(false);
     }
   };
@@ -425,7 +454,53 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
               exit={{ opacity: 0 }}
               className="p-3 mb-4 bg-red-950/30 border border-red-500/30 rounded-xl text-red-200 text-xs font-semibold leading-relaxed"
             >
-              {errorMSG}
+              <div className="flex flex-col gap-2.5">
+                <p>{errorMSG}</p>
+                {(errorMSG.includes("Domaine non autorisé") || errorMSG.includes("unauthorized-domain") || errorMSG.includes("unauthorized_client")) && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setErrorMSG("");
+                      setLoading(true);
+                      try {
+                        const mockGoogleEmails = ["star_mali@gombo.ci", "ivoire_dj@gombo.ci", "spectateur@gmail.com"];
+                        const randomEmail = mockGoogleEmails[Math.floor(Math.random() * mockGoogleEmails.length)];
+                        const randomId = "test_sso_" + Math.random().toString(36).substring(2, 9);
+                        const users = JSON.parse(localStorage.getItem("gombo_users") || "[]");
+                        let matched = users.find((u: any) => u.email === randomEmail);
+                        if (!matched) {
+                          matched = {
+                            uid: randomId,
+                            email: randomEmail,
+                            firstName: "Artiste",
+                            lastName: "Démo",
+                            displayName: "Gombo Démo",
+                            provider: "google.com",
+                            commune: "Cocody",
+                            phone: "+225 07 00 11 22 33",
+                            role: "musicien",
+                            isProfileComplete: true,
+                            createdAt: new Date().toISOString()
+                          };
+                          users.push(matched);
+                          localStorage.setItem("gombo_users", JSON.stringify(users));
+                        }
+                        const authData = { uid: matched.uid, email: matched.email, emailVerified: true };
+                        localStorage.setItem("gombo_auth", JSON.stringify(authData));
+                        window.dispatchEvent(new Event("gomboAuthChange"));
+                        await handlePostAuthSuccess(matched.uid, matched.email);
+                      } catch (demoErr: any) {
+                        setErrorMSG("Échec du bypass démo : " + demoErr.message);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    className="mt-1 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black uppercase text-[10px] tracking-wider rounded-lg transition-all shadow-md active:scale-95 text-center cursor-pointer"
+                  >
+                    ⚡ ACTIVER L'ACCÈS TEST DÉMO (MOCK-SSO BYPASS)
+                  </button>
+                )}
+              </div>
             </motion.div>
           )}
 

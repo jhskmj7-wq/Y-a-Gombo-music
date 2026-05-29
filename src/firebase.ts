@@ -349,6 +349,24 @@ export const gomboAuth = {
 
   async signUp(email: string, password: string, role: "musicien" | "client", details: { firstName: string; lastName: string; phone: string; commune: string }) {
     if (!isFirebaseMock && auth && db) {
+      // Prevents multiple accounts with the same phone
+      if (details.phone && details.phone.trim() !== "") {
+        try {
+          const phoneQuery = query(collection(db, "users"), where("phone", "==", details.phone.trim()));
+          const querySnapshot = await getDocs(phoneQuery);
+          if (!querySnapshot.empty) {
+            const err = new Error("Ce numéro est déjà utilisé.");
+            (err as any).code = "auth/phone-already-in-use";
+            throw err;
+          }
+        } catch (phErr: any) {
+          if (phErr.code === "auth/phone-already-in-use") {
+            throw phErr;
+          }
+          console.warn("⚠️ Phone check yielded error or rules denied read:", phErr);
+        }
+      }
+
       // Pre-assemble the full template profile with original registration details
       const userProfile: UserProfile = {
         uid: "", // Will be populated with res.user.uid post-creation
@@ -390,7 +408,14 @@ export const gomboAuth = {
       // Local Mock DB
       const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
       if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-        throw new Error("Cet email est déjà enregistré !");
+        const err = new Error("Ce mail possède déjà un compte.");
+        (err as any).code = "auth/email-already-in-use";
+        throw err;
+      }
+      if (details.phone && users.some(u => u.phone === details.phone.trim())) {
+        const err = new Error("Ce numéro est déjà utilisé.");
+        (err as any).code = "auth/phone-already-in-use";
+        throw err;
       }
       const newUid = "uid_" + Math.random().toString(36).substring(2, 9);
       const userProfile: UserProfile = {

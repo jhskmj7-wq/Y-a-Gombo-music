@@ -363,6 +363,28 @@ export default function GomboProfile({
                     "{currentUserProfile.bio}"
                   </p>
                 )}
+
+                {/* Showbiz Detailed User Metadata Grid */}
+                <div className="mt-4 pt-3.5 border-t border-gray-100 dark:border-gray-800/80 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Email:</span>
+                    <span className="text-gray-800 dark:text-gray-200 select-all font-mono text-[11px]">{currentUserProfile.email || "Non renseigné"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Commune:</span>
+                    <span className="text-gray-800 dark:text-gray-200">{currentUserProfile.commune || "Cocody"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Authentification:</span>
+                    <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-[10px] font-black tracking-wider uppercase text-gray-600 dark:text-gray-450 rounded-md">
+                      🔐 {currentUserProfile.provider || "Standard Email"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Solde Cachets:</span>
+                    <span className="font-extrabold text-[#FF7A00]">{(currentUserProfile.balance ?? 25000).toLocaleString()} FCFA</span>
+                  </div>
+                </div>
               </div>
             </div>
 

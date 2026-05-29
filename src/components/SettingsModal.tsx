@@ -9,9 +9,10 @@ interface SettingsModalProps {
   onClose: () => void;
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
+  onLogout?: () => void;
 }
 
-export default function SettingsModal({ isOpen, onClose, darkMode, setDarkMode }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, darkMode, setDarkMode, onLogout }: SettingsModalProps) {
   // Localized preferences
   const [region, setRegion] = useState(() => localStorage.getItem("gombo_pref_region") || "Abidjan (Cocody)");
   const [paymentMethod, setPaymentMethod] = useState(() => localStorage.getItem("gombo_pref_payment") || "Wave");
@@ -295,13 +296,28 @@ export default function SettingsModal({ isOpen, onClose, darkMode, setDarkMode }
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-end bg-gray-50/50 dark:bg-gray-900/10 gap-2.5">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-xs font-bold text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850/50 transition-all"
-          >
-            Annuler
-          </button>
+        <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/10 gap-2.5">
+          <div>
+            {onLogout && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onLogout();
+                }}
+                className="px-4 py-2 text-xs font-bold text-red-500 hover:text-white rounded-xl hover:bg-red-500 transition-all border border-red-500/20"
+              >
+                Déconnexion
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-bold text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850/50 transition-all"
+            >
+              Annuler
+            </button>
           
           <button
             onClick={handleSave}
@@ -324,8 +340,9 @@ export default function SettingsModal({ isOpen, onClose, darkMode, setDarkMode }
             )}
           </button>
         </div>
-
       </div>
+
+    </div>
     </div>
   );
 }

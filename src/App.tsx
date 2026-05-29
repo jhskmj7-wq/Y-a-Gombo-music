@@ -371,13 +371,6 @@ export default function App() {
           </div>
           <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider animate-pulse pt-2">Vérification de votre session sécurisée...</p>
         </div>
-        
-        {/* Debug Box */}
-        <div className="mt-8 p-3 rounded-xl bg-gray-900 border border-gray-800 text-[10px] font-mono text-gray-500 max-w-sm text-left opacity-60 space-y-1">
-          <p>🔧 [Debug Auth Mode]: {isFirebaseMock ? "MOCK LOCAL" : "FIREBASE PRODUCTION"}</p>
-          <p>👤 [Session ID]: {currentUser ? currentUser.uid.substring(0, 12) + "..." : "NON CONNECTÉ"}</p>
-          <p>📦 [Firestore Profile]: {authProfile ? "HYDRATÉ ✅" : "RECHERCHE EN COURS..."}</p>
-        </div>
 
         {/* Tailored keyframes in style block */}
         <style dangerouslySetInnerHTML={{__html: `
@@ -1737,6 +1730,7 @@ export default function App() {
         onClose={() => setShowSettingsModal(false)} 
         darkMode={darkMode} 
         setDarkMode={setDarkMode} 
+        onLogout={handleLogout}
       />
 
     </div>
