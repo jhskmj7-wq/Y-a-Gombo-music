@@ -144,6 +144,7 @@ export default function App() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Listing page Filters & Selection
   const [gombos, setGombos] = useState<Gombo[]>([]);
@@ -319,11 +320,14 @@ export default function App() {
 
   // Log Out Wrapper
   const handleLogout = async () => {
-    if (window.confirm("Se déconnecter de Y’A GOMBO MUSIC ?")) {
-      await doLogout();
-      setView("home");
-      setMobileMenuOpen(false);
-    }
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setShowLogoutConfirm(false);
+    setMobileMenuOpen(false);
+    await doLogout();
+    setView("home");
   };
 
   // Filtering Gombos logic based on queries
@@ -1732,6 +1736,62 @@ export default function App() {
         setDarkMode={setDarkMode} 
         onLogout={handleLogout}
       />
+
+      {/* --- IMMERSIVE CUSTOM LOGOUT DIALOG --- */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Dark glass backdrop with high blur */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLogoutConfirm(false)}
+              className="absolute inset-0 bg-[#020617]/85 backdrop-blur-md"
+            />
+            
+            {/* Elegant luxury card container */}
+            <motion.div
+              initial={{ scale: 0.95, y: 15, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 15, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              className="relative w-full max-w-sm bg-gradient-to-b from-[#0F172A]/95 to-[#020617]/98 border border-[#D4A373]/30 px-6 py-8 rounded-3xl shadow-2xl overflow-hidden text-center z-10"
+            >
+              {/* Subtle gold back glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-24 bg-[#D4A373]/15 rounded-full blur-2xl pointer-events-none" />
+              
+              <div className="inline-flex items-center justify-center p-3.5 bg-red-500/15 text-red-400 rounded-2xl mb-4 border border-red-500/25 shadow-lg">
+                <LogOut className="w-6 h-6" />
+              </div>
+              
+              <h3 className="text-lg font-black text-slate-100 tracking-wide uppercase font-sans">
+                Se Déconnecter ?
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed mt-2.5 px-2">
+                Êtes-vous sûr de vouloir vous déconnecter de <span className="text-[#D4A373] font-bold">Y’A GOMBO MUSIC</span> ? Votre session sera fermée en toute sécurité.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-3 mt-7">
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="py-3 px-4 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 rounded-xl font-bold text-xs transition-colors active:scale-97 cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmLogout}
+                  className="py-3 px-4 bg-gradient-to-r from-red-650 to-rose-700 hover:from-red-700 hover:to-rose-800 text-slate-50 font-black uppercase tracking-wider text-xs rounded-xl transition-all shadow-md shadow-red-950/25 active:scale-97 cursor-pointer"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

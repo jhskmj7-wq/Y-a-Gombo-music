@@ -54,11 +54,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log("🎬 [AuthContext] Initializing Firebase Auth observer...");
     let profileUnsubscribe: (() => void) | null = null;
+    let fallbackTimeout: NodeJS.Timeout | null = null;
 
     const authUnsubscribe = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
       console.log("👤 [AuthContext] Auth state changed. firebaseUser:", firebaseUser);
       setCurrentUser(firebaseUser);
       
+      if (fallbackTimeout) {
+        clearTimeout(fallbackTimeout);
+        fallbackTimeout = null;
+      }
+
       // Cleanup previous profile listener
       if (profileUnsubscribe) {
         profileUnsubscribe();
@@ -72,6 +78,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailVerified: firebaseUser.emailVerified
         }));
         setLoading(true);
+
+        // Safety timeout to prevent the app from getting stuck if Firebase/Firestore loading stalls
+        fallbackTimeout = setTimeout(() => {
+          console.warn("⏳ [AuthContext] Profile loading safety timeout reached. Stopping splash loader.");
+          setLoading(false);
+        }, 4500);
+
         try {
           console.log("🔍 [AuthContext] Checking if profile exists in Firestore for uid:", firebaseUser.uid);
           let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
@@ -118,6 +131,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log("🔗 [AuthContext] Connecting real-time onSnapshot listener to users/" + firebaseUser.uid);
           profileUnsubscribe = gomboDB.listenUserProfile(firebaseUser.uid, (updatedProfile) => {
             console.log("⚡ [AuthContext Real-time Sync] Profile updated live:", updatedProfile);
+            if (fallbackTimeout) {
+              clearTimeout(fallbackTimeout);
+              fallbackTimeout = null;
+            }
             if (updatedProfile) {
               setProfile(updatedProfile);
               localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile));
@@ -136,6 +153,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         } catch (e) {
           console.error("❌ [AuthContext] Error initializing user profile listener:", e);
+          if (fallbackTimeout) {
+            clearTimeout(fallbackTimeout);
+            fallbackTimeout = null;
+          }
           setLoading(false);
         }
       } else {
@@ -150,6 +171,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authUnsubscribe();
       if (profileUnsubscribe) {
         profileUnsubscribe();
+      }
+      if (fallbackTimeout) {
+        clearTimeout(fallbackTimeout);
       }
     };
   }, []);

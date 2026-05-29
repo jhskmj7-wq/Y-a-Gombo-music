@@ -829,6 +829,17 @@ export const gomboDB = {
           }
         }, (error) => {
           console.warn("⚠️ Error in listenUserProfile snapshot:", error);
+          // Safety fallback: load local cached profile or signal callback(null) to prevent page from getting stuck
+          try {
+            const saved = localStorage.getItem("gombo_active_profile");
+            if (saved) {
+              callback(JSON.parse(saved));
+            } else {
+              callback(null);
+            }
+          } catch {
+            callback(null);
+          }
         });
         return unsubscribe;
       } catch (error) {

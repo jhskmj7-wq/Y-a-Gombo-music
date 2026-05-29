@@ -117,6 +117,23 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       const isComplete = profile ? (profile.isProfileComplete ?? false) : false;
       const isFormRegister = authMethod === "register" && firstName.trim() !== "";
 
+      // Standardize Côte d'Ivoire phone format (+225 + 10 digits)
+      let standardizedPhone = profile?.phone || "";
+      const rawInputPhone = (isFormRegister ? phone : null) || phoneInput;
+      if (rawInputPhone && rawInputPhone.trim()) {
+        const pDigits = rawInputPhone.trim().replace(/\D/g, "");
+        let pLocal = pDigits;
+        if (pDigits.startsWith("225") && pDigits.length > 10) {
+          pLocal = pDigits.substring(3);
+        }
+        if (pLocal.length > 10) {
+          pLocal = pLocal.slice(-10);
+        } else if (pLocal.length < 10) {
+          pLocal = pLocal.padStart(10, "0");
+        }
+        standardizedPhone = "+225" + pLocal;
+      }
+
       const updatedProfileData: any = {
         uid,
         email: userEmail || profile?.email || "",
@@ -125,7 +142,7 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         displayName: isFormRegister 
           ? `${firstName.trim()} ${lastName.trim()}`
           : (profile?.displayName || profile?.firstName ? `${profile.firstName} ${profile.lastName || ""}`.trim() : "Artiste Gombo"),
-        phone: (isFormRegister ? phone.trim() : null) || phoneInput.trim() || profile?.phone || "",
+        phone: standardizedPhone,
         commune: (isFormRegister ? commune : null) || profile?.commune || "Cocody",
         role: (isFormRegister ? role : null) || profile?.role || "musicien",
         provider: profile?.provider || (authMethod === "phone" ? "phone" : (authMethod === "login" ? "password" : "email")),
@@ -296,56 +313,22 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         throw new Error("Veuillez entrer un numéro de téléphone valide.");
       }
 
-      // Convert local format (e.g. 07...) to standard Côte d'Ivoire global code (+225...)
-      let rawPhone = phoneInput.trim().replace(/\s+/g, "");
-      
-      // Basic check, remove non-numeric except +
-      let digitsOnly = rawPhone.replace(/[^\d+]/g, "");
-      let cleanedPhone = digitsOnly;
-      
-      if (!cleanedPhone.startsWith("+")) {
-        // Côte d'Ivoire local format
-        if (cleanedPhone.startsWith("225")) {
-          const remaining = cleanedPhone.substring(3);
-          if (remaining.startsWith("0")) {
-            cleanedPhone = "+225" + remaining.substring(1);
-          } else {
-            cleanedPhone = "+" + cleanedPhone;
-          }
-        } else {
-          if (cleanedPhone.startsWith("0")) {
-            cleanedPhone = "+225" + cleanedPhone.substring(1);
-          } else {
-            cleanedPhone = "+225" + cleanedPhone;
-          }
-        }
-      } else {
-        // Starts with +
-        if (cleanedPhone.startsWith("+2250")) {
-          cleanedPhone = "+225" + cleanedPhone.substring(5);
-        }
+      // Extract raw digits of input to isolate user number
+      const digits = phoneInput.replace(/\D/g, "");
+      let localNumber = digits;
+      if (digits.startsWith("225") && digits.length > 10) {
+        localNumber = digits.substring(3);
       }
 
-      // Check number of digits after country-code to avoid dispatching a TOO_SHORT invalid-phone-number
-      if (cleanedPhone.startsWith("+225")) {
-        const suffix = cleanedPhone.substring(4);
-        if (suffix.length < 9) {
-          throw new Error("Le numéro de téléphone saisi est trop court (" + suffix.length + " chiffres). Un numéro de Côte d'Ivoire valide doit faire 10 chiffres au format local (ex: 07 45 89 12 00).");
-        }
-        if (suffix.length > 10) {
-          throw new Error("Le numéro de téléphone saisi est trop long (" + suffix.length + " chiffres). Saisissez un numéro valide de 10 chiffres.");
-        }
-      } else {
-        const suffix = cleanedPhone.substring(1);
-        if (suffix.length < 7) {
-          throw new Error("Le numéro de téléphone saisi est trop court pour être valide.");
-        }
-        if (suffix.length > 15) {
-          throw new Error("Le numéro de téléphone saisi est trop long pour être valide.");
-        }
+      // Enforce exactly 10 digits (pad with leading zeros if fewer, truncate if more)
+      if (localNumber.length > 10) {
+        localNumber = localNumber.slice(-10);
+      } else if (localNumber.length < 10) {
+        localNumber = localNumber.padStart(10, "0");
       }
 
-      console.log("📱 Dispatching OTP code for phone: ", cleanedPhone);
+      const cleanedPhone = "+225" + localNumber;
+      console.log("📱 Dispatching OTP code for formatted phone: ", cleanedPhone);
       
       // Initialize reCAPTCHA verifier dynamically on empty anchor container
       let verifier: RecaptchaVerifier | null = null;
