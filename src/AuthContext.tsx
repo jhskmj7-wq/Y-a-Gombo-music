@@ -9,6 +9,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, role: "musicien" | "client", details: { firstName: string; lastName: string; phone: string; commune: string }) => Promise<any>;
+  loginWithGoogle: () => Promise<any>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -188,6 +189,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async () => {
+    setLoading(true);
+    try {
+      console.log("📂 [AuthContext] Performing loginWithGoogle...");
+      const res = await gomboAuth.loginWithGoogle();
+      console.log("✅ [AuthContext] Google Login success:", res);
+      return res;
+    } catch (err) {
+      console.error("❌ [AuthContext] Google Login error:", err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     setLoading(true);
     try {
@@ -205,7 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, profile, loading, signIn, signUp, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ currentUser, profile, loading, signIn, signUp, loginWithGoogle, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

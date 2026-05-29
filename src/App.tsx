@@ -351,6 +351,46 @@ export default function App() {
   const urgentGombos = filteredGombos.filter(g => g.urgent);
   const normalGombos = filteredGombos.filter(g => !g.urgent);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6 text-center select-none">
+        <div className="relative w-24 h-24 mb-6">
+          <div className="absolute inset-0 rounded-full border-4 border-orange-500/20 animate-pulse"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-t-orange-500 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+          <div className="absolute inset-3 rounded-full bg-gradient-to-tr from-orange-500 to-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
+            <svg className="w-8 h-8 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+        </div>
+        <h2 className="text-xl font-black uppercase text-white tracking-widest animate-pulse">Y’A GOMBO MUSIC</h2>
+        <p className="text-orange-500 text-xs font-black uppercase tracking-wider mt-1.5 mb-8">Showbiz Ivoirien</p>
+        <div className="space-y-3 max-w-xs">
+          <div className="h-1.5 w-48 bg-gray-800 rounded-full overflow-hidden mx-auto relative">
+            <div className="absolute top-0 bottom-0 left-0 bg-orange-500 rounded-full animate-[loading_1.5s_infinite_ease-in-out]" style={{ width: "60%" }}></div>
+          </div>
+          <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider animate-pulse pt-2">Vérification de votre session sécurisée...</p>
+        </div>
+        
+        {/* Debug Box */}
+        <div className="mt-8 p-3 rounded-xl bg-gray-900 border border-gray-800 text-[10px] font-mono text-gray-500 max-w-sm text-left opacity-60 space-y-1">
+          <p>🔧 [Debug Auth Mode]: {isFirebaseMock ? "MOCK LOCAL" : "FIREBASE PRODUCTION"}</p>
+          <p>👤 [Session ID]: {currentUser ? currentUser.uid.substring(0, 12) + "..." : "NON CONNECTÉ"}</p>
+          <p>📦 [Firestore Profile]: {authProfile ? "HYDRATÉ ✅" : "RECHERCHE EN COURS..."}</p>
+        </div>
+
+        {/* Tailored keyframes in style block */}
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes loading {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+          }
+        `}} />
+      </div>
+    );
+  }
+
   if (["privacy", "terms", "delete-account"].includes(view)) {
     return (
       <div className={darkMode ? "dark" : ""}>

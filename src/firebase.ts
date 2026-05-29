@@ -471,8 +471,7 @@ export const gomboAuth = {
             console.log("📦 [Firebase Auth Debug] User profile already exists in Firestore. Skipping auto-onboarding.");
           }
         } catch (err) {
-          console.error("❌ [Firebase Auth Debug] Error syncing user profile on Google auth:", err);
-          handleFirestoreError(err, OperationType.WRITE, "users/" + res.user.uid);
+          console.warn("⚠️ [Firebase Auth Debug] Non-fatal user profile sync error during Google auth:", err);
         }
         return { uid: res.user.uid, email: res.user.email };
       } catch (e: any) {
@@ -752,9 +751,15 @@ export const gomboDB = {
       try {
         const docSnap = await getDoc(doc(db, "users", uid));
         return docSnap.exists() ? (docSnap.data() as UserProfile) : null;
-      } catch (error) {
-        console.warn("⚠️ Mode Firestore inaccessible. Repli sur le Bac à Sable Local pour getUserProfile.", error);
-        setIsFirebaseMock(true);
+      } catch (error: any) {
+        console.warn("⚠️ Mode Firestore inaccessible or rule block for getUserProfile. Error details:", error);
+        if (error && error.code === "permission-denied") {
+          // Keep real Firebase, return null to let caller/AuthContext auto-onboard the profile
+          return null;
+        }
+        if (error && (error.code === "unavailable" || error.message?.includes("offline"))) {
+          setIsFirebaseMock(true);
+        }
       }
     }
     const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
@@ -766,9 +771,14 @@ export const gomboDB = {
       try {
         await setDoc(doc(db, "users", uid), profile, { merge: true });
         return;
-      } catch (error) {
-        console.warn("⚠️ Mode Firestore inaccessible. Repli sur le Bac à Sable Local pour updateUserProfile.", error);
-        setIsFirebaseMock(true);
+      } catch (error: any) {
+        console.warn("⚠️ Mode Firestore inaccessible or rule block for updateUserProfile. Error details:", error);
+        if (error && error.code === "permission-denied") {
+          return;
+        }
+        if (error && (error.code === "unavailable" || error.message?.includes("offline"))) {
+          setIsFirebaseMock(true);
+        }
       }
     }
     const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");

@@ -24,6 +24,7 @@ import { gomboAuth, gomboDB } from "../firebase";
 import { auth } from "../lib/firebase";
 import { RecaptchaVerifier } from "firebase/auth";
 import { UserProfile } from "../types";
+import { useAuth } from "../AuthContext";
 
 const ABIDJAN_COMMUNES = [
   "Cocody",
@@ -46,6 +47,8 @@ interface AuthScreenProps {
 }
 
 export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
+  const { loginWithGoogle, signIn: ctxSignIn, signUp: ctxSignUp } = useAuth();
+  
   // Tabs for Auth: "register" | "login" | "phone"
   const [authMethod, setAuthMethod] = useState<"register" | "login" | "phone">("register");
   
@@ -157,7 +160,7 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
     setShowTroubleshoot(false);
     setActiveErrorCode("");
     try {
-      const res = await gomboAuth.loginWithGoogle();
+      const res = await loginWithGoogle();
       if (res && res.uid) {
         await handlePostAuthSuccess(res.uid, res.email || "");
       }
@@ -211,7 +214,7 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
       if (authMethod === "login") {
         console.log("🔑 Logging in standard email user...");
-        await gomboAuth.signIn(email.trim().toLowerCase(), password);
+        await ctxSignIn(email.trim().toLowerCase(), password);
         const authRef = JSON.parse(localStorage.getItem("gombo_auth") || "null");
         if (authRef && authRef.uid) {
           await handlePostAuthSuccess(authRef.uid, authRef.email);
@@ -228,7 +231,7 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         }
 
         console.log("✨ Creating a brand new email profile...");
-        await gomboAuth.signUp(email.trim().toLowerCase(), password, role, {
+        await ctxSignUp(email.trim().toLowerCase(), password, role, {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           phone: phone.trim(),
