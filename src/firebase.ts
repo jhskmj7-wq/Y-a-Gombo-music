@@ -62,6 +62,7 @@ export function setIsFirebaseMock(val: boolean) {
 }
 
 import { app, auth, db, storage } from "./lib/firebase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 const GOOGLE_PROVIDER = new GoogleAuthProvider();
 const FACEBOOK_PROVIDER = new FacebookAuthProvider();
@@ -1444,5 +1445,64 @@ export const gomboDB = {
       window.removeEventListener("storage", triggerLocal);
       window.removeEventListener("gomboNotificationChange", triggerLocal as EventListener);
     };
+  },
+
+  async uploadFile(path: string, file: File, onProgress?: (pct: number) => void): Promise<string> {
+    if (!isFirebaseMock && storage) {
+      try {
+        const storageRef = ref(storage, path);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+        return new Promise((resolve, reject) => {
+          uploadTask.on(
+            'state_changed', 
+            (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              if (onProgress) onProgress(progress);
+            }, 
+            (error) => {
+              console.error("Storage upload failed:", error);
+              reject(error);
+            }, 
+            async () => {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve(downloadURL);
+            }
+          );
+        });
+      } catch (err) {
+        console.warn("Storage unreachable, falling back to local Blob URL:", err);
+      }
+    }
+    // High-fidelity fallback for offline / mock modes
+    return new Promise((resolve) => {
+      let pct = 0;
+      const interval = setInterval(() => {
+        pct += 25;
+        if (onProgress) onProgress(pct);
+        if (pct >= 100) {
+          clearInterval(interval);
+          const localUrl = URL.createObjectURL(file);
+          resolve(localUrl);
+        }
+      }, 150);
+    });
+  },
+
+  async deleteSocialPost(id: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await deleteDoc(doc(db, "posts", id));
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible or rule block for deleteSocialPost.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const posts: SocialPost[] = JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
+    const filtered = posts.filter(p => p.id !== id);
+    localStorage.setItem("gombo_social_posts", JSON.stringify(filtered));
+    triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboSocialPostsChange"));
   }
 };

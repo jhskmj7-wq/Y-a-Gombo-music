@@ -162,6 +162,7 @@ export default function App() {
   const [socialPosts, setSocialPosts] = useState<SocialPost[]>([]);
   const [loadingSocial, setLoadingSocial] = useState(false);
   const [playingPostId, setPlayingPostId] = useState<string | null>(null);
+  const [socialFilter, setSocialFilter] = useState<"all" | "gombo" | "demo" | "annonce">("all");
 
   // Keep scrolls independent and not mixed by scrolling to top of page on view or tab transition
   useEffect(() => {
@@ -960,8 +961,6 @@ export default function App() {
                       <button 
                         onClick={() => {
                           setView("publish");
-                          // directly focus composer
-                          setNewPostTitle("");
                         }}
                         className="px-4 py-2 bg-orange-100 text-orange-600 hover:bg-[#FF7A00] hover:text-white rounded-xl text-xs font-bold transition-all"
                       >
@@ -970,30 +969,76 @@ export default function App() {
                     </div>
                   )}
 
+                  {/* HIGH-STYLE FILTER BAR */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    <button
+                      onClick={() => setSocialFilter("all")}
+                      className={`px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all ${
+                        socialFilter === "all"
+                          ? "bg-gray-900 text-white dark:bg-white dark:text-gray-950 shadow-md"
+                          : "bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                      }`}
+                    >
+                      🚀 Tous
+                    </button>
+                    <button
+                      onClick={() => setSocialFilter("gombo")}
+                      className={`px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all ${
+                        socialFilter === "gombo"
+                          ? "bg-[#FF7A00] text-white shadow-md shadow-orange-500/15"
+                          : "bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                      }`}
+                    >
+                      💼 Gombos
+                    </button>
+                    <button
+                      onClick={() => setSocialFilter("demo")}
+                      className={`px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all ${
+                        socialFilter === "demo"
+                          ? "bg-purple-600 text-white shadow-md shadow-purple-600/15"
+                          : "bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                      }`}
+                    >
+                      🎵 Démos
+                    </button>
+                    <button
+                      onClick={() => setSocialFilter("annonce")}
+                      className={`px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all ${
+                        socialFilter === "annonce"
+                          ? "bg-teal-600 text-white shadow-md shadow-teal-650/15"
+                          : "bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                      }`}
+                    >
+                      📢 Artistes
+                    </button>
+                  </div>
+
                   {/* LOADING STATE OR SOCIAL POSTS GRID */}
                   {loadingSocial ? (
                     <div className="flex justify-center items-center py-12">
                       <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
                     </div>
-                  ) : socialPosts.length === 0 ? (
+                  ) : socialPosts.filter(p => socialFilter === "all" || p.type === socialFilter).length === 0 ? (
                     <div className="text-center py-12 bg-white dark:bg-gray-800/10 rounded-3xl border border-gray-100 dark:border-gray-800">
-                      <Music className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                      <p className="font-bold text-gray-800 dark:text-white text-sm">Le fil d'actualité est vierge</p>
-                      <p className="text-xs text-gray-500 mt-1">Écrivez et partagez le tout premier son sur Y’A GOMBO MUSIC !</p>
+                      <Music className="w-12 h-12 text-gray-300 mx-auto mb-2 animate-bounce" />
+                      <p className="font-bold text-gray-850 dark:text-white text-sm">Le fil d’actualité est vide ici</p>
+                      <p className="text-xs text-gray-500 mt-1">Soyez le premier à publier dans cette catégorie !</p>
                     </div>
                   ) : (
                     <div className="space-y-6">
-                      {socialPosts.map((post) => (
-                        <SocialPostCard
-                          key={post.id}
-                          post={post}
-                          currentUser={user}
-                          currentUserProfile={profile}
-                          playingPostId={playingPostId}
-                          setPlayingPostId={setPlayingPostId}
-                          onTriggerLogin={() => setShowAuthModal(true)}
-                        />
-                      ))}
+                      {socialPosts
+                        .filter(p => socialFilter === "all" || p.type === socialFilter)
+                        .map((post) => (
+                          <SocialPostCard
+                            key={post.id}
+                            post={post}
+                            currentUser={user}
+                            currentUserProfile={profile}
+                            playingPostId={playingPostId}
+                            setPlayingPostId={setPlayingPostId}
+                            onTriggerLogin={() => setShowAuthModal(true)}
+                          />
+                        ))}
                     </div>
                   )}
                 </div>
@@ -1792,23 +1837,6 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
-
-      {/* Temporary Auth Debug Panel requested by user */}
-      <div className="fixed bottom-22 right-4 z-50 bg-slate-900/95 dark:bg-black/95 text-xs text-gray-300 p-4 rounded-2xl border border-orange-500/30 shadow-2xl max-w-xs space-y-2 font-mono">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-1.5">
-          <span className="font-extrabold text-orange-500 uppercase tracking-wider text-[10px]">🔴 Auth Status (Debug MVP)</span>
-        </div>
-        <div><span className="text-gray-500">UID:</span> <span className="text-white text-[10px] break-all">{user?.uid || "Non connecté"}</span></div>
-        <div><span className="text-gray-500">Email:</span> <span className="text-white text-[10px] break-all">{user?.email || "Non connecté"}</span></div>
-        <div><span className="text-gray-500">Profile:</span> <span className={`${profile ? "text-emerald-500" : "text-amber-500"} font-bold`}>{profile ? "Trouvé (OK)" : "Inexistant (En attente)"}</span></div>
-        {profile && (
-          <div className="pt-1.5 border-t border-slate-800 text-[10px] space-y-0.5 text-gray-400">
-            <div>Nom: {profile.firstName} {profile.lastName}</div>
-            <div>Rôle: {profile.role}</div>
-            <div>Commune: {profile.commune}</div>
-          </div>
-        )}
-      </div>
 
     </div>
   );

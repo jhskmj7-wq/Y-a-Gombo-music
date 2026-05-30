@@ -43,17 +43,33 @@ service cloud.firestore {
              (!('name' in data) || (data.name is string && data.name.size() <= 200)) &&
              (!('firstName' in data) || (data.firstName is string && data.firstName.size() <= 100)) &&
              (!('lastName' in data) || (data.lastName is string && data.lastName.size() <= 100)) &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 250)) &&
              (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 2083)) &&
              (!('avatarUrl' in data) || (data.avatarUrl is string && data.avatarUrl.size() <= 2083)) &&
              (!('bio' in data) || (data.bio is string && data.bio.size() <= 2000)) &&
              (!('phone' in data) || (data.phone is string && data.phone.size() <= 51)) &&
              (!('commune' in data) || (data.commune is string && data.commune.size() <= 100)) &&
+             (!('provider' in data) || (data.provider is string && data.provider.size() <= 100)) &&
+             (!('isProfileComplete' in data) || (data.isProfileComplete is bool)) &&
+             (!('balance' in data) || (data.balance is int)) &&
+             (!('totalRevenue' in data) || (data.totalRevenue is int)) &&
+             (!('totalWithdrawals' in data) || (data.totalWithdrawals is int)) &&
+             (!('gigsCompleted' in data) || (data.gigsCompleted is int)) &&
+             (!('applicationsSent' in data) || (data.applicationsSent is int)) &&
+             (!('acceptanceRate' in data) || (data.acceptanceRate is int)) &&
              (!('orangeMoneyNumber' in data) || (data.orangeMoneyNumber is string && data.orangeMoneyNumber.size() <= 51)) &&
              (!('moovMoneyNumber' in data) || (data.moovMoneyNumber is string && data.moovMoneyNumber.size() <= 51)) &&
              (!('waveNumber' in data) || (data.waveNumber is string && data.waveNumber.size() <= 51)) &&
              (!('paymentMethods' in data) || (data.paymentMethods is list && data.paymentMethods.size() <= 10)) &&
              (!('experience' in data) || (data.experience is string && data.experience.size() <= 100)) &&
              (!('specialty' in data) || (data.specialty is string && data.specialty.size() <= 100)) &&
+             (!('speciality' in data) || (data.speciality is string && data.speciality.size() <= 100)) &&
+             (!('experienceYears' in data) || (data.experienceYears is string && data.experienceYears.size() <= 100)) &&
+             (!('musicGenre' in data) || (data.musicGenre is string && data.musicGenre.size() <= 100)) &&
+             (!('artistName' in data) || (data.artistName is string && data.artistName.size() <= 100)) &&
+             (!('paymentNumber' in data) || (data.paymentNumber is string && data.paymentNumber.size() <= 50)) &&
+             (!('paymentProvider' in data) || (data.paymentProvider is string && data.paymentProvider.size() <= 50)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50)) &&
              (!('isVerified' in data) || (data.isVerified is bool));
     }
 

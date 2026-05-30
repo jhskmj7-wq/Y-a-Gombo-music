@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Heart, MessageSquare, Share2, Bookmark, Play, Pause, 
-  Volume2, Music, Check, User, Send, Sparkles, Star
+  Volume2, Music, Check, User, Send, Sparkles, Star, Briefcase
 } from "lucide-react";
 import { SocialPost, PostComment, UserProfile } from "../types";
 import { gomboDB } from "../firebase";
@@ -254,114 +254,206 @@ export default function SocialPostCard({
             />
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-sm text-gray-950 dark:text-white leading-tight">
-                {post.userName}
-              </span>
-              <Check className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
-            </div>
-            {post.userRole && (
-              <span className="text-[10px] uppercase font-bold text-orange-600 dark:text-orange-400 block tracking-tight -mt-0.5">
-                {post.userRole}
-              </span>
-            )}
-          </div>
-        </div>
+             <div className="flex items-center gap-1.5">
+               <span className="font-extrabold text-sm text-gray-950 dark:text-white leading-tight">
+                 {post.userName || "Artiste Gombo"}
+               </span>
+               <Check className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
+             </div>
+             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+               {post.userRole && (
+                 <span className="text-[9px] uppercase font-bold text-orange-600 dark:text-orange-400 tracking-tight">
+                   {post.userRole === "musicien" ? "🎸 Musicien" : post.userRole === "client" ? "💼 Recruteur" : "🦁 Groupe"}
+                 </span>
+               )}
+               {post.type && (
+                 <>
+                   <span className="text-[9px] text-gray-300 dark:text-gray-600">|</span>
+                   <span className={`text-[9px] uppercase font-black px-1.5 py-0.5 rounded-md ${
+                     post.type === "gombo" 
+                       ? "bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-[#FF7A00]" 
+                       : post.type === "demo"
+                       ? "bg-purple-50 text-purple-600 dark:bg-purple-950/20 dark:text-purple-400"
+                       : "bg-teal-50 text-teal-600 dark:bg-teal-950/20 dark:text-teal-400"
+                   }`}>
+                     {post.type === "gombo" ? "💼 GOMBO" : post.type === "demo" ? "🎵 DÉMO" : "📢 ANNONCE"}
+                   </span>
+                 </>
+               )}
+             </div>
+           </div>
+         </div>
+ 
+         {/* Follow/Unfollow Artist Button */}
+         <button
+           onClick={handleFollowToggle}
+           className={`px-3.5 py-1.5 text-xs font-black rounded-full transition-all border active:scale-95 ${
+             followed 
+               ? "bg-gray-100 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700" 
+               : "bg-orange-500 border-orange-500 text-white hover:bg-orange-650"
+           }`}
+         >
+           {followed ? "Abonné" : "+ Suivre"}
+         </button>
+       </div>
+ 
+       {/* 2. Content Body Caption */}
+       <div className="px-4 sm:px-5 pb-3.5 space-y-2.5">
+         {post.title && (
+           <h4 className="text-xs font-black text-gray-950 dark:text-white uppercase tracking-tight flex items-center gap-1">
+             {post.type === "gombo" && <Briefcase className="w-3.5 h-3.5 text-[#FF7A00]" />}
+             {post.type === "demo" && <Music className="w-3.5 h-3.5 text-[#7C3AED]" />}
+             {post.type === "annonce" && <MessageSquare className="w-3.5 h-3.5 text-teal-600" />}
+             {post.title}
+           </h4>
+         )}
+         
+         <p className="text-xs text-gray-650 dark:text-gray-300 leading-relaxed font-semibold">
+           {post.caption}
+         </p>
 
-        {/* Follow/Unfollow Artist Button */}
-        <button
-          onClick={handleFollowToggle}
-          className={`px-3.5 py-1.5 text-xs font-black rounded-full transition-all border active:scale-95 ${
-            followed 
-              ? "bg-gray-100 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700" 
-              : "bg-orange-500 border-orange-500 text-white hover:bg-orange-650"
-          }`}
-        >
-          {followed ? "Abonné" : "+ Suivre"}
-        </button>
-      </div>
+         {/* TYPE 1: GOMBO METADATA BLOCK */}
+         {post.type === "gombo" && (
+           <div className="grid grid-cols-2 gap-2 bg-orange-50/15 dark:bg-orange-950/5 p-3.5 rounded-2xl border border-orange-100/30 dark:border-orange-950/20 text-[11px] font-bold text-gray-750 dark:text-gray-300">
+             <div className="flex items-center gap-1.5 col-span-2">
+               <span className="text-gray-400 font-semibold">Recherche:</span>
+               <span className="font-extrabold text-[#FF7A00] uppercase tracking-wide">{post.specialty || "Musicien"}</span>
+             </div>
+             <div className="flex items-center gap-1.5">
+               <span className="text-gray-400 font-semibold">Cachet:</span>
+               <span className="font-extrabold text-[#FF7A00]">{post.budget ? `${Number(post.budget).toLocaleString()} FCFA` : "A débattre"}</span>
+             </div>
+             <div className="flex items-center gap-1.5">
+               <span className="text-gray-400 font-semibold">Commune:</span>
+               <span className="font-extrabold">{post.commune || "Abidjan"}</span>
+             </div>
+             {post.urgent && (
+               <div className="col-span-2 flex items-center gap-1 text-[9px] font-black text-[#FF7A00] bg-orange-500/10 w-fit px-2 py-0.5 rounded-md uppercase tracking-widest mt-1 animate-pulse">
+                 🔥 Urgent
+               </div>
+             )}
+           </div>
+         )}
 
-      {/* 2. Content Body Caption */}
-      <div className="px-4 sm:px-5 pb-3">
-        <p className="text-xs sm:text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
-          {post.caption}
-        </p>
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {post.tags.map((tag) => (
-            <span key={tag} className="text-[11px] font-black text-orange-600 dark:text-orange-400">
-              {tag}
-            </span>
-          ))}
-        </div>
-      </div>
+         {/* TYPE 2: DÉMO METADATA BADGE */}
+         {post.type === "demo" && post.genre && (
+           <div className="inline-flex items-center gap-1.5 bg-purple-50/20 dark:bg-purple-950/10 border border-purple-100/30 dark:border-purple-900/30 px-3 py-1 rounded-full text-[10px] font-black text-[#7C3AED] dark:text-purple-400 uppercase tracking-wide">
+             🎵 Style: {post.genre}
+           </div>
+         )}
 
-      {/* 3. Media Cover artwork and Audio soundtrack */}
-      {post.audioUrl && (
-        <div className="px-4 sm:px-5 pb-4">
-          <div className="relative group rounded-2xl overflow-hidden shadow-xs border border-gray-100 dark:border-gray-800">
-            {/* Native background audio thread */}
-            <audio 
-              ref={audioRef}
-              src={post.audioUrl}
-              onTimeUpdate={onTimeUpdate}
-              onLoadedMetadata={onLoadedMetadata}
-              className="hidden"
-            />
-
-            {/* Simulated live visual block */}
-            <img 
-              src={post.imageUrl || "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?auto=format&fit=crop&q=80&w=500"} 
-              alt="Track Cover" 
-              className="w-full h-44 object-cover object-center group-hover:scale-102 transition-transform duration-500"
-            />
-            
-            {/* Premium blur soundtrack visual shadow */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-end p-4">
-              
-              <div className="flex items-center gap-3">
-                {/* Round play control button */}
-                <button
-                  onClick={handlePlayPause}
-                  className="w-11 h-11 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:scale-105 active:scale-95 text-white flex items-center justify-center shadow-lg transition-transform shrink-0"
-                >
-                  {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current translate-x-0.5" />}
-                </button>
-
-                {/* Track text and progress timeline */}
-                <div className="flex-1 min-w-0">
-                  <span className="text-[10px] uppercase font-black text-orange-400 tracking-wider flex items-center gap-1">
-                    <Music className="w-3 h-3 animate-pulse text-orange-500" />
-                    PRESTATION DEEMO
-                  </span>
-                  <p className="text-white text-sm font-bold truncate leading-snug">
-                    {post.title}
-                  </p>
-                  {post.beatProd && (
-                    <p className="text-[10px] text-gray-300 truncate -mt-0.5">
-                      Prod: {post.beatProd}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Progress timeline slider */}
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-[10px] font-mono text-gray-300">{formatTime(currentTime)}</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={duration || 100}
-                  value={currentTime}
-                  onChange={handleSeek}
-                  className="flex-1 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-orange-500 focus:outline-none"
-                />
-                <span className="text-[10px] font-mono text-gray-300">{formatTime(duration)}</span>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      )}
+         {/* TYPE 3: ANNONCE METADATA BLOCK */}
+         {post.type === "annonce" && (
+           <div className="grid grid-cols-2 gap-2 bg-teal-50/15 dark:bg-teal-950/5 p-3.5 rounded-2xl border border-teal-100/30 dark:border-teal-950/20 text-[11px] font-bold text-gray-750 dark:text-gray-300">
+             <div className="flex items-center gap-1.5">
+               <span className="text-gray-400 font-semibold">Spécialité:</span>
+               <span className="font-extrabold text-teal-600 dark:text-teal-400 uppercase tracking-wide">{post.specialty || "Artiste"}</span>
+             </div>
+             <div className="flex items-center gap-1.5">
+               <span className="text-gray-400 font-semibold">Dispo:</span>
+               <span className="font-extrabold text-teal-600 dark:text-teal-400">{post.availability || "Disponible"}</span>
+             </div>
+             <div className="flex items-center gap-1.5 col-span-2">
+               <span className="text-gray-400 font-semibold">Commune:</span>
+               <span className="font-extrabold">{post.commune || "Abidjan"}</span>
+             </div>
+           </div>
+         )}
+ 
+         <div className="flex flex-wrap gap-1.5 pt-1">
+           {post.tags?.filter(Boolean).map((tag) => (
+             <span key={tag} className="text-[10px] font-black bg-gray-50 dark:bg-gray-850/60 text-gray-500 rounded px-2 py-0.5 border border-gray-100 dark:border-gray-800">
+               #{tag}
+             </span>
+           ))}
+         </div>
+       </div>
+ 
+       {/* 3. Media Cover artwork and Audio/Video soundtrack */}
+       {post.audioUrl ? (
+         <div className="px-4 sm:px-5 pb-4">
+           <div className="relative group rounded-2xl overflow-hidden shadow-xs border border-gray-100 dark:border-gray-800">
+             {/* Native background audio thread */}
+             <audio 
+               ref={audioRef}
+               src={post.audioUrl}
+               onTimeUpdate={onTimeUpdate}
+               onLoadedMetadata={onLoadedMetadata}
+               className="hidden"
+             />
+ 
+             {/* Simulated live visual block */}
+             <img 
+               src={post.imageUrl || "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?auto=format&fit=crop&q=80&w=500"} 
+               alt="Track Cover" 
+               className="w-full h-44 object-cover object-center group-hover:scale-102 transition-transform duration-500"
+             />
+             
+             {/* Premium blur soundtrack visual shadow */}
+             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-4">
+               
+               <div className="flex items-center gap-3">
+                 {/* Round play control button */}
+                 <button
+                   onClick={handlePlayPause}
+                   className="w-11 h-11 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:scale-105 active:scale-95 text-white flex items-center justify-center shadow-lg transition-transform shrink-0"
+                 >
+                   {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current translate-x-0.5" />}
+                 </button>
+ 
+                 {/* Track text and progress timeline */}
+                 <div className="flex-1 min-w-0">
+                   <span className="text-[9px] uppercase font-extrabold text-orange-400 tracking-wider flex items-center gap-1">
+                     <Music className="w-3 h-3 animate-pulse text-orange-500" />
+                     DÉMO MUSICALE
+                   </span>
+                   <p className="text-white text-sm font-bold truncate leading-snug">
+                     {post.title || "Titre de Démo"}
+                   </p>
+                   {post.beatProd && (
+                     <p className="text-[10px] text-gray-300 truncate -mt-0.5">
+                       Prod: {post.beatProd}
+                     </p>
+                   )}
+                 </div>
+               </div>
+ 
+               {/* Progress timeline slider */}
+               <div className="mt-3 flex items-center gap-2">
+                 <span className="text-[10px] font-mono text-gray-300">{formatTime(currentTime)}</span>
+                 <input
+                   type="range"
+                   min={0}
+                   max={duration || 100}
+                   value={currentTime}
+                   onChange={handleSeek}
+                   className="flex-1 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-orange-500 focus:outline-none"
+                 />
+                 <span className="text-[10px] font-mono text-gray-300">{formatTime(duration)}</span>
+               </div>
+ 
+             </div>
+           </div>
+         </div>
+       ) : post.videoUrl ? (
+         <div className="px-4 sm:px-5 pb-4">
+           <video 
+             src={post.videoUrl} 
+             controls 
+             preload="metadata"
+             referrerPolicy="no-referrer"
+             className="w-full max-h-80 bg-black rounded-2xl border border-gray-150 dark:border-gray-800 object-contain shadow-xs"
+           />
+         </div>
+       ) : post.imageUrl ? (
+         <div className="px-4 sm:px-5 pb-4">
+           <img 
+             src={post.imageUrl} 
+             alt={post.title} 
+             className="w-full h-48 object-cover rounded-2xl border border-gray-150 dark:border-gray-800 shadow-xs"
+           />
+         </div>
+       ) : null}
 
       {/* 4. Footer interactions buttons (Likes, Comments, Shares, Saves) */}
       <div className="px-4 sm:px-5 py-3.5 bg-gray-50/50 dark:bg-gray-850/20 border-t border-gray-50 dark:border-gray-850 flex items-center justify-between">

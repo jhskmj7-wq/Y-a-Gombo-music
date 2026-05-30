@@ -60,6 +60,59 @@ export default function GomboProfile({
 }: GomboProfileProps) {
   // Current Panel view: "main" | "edit" | "settings" | "support"
   const [panelView, setPanelView] = useState<"main" | "edit" | "settings" | "support">("main");
+
+  // Real-time synchronization of current user posts (Mes publications)
+  const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+
+  // Editing mode state
+  const [editingPost, setEditingPost] = useState<any | null>(null);
+  const [editPostTitle, setEditPostTitle] = useState("");
+  const [editPostCaption, setEditPostCaption] = useState("");
+  const [savingPostEdit, setSavingPostEdit] = useState(false);
+
+  useEffect(() => {
+    setLoadingPosts(true);
+    const unsubscribe = gomboDB.listenSocialPosts((allPosts) => {
+      const filtered = allPosts.filter(p => p.authorId === currentUserProfile.uid || p.userId === currentUserProfile.uid);
+      setMyPosts(filtered);
+      setLoadingPosts(false);
+    });
+    return () => unsubscribe();
+  }, [currentUserProfile?.uid]);
+
+  const handleStartEditPost = (post: any) => {
+    setEditingPost(post);
+    setEditPostTitle(post.title || "");
+    setEditPostCaption(post.caption || post.description || "");
+  };
+
+  const handleSavePostEdit = async () => {
+    if (!editingPost) return;
+    setSavingPostEdit(true);
+    try {
+      await gomboDB.updateSocialPost(editingPost.id, {
+        title: editPostTitle,
+        caption: editPostCaption,
+        description: editPostCaption
+      });
+      setEditingPost(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingPostEdit(false);
+    }
+  };
+
+  const handleDeletePost = async (id: string) => {
+    if (window.confirm("Voulez-vous vraiment supprimer cette publication ?")) {
+      try {
+        await gomboDB.deleteSocialPost(id);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
   
   // Available toggle value
   const [isAvailable, setIsAvailable] = useState(currentUserProfile.isAvailableNow ?? true);
@@ -548,6 +601,127 @@ export default function GomboProfile({
             </div>
 
           </div>
+
+          {/* SECTION MES PUBLICATIONS (CRUD) */}
+          <div className="space-y-3 pt-2">
+            <span className="text-[10px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-widest block">📝 Mes Publications ({myPosts.length})</span>
+            {loadingPosts ? (
+              <div className="flex justify-center p-6 bg-white dark:bg-[#121214] rounded-3xl border border-gray-150 dark:border-gray-800">
+                <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : myPosts.length === 0 ? (
+              <div className="p-6 bg-white dark:bg-[#121214] rounded-3xl border border-dashed border-gray-150 dark:border-gray-850/60 text-center">
+                <p className="text-xs font-bold text-gray-500">Aucune publication active</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Vos Gombos, Démos, et Annonces s'afficheront ici.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3.5">
+                {myPosts.map((post) => (
+                  <div key={post.id} className="p-4 bg-white dark:bg-[#121214] rounded-2xl border border-gray-100 dark:border-gray-805 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-[9px] uppercase font-black px-1.5 py-0.5 rounded ${
+                          post.type === "gombo" 
+                            ? "bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-[#FF7A00]" 
+                            : post.type === "demo"
+                            ? "bg-purple-50 text-purple-600 dark:bg-purple-950/20 dark:text-purple-400"
+                            : "bg-teal-50 text-teal-600 dark:bg-teal-950/20 dark:text-teal-400"
+                        }`}>
+                          {post.type || "Publication"}
+                        </span>
+                        {post.commune && (
+                          <span className="text-[10px] font-bold text-gray-400">
+                            📍 {post.commune}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-xs font-black text-gray-950 dark:text-white truncate">
+                        {post.title || "Titre de publication"}
+                      </h4>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed font-semibold">
+                        {post.caption || post.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEditPost(post)}
+                        className="flex-1 sm:flex-none px-3.5 py-2 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors border border-gray-100 dark:border-gray-750 cursor-pointer"
+                      >
+                        Modifier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePost(post.id)}
+                        className="flex-1 sm:flex-none px-3.5 py-2 bg-red-50 hover:bg-red-105 dark:bg-red-950/20 text-red-650 dark:text-red-400 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors border border-red-100 dark:border-red-950/20 flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* INLINE EDIT MODAL DIALOG */}
+          <AnimatePresence>
+            {editingPost && (
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                  className="bg-white dark:bg-[#1a1a1f] w-full max-w-md rounded-3xl p-6 shadow-2xl border border-gray-150 dark:border-gray-800"
+                >
+                  <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase mb-4 tracking-tight flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-805 pb-3">
+                    📝 Modifier la Publication
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Titre</label>
+                      <input
+                        type="text"
+                        value={editPostTitle}
+                        onChange={(e) => setEditPostTitle(e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-50/60 dark:bg-gray-805/40 border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Description / Caption</label>
+                      <textarea
+                        rows={4}
+                        value={editPostCaption}
+                        onChange={(e) => setEditPostCaption(e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-50/60 dark:bg-gray-805/40 border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2.5 mt-6 border-t border-gray-100 dark:border-gray-850 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setEditingPost(null)}
+                      className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-extrabold text-xs uppercase rounded-lg cursor-pointer"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSavePostEdit}
+                      disabled={savingPostEdit}
+                      className="px-5 py-2 bg-[#FF7A00] text-white font-extrabold text-xs uppercase rounded-lg flex items-center gap-1.5 shadow-sm cursor-pointer"
+                    >
+                      {savingPostEdit ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : "Sauvegarder"}
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
 
           {/* SECTION ACTIONS RAPIDES */}
           <div className="space-y-3">

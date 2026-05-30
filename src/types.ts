@@ -137,6 +137,22 @@ export interface SocialPost {
   audioUrl?: string; // Optional soundtrack link
   imageUrl?: string; // Cover artwork link
   createdAt: string;
+
+  // New fields for MVP Phase 2 publication system
+  type?: "gombo" | "demo" | "annonce";
+  authorId?: string;
+  authorName?: string;
+  authorPhoto?: string;
+  description?: string;
+  commune?: string;
+  mediaUrl?: string;
+  videoUrl?: string;
+  budget?: string | number;
+  specialty?: string;
+  urgent?: boolean;
+  commentsCount?: number;
+  genre?: string;         // e.g. for Démo
+  availability?: string;  // e.g. for Annonce
 }
 
 export interface GomboNotification {
