@@ -311,9 +311,13 @@ export default function App() {
 
   // Profile setup safeguard
   const handleProtectedAction = (targetView: string) => {
-    if (!user) {
+    if (!currentUser) {
       setShowAuthModal(true);
       return;
+    }
+    // Sync state
+    if (!user) {
+      setUser(currentUser);
     }
     setView(targetView);
     setMobileMenuOpen(false);
@@ -1103,12 +1107,13 @@ export default function App() {
                     </p>
                     <button
                       onClick={async () => {
-                        if (!user) {
+                        const activeUser = currentUser || user;
+                        if (!activeUser) {
                           setShowAuthModal(true);
                           return;
                         }
                         try {
-                          await gomboDB.registerWaitingFeature(user.uid, user.email, "marche");
+                          await gomboDB.registerWaitingFeature(activeUser.uid, activeUser.email, "marche");
                           alert("Félicitations ! Vous êtes bien enregistré sur la file d'attente du Marché du Coin ! Nous vous contacterons dès activation.");
                         } catch (err) {
                           console.error(err);
