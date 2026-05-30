@@ -72,94 +72,107 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (firebaseUser) {
+        console.log("🔥 [AuthContext] User detected! UID:", firebaseUser.uid, "Email:", firebaseUser.email);
         localStorage.setItem("gombo_auth", JSON.stringify({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           emailVerified: firebaseUser.emailVerified
         }));
-        setLoading(true);
 
-        // Safety timeout to prevent the app from getting stuck if Firebase/Firestore loading stalls
-        fallbackTimeout = setTimeout(() => {
-          console.warn("⏳ [AuthContext] Profile loading safety timeout reached. Stopping splash loader.");
-          setLoading(false);
-        }, 4500);
-
+        // --- STEP 1: INSTANT PROFILE LOAD (NO WAITING FOR FIRESTORE) ---
+        let initialProfile: UserProfile | null = null;
         try {
-          console.log("🔍 [AuthContext] Checking if profile exists in Firestore for uid:", firebaseUser.uid);
-          let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
-          
-          if (!uProfile) {
-            // Check if there is a pending signup profile to use instead of default
-            const pending = gomboDB.getPendingSignUpProfile();
-            if (pending) {
-              console.log("🎯 [AuthContext] Found pending registration profile. Saving to Firestore...");
-              uProfile = { ...pending, uid: firebaseUser.uid };
-              await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
-            } else {
-              console.log("⚠️ [AuthContext] Profile does not exist in Firestore. Let's create one...");
-              const nameParts = firebaseUser.displayName ? firebaseUser.displayName.split(" ") : ["", ""];
-              const primaryProvider = firebaseUser.providerData && firebaseUser.providerData[0] 
-                ? firebaseUser.providerData[0].providerId 
-                : "email";
-              uProfile = {
-                uid: firebaseUser.uid,
-                email: firebaseUser.email || "",
-                firstName: nameParts[0] || "Artiste",
-                lastName: nameParts.slice(1).join(" ") || "Ivoirien",
-                phone: firebaseUser.phoneNumber || "",
-                commune: "Cocody", // Default starter commune
-                role: "musicien", // Default starting role
-                avatarUrl: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-                photoURL: firebaseUser.photoURL || "",
-                displayName: firebaseUser.displayName || `${nameParts[0]} ${nameParts.slice(1).join(" ")}`.trim() || "Artiste Gombo",
-                provider: primaryProvider,
-                isProfileComplete: false,
-                balance: 25000,
-                totalRevenue: 25000,
-                totalWithdrawals: 0,
-                gigsCompleted: 0,
-                applicationsSent: 0,
-                acceptanceRate: 100,
-                createdAt: new Date().toISOString()
-              };
-              console.log("💾 [AuthContext] Creating profile in Firestore:", uProfile);
-              await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
+          const cached = localStorage.getItem("gombo_active_profile");
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed && parsed.uid === firebaseUser.uid) {
+              initialProfile = parsed;
+              console.log("🎒 [AuthContext] Loaded profile instantly from LocalCache:", initialProfile);
             }
           }
-          
-          console.log("🔗 [AuthContext] Connecting real-time onSnapshot listener to users/" + firebaseUser.uid);
-          profileUnsubscribe = gomboDB.listenUserProfile(firebaseUser.uid, (updatedProfile) => {
-            console.log("⚡ [AuthContext Real-time Sync] Profile updated live:", updatedProfile);
-            if (fallbackTimeout) {
-              clearTimeout(fallbackTimeout);
-              fallbackTimeout = null;
+        } catch (err) {
+          console.warn("⚠️ Error parsing cached profile:", err);
+        }
+
+        // If no cache, generate mock/default immediately so the UI is active right away
+        if (!initialProfile) {
+          const nameParts = firebaseUser.displayName ? firebaseUser.displayName.split(" ") : ["Artiste", "Gombo"];
+          const primaryProvider = firebaseUser.providerData && firebaseUser.providerData[0] 
+            ? firebaseUser.providerData[0].providerId 
+            : "google.com";
+
+          initialProfile = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || "",
+            firstName: nameParts[0] || "Artiste",
+            lastName: nameParts.slice(1).join(" ") || "Ivoirien",
+            phone: firebaseUser.phoneNumber || "",
+            commune: "Cocody",
+            role: "musicien", // default role
+            avatarUrl: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+            photoURL: firebaseUser.photoURL || "",
+            displayName: firebaseUser.displayName || `${nameParts[0]} ${nameParts.slice(1).join(" ")}`.trim() || "Artiste Gombo",
+            provider: primaryProvider,
+            isProfileComplete: false,
+            balance: 25000,
+            totalRevenue: 25000,
+            totalWithdrawals: 0,
+            gigsCompleted: 0,
+            applicationsSent: 0,
+            acceptanceRate: 100,
+            createdAt: new Date().toISOString()
+          };
+          console.log("💾 [AuthContext] Built default initial profile:", initialProfile);
+          localStorage.setItem("gombo_active_profile", JSON.stringify(initialProfile));
+        }
+
+        // Make the profile active and stop the loading spinner instantly
+        setProfile(initialProfile);
+        setLoading(false);
+
+        // --- STEP 2: BACKGROUND FIRESTORE SYNC & LISTENER ---
+        const syncAndListenFirestore = async () => {
+          try {
+            console.log("🔍 [AuthContext DB Sync] Verifying/creating Firestore document in background for:", firebaseUser.uid);
+            let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
+            
+            if (!uProfile && initialProfile) {
+              const pendingProfile = gomboDB.getPendingSignUpProfile();
+              if (pendingProfile) {
+                console.log("🎯 [AuthContext Sync] Found pending registration data. Saving to Firestore...");
+                uProfile = { ...pendingProfile, uid: firebaseUser.uid };
+              } else {
+                console.log("⚠️ [AuthContext Sync] Creating new Firestore matching profile...");
+                uProfile = { ...initialProfile };
+              }
+              await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
             }
-            if (updatedProfile) {
-              setProfile(updatedProfile);
-              localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile));
-              setLoading(false);
-            } else if (uProfile) {
-              // Fallback to local representation if Firestore is still propagating
-              console.log("🕒 [AuthContext Real-time Sync] Profile document is temporarily unavailable. Using initial user data...");
+
+            // Sync backend updates to local state
+            if (uProfile) {
               setProfile(uProfile);
               localStorage.setItem("gombo_active_profile", JSON.stringify(uProfile));
-              setLoading(false);
-            } else {
-              setProfile(null);
-              setLoading(false);
+            }
+          } catch (syncErr) {
+            console.warn("⚠️ Background profile sync got non-fatal error:", syncErr);
+          }
+
+          // Attach subscription
+          console.log("🔗 [AuthContext Live] Hooking real-time subscription for users/" + firebaseUser.uid);
+          profileUnsubscribe = gomboDB.listenUserProfile(firebaseUser.uid, (updatedProfile) => {
+            if (updatedProfile) {
+              console.log("⚡ [AuthContext Live Sync] Profile updated live from Firestore:", updatedProfile);
+              setProfile(updatedProfile);
+              localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile));
             }
           });
+        };
 
-        } catch (e) {
-          console.error("❌ [AuthContext] Error initializing user profile listener:", e);
-          if (fallbackTimeout) {
-            clearTimeout(fallbackTimeout);
-            fallbackTimeout = null;
-          }
-          setLoading(false);
-        }
+        // Run sync-and-listen inside background microtask
+        syncAndListenFirestore();
+
       } else {
+        console.log("👤 [AuthContext] No authenticated user detected.");
         setProfile(null);
         localStorage.removeItem("gombo_auth");
         localStorage.removeItem("gombo_active_profile");

@@ -1793,6 +1793,23 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Temporary Auth Debug Panel requested by user */}
+      <div className="fixed bottom-22 right-4 z-50 bg-slate-900/95 dark:bg-black/95 text-xs text-gray-300 p-4 rounded-2xl border border-orange-500/30 shadow-2xl max-w-xs space-y-2 font-mono">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-1.5">
+          <span className="font-extrabold text-orange-500 uppercase tracking-wider text-[10px]">🔴 Auth Status (Debug MVP)</span>
+        </div>
+        <div><span className="text-gray-500">UID:</span> <span className="text-white text-[10px] break-all">{user?.uid || "Non connecté"}</span></div>
+        <div><span className="text-gray-500">Email:</span> <span className="text-white text-[10px] break-all">{user?.email || "Non connecté"}</span></div>
+        <div><span className="text-gray-500">Profile:</span> <span className={`${profile ? "text-emerald-500" : "text-amber-500"} font-bold`}>{profile ? "Trouvé (OK)" : "Inexistant (En attente)"}</span></div>
+        {profile && (
+          <div className="pt-1.5 border-t border-slate-800 text-[10px] space-y-0.5 text-gray-400">
+            <div>Nom: {profile.firstName} {profile.lastName}</div>
+            <div>Rôle: {profile.role}</div>
+            <div>Commune: {profile.commune}</div>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

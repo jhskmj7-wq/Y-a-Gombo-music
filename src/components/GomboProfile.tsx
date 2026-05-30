@@ -371,16 +371,25 @@ export default function GomboProfile({
                     <span className="text-gray-800 dark:text-gray-200 select-all font-mono text-[11px]">{currentUserProfile.email || "Non renseigné"}</span>
                   </div>
                   <div className="flex items-center gap-2">
+                    <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[10px]">Date Inscription:</span>
+                    <span className="text-gray-800 dark:text-gray-200 flex items-center gap-1.5 font-mono">
+                      <Calendar className="w-3.5 h-3.5 text-gray-450" />
+                      {currentUserProfile.createdAt 
+                        ? new Date(currentUserProfile.createdAt).toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" })
+                        : "Non renseignée"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Commune:</span>
                     <span className="text-gray-800 dark:text-gray-200">{currentUserProfile.commune || "Cocody"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Authentification:</span>
-                    <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-[10px] font-black tracking-wider uppercase text-gray-600 dark:text-gray-450 rounded-md">
+                    <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-[10px] font-black tracking-wider uppercase text-gray-450 rounded-md">
                       🔐 {currentUserProfile.provider || "Standard Email"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 sm:col-span-2">
                     <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Solde Cachets:</span>
                     <span className="font-extrabold text-[#FF7A00]">{(currentUserProfile.balance ?? 25000).toLocaleString()} FCFA</span>
                   </div>
