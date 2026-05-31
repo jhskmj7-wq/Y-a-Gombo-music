@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { 
   User, Phone, MapPin, Music, Award, Wallet, Send, FileText, Check, 
-  Sparkles, ShieldCheck, Heart, CreditCard, Star, Radio
+  Sparkles, ShieldCheck, Heart, CreditCard, Star, Radio,
+  Camera, Upload, RefreshCw
 } from "lucide-react";
 import { UserProfile, UserRole } from "../types";
 import { gomboDB } from "../firebase";
@@ -63,6 +64,78 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
 
   const [loading, setLoading] = useState(false);
   const [errorMSG, setErrorMSG] = useState("");
+
+  // Webcam capturing and photo upload states
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 300, height: 305, facingMode: "user" } });
+      setCameraStream(stream);
+      setCameraActive(true);
+    } catch (err) {
+      console.error("Camera access failed:", err);
+      alert("Impossible d'accéder à la caméra. Veuillez autoriser l'accès à l'appareil photo.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+    setCameraActive(false);
+  };
+
+  // Stop camera when component unmounts or view changes
+  React.useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  const capturePhoto = async () => {
+    const video = document.getElementById("complete-webcam-preview") as HTMLVideoElement;
+    if (!video) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 300;
+    canvas.height = 300;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Draw the current video frame onto canvas
+    ctx.drawImage(video, 0, 0, 300, 300);
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const file = new File([blob], `captured_avatar_${Date.now()}.jpeg`, { type: "image/jpeg" });
+      stopCamera();
+      await handleFileUpload(file);
+    }, "image/jpeg");
+  };
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true);
+    setUploadProgress(0);
+    try {
+      const path = `avatars/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
+      const downloadUrl = await gomboDB.uploadFile(path, file, (progress) => {
+        setUploadProgress(Math.round(progress));
+      });
+      setAvatarUrl(downloadUrl);
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Une erreur de chargement est survenue. Veuillez réessayer.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,31 +243,107 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
 
           {/* STEP 2: Profile Picture Selection */}
           <div className="space-y-3 border-t border-gray-100 dark:border-gray-850 pt-5">
-            <label className="block text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              2. CHOISIR VOTRE PHOTO DE PROFIL CHIC
-            </label>
-            <div className="flex flex-wrap gap-4 items-center justify-center md:justify-start">
-              <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[#7C3AED] shadow-inner">
-                <img src={avatarUrl} alt="Preview" className="w-full h-full object-cover" />
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                2. CHOISIR VOTRE PHOTO DE PROFIL CHIC
+              </label>
+              {uploading && (
+                <span className="text-[10px] font-black tracking-wider text-[#7C3AED] uppercase animate-pulse">
+                  Chargement de la photo... {uploadProgress}%
+                </span>
+              )}
+            </div>
+
+            <div className="border border-gray-100 dark:border-gray-800 p-4.5 rounded-2xl bg-gray-50/50 dark:bg-gray-850/20 space-y-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                {/* Current Preview or Camera active viewport */}
+                <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#7C3AED] bg-gray-100 dark:bg-gray-800 flex-shrink-0 flex items-center justify-center shadow-inner">
+                  {cameraActive ? (
+                    <video
+                      id="complete-webcam-preview"
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover scale-x-[-1]"
+                    />
+                  ) : (
+                    <img src={avatarUrl} alt="Aperçu" className="w-full h-full object-cover" />
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2 w-full sm:w-auto">
+                  {cameraActive ? (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={capturePhoto}
+                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                      >
+                        📸 Prendre la Photo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={stopCamera}
+                        className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-750 dark:text-gray-300 font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {/* Choisir une photo button */}
+                      <label className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-750 dark:text-gray-300 font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-gray-200/50 dark:border-gray-750">
+                        <Upload className="w-3.5 h-3.5" />
+                        Choisir une photo
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file);
+                          }}
+                        />
+                      </label>
+
+                      {/* Prendre une photo button */}
+                      <button
+                        type="button"
+                        onClick={startCamera}
+                        className="px-3.5 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        Prendre une photo
+                      </button>
+                    </div>
+                  )}
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold">
+                    Stockage réel via Firebase Storage ou simulation HD.
+                  </span>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {AVATARS.map((url, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setAvatarUrl(url)}
-                    className={`relative w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
-                      avatarUrl === url ? "border-[#7C3AED] scale-105 shadow-md" : "border-transparent"
-                    }`}
-                  >
-                    <img src={url} alt={`Avatar ${index}`} className="w-full h-full object-cover" />
-                    {avatarUrl === url && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <Check className="w-4.5 h-4.5 text-white stroke-[3px]" />
-                      </div>
-                    )}
-                  </button>
-                ))}
+
+              {/* Predefined Avatars as presets alternatives */}
+              <div className="pt-2 border-t border-gray-100/30 dark:border-gray-800/20">
+                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase block mb-1.5">Ou utiliser l'une de nos illustrations :</span>
+                <div className="flex flex-wrap gap-2">
+                  {AVATARS.map((url, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setAvatarUrl(url)}
+                      className={`relative w-9 h-9 rounded-full overflow-hidden border-2 transition-all ${
+                        avatarUrl === url ? "border-[#7C3AED] scale-105 shadow-md" : "border-transparent"
+                      }`}
+                    >
+                      <img src={url} alt={`Avatar ${index}`} className="w-full h-full object-cover" />
+                      {avatarUrl === url && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <Check className="w-3.5 h-3.5 text-white stroke-[3px]" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

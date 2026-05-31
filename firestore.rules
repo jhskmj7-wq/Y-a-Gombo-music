@@ -201,7 +201,7 @@ service cloud.firestore {
         isValidUser(request.resource.data) &&
         // Block standard users from promoting themselves to system roles
         (isOwner(userId) ? (request.resource.data.role == resource.data.role) : true);
-      allow delete: if isAdmin();
+      allow delete: if isSignedIn() && (isOwner(userId) || isAdmin());
     }
 
     // --- 2. GOMBOS COLLECTION RULES ---

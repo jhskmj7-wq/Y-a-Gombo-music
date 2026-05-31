@@ -4,7 +4,8 @@ import {
   User, Phone, MapPin, Music, Award, Wallet, Send, FileText, Check, 
   Sparkles, ShieldCheck, Heart, CreditCard, Star, Radio, LogOut,
   Settings, ArrowUpRight, TrendingUp, HelpCircle, Bell, Eye, EyeOff,
-  Moon, Sun, Globe, Smartphone, Shield, Lock, Trash2, Calendar
+  Moon, Sun, Globe, Smartphone, Shield, Lock, Trash2, Calendar,
+  Camera, Upload, RefreshCw
 } from "lucide-react";
 import { UserProfile, PaymentProvider } from "../types";
 import { gomboDB, gomboAuth } from "../firebase";
@@ -126,9 +127,9 @@ export default function GomboProfile({
   const [withdrawErrorMsg, setWithdrawErrorMsg] = useState("");
 
   // Wallet defaults in database
-  const balance = currentUserProfile.balance ?? 25000;
-  const totalRevenue = currentUserProfile.totalRevenue ?? 75000;
-  const totalWithdrawals = currentUserProfile.totalWithdrawals ?? 50000;
+  const balance = currentUserProfile.balance ?? 0;
+  const totalRevenue = currentUserProfile.totalRevenue ?? 0;
+  const totalWithdrawals = currentUserProfile.totalWithdrawals ?? 0;
 
   // Stats defaults
   const gigsCompleted = currentUserProfile.gigsCompleted ?? (currentUserProfile.role === "musicien" ? 3 : 0);
@@ -153,6 +154,78 @@ export default function GomboProfile({
   const [editLoading, setEditLoading] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
   const [editError, setEditError] = useState("");
+
+  // Webcam capturing and photo upload states
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 300, height: 300, facingMode: "user" } });
+      setCameraStream(stream);
+      setCameraActive(true);
+    } catch (err) {
+      console.error("Camera access failed:", err);
+      alert("Impossible d'accéder à la caméra. Veuillez autoriser l'accès à l'appareil photo.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+    setCameraActive(false);
+  };
+
+  // Stop camera when component unmounts or view changes
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  const capturePhoto = async () => {
+    const video = document.getElementById("webcam-preview") as HTMLVideoElement;
+    if (!video) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 300;
+    canvas.height = 300;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Draw the current video frame onto canvas
+    ctx.drawImage(video, 0, 0, 300, 300);
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const file = new File([blob], `captured_avatar_${Date.now()}.jpeg`, { type: "image/jpeg" });
+      stopCamera();
+      await handleFileUpload(file);
+    }, "image/jpeg");
+  };
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true);
+    setUploadProgress(0);
+    try {
+      const path = `avatars/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
+      const downloadUrl = await gomboDB.uploadFile(path, file, (progress) => {
+        setUploadProgress(Math.round(progress));
+      });
+      setAvatarUrl(downloadUrl);
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Une erreur de chargement est survenue. Veuillez réessayer.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Settings screen State Sub-Tabs: "compte" | "pref" | "secu" | "confi"
   const [settingsTab, setSettingsTab] = useState<"compte" | "pref" | "secu" | "confi">("compte");
@@ -364,6 +437,23 @@ export default function GomboProfile({
           animate={{ opacity: 1 }}
           className="space-y-6"
         >
+          {(!currentUserProfile.isProfileComplete || !currentUserProfile.bio || !currentUserProfile.phone || !currentUserProfile.firstName) && (
+            <div className="bg-amber-50 dark:bg-amber-950/20 border-l-4 border-amber-500 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">💡</span>
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  Votre profil n'est pas tout à fait complet ! Complétez vos informations pour débloquer de nouveaux cachets.
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigateView("complete_profile")}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer"
+              >
+                Compléter mon profil
+              </button>
+            </div>
+          )}
+
           {/* HEADER PROFIL */}
           <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col md:flex-row items-center gap-6 justify-between">
             <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
@@ -479,6 +569,14 @@ export default function GomboProfile({
               >
                 📱 Partager mon profil
               </a>
+
+              <button
+                type="button"
+                onClick={() => setPanelView("edit")}
+                className="w-full text-center px-4 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-extrabold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                📝 Modifier mon profil
+              </button>
             </div>
           </div>
 
@@ -728,7 +826,7 @@ export default function GomboProfile({
             <span className="text-[10px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-widest block">⚡ ACTIONS RAPIDES</span>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
-                { label: "Modifier Mon Coin", icon: User, action: () => setPanelView("edit"), color: "hover:border-[#7C3AED] hover:text-[#7C3AED]" },
+                { label: "Modifier mon profil", icon: User, action: () => setPanelView("edit"), color: "hover:border-[#7C3AED] hover:text-[#7C3AED]" },
                 { label: "Mes Plans", icon: FileText, action: () => onNavigateView("dashboard"), color: "hover:border-purple-500 hover:text-purple-500" },
                 { label: "Les Cachets", icon: Calendar, action: () => onNavigateView("dashboard"), color: "hover:border-emerald-500 hover:text-emerald-500" },
                 { label: "Le Terrain", icon: Award, action: () => onNavigateView("dashboard"), color: "hover:border-[#7C3AED] hover:text-[#7C3AED]" },
@@ -751,10 +849,10 @@ export default function GomboProfile({
 
             <button
               onClick={onLogout}
-              className="w-full p-4 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
+              className="w-full p-4 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 rounded-2xl font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <LogOut className="w-4.5 h-4.5" />
-              Se Déconnecter de Y’A GOMBO MUSIC
+              Déconnexion
             </button>
           </div>
         </motion.div>
@@ -795,28 +893,107 @@ export default function GomboProfile({
           <form onSubmit={handleEditProfileSubmit} className="space-y-6">
             <div className="bg-white dark:bg-[#121214] p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
               
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">
-                  Photo de Profil (Avatar)
-                </label>
-                <div className="flex flex-wrap gap-2.5">
-                  {AVATARS.map((url, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => setAvatarUrl(url)}
-                      className={`relative w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
-                        avatarUrl === url ? "border-[#FF7A00] scale-105" : "border-transparent"
-                      }`}
-                    >
-                      <img src={url} alt="" className="w-full h-full object-cover" />
-                      {avatarUrl === url && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
+              <div className="border border-gray-100 dark:border-gray-800 p-4.5 rounded-2xl bg-gray-50/50 dark:bg-gray-850/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Photo de Profil (Avatar)
+                  </label>
+                  {uploading && (
+                    <span className="text-[10px] font-black tracking-wider text-[#FF7A00] uppercase animate-pulse">
+                      Chargement de la photo... {uploadProgress}%
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {/* Current Preview or Camera active viewport */}
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#FF7A00] bg-gray-100 dark:bg-gray-800 flex-shrink-0 flex items-center justify-center shadow-inner">
+                    {cameraActive ? (
+                      <video
+                        id="webcam-preview"
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover scale-x-[-1]"
+                      />
+                    ) : (
+                      <img src={avatarUrl} alt="Aperçu" className="w-full h-full object-cover" />
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2 w-full sm:w-auto">
+                    {cameraActive ? (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={capturePhoto}
+                          className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                        >
+                          📸 Prendre la Photo
+                        </button>
+                        <button
+                          type="button"
+                          onClick={stopCamera}
+                          className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-750 dark:text-gray-300 font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {/* Choisir une photo button */}
+                        <label className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-750 dark:text-gray-300 font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-gray-200/50 dark:border-gray-750">
+                          <Upload className="w-3.5 h-3.5" />
+                          Choisir une photo
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload(file);
+                            }}
+                          />
+                        </label>
+
+                        {/* Prendre une photo button */}
+                        <button
+                          type="button"
+                          onClick={startCamera}
+                          className="px-3.5 py-2 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          Prendre une photo
+                        </button>
+                      </div>
+                    )}
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold">
+                      Pris en charge via Firebase Storage.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Predefined alternative presets */}
+                <div className="pt-2">
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase block mb-1.5">Ou utiliser un avatar du Showbiz :</span>
+                  <div className="flex flex-wrap gap-2">
+                    {AVATARS.map((url, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setAvatarUrl(url)}
+                        className={`relative w-9 h-9 rounded-full overflow-hidden border-2 transition-all ${
+                          avatarUrl === url ? "border-[#FF7A00] scale-105" : "border-transparent"
+                        }`}
+                      >
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        {avatarUrl === url && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

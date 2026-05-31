@@ -219,6 +219,21 @@ export default function SocialPostCard({
     await gomboDB.updateSocialPost(post.id, {
       comments: updatedComments
     });
+
+    // Alert the post owner via real Firestore notifications
+    if (post.userId !== currentUser.uid) {
+      try {
+        const authorName = currentUserProfile ? `${currentUserProfile.firstName} ${currentUserProfile.lastName}` : "Un artiste";
+        await gomboDB.sendNotification({
+          userId: post.userId,
+          title: "💬 Nouveau Commentaire !",
+          message: `${authorName} a commenté votre post : "${newComment.text.substring(0, 35)}${newComment.text.length > 35 ? "..." : ""}"`,
+          type: "general"
+        });
+      } catch (err) {
+        console.error("⚠️ Failed to dispatch comment notification:", err);
+      }
+    }
   };
 
   // Share Action (Copy to clipboard simulation)
