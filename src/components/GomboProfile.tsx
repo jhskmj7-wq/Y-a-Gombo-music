@@ -5,7 +5,7 @@ import {
   Sparkles, ShieldCheck, Heart, CreditCard, Star, Radio, LogOut,
   Settings, ArrowUpRight, TrendingUp, HelpCircle, Bell, Eye, EyeOff,
   Moon, Sun, Globe, Smartphone, Shield, Lock, Trash2, Calendar,
-  Camera, Upload, RefreshCw
+  Camera, Upload, RefreshCw, MessageSquare, ChevronDown, Search
 } from "lucide-react";
 import { UserProfile, PaymentProvider } from "../types";
 import { gomboDB, gomboAuth } from "../firebase";
@@ -20,26 +20,30 @@ interface GomboProfileProps {
 }
 
 const ABIDJAN_COMMUNES = [
-  "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", "Abobo", 
-  "Koumassi", "Adjamé", "Port-Bouët", "Attécoubé", "Grand-Bassam", "Bingerville"
+  "Abobo", "Adjamé", "Attécoubé", "Cocody", "Koumassi", "Marcory", 
+  "Plateau", "Port-Bouët", "Treichville", "Yopougon", "Bingerville", 
+  "Songon", "Anyama"
 ];
 
 const SPECIALTIES = [
-  "Chanteur(euse) Lead", "Guitariste Soliste", "Guitariste Accompagnateur", 
-  "Bassiste", "Batteur", "Claviériste / Pianiste", "Percussionniste", 
-  "DJ", "Cuivres / Wind", "Ingénieur du Son", "Directeur Artistique / MC"
+  "Chant", "Chœur", "Piano", "Clavier", "Guitare Solo", "Guitare Rythmique", 
+  "Guitare Basse", "Batterie", "Percussions", "Djembé", "Balafon", 
+  "Saxophone", "Trompette", "Violon", "Flûte", "Accordéon", "DJ", 
+  "Beatmaker", "Producteur Musical", "Arrangeur", "Compositeur", "Auteur", 
+  "Sound Engineer", "Choriste", "Chef d'Orchestre", "Danseur", 
+  "MC / Animateur", "Rappeur", "Slameur"
 ];
 
 const EXPERIENCES = [
-  "1-2 ans (Débutant ambitieux)",
-  "3-5 ans (Intermédiaire actif)",
-  "5-10 ans (Professionnel aguerri)",
-  "Plus de 10 ans (Légende locale)"
+  "Débutant", "Intermédiaire", "Confirmé", "Professionnel"
 ];
 
 const GENRES = [
-  "Coupé-Décalé", "Zouglou", "Rumba Congolaise", "Rap Ivoire / Hip-Hop", 
-  "Gospel Ivoirien", "Afrobeat / Afropop", "Reggae ivoirien", "Jazz / Variété Acoustique"
+  "Coupé-Décalé", "Zouglou", "Wôyô", "Afrobeat", "Amapiano", "Gospel", 
+  "Reggae", "Dancehall", "Rap Ivoire", "Drill", "RnB", "Soul", "Jazz", 
+  "Blues", "Rock", "Variété", "Musique Traditionnelle", "Musique Mandingue", 
+  "Musique Baoulé", "Musique Bété", "Musique Sénoufo", "Musique Ébrié", 
+  "Orchestre Live", "Animation Mariage", "Animation Maquis", "Animation Église"
 ];
 
 const AVATARS = [
@@ -140,14 +144,29 @@ export default function GomboProfile({
   const [firstName, setFirstName] = useState(currentUserProfile.firstName || "");
   const [lastName, setLastName] = useState(currentUserProfile.lastName || "");
   const [artistName, setArtistName] = useState(currentUserProfile.artistName || "");
+  const [gender, setGender] = useState(currentUserProfile.gender || "Homme");
+  const [birthDate, setBirthDate] = useState(currentUserProfile.birthDate || "");
   const [phone, setPhone] = useState(currentUserProfile.phone || "");
+  const [whatsapp, setWhatsapp] = useState(currentUserProfile.whatsapp || "");
   const [commune, setCommune] = useState(currentUserProfile.commune || "Cocody");
+  const [communeSearch, setCommuneSearch] = useState("");
+  const [showCommuneDropdown, setShowCommuneDropdown] = useState(false);
   const [bio, setBio] = useState(currentUserProfile.bio || "");
   const [avatarUrl, setAvatarUrl] = useState(currentUserProfile.avatarUrl || currentUserProfile.photoURL || AVATARS[0]);
   
-  const [speciality, setSpeciality] = useState(currentUserProfile.speciality || currentUserProfile.specialty || SPECIALTIES[0]);
-  const [experienceYears, setExperienceYears] = useState(currentUserProfile.experienceYears || EXPERIENCES[1]);
-  const [musicGenre, setMusicGenre] = useState(currentUserProfile.musicGenre || GENRES[0]);
+  const [specialties, setSpecialties] = useState<string[]>(
+    currentUserProfile.specialties || 
+    (currentUserProfile.specialty ? [currentUserProfile.specialty] : [])
+  );
+  const [musicGenres, setMusicGenres] = useState<string[]>(
+    currentUserProfile.musicGenres || 
+    (currentUserProfile.musicGenre ? [currentUserProfile.musicGenre] : [])
+  );
+  const [experience, setExperience] = useState(currentUserProfile.experience || "Intermédiaire");
+  const [availabilities, setAvailabilities] = useState<string[]>(
+    currentUserProfile.availabilities || 
+    (currentUserProfile.isAvailableNow ? ["Disponible immédiatement"] : [])
+  );
   const [waveNumber, setWaveNumber] = useState(currentUserProfile.waveNumber || currentUserProfile.paymentNumber || "");
   const [orangeMoneyNumber, setOrangeMoneyNumber] = useState(currentUserProfile.orangeMoneyNumber || "");
 
@@ -254,9 +273,9 @@ export default function GomboProfile({
       setCommune(currentUserProfile.commune || "Cocody");
       setBio(currentUserProfile.bio || "");
       setAvatarUrl(currentUserProfile.avatarUrl || currentUserProfile.photoURL || AVATARS[0]);
-      setSpeciality(currentUserProfile.speciality || currentUserProfile.specialty || SPECIALTIES[0]);
-      setExperienceYears(currentUserProfile.experienceYears || EXPERIENCES[1]);
-      setMusicGenre(currentUserProfile.musicGenre || GENRES[0]);
+      setSpecialties(currentUserProfile.specialties || (currentUserProfile.specialty ? [currentUserProfile.specialty] : []));
+      setExperience(currentUserProfile.experience || "Intermédiaire");
+      setMusicGenres(currentUserProfile.musicGenres || (currentUserProfile.musicGenre ? [currentUserProfile.musicGenre] : []));
       setWaveNumber(currentUserProfile.waveNumber || currentUserProfile.paymentNumber || "");
       setOrangeMoneyNumber(currentUserProfile.orangeMoneyNumber || "");
       setIsAvailable(currentUserProfile.isAvailableNow ?? true);
@@ -350,16 +369,23 @@ export default function GomboProfile({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       artistName: artistName.trim(),
+      gender,
+      birthDate,
       phone: phone.trim(),
+      whatsapp: whatsapp.trim() || phone.trim(),
       commune,
       bio: bio.trim(),
       avatarUrl,
       photoURL: avatarUrl,
-      speciality,
-      specialty: speciality,
-      experienceYears,
-      experience: experienceYears,
-      musicGenre,
+      specialties,
+      specialty: specialties[0] || "Artiste",
+      speciality: specialties[0] || "Artiste",
+      musicGenres,
+      musicGenre: musicGenres[0] || "Showbiz",
+      experience,
+      experienceYears: experience,
+      availabilities,
+      isAvailableNow: availabilities.includes("Disponible immédiatement"),
       waveNumber: waveNumber.trim(),
       orangeMoneyNumber: orangeMoneyNumber.trim(),
       updatedAt: new Date().toISOString()
@@ -437,22 +463,110 @@ export default function GomboProfile({
           animate={{ opacity: 1 }}
           className="space-y-6"
         >
-          {(!currentUserProfile.isProfileComplete || !currentUserProfile.bio || !currentUserProfile.phone || !currentUserProfile.firstName) && (
-            <div className="bg-amber-50 dark:bg-amber-950/20 border-l-4 border-amber-500 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">💡</span>
-                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-                  Votre profil n'est pas tout à fait complet ! Complétez vos informations pour débloquer de nouveaux cachets.
-                </p>
+          {/* PROFILE COMPLETION DETAILED PROGRESS BLOCK */}
+          {(() => {
+            let score = 0;
+            const missing = [];
+            
+            // Check photo (using avatarUrl or photoURL)
+            if (currentUserProfile.avatarUrl || currentUserProfile.photoURL) {
+              score += 20;
+            } else {
+              missing.push({ name: "Photo de profil", bonus: "+20%", key: "photo" });
+            }
+            
+            // Check bio
+            if (currentUserProfile.bio && currentUserProfile.bio.trim().length > 0) {
+              score += 20;
+            } else {
+              missing.push({ name: "Biographie (Bio)", bonus: "+20%", key: "bio" });
+            }
+            
+            // Check phone
+            if (currentUserProfile.phone && currentUserProfile.phone.trim().length > 0) {
+              score += 20;
+            } else {
+              missing.push({ name: "Téléphone", bonus: "+20%", key: "phone" });
+            }
+            
+            // Check commune
+            if (currentUserProfile.commune && currentUserProfile.commune.trim().length > 0) {
+              score += 20;
+            } else {
+              missing.push({ name: "Commune d’Abidjan", bonus: "+20%", key: "commune" });
+            }
+            
+            // Check specialty
+            if (currentUserProfile.specialty || currentUserProfile.speciality) {
+              score += 20;
+            } else {
+              missing.push({ name: "Spécialité musicale", bonus: "+20%", key: "specialty" });
+            }
+
+            return (
+              <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider">📈 Force & Intégrité du Profil</h3>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-xl sm:text-2xl font-black text-gray-950 dark:text-white font-mono">{score}%</span>
+                      <span className="text-xs font-bold text-gray-400">
+                        {score === 100 ? "🎉 Profil 100% complet ! Prêt pour le showbiz ivoirien." : "Travaillez votre profil pour rassurer les promoteurs d'Abidjan."}
+                      </span>
+                    </div>
+                  </div>
+                  {score < 100 && (
+                    <button
+                      onClick={() => {
+                        if (missing.some(m => m.key === "photo" || m.key === "bio" || m.key === "specialty")) {
+                          setPanelView("edit");
+                        } else {
+                          onNavigateView("complete_profile");
+                        }
+                      }}
+                      className="px-4 py-2 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-bold rounded-xl text-xs uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer text-center"
+                    >
+                      🚀 Compléter mon profil
+                    </button>
+                  )}
+                </div>
+
+                {/* Progress Track */}
+                <div className="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden flex">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#FF7A00] to-amber-500 transition-all duration-500" 
+                    style={{ width: `${score}%` }}
+                  />
+                </div>
+
+                {/* Missing tasks to gamify engagement */}
+                {score < 100 && (
+                  <div className="space-y-2.5 pt-1 animate-fadeIn">
+                    <span className="text-[10px] uppercase font-black text-[#FF7A00] dark:text-orange-400 tracking-widest block font-mono">🎯 Boostez votre visibilité en ajoutant :</span>
+                    <div className="flex flex-wrap gap-2">
+                      {missing.map((it, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            if (it.key === "photo" || it.key === "bio") {
+                              setPanelView("edit");
+                            } else {
+                              onNavigateView("complete_profile");
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-gray-50 hover:bg-orange-50 dark:bg-gray-850 dark:hover:bg-orange-950/20 border border-gray-150 dark:border-gray-800 text-gray-650 dark:text-gray-300 rounded-xl text-[10px] font-bold flex items-center gap-1.5 transition-all text-left"
+                        >
+                          <span className="text-orange-550 font-extrabold">{it.bonus}</span>
+                          <span>{it.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              <button
-                onClick={() => onNavigateView("complete_profile")}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer"
-              >
-                Compléter mon profil
-              </button>
-            </div>
-          )}
+            );
+          })()}
 
           {/* HEADER PROFIL */}
           <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col md:flex-row items-center gap-6 justify-between">
@@ -482,8 +596,39 @@ export default function GomboProfile({
                   )}
                   {/* Verified badge labeled */}
                   <span className="text-[9px] font-black tracking-widest text-[#FF7A00] dark:text-yellow-400 uppercase bg-orange-50 dark:bg-yellow-950/20 px-2 py-0.5 rounded-md flex items-center gap-1">
-                    🌟 VÉRIFIÉ Showbiz
+                    🌟 VÉRIFIÉ
                   </span>
+
+                  {/* Level badge */}
+                  {(() => {
+                    const gigs = currentUserProfile.gigsCompleted || 0;
+                    const apps = currentUserProfile.applicationsSent || 0;
+                    const rev = currentUserProfile.totalRevenue || 0;
+                    let userLvl = "Nouveau Talent";
+                    let levelColor = "bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 border border-purple-150/40 dark:border-purple-900/30";
+                    if (gigs >= 8 || rev >= 100000 || apps >= 10) {
+                      userLvl = "Boss du Gombo";
+                      levelColor = "bg-gradient-to-r from-red-500/10 to-orange-500/10 dark:from-red-950/30 dark:to-orange-950/30 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/40 font-black";
+                    } else if (gigs >= 2 || rev >= 15000 || apps >= 3) {
+                      userLvl = "Talent Confirmé";
+                      levelColor = "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40";
+                    }
+                    return (
+                      <span className={`text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-md flex items-center gap-1 uppercase ${levelColor}`}>
+                        👑 {userLvl}
+                      </span>
+                    );
+                  })()}
+
+                  {/* Activity Streak */}
+                  {(() => {
+                    const streak = localStorage.getItem("gombo_activity_streak") || "1";
+                    return (
+                      <span className="text-[9px] font-bold tracking-wider text-orange-600 dark:text-orange-400 uppercase bg-orange-50 dark:bg-orange-950/20 px-2 py-0.5 rounded-md flex items-center gap-1 border border-orange-100 dark:border-orange-900/30">
+                        🔥 {streak} {parseInt(streak) > 1 ? "jours actifs" : "jour actif"}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 text-xs font-bold text-gray-400 dark:text-gray-500 mt-2">
@@ -496,7 +641,7 @@ export default function GomboProfile({
                   </span>
                   {(currentUserProfile.role === "musicien" || currentUserProfile.role === "groupe") && (
                     <span className="flex items-center gap-1 bg-orange-500/10 text-[#FF7A00] rounded-sm px-1 text-[11px]">
-                      🎸 {speciality}
+                      🎸 {currentUserProfile.specialties?.join(', ') || currentUserProfile.specialty || "Artiste"}
                     </span>
                   )}
                 </div>
@@ -999,7 +1144,7 @@ export default function GomboProfile({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Prénom</label>
+                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Prénom(s)</label>
                   <input
                     type="text"
                     required
@@ -1010,7 +1155,7 @@ export default function GomboProfile({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Nom</label>
+                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Nom de famille</label>
                   <input
                     type="text"
                     required
@@ -1021,7 +1166,7 @@ export default function GomboProfile({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Nom d'Artiste / Pseudonyme</label>
+                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Nom d’Artiste / de Scène</label>
                   <input
                     type="text"
                     value={artistName}
@@ -1031,35 +1176,108 @@ export default function GomboProfile({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Téléphone</label>
+                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Sexe / Genre</label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black"
+                  >
+                    <option value="Homme">Homme</option>
+                    <option value="Femme">Femme</option>
+                    <option value="Autre">Autre</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Date de Naissance</label>
+                  <input
+                    type="date"
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-805 rounded-xl text-sm dark:text-white text-black font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Téléphone Direct (+225)</label>
                   <input
                     type="tel"
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black font-mono font-bold"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Commune d'Abidjan</label>
-                  <select
-                    value={commune}
-                    onChange={(e) => setCommune(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black"
-                  >
-                    {ABIDJAN_COMMUNES.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase flex items-center gap-1">
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
+                    Numéro WhatsApp (Laisser vide si identique)
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. 0505050607"
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black font-mono"
+                  />
                 </div>
+
+                {/* Searchable Commune Selector */}
+                <div className="md:col-span-2 relative">
+                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Commune d'Abidjan</label>
+                  <div 
+                    onClick={() => setShowCommuneDropdown(!showCommuneDropdown)}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm cursor-pointer dark:text-white text-black font-bold flex items-center justify-between"
+                  >
+                    <span>📍 {commune || "Choisir votre commune..."}</span>
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  </div>
+
+                  {showCommuneDropdown && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-[#121214] border border-gray-150 dark:border-[#222226] rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 flex flex-col">
+                      <div className="p-2 border-b border-gray-100 dark:border-gray-850 bg-gray-50/50 dark:bg-gray-900/60 flex items-center gap-1.5">
+                        <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <input 
+                          type="text" 
+                          placeholder="Filtre rapide (Yopougon, Cocody, ...)"
+                          value={communeSearch}
+                          onChange={(e) => setCommuneSearch(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full bg-transparent border-none text-xs focus:outline-none py-1 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      
+                      <div className="overflow-y-auto divide-y divide-gray-50 dark:divide-gray-850">
+                        {ABIDJAN_COMMUNES.filter(c => c.toLowerCase().includes(communeSearch.toLowerCase())).map((com) => (
+                          <button
+                            key={com}
+                            type="button"
+                            onClick={() => {
+                              setCommune(com);
+                              setShowCommuneDropdown(false);
+                              setCommuneSearch("");
+                            }}
+                            className={`w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-[#FF7A00]/5 transition-all flex items-center justify-between ${
+                              commune === com ? "text-[#FF7A00] bg-orange-500/5" : "text-gray-700 dark:text-gray-300"
+                            }`}
+                          >
+                            <span>📍 {com}</span>
+                            {commune === com && <Check className="w-3.5 h-3.5 text-[#FF7A00]" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Ma présentation / Bio</label>
                 <textarea
                   value={bio}
-                  rows={3}
+                  rows={2}
                   onChange={(e) => setBio(e.target.value)}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black"
                 />
@@ -1067,46 +1285,109 @@ export default function GomboProfile({
             </div>
 
             {(currentUserProfile.role === "musicien" || currentUserProfile.role === "groupe") && (
-              <div className="bg-white dark:bg-[#121214] p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
-                <span className="text-sm font-black text-gray-500 uppercase tracking-widest block">🎸 Détails Showbiz</span>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">Spécialité Principale</label>
-                    <select
-                      value={speciality}
-                      onChange={(e) => setSpeciality(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-105 rounded-xl text-sm text-black"
-                    >
-                      {SPECIALTIES.map(s => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
+              <div className="bg-white dark:bg-[#121214] p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-5">
+                <div>
+                  <span className="text-sm font-black text-gray-500 uppercase tracking-widest block mb-1">🎸 Spécialités Musicales (Sélection Multiple)</span>
+                  <span className="text-[10px] text-[#FF7A00] font-bold uppercase tracking-wider block">☑ Sélectionnez une ou plusieurs spécialités :</span>
+                </div>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto pt-1 pr-1 border border-gray-50 dark:border-gray-850 p-2 rounded-xl">
+                  {SPECIALTIES.map((spec) => {
+                    const selected = specialties.includes(spec);
+                    return (
+                      <button
+                        key={spec}
+                        type="button"
+                        onClick={() => {
+                          if (selected) {
+                            setSpecialties(specialties.filter(s => s !== spec));
+                          } else {
+                            setSpecialties([...specialties, spec]);
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold text-left border flex items-center justify-between gap-1 transition-all ${
+                          selected
+                            ? "bg-[#FF7A00] border-[#FF7A00] text-white"
+                            : "bg-gray-50 dark:bg-[#18181b] border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-350"
+                        }`}
+                      >
+                        <span className="truncate">{spec}</span>
+                        {selected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">Genre Musical</label>
-                    <select
-                      value={musicGenre}
-                      onChange={(e) => setMusicGenre(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-105 rounded-xl text-sm text-black"
-                    >
-                      {GENRES.map(g => (
-                        <option key={g} value={g}>{g}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div>
+                  <span className="text-sm font-black text-gray-500 uppercase tracking-widest block mb-1">🎶 Genres Musicaux (Sélection Multiple)</span>
+                  <span className="text-[10px] text-[#FF7A00] font-bold uppercase tracking-wider block">☑ Sélectionnez un ou plusieurs genres :</span>
+                </div>
 
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto pt-1 pr-1 border border-gray-50 dark:border-gray-850 p-2 rounded-xl">
+                  {GENRES.map((g) => {
+                    const selected = musicGenres.includes(g);
+                    return (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => {
+                          if (selected) {
+                            setMusicGenres(musicGenres.filter(item => item !== g));
+                          } else {
+                            setMusicGenres([...musicGenres, g]);
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold text-left border flex items-center justify-between gap-1 transition-all ${
+                          selected
+                            ? "bg-amber-500 border-amber-500 text-white"
+                            : "bg-gray-50 dark:bg-[#18181b] border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-350"
+                        }`}
+                      >
+                        <span className="truncate">{g}</span>
+                        {selected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-100 dark:border-gray-850 pt-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">Années de scène de niveau</label>
+                    <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Niveau d'Expérience</label>
                     <select
-                      value={experienceYears}
-                      onChange={(e) => setExperienceYears(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-105 rounded-xl text-sm text-black"
+                      value={experience}
+                      onChange={(e) => setExperience(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-105 rounded-xl text-sm font-bold text-black"
                     >
                       {EXPERIENCES.map(e => (
                         <option key={e} value={e}>{e}</option>
                       ))}
                     </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Disponibilité Générale</label>
+                    <div className="space-y-1.5 mt-1 border border-gray-50 dark:border-gray-850 p-3 rounded-xl max-h-36 overflow-y-auto">
+                      {["Week-end", "Semaine", "Journée", "Soirée", "Disponible immédiatement"].map((av) => {
+                        const checked = availabilities.includes(av);
+                        return (
+                          <label key={av} className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => {
+                                if (checked) {
+                                  setAvailabilities(availabilities.filter(item => item !== av));
+                                } else {
+                                  setAvailabilities([...availabilities, av]);
+                                }
+                              }}
+                              className="accent-orange-500 text-[#FF7A00]"
+                            />
+                            <span>{av}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 

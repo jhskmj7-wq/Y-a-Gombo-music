@@ -13,11 +13,17 @@ export interface UserProfile {
   bio?: string;
   role: UserRole;
   specialty?: string; // e.g. "Chanteur", "Guitariste", "Pianiste", "Batteur", "DJ", "Cuivres", "Bassiste", etc.
+  specialties?: string[]; // Multiple specialties
   experience?: string;
   // New specific fields:
   speciality?: string; // musical specialty
   experienceYears?: string; // Years of experience
   musicGenre?: string; // Genre of music
+  musicGenres?: string[]; // Multiple music genres
+  gender?: string;
+  birthDate?: string;
+  whatsapp?: string;
+  availabilities?: string[];
   waveNumber?: string;
   orangeMoneyNumber?: string;
   balance?: number; // solde disponible

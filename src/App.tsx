@@ -69,8 +69,15 @@ const SPECIALTY_OPTIONS = [
 
 export default function App() {
   // Theme state
+  const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => {
+    return (localStorage.getItem("gombo_theme_mode") as "light" | "dark" | "system") || "system";
+  });
   const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("gombo_theme") === "dark";
+    const mode = localStorage.getItem("gombo_theme_mode") || "system";
+    if (mode === "system") {
+      return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return mode === "dark";
   });
 
   // Mock Mode reactive state
@@ -164,6 +171,17 @@ export default function App() {
   const [playingPostId, setPlayingPostId] = useState<string | null>(null);
   const [socialFilter, setSocialFilter] = useState<"all" | "gombo" | "demo" | "annonce">("all");
 
+  // User engagement retention states
+  const [topTalentsList, setTopTalentsList] = useState<any[]>([]);
+  const [activityStreak, setActivityStreak] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem("gombo_activity_streak");
+      return stored ? parseInt(stored) : 1;
+    } catch {
+      return 1;
+    }
+  });
+
   // Keep scrolls independent and not mixed by scrolling to top of page on view or tab transition
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -248,17 +266,36 @@ export default function App() {
     };
   }, []);
 
-  // Light/Dark toggle effect
+  // Light/Dark and System theme selection and application effect
   useEffect(() => {
     const root = window.document.documentElement;
-    if (darkMode) {
-      root.classList.add("dark");
-      localStorage.setItem("gombo_theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      localStorage.setItem("gombo_theme", "light");
+    const updateTheme = () => {
+      let isDark = false;
+      if (themeMode === "system") {
+        isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      } else {
+        isDark = themeMode === "dark";
+      }
+      setDarkMode(isDark);
+      if (isDark) {
+        root.classList.add("dark");
+        localStorage.setItem("gombo_theme", "dark");
+      } else {
+        root.classList.remove("dark");
+        localStorage.setItem("gombo_theme", "light");
+      }
+    };
+
+    updateTheme();
+    localStorage.setItem("gombo_theme_mode", themeMode);
+
+    if (themeMode === "system") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const handleChange = () => updateTheme();
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
     }
-  }, [darkMode]);
+  }, [themeMode]);
 
   // Auth Context Global Synchronization
   const { currentUser, profile: authProfile, loading: authLoading, refreshProfile: doRefreshProfile, logout: doLogout } = useAuth();
@@ -285,6 +322,140 @@ export default function App() {
       setView("complete_profile");
     }
   }, [currentUser, authProfile, authLoading]);
+
+  // User automatic consecutive daily active streak tracking effect
+  useEffect(() => {
+    try {
+      const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+      const lastActive = localStorage.getItem("gombo_last_active_date");
+      const currentStreak = localStorage.getItem("gombo_activity_streak")
+        ? parseInt(localStorage.getItem("gombo_activity_streak")!)
+        : 1;
+
+      if (!lastActive) {
+        localStorage.setItem("gombo_last_active_date", today);
+        localStorage.setItem("gombo_activity_streak", "1");
+        setActivityStreak(1);
+        console.log("🔥 [Streak Tracker] Initial visit today! Streak set to 1.");
+      } else if (lastActive !== today) {
+        const lastDate = new Date(lastActive);
+        const currentDate = new Date(today);
+        
+        // Compute difference in dates
+        const diffTime = Math.abs(currentDate.getTime() - lastDate.getTime());
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        let newStreak = 1;
+        if (diffDays === 1) {
+          newStreak = currentStreak + 1;
+          console.log(`🔥 [Streak Tracker] Consecutive day! Streak incremented to ${newStreak}.`);
+        } else if (diffDays > 1) {
+          newStreak = 1;
+          console.log("🔥 [Streak Tracker] Days missed. Resetting streak back to 1.");
+        } else {
+          // Same day visit
+          newStreak = currentStreak || 1;
+        }
+
+        localStorage.setItem("gombo_last_active_date", today);
+        localStorage.setItem("gombo_activity_streak", newStreak.toString());
+        setActivityStreak(newStreak);
+      }
+    } catch (err) {
+      console.error("⚠️ Failed to compute Consecutive Activity Streak:", err);
+    }
+  }, [currentUser]);
+
+  // Load Top Talents of the week effect
+  useEffect(() => {
+    const loadTopTalents = async () => {
+      try {
+        const users = await gomboDB.getAllUsers();
+        const musicians = users.filter((u: any) => u.role === "musicien" || u.role === "groupe");
+        
+        // Define outstanding defaults for local or mock sandbox
+        const defaultTalents = [
+          {
+            uid: "mus1",
+            firstName: "Yorobo",
+            lastName: "Sangaré",
+            artistName: "Yoro Lead",
+            specialty: "Guitariste Soliste",
+            commune: "Cocody",
+            avatarUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=150",
+            gigsCompleted: 12,
+            applicationsSent: 20,
+            activityStreak: 8
+          },
+          {
+            uid: "mus2",
+            firstName: "Fanta",
+            lastName: "Kouyaté",
+            artistName: "La Voix d'Or",
+            specialty: "Chanteuse Lead",
+            commune: "Yopougon",
+            avatarUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=150",
+            gigsCompleted: 9,
+            applicationsSent: 14,
+            activityStreak: 6
+          },
+          {
+            uid: "mus-extra-1",
+            firstName: "Pacôme",
+            lastName: "Koffi",
+            artistName: "Didi Clavier",
+            specialty: "Claviériste / Pianiste",
+            commune: "Marcory",
+            avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
+            gigsCompleted: 7,
+            applicationsSent: 11,
+            activityStreak: 5
+          },
+          {
+            uid: "mus-extra-2",
+            firstName: "Manu",
+            lastName: "Diarra",
+            artistName: "Manu Beats",
+            specialty: "Batteur Afro",
+            commune: "Treichville",
+            avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150",
+            gigsCompleted: 5,
+            applicationsSent: 9,
+            activityStreak: 4
+          }
+        ];
+
+        // Combine users with fallback defaults for a vibrant feel
+        const combined = [...musicians];
+        defaultTalents.forEach((dt: any) => {
+          if (!combined.some(u => u.uid === dt.uid)) {
+            combined.push(dt);
+          }
+        });
+
+        // Ensure proper activity attributes
+        const populated = combined.map((u: any) => ({
+          ...u,
+          gigsCompleted: u.gigsCompleted || (u.uid === "mus1" ? 12 : u.uid === "mus2" ? 9 : Math.floor(Math.random() * 4) + 1),
+          activityStreak: u.activityStreak || (u.uid === "mus1" ? 8 : u.uid === "mus2" ? 6 : Math.floor(Math.random() * 3) + 1),
+          specialty: u.specialty || u.speciality || "Artiste Musicien"
+        }));
+
+        // Sort desc based on gigs completed
+        populated.sort((a, b) => b.gigsCompleted - a.gigsCompleted);
+
+        setTopTalentsList(populated.slice(0, 4));
+      } catch (err) {
+        console.warn("⚠️ Failed to load top talents list:", err);
+      }
+    };
+
+    loadTopTalents();
+    window.addEventListener("gomboUserProfileChange", loadTopTalents);
+    return () => {
+      window.removeEventListener("gomboUserProfileChange", loadTopTalents);
+    };
+  }, [profile]);
 
   // Live Gombos Synchronization
   useEffect(() => {
@@ -945,9 +1116,14 @@ export default function App() {
                 </button>
               </div>
 
-              {/* TAB CONTAINER 1: FIL D'ACTUALITÉ */}
-              {currentHomeTab === "fil" && (
-                <div className="space-y-6 max-w-xl mx-auto">
+              {/* TWO COLUMN HOME LAYOUT */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-6 w-full">
+                
+                {/* LEFT COLUMN: PRIMARY FEEDS */}
+                <div className="lg:col-span-8 space-y-6 w-full">
+                  {/* TAB CONTAINER 1: FIL D'ACTUALITÉ */}
+                  {currentHomeTab === "fil" && (
+                    <div className="space-y-6 max-w-2xl mx-auto">
                   {/* COMPOSER BANNER FOR LOGGED IN ARTISTES */}
                   {profile && profile.role === "musicien" && (
                     <div className="bg-white dark:bg-[#1a1a1f] p-4 rounded-3xl border border-dashed border-orange-300 dark:border-orange-900/50 flex items-center justify-between gap-3 shadow-xs">
@@ -1127,6 +1303,206 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+                </div>
+
+                {/* RIGHT COLUMN: ENGAGEMENT SIDEBAR */}
+                <div className="lg:col-span-4 space-y-6 w-full">
+                  
+                  {/* CARD 1: SÉRIE D'ACTIVITÉ */}
+                  <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:from-orange-950/20 dark:to-transparent border border-orange-100 dark:border-orange-900/40 p-5 rounded-3xl space-y-3 shadow-xs relative overflow-hidden">
+                    <div className="absolute top-3 right-3 text-2xl animate-bounce">🔥</div>
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-[#FF7A00] dark:text-orange-400 font-mono">Série & Engagement</h4>
+                      <p className="text-lg font-black text-gray-900 dark:text-white mt-1">🔥 {activityStreak} {activityStreak > 1 ? "jours actifs" : "jour actif"}</p>
+                    </div>
+                    <p className="text-xs text-gray-400 dark:text-gray-400 leading-relaxed">
+                      Revenez chaque jour à Abidjan pour développer votre réseau de contacts et maintenir votre bonus de référencement !
+                    </p>
+
+                    {profile && (
+                      <div className="pt-2 border-t border-orange-150/20 dark:border-orange-900/30 flex items-center justify-between text-xs font-bold gap-2">
+                        <span className="text-gray-400 dark:text-gray-500">Votre Statut :</span>
+                        {(() => {
+                          const gigs = profile.gigsCompleted || 0;
+                          const apps = profile.applicationsSent || 0;
+                          const rev = profile.totalRevenue || 0;
+                          let lvlName = "Nouveau Talent";
+                          let lvlColor = "text-purple-600 bg-purple-50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/30";
+                          if (gigs >= 8 || rev >= 100000 || apps >= 10) {
+                            lvlName = "Boss du Gombo";
+                            lvlColor = "text-rose-600 bg-rose-50 dark:bg-rose-950/30 border border-rose-200/50 dark:border-rose-900/40 font-black";
+                          } else if (gigs >= 2 || rev >= 15000 || apps >= 3) {
+                            lvlName = "Talent Confirmé";
+                            lvlColor = "text-amber-600 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/40";
+                          }
+                          return (
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider ${lvlColor}`}>
+                              👑 {lvlName}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CARD 2: PROFILE COMPLETION BAR */}
+                  {profile ? (() => {
+                    let score = 0;
+                    const missingItems = [];
+                    if (profile.avatarUrl || profile.photoURL) score += 20; else missingItems.push("Photo");
+                    if (profile.bio && profile.bio.trim().length > 0) score += 20; else missingItems.push("Bio");
+                    if (profile.phone && profile.phone.trim().length > 0) score += 20; else missingItems.push("Tel");
+                    if (profile.commune && profile.commune.trim().length > 0) score += 20; else missingItems.push("Commune");
+                    if (profile.specialty || profile.speciality) score += 20; else missingItems.push("Spécialité");
+
+                    return (
+                      <div className="bg-white dark:bg-[#121214] border border-gray-105 dark:border-gray-800 p-5 rounded-3xl space-y-3 shadow-xs">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider font-mono">📈 Profil ({score}%)</span>
+                          {score < 100 && (
+                            <button 
+                              onClick={() => setView("dashboard")}
+                              className="text-[10px] font-extrabold text-[#FF7A00] uppercase hover:underline animate-pulse"
+                            >
+                              Éditer
+                            </button>
+                          )}
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-[#FF7A00] to-amber-500" style={{ width: `${score}%` }} />
+                        </div>
+                        {score < 100 ? (
+                          <p className="text-[10px] text-gray-400 font-semibold leading-relaxed">
+                            💡 Reste à remplir : <strong className="text-gray-650 dark:text-gray-300">{missingItems.join(", ")}</strong> pour maximiser votre éligibilité !
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                            🎉 Profil optimal à 100% pour recevoir des cachets !
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })() : (
+                    <div className="bg-white dark:bg-[#121214] border border-gray-105 dark:border-gray-800 p-5 rounded-3xl text-center space-y-3 shadow-xs">
+                      <span className="text-3xl block animate-bounce">🎤</span>
+                      <h4 className="font-extrabold text-xs text-gray-800 dark:text-white uppercase">Créez votre profil</h4>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
+                        Rejoignez le Gombo-Réseau, publiez vos démos et gagnez de la visibilité auprès des promoteurs.
+                      </p>
+                      <button 
+                        onClick={() => setShowAuthModal(true)}
+                        className="py-2 px-4 bg-orange-50 dark:bg-orange-950/20 text-[#FF7A00] rounded-xl text-[10px] font-black uppercase text-center w-full block border border-orange-100/40"
+                      >
+                        Créer mon compte
+                      </button>
+                    </div>
+                  )}
+
+                  {/* CARD 3: GOMBO DU JOUR */}
+                  {(() => {
+                    const activeOffers = gombos.filter(g => g.status === "publie");
+                    let featured: any = null;
+                    if (activeOffers.length > 0) {
+                      const sorted = [...activeOffers].sort((a,b) => {
+                        if (a.urgent && !b.urgent) return -1;
+                        if (!a.urgent && b.urgent) return 1;
+                        return b.budget - a.budget;
+                      });
+                      featured = sorted[0];
+                    } else {
+                      featured = {
+                        id: "g-jour-static",
+                        title: "⭐ Prestation Cabaret d'Honneur",
+                        eventType: "Cabaret",
+                        budget: 180000,
+                        commune: "Marcory Zone 4",
+                        description: "Nous recrutons un claviériste d'urgence et une chanteuse lead vocale pour une prestation de 4H d’ambiance rumba chic.",
+                        musiciansCount: 2,
+                        date: "Samedi Prochain",
+                        urgent: true
+                      };
+                    }
+
+                    return (
+                      <div className="bg-[#121214] border border-[#FF7A00]/25 rounded-3xl p-5 text-white shadow-xl relative overflow-hidden space-y-3.5">
+                        <div className="absolute top-0 right-0 bg-gradient-to-bl from-orange-500 to-transparent p-2 text-[10px] font-extrabold uppercase tracking-widest leading-none text-white rounded-bl-xl">
+                          VEDETTE
+                        </div>
+                        <div className="space-y-1">
+                          <span className="px-2 py-0.5 bg-[#FF7A00] text-[9px] font-bold uppercase rounded text-white tracking-wider">
+                            ⚡ GOMBO DU JOUR
+                          </span>
+                          <h4 className="font-black text-sm tracking-tight leading-snug pt-1 text-white uppercase">{featured.title}</h4>
+                        </div>
+                        
+                        <p className="text-[11px] text-gray-400 leading-relaxed line-clamp-3">
+                          {featured.description}
+                        </p>
+
+                        <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-3 text-xs font-bold gap-2">
+                          <div className="space-y-0.5">
+                            <span className="text-[9px] text-[#FF7A00] uppercase block">Cachet Net</span>
+                            <span className="font-mono text-xs text-yellow-300">{(featured.budget).toLocaleString()} FCFA</span>
+                          </div>
+                          <div className="text-right space-y-0.5">
+                            <span className="text-[9px] text-gray-400 uppercase block">Commune</span>
+                            <span className="text-xs text-gray-200">📍 {featured.commune}</span>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setView("gombo_list");
+                          }}
+                          className="w-full text-center py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap active:scale-97 transition-all cursor-pointer"
+                        >
+                          Décrocher le Cachet !
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* CARD 4: TOP TALENTS */}
+                  <div className="bg-white dark:bg-[#121214] border border-gray-105 dark:border-gray-800 rounded-3xl p-5 space-y-4 shadow-xs">
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-[#FF7A00] dark:text-orange-400 font-mono">Top Talents</h4>
+                      <p className="text-xs font-bold text-gray-805 dark:text-white mt-1">⭐ Artistes les plus actifs de la semaine</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {topTalentsList.map((talent, idx) => (
+                        <div key={idx} className="flex items-center justify-between border-b border-gray-100/40 dark:border-gray-800/40 pb-2.5 last:border-0 last:pb-0">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="relative shrink-0">
+                              <img src={talent.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} alt="" className="w-8 h-8 rounded-full object-cover border border-orange-500/20" />
+                              <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-amber-400 text-gray-950 font-black rounded-full flex items-center justify-center text-[7px] border border-white">
+                                {idx + 1}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-black text-gray-950 dark:text-white truncate font-sans">
+                                {talent.artistName || `${talent.firstName} ${talent.lastName.substring(0, 1)}.`}
+                              </p>
+                              <span className="text-[9px] font-bold text-gray-400 block dark:text-gray-500 shrink-0 truncate">
+                                🎸 {talent.specialty || "Showbiz Solo"}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right shrink-0">
+                            <span className="px-2 py-0.5 bg-orange-50 dark:bg-orange-950/20 text-[#FF7A00] text-[9px] font-black uppercase rounded font-mono">
+                              🔥 {talent.gigsCompleted} GIGS
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
             </motion.div>
           )}
 
@@ -1784,6 +2160,8 @@ export default function App() {
         onClose={() => setShowSettingsModal(false)} 
         darkMode={darkMode} 
         setDarkMode={setDarkMode} 
+        themeMode={themeMode}
+        setThemeMode={setThemeMode}
         onLogout={handleLogout}
       />
 
