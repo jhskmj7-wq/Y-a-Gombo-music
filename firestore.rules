@@ -191,6 +191,41 @@ service cloud.firestore {
     }
 
 
+    // Validate Renfort Express postings
+    function isValidRenfort(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId == request.auth.uid &&
+             data.title is string && data.title.size() <= 300 &&
+             data.description is string && data.description.size() <= 3000 &&
+             data.status in ['publie', 'termine'] &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('instrument' in data) || (data.instrument is string && data.instrument.size() <= 100)) &&
+             (!('instruments' in data) || (data.instruments is list && data.instruments.size() <= 30)) &&
+             (!('date' in data) || (data.date is string && data.date.size() <= 20)) &&
+             (!('time' in data) || (data.time is string && data.time.size() <= 20)) &&
+             (!('musiciansCount' in data) || (data.musiciansCount is int && data.musiciansCount >= 0)) &&
+             (!('budget' in data) || (data.budget is int && data.budget >= 0)) &&
+             (!('commune' in data) || (data.commune is string && data.commune.size() <= 150)) &&
+             (!('whatsapp' in data) || (data.whatsapp is string && data.whatsapp.size() <= 51)) &&
+             (!('requestType' in data) || (data.requestType is string && data.requestType.size() <= 100)) &&
+             (!('genres' in data) || (data.genres is list && data.genres.size() <= 30));
+    }
+
+    // Validate Renfort Express applications
+    function isValidRenfortApplication(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.renfortId is string && data.renfortId.size() <= 128 &&
+             data.musicianId == request.auth.uid &&
+             data.status in ['en_attente', 'accepte', 'refuse'] &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('renfortTitle' in data) || (data.renfortTitle is string && data.renfortTitle.size() <= 200)) &&
+             (!('musicianName' in data) || (data.musicianName is string && data.musicianName.size() <= 200)) &&
+             (!('musicianPhone' in data) || (data.musicianPhone is string && data.musicianPhone.size() <= 51)) &&
+             (!('musicianAvatar' in data) || (data.musicianAvatar is string && data.musicianAvatar.size() <= 2083)) &&
+             (!('musicianSpecialties' in data) || (data.musicianSpecialties is list && data.musicianSpecialties.size() <= 30));
+    }
+
+
     // --- 1. USERS COLLECTION RULES ---
     match /users/{userId} {
       allow read: if true;
@@ -292,6 +327,62 @@ service cloud.firestore {
         ( resource.data.userId == request.auth.uid && isValidSocialPost(request.resource.data) ) ||
         isAdmin()
       );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // --- 9. RENFORTS COLLECTION RULES ---
+    match /renforts/{renfortId} {
+      allow read: if true;
+      allow create: if isSignedIn() && 
+        isValidRenfort(request.resource.data) &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isSignedIn() && (
+        ( resource.data.userId == request.auth.uid && isValidRenfort(request.resource.data) ) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // --- 10. RENFORT APPLICATIONS COLLECTION RULES ---
+    match /renfortApplications/{applicationId} {
+      allow read: if isSignedIn() && (
+        resource.data.musicianId == request.auth.uid ||
+        get(/databases/$(database)/documents/renforts/$(resource.data.renfortId)).data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && 
+        isValidRenfortApplication(request.resource.data) &&
+        exists(/databases/$(database)/documents/renforts/$(request.resource.data.renfortId));
+      allow update: if isSignedIn() && (
+        ( resource.data.musicianId == request.auth.uid && isValidRenfortApplication(request.resource.data) ) ||
+        ( get(/databases/$(database)/documents/renforts/$(resource.data.renfortId)).data.userId == request.auth.uid && request.resource.data.status in ['en_attente', 'accepte', 'refuse'] ) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.musicianId == request.auth.uid);
+    }
+
+    // --- 11. MONETIZATION PREPARATION COLLECTIONS RULES ---
+    match /subscriptions/{subscriptionId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    match /boosts/{boostId} {
+      allow read: if true;
+      allow create, update: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    match /certifications/{certificationId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 

@@ -52,6 +52,9 @@ import SocialPostCard from "./components/SocialPostCard";
 import SettingsModal from "./components/SettingsModal";
 import CompleteProfile from "./components/CompleteProfile";
 import GomboProfile from "./components/GomboProfile";
+import RenfortExpress from "./components/RenfortExpress";
+import CertificationHub from "./components/CertificationHub";
+import GroupeVIPAnnuaire from "./components/GroupeVIPAnnuaire";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./components/PublicPages";
 
 const ABIDJAN_COMMUNES = [
@@ -255,7 +258,11 @@ export default function App() {
     console.log("🔗 [App Feed Live] Subscribing to real-time social posts observer...");
     const unsubscribe = gomboDB.listenSocialPosts((allPosts) => {
       console.log("⚡ [App Feed Live Sync] Live sync fetched latest social posts:", allPosts.length);
-      const sorted = [...allPosts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const sorted = [...allPosts].sort((a, b) => {
+        if (a.urgent && !b.urgent) return -1;
+        if (!a.urgent && b.urgent) return 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
       setSocialPosts(sorted);
       setLoadingSocial(false);
     });
@@ -644,6 +651,15 @@ export default function App() {
               </button>
 
               <button 
+                onClick={() => setView("renfort_express")}
+                className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1 ${
+                  view === "renfort_express" ? "text-orange-500 dark:text-orange-400 font-extrabold" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                }`}
+              >
+                🎼 Renfort Express
+              </button>
+
+              <button 
                 onClick={() => setView("gombo_list")}
                 className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
                   view === "gombo_list" ? "text-[#7C3AED] dark:text-[#A78BFA]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
@@ -659,17 +675,17 @@ export default function App() {
                 }`}
               >
                 La Base
-                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Bientôt</span>
+                <span id="academie-soon-badge" className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Bientôt</span>
               </button>
 
               <button 
                 onClick={() => setView("groupe")}
                 className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "groupe" ? "text-[#7C3AED]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "groupe" ? "text-amber-500 font-extrabold" : "text-gray-500 hover:text-gray-150 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 Coin des Groupes
-                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Bientôt</span>
+                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-amber-500 bg-amber-55 dark:bg-amber-950/20 px-1 rounded-md animate-pulse">VIP ⭐</span>
               </button>
 
               <button 
@@ -953,6 +969,13 @@ export default function App() {
               </button>
 
               <button 
+                onClick={() => { setView("renfort_express"); setMobileMenuOpen(false); }}
+                className="w-full py-2.5 text-left text-orange-500 dark:text-orange-400 border-b border-gray-50 dark:border-gray-850"
+              >
+                🎼 Renfort Express
+              </button>
+
+              <button 
                 onClick={() => { setView("gombo_list"); setMobileMenuOpen(false); }}
                 className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850"
               >
@@ -972,7 +995,7 @@ export default function App() {
                 className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
               >
                 <span>Coin des Groupes</span>
-                <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">Bientôt</span>
+                <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm animate-pulse">VIP ⭐</span>
               </button>
 
               <button 
@@ -1506,6 +1529,21 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* B. RENFORT EXPRESS ACTIVE LISTING & FORM */}
+          {view === "renfort_express" && (
+            <motion.div
+              key="renfort_express"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <RenfortExpress 
+                currentUserProfile={profile} 
+                onShowAuth={() => setShowAuthModal(true)} 
+              />
+            </motion.div>
+          )}
+
           {/* B. ACTIVE GOMBOS OFFERS DATABASE (SECTION 2: GOMBO) */}
           {view === "gombo_list" && (
             <motion.div
@@ -1978,8 +2016,39 @@ export default function App() {
             )
           )}
 
-          {/* E. COMING SOON PATHS (DYNAMICALLY CAPTURING INTERACTION) */}
-          {["academie", "groupe", "marche", "certification"].includes(view) && (
+          {/* E. COMING SOON PATHS & NEW PREMIUM CORNERS */}
+          {view === "certification" && (
+            <motion.div
+              key="certification"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <CertificationHub
+                currentUserProfile={profile}
+                onRefreshProfile={refreshProfile}
+                onShowAuth={() => setShowAuthModal(true)}
+                onNavigateView={(targetView) => setView(targetView)}
+              />
+            </motion.div>
+          )}
+
+          {view === "groupe" && (
+            <motion.div
+              key="groupe"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <GroupeVIPAnnuaire
+                currentUserProfile={profile}
+                onRefreshProfile={refreshProfile}
+                onShowAuth={() => setShowAuthModal(true)}
+              />
+            </motion.div>
+          )}
+
+          {["academie", "marche"].includes(view) && (
             <motion.div
               key={view}
               initial={{ opacity: 0 }}
@@ -2127,15 +2196,15 @@ export default function App() {
           </button>
         </div>
 
-        {/* Item 4: La Base (locked) */}
+        {/* Item 4: Renfort Express */}
         <button
-          onClick={() => setView("academie")}
+          onClick={() => setView("renfort_express")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "academie" ? "text-[#7C3AED] font-black" : "text-gray-400 dark:text-gray-500"
+            view === "renfort_express" ? "text-orange-500 font-extrabold" : "text-gray-400 dark:text-gray-500"
           }`}
         >
-          <BookOpen className="w-5 h-5" />
-          <span className="text-[9px] font-bold tracking-tight mt-1">La Base</span>
+          <Sparkles className="w-5 h-5" />
+          <span className="text-[9px] font-bold tracking-tight mt-1">Renfort</span>
         </button>
 
         {/* Item 5: Mes Plans / profile context */}

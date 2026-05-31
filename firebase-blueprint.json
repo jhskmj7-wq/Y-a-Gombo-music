@@ -137,6 +137,119 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "Event occurrence timestamp" }
       },
       "required": ["id", "action", "targetId", "performedBy", "createdAt"]
+    },
+    "Renfort": {
+      "title": "Renfort Express",
+      "description": "Quick rehearsal, replacement, or temporary gig offer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Renfort identifier" },
+        "userId": { "type": "string", "description": "UID of the publisher" },
+        "userName": { "type": "string", "description": "Name of the publisher" },
+        "userAvatar": { "type": "string", "description": "Optional avatar of the publisher" },
+        "title": { "type": "string", "description": "Title of request" },
+        "description": { "type": "string", "description": "Detailed description of gig/event/replacement" },
+        "instrument": { "type": "string", "description": "Primary instrument searched" },
+        "instruments": { "type": "array", "description": "All specialties needed" },
+        "date": { "type": "string", "description": "Date needed" },
+        "time": { "type": "string", "description": "Time needed" },
+        "musiciansCount": { "type": "integer", "description": "Number of musicians wanted" },
+        "budget": { "type": "integer", "description": "Budget/Remuneration in FCFA" },
+        "commune": { "type": "string", "description": "Commune / city" },
+        "whatsapp": { "type": "string", "description": "WhatsApp contact connection link" },
+        "requestType": { "type": "string", "description": "Type of event/request" },
+        "genres": { "type": "array", "description": "Genres of music needed" },
+        "status": { "type": "string", "enum": ["publie", "termine"], "description": "Status state" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["id", "userId", "title", "status", "createdAt"]
+    },
+    "RenfortApplication": {
+      "title": "Renfort Express Candidacy",
+      "description": "Candidacies submitted for renfort gigs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Candidacy identifier" },
+        "renfortId": { "type": "string", "description": "ID of associated renfort" },
+        "renfortTitle": { "type": "string", "description": "Title of associated renfort" },
+        "musicianId": { "type": "string", "description": "UID of applicant" },
+        "musicianName": { "type": "string", "description": "Name of applicant" },
+        "musicianPhone": { "type": "string", "description": "Phone number/WhatsApp of applicant" },
+        "musicianAvatar": { "type": "string", "description": "Avatar of applicant" },
+        "musicianSpecialties": { "type": "array", "description": "Specialties of applicant" },
+        "status": { "type": "string", "enum": ["en_attente", "accepte", "refuse"], "description": "Status state" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Submission date" }
+      },
+      "required": ["id", "renfortId", "musicianId", "status", "createdAt"]
+    },
+    "Subscription": {
+      "title": "Gombo VIP or Certifie Subscription",
+      "description": "Paid subscriptions database",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "price": { "type": "integer" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "type", "status", "createdAt"]
+    },
+    "Payment": {
+      "title": "Financial Transaction Log",
+      "description": "Simulated or actual payments records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "amount": { "type": "integer" },
+        "purpose": { "type": "string" },
+        "provider": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "amount", "purpose", "status", "createdAt"]
+    },
+    "Boost": {
+      "title": "Boost Listing Premium",
+      "description": "Records of boosted posts or gigs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "targetType": { "type": "string" },
+        "targetId": { "type": "string" },
+        "targetTitle": { "type": "string" },
+        "duration": { "type": "string" },
+        "price": { "type": "integer" },
+        "expiresAt": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "targetId", "expiresAt", "status", "createdAt"]
+    },
+    "Certification": {
+      "title": "Artist Certification Application",
+      "description": "Application records for verifying / certifying Pro artists",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "pricePaid": { "type": "integer" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "type", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -167,6 +280,30 @@
     "/admin_logs/{logId}": {
       "schema": "AdminLog",
       "description": "Traceability record logs for administrative and oversight actions"
+    },
+    "/renforts/{renfortId}": {
+      "schema": "Renfort",
+      "description": "Renfort Express gig listings"
+    },
+    "/renfortApplications/{applicationId}": {
+      "schema": "RenfortApplication",
+      "description": "Renfort Express applications"
+    },
+    "/subscriptions/{subscriptionId}": {
+      "schema": "Subscription",
+      "description": "Active premium plans subscriptions"
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Payments records for verification and transaction audits"
+    },
+    "/boosts/{boostId}": {
+      "schema": "Boost",
+      "description": "Boost campaign records"
+    },
+    "/certifications/{certificationId}": {
+      "schema": "Certification",
+      "description": "Verification and talent credentials certifications"
     }
   }
 }

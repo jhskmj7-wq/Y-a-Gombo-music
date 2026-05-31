@@ -41,6 +41,20 @@ export default function SocialPostCard({
     return list.includes(post.userId);
   });
 
+  const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    gomboDB.getUserProfile(post.userId).then((profile) => {
+      if (active && profile) {
+        setAuthorProfile(profile);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [post.userId]);
+
   const [showComments, setShowComments] = useState(false);
   const [commentsList, setCommentsList] = useState<PostComment[]>(post.comments);
   const [commentInput, setCommentInput] = useState("");
@@ -256,7 +270,11 @@ export default function SocialPostCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white dark:bg-[#1a1a1f] border border-gray-100 dark:border-gray-850 rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300"
+      className={`bg-white dark:bg-[#1a1a1f] border rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 ${
+        post.urgent 
+          ? "border-orange-400 dark:border-orange-500/50 shadow-orange-500/5 bg-gradient-to-tr from-orange-500/[0.02] to-transparent ring-2 ring-orange-400/10" 
+          : "border-gray-100 dark:border-gray-850"
+      }`}
     >
       {/* 1. Header block: user info */}
       <div className="p-4 sm:p-5 flex items-center justify-between">
@@ -269,11 +287,19 @@ export default function SocialPostCard({
             />
           </div>
           <div>
-             <div className="flex items-center gap-1.5">
+             <div className="flex items-center gap-1.5 flex-wrap">
                <span className="font-extrabold text-sm text-gray-950 dark:text-white leading-tight">
                  {post.userName || "Artiste Gombo"}
                </span>
-               <Check className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
+               {authorProfile?.badges && authorProfile.badges.length > 0 ? (
+                 <div className="flex items-center gap-0.5">
+                   {authorProfile.badges.map((b) => (
+                     <span key={b} title={b} className="text-xs cursor-help">{b.split(" ")[0]}</span>
+                   ))}
+                 </div>
+               ) : (
+                 <Check className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
+               )}
              </div>
              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                {post.userRole && (
@@ -299,7 +325,12 @@ export default function SocialPostCard({
            </div>
          </div>
  
-         {/* Follow/Unfollow Artist Button */}
+         {post.urgent && (
+            <span className="text-[10px] uppercase font-black bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-2.5 py-1 rounded-full flex items-center gap-0.5 shadow-sm mr-1.5 leading-none animate-pulse">
+              🚀 Boosté
+            </span>
+          )}
+          {/* Follow/Unfollow Artist Button */}
          <button
            onClick={handleFollowToggle}
            className={`px-3.5 py-1.5 text-xs font-black rounded-full transition-all border active:scale-95 ${

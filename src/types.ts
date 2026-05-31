@@ -43,6 +43,13 @@ export interface UserProfile {
   isVerified?: boolean;
   displayName?: string;
   provider?: string;
+
+  // Monetization / Gamification fields
+  verificationStatus?: "standard" | "certifie" | "verifie"; // Talent Certifié
+  groupStatus?: "standard" | "vip" | "premium"; // Groups level
+  groupType?: "Orchestre" | "Groupes Zouglou" | "Chorale" | "Groupes Gospel"; // Category for groups VIP
+  badges?: string[]; // ["⭐ Talent Certifié", "🔥 Artiste Actif", "🏆 Top Talent", "🎼 Groupe VIP", "✅ Profil Vérifié"]
+
   createdAt: string; // ISO String
 }
 
@@ -173,3 +180,89 @@ export interface GomboNotification {
   read: boolean;
   createdAt: string;
 }
+
+export interface Renfort {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  title: string;
+  description: string;
+  instrument: string; // Left for simple queries
+  instruments: string[]; // Sélection multiple
+  date: string;
+  time: string;
+  musiciansCount: number;
+  budget: number;
+  commune: string;
+  whatsapp: string;
+  requestType: string; // Répétition, Remplacement, etc
+  genres: string[];
+  status: "publie" | "termine";
+  createdAt: string;
+}
+
+export interface RenfortApplication {
+  id: string;
+  renfortId: string;
+  renfortTitle: string;
+  musicianId: string;
+  musicianName: string;
+  musicianPhone: string;
+  musicianAvatar?: string;
+  musicianSpecialties?: string[];
+  status: "en_attente" | "accepte" | "refuse";
+  createdAt: string;
+}
+
+// Monetization Interfaces for preparations
+export interface GomboSubscription {
+  id: string;
+  userId: string;
+  userName: string;
+  type: "talent_certifie" | "groupe_vip" | "groupe_premium";
+  status: "active" | "expired" | "pending";
+  price: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
+export interface GomboPayment {
+  id: string;
+  userId: string;
+  userName: string;
+  amount: number;
+  purpose: string; // e.g., "Certification", "Boost 24h", etc.
+  provider: "Wave" | "Orange Money" | "MTN Momo" | "Moov Money";
+  phoneNumber: string;
+  status: "success" | "pending" | "failed";
+  createdAt: string;
+}
+
+export interface GomboBoost {
+  id: string;
+  userId: string;
+  userName: string;
+  targetType: "gombo" | "post";
+  targetId: string; // ID of the boosted item (Gombo or SocialPost)
+  targetTitle: string;
+  duration: "24h" | "3d" | "7d";
+  price: number;
+  expiresAt: string;
+  status: "actif" | "expire";
+  createdAt: string;
+}
+
+export interface GomboCertification {
+  id: string;
+  userId: string;
+  userName: string;
+  type: "certifie" | "verifie";
+  status: "en_attente" | "approuve" | "rejete";
+  videoUrl?: string; // Showcase or audition video url
+  pricePaid?: number;
+  createdAt: string;
+}
+
+

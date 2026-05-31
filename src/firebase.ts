@@ -30,7 +30,7 @@ import {
   onSnapshot
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
-import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus } from "./types";
+import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification } from "./types";
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
@@ -172,6 +172,8 @@ const LOCAL_RESERVATIONS_KEY = "gombo_reservations";
 const LOCAL_WAITING_KEY = "gombo_waiting";
 const LOCAL_AUTH_KEY = "gombo_logged_in_user";
 const LOCAL_NOTIFICATIONS_KEY = "gombo_notifications";
+const LOCAL_RENFORS_KEY = "gombo_renforts";
+const LOCAL_RENFORT_APPLICATIONS_KEY = "gombo_renfort_applications";
 
 // Initialize mock local data if empty
 const initMockDB = () => {
@@ -303,6 +305,54 @@ const initMockDB = () => {
   }
   if (!localStorage.getItem(LOCAL_NOTIFICATIONS_KEY)) {
     localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(LOCAL_RENFORS_KEY)) {
+    const mockRenforts: Renfort[] = [
+      {
+        id: "ren_mock1",
+        userId: "cli1",
+        userName: "Serge Kassi",
+        userAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
+        title: "Pianiste / Claviériste pour culte spécial Église",
+        description: "Recherche un pianiste expérimenté pour accompagner la chorale durant le culte spécial ce dimanche matin. Doit maîtriser le répertoire Gospel de Côte d’Ivoire.",
+        instrument: "Piano",
+        instruments: ["Piano", "Clavier"],
+        date: new Date(Date.now() + 86400005 * 2).toISOString().split("T")[0],
+        time: "08:30",
+        musiciansCount: 1,
+        budget: 25000,
+        commune: "Cocody",
+        whatsapp: "0700112233",
+        requestType: "Église",
+        genres: ["Gospel"],
+        status: "publie",
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: "ren_mock2",
+        userId: "mus1",
+        userName: "Yorobo Sangaré",
+        userAvatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
+        title: "Remplacement Batteur Urgent Zouglou Live",
+        description: "Notre batteur s’est blessé, il nous faut un remplaçant ce soir pour notre prestation live au maquis VIP à Yopougon. Ambiance Zouglou assurée !",
+        instrument: "Batterie",
+        instruments: ["Batterie"],
+        date: new Date().toISOString().split("T")[0],
+        time: "21:00",
+        musiciansCount: 1,
+        budget: 35000,
+        commune: "Yopougon",
+        whatsapp: "0511223344",
+        requestType: "Remplacement urgent",
+        genres: ["Zouglou", "Wôyô"],
+        status: "publie",
+        createdAt: new Date().toISOString()
+      }
+    ];
+    localStorage.setItem(LOCAL_RENFORS_KEY, JSON.stringify(mockRenforts));
+  }
+  if (!localStorage.getItem(LOCAL_RENFORT_APPLICATIONS_KEY)) {
+    localStorage.setItem(LOCAL_RENFORT_APPLICATIONS_KEY, JSON.stringify([]));
   }
 };
 
@@ -1504,5 +1554,396 @@ export const gomboDB = {
     localStorage.setItem("gombo_social_posts", JSON.stringify(filtered));
     triggerStorageEvent();
     window.dispatchEvent(new Event("gomboSocialPostsChange"));
+  },
+
+  // --- RENFORTS (RENFORT EXPRESS) ---
+  async getAllRenforts(): Promise<Renfort[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "renforts"));
+        return snap.docs.map(d => d.data() as Renfort);
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getAllRenforts.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+    return JSON.parse(localStorage.getItem("gombo_renforts") || "[]");
+  },
+
+  listenAllRenforts(callback: (renforts: Renfort[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "renforts"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as Renfort);
+          callback(list);
+        }, (error) => {
+          console.error("⚠️ Firestore listenAllRenforts Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour listenAllRenforts.", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const list = JSON.parse(localStorage.getItem("gombo_renforts") || "[]");
+      callback(list);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboRenfortChange", triggerLocal);
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboRenfortChange", triggerLocal);
+    };
+  },
+
+  async publishRenfort(renfort: Omit<Renfort, "id" | "createdAt" | "status">): Promise<Renfort> {
+    const id = "ren_" + Math.random().toString(36).substring(2, 9);
+    const newRenfort: Renfort = {
+      ...renfort,
+      id,
+      status: "publie",
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "renforts", id), newRenfort);
+        return newRenfort;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour publishRenfort.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: Renfort[] = JSON.parse(localStorage.getItem("gombo_renforts") || "[]");
+    list.unshift(newRenfort);
+    localStorage.setItem("gombo_renforts", JSON.stringify(list));
+    triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboRenfortChange"));
+    return newRenfort;
+  },
+
+  async deleteRenfort(id: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await deleteDoc(doc(db, "renforts", id));
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour deleteRenfort.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+    let list: Renfort[] = JSON.parse(localStorage.getItem("gombo_renforts") || "[]");
+    list = list.filter(r => r.id !== id);
+    localStorage.setItem("gombo_renforts", JSON.stringify(list));
+    triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboRenfortChange"));
+  },
+
+  // --- RENFORT APPLICATIONS ---
+  async getRenfortApplications(): Promise<RenfortApplication[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "renfortApplications"));
+        return snap.docs.map(d => d.data() as RenfortApplication);
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getRenfortApplications.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+    return JSON.parse(localStorage.getItem("gombo_renfort_applications") || "[]");
+  },
+
+  listenRenfortApplications(callback: (applications: RenfortApplication[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "renfortApplications"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as RenfortApplication);
+          callback(list);
+        }, (error) => {
+          console.error("⚠️ Firestore listenRenfortApplications Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour listenRenfortApplications.", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const list = JSON.parse(localStorage.getItem("gombo_renfort_applications") || "[]");
+      callback(list);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboRenfortAppChange", triggerLocal);
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboRenfortAppChange", triggerLocal);
+    };
+  },
+
+  async applyToRenfort(appData: Omit<RenfortApplication, "id" | "createdAt" | "status">): Promise<RenfortApplication> {
+    const id = "rapp_" + Math.random().toString(36).substring(2, 10);
+    const newApp: RenfortApplication = {
+      ...appData,
+      id,
+      status: "en_attente",
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "renfortApplications", id), newApp);
+        return newApp;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour applyToRenfort.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: RenfortApplication[] = JSON.parse(localStorage.getItem("gombo_renfort_applications") || "[]");
+    list.push(newApp);
+    localStorage.setItem("gombo_renfort_applications", JSON.stringify(list));
+    triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboRenfortAppChange"));
+    return newApp;
+  },
+
+  async updateRenfortApplicationStatus(id: string, status: "en_attente" | "accepte" | "refuse"): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "renfortApplications", id), { status }, { merge: true });
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour updateRenfortApplicationStatus.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+    const list: RenfortApplication[] = JSON.parse(localStorage.getItem("gombo_renfort_applications") || "[]");
+    const idx = list.findIndex(a => a.id === id);
+    if (idx !== -1) {
+      list[idx].status = status;
+      localStorage.setItem("gombo_renfort_applications", JSON.stringify(list));
+      triggerStorageEvent();
+      window.dispatchEvent(new Event("gomboRenfortAppChange"));
+    }
+  },
+
+  // ==========================================
+  // --- Monetization Infrastructure (Beta) ---
+  // ==========================================
+  async publishSubscription(sub: Omit<GomboSubscription, "id" | "createdAt">): Promise<GomboSubscription> {
+    const id = "sub_" + Math.random().toString(36).substr(2, 9);
+    const newSub: GomboSubscription = {
+      ...sub,
+      id,
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "subscriptions", id), newSub);
+        return newSub;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour publishSubscription.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: GomboSubscription[] = JSON.parse(localStorage.getItem("gombo_subscriptions") || "[]");
+    list.push(newSub);
+    localStorage.setItem("gombo_subscriptions", JSON.stringify(list));
+    triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboMonetizationChange"));
+    return newSub;
+  },
+
+  async getSubscriptions(userId: string): Promise<GomboSubscription[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "subscriptions"), where("userId", "==", userId));
+        const querySnapshot = await getDocs(q);
+        const results: GomboSubscription[] = [];
+        querySnapshot.forEach((doc) => {
+          results.push(doc.data() as GomboSubscription);
+        });
+        return results.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getSubscriptions.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: GomboSubscription[] = JSON.parse(localStorage.getItem("gombo_subscriptions") || "[]");
+    return list.filter(s => s.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async publishPayment(pay: Omit<GomboPayment, "id" | "createdAt">): Promise<GomboPayment> {
+    const id = "pay_" + Math.random().toString(36).substr(2, 9);
+    const newPay: GomboPayment = {
+      ...pay,
+      id,
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "payments", id), newPay);
+        return newPay;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour publishPayment.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: GomboPayment[] = JSON.parse(localStorage.getItem("gombo_payments") || "[]");
+    list.push(newPay);
+    localStorage.setItem("gombo_payments", JSON.stringify(list));
+    triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboMonetizationChange"));
+    return newPay;
+  },
+
+  async getPayments(userId: string): Promise<GomboPayment[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "payments"), where("userId", "==", userId));
+        const querySnapshot = await getDocs(q);
+        const results: GomboPayment[] = [];
+        querySnapshot.forEach((doc) => {
+          results.push(doc.data() as GomboPayment);
+        });
+        return results.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getPayments.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: GomboPayment[] = JSON.parse(localStorage.getItem("gombo_payments") || "[]");
+    return list.filter(p => p.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async publishBoost(boost: Omit<GomboBoost, "id" | "createdAt" | "status">): Promise<GomboBoost> {
+    const id = "boost_" + Math.random().toString(36).substr(2, 9);
+    const newBoost: GomboBoost = {
+      ...boost,
+      id,
+      status: "actif",
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "boosts", id), newBoost);
+        // Also update the target item status in firebase (e.g. gombos or posts) if they exist
+        const targetColl = boost.targetType === "gombo" ? "gombos" : "posts";
+        await setDoc(doc(db, targetColl, boost.targetId), { isBoosted: true, urgent: true }, { merge: true });
+        return newBoost;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour publishBoost.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: GomboBoost[] = JSON.parse(localStorage.getItem("gombo_boosts") || "[]");
+    list.push(newBoost);
+    localStorage.setItem("gombo_boosts", JSON.stringify(list));
+
+    // Support client side simulation of boost effect
+    if (boost.targetType === "gombo") {
+      const gombos: Gombo[] = JSON.parse(localStorage.getItem("gombo_offers") || "[]");
+      const idx = gombos.findIndex(g => g.id === boost.targetId);
+      if (idx !== -1) {
+        gombos[idx].urgent = true;
+        localStorage.setItem("gombo_offers", JSON.stringify(gombos));
+        window.dispatchEvent(new Event("gomboOffersChange"));
+      }
+    } else {
+      const posts: SocialPost[] = JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
+      const idx = posts.findIndex(p => p.id === boost.targetId);
+      if (idx !== -1) {
+        posts[idx].urgent = true;
+        localStorage.setItem("gombo_social_posts", JSON.stringify(posts));
+        window.dispatchEvent(new Event("gomboSocialChange"));
+      }
+    }
+
+    triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboMonetizationChange"));
+    return newBoost;
+  },
+
+  async getBoosts(): Promise<GomboBoost[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const querySnapshot = await getDocs(collection(db, "boosts"));
+        const results: GomboBoost[] = [];
+        querySnapshot.forEach((doc) => {
+          results.push(doc.data() as GomboBoost);
+        });
+        return results;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getBoosts.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    return JSON.parse(localStorage.getItem("gombo_boosts") || "[]");
+  },
+
+  async publishCertification(cert: Omit<GomboCertification, "id" | "createdAt" | "status">): Promise<GomboCertification> {
+    const id = "cert_" + Math.random().toString(36).substr(2, 9);
+    const newCert: GomboCertification = {
+      ...cert,
+      id,
+      status: "en_attente",
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "certifications", id), newCert);
+        return newCert;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour publishCertification.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: GomboCertification[] = JSON.parse(localStorage.getItem("gombo_certifications") || "[]");
+    list.push(newCert);
+    localStorage.setItem("gombo_certifications", JSON.stringify(list));
+    triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboMonetizationChange"));
+    return newCert;
+  },
+
+  async getCertifications(userId: string): Promise<GomboCertification[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "certifications"), where("userId", "==", userId));
+        const querySnapshot = await getDocs(q);
+        const results: GomboCertification[] = [];
+        querySnapshot.forEach((doc) => {
+          results.push(doc.data() as GomboCertification);
+        });
+        return results;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getCertifications.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: GomboCertification[] = JSON.parse(localStorage.getItem("gombo_certifications") || "[]");
+    return list.filter(c => c.userId === userId);
   }
 };
