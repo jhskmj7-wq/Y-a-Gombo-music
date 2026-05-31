@@ -238,6 +238,14 @@ export default function GomboProfile({
         setUploadProgress(Math.round(progress));
       });
       setAvatarUrl(downloadUrl);
+      
+      // Persist directly in Firestore immediately
+      await gomboDB.updateUserProfile(currentUserProfile.uid, {
+        avatarUrl: downloadUrl,
+        photoURL: downloadUrl,
+      });
+      // Fire refresh callback so user header and app components receive the updated photo URL immediately
+      onRefreshProfile();
     } catch (err) {
       console.error("Upload error:", err);
       alert("Une erreur de chargement est survenue. Veuillez réessayer.");

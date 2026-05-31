@@ -281,7 +281,7 @@ export default function SocialPostCard({
         <div className="flex items-center gap-3">
           <div className="relative w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-[#FF7A00] to-yellow-500">
             <img 
-              src={post.userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+              src={authorProfile?.avatarUrl || authorProfile?.photoURL || post.userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
               alt={post.userName} 
               className="w-full h-full rounded-full object-cover border border-white dark:border-[#1a1a1f]" 
             />
@@ -585,7 +585,11 @@ export default function SocialPostCard({
                 commentsList.map((com) => (
                   <div key={com.id} className="text-xs flex items-start gap-2.5 bg-white dark:bg-[#1f1f25] p-3 rounded-2xl border border-gray-50 dark:border-gray-800">
                     <img 
-                      src={com.userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                      src={
+                        com.userId === currentUser?.uid 
+                          ? (currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || com.userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150")
+                          : (com.userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150")
+                      } 
                       alt={com.userName} 
                       className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5" 
                     />
