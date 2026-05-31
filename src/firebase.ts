@@ -30,7 +30,7 @@ import {
   onSnapshot
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
-import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification } from "./types";
+import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus } from "./types";
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
@@ -1075,7 +1075,7 @@ export const gomboDB = {
     return newApp;
   },
 
-  async updateApplicationStatus(id: string, status: "en_attente" | "accepte" | "rejete"): Promise<void> {
+  async updateApplicationStatus(id: string, status: ApplicationStatus): Promise<void> {
     if (!isFirebaseMock && db) {
       try {
         await setDoc(doc(db, "applications", id), { status }, { merge: true });

@@ -60,7 +60,7 @@ export interface Gombo {
   createdAt: string; // ISO String
 }
 
-export type ApplicationStatus = "en_attente" | "accepte" | "rejete";
+export type ApplicationStatus = "en_attente" | "accepte" | "refuse" | "rejete";
 
 export interface Application {
   id: string;
@@ -81,6 +81,9 @@ export interface Application {
   applicantName?: string;
   applicantPhoto?: string;
   whatsapp?: string;
+  specialty?: string;
+  disponibilite?: string;
+  availability?: string;
   audioUrl?: string;
   videoUrl?: string;
   userId?: string; // matches security rules

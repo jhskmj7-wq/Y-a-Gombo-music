@@ -243,7 +243,8 @@ export default function SettingsModal({ isOpen, onClose, darkMode, setDarkMode, 
                     max="100"
                     value={audioVolume}
                     onChange={(e) => setAudioVolume(parseInt(e.target.value))}
-                    onChangeCommit={playDemoBeep}
+                    onMouseUp={playDemoBeep}
+                    onTouchEnd={playDemoBeep}
                     className="flex-1 accent-orange-550 cursor-pointer"
                   />
                 </div>

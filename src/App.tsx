@@ -1245,7 +1245,7 @@ export default function App() {
                               }}
                               className="px-4.5 py-2.5 bg-[#FF7A00] hover:bg-[#E06C00] active:scale-97 text-white font-black rounded-xl text-xs transition-colors shadow-md uppercase tracking-wider"
                             >
-                              Postuler direct
+                              🔥 Je suis chaud
                             </button>
                           ) : (
                             <span className="text-[10px] text-gray-400 font-bold uppercase py-1.5 px-3 bg-gray-100 dark:bg-gray-850 rounded-lg">Réservé-Clients</span>
@@ -1313,7 +1313,7 @@ export default function App() {
                               }}
                               className="px-4 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-[#FF7A00] hover:text-white active:scale-97 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-xs transition-all shadow-xs"
                             >
-                              Postuler
+                              🔥 Je suis chaud
                             </button>
                           ) : (
                             <span className="text-[9px] text-gray-400 font-bold uppercase py-1 px-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg">Recrutement</span>

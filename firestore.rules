@@ -102,7 +102,7 @@ service cloud.firestore {
              data.gomboId is string && data.gomboId.size() <= 128 &&
              (data.userId == request.auth.uid || data.musicianId == request.auth.uid) &&
              data.message is string && data.message.size() <= 2000 &&
-             data.status in ['pending', 'accepted', 'rejected', 'en_attente', 'accepte', 'rejete'] &&
+             data.status in ['pending', 'accepted', 'rejected', 'en_attente', 'accepte', 'rejete', 'refuse'] &&
              data.createdAt is string && data.createdAt.size() <= 50 &&
              (!('gomboTitle' in data) || (data.gomboTitle is string && data.gomboTitle.size() <= 200)) &&
              (!('musicianName' in data) || (data.musicianName is string && data.musicianName.size() <= 200)) &&
@@ -110,7 +110,16 @@ service cloud.firestore {
              (!('musicianPhone' in data) || (data.musicianPhone is string && data.musicianPhone.size() <= 51)) &&
              (!('musicianAvatar' in data) || (data.musicianAvatar is string && data.musicianAvatar.size() <= 2083)) &&
              (!('mediaURL' in data) || (data.mediaURL is string && data.mediaURL.size() <= 2083)) &&
-             (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 2083));
+             (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 2083)) &&
+             (!('applicantId' in data) || (data.applicantId is string && data.applicantId.size() <= 128)) &&
+             (!('applicantName' in data) || (data.applicantName is string && data.applicantName.size() <= 200)) &&
+             (!('applicantPhoto' in data) || (data.applicantPhoto is string && data.applicantPhoto.size() <= 2083)) &&
+             (!('whatsapp' in data) || (data.whatsapp is string && data.whatsapp.size() <= 51)) &&
+             (!('specialty' in data) || (data.specialty is string && data.specialty.size() <= 100)) &&
+             (!('disponibilite' in data) || (data.disponibilite is string && data.disponibilite.size() <= 150)) &&
+             (!('availability' in data) || (data.availability is string && data.availability.size() <= 150)) &&
+             (!('audioUrl' in data) || (data.audioUrl is string && data.audioUrl.size() <= 2083)) &&
+             (!('videoUrl' in data) || (data.videoUrl is string && data.videoUrl.size() <= 2083));
     }
 
     // Validate a notification document
@@ -227,7 +236,7 @@ service cloud.firestore {
         ( (resource.data.userId == request.auth.uid || resource.data.musicianId == request.auth.uid) && isValidApplication(request.resource.data) ) ||
         ( (get(/databases/$(database)/documents/gombos/$(resource.data.gomboId)).data.createdBy == request.auth.uid || 
            get(/databases/$(database)/documents/gombos/$(resource.data.gomboId)).data.clientId == request.auth.uid) && 
-          request.resource.data.status in ['accepted', 'rejected', 'en_attente', 'accepte', 'rejete'] ) ||
+          request.resource.data.status in ['accepted', 'rejected', 'en_attente', 'accepte', 'rejete', 'refuse'] ) ||
         isAdmin()
       );
       allow delete: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.musicianId == request.auth.uid));

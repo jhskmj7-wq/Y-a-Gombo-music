@@ -187,7 +187,17 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
       if (targetGombo.musiciansCount === 1) {
         const matchingApps = receivedApplications.filter(a => a.gomboId === app.gomboId && a.id !== app.id);
         for (const otherApp of matchingApps) {
-          await gomboDB.updateApplicationStatus(otherApp.id, "rejete");
+          await gomboDB.updateApplicationStatus(otherApp.id, "refuse");
+          try {
+            await gomboDB.sendNotification({
+              userId: otherApp.musicianId,
+              title: "Candidature Refusée ❌",
+              message: `Désolé, votre candidature pour le gombo "${otherApp.gomboTitle}" n'a pas été retenue. Courage, de nouveaux plans arrivent !`,
+              type: "general"
+            });
+          } catch (notifErr) {
+            console.warn("⚠️ Notification could not be sent:", notifErr);
+          }
         }
       }
 
@@ -217,7 +227,17 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
     if (!window.confirm("Désapprouver cette candidature ?")) return;
     setLoading(true);
     try {
-      await gomboDB.updateApplicationStatus(app.id, "rejete");
+      await gomboDB.updateApplicationStatus(app.id, "refuse");
+      try {
+        await gomboDB.sendNotification({
+          userId: app.musicianId,
+          title: "Candidature Refusée ❌",
+          message: `Désolé, votre candidature pour le gombo "${app.gomboTitle}" n'a pas été retenue. Ne vous découragez pas, d'autres plans arrivent !`,
+          type: "general"
+        });
+      } catch (notifErr) {
+        console.warn("⚠️ Notification could not be sent:", notifErr);
+      }
       loadDashboardData();
     } catch (err) {
       console.error(err);
@@ -489,9 +509,13 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
                             {app.status === "en_attente" ? "En attente" : app.status === "accepte" ? "Sélectionné ✅" : "Non retenu ❌"}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-650 dark:text-gray-300 whitespace-pre-wrap leading-relaxed mt-2 p-3 bg-gray-55/60 dark:bg-gray-800/30 rounded-xl border border-gray-100 dark:border-gray-800">
-                          💬 Message : "{app.message}"
-                        </p>
+                        <div className="mt-3.5 space-y-1.5 text-xs text-gray-600 dark:text-gray-300">
+                          <p>🎛️ Spécialité : <strong className="text-gray-900 dark:text-white">{app.musicianSpecialty || app.specialty || "Non renseigné"}</strong></p>
+                          <p>📅 Disponibilité renseignée : <strong className="text-gray-900 dark:text-white">{app.disponibilite || app.availability || "Totalement disponible"}</strong></p>
+                          <p className="text-xs text-gray-650 dark:text-gray-305 whitespace-pre-wrap leading-relaxed mt-2 p-3 bg-gray-55/60 dark:bg-gray-800/30 rounded-xl border border-gray-100 dark:border-gray-800">
+                            💬 Message : "{app.message}"
+                          </p>
+                        </div>
 
                         {/* Audio & Video rendering */}
                         <div className="flex flex-wrap gap-2 mt-3">
@@ -568,7 +592,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
                                   {app.musicianName}
                                 </h4>
                                 <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
-                                  {app.musicianSpecialty} • {app.gomboTitle}
+                                  {app.musicianSpecialty || app.specialty || "Musicien polyvalent"} • {app.gomboTitle}
                                 </p>
                               </div>
                             </div>
@@ -578,16 +602,26 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
                                 ? "bg-amber-50 text-amber-600 dark:bg-amber-950/20" 
                                 : app.status === "accepte" 
                                 ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" 
-                                : "bg-red-50 text-red-600 dark:bg-red-950/20"
+                                : "bg-red-50 text-red-655 dark:bg-red-950/20"
                             }`}>
-                              {app.status === "en_attente" ? "En suspens" : app.status === "accepte" ? "Réservé" : "Décliné"}
+                              {app.status === "en_attente" ? "En attente" : app.status === "accepte" ? "Accepté" : "Refusé"}
                             </span>
                           </div>
 
-                          {/* Message/motivation presentation */}
-                          <div className="mt-3 p-3 bg-gray-55/40 dark:bg-gray-800/20 rounded-xl text-xs text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-800">
-                            <p className="font-semibold text-gray-400 dark:text-gray-500 mb-1 uppercase tracking-wider text-[10px]">Présentation de l'artiste :</p>
-                            <blockquote className="italic">"{app.message}"</blockquote>
+                          {/* Candidate details details */}
+                          <div className="mt-3 p-3.5 bg-gray-55/65 dark:bg-gray-800/20 rounded-xl text-xs text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-800 space-y-2">
+                            <div>
+                              <span className="font-bold text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-0.5">Spécialité :</span>
+                              <span className="font-semibold text-gray-800 dark:text-gray-100">{app.musicianSpecialty || app.specialty || "Non renseigné"}</span>
+                            </div>
+                            <div>
+                              <span className="font-bold text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-0.5">Disponibilité :</span>
+                              <span className="font-semibold text-gray-800 dark:text-gray-100">{app.disponibilite || app.availability || "Totalement disponible"}</span>
+                            </div>
+                            <div>
+                              <span className="font-bold text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-0.5">Motivation (Pitch) :</span>
+                              <blockquote className="italic text-gray-650 dark:text-gray-400 bg-white/40 dark:bg-black/10 p-2 rounded-lg border border-gray-100/30">"{app.message}"</blockquote>
+                            </div>
                           </div>
 
                           {/* Demos and Audio / Video rendering */}
@@ -633,15 +667,15 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
                               <>
                                 <button
                                   onClick={() => handleRejectCandidacy(app)}
-                                  className="px-4 py-2 text-xs font-bold text-gray-500 hover:text-red-500 transition-colors"
+                                  className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl text-xs flex items-center gap-1 transition-all"
                                 >
-                                  Décliner
+                                  ❌ Refuser
                                 </button>
                                 <button
                                   onClick={() => handleAcceptCandidacy(app)}
-                                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs"
+                                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-xs transition-all"
                                 >
-                                  <UserCheck className="w-3.5 h-3.5" /> Réserver cet artiste
+                                  ✅ Accepter
                                 </button>
                               </>
                             )}

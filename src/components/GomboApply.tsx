@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { Check, Send, AlignLeft, Video, X, Music, Phone } from "lucide-react";
+import { Check, Send, AlignLeft, Video, X, Music, Phone, Briefcase, Calendar } from "lucide-react";
 import { gomboDB } from "../firebase";
 import { Gombo, UserProfile } from "../types";
 
@@ -14,6 +14,8 @@ interface GomboApplyProps {
 export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCancel }: GomboApplyProps) {
   const [message, setMessage] = useState("");
   const [whatsapp, setWhatsapp] = useState(currentUserProfile.phone || "");
+  const [specialty, setSpecialty] = useState(currentUserProfile.specialty || "");
+  const [disponibilite, setDisponibilite] = useState("Disponible pour les dates prévues");
   const [audioUrl, setAudioUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,6 +38,18 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
       return;
     }
 
+    if (!specialty.trim()) {
+      setErrorMSG("Veuillez préciser votre spécialité ou instrument !");
+      setLoading(false);
+      return;
+    }
+
+    if (!disponibilite.trim()) {
+      setErrorMSG("Veuillez renseigner vos disponibilités pour ce gombo !");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Apply real-time gombo application through database layer
       const applicantName = `${currentUserProfile.firstName} ${currentUserProfile.lastName}`;
@@ -45,7 +59,7 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
         musicianId: currentUserProfile.uid,
         userId: currentUserProfile.uid,
         musicianName: applicantName,
-        musicianSpecialty: currentUserProfile.specialty || "Musicien polyvalent",
+        musicianSpecialty: specialty.trim(),
         musicianPhone: whatsapp.trim(),
         musicianAvatar: currentUserProfile.avatarUrl,
         message: message.trim(),
@@ -55,6 +69,9 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
         applicantName: applicantName,
         applicantPhoto: currentUserProfile.avatarUrl,
         whatsapp: whatsapp.trim(),
+        specialty: specialty.trim(),
+        disponibilite: disponibilite.trim(),
+        availability: disponibilite.trim(),
         audioUrl: audioUrl.trim(),
         videoUrl: videoUrl.trim()
       });
@@ -146,6 +163,42 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
                 placeholder="Ex: 07 45 89 12 00"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* Specialty Field */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Votre Spécialité / Instrument pour ce plan</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                <Briefcase className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                required
+                placeholder="Ex: Guitariste Soliste, Chanteuse Lead, Pianiste, Batteur, Chœur..."
+                value={specialty}
+                onChange={(e) => setSpecialty(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* Availability Field */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Votre Disponibilité</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                <Calendar className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                required
+                placeholder="Ex: Libre toutes les dates, disponible aussi pour répétitions"
+                value={disponibilite}
+                onChange={(e) => setDisponibilite(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
               />
             </div>
