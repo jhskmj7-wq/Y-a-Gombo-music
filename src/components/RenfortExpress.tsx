@@ -161,7 +161,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
       await gomboDB.publishRenfort({
         userId: currentUserProfile.uid,
         userName: `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Artiste",
-        userAvatar: currentUserProfile.photoURL || currentUserProfile.avatarUrl || "",
+        userAvatar: currentUserProfile.avatarUrl || currentUserProfile.photoURL || "",
         title,
         description,
         instrument: finalSpecialties[0], // Compat primary
@@ -226,7 +226,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
         musicianId: currentUserProfile.uid,
         musicianName: `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Musicien",
         musicianPhone: currentUserProfile.whatsapp || currentUserProfile.phone || "",
-        musicianAvatar: currentUserProfile.photoURL || currentUserProfile.avatarUrl || "",
+        musicianAvatar: currentUserProfile.avatarUrl || currentUserProfile.photoURL || "",
         musicianSpecialties: currentUserProfile.specialties || (currentUserProfile.specialty ? [currentUserProfile.specialty] : [])
       });
 

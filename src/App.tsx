@@ -2188,7 +2188,7 @@ export default function App() {
           )}
 
           {/* F. CLEAN 404 FALLBACK ROUTE */}
-          {!["home", "gombo_list", "publish", "dashboard", "complete_profile", "profile_edit", "annuaire", "groupe", "marche", "certification"].includes(view) && (
+          {!["home", "gombo_list", "publish", "dashboard", "complete_profile", "profile_edit", "annuaire", "groupe", "marche", "certification", "renfort_express"].includes(view) && (
             <motion.div
               key="404"
               initial={{ opacity: 0, scale: 0.95 }}

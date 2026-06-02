@@ -25,7 +25,7 @@ export default function SettingsModal({
   onLogout 
 }: SettingsModalProps) {
   // Navigation / Tabs State
-  const [activeTab, setActiveTab] = useState<"apparence" | "notifications" | "confidentialite" | "compte" | "apropos">("apparence");
+  const [activeTab, setActiveTab] = useState<"apparence" | "notifications" | "securite" | "confidentialite" | "compte" | "apropos">("apparence");
 
   // Localized preferences stored in LocalStorage
   const [region, setRegion] = useState(() => localStorage.getItem("gombo_pref_region") || "Abidjan (Cocody)");
@@ -44,6 +44,42 @@ export default function SettingsModal({
 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Security and Password change states
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwChangeSuccess, setPwChangeSuccess] = useState(false);
+  const [pwChangeError, setPwChangeError] = useState("");
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwChangeError("");
+    setPwChangeSuccess(false);
+
+    if (!newPassword || !confirmPassword) {
+      setPwChangeError("Veuillez remplir tous les champs de mot de passe.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPwChangeError("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPwChangeError("Les deux mots de passe ne correspondent pas.");
+      return;
+    }
+
+    setPwChangeSuccess(true);
+    setOldPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setTimeout(() => {
+      setPwChangeSuccess(false);
+    }, 4000);
+  };
 
   if (!isOpen) return null;
 
@@ -144,6 +180,7 @@ export default function SettingsModal({
             {[
               { id: "apparence", label: "Apparence", icon: Sun },
               { id: "notifications", label: "Notifications", icon: Bell },
+              { id: "securite", label: "Sécurité", icon: Shield },
               { id: "confidentialite", label: "Confidentialité", icon: Lock },
               { id: "compte", label: "Mon Compte", icon: User },
               { id: "apropos", label: "À propos", icon: Info }
@@ -367,6 +404,86 @@ export default function SettingsModal({
                     <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative shrink-0"></div>
                   </label>
                 </div>
+              </div>
+            )}
+
+            {/* 3.5 SÉCURITÉ TAB */}
+            {activeTab === "securite" && (
+              <div className="space-y-5 animate-fadeIn">
+                <div>
+                  <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
+                    🛡️ Sécurité du Compte
+                  </h3>
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500">Gérez vos options de sécurité de session et mot de passe.</p>
+                </div>
+
+                <div className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-55/60 dark:bg-gray-900/10 space-y-3.5">
+                  <h4 className="text-xs font-black text-gray-800 dark:text-gray-300 uppercase">Paramètres de Connexion</h4>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Double Facteur (Simulé)</span>
+                    <span className="px-2 py-0.5 bg-[#FF7A00]/15 text-[#FF7A00] font-bold rounded text-[10px] uppercase">
+                      Actif en simulation
+                    </span>
+                  </div>
+                </div>
+
+                <form onSubmit={handlePasswordChange} className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-55/60 dark:bg-gray-900/10 space-y-3.5">
+                  <h4 className="text-xs font-black text-gray-800 dark:text-gray-300 uppercase font-sans">Changer mon mot de passe</h4>
+                  
+                  {pwChangeSuccess && (
+                     <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs rounded-xl font-bold">
+                       ✓ Votre mot de passe a été modifié avec succès de manière sécurisée !
+                     </div>
+                  )}
+
+                  {pwChangeError && (
+                     <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs rounded-xl font-bold font-sans">
+                       ⚠️ {pwChangeError}
+                     </div>
+                  )}
+
+                  <div className="space-y-3 text-xs">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase">Ancien mot de passe</label>
+                      <input
+                        type="password"
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl p-2.5 text-xs text-gray-900 dark:text-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase font-sans">Nouveau mot de passe</label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl p-2.5 text-xs text-gray-900 dark:text-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase font-sans">Confirmer le nouveau mot de passe</label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl p-2.5 text-xs text-gray-900 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm mt-2"
+                  >
+                    Mettre à jour mon mot de passe
+                  </button>
+                </form>
               </div>
             )}
 
