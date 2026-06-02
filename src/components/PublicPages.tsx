@@ -1,5 +1,12 @@
-import React from "react";
-import { Shield, FileText, Trash2, ArrowLeft, Mail, Flame, Lock, CheckCircle, Smartphone, AlertTriangle, MessageSquare, Info } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { motion } from "motion/react";
+import { 
+  Shield, FileText, Trash2, ArrowLeft, Mail, Flame, Lock, CheckCircle, 
+  Smartphone, AlertTriangle, MessageSquare, Info, Star, HelpCircle, 
+  Send, Loader2, BookOpen, Heart, DollarSign, Globe, MapPin, Sparkles, Users, Award
+} from "lucide-react";
+import { gomboDB } from "../firebase";
+import { UserProfile } from "../types";
 
 interface PublicPageProps {
   onBack: () => void;
@@ -362,4 +369,361 @@ export function DeleteAccountPage({ onBack }: PublicPageProps) {
   );
 }
 
+export function AboutPage({ onBack }: PublicPageProps) {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0516] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div className="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-800">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-[#120E22]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Retour</span>
+          </button>
+          
+          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">
+            <Flame className="w-4.5 h-4.5 text-[#7C3AED] fill-current" />
+            <span>Y’A GOMBO MUSIC</span>
+          </div>
+        </div>
+
+        <div className="text-center space-y-3">
+          <div className="inline-flex p-3 bg-purple-100 dark:bg-purple-950/30 text-[#7C3AED] dark:text-[#A78BFA] rounded-2xl animate-bounce">
+            <Info className="w-8 h-8" />
+          </div>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+            À Propos de Nous
+          </h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+            La révolution numérique du Showbiz et des gombos musicaux en Côte d'Ivoire.
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="space-y-4">
+            <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase border-b border-gray-50 dark:border-gray-850 pb-2 flex items-center gap-2">
+              <span className="text-[#7C3AED]">🇨🇮</span> Notre Mission
+            </h2>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+              <strong>Y'A GOMBO MUSIC</strong> a été conçu par et pour les artistes ivoiriens. Notre but ultime est de professionnaliser la recherche, la planification et le paiement sécurisé des contrats musicaux (les fameux « Gombos ») à Abidjan et partout au pays.
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+              Fini les fausses promesses, les intermédiaires gourmands ou les cachets non payés après des heures de show live intense. Nous offrons une plateforme transparente de mise en relation directe.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div className="p-4 bg-purple-500/5 rounded-2xl border border-purple-500/10 space-y-2">
+              <span className="text-lg">⚡</span>
+              <h3 className="text-xs font-black uppercase text-gray-900 dark:text-white">Confiance Mutuelle</h3>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">Des profils de prestataires vérifiés, des avis sincères, et un annuaire transparent pour rassurer le showbiz.</p>
+            </div>
+            <div className="p-4 bg-orange-500/5 rounded-2xl border border-orange-500/10 space-y-2">
+              <span className="text-lg">💰</span>
+              <h3 className="text-xs font-black uppercase text-gray-900 dark:text-white">Paiement Garanti</h3>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">Les fonds sont bloqués de manière sécurisée et débloqués instantanément dès que l'artiste monte sur scène.</p>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-850 space-y-3">
+            <h3 className="text-xs font-black uppercase text-[#7C3AED] dark:text-[#A78BFA] tracking-wider">L'Équipe Fondatrice</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              Basée à Cocody, notre équipe rassemble des développeurs ivoiriens passionnés de musique et des promoteurs d'événements de confiance, résolus à digitaliser la culture ivoirienne de façon vertueuse.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SupportPage({ onBack }: PublicPageProps) {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [subject, setSubject] = useState("");
+  const [category, setCategory] = useState("Gombos & Annuaire");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    // Sync current profile if logged in
+    const stored = localStorage.getItem("gombo_current_user_profile");
+    if (stored) {
+      try {
+        setProfile(JSON.parse(stored));
+      } catch (e) {}
+    }
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim() || !subject.trim()) {
+      alert("Veuillez remplir le sujet et votre message.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await gomboDB.publishSupportMessage({
+        userId: profile?.uid || "visiteur_anonyme",
+        email: profile?.email || "contacts@yagombo.com",
+        subject,
+        message,
+        category
+      });
+      setSuccess(true);
+      setSubject("");
+      setMessage("");
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de l'envoi de votre requête de support.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0516] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div className="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-800">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-[#120E22]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Retour</span>
+          </button>
+          
+          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">
+            <Flame className="w-4.5 h-4.5 text-[#7C3AED] fill-current" />
+            <span>SUPPORT EN DIRECT</span>
+          </div>
+        </div>
+
+        <div className="text-center space-y-3">
+          <div className="inline-flex p-3 bg-purple-100 dark:bg-purple-950/30 text-[#7C3AED] dark:text-[#A78BFA] rounded-2xl">
+            <HelpCircle className="w-8 h-8 animate-pulse" />
+          </div>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+            Centre d'Assistance 📞
+          </h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+            Des animateurs et conseillers disponibles 24h/7 pour régler vos soucis d'installation, paiement ou contrat d'artiste.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-1 bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 space-y-4">
+            <h3 className="text-xs font-black uppercase text-gray-900 dark:text-white tracking-wider">Nos Canaux Directs</h3>
+            
+            <div className="space-y-4 text-xs font-semibold">
+              <div className="flex items-start gap-2 pt-1">
+                <span className="text-emerald-505 font-bold shrink-0">🟢 WhatsApp :</span>
+                <div>
+                  <a href="https://wa.me/22507482910" target="_blank" rel="no-referrer" className="text-purple-600 dark:text-purple-400 hover:underline block font-bold">+225 07 48 29 10 20</a>
+                  <span className="text-[10px] text-gray-400 font-medium">Réponse rapide au maquis</span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 pt-1">
+                <span className="text-blue-500 font-bold shrink-0">✉ Email :</span>
+                <div>
+                  <a href="mailto:support@yagombomusic.ci" className="text-purple-600 dark:text-purple-400 hover:underline block font-bold">support@yagombo.ci</a>
+                  <span className="text-[10px] text-gray-400 font-medium">Pour les partenariats importants</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="md:col-span-2 bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm">
+            {success ? (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-12 space-y-4"
+              >
+                <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-950/25 text-emerald-500 rounded-full flex items-center justify-center mx-auto text-2xl">
+                  ✓
+                </div>
+                <h3 className="text-sm font-black uppercase text-gray-900 dark:text-white">Message Envoyé !</h3>
+                <p className="text-xs text-gray-500 max-w-xs mx-auto leading-relaxed">Votre requête de support a été enregistrée avec succès. Notre équipe à Cocody vous répondra dans un délai de 2 heures maximum.</p>
+                <button
+                  type="button"
+                  onClick={() => setSuccess(false)}
+                  className="px-4 py-2 bg-purple-100 text-[#7C3AED] text-xs font-bold rounded-xl"
+                >
+                  Envoyer un autre message
+                </button>
+              </motion.div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <h3 className="text-xs font-black uppercase text-gray-900 dark:text-white mb-2 tracking-wider">Écrire au Support</h3>
+                
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Catégorie de Demande</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-950 dark:text-white"
+                  >
+                    <option value="Gombos & Annuaire">💼 Gombos & Annuaire</option>
+                    <option value="Paiements & Wave / OM">💰 Paiements & Retrait Wave/OM</option>
+                    <option value="Bug / Dysfonctionnement">🐛 Bug Technique</option>
+                    <option value="Mon Compte / Certification">👤 Compte & Certification</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Sujet de la Demande</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={100}
+                    placeholder="e.g. Problème d'affichage de mon avatar"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-950 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Description détaillée</label>
+                  <textarea
+                    required
+                    rows={4}
+                    placeholder="Saisissez votre problème ici..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-950 dark:text-white"
+                  />
+                  {profile && (
+                    <span className="text-[10px] text-gray-400 mt-1 block">Votre email associé : {profile.email}</span>
+                  )}
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 bg-gradient-to-r from-[#7C3AED] to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 text-white" />
+                        <span>Envoyer le Ticket</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function CachetsPage({ onBack }: PublicPageProps) {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("gombo_current_user_profile");
+    if (stored) {
+      try {
+        setProfile(JSON.parse(stored));
+      } catch (e) {}
+    }
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0516] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div className="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-800">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-[#120E22]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Retour</span>
+          </button>
+          
+          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">
+            <Flame className="w-4.5 h-4.5 text-[#7C3AED] fill-current" />
+            <span>TRANSPARENCE DES CACHETS</span>
+          </div>
+        </div>
+
+        <div className="text-center space-y-3">
+          <div className="inline-flex p-3 bg-purple-100 dark:bg-purple-950/30 text-[#7C3AED] dark:text-[#A78BFA] rounded-2xl">
+            <DollarSign className="w-8 h-8 animate-pulse text-emerald-500" />
+          </div>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+            Gestion des Cachets 💰
+          </h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+            Garantissez votre rémunération à 100%. Finies les pertes d'argent après les mariages ou les maquis.
+          </p>
+        </div>
+
+        {/* Balance Showcase */}
+        {profile && (
+          <div className="p-6 bg-gradient-to-r from-purple-950 via-slate-900 to-[#120422] rounded-3xl border border-purple-500/20 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest block">Votre solde de cachets actif</span>
+              <span className="text-2xl font-black font-mono">{(profile.balance || 0).toLocaleString("fr-FR")} FCFA</span>
+            </div>
+            <div className="space-y-1.5 text-center sm:text-right">
+              <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-full inline-block">Réseau d'épargne d'urgence</span>
+              <p className="text-[10px] text-gray-450">Retraits disponibles 24h/24 via Wave ou Orange Money.</p>
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="space-y-4">
+            <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
+              <span className="text-[#7C3AED]">✓</span> Fonctionnement de l'Escrow de Y'A GOMBO MUSIC
+            </h2>
+            <p className="text-xs text-gray-650 dark:text-gray-300 leading-relaxed">
+              Pour assurer l'honnêteté de toutes les parties, Y'A GOMBO MUSIC utilise un système exclusif de tiers-confiance de cachets :
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+              <div className="p-4 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-2">
+                <span className="text-lg">1</span>
+                <h4 className="text-xs font-black uppercase text-gray-900 dark:text-white">Le Client verse le cachet</h4>
+                <p className="text-[11px] text-gray-500 dark:text-gray-450 leading-relaxed">Dès qu'un musicien est réservé pour un gombo, le client dépose la somme convenue sur la plateforme.</p>
+              </div>
+
+              <div className="p-4 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-2">
+                <span className="text-lg">2</span>
+                <h4 className="text-xs font-black uppercase text-gray-900 dark:text-white">Fonds sécurisés</h4>
+                <p className="text-[11px] text-gray-500 dark:text-gray-450 leading-relaxed">L'argent reste bloqué en lieu sûr. Le musicien joue en toute sérénité, sachant le cachet déjà disponible.</p>
+              </div>
+
+              <div className="p-4 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-2">
+                <span className="text-lg">3</span>
+                <h4 className="text-xs font-black uppercase text-gray-900 dark:text-white">Déblocage instantané</h4>
+                <p className="text-[11px] text-gray-500 dark:text-gray-450 leading-relaxed">Dès le concert terminé, le client valide, et les fonds sont versés directement au portefeuille de l'artiste.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-850">
+            <h3 className="text-xs font-black uppercase text-emerald-500 tracking-wider mb-2">Commissions de service : 0%</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              Y'A GOMBO MUSIC est un projet culturel d'Abidjan : nous ne prenons aucune commission sur les prestations artistiques directes en 2026. L'intégralité du cachet négocié va dans la poche des musiciens de scène.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const User = ({ className }: { className?: string }) => <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>;
+

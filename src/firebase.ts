@@ -2286,5 +2286,28 @@ export const gomboDB = {
       triggerStorageEvent();
     }
     return followed;
+  },
+
+  async publishSupportMessage(messageData: {
+    userId: string;
+    email: string;
+    subject: string;
+    message: string;
+    category: string;
+  }): Promise<void> {
+    const id = "sup_" + Math.random().toString(36).substr(2, 9);
+    const docData = { ...messageData, id, createdAt: new Date().toISOString() };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "support_messages", id), docData);
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour publishSupportMessage.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_support_messages") || "[]");
+    list.push(docData);
+    localStorage.setItem("gombo_support_messages", JSON.stringify(list));
   }
 };

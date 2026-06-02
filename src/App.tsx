@@ -56,7 +56,7 @@ import RenfortExpress from "./components/RenfortExpress";
 import CertificationHub from "./components/CertificationHub";
 import GroupeVIPAnnuaire from "./components/GroupeVIPAnnuaire";
 import AnnuaireTalents from "./components/AnnuaireTalents";
-import { PrivacyPage, TermsPage, DeleteAccountPage } from "./components/PublicPages";
+import { PrivacyPage, TermsPage, DeleteAccountPage, AboutPage, SupportPage, CachetsPage } from "./components/PublicPages";
 
 const ABIDJAN_COMMUNES = [
   "Abidjan (Toutes)",
@@ -593,12 +593,15 @@ export default function App() {
     );
   }
 
-  if (["privacy", "terms", "delete-account"].includes(view)) {
+  if (["privacy", "terms", "delete-account", "about", "support", "cachets"].includes(view)) {
     return (
       <div className={darkMode ? "dark" : ""}>
         {view === "privacy" && <PrivacyPage onBack={() => navigateTo("home")} />}
         {view === "terms" && <TermsPage onBack={() => navigateTo("home")} />}
         {view === "delete-account" && <DeleteAccountPage onBack={() => navigateTo("home")} />}
+        {view === "about" && <AboutPage onBack={() => navigateTo("home")} />}
+        {view === "support" && <SupportPage onBack={() => navigateTo("home")} />}
+        {view === "cachets" && <CachetsPage onBack={() => navigateTo("home")} />}
       </div>
     );
   }
@@ -922,14 +925,27 @@ export default function App() {
                   <div className="hidden sm:flex items-center gap-2">
                     {/* User profile option */}
                     <button
+                      onClick={() => handleProtectedAction("profile_edit")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-bold ${
+                        view === "profile_edit"
+                          ? "bg-purple-50 border-purple-200 text-[#7C3AED] dark:text-[#A78BFA] dark:bg-purple-950/20 dark:border-purple-900"
+                          : "bg-white dark:bg-[#1a1a1c] border-gray-150 dark:border-gray-800 hover:bg-gray-50 text-gray-700 dark:text-gray-300"
+                      }`}
+                    >
+                      <User className="w-4 h-4 text-orange-500" />
+                      Bonjour {profile?.firstName || "Artiste"}
+                    </button>
+
+                    <button
                       onClick={() => handleProtectedAction("dashboard")}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-bold ${
                         view === "dashboard"
                           ? "bg-purple-50 border-purple-200 text-[#7C3AED] dark:text-[#A78BFA] dark:bg-purple-950/20 dark:border-purple-900"
                           : "bg-white dark:bg-[#1a1a1c] border-gray-150 dark:border-gray-800 hover:bg-gray-50 text-gray-700 dark:text-gray-300"
                       }`}
+                      title="Tableau de Bord"
                     >
-                      <LayoutDashboard className="w-4 h-4" />
+                      <LayoutDashboard className="w-4 h-4 text-purple-500" />
                       Mes Plans
                     </button>
 
@@ -974,101 +990,159 @@ export default function App() {
           </div>
         </div>
 
-        {/* --- MOBILE NAVIGATION PANEL --- */}
+        {/* --- MOBILE NAVIGATION PANEL (SLIDING LEFT SIDE DRAWER / MENU LATÉRAL) --- */}
         <AnimatePresence>
           {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white dark:bg-[#121214] border-b border-gray-150 dark:border-gray-800 px-4 py-4 space-y-2 transition-colors uppercase text-xs tracking-wider font-extrabold"
-            >
-              <button 
-                onClick={() => { setView("home"); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850"
-              >
-                Le Terrain
-              </button>
+            <>
+              {/* Backdrop Overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileMenuOpen(false)}
+                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs md:hidden"
+              />
 
-              <button 
-                onClick={() => { setView("renfort_express"); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 text-left text-orange-500 dark:text-orange-400 border-b border-gray-50 dark:border-gray-850"
+              {/* Sliding Drawer */}
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="fixed inset-y-0 left-0 z-[60] w-80 max-w-[85vw] bg-white dark:bg-[#0F172A] p-6 shadow-2xl overflow-y-auto md:hidden flex flex-col justify-between"
               >
-                🎼 Renfort Express
-              </button>
-
-              <button 
-                onClick={() => { setView("gombo_list"); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850"
-              >
-                Les Vibes
-              </button>
-              
-              <button 
-                onClick={() => { navigateTo("annuaire"); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
-              >
-                <span>La Base 🎤</span>
-                <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm animate-pulse">DIRECT 🔥</span>
-              </button>
-
-              <button 
-                onClick={() => { setView("groupe"); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
-              >
-                <span>Coin des Groupes</span>
-                <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm animate-pulse">VIP ⭐</span>
-              </button>
-
-              <button 
-                onClick={() => { setView("marche"); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
-              >
-                <span>Marché du Coin</span>
-                <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">Bientôt</span>
-              </button>
-
-              <button 
-                onClick={() => { setView("certification"); setMobileMenuOpen(false); }}
-                className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 flex justify-between items-center"
-              >
-                <span>Talent Certifié</span>
-                <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm">Niveau Boss</span>
-              </button>
-
-              {/* Dynamic user options inside mobile menu */}
-              {authReady && (
-                user ? (
-                  <div className="pt-4 border-t border-gray-100 dark:border-gray-850 space-y-2">
+                <div>
+                  {/* Close and Title Bar */}
+                  <div className="flex items-center justify-between pb-6 mb-6 border-b border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-gradient-to-tr from-[#7C3AED] to-purple-600 rounded-xl text-white">
+                        <Flame className="w-4 h-4 fill-current animate-pulse" />
+                      </div>
+                      <div>
+                        <span className="font-extrabold text-sm tracking-tight text-gray-950 dark:text-white uppercase block">Y’A GOMBO</span>
+                        <span className="text-[8px] font-black uppercase text-purple-600 dark:text-purple-400 block -mt-1 tracking-wider">SHOWBIZ CI</span>
+                      </div>
+                    </div>
                     <button
-                      onClick={() => handleProtectedAction("dashboard")}
-                      className="w-full py-2.5 text-left text-[#7C3AED] hover:text-[#6D28D9] font-bold flex items-center gap-1.5"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-1.5 bg-gray-50 dark:bg-gray-800/50 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg transition-colors cursor-pointer"
                     >
-                      <LayoutDashboard className="w-4.5 h-4.5" /> Mes Plans
-                    </button>
-                    <button
-                      onClick={() => handleProtectedAction("profile_edit")}
-                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 font-bold flex items-center gap-1.5"
-                    >
-                      <User className="w-4.5 h-4.5" /> Mon Coin
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full py-2.5 text-left text-red-500 font-bold flex items-center gap-1.5"
-                    >
-                      <LogOut className="w-4.5 h-4.5" /> Se déconnecter
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
-                ) : (
-                  <button
-                    onClick={() => { setShowAuthModal(true); setMobileMenuOpen(false); }}
-                    className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-center font-bold rounded-xl mt-4 shrink-0 block"
-                  >
-                    Se Connecter / S'inscrire
-                  </button>
-                )
-              )}
-            </motion.div>
+
+                  {/* Item 6. MENU UTILISATEUR & Item 5 CORRECTION CONNECTED STATE */}
+                  {authReady && user && (
+                    <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-800 mb-6 normal-case text-left">
+                      <img 
+                        src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                        alt="" 
+                        className="w-11 h-11 rounded-full object-cover border-2 border-purple-500 shrink-0" 
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-gray-950 dark:text-white text-xs truncate uppercase tracking-tight">
+                          {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : "Artiste Gombo"}
+                        </p>
+                        <p className="text-[9px] text-gray-500 dark:text-gray-400 font-bold flex items-center gap-0.5">
+                          📍 {profile?.commune || "Abidjan"}
+                        </p>
+                        <span className="inline-block mt-1 text-[8px] font-black uppercase text-[#7C3AED] bg-purple-50 dark:bg-purple-950/30 px-1.5 py-0.5 rounded tracking-wide font-sans">
+                          {profile?.role === "musicien" ? "🎤 Talent Musicien" : profile?.role === "client" ? "💼 Boss Recruteur" : profile?.role === "admin" ? "👑 Administrateur" : "⭐ Membre Gombo"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Navigation Links (Item 3 Official sidebar links) */}
+                  <div className="space-y-4 uppercase text-xs tracking-wider font-extrabold">
+                    <button 
+                      onClick={() => { navigateTo("annuaire"); setMobileMenuOpen(false); }}
+                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                    >
+                      <span className="group-hover:text-[#7C3AED] transition-colors">🎤 La Base</span>
+                      <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm animate-pulse">DIRECT 🔥</span>
+                    </button>
+
+                    <button 
+                      onClick={() => { setView("groupe"); setMobileMenuOpen(false); }}
+                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                    >
+                      <span className="group-hover:text-amber-500 transition-colors">🎼 Coin des Groupes</span>
+                      <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm animate-pulse">VIP ⭐</span>
+                    </button>
+
+                    <button 
+                      onClick={() => { setView("marche"); setMobileMenuOpen(false); }}
+                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                    >
+                      <span className="group-hover:text-purple-500 transition-colors">🛒 Marché du Coin</span>
+                      <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">Bientôt</span>
+                    </button>
+
+                    <button 
+                      onClick={() => { setView("certification"); setMobileMenuOpen(false); }}
+                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                    >
+                      <span className="group-hover:text-[#7C3AED] transition-colors">🏆 Talent Certifié</span>
+                      <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm">Niveau Boss</span>
+                    </button>
+
+                    <button 
+                      onClick={() => { setView("cachets"); setMobileMenuOpen(false); }}
+                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                    >
+                      <span className="group-hover:text-emerald-550 transition-colors">💰 Les Cachets</span>
+                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded-sm">Sécurisé</span>
+                    </button>
+
+                    <button 
+                      onClick={() => { setView("support"); setMobileMenuOpen(false); }}
+                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                    >
+                      <span className="group-hover:text-purple-500 transition-colors">📞 Support</span>
+                      <span className="text-[9px] font-black text-purple-650 bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">24H/7</span>
+                    </button>
+
+                    <button 
+                      onClick={() => { setView("about"); setMobileMenuOpen(false); }}
+                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 flex justify-between items-center group cursor-pointer"
+                    >
+                      <span className="group-hover:text-orange-500 transition-colors">📖 À propos</span>
+                      <span className="text-[8px] font-black text-orange-600 bg-orange-50 dark:bg-orange-950/20 px-1 py-0.5 rounded">INFOS</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Footer buttons / logged status */}
+                <div className="pt-6 mt-6 border-t border-gray-100 dark:border-gray-800">
+                  {authReady && (
+                    user ? (
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => { handleProtectedAction("profile_edit"); setMobileMenuOpen(false); }}
+                          className="w-full py-2.5 px-3 bg-[#7C3AED]/10 hover:bg-[#7C3AED]/15 text-[#7C3AED] dark:text-[#A78BFA] font-bold rounded-xl flex items-center justify-center gap-1.5 text-xs transition-colors cursor-pointer"
+                        >
+                          <User className="w-4 h-4" /> Mon Coin
+                        </button>
+                        <button
+                          onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                          className="w-full py-2.5 px-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/25 font-bold rounded-xl flex items-center justify-center gap-1.5 text-xs transition-colors cursor-pointer"
+                        >
+                          <LogOut className="w-4 h-4" /> Se déconnecter
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setShowAuthModal(true); setMobileMenuOpen(false); }}
+                        className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-center font-bold rounded-xl text-xs uppercase cursor-pointer shadow-md"
+                      >
+                        Se Connecter
+                      </button>
+                    )
+                  )}
+                </div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </nav>
@@ -2258,19 +2332,19 @@ export default function App() {
           <span className="text-[9px] font-bold tracking-tight mt-1">Renfort</span>
         </button>
 
-        {/* Item 5: Mes Plans / profile context */}
+        {/* Item 5: Mon Coin */}
         <button
-          onClick={() => handleProtectedAction("dashboard")}
+          onClick={() => handleProtectedAction("profile_edit")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "dashboard" ? "text-[#7C3AED] font-black" : "text-gray-400 dark:text-gray-500"
+            view === "profile_edit" ? "text-[#7C3AED] font-black" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           {profile?.avatarUrl ? (
-            <img src={profile.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover border border-[#7C3AED]" />
+            <img src={profile.avatarUrl} alt="" className="w-5.5 h-5.5 rounded-full object-cover border border-[#7C3AED]" />
           ) : (
-            <User className="w-5 h-5" />
+            <User className="w-5.5 h-5.5" />
           )}
-          <span className="text-[9px] font-bold tracking-tight mt-1">Mes Plans</span>
+          <span className="text-[9px] font-bold tracking-tight mt-1">Mon Coin</span>
         </button>
       </div>
 

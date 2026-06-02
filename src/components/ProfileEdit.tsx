@@ -45,6 +45,35 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
   const [bio, setBio] = useState(initialProfile.bio || "");
   const [avatarUrl, setAvatarUrl] = useState(initialProfile.avatarUrl || AVATARS[0]);
   
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 4 * 1024 * 1024) {
+      alert("La taille du fichier ne doit pas dépasser 4 Mo.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const path = `profiles/${initialProfile.uid}/${Date.now()}_${file.name}`;
+      const downloadUrl = await gomboDB.uploadFile(path, file, (pct) => {
+        setUploadProgress(pct);
+      });
+      setAvatarUrl(downloadUrl);
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Une erreur est survenue lors du téléchargement de la photo.");
+    } finally {
+      setUploading(false);
+    }
+  };
+  
   // Musicians fields only
   const [specialty, setSpecialty] = useState(initialProfile.specialty || SPECIALTIES[0]);
   const [experience, setExperience] = useState(initialProfile.experience || EXPERIENCES[0]);
@@ -109,24 +138,58 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
         </h3>
 
         {/* Avatar custom choice list */}
-        <div className="mb-6">
-          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">
-            Photo de Profil (Choisir un avatar chic)
+        <div className="mb-6 space-y-4">
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">
+            Photo de Profil (Uploader votre photo ou choisir un avatar)
           </label>
-          <div className="flex flex-wrap gap-3 items-center">
+          
+          {/* Custom Photo Uploader */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800/40 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-orange-500 bg-gray-100 shrink-0">
+              <img src={avatarUrl} alt="Aperçu" className="w-full h-full object-cover" />
+              {uploadProgress > 0 && uploadProgress < 100 && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-[10px] font-bold text-white">
+                  {Math.round(uploadProgress)}%
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-1.5 text-center sm:text-left flex-1">
+              <input
+                type="file"
+                id="profile-photo-upload"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+              <label
+                htmlFor="profile-photo-upload"
+                className={`inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs transition-transform active:scale-97 ${
+                  uploading ? "opacity-50 pointer-events-none" : ""
+                }`}
+              >
+                <Camera className="w-4 h-4" />
+                <span>{uploading ? "Upload en cours..." : "Uploader ma photo"}</span>
+              </label>
+              <p className="text-[10px] text-gray-400">Fichiers acceptés : PNG, JPG, JPEG (Max : 4 Mo)</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3 items-center pt-2">
             {AVATARS.map((url, index) => (
               <button
                 key={index}
                 type="button"
                 onClick={() => setAvatarUrl(url)}
-                className={`relative w-14 h-14 rounded-full overflow-hidden border-2 transition-all ${
-                  avatarUrl === url ? "border-orange-500 scale-105 shadow-md" : "border-transparent"
+                className={`relative w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
+                  avatarUrl === url ? "border-orange-500 scale-105 shadow-md" : "border-transparent opacity-80 hover:opacity-100"
                 }`}
               >
                 <img src={url} alt={`Avatar ${index}`} className="w-full h-full object-cover" />
                 {avatarUrl === url && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white" />
+                    <Check className="w-3.5 h-3.5 text-white" />
                   </div>
                 )}
               </button>
