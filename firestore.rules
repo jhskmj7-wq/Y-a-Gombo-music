@@ -226,6 +226,49 @@ service cloud.firestore {
     }
 
 
+    // Validate a Certification Request
+    function isValidCertificationRequest(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.artistName is string && data.artistName.size() <= 200 &&
+             data.experience is string && data.experience.size() <= 200 &&
+             data.mediaUrl is string && data.mediaUrl.size() <= 2083 &&
+             data.status in ['En attente', 'Approuvé', 'Refusé'] &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('specialties' in data) || (data.specialties is list && data.specialties.size() <= 30));
+    }
+
+    // Validate Côte d'Ivoire Music Group profiles
+    function isValidMusicGroup(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.creatorId is string && data.creatorId.size() <= 128 &&
+             data.name is string && data.name.size() <= 200 &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 2083)) &&
+             (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 2083)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 3000)) &&
+             (!('commune' in data) || (data.commune is string && data.commune.size() <= 150)) &&
+             (!('ville' in data) || (data.ville is string && data.ville.size() <= 150)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 51)) &&
+             (!('whatsapp' in data) || (data.whatsapp is string && data.whatsapp.size() <= 51)) &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
+             (!('type' in data) || (data.type is string && data.type.size() <= 100)) &&
+             (!('membersCount' in data) || (data.membersCount is int)) &&
+             (!('creationYear' in data) || (data.creationYear is int)) &&
+             (!('viewsCount' in data) || (data.viewsCount is int)) &&
+             (!('favoritesCount' in data) || (data.favoritesCount is int)) &&
+             (!('contactsCount' in data) || (data.contactsCount is int)) &&
+             (!('isVerified' in data) || (data.isVerified is bool)) &&
+             (!('isPremium' in data) || (data.isPremium is bool)) &&
+             (!('isPopular' in data) || (data.isPopular is bool)) &&
+             (!('plan' in data) || (data.plan in ['standard', 'vip', 'premium'])) &&
+             (!('genres' in data) || (data.genres is list && data.genres.size() <= 30)) &&
+             (!('followers' in data) || (data.followers is list && data.followers.size() <= 10000)) &&
+             (!('members' in data) || (data.members is list && data.members.size() <= 200)) &&
+             (!('gallery' in data) || (data.gallery is list && data.gallery.size() <= 200));
+    }
+
+
     // --- 1. USERS COLLECTION RULES ---
     match /users/{userId} {
       allow read: if true;
@@ -384,6 +427,30 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create, update: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    match /certificationRequests/{requestId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && isValidCertificationRequest(request.resource.data);
+      allow update: if isSignedIn() && (isAdmin() || (resource.data.userId == request.auth.uid && request.resource.data.status == resource.data.status && isValidCertificationRequest(request.resource.data)));
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // --- 12. MUSIC GROUPS COLLECTION RULES ---
+    match /music_groups/{groupId} {
+      allow read: if true;
+      allow create: if isSignedIn() &&
+        isValidMusicGroup(request.resource.data) &&
+        request.resource.data.creatorId == request.auth.uid &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isSignedIn() && (
+        ( resource.data.creatorId == request.auth.uid && isValidMusicGroup(request.resource.data) ) ||
+        // Allow anyone to update stats or follow: increment viewsCount, increment favoritesCount, augment followers, etc.
+        ( isValidMusicGroup(request.resource.data) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasAny(['viewsCount', 'favoritesCount', 'contactsCount', 'followers']) ) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.creatorId == request.auth.uid);
     }
 
   }

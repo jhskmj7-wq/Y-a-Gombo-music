@@ -55,6 +55,7 @@ import GomboProfile from "./components/GomboProfile";
 import RenfortExpress from "./components/RenfortExpress";
 import CertificationHub from "./components/CertificationHub";
 import GroupeVIPAnnuaire from "./components/GroupeVIPAnnuaire";
+import AnnuaireTalents from "./components/AnnuaireTalents";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./components/PublicPages";
 
 const ABIDJAN_COMMUNES = [
@@ -97,12 +98,21 @@ export default function App() {
   }, []);
 
   // Navigation / View State
-  // 'home' | 'publish' | 'dashboard' | 'profile_edit' | 'academie' | 'groupe' | 'marche' | 'certification' | 'privacy' | 'terms' | 'delete-account'
+  // 'home' | 'publish' | 'dashboard' | 'profile_edit' | 'annuaire' | 'groupe' | 'marche' | 'certification' | 'privacy' | 'terms' | 'delete-account'
+  const [selectedTalentUid, setSelectedTalentUid] = useState<string | null>(() => {
+    const path = window.location.pathname;
+    if (path.startsWith("/talent/")) {
+      return path.split("/talent/")[1];
+    }
+    return null;
+  });
+
   const [view, setView] = useState<string>(() => {
     const path = window.location.pathname;
     if (path === "/privacy") return "privacy";
     if (path === "/terms") return "terms";
     if (path === "/delete-account") return "delete-account";
+    if (path.startsWith("/talent/")) return "annuaire";
     
     // Fallback hash routing
     const hash = window.location.hash;
@@ -112,6 +122,8 @@ export default function App() {
     
     return "home";
   });
+
+  const [dashboardInitialTab, setDashboardInitialTab] = useState<string>("");
 
   // URL synchronization for public policy pages
   useEffect(() => {
@@ -123,6 +135,10 @@ export default function App() {
         setView("terms");
       } else if (path === "/delete-account") {
         setView("delete-account");
+      } else if (path.startsWith("/talent/")) {
+        const uid = path.split("/talent/")[1];
+        setSelectedTalentUid(uid);
+        setView("annuaire");
       } else {
         const hash = window.location.hash;
         if (hash === "#/privacy") setView("privacy");
@@ -143,6 +159,12 @@ export default function App() {
       window.history.pushState(null, "", "/terms");
     } else if (targetView === "delete-account") {
       window.history.pushState(null, "", "/delete-account");
+    } else if (targetView === "annuaire") {
+      if (selectedTalentUid) {
+        window.history.pushState(null, "", `/talent/${selectedTalentUid}`);
+      } else {
+        window.history.pushState(null, "", "/");
+      }
     } else {
       window.history.pushState(null, "", "/");
     }
@@ -669,13 +691,13 @@ export default function App() {
               </button>
               
               <button 
-                onClick={() => setView("academie")}
-                className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "academie" ? "text-[#7C3AED]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                onClick={() => navigateTo("annuaire")}
+                className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
+                  view === "annuaire" ? "text-[#7C3AED] dark:text-[#A78BFA] font-black" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
-                La Base
-                <span id="academie-soon-badge" className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Bientôt</span>
+                <span>La Base 🎤</span>
+                <span className="text-[8px] font-black uppercase text-red-500 bg-red-50 dark:bg-red-950/25 px-1 py-0.5 rounded leading-none animate-pulse">DIRECT</span>
               </button>
 
               <button 
@@ -983,11 +1005,11 @@ export default function App() {
               </button>
               
               <button 
-                onClick={() => { setView("academie"); setMobileMenuOpen(false); }}
+                onClick={() => { navigateTo("annuaire"); setMobileMenuOpen(false); }}
                 className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center"
               >
-                <span>La Base</span>
-                <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">Bientôt</span>
+                <span>La Base 🎤</span>
+                <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm animate-pulse">DIRECT 🔥</span>
               </button>
 
               <button 
@@ -1961,6 +1983,7 @@ export default function App() {
                 <Dashboards 
                   currentUserProfile={profile}
                   onRefreshProfile={refreshProfile}
+                  initialTab={dashboardInitialTab}
                 />
               </motion.div>
             )
@@ -2004,7 +2027,12 @@ export default function App() {
                 <GomboProfile
                   currentUserProfile={profile}
                   onRefreshProfile={refreshProfile}
-                  onNavigateView={(targetView) => setView(targetView)}
+                  onNavigateView={(targetView, initialTab) => {
+                    setView(targetView);
+                    if (initialTab) {
+                      setDashboardInitialTab(initialTab);
+                    }
+                  }}
                   onLogout={async () => {
                     await doLogout();
                     setView("home");
@@ -2048,7 +2076,30 @@ export default function App() {
             </motion.div>
           )}
 
-          {["academie", "marche"].includes(view) && (
+          {view === "annuaire" && (
+            <motion.div
+              key="annuaire"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <AnnuaireTalents
+                currentUserProfile={profile}
+                onNavigateView={(v) => navigateTo(v)}
+                selectedTalentUid={selectedTalentUid || undefined}
+                onSelectTalent={(uid) => {
+                  setSelectedTalentUid(uid);
+                  if (uid) {
+                    window.history.pushState(null, "", `/talent/${uid}`);
+                  } else {
+                    window.history.pushState(null, "", "/");
+                  }
+                }}
+              />
+            </motion.div>
+          )}
+
+          {["marche"].includes(view) && (
             <motion.div
               key={view}
               initial={{ opacity: 0 }}
@@ -2063,7 +2114,7 @@ export default function App() {
           )}
 
           {/* F. CLEAN 404 FALLBACK ROUTE */}
-          {!["home", "gombo_list", "publish", "dashboard", "complete_profile", "profile_edit", "academie", "groupe", "marche", "certification"].includes(view) && (
+          {!["home", "gombo_list", "publish", "dashboard", "complete_profile", "profile_edit", "annuaire", "groupe", "marche", "certification"].includes(view) && (
             <motion.div
               key="404"
               initial={{ opacity: 0, scale: 0.95 }}

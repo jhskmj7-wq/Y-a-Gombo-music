@@ -301,32 +301,39 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
       )}
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3 mt-4">
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl transition-all"
-          >
-            Annuler
-          </button>
+      <div className="flex flex-col sm:flex-row items-center justify-end gap-3 mt-4 w-full">
+        {success && (
+          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 animate-pulse">
+            🎉 Profil mis à jour avec succès !
+          </span>
         )}
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-98 flex items-center gap-2"
-        >
-          {loading ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : success ? (
-            "Enregistré !"
-          ) : (
-            <>
-              <Check className="w-4.5 h-4.5" />
-              Sauvegarder mon profil
-            </>
+        <div className="flex gap-3">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl transition-all"
+            >
+              Annuler
+            </button>
           )}
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-98 flex items-center gap-2"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : success ? (
+              "Enregistré !"
+            ) : (
+              <>
+                <Check className="w-4.5 h-4.5" />
+                Sauvegarder mon profil
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </form>
   );

@@ -25,12 +25,13 @@ import {
   query, 
   where, 
   deleteDoc,
+  updateDoc,
   serverTimestamp,
   getDocFromServer,
   onSnapshot
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
-import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification } from "./types";
+import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia } from "./types";
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
@@ -1945,5 +1946,345 @@ export const gomboDB = {
 
     const list: GomboCertification[] = JSON.parse(localStorage.getItem("gombo_certifications") || "[]");
     return list.filter(c => c.userId === userId);
+  },
+
+  async publishCertificationRequest(req: Omit<CertificationRequest, "id" | "status" | "createdAt">): Promise<CertificationRequest> {
+    const id = "cert_req_" + Math.random().toString(36).substr(2, 9);
+    const newReq: CertificationRequest = {
+      ...req,
+      id,
+      status: "En attente",
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "certificationRequests", id), newReq);
+        return newReq;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour publishCertificationRequest.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: CertificationRequest[] = JSON.parse(localStorage.getItem("gombo_certification_requests") || "[]");
+    list.push(newReq);
+    localStorage.setItem("gombo_certification_requests", JSON.stringify(list));
+    triggerStorageEvent();
+    return newReq;
+  },
+
+  async getCertificationRequests(userId: string): Promise<CertificationRequest[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "certificationRequests"), where("userId", "==", userId));
+        const querySnapshot = await getDocs(q);
+        const results: CertificationRequest[] = [];
+        querySnapshot.forEach((doc) => {
+          results.push(doc.data() as CertificationRequest);
+        });
+        return results;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getCertificationRequests.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: CertificationRequest[] = JSON.parse(localStorage.getItem("gombo_certification_requests") || "[]");
+    return list.filter(c => c.userId === userId);
+  },
+
+  async getAllCertificationRequests(): Promise<CertificationRequest[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "certificationRequests"));
+        const querySnapshot = await getDocs(q);
+        const results: CertificationRequest[] = [];
+        querySnapshot.forEach((doc) => {
+          results.push(doc.data() as CertificationRequest);
+        });
+        return results;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getAllCertificationRequests.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    return JSON.parse(localStorage.getItem("gombo_certification_requests") || "[]");
+  },
+
+  async updateCertificationRequestStatus(requestId: string, status: "En attente" | "Approuvé" | "Refusé"): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await updateDoc(doc(db, "certificationRequests", requestId), { status });
+        
+        // Let's also fetch the request, and if approved, update user's profile
+        const requestSnap = await getDocs(query(collection(db, "certificationRequests"), where("id", "==", requestId)));
+        if (!requestSnap.empty) {
+          const reqData = requestSnap.docs[0].data() as CertificationRequest;
+          if (status === "Approuvé") {
+            const userRef = doc(db, "users", reqData.userId);
+            const currentBadgesResult = await getDocs(query(collection(db, "users"), where("uid", "==", reqData.userId)));
+            let currentBadges: string[] = [];
+            if (!currentBadgesResult.empty) {
+              const uData = currentBadgesResult.docs[0].data();
+              currentBadges = uData.badges || [];
+            }
+            const updatedBadges = Array.from(new Set([...currentBadges, "🟢 Talent Certifié"]));
+            await updateDoc(userRef, {
+              verificationStatus: "certifie",
+              badges: updatedBadges
+            });
+          } else if (status === "Refusé") {
+            const userRef = doc(db, "users", reqData.userId);
+            const currentBadgesResult = await getDocs(query(collection(db, "users"), where("uid", "==", reqData.userId)));
+            let currentBadges: string[] = [];
+            if (!currentBadgesResult.empty) {
+              const uData = currentBadgesResult.docs[0].data();
+              currentBadges = uData.badges || [];
+            }
+            const updatedBadges = currentBadges.filter(b => b !== "🟢 Talent Certifié");
+            await updateDoc(userRef, {
+              verificationStatus: "standard",
+              badges: updatedBadges
+            });
+          }
+        }
+        triggerStorageEvent();
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour updateCertificationRequestStatus.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: CertificationRequest[] = JSON.parse(localStorage.getItem("gombo_certification_requests") || "[]");
+    const found = list.find(c => c.id === requestId);
+    if (found) {
+      found.status = status;
+      localStorage.setItem("gombo_certification_requests", JSON.stringify(list));
+      
+      // Update in localstorage profiles
+      if (status === "Approuvé") {
+        const uList: UserProfile[] = JSON.parse(localStorage.getItem("gombo_users") || "[]");
+        const uIndex = uList.findIndex(u => u.uid === found.userId);
+        if (uIndex !== -1) {
+          const currentBadges = uList[uIndex].badges || [];
+          uList[uIndex].badges = Array.from(new Set([...currentBadges, "🟢 Talent Certifié"]));
+          uList[uIndex].verificationStatus = "certifie";
+          localStorage.setItem("gombo_users", JSON.stringify(uList));
+        }
+      } else if (status === "Refusé") {
+        const uList: UserProfile[] = JSON.parse(localStorage.getItem("gombo_users") || "[]");
+        const uIndex = uList.findIndex(u => u.uid === found.userId);
+        if (uIndex !== -1) {
+          const currentBadges = uList[uIndex].badges || [];
+          uList[uIndex].badges = currentBadges.filter(b => b !== "🟢 Talent Certifié");
+          uList[uIndex].verificationStatus = "standard";
+          localStorage.setItem("gombo_users", JSON.stringify(uList));
+        }
+      }
+      triggerStorageEvent();
+    }
+  },
+
+  // ==========================================
+  // --- Coin des Groupes Service (Phase 8) ---
+  // ==========================================
+  async getAllMusicGroups(): Promise<MusicGroup[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const querySnapshot = await getDocs(collection(db, "music_groups"));
+        const results: MusicGroup[] = [];
+        querySnapshot.forEach((docSnap) => {
+          results.push(docSnap.data() as MusicGroup);
+        });
+        return results.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getAllMusicGroups.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+    return list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  listenAllMusicGroups(callback: (groups: MusicGroup[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        return onSnapshot(collection(db, "music_groups"), (snapshot) => {
+          const results: MusicGroup[] = [];
+          snapshot.forEach((docSnap) => {
+            results.push(docSnap.data() as MusicGroup);
+          });
+          callback(results.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+        }, (error) => {
+          console.warn("⚠️ Erreur listenAllMusicGroups snapshot", error);
+        });
+      } catch (e) {
+        console.warn("⚠️ Snapshot impossible, repli local", e);
+      }
+    }
+
+    const handleLocalUpdate = () => {
+      const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+      callback(list.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+    };
+
+    window.addEventListener("storage", handleLocalUpdate);
+    window.addEventListener("gomboStorageChange", handleLocalUpdate);
+    // Initial emission
+    handleLocalUpdate();
+
+    return () => {
+      window.removeEventListener("storage", handleLocalUpdate);
+      window.removeEventListener("gomboStorageChange", handleLocalUpdate);
+    };
+  },
+
+  async publishMusicGroup(
+    groupData: Omit<MusicGroup, "id" | "createdAt" | "viewsCount" | "favoritesCount" | "contactsCount" | "followers">
+  ): Promise<MusicGroup> {
+    const id = "group_" + Math.random().toString(36).substr(2, 9);
+    const newGroup: MusicGroup = {
+      ...groupData,
+      id,
+      viewsCount: 0,
+      favoritesCount: 0,
+      contactsCount: 0,
+      followers: [],
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "music_groups", id), newGroup);
+        return newGroup;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour publishMusicGroup.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+    list.push(newGroup);
+    localStorage.setItem("gombo_music_groups", JSON.stringify(list));
+    triggerStorageEvent();
+    return newGroup;
+  },
+
+  async updateMusicGroup(id: string, updates: Partial<MusicGroup>): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "music_groups", id), updates, { merge: true });
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour updateMusicGroup.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+    const idx = list.findIndex(g => g.id === id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...updates };
+      localStorage.setItem("gombo_music_groups", JSON.stringify(list));
+      triggerStorageEvent();
+    }
+  },
+
+  async deleteMusicGroup(id: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await deleteDoc(doc(db, "music_groups", id));
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour deleteMusicGroup.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+    const filtered = list.filter(g => g.id !== id);
+    localStorage.setItem("gombo_music_groups", JSON.stringify(filtered));
+    triggerStorageEvent();
+  },
+
+  async incrementMusicGroupStat(id: string, stat: "viewsCount" | "contactsCount" | "favoritesCount", amount: number): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        const groupRef = doc(db, "music_groups", id);
+        const snapshot = await getDoc(groupRef);
+        if (snapshot.exists()) {
+          const currentVal = snapshot.data()[stat] || 0;
+          await updateDoc(groupRef, { [stat]: currentVal + amount });
+          return;
+        }
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour incrementMusicGroupStat.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+    const idx = list.findIndex(g => g.id === id);
+    if (idx !== -1) {
+      const currentVal = list[idx][stat] || 0;
+      list[idx] = { ...list[idx], [stat]: currentVal + amount };
+      localStorage.setItem("gombo_music_groups", JSON.stringify(list));
+      triggerStorageEvent();
+    }
+  },
+
+  async toggleFollowMusicGroup(groupId: string, userId: string): Promise<boolean> {
+    let followed = false;
+    if (!isFirebaseMock && db) {
+      try {
+        const groupRef = doc(db, "music_groups", groupId);
+        const snapshot = await getDoc(groupRef);
+        if (snapshot.exists()) {
+          const currentFollowers: string[] = snapshot.data().followers || [];
+          let updatedFollowers: string[];
+          if (currentFollowers.includes(userId)) {
+            updatedFollowers = currentFollowers.filter(uid => uid !== userId);
+            followed = false;
+          } else {
+            updatedFollowers = [...currentFollowers, userId];
+            followed = true;
+          }
+          await updateDoc(groupRef, { 
+            followers: updatedFollowers,
+            favoritesCount: updatedFollowers.length 
+          });
+          return followed;
+        }
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour toggleFollowMusicGroup.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+    const idx = list.findIndex(g => g.id === groupId);
+    if (idx !== -1) {
+      const currentFollowers = list[idx].followers || [];
+      let updatedFollowers: string[];
+      if (currentFollowers.includes(userId)) {
+        updatedFollowers = currentFollowers.filter(uid => uid !== userId);
+        followed = false;
+      } else {
+        updatedFollowers = [...currentFollowers, userId];
+        followed = true;
+      }
+      list[idx] = { 
+        ...list[idx], 
+        followers: updatedFollowers,
+        favoritesCount: updatedFollowers.length 
+      };
+      localStorage.setItem("gombo_music_groups", JSON.stringify(list));
+      triggerStorageEvent();
+    }
+    return followed;
   }
 };

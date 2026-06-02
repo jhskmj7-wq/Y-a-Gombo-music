@@ -13,7 +13,7 @@ import { gomboDB, gomboAuth } from "../firebase";
 interface GomboProfileProps {
   currentUserProfile: UserProfile;
   onRefreshProfile: () => void;
-  onNavigateView: (view: string) => void;
+  onNavigateView: (view: string, initialTab?: any) => void;
   onLogout: () => void;
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
@@ -121,6 +121,13 @@ export default function GomboProfile({
   
   // Available toggle value
   const [isAvailable, setIsAvailable] = useState(currentUserProfile.isAvailableNow ?? true);
+  const [availabilityStatus, setAvailabilityStatus] = useState<"disponible" | "occupe" | "indisponible">(() => {
+    if (currentUserProfile.verificationStatus) { // We can check if it exists or use fallback
+      // wait, check the actual property in currentUserProfile:
+    }
+    if (currentUserProfile.availabilityStatus) return currentUserProfile.availabilityStatus;
+    return (currentUserProfile.isAvailableNow ?? true) ? "disponible" : "indisponible";
+  });
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
 
   // Solde/Wallet withdrawals state
@@ -287,20 +294,22 @@ export default function GomboProfile({
       setWaveNumber(currentUserProfile.waveNumber || currentUserProfile.paymentNumber || "");
       setOrangeMoneyNumber(currentUserProfile.orangeMoneyNumber || "");
       setIsAvailable(currentUserProfile.isAvailableNow ?? true);
+      setAvailabilityStatus(currentUserProfile.availabilityStatus || ((currentUserProfile.isAvailableNow ?? true) ? "disponible" : "indisponible"));
       setNewEmail(currentUserProfile.email || "");
       setNewPhone(currentUserProfile.phone || "");
     }
   }, [currentUserProfile?.uid, currentUserProfile]);
 
-  // Handle Availability Toggle
-  const handleToggleAvailability = async () => {
+  // Handle Availability 3-State Update
+  const handleUpdateAvailabilityStatus = async (status: "disponible" | "occupe" | "indisponible") => {
     setUpdatingAvailability(true);
-    const newVal = !isAvailable;
     try {
       await gomboDB.updateUserProfile(currentUserProfile.uid, {
-        isAvailableNow: newVal
+        availabilityStatus: status,
+        isAvailableNow: status === "disponible"
       });
-      setIsAvailable(newVal);
+      setAvailabilityStatus(status);
+      setIsAvailable(status === "disponible");
       onRefreshProfile();
     } catch (err) {
       console.error("Availability error:", err);
@@ -589,7 +598,11 @@ export default function GomboProfile({
                   <ShieldCheck className="w-4 h-4 text-white fill-current" />
                 </div>
                 {/* Availability indicator */}
-                <div className={`absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-white dark:border-[#121214] ${isAvailable ? "bg-emerald-500" : "bg-gray-400"}`} />
+                <div className={`absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-white dark:border-[#121214] ${
+                  availabilityStatus === "disponible" ? "bg-emerald-500" : availabilityStatus === "occupe" ? "bg-amber-500" : "bg-red-500"
+                }`} title={
+                  availabilityStatus === "disponible" ? "Disponible" : availabilityStatus === "occupe" ? "Occupé" : "Indisponible"
+                } />
               </div>
 
               <div>
@@ -638,6 +651,17 @@ export default function GomboProfile({
                     );
                   })()}
                 </div>
+
+                {/* Active Badges list */}
+                {currentUserProfile.badges && currentUserProfile.badges.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start mt-2">
+                    {currentUserProfile.badges.map((b) => (
+                      <span key={b} className="text-[9px] font-extrabold bg-[#FF7A00]/10 text-[#FF7A00] border border-[#FF7A00]/20 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs tracking-wide">
+                        {b}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 text-xs font-bold text-gray-400 dark:text-gray-500 mt-2">
                   <span className="px-2.5 py-1 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-300 uppercase tracking-wider text-[10px]">
@@ -695,23 +719,34 @@ export default function GomboProfile({
 
             {/* Availability action and dynamic direct button share */}
             <div className="flex flex-col items-center sm:items-end gap-3 w-full md:w-auto border-t md:border-t-0 border-gray-50 dark:border-gray-850 pt-4 md:pt-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Disponible maintenant?</span>
-                <button
-                  type="button"
-                  disabled={updatingAvailability}
-                  onClick={handleToggleAvailability}
-                  className={`w-12 h-6.5 rounded-full p-1 transition-colors relative ${isAvailable ? "bg-emerald-500" : "bg-gray-300 dark:bg-gray-700"}`}
-                >
-                  <div className={`w-4.5 h-4.5 bg-white rounded-full shadow-md transition-transform ${isAvailable ? "translate-x-5.5" : "translate-x-0"}`} />
-                </button>
+              <div className="flex flex-col gap-1.5 w-full">
+                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 text-center sm:text-right">Statut de Disponibilité :</span>
+                <div className="flex gap-1 bg-gray-100 dark:bg-gray-800/60 p-1 rounded-xl w-full sm:w-60">
+                  {[
+                    { key: "disponible", label: "Disponible", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30", dot: "🟢" },
+                    { key: "occupe", label: "Occupé", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30", dot: "🟠" },
+                    { key: "indisponible", label: "Indispo.", color: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30", dot: "🔴" }
+                  ].map((s) => {
+                    const isActive = availabilityStatus === s.key;
+                    return (
+                      <button
+                        key={s.key}
+                        type="button"
+                        disabled={updatingAvailability}
+                        onClick={() => handleUpdateAvailabilityStatus(s.key as any)}
+                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all border flex items-center justify-center gap-1 cursor-pointer ${
+                          isActive 
+                            ? `${s.color} shadow-xs font-extrabold transform scale-102` 
+                            : "bg-transparent text-gray-550 dark:text-gray-400 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        <span>{s.dot}</span>
+                        <span>{s.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-
-              {isAvailable && (
-                <span className="text-[10px] font-black bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 rounded-full px-3 py-1 uppercase tracking-wide">
-                  🟢 ACTIF SUR LE SHOWBIZ
-                </span>
-              )}
 
               {/* Dynamic WhatsApp wa.me links for user share profile */}
               <a
@@ -980,9 +1015,9 @@ export default function GomboProfile({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
                 { label: "Modifier mon profil", icon: User, action: () => setPanelView("edit"), color: "hover:border-[#7C3AED] hover:text-[#7C3AED]" },
-                { label: "Mes Plans", icon: FileText, action: () => onNavigateView("dashboard"), color: "hover:border-purple-500 hover:text-purple-500" },
-                { label: "Les Cachets", icon: Calendar, action: () => onNavigateView("dashboard"), color: "hover:border-emerald-500 hover:text-emerald-500" },
-                { label: "Le Terrain", icon: Award, action: () => onNavigateView("dashboard"), color: "hover:border-[#7C3AED] hover:text-[#7C3AED]" },
+                { label: "Mes Plans", icon: FileText, action: () => onNavigateView("dashboard", "applications"), color: "hover:border-purple-500 hover:text-purple-500" },
+                { label: "Les Cachets", icon: Calendar, action: () => onNavigateView("dashboard", "reservations"), color: "hover:border-emerald-500 hover:text-emerald-500" },
+                { label: "Le Terrain", icon: Award, action: () => onNavigateView("home"), color: "hover:border-[#7C3AED] hover:text-[#7C3AED]" },
                 { label: "Réglages", icon: Settings, action: () => setPanelView("settings"), color: "hover:border-[#7C3AED] hover:text-[#7C3AED]" },
                 { label: "On est là", icon: HelpCircle, action: () => setPanelView("support"), color: "hover:border-teal-500 hover:text-teal-500" }
               ].map((act, index) => {

@@ -10,10 +10,22 @@ import { UserProfile, Gombo, Application, Reservation } from "../types";
 interface DashboardsProps {
   currentUserProfile: UserProfile;
   onRefreshProfile: () => void;
+  initialTab?: string;
 }
 
-export default function Dashboards({ currentUserProfile, onRefreshProfile }: DashboardsProps) {
-  const [activeTab, setActiveTab] = useState<"gombos" | "applications" | "reservations" | "admin" | "waiting">("gombos");
+export default function Dashboards({ currentUserProfile, onRefreshProfile, initialTab }: DashboardsProps) {
+  const [activeTab, setActiveTab] = useState<"gombos" | "applications" | "reservations" | "admin" | "waiting">(() => {
+    if (initialTab && ["gombos", "applications", "reservations", "admin", "waiting"].includes(initialTab)) {
+      return initialTab as any;
+    }
+    return "gombos";
+  });
+
+  useEffect(() => {
+    if (initialTab && ["gombos", "applications", "reservations", "admin", "waiting"].includes(initialTab)) {
+      setActiveTab(initialTab as any);
+    }
+  }, [initialTab]);
 
   // Keep scrolls independent and not mixed by scrolling to top of page on activeTab transition
   useEffect(() => {
@@ -588,8 +600,27 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile }: Das
                                 <img src={app.musicianAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150"} alt="" className="w-full h-full object-cover" />
                               </div>
                               <div>
-                                <h4 className="font-extrabold text-gray-950 dark:text-white text-base leading-snug">
+                                <h4 className="font-extrabold text-gray-950 dark:text-white text-base leading-snug flex items-center gap-1.5 flex-wrap">
                                   {app.musicianName}
+                                  {(() => {
+                                    try {
+                                      const ulist = JSON.parse(localStorage.getItem("gombo_users") || "[]");
+                                      const u = ulist.find((user: any) => user.uid === (app.musicianId || app.userId));
+                                      if (u && u.badges) {
+                                        return u.badges.map((badgeName: string) => {
+                                          const emoji = badgeName.split(" ")[0] || "🟢";
+                                          return (
+                                            <span key={badgeName} title={badgeName} className="text-xs">
+                                              {emoji}
+                                            </span>
+                                          );
+                                        });
+                                      }
+                                    } catch (e) {
+                                      console.error("Failed to load badges for applicant", e);
+                                    }
+                                    return null;
+                                  })()}
                                 </h4>
                                 <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
                                   {app.musicianSpecialty || app.specialty || "Musicien polyvalent"} • {app.gomboTitle}

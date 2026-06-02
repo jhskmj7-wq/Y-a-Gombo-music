@@ -344,7 +344,10 @@ export default function SocialPostCard({
        </div>
  
        {/* 2. Content Body Caption */}
-       <div className="px-4 sm:px-5 pb-3.5 space-y-2.5">
+       <div 
+         onClick={() => setShowComments(!showComments)}
+         className="px-4 sm:px-5 pb-3.5 space-y-2.5 cursor-pointer hover:bg-gray-50/55 dark:hover:bg-white/[0.015] rounded-2xl transition-all duration-200 py-1.5 mx-1"
+       >
          {post.title && (
            <h4 className="text-xs font-black text-gray-950 dark:text-white uppercase tracking-tight flex items-center gap-1">
              {post.type === "gombo" && <Briefcase className="w-3.5 h-3.5 text-[#FF7A00]" />}

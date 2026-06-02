@@ -49,6 +49,7 @@ export interface UserProfile {
   groupStatus?: "standard" | "vip" | "premium"; // Groups level
   groupType?: "Orchestre" | "Groupes Zouglou" | "Chorale" | "Groupes Gospel"; // Category for groups VIP
   badges?: string[]; // ["⭐ Talent Certifié", "🔥 Artiste Actif", "🏆 Top Talent", "🎼 Groupe VIP", "✅ Profil Vérifié"]
+  availabilityStatus?: "disponible" | "occupe" | "indisponible";
 
   createdAt: string; // ISO String
 }
@@ -215,6 +216,59 @@ export interface RenfortApplication {
   createdAt: string;
 }
 
+export interface GroupMember {
+  id: string;
+  name: string;
+  role: string; // Function/Role inside group e.g. "Chanteur", "Bassiste", etc.
+  instrument: string;
+  photoUrl?: string;
+}
+
+export interface GroupGalleryMedia {
+  id: string;
+  type: "photo" | "video" | "audio";
+  url: string;
+  title?: string;
+}
+
+export interface MusicGroup {
+  id: string;
+  creatorId: string; // Owner of the group who can manage it
+  name: string;
+  photoUrl: string;
+  logoUrl: string;
+  description: string;
+  commune: string;
+  ville: string;
+  phone: string;
+  whatsapp: string;
+  email: string;
+  membersCount: number;
+  creationYear: number;
+  type: string; // Orchestre Live, Groupe Zouglou, etc.
+  genres: string[]; // Selection multiple
+  members: GroupMember[];
+  gallery: GroupGalleryMedia[];
+  
+  // Statistics
+  viewsCount: number;
+  favoritesCount: number;
+  contactsCount: number;
+  
+  // Badges
+  isVerified?: boolean; // ✅ Groupe Vérifié
+  isPremium?: boolean; // 🏆 Groupe Premium
+  isPopular?: boolean; // 🔥 Groupe Populaire
+  
+  // Plan level (Standard, VIP, Premium)
+  plan: "standard" | "vip" | "premium";
+  
+  // Followers / users who followed this group
+  followers: string[]; // array of user uids
+  
+  createdAt: string;
+}
+
 // Monetization Interfaces for preparations
 export interface GomboSubscription {
   id: string;
@@ -264,5 +318,17 @@ export interface GomboCertification {
   pricePaid?: number;
   createdAt: string;
 }
+
+export interface CertificationRequest {
+  id: string;
+  userId: string;
+  artistName: string;
+  specialties: string[];
+  experience: string;
+  mediaUrl: string;
+  status: "En attente" | "Approuvé" | "Refusé";
+  createdAt: string;
+}
+
 
 

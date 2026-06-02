@@ -250,9 +250,60 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "userId", "type", "status", "createdAt"]
+    },
+    "CertificationRequest": {
+      "title": "Talent Certification Request",
+      "description": "Exhaustive application system folder for pro talent credentials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique folder identifier" },
+        "userId": { "type": "string", "description": "The applicant artist user identifier" },
+        "artistName": { "type": "string", "description": "The name or artist alias of user" },
+        "specialties": { "type": "array", "description": "Musical specialities of user" },
+        "experience": { "type": "string", "description": "Years of showbiz or cabaret track record" },
+        "mediaUrl": { "type": "string", "description": "Pastable proof or uploaded video or audio track or YouTube link" },
+        "status": { "type": "string", "enum": ["En attente", "Approuvé", "Refusé"], "description": "Current vetting state of the request" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Folder submission date" }
+      },
+      "required": ["id", "userId", "artistName", "specialties", "experience", "mediaUrl", "status", "createdAt"]
+    },
+    "MusicGroup": {
+      "title": "Music Group Profile",
+      "description": "Information about music groups in Côte d'Ivoire",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique group identifier" },
+        "creatorId": { "type": "string", "description": "UID of the user who manages/owns the group" },
+        "name": { "type": "string", "description": "Name of the musical group" },
+        "photoUrl": { "type": "string", "description": "Group photo URL" },
+        "logoUrl": { "type": "string", "description": "Group logo URL" },
+        "description": { "type": "string", "description": "Detailed description of the group" },
+        "commune": { "type": "string", "description": "Commune / quarter in Abidjan" },
+        "ville": { "type": "string", "description": "City in Côte d'Ivoire" },
+        "phone": { "type": "string", "description": "Contact telephone number" },
+        "whatsapp": { "type": "string", "description": "WhatsApp contact connection" },
+        "email": { "type": "string", "description": "Email address of the group" },
+        "membersCount": { "type": "integer", "description": "Number of members in the group" },
+        "creationYear": { "type": "integer", "description": "The year the group was founded" },
+        "type": { "type": "string", "description": "The style/category e.g. Zouglou, Orchestre, Wôyô" },
+        "genres": { "type": "array", "description": "List of musical styles" },
+        "members": { "type": "array", "description": "List of active members stored in group document metadata" },
+        "gallery": { "type": "array", "description": "List of images, videos and audio tracks" },
+        "viewsCount": { "type": "integer" },
+        "favoritesCount": { "type": "integer" },
+        "contactsCount": { "type": "integer" },
+        "plan": { "type": "string", "enum": ["standard", "vip", "premium"] },
+        "followers": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "creatorId", "name", "type", "createdAt"]
     }
   },
   "firestore": {
+    "/music_groups/{groupId}": {
+      "schema": "MusicGroup",
+      "description": "Côte d'Ivoire Music Group profiles catalog"
+    },
     "/users/{userId}": {
       "schema": "User",
       "description": "User profiles for musicians and clients"
@@ -304,6 +355,10 @@
     "/certifications/{certificationId}": {
       "schema": "Certification",
       "description": "Verification and talent credentials certifications"
+    },
+    "/certificationRequests/{requestId}": {
+      "schema": "CertificationRequest",
+      "description": "Requests folder submitted by users for skill-based standard verification and branding badges"
     }
   }
 }

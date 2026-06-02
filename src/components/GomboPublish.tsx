@@ -446,25 +446,35 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               </div>
 
               {/* Urgent Flag toggle */}
-              <div className="bg-orange-50/40 dark:bg-orange-950/15 p-4 rounded-2xl border border-orange-100/60 dark:border-orange-950 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-orange-100/80 dark:bg-orange-950/80 rounded-xl text-[#FF7A00]">
-                    <Zap className="w-4.5 h-4.5 fill-current" />
+              <div className="bg-orange-50/40 dark:bg-orange-950/15 p-4 rounded-2xl border border-orange-100/60 dark:border-orange-950 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-100/80 dark:bg-orange-950/80 rounded-xl text-[#FF7A00]">
+                      <Zap className="w-4.5 h-4.5 fill-current" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-extrabold text-gray-900 dark:text-white flex items-center gap-1.5">
+                        <span>Publication Urgente</span>
+                        <span className="text-[9px] font-black uppercase bg-red-500 text-white px-1.5 py-0.5 rounded leading-none">🚨 URGENT</span>
+                      </h4>
+                      <p className="text-[10px] text-gray-500">S'affiche en haut de liste. Tarification de lancement simulée : 1 000 FCFA</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-extrabold text-gray-900 dark:text-white">Gombo Ultra-Urgent</h4>
-                    <p className="text-[10px] text-gray-500">Marquer d'un badge de priorité orange dans le fil public.</p>
-                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={urgent}
+                      onChange={(e) => setUrgent(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5.5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-750 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all dark:border-gray-600 peer-checked:bg-[#FF7A00]" />
+                  </label>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={urgent}
-                    onChange={(e) => setUrgent(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-10 h-5.5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-750 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all dark:border-gray-600 peer-checked:bg-[#FF7A00]" />
-                </label>
+                {urgent && (
+                  <div className="text-[10px] text-orange-600 dark:text-orange-400 font-bold border-t border-orange-200/40 dark:border-orange-950/40 pt-2 bg-[#FF7A00]/5 p-2 rounded-lg text-center">
+                    ⚡ Mode Urgent Actif ! Simulé à 1 000 FCFA de gombo. (La facturation réelle n'est pas encore imposée).
+                  </div>
+                )}
               </div>
             </div>
           )}
