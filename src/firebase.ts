@@ -31,7 +31,7 @@ import {
   onSnapshot
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
-import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia } from "./types";
+import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry } from "./types";
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
@@ -175,6 +175,7 @@ const LOCAL_AUTH_KEY = "gombo_logged_in_user";
 const LOCAL_NOTIFICATIONS_KEY = "gombo_notifications";
 const LOCAL_RENFORS_KEY = "gombo_renforts";
 const LOCAL_RENFORT_APPLICATIONS_KEY = "gombo_renfort_applications";
+const LOCAL_ACTIVITY_FEED_KEY = "gombo_activity_feed";
 
 // Initialize mock local data if empty
 const initMockDB = () => {
@@ -354,6 +355,44 @@ const initMockDB = () => {
   }
   if (!localStorage.getItem(LOCAL_RENFORT_APPLICATIONS_KEY)) {
     localStorage.setItem(LOCAL_RENFORT_APPLICATIONS_KEY, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(LOCAL_ACTIVITY_FEED_KEY)) {
+    const mockActivities: ActivityFeedEntry[] = [
+      {
+        id: "act1",
+        type: "gombo",
+        title: "Nouveau Gombo publié !",
+        message: "Recherche Claviériste & Batteur pour Mariage Chrétien à Espace Eden, Cocody",
+        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+        userId: "cli1",
+        userName: "Serge Kassi",
+        userAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
+        targetId: "gom2"
+      },
+      {
+        id: "act2",
+        type: "talent",
+        title: "Nouveau Talent à Cocody",
+        message: "Yorobo Sangaré s'est inscrit en tant que Guitariste professionnel.",
+        createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+        userId: "mus1",
+        userName: "Yorobo Sangaré",
+        userAvatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
+        targetId: "mus1"
+      },
+      {
+        id: "act3",
+        type: "certification",
+        title: "Audition Réussie !",
+        message: "Fanta Kouyaté a obtenu son badge de Talent Certifié ⭐",
+        createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+        userId: "mus2",
+        userName: "Fanta Kouyaté",
+        userAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
+        targetId: "mus2"
+      }
+    ];
+    localStorage.setItem(LOCAL_ACTIVITY_FEED_KEY, JSON.stringify(mockActivities));
   }
 };
 
@@ -1464,6 +1503,23 @@ export const gomboDB = {
     }
   },
 
+  async deleteNotification(id: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await deleteDoc(doc(db, "notifications", id));
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible. Repli sur le Bac à Sable Local pour deleteNotification.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+    const notifs: GomboNotification[] = JSON.parse(localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) || "[]");
+    const updated = notifs.filter(n => n.id !== id);
+    localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify(updated));
+    triggerStorageEvent();
+    window.dispatchEvent(new CustomEvent("gomboNotificationChange", { detail: updated }));
+  },
+
   listenToNotifications(userId: string, callback: (notifications: GomboNotification[]) => void): () => void {
     if (!isFirebaseMock && db) {
       try {
@@ -1495,6 +1551,67 @@ export const gomboDB = {
     return () => {
       window.removeEventListener("storage", triggerLocal);
       window.removeEventListener("gomboNotificationChange", triggerLocal as EventListener);
+    };
+  },
+
+  async publishActivity(activity: Omit<ActivityFeedEntry, "id" | "createdAt">): Promise<ActivityFeedEntry> {
+    const id = "act_" + Math.random().toString(36).substring(2, 10);
+    const newActivity: ActivityFeedEntry = {
+      ...activity,
+      id,
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "activityFeed", id), newActivity);
+        return newActivity;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible. Repli sur le Bac à Sable Local pour publishActivity.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+
+    const activities: ActivityFeedEntry[] = JSON.parse(localStorage.getItem(LOCAL_ACTIVITY_FEED_KEY) || "[]");
+    activities.unshift(newActivity);
+    localStorage.setItem(LOCAL_ACTIVITY_FEED_KEY, JSON.stringify(activities));
+    triggerStorageEvent();
+    window.dispatchEvent(new CustomEvent("gomboActivityChange", { detail: activities }));
+    return newActivity;
+  },
+
+  listenToActivityFeed(callback: (activities: ActivityFeedEntry[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = collection(db, "activityFeed");
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as ActivityFeedEntry);
+          list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          callback(list.slice(0, 100)); // Limit to last 100 entries for stability
+          return;
+        }, (error) => {
+          console.error("⚠️ Firestore Activity Feed Listener Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour listenToActivityFeed. Repli local.", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const all: ActivityFeedEntry[] = JSON.parse(localStorage.getItem(LOCAL_ACTIVITY_FEED_KEY) || "[]");
+      all.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      callback(all);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboActivityChange", triggerLocal as EventListener);
+    
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboActivityChange", triggerLocal as EventListener);
     };
   },
 
@@ -2014,6 +2131,9 @@ export const gomboDB = {
   },
 
   async updateCertificationRequestStatus(requestId: string, status: "En attente" | "Approuvé" | "Refusé"): Promise<void> {
+    let targetUserId = "";
+    let artistName = "Artiste";
+
     if (!isFirebaseMock && db) {
       try {
         await updateDoc(doc(db, "certificationRequests", requestId), { status });
@@ -2022,6 +2142,9 @@ export const gomboDB = {
         const requestSnap = await getDocs(query(collection(db, "certificationRequests"), where("id", "==", requestId)));
         if (!requestSnap.empty) {
           const reqData = requestSnap.docs[0].data() as CertificationRequest;
+          targetUserId = reqData.userId;
+          artistName = reqData.artistName || "Artiste";
+
           if (status === "Approuvé") {
             const userRef = doc(db, "users", reqData.userId);
             const currentBadgesResult = await getDocs(query(collection(db, "users"), where("uid", "==", reqData.userId)));
@@ -2051,40 +2174,73 @@ export const gomboDB = {
           }
         }
         triggerStorageEvent();
-        return;
       } catch (error) {
         console.warn("⚠️ Mode Firestore inaccessible pour updateCertificationRequestStatus.", error);
         setIsFirebaseMock(true);
       }
+    } else {
+      const list: CertificationRequest[] = JSON.parse(localStorage.getItem("gombo_certification_requests") || "[]");
+      const found = list.find(c => c.id === requestId);
+      if (found) {
+        found.status = status;
+        localStorage.setItem("gombo_certification_requests", JSON.stringify(list));
+        targetUserId = found.userId;
+        artistName = found.artistName || "Artiste";
+        
+        // Update in localstorage profiles
+        if (status === "Approuvé") {
+          const uList: UserProfile[] = JSON.parse(localStorage.getItem("gombo_users") || "[]");
+          const uIndex = uList.findIndex(u => u.uid === found.userId);
+          if (uIndex !== -1) {
+            const currentBadges = uList[uIndex].badges || [];
+            uList[uIndex].badges = Array.from(new Set([...currentBadges, "🟢 Talent Certifié"]));
+            uList[uIndex].verificationStatus = "certifie";
+            localStorage.setItem("gombo_users", JSON.stringify(uList));
+          }
+        } else if (status === "Refusé") {
+          const uList: UserProfile[] = JSON.parse(localStorage.getItem("gombo_users") || "[]");
+          const uIndex = uList.findIndex(u => u.uid === found.userId);
+          if (uIndex !== -1) {
+            const currentBadges = uList[uIndex].badges || [];
+            uList[uIndex].badges = currentBadges.filter(b => b !== "🟢 Talent Certifié");
+            uList[uIndex].verificationStatus = "standard";
+            localStorage.setItem("gombo_users", JSON.stringify(uList));
+          }
+        }
+        triggerStorageEvent();
+      }
     }
 
-    const list: CertificationRequest[] = JSON.parse(localStorage.getItem("gombo_certification_requests") || "[]");
-    const found = list.find(c => c.id === requestId);
-    if (found) {
-      found.status = status;
-      localStorage.setItem("gombo_certification_requests", JSON.stringify(list));
-      
-      // Update in localstorage profiles
-      if (status === "Approuvé") {
-        const uList: UserProfile[] = JSON.parse(localStorage.getItem("gombo_users") || "[]");
-        const uIndex = uList.findIndex(u => u.uid === found.userId);
-        if (uIndex !== -1) {
-          const currentBadges = uList[uIndex].badges || [];
-          uList[uIndex].badges = Array.from(new Set([...currentBadges, "🟢 Talent Certifié"]));
-          uList[uIndex].verificationStatus = "certifie";
-          localStorage.setItem("gombo_users", JSON.stringify(uList));
-        }
-      } else if (status === "Refusé") {
-        const uList: UserProfile[] = JSON.parse(localStorage.getItem("gombo_users") || "[]");
-        const uIndex = uList.findIndex(u => u.uid === found.userId);
-        if (uIndex !== -1) {
-          const currentBadges = uList[uIndex].badges || [];
-          uList[uIndex].badges = currentBadges.filter(b => b !== "🟢 Talent Certifié");
-          uList[uIndex].verificationStatus = "standard";
-          localStorage.setItem("gombo_users", JSON.stringify(uList));
+    // Trigger Notification & Activity entry across both branches
+    try {
+      if (targetUserId) {
+        if (status === "Approuvé") {
+          await this.sendNotification({
+            userId: targetUserId,
+            type: "certification_approved",
+            title: "Félicitations ! Badge obtenu 💚",
+            message: "Votre demande de certification a été APPROUVÉE par l'équipe ! Vous êtes désormais un Talent Certifié ⭐."
+          });
+
+          await this.publishActivity({
+            type: "certification",
+            title: "Dossier Approuvé ⭐",
+            message: `${artistName} a officiellement obtenu son badge de Talent Certifié !`,
+            userId: targetUserId,
+            userName: artistName,
+            targetId: targetUserId
+          });
+        } else if (status === "Refusé") {
+          await this.sendNotification({
+            userId: targetUserId,
+            type: "general",
+            title: "Statut Certification 🔴",
+            message: "Votre demande de certification n'a pas été approuvée par nos administrateurs. Re-vérifiez vos démos de prestations."
+          });
         }
       }
-      triggerStorageEvent();
+    } catch (notifErr) {
+      console.error("Non-fatal certification auto notification fail:", notifErr);
     }
   },
 
@@ -2160,17 +2316,34 @@ export const gomboDB = {
     if (!isFirebaseMock && db) {
       try {
         await setDoc(doc(db, "music_groups", id), newGroup);
-        return newGroup;
       } catch (error) {
         console.warn("⚠️ Mode Firestore inaccessible pour publishMusicGroup.", error);
         setIsFirebaseMock(true);
       }
     }
 
-    const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
-    list.push(newGroup);
-    localStorage.setItem("gombo_music_groups", JSON.stringify(list));
-    triggerStorageEvent();
+    if (isFirebaseMock || !db) {
+      const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+      list.push(newGroup);
+      localStorage.setItem("gombo_music_groups", JSON.stringify(list));
+      triggerStorageEvent();
+    }
+
+    // Publish to public Activity Feed when a music group is created
+    try {
+      await this.publishActivity({
+        type: "groupe",
+        title: "Nouveau Groupe Musik ! 📡",
+        message: `Le groupe "${newGroup.name}" de ${newGroup.commune || "Abidjan"} vient de s'inscrire à l'annuaire VIP !`,
+        userId: newGroup.creatorId,
+        userName: newGroup.name,
+        userAvatar: newGroup.logoUrl || newGroup.photoUrl || undefined,
+        targetId: id
+      });
+    } catch (feedErr) {
+      console.error("Non-fatal music group feed publish fail:", feedErr);
+    }
+
     return newGroup;
   },
 
@@ -2239,12 +2412,15 @@ export const gomboDB = {
 
   async toggleFollowMusicGroup(groupId: string, userId: string): Promise<boolean> {
     let followed = false;
+    let groupMap: any = null;
+
     if (!isFirebaseMock && db) {
       try {
         const groupRef = doc(db, "music_groups", groupId);
         const snapshot = await getDoc(groupRef);
         if (snapshot.exists()) {
-          const currentFollowers: string[] = snapshot.data().followers || [];
+          groupMap = snapshot.data();
+          const currentFollowers: string[] = groupMap.followers || [];
           let updatedFollowers: string[];
           if (currentFollowers.includes(userId)) {
             updatedFollowers = currentFollowers.filter(uid => uid !== userId);
@@ -2257,7 +2433,6 @@ export const gomboDB = {
             followers: updatedFollowers,
             favoritesCount: updatedFollowers.length 
           });
-          return followed;
         }
       } catch (error) {
         console.warn("⚠️ Mode Firestore inaccessible pour toggleFollowMusicGroup.", error);
@@ -2265,26 +2440,64 @@ export const gomboDB = {
       }
     }
 
-    const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
-    const idx = list.findIndex(g => g.id === groupId);
-    if (idx !== -1) {
-      const currentFollowers = list[idx].followers || [];
-      let updatedFollowers: string[];
-      if (currentFollowers.includes(userId)) {
-        updatedFollowers = currentFollowers.filter(uid => uid !== userId);
-        followed = false;
-      } else {
-        updatedFollowers = [...currentFollowers, userId];
-        followed = true;
+    if (isFirebaseMock || !db) {
+      const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+      const idx = list.findIndex(g => g.id === groupId);
+      if (idx !== -1) {
+        groupMap = list[idx];
+        const currentFollowers = groupMap.followers || [];
+        let updatedFollowers: string[];
+        if (currentFollowers.includes(userId)) {
+          updatedFollowers = currentFollowers.filter(uid => uid !== userId);
+          followed = false;
+        } else {
+          updatedFollowers = [...currentFollowers, userId];
+          followed = true;
+        }
+        list[idx] = { 
+          ...list[idx], 
+          followers: updatedFollowers,
+          favoritesCount: updatedFollowers.length 
+        };
+        localStorage.setItem("gombo_music_groups", JSON.stringify(list));
+        triggerStorageEvent();
       }
-      list[idx] = { 
-        ...list[idx], 
-        followers: updatedFollowers,
-        favoritesCount: updatedFollowers.length 
-      };
-      localStorage.setItem("gombo_music_groups", JSON.stringify(list));
-      triggerStorageEvent();
     }
+
+    // Trigger Notification & Activity feed if followed is true
+    if (followed && groupMap) {
+      try {
+        const followerProfile = await this.getUserProfile(userId);
+        const followerName = followerProfile 
+          ? `${followerProfile.firstName || ""} ${followerProfile.lastName || ""}`.trim() || followerProfile.artistName || "Un artiste"
+          : "Un artiste";
+        const groupCreatorId = groupMap.creatorId;
+        const groupName = groupMap.name || "Groupe Musique";
+
+        if (groupCreatorId && groupCreatorId !== userId) {
+          await this.sendNotification({
+            userId: groupCreatorId,
+            type: "new_follower",
+            title: "Nouvel Abonné ! 🤝",
+            message: `${followerName} a commencé à suivre votre groupe Musik "${groupName}".`
+          });
+        }
+
+        // Also publish to public Activity Feed
+        await this.publishActivity({
+          type: "groupe",
+          title: "Nouveau fan de groupe ! 🚀",
+          message: `${followerName} s'est abonné au groupe "${groupName}".`,
+          userId: userId,
+          userName: followerName,
+          userAvatar: (followerProfile && followerProfile.avatarUrl) || undefined,
+          targetId: groupId
+        });
+      } catch (notifErr) {
+        console.error("Non-fatal follow notification fail:", notifErr);
+      }
+    }
+
     return followed;
   },
 

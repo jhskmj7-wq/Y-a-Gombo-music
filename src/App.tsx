@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Music, Calendar, Clock, MapPin, Search, Plus, User, LogOut, 
-  Flame, Sparkles, LayoutDashboard, Settings, Menu, X, Sun, Moon, 
+  Flame, Sparkles, LayoutDashboard, Settings, Menu, X, Sun, Moon, Laptop, 
   Star, Award, BookOpen, Users2, ShoppingBag, ShieldCheck, Info,
   ExternalLink, ChevronRight, Heart, MessageSquare, 
   Share2, Bookmark, Play, Pause, Volume2, Lock, Eye, Check, ChevronLeft, Send, Briefcase, Bell
@@ -56,6 +56,8 @@ import RenfortExpress from "./components/RenfortExpress";
 import CertificationHub from "./components/CertificationHub";
 import GroupeVIPAnnuaire from "./components/GroupeVIPAnnuaire";
 import AnnuaireTalents from "./components/AnnuaireTalents";
+import NotificationCenter from "./components/NotificationCenter";
+import ActivityFeedView from "./components/ActivityFeedView";
 import { PrivacyPage, TermsPage, DeleteAccountPage, AboutPage, SupportPage, CachetsPage } from "./components/PublicPages";
 
 const ABIDJAN_COMMUNES = [
@@ -318,13 +320,20 @@ export default function App() {
     updateTheme();
     localStorage.setItem("gombo_theme_mode", themeMode);
 
+    // Save choice to Firebase if logged in and profile has a different theme
+    if (profile?.uid && profile.themePreference !== themeMode) {
+      gomboDB.updateUserProfile(profile.uid, {
+        themePreference: themeMode
+      }).catch(err => console.log("⚠️ Error saving theme preference to profile:", err));
+    }
+
     if (themeMode === "system") {
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
       const handleChange = () => updateTheme();
       mediaQuery.addEventListener("change", handleChange);
       return () => mediaQuery.removeEventListener("change", handleChange);
     }
-  }, [themeMode]);
+  }, [themeMode, profile?.uid]);
 
   // Auth Context Global Synchronization
   const { currentUser, profile: authProfile, loading: authLoading, refreshProfile: doRefreshProfile, logout: doLogout } = useAuth();
@@ -339,6 +348,11 @@ export default function App() {
     setUser(currentUser);
     setProfile(authProfile);
     setAuthReady(!authLoading);
+
+    // Dynamic theme restore from profile
+    if (authProfile?.themePreference && authProfile.themePreference !== themeMode) {
+      setThemeMode(authProfile.themePreference);
+    }
 
     // Close the auth screen/modal when user is successfully authenticated
     if (currentUser) {
@@ -732,19 +746,37 @@ export default function App() {
                 Talent Certifié
                 <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Niveau Boss</span>
               </button>
+
+              <button 
+                onClick={() => setView("activity")}
+                className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1 ${
+                  view === "activity" ? "text-orange-500 dark:text-orange-400 font-extrabold" : "text-gray-500 hover:text-gray-400 dark:hover:text-white"
+                }`}
+              >
+                <span>⚡ Activité</span>
+                <span className="text-[8px] font-black uppercase text-orange-500 bg-orange-50 dark:bg-orange-950/20 px-1.5 py-0.5 rounded leading-none">TEMPS RÉEL</span>
+              </button>
             </div>
 
             {/* Utility Right Actions */}
             <div className="flex items-center gap-2.5">
               
-              {/* Light/Dark mode */}
+              {/* Light/Dark/System 3-Theme Switch */}
               <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                onClick={() => {
+                  const nextTheme = themeMode === "light" ? "dark" : themeMode === "dark" ? "system" : "light";
+                  setThemeMode(nextTheme);
+                }}
+                className="p-2.5 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white transition-colors relative flex items-center justify-center cursor-pointer min-w-[42px] min-h-[42px]"
                 aria-label="Toggle theme"
-                title={darkMode ? "Activer le mode clair" : "Activer le mode sombre"}
+                title={`Thème : ${themeMode === "light" ? "Clair" : themeMode === "dark" ? "Sombre" : "Système (Automatique)"}. Cliquer pour changer.`}
               >
-                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {themeMode === "light" && <Sun className="w-5 h-5 text-amber-500 animate-spin-slow" />}
+                {themeMode === "dark" && <Moon className="w-5 h-5 text-[#8B5CF6]" />}
+                {themeMode === "system" && <Laptop className="w-5 h-5 text-blue-500" />}
+                <span className="absolute -bottom-1 -right-1 text-[7px] font-black uppercase text-purple-650 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/45 px-1 py-0.5 rounded leading-none border border-purple-100/50 dark:border-purple-900/30 scale-90">
+                  {themeMode === "light" ? "CLR" : themeMode === "dark" ? "SMB" : "SYS"}
+                </span>
               </button>
 
               {/* Settings / Paramètres */}
@@ -913,6 +945,18 @@ export default function App() {
                             ))
                           )}
                         </div>
+
+                        <div className="p-2.5 border-t border-gray-150 dark:border-gray-800 text-center bg-gray-50/50 dark:bg-gray-900/10">
+                          <button
+                            onClick={() => {
+                              setView("notifications");
+                              setShowNotifTray(false);
+                            }}
+                            className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400 hover:underline flex items-center justify-center gap-1 mx-auto"
+                          >
+                            Voir tout dans le Centre 🔔
+                          </button>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -978,19 +1022,19 @@ export default function App() {
                 )
               )}
 
-              {/* Mobile Hamburger menu */}
+              {/* Universal Hamburger menu button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 hover:text-gray-900 dark:hover:text-white cursor-pointer"
               >
-                {mobileMenuOpen ? <X className="w-5.5 h-5.5" /> : <Menu className="w-5.5 h-5.5" />}
+                {mobileMenuOpen ? <X className="w-5.5 h-5.5 text-orange-500" /> : <Menu className="w-5.5 h-5.5" />}
               </button>
 
             </div>
           </div>
         </div>
 
-        {/* --- MOBILE NAVIGATION PANEL (SLIDING LEFT SIDE DRAWER / MENU LATÉRAL) --- */}
+        {/* --- UNIVERSAL NAVIGATION PANEL (SLIDING LEFT SIDE DRAWER / MENU LATÉRAL) --- */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <>
@@ -1000,7 +1044,7 @@ export default function App() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setMobileMenuOpen(false)}
-                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs md:hidden"
+                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs"
               />
 
               {/* Sliding Drawer */}
@@ -1009,137 +1053,193 @@ export default function App() {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed inset-y-0 left-0 z-[60] w-80 max-w-[85vw] bg-white dark:bg-[#0F172A] p-6 shadow-2xl overflow-y-auto md:hidden flex flex-col justify-between"
+                className="fixed inset-y-0 left-0 z-[60] w-80 max-w-[85vw] bg-white dark:bg-[#121826] p-6 shadow-2xl overflow-y-auto flex flex-col justify-between border-r border-gray-100 dark:border-gray-800"
               >
-                <div>
+                <div className="space-y-6">
                   {/* Close and Title Bar */}
                   <div className="flex items-center justify-between pb-6 mb-6 border-b border-gray-100 dark:border-gray-800">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 bg-gradient-to-tr from-[#7C3AED] to-purple-600 rounded-xl text-white">
+                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setView("home"); setMobileMenuOpen(false); }}>
+                      <div className="p-2 bg-gradient-to-tr from-orange-500 to-orange-600 rounded-xl text-white">
                         <Flame className="w-4 h-4 fill-current animate-pulse" />
                       </div>
                       <div>
-                        <span className="font-extrabold text-sm tracking-tight text-gray-950 dark:text-white uppercase block">Y’A GOMBO</span>
-                        <span className="text-[8px] font-black uppercase text-purple-600 dark:text-purple-400 block -mt-1 tracking-wider">SHOWBIZ CI</span>
+                        <span className="font-extrabold text-sm tracking-tight text-gray-950 dark:text-white uppercase block leading-none">Y’A GOMBO</span>
+                        <span className="text-[9px] font-black uppercase text-orange-600 dark:text-orange-400 block tracking-wider mt-0.5">MUSIC 🇨🇮</span>
                       </div>
                     </div>
                     <button
                       onClick={() => setMobileMenuOpen(false)}
-                      className="p-1.5 bg-gray-50 dark:bg-gray-800/50 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 bg-gray-50 dark:bg-gray-800/50 text-gray-400 hover:text-gray-950 dark:hover:text-white rounded-lg transition-colors cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  {/* Item 6. MENU UTILISATEUR & Item 5 CORRECTION CONNECTED STATE */}
-                  {authReady && user && (
-                    <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-800 mb-6 normal-case text-left">
-                      <img 
-                        src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
-                        alt="" 
-                        className="w-11 h-11 rounded-full object-cover border-2 border-purple-500 shrink-0" 
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-black text-gray-950 dark:text-white text-xs truncate uppercase tracking-tight">
-                          {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : "Artiste Gombo"}
-                        </p>
-                        <p className="text-[9px] text-gray-500 dark:text-gray-400 font-bold flex items-center gap-0.5">
-                          📍 {profile?.commune || "Abidjan"}
-                        </p>
-                        <span className="inline-block mt-1 text-[8px] font-black uppercase text-[#7C3AED] bg-purple-50 dark:bg-purple-950/30 px-1.5 py-0.5 rounded tracking-wide font-sans">
-                          {profile?.role === "musicien" ? "🎤 Talent Musicien" : profile?.role === "client" ? "💼 Boss Recruteur" : profile?.role === "admin" ? "👑 Administrateur" : "⭐ Membre Gombo"}
-                        </span>
+                  {/* USER CONNECTIONS DETAILS & STATE */}
+                  {authReady && (
+                    user ? (
+                      /* LOGGED USER PROFILE CARD & MON ESPACE GOMBO ACTIONS */
+                      <div className="space-y-4">
+                        <div className="p-4 bg-gradient-to-tr from-purple-500/10 to-orange-500/5 dark:from-purple-950/20 dark:to-orange-950/5 rounded-2xl border border-gray-150 dark:border-gray-850 text-left">
+                          <div className="flex items-center gap-3">
+                            <img 
+                              src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                              alt="Profil" 
+                              className="w-12 h-12 rounded-full object-cover border-2 border-orange-500 shrink-0 shadow-sm"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-black text-gray-950 dark:text-white text-sm leading-tight truncate uppercase tracking-tight">
+                                {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : "Artiste Gombo"}
+                              </p>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold flex items-center gap-0.5 mt-0.5">
+                                📍 {profile?.commune || "Abidjan"}
+                              </p>
+                              <span className="inline-block mt-1 text-[8.5px] font-black uppercase text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-1.5 py-0.5 rounded tracking-wide">
+                                🎤 {profile?.role === "musicien" ? "Musicien" : profile?.role === "client" ? "Boss Recruteur" : "Membre Gombo"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Mon Espace Gombo List */}
+                        <div className="space-y-1.5 border-b border-gray-100 dark:border-gray-800 pb-4 text-left">
+                          <p className="text-[9.5px] font-black tracking-widest text-[#FF7A00] uppercase mb-1.5">👤 Mon Espace Gombo</p>
+                          
+                          <button
+                            onClick={() => { setView("profile_edit"); setMobileMenuOpen(false); }}
+                            className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 transition-colors uppercase tracking-wider cursor-pointer"
+                          >
+                            <User className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                            <span>Mon Profil</span>
+                          </button>
+
+                          <button
+                            onClick={() => { setDashboardInitialTab("gombos"); setView("dashboard"); setMobileMenuOpen(false); }}
+                            className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-350 transition-colors uppercase tracking-wider cursor-pointer"
+                          >
+                            <Briefcase className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                            <span>Mes Publications</span>
+                          </button>
+
+                          <button
+                            onClick={() => { setDashboardInitialTab("applications"); setView("dashboard"); setMobileMenuOpen(false); }}
+                            className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
+                          >
+                            <Plus className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                            <span>Mes Candidatures</span>
+                          </button>
+
+                          <button
+                            onClick={() => { setDashboardInitialTab("reservations"); setView("dashboard"); setMobileMenuOpen(false); }}
+                            className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
+                          >
+                            <Heart className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                            <span>Mes Favoris</span>
+                          </button>
+
+                          <button
+                            onClick={() => { setView("notifications"); setMobileMenuOpen(false); }}
+                            className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Bell className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
+                              <span>Mes Notifications</span>
+                            </div>
+                            {notifications.filter(n => !n.read).length > 0 && (
+                              <span className="bg-red-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded-full">
+                                {notifications.filter(n => !n.read).length}
+                              </span>
+                            )}
+                          </button>
+
+                          <button
+                            onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                            className="w-full py-1.5 px-2.5 text-left hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl flex items-center gap-2 text-xs font-semibold text-red-500 transition-colors uppercase tracking-wider cursor-pointer"
+                          >
+                            <LogOut className="w-3.5 h-3.5 shrink-0" />
+                            <span>Déconnexion</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* NON-LOGGED IN USER GREETING & LOGIN BUTTON */
+                      <div className="p-4 bg-orange-500/5 dark:bg-orange-950/10 rounded-2xl border border-orange-500/10 text-center space-y-2.5">
+                        <p className="text-[10px] font-black uppercase text-orange-600 dark:text-orange-400 tracking-wider">Bienvenue dans Y’A GOMBO MUSIC 🇨🇮</p>
+                        <p className="text-[10px] text-gray-500 leading-relaxed">Connectez-vous pour voir vos opportunités musicales et cachets sécurisés.</p>
+                        <button
+                          onClick={() => { setShowAuthModal(true); setMobileMenuOpen(false); }}
+                          className="w-full py-2 bg-[#FF7A00] hover:bg-[#E06C00] text-white text-center font-black rounded-xl text-xs uppercase cursor-pointer shadow-md select-none"
+                        >
+                          Se Connecter
+                        </button>
+                      </div>
+                    )
                   )}
 
-                  {/* Navigation Links (Item 3 Official sidebar links) */}
-                  <div className="space-y-4 uppercase text-xs tracking-wider font-extrabold">
+                  {/* Core Navigation Links */}
+                  <div className="space-y-3 uppercase text-xs tracking-wider font-extrabold pb-4">
                     <button 
                       onClick={() => { navigateTo("annuaire"); setMobileMenuOpen(false); }}
-                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-[#7C3AED] transition-colors">🎤 La Base</span>
-                      <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm animate-pulse">DIRECT 🔥</span>
+                      <span className="group-hover:text-[#FF7A00] transition-colors">🎤 La Base</span>
+                      <span className="text-[9px] font-black text-[#FF7A00] bg-orange-50 dark:bg-orange-950/20 px-1.5 py-0.5 rounded-sm animate-pulse">DIRECT 🔥</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("groupe"); setMobileMenuOpen(false); }}
-                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-amber-500 transition-colors">🎼 Coin des Groupes</span>
-                      <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm animate-pulse">VIP ⭐</span>
+                      <span className="group-hover:text-amber-500 transition-colors font-semibold">🎼 Coin des Groupes</span>
+                      <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm">VIP ⭐</span>
                     </button>
 
                     <button 
-                      onClick={() => { setView("marche"); setMobileMenuOpen(false); }}
-                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                      onClick={() => { setView("home"); setCurrentHomeTab("marche"); setMobileMenuOpen(false); }}
+                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
                       <span className="group-hover:text-purple-500 transition-colors">🛒 Marché du Coin</span>
-                      <span className="text-[9px] font-black text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">Bientôt</span>
+                      <span className="text-[9px] font-black text-orange-600 bg-orange-50 dark:bg-orange-950/20 px-1.5 py-0.5 rounded-sm">Direct 👍</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("certification"); setMobileMenuOpen(false); }}
-                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-[#7C3AED] transition-colors">🏆 Talent Certifié</span>
+                      <span className="group-hover:text-orange-500 transition-colors">🏆 Talent Certifié</span>
                       <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm">Niveau Boss</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("cachets"); setMobileMenuOpen(false); }}
-                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-emerald-550 transition-colors">💰 Les Cachets</span>
-                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded-sm">Sécurisé</span>
+                      <span className="group-hover:text-emerald-500 transition-colors">💰 Les Cachets</span>
+                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded-sm font-sans">Sécurisé</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("support"); setMobileMenuOpen(false); }}
-                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 border-b border-gray-50 dark:border-gray-850 flex justify-between items-center group cursor-pointer"
+                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-purple-500 transition-colors">📞 Support</span>
+                      <span className="group-hover:text-purple-550 transition-colors font-semibold">📞 Support</span>
                       <span className="text-[9px] font-black text-purple-650 bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">24H/7</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("about"); setMobileMenuOpen(false); }}
-                      className="w-full py-2.5 text-left text-gray-650 dark:text-gray-300 flex justify-between items-center group cursor-pointer"
+                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
                       <span className="group-hover:text-orange-500 transition-colors">📖 À propos</span>
-                      <span className="text-[8px] font-black text-orange-600 bg-orange-50 dark:bg-orange-950/20 px-1 py-0.5 rounded">INFOS</span>
+                      <span className="text-[8px] font-black text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-1.5 py-0.5 rounded">INFOS</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Footer buttons / logged status */}
-                <div className="pt-6 mt-6 border-t border-gray-100 dark:border-gray-800">
-                  {authReady && (
-                    user ? (
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => { handleProtectedAction("profile_edit"); setMobileMenuOpen(false); }}
-                          className="w-full py-2.5 px-3 bg-[#7C3AED]/10 hover:bg-[#7C3AED]/15 text-[#7C3AED] dark:text-[#A78BFA] font-bold rounded-xl flex items-center justify-center gap-1.5 text-xs transition-colors cursor-pointer"
-                        >
-                          <User className="w-4 h-4" /> Mon Coin
-                        </button>
-                        <button
-                          onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
-                          className="w-full py-2.5 px-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/25 font-bold rounded-xl flex items-center justify-center gap-1.5 text-xs transition-colors cursor-pointer"
-                        >
-                          <LogOut className="w-4 h-4" /> Se déconnecter
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => { setShowAuthModal(true); setMobileMenuOpen(false); }}
-                        className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-center font-bold rounded-xl text-xs uppercase cursor-pointer shadow-md"
-                      >
-                        Se Connecter
-                      </button>
-                    )
-                  )}
+                {/* Footer Brand Credit */}
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-800 text-center">
+                  <p className="text-[9px] font-bold text-gray-400 tracking-wider">© Y’A GOMBO MUSIC CORP • ABIDJAN</p>
                 </div>
               </motion.div>
             </>
@@ -1713,9 +1813,12 @@ export default function App() {
                     Contrats d'urgence Showbiz 🔥
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {urgentGombos.map((gombo) => (
-                      <div 
+                    {urgentGombos.map((gombo, index) => (
+                      <motion.div 
                         key={gombo.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
                         className="bg-amber-50/20 dark:bg-amber-950/10 border-2 border-[#FF7A00]/30 p-5 rounded-3xl relative flex flex-col justify-between"
                       >
                         <span className="absolute top-4 right-4 px-2 py-0.5 bg-orange-500 text-white text-[9px] font-black uppercase rounded-md tracking-wider animate-pulse">
@@ -1761,7 +1864,7 @@ export default function App() {
                             <span className="text-[10px] text-gray-400 font-bold uppercase py-1.5 px-3 bg-gray-100 dark:bg-gray-850 rounded-lg">Réservé-Clients</span>
                           )}
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
@@ -1785,9 +1888,12 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {filteredGombos.map((gombo) => (
-                      <div 
+                    {filteredGombos.map((gombo, index) => (
+                      <motion.div 
                         key={gombo.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
                         className="bg-white dark:bg-[#1a1a1f] p-5 rounded-2xl border border-gray-100 dark:border-gray-850 relative flex flex-col justify-between hover:shadow-md transition-all duration-200"
                       >
                         <div>
@@ -1829,7 +1935,7 @@ export default function App() {
                             <span className="text-[9px] text-gray-400 font-bold uppercase py-1 px-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg">Recrutement</span>
                           )}
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 )}
@@ -2119,6 +2225,59 @@ export default function App() {
           )}
 
           {/* E. COMING SOON PATHS & NEW PREMIUM CORNERS */}
+          {view === "notifications" && (
+            profile ? (
+              <motion.div
+                key="notifications_page"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <NotificationCenter
+                  currentUserProfile={profile}
+                  notifications={notifications}
+                  onRefreshProfile={refreshProfile}
+                  onNavigateHome={() => setView("home")}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="notifications_auth"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="max-w-md mx-auto py-20 px-4 text-center"
+              >
+                <div className="bg-white dark:bg-[#1e1e24] border border-gray-150 dark:border-gray-800 rounded-3xl p-8 shadow-sm">
+                  <Lock className="w-12 h-12 mx-auto text-purple-600 mb-4 animate-bounce" />
+                  <h3 className="text-lg font-black uppercase text-gray-900 dark:text-white">Connexion Requise</h3>
+                  <p className="text-xs text-gray-550 dark:text-gray-400 mt-2">
+                    Veuillez vous connecter pour accéder à votre centre de notifications privées en temps réel.
+                  </p>
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="mt-6 w-full py-3 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs uppercase rounded-xl shadow-md cursor-pointer transition-all"
+                  >
+                    Se connecter / S’inscrire
+                  </button>
+                </div>
+              </motion.div>
+            )
+          )}
+
+          {view === "activity" && (
+            <motion.div
+              key="activity_page"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <ActivityFeedView
+                currentUserProfile={profile}
+                onNavigateView={(targetView) => setView(targetView)}
+              />
+            </motion.div>
+          )}
+
           {view === "certification" && (
             <motion.div
               key="certification"

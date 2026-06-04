@@ -268,6 +268,19 @@ service cloud.firestore {
              (!('gallery' in data) || (data.gallery is list && data.gallery.size() <= 200));
     }
 
+    // Validate static/real-time Activity Feed events
+    function isValidActivity(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.type in ['talent', 'groupe', 'certification', 'gombo'] &&
+             data.title is string && data.title.size() <= 200 &&
+             data.message is string && data.message.size() <= 1000 &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('userId' in data) || (data.userId is string && data.userId.size() <= 128)) &&
+             (!('userName' in data) || (data.userName is string && data.userName.size() <= 200)) &&
+             (!('userAvatar' in data) || (data.userAvatar is string && data.userAvatar.size() <= 2083)) &&
+             (!('targetId' in data) || (data.targetId is string && data.targetId.size() <= 128));
+    }
+
 
     // --- 1. USERS COLLECTION RULES ---
     match /users/{userId} {
@@ -451,6 +464,13 @@ service cloud.firestore {
         isAdmin()
       );
       allow delete: if isAdmin() || (isSignedIn() && resource.data.creatorId == request.auth.uid);
+    }
+
+    // --- 13. ACTIVITY FEED COLLECTION RULES ---
+    match /activityFeed/{activityId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidActivity(request.resource.data);
+      allow update, delete: if isAdmin();
     }
 
   }

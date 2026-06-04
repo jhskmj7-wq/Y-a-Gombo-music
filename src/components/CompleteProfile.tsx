@@ -289,6 +289,24 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
 
     try {
       await gomboDB.updateUserProfile(currentUserProfile.uid, updates);
+      
+      // Publish "nouveaux talents" to public Activity Feed
+      if (role === "musicien") {
+        try {
+          await gomboDB.publishActivity({
+            type: "talent",
+            title: "Nouveau Talent à bord ! 🚀",
+            message: `${firstName} ${lastName} vient de rejoindre la communauté en tant que ${specialties[0] || "Artiste"} !`,
+            userId: currentUserProfile.uid,
+            userName: `${firstName} ${lastName}`,
+            userAvatar: avatarUrl || undefined,
+            targetId: currentUserProfile.uid
+          });
+        } catch (feedErr) {
+          console.error("Non-fatal onboarding feed publish failed:", feedErr);
+        }
+      }
+
       // Fire simulated event so components aware of the transition can refresh immediately
       window.dispatchEvent(new Event("gomboUserProfileChange"));
       onComplete();

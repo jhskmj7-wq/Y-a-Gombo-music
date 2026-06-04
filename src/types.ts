@@ -51,6 +51,16 @@ export interface UserProfile {
   badges?: string[]; // ["⭐ Talent Certifié", "🔥 Artiste Actif", "🏆 Top Talent", "🎼 Groupe VIP", "✅ Profil Vérifié"]
   availabilityStatus?: "disponible" | "occupe" | "indisponible";
 
+  notificationSettings?: {
+    gombos: boolean;
+    renforts: boolean;
+    messages: boolean;
+    certifications: boolean;
+    groupes: boolean;
+  };
+
+  themePreference?: "light" | "dark" | "system";
+
   createdAt: string; // ISO String
 }
 
@@ -177,9 +187,26 @@ export interface GomboNotification {
   userId: string; // The user receiving the notification
   title: string;
   message: string;
-  type: "application_accepted" | "general" | "booking";
+  type: "application_accepted" | "general" | "booking" | "new_gombo" | "new_renfort" | "new_application" | "certification_approved" | "new_follower" | "new_message" | string;
   read: boolean;
+  isRead?: boolean; // For compat with firestore.rules
   createdAt: string;
+  senderId?: string;
+  senderName?: string;
+  senderAvatar?: string;
+  targetId?: string;
+}
+
+export interface ActivityFeedEntry {
+  id: string;
+  type: "talent" | "groupe" | "certification" | "gombo";
+  title: string;
+  message: string;
+  createdAt: string;
+  userId?: string;
+  userName?: string;
+  userAvatar?: string;
+  targetId?: string; // e.g. gombo ID, group ID, user ID
 }
 
 export interface Renfort {

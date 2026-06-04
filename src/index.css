@@ -37,19 +37,77 @@
   --color-gombo-orange: #7c3aed;
   --color-gombo-orange-hover: #6d28d9;
   --color-gombo-dark: #0f172a;
-  --color-gombo-card-dark: #1e293b;
+  --color-gombo-card-dark: #121826;
+}
+
+:root {
+  --bg-color: #F5F7FA;
+  --card-bg: #FFFFFF;
+  --text-color: #111827;
+  --border-color: #D1D5DB;
+}
+
+.dark {
+  --bg-color: #0B0F1A;
+  --card-bg: #121826;
+  --text-color: #FFFFFF;
+  --border-color: #1F2937;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
   transition: background-color 0.3s, color 0.3s;
 }
 
 .dark body {
-  background-color: var(--color-gombo-dark);
-  color: #f8fafc;
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Card and container dynamic theme adaptation */
+.bg-white, 
+.bg-gray-50, 
+.bg-gray-100 {
+  background-color: var(--card-bg) !important;
+}
+
+.dark .bg-\[\#121214\],
+.dark .bg-\[\#111113\],
+.dark .bg-\[\#1a1a1c\],
+.dark .bg-\[\#18181B\],
+.dark .bg-\[\#0F0F0F\],
+.dark .bg-\[\#0F172A\] {
+  background-color: var(--card-bg) !important;
+}
+
+/* Borders dynamic adaptation */
+.border-gray-100, 
+.border-gray-150, 
+.border-gray-200, 
+.border-gray-300 {
+  border-color: var(--border-color) !important;
+}
+
+.dark .border-gray-800, 
+.dark .border-gray-850, 
+.dark .border-gray-700 {
+  border-color: var(--border-color) !important;
+}
+
+/* Text dynamic adaptation */
+.text-gray-900, 
+.text-gray-950, 
+.text-gray-800 {
+  color: var(--text-color) !important;
+}
+
+.dark .text-white, 
+.dark .text-gray-100, 
+.dark .text-gray-200, 
+.dark .text-gray-300 {
+  color: var(--text-color) !important;
 }
 
 /* Perfect Custom Scrollbar style */
