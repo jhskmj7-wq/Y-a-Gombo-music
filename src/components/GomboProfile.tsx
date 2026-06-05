@@ -5,10 +5,15 @@ import {
   Sparkles, ShieldCheck, Heart, CreditCard, Star, Radio, LogOut,
   Settings, ArrowUpRight, TrendingUp, HelpCircle, Bell, Eye, EyeOff,
   Moon, Sun, Globe, Smartphone, Shield, Lock, Trash2, Calendar,
-  Camera, Upload, RefreshCw, MessageSquare, ChevronDown, Search
+  Camera, Upload, RefreshCw, MessageSquare, ChevronDown, Search,
+  Copy, Plus, Play, Pause, ExternalLink
 } from "lucide-react";
 import { UserProfile, PaymentProvider } from "../types";
 import { gomboDB, gomboAuth } from "../firebase";
+import { ProfileCompletionScore } from "./ProfileCompletionScore";
+import { MediaGalleryManager } from "./MediaGalleryManager";
+import { GomboProfileMainView } from "./GomboProfileMainView";
+import { GomboProfileEditView } from "./GomboProfileEditView";
 
 interface GomboProfileProps {
   currentUserProfile: UserProfile;
@@ -187,6 +192,54 @@ export default function GomboProfile({
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
+  // New state fields for Phase 10
+  const [ville, setVille] = useState(currentUserProfile.ville || "Abidjan");
+  const [quartier, setQuartier] = useState(currentUserProfile.quartier || "");
+  const [accountRole, setAccountRole] = useState(currentUserProfile.role || "musicien");
+  const [freeSpecialty, setFreeSpecialty] = useState("");
+  const [freeGenre, setFreeGenre] = useState("");
+
+  // Media portfolio states
+  const [mediaGallery, setMediaGallery] = useState<any[]>(currentUserProfile.mediaGallery || []);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [newMediaType, setNewMediaType] = useState<"photo" | "audio" | "video" | "youtube">("youtube");
+  const [newMediaUrl, setNewMediaUrl] = useState("");
+  const [newMediaTitle, setNewMediaTitle] = useState("");
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [mediaUploadProgress, setMediaUploadProgress] = useState(0);
+
+  // Stats dynamically calculated in real-time
+  const [dynamicGroupsCount, setDynamicGroupsCount] = useState(0);
+  const [dynamicFavsCount, setDynamicFavsCount] = useState(0);
+  const [dynamicAppsCount, setDynamicAppsCount] = useState(currentUserProfile.applicationsSent ?? 0);
+
+  useEffect(() => {
+    const unsubGroups = gomboDB.listenAllMusicGroups((groups) => {
+      const mine = groups.filter(g => g.creatorId === currentUserProfile.uid);
+      setDynamicGroupsCount(mine.length);
+    });
+
+    const unsubApps = gomboDB.listenApplications((apps) => {
+      const mine = apps.filter(a => a.musicianId === currentUserProfile.uid);
+      setDynamicAppsCount(mine.length);
+    });
+
+    const unsubPosts = gomboDB.listenSocialPosts((posts) => {
+      const savedOrLiked = posts.filter(p => 
+        (p.likedBy && p.likedBy.includes(currentUserProfile.uid)) || 
+        (p.savedBy && p.savedBy.includes(currentUserProfile.uid))
+      );
+      setDynamicFavsCount(savedOrLiked.length);
+    });
+
+    return () => {
+      unsubGroups();
+      unsubApps();
+      unsubPosts();
+    };
+  }, [currentUserProfile?.uid]);
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 300, height: 300, facingMode: "user" } });
@@ -261,6 +314,82 @@ export default function GomboProfile({
     }
   };
 
+  // Media Gallery System
+  const handleAddMedia = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newMediaType !== "youtube" && mediaFile) {
+      setMediaUploading(true);
+      setMediaUploadProgress(0);
+      try {
+        const fileExt = mediaFile.name.split('.').pop();
+        const path = `portfolio/${currentUserProfile.uid}/${Date.now()}_media.${fileExt}`;
+        const downloadUrl = await gomboDB.uploadFile(path, mediaFile, (progress) => {
+          setMediaUploadProgress(Math.round(progress));
+        });
+        const newItem = {
+          id: `media_${Date.now()}`,
+          type: newMediaType,
+          url: downloadUrl,
+          title: newMediaTitle.trim() || `${newMediaType.toUpperCase()} Portfolio`
+        };
+        const updatedGallery = [...mediaGallery, newItem];
+        await gomboDB.updateUserProfile(currentUserProfile.uid, {
+          mediaGallery: updatedGallery
+        });
+        setMediaGallery(updatedGallery);
+        onRefreshProfile();
+        setIsMediaModalOpen(false);
+        setNewMediaUrl("");
+        setNewMediaTitle("");
+        setMediaFile(null);
+      } catch (err) {
+        console.error("Media upload error:", err);
+        alert("Erreur de chargement du fichier.");
+      } finally {
+        setMediaUploading(false);
+      }
+    } else {
+      if (!newMediaUrl.trim()) {
+        alert("Veuillez entrer un lien valide.");
+        return;
+      }
+      const newItem = {
+        id: `media_${Date.now()}`,
+        type: newMediaType,
+        url: newMediaUrl.trim(),
+        title: newMediaTitle.trim() || `${newMediaType.toUpperCase()} Portfolio`
+      };
+      const updatedGallery = [...mediaGallery, newItem];
+      try {
+        await gomboDB.updateUserProfile(currentUserProfile.uid, {
+          mediaGallery: updatedGallery
+        });
+        setMediaGallery(updatedGallery);
+        onRefreshProfile();
+        setIsMediaModalOpen(false);
+        setNewMediaUrl("");
+        setNewMediaTitle("");
+      } catch (err) {
+        console.error("Gallery update error:", err);
+      }
+    }
+  };
+
+  const handleDeleteMedia = async (mediaId: string) => {
+    if (window.confirm("Voulez-vous supprimer ce média de votre galerie d'artiste ?")) {
+      const updatedGallery = mediaGallery.filter(item => item.id !== mediaId);
+      try {
+        await gomboDB.updateUserProfile(currentUserProfile.uid, {
+          mediaGallery: updatedGallery
+        });
+        setMediaGallery(updatedGallery);
+        onRefreshProfile();
+      } catch (err) {
+        console.error("Gallery delete error:", err);
+      }
+    }
+  };
+
   // Settings screen State Sub-Tabs: "compte" | "pref" | "secu" | "confi"
   const [settingsTab, setSettingsTab] = useState<"compte" | "pref" | "secu" | "confi">("compte");
   const [newEmail, setNewEmail] = useState(currentUserProfile.email || "");
@@ -297,6 +426,10 @@ export default function GomboProfile({
       setAvailabilityStatus(currentUserProfile.availabilityStatus || ((currentUserProfile.isAvailableNow ?? true) ? "disponible" : "indisponible"));
       setNewEmail(currentUserProfile.email || "");
       setNewPhone(currentUserProfile.phone || "");
+      setVille(currentUserProfile.ville || "Abidjan");
+      setQuartier(currentUserProfile.quartier || "");
+      setAccountRole(currentUserProfile.role || "musicien");
+      setMediaGallery(currentUserProfile.mediaGallery || []);
     }
   }, [currentUserProfile?.uid, currentUserProfile]);
 
@@ -391,6 +524,9 @@ export default function GomboProfile({
       phone: phone.trim(),
       whatsapp: whatsapp.trim() || phone.trim(),
       commune,
+      ville: ville.trim(),
+      quartier: quartier.trim(),
+      role: accountRole as any,
       bio: bio.trim(),
       avatarUrl,
       photoURL: avatarUrl,
@@ -469,6 +605,144 @@ export default function GomboProfile({
       alert("Une erreur est survenue lors de la suppression de votre compte.");
     }
   };
+
+  const [uidCopied, setUidCopied] = useState(false);
+  const handleCopyUid = () => {
+    navigator.clipboard.writeText(currentUserProfile.uid);
+    setUidCopied(true);
+    setTimeout(() => setUidCopied(false), 2000);
+  };
+
+  const [playingAudioUrl, setPlayingAudioUrl] = useState<string | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+
+  const toggleAudioPlay = (url: string) => {
+    if (playingAudioUrl === url) {
+      if (audioElement) {
+        audioElement.pause();
+        setPlayingAudioUrl(null);
+      }
+    } else {
+      if (audioElement) {
+        audioElement.pause();
+      }
+      const audio = new Audio(url);
+      audio.play();
+      setAudioElement(audio);
+      setPlayingAudioUrl(url);
+      audio.onended = () => {
+        setPlayingAudioUrl(null);
+      };
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+      }
+    };
+  }, [audioElement]);
+
+  const [activeMediaTab, setActiveMediaTab] = useState<"photo" | "audio" | "youtube">("youtube");
+  const [selectedYoutubeEmbed, setSelectedYoutubeEmbed] = useState<string | null>(null);
+
+  const getYoutubeId = (url: string) => {
+    let videoId = "";
+    if (url.includes("youtube.com/watch")) {
+      const parts = url.split("v=");
+      if (parts[1]) videoId = parts[1].split("&")[0];
+    } else if (url.includes("youtu.be/")) {
+      const parts = url.split("youtu.be/");
+      if (parts[1]) videoId = parts[1].split("?")[0];
+    } else if (url.includes("youtube.com/embed/")) {
+      const parts = url.split("youtube.com/embed/");
+      if (parts[1]) videoId = parts[1].split("?")[0];
+    }
+    return videoId;
+  };
+
+  if (panelView === "main") {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-6 text-[#1A1A1A] dark:text-gray-100">
+        <GomboProfileMainView
+          currentUserProfile={currentUserProfile}
+          onRefreshProfile={onRefreshProfile}
+          onNavigateView={onNavigateView}
+          setPanelView={setPanelView}
+          availabilityStatus={availabilityStatus}
+          handleUpdateAvailabilityStatus={handleUpdateAvailabilityStatus}
+          updatingAvailability={updatingAvailability}
+          dynamicGroupsCount={dynamicGroupsCount}
+          dynamicFavsCount={dynamicFavsCount}
+          dynamicAppsCount={dynamicAppsCount}
+          myPosts={myPosts}
+          mediaGallery={mediaGallery}
+          setMediaGallery={setMediaGallery}
+        />
+      </div>
+    );
+  }
+
+  if (panelView === "edit") {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-6 text-[#1A1A1A] dark:text-gray-100">
+        <GomboProfileEditView
+          firstName={firstName}
+          setFirstName={setFirstName}
+          lastName={lastName}
+          setLastName={setLastName}
+          artistName={artistName}
+          setArtistName={setArtistName}
+          phone={phone}
+          setPhone={setPhone}
+          whatsapp={whatsapp}
+          setWhatsapp={setWhatsapp}
+          gender={gender}
+          setGender={setGender}
+          birthDate={birthDate}
+          setBirthDate={setBirthDate}
+          commune={commune}
+          setCommune={setCommune}
+          ville={ville}
+          setVille={setVille}
+          quartier={quartier}
+          setQuartier={setQuartier}
+          accountRole={accountRole}
+          setAccountRole={setAccountRole}
+          bio={bio}
+          setBio={setBio}
+          specialties={specialties}
+          setSpecialties={setSpecialties}
+          musicGenres={musicGenres}
+          setMusicGenres={setMusicGenres}
+          experience={experience}
+          setExperience={setExperience}
+          availabilities={availabilities}
+          setAvailabilities={setAvailabilities}
+          waveNumber={waveNumber}
+          setWaveNumber={setWaveNumber}
+          orangeMoneyNumber={orangeMoneyNumber}
+          setOrangeMoneyNumber={setOrangeMoneyNumber}
+          editLoading={editLoading}
+          editError={editError}
+          editSuccess={editSuccess}
+          onSubmit={handleEditProfileSubmit}
+          onCancel={() => setPanelView("main")}
+          avatarUrl={avatarUrl}
+          setAvatarUrl={setAvatarUrl}
+          cameraActive={cameraActive}
+          setCameraActive={setCameraActive}
+          uploading={uploading}
+          uploadProgress={uploadProgress}
+          capturePhoto={capturePhoto}
+          stopCamera={stopCamera}
+          startCamera={startCamera}
+          handleFileUpload={handleFileUpload}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 text-[#1A1A1A] dark:text-gray-100">

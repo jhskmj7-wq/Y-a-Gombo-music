@@ -10,12 +10,14 @@ export interface UserProfile {
   artistName?: string;
   ville?: string;
   commune: string;
+  quartier?: string;
   phone: string;
   bio?: string;
   role: UserRole;
   specialty?: string; // e.g. "Chanteur", "Guitariste", "Pianiste", "Batteur", "DJ", "Cuivres", "Bassiste", etc.
   specialties?: string[]; // Multiple specialties
   experience?: string;
+  mediaGallery?: { id: string; type: "photo" | "audio" | "video" | "youtube"; url: string; title?: string; }[];
   // New specific fields:
   speciality?: string; // musical specialty
   experienceYears?: string; // Years of experience
