@@ -382,31 +382,31 @@ export function AboutPage({ onBack }: PublicPageProps) {
             <span>Retour</span>
           </button>
           
-          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">
-            <Flame className="w-4.5 h-4.5 text-[#7C3AED] fill-current" />
-            <span>Y’A GOMBO MUSIC</span>
+          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
+            <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
+            <span>AFRIGOMBO • Y’A GOMBO MUSIC</span>
           </div>
         </div>
 
         <div className="text-center space-y-3">
-          <div className="inline-flex p-3 bg-purple-100 dark:bg-purple-950/30 text-[#7C3AED] dark:text-[#A78BFA] rounded-2xl animate-bounce">
+          <div className="inline-flex p-3 bg-[#D4AF37]/15 text-[#D4AF37] rounded-2xl animate-bounce">
             <Info className="w-8 h-8" />
           </div>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
             À Propos de Nous
           </h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-            La révolution numérique du Showbiz et des gombos musicaux en Côte d'Ivoire.
+            La révolution numérique d'AFRIGOMBO : opportunités certifiées et cachets sécurisés du showbiz.
           </p>
         </div>
 
-        <div className="bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase border-b border-gray-50 dark:border-gray-850 pb-2 flex items-center gap-2">
-              <span className="text-[#7C3AED]">🇨🇮</span> Notre Mission
+              <span className="text-[#D4AF37]">🇨🇮</span> Notre Mission
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-              <strong>Y'A GOMBO MUSIC</strong> a été conçu par et pour les artistes ivoiriens. Notre but ultime est de professionnaliser la recherche, la planification et le paiement sécurisé des contrats musicaux (les fameux « Gombos ») à Abidjan et partout au pays.
+              <strong>AFRIGOMBO</strong>, propulsé par la solution <strong>Y'A GOMBO MUSIC</strong>, a été conçu par et pour les artistes. Notre but ultime est de professionnaliser la recherche, la planification et le paiement certifié des contrats musicaux et gombos scéniques à Abidjan et partout en Afrique de l'Ouest.
             </p>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Fini les fausses promesses, les intermédiaires gourmands ou les cachets non payés après des heures de show live intense. Nous offrons une plateforme transparente de mise en relation directe.

@@ -929,11 +929,18 @@ export default function GomboProfile({
                 {/* Active Badges list */}
                 {currentUserProfile.badges && currentUserProfile.badges.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start mt-2">
-                    {currentUserProfile.badges.map((b) => (
-                      <span key={b} className="text-[9px] font-extrabold bg-[#FF7A00]/10 text-[#FF7A00] border border-[#FF7A00]/20 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs tracking-wide">
-                        {b}
-                      </span>
-                    ))}
+                    {currentUserProfile.badges.map((b) => {
+                      const isGoldNoir = b.includes("Certifié") || b.includes("Vérifié");
+                      return (
+                        <span key={b} className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs tracking-wide border ${
+                          isGoldNoir 
+                            ? "bg-[#D4AF37] text-[#0B0B0B] border-[#D4AF37]/40" 
+                            : "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/20"
+                        }`}>
+                          {b}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
 

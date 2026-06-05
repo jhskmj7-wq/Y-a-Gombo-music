@@ -6,52 +6,52 @@
   --font-display: "Poppins", "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   
-  /* Map standard Orange color scale to Royal Violet so existing elements adapt beautifully */
-  --color-orange-50: #f5f3ff;
-  --color-orange-100: #ede9fe;
-  --color-orange-200: #ddd6fe;
-  --color-orange-300: #c4b5fd;
-  --color-orange-400: #a78bfa;
-  --color-orange-500: #7c3aed;
-  --color-orange-600: #6d28d9;
-  --color-orange-605: #5b21b6;
-  --color-orange-650: #4c1d95;
-  --color-orange-700: #4c1d95;
-  --color-orange-850: #2e1065;
-  --color-orange-905: #1e1b4b;
-  --color-orange-955: #120e36;
-  --color-orange-900: #1e1b4b;
-  --color-orange-950: #120e36;
+  /* Map standard Orange color scale to Or Royal gold so existing elements adapt beautifully */
+  --color-orange-50: #fbfaf2;
+  --color-orange-100: #f5eed3;
+  --color-orange-200: #ecdda7;
+  --color-orange-300: #e2c974;
+  --color-orange-400: #dcb343;
+  --color-orange-500: #D4AF37; /* Or Royal */
+  --color-orange-600: #bfa12d;
+  --color-orange-605: #a88d22;
+  --color-orange-650: #917918;
+  --color-orange-700: #7a6611;
+  --color-orange-850: #493d0a;
+  --color-orange-905: #2d2605;
+  --color-orange-955: #110e01;
+  --color-orange-900: #2d2605;
+  --color-orange-950: #110e01;
   
   /* Map Gold Accents */
-  --color-gold-50: #fcf8f2;
-  --color-gold-100: #f4eae0;
-  --color-gold-200: #ebd8c1;
-  --color-gold-300: #dfbf9b;
-  --color-gold-400: #d4a373;
-  --color-gold-500: #d4a373;
-  --color-gold-600: #c59262;
-  --color-gold-700: #a37243;
-  --color-gold-950: #2d1e11;
+  --color-gold-50: #fbfaf2;
+  --color-gold-100: #f5eed3;
+  --color-gold-200: #ecdda7;
+  --color-gold-300: #e2c974;
+  --color-gold-400: #dcb343;
+  --color-gold-500: #D4AF37; /* Or Royal */
+  --color-gold-600: #bfa12d;
+  --color-gold-700: #7a6611;
+  --color-gold-950: #110e01;
 
-  --color-gombo-orange: #7c3aed;
-  --color-gombo-orange-hover: #6d28d9;
-  --color-gombo-dark: #0f172a;
-  --color-gombo-card-dark: #121826;
+  --color-gombo-orange: #D4AF37;
+  --color-gombo-orange-hover: #bfa12d;
+  --color-gombo-dark: #0B0B0B;
+  --color-gombo-card-dark: #141414;
 }
 
 :root {
-  --bg-color: #F5F7FA;
-  --card-bg: #FFFFFF;
-  --text-color: #111827;
-  --border-color: #D1D5DB;
+  --bg-color: #F5F5F5; /* Gris Clair */
+  --card-bg: #FFFFFF; /* Blanc */
+  --text-color: #0B0B0B; /* Noir Premium */
+  --border-color: #E2E2E2;
 }
 
 .dark {
-  --bg-color: #0B0F1A;
-  --card-bg: #121826;
-  --text-color: #FFFFFF;
-  --border-color: #1F2937;
+  --bg-color: #0B0B0B; /* Noir Premium */
+  --card-bg: #141414; /* Blanc Premium Option with Dark Slate */
+  --text-color: #FFFFFF; /* Blanc */
+  --border-color: #222222;
 }
 
 body {

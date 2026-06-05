@@ -128,20 +128,24 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
         {/* Brand Banner Header - Logo & Slogan */}
         <div className="text-center mb-8 mt-4">
-          <div className="inline-flex items-center justify-center p-4 bg-[#7C3AED]/20 hover:bg-[#7C3AED]/30 text-[#D4A373] rounded-3xl mb-4 border border-[#D4A373]/20 shadow-lg">
-            <Flame className="w-9 h-9 fill-current text-[#D4A373]" />
+          <div className="inline-flex items-center justify-center p-4 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] rounded-3xl mb-4 border border-[#D4AF37]/20 shadow-lg transition-all duration-300">
+            <Flame className="w-9 h-9 fill-current text-[#D4AF37]" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-50 tracking-wide uppercase font-display">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#D4AF37] tracking-wider uppercase font-display mb-1.5">
+            AFRIGOMBO
+          </h1>
+          <h2 className="text-lg sm:text-xl font-bold text-slate-300 tracking-widest uppercase mb-4">
             Y'A GOMBO MUSIC
           </h2>
-          <p className="text-[10px] text-[#D4A373] font-extra-black tracking-widest uppercase mt-1">
-            L'Élite du Showbiz & Contrats d'Artistes
+          <p className="text-xs sm:text-sm text-gray-300 font-bold px-2 max-w-md mx-auto leading-relaxed border-t border-[#D4AF37]/15 pt-3">
+            Le Temple du Gombo :<br />
+            Vos opportunités musicales certifiées, vos cachets sécurisés.
           </p>
         </div>
 
         {/* Info label */}
         <p className="text-center text-xs text-slate-400 max-w-xs mx-auto mb-6 leading-relaxed">
-          Accédez aux opportunités de l'arène musicale ivoirienne en moins de 10 secondes.
+          Accédez aux opportunités de l'arène musicale certifiée en moins de 10 secondes.
         </p>
 
         {/* Error / Success Feedback banner */}
@@ -190,30 +194,27 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full h-12 flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-950 rounded-2xl transition-all font-black text-xs uppercase tracking-wider active:scale-98 cursor-pointer shadow-lg"
+            className="w-full h-12 flex items-center justify-center gap-3 bg-[#D4AF37] hover:bg-[#be992c] text-[#0B0B0B] rounded-2xl transition-all duration-300 font-extrabold text-xs uppercase tracking-wider active:scale-98 cursor-pointer shadow-lg hover:shadow-[#D4AF37]/20"
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
               <path
-                fill="#EA4335"
+                fill="#0B0B0B"
                 d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.529-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.1C18.28 1.844 15.485 1 12.24 1 6.05 1 1.042 6.01 1.042 12.185S6.05 23.37 12.24 23.37c6.46 0 10.755-4.54 10.755-10.95 0-.735-.08-1.3-.175-1.833h-10.58z"
               />
             </svg>
             <span>{loading ? "Chargement..." : "Continuer avec Google"}</span>
           </button>
 
-          {/* CONTINUER AVEC FACEBOOK (Disabled / Bientôt disponible) */}
+          {/* CONTINUER AVEC FACEBOOK (Disabled / Préparation) */}
           <div className="relative group">
             <button
               type="button"
               disabled
-              className="w-full h-12 flex items-center justify-center gap-3 bg-[#1877F2]/10 border border-[#1877F2]/20 text-blue-350 opacity-60 rounded-2xl font-bold text-xs uppercase tracking-wider cursor-not-allowed"
+              className="w-full h-12 flex items-center justify-center gap-3 bg-white/5 border border-white/10 text-slate-500 rounded-2xl font-bold text-xs uppercase tracking-wider cursor-not-allowed opacity-50"
             >
-              <Facebook className="w-5 h-5 fill-[#1877F2] stroke-none shrink-0" />
-              <span>Continuer avec Facebook</span>
+              <Facebook className="w-5 h-5 fill-slate-500 stroke-none shrink-0" />
+              <span>Continuer avec Facebook (préparation)</span>
             </button>
-            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-900/90 border border-blue-500/50 text-[9px] font-black uppercase text-blue-200 px-2 py-0.5 rounded-md pointer-events-none">
-              Bientôt disponible
-            </span>
           </div>
         </div>
 

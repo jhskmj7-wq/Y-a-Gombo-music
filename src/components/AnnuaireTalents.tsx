@@ -113,6 +113,7 @@ export default function AnnuaireTalents({
   const [contactingTalent, setContactingTalent] = useState<UserProfile | null>(null);
   const [contactMessage, setContactMessage] = useState("");
   const [contactSuccess, setContactSuccess] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   // Load all talents
   useEffect(() => {
@@ -313,17 +314,52 @@ export default function AnnuaireTalents({
   };
 
   // Submit dynamic direct message
-  const handleSendMessageSubmit = (e: React.FormEvent) => {
+  const handleSendMessageSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!contactMessage.trim() || !contactingTalent) return;
+    if (!contactMessage.trim() || !contactingTalent || !currentUserProfile) return;
     
-    // Simulate high class instant feedback messages
-    setContactSuccess(true);
-    setTimeout(() => {
-      setContactSuccess(false);
-      setContactingTalent(null);
-      setContactMessage("");
-    }, 2000);
+    setSendingMessage(true);
+    try {
+      const myDetails = {
+        name: currentUserProfile.artistName || `${currentUserProfile.firstName} ${currentUserProfile.lastName}` || "Moi",
+        avatarUrl: currentUserProfile.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+        role: currentUserProfile.role || "organisateur"
+      };
+      const recipientDetails = {
+        name: contactingTalent.artistName || `${contactingTalent.firstName} ${contactingTalent.lastName}` || "Artiste Gombo",
+        avatarUrl: contactingTalent.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+        role: contactingTalent.role || "musicien"
+      };
+
+      const convoId = await gomboDB.getOrCreateConversation(
+        currentUserProfile.uid,
+        contactingTalent.uid,
+        myDetails,
+        recipientDetails
+      );
+
+      await gomboDB.sendMessage(
+        convoId,
+        currentUserProfile.uid,
+        myDetails.name,
+        contactMessage
+      );
+
+      setContactSuccess(true);
+      setTimeout(() => {
+        setContactSuccess(false);
+        setContactingTalent(null);
+        setContactMessage("");
+        if (onNavigateView) {
+          onNavigateView("messages");
+        }
+      }, 1500);
+    } catch (err) {
+      console.error("Error sending message:", err);
+      alert("Une erreur est survenue lors de l'envoi du message.");
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   // Perform filtering on loaded talents list
@@ -468,11 +504,18 @@ export default function AnnuaireTalents({
                     🏆 {selectedTalent.experience || "Professionnel"}
                   </span>
                   
-                  {selectedTalent.badges && selectedTalent.badges?.map((badge, index) => (
-                    <span key={index} className="text-[10px] font-black bg-[#FF7A00]/10 text-[#FF7A00] border border-[#FF7A00]/25 px-2.5 py-1 rounded-md flex items-center gap-1">
-                      {badge}
-                    </span>
-                  ))}
+                  {selectedTalent.badges && selectedTalent.badges?.map((badge, index) => {
+                    const isGoldNoir = badge.includes("Certifié") || badge.includes("Vérifié");
+                    return (
+                      <span key={index} className={`text-[10px] font-black px-2.5 py-1 rounded-md flex items-center gap-1 border ${
+                        isGoldNoir 
+                          ? "bg-[#D4AF37] text-[#0B0B0B] border-[#0B0B0B]/10 shadow-sm" 
+                          : "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/25"
+                      }`}>
+                        {badge}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -568,10 +611,14 @@ export default function AnnuaireTalents({
               {/* Contacter Direct Button */}
               <button 
                 onClick={() => {
+                  if (!currentUserProfile) {
+                    alert("Veuillez vous connecter pour contacter l'artiste.");
+                    return;
+                  }
                   setContactingTalent(selectedTalent);
-                  setContactMessage(`Salut ${selectedTalent.firstName}, j'ai vu ton profil sur l'Annuaire Y'A GOMBO MUSIC. Nous aurions besoin de ton talent pour une prestation...`);
+                  setContactMessage(`Salut ${selectedTalent.firstName}, j'ai vu ton profil sur l'Annuaire AFRIGOMBO. Nous aurions besoin de ton talent pour une prestation...`);
                 }}
-                className="flex-1 bg-[#7C3AED] hover:bg-[#6D28D9] text-white py-3.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="flex-1 bg-[#D4AF37] hover:bg-[#bfa12d] text-[#0B0B0B] py-3.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Contacter l'Artiste</span>
@@ -872,11 +919,18 @@ export default function AnnuaireTalents({
                               <span className="text-[9px] font-black uppercase text-purple-650 bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded leading-none">
                                 {talent.specialty || "Musicien"}
                               </span>
-                              {talent.badges?.map((badge, idx) => (
-                                <span key={idx} className="text-[8px] font-black bg-[#FF7A00]/10 text-[#FF7A00] px-1 py-0.5 rounded leading-none">
-                                  {badge}
-                                </span>
-                              ))}
+                              {talent.badges?.map((badge, idx) => {
+                                const isGoldNoir = badge.includes("Certifié") || badge.includes("Vérifié");
+                                return (
+                                  <span key={idx} className={`text-[8px] font-black px-1.5 py-0.5 rounded leading-none border ${
+                                    isGoldNoir 
+                                      ? "bg-[#D4AF37] text-[#0B0B0B] border-[#D4AF37]/10" 
+                                      : "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/15"
+                                  }`}>
+                                    {badge}
+                                  </span>
+                                );
+                              })}
                             </div>
                             
                             <h3 className="text-sm font-black text-gray-950 dark:text-white truncate">
@@ -919,10 +973,14 @@ export default function AnnuaireTalents({
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
+                              if (!currentUserProfile) {
+                                alert("Veuillez vous connecter pour envoyer un message.");
+                                return;
+                              }
                               setContactingTalent(talent);
                               setContactMessage(`Salut ${talent.firstName}, j'ai vu ton profil d'artiste sur l'Annuaire Premium. J'ai un projet de gombo musical pour toi...`);
                             }}
-                            className="p-1.5 bg-purple-50 text-[#7C3AED] dark:bg-purple-950/20 dark:text-[#A78BFA] rounded-lg hover:bg-purple-100 transition cursor-pointer"
+                            className="p-1.5 bg-[#D4AF37]/10 text-[#D4AF37] dark:bg-[#D4AF37]/20 dark:text-[#D4AF37] rounded-lg hover:bg-[#D4AF37]/35 transition cursor-pointer"
                             title="Envoyer un message direct"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
@@ -961,7 +1019,7 @@ export default function AnnuaireTalents({
             
             <div className="flex justify-between items-start pb-2 border-b border-gray-50 dark:border-gray-850">
               <div>
-                <span className="text-[10px] font-black uppercase text-purple-600">Mise en relation Showbiz</span>
+                <span className="text-[10px] font-black uppercase text-[#D4AF37]">Mise en relation Showbiz</span>
                 <h3 className="text-base font-black text-gray-950 dark:text-white uppercase leading-tight">
                   Contacter {contactingTalent.firstName}
                 </h3>
@@ -981,7 +1039,7 @@ export default function AnnuaireTalents({
                 </div>
                 <h4 className="text-sm font-black text-gray-950 dark:text-white uppercase">Message Envoyé !</h4>
                 <p className="text-xs text-gray-400 max-w-xs mx-auto">
-                  Votre proposition d'embauche a été envoyée. L'artiste vous répondra directement ou via son numéro mobile.
+                  Votre proposition d'embauche a été envoyée. Retrouvez la discussion en direct dans l'onglet Messagerie.
                 </p>
               </div>
             ) : (
@@ -992,7 +1050,7 @@ export default function AnnuaireTalents({
                     value={contactMessage}
                     onChange={(e) => setContactMessage(e.target.value)}
                     rows={4}
-                    className="w-full p-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-purple-600 dark:text-white"
+                    className="w-full p-3 bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white"
                     placeholder="Écrivez les conditions de date, de cachet de vos spectacles..."
                     required
                   />
@@ -1001,17 +1059,19 @@ export default function AnnuaireTalents({
                 <div className="flex gap-2.5 pt-1">
                   <button 
                     type="button"
+                    disabled={sendingMessage}
                     onClick={() => setContactingTalent(null)}
-                    className="flex-1 py-3 border border-gray-150 text-gray-700 dark:text-gray-300 dark:border-gray-850 hover:bg-gray-50 rounded-xl text-xs font-bold font-sans cursor-pointer"
+                    className="flex-1 py-3 border border-gray-150 text-gray-700 dark:text-gray-300 dark:border-gray-850 hover:bg-gray-50 rounded-xl text-xs font-bold font-sans cursor-pointer disabled:opacity-50"
                   >
                     Annuler
                   </button>
                   <button 
                     type="submit"
-                    className="flex-1 py-3 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    disabled={sendingMessage}
+                    className="flex-1 py-3 bg-[#D4AF37] hover:bg-[#bfa12d] text-[#0B0B0B] rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>Envoyer la demande</span>
+                    <span>{sendingMessage ? "Envoi..." : "Envoyer la demande"}</span>
                   </button>
                 </div>
               </form>

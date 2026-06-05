@@ -58,6 +58,7 @@ import GroupeVIPAnnuaire from "./components/GroupeVIPAnnuaire";
 import AnnuaireTalents from "./components/AnnuaireTalents";
 import NotificationCenter from "./components/NotificationCenter";
 import ActivityFeedView from "./components/ActivityFeedView";
+import MessagesView from "./components/MessagesView";
 import { PrivacyPage, TermsPage, DeleteAccountPage, AboutPage, SupportPage, CachetsPage } from "./components/PublicPages";
 
 const ABIDJAN_COMMUNES = [
@@ -126,6 +127,7 @@ export default function App() {
   });
 
   const [dashboardInitialTab, setDashboardInitialTab] = useState<string>("");
+  const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
 
   // URL synchronization for public policy pages
   useEffect(() => {
@@ -237,6 +239,20 @@ export default function App() {
   const [showNotifTray, setShowNotifTray] = useState(false);
   const [groupNotifications, setGroupNotifications] = useState(false);
   const [activeToast, setActiveToast] = useState<{ id: string; title: string; message: string } | null>(null);
+  const [unreadChatCount, setUnreadChatCount] = useState<number>(0);
+
+  // Real-time messaging unread list listener
+  useEffect(() => {
+    if (!profile?.uid) {
+      setUnreadChatCount(0);
+      return;
+    }
+    const unsubscribe = gomboDB.listenConversations(profile.uid, (convos) => {
+      const count = convos.filter(c => (c.unreadCount?.[profile.uid] || 0) > 0).length;
+      setUnreadChatCount(count);
+    });
+    return () => unsubscribe();
+  }, [profile]);
 
   // Real-time notification listener
   useEffect(() => {
@@ -668,22 +684,22 @@ export default function App() {
           <div className="flex items-center justify-between h-16">
             
             {/* Logo */}
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView("home")}>
-              <div className="p-2 bg-gradient-to-tr from-orange-500 to-orange-600 rounded-xl text-white">
-                <Flame className="w-5 h-5 fill-current" />
+            <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setView("home")}>
+              <div className="p-2 bg-[#D4AF37] rounded-xl text-[#0B0B0B] shadow-sm">
+                <Flame className="w-5 h-5 fill-current text-[#0B0B0B]" />
               </div>
-              <div>
-                <span className="font-extrabold text-lg sm:text-lg tracking-tight text-gray-950 dark:text-white uppercase">Y’A GOMBO MUSIC</span>
-                <span className="text-[10px] font-black uppercase text-orange-600 dark:text-orange-400 block -mt-1 tracking-wider">Showbiz CI</span>
+              <div className="flex flex-col">
+                <span className="font-extrabold text-sm sm:text-base tracking-wider text-gray-950 dark:text-white uppercase leading-none">AFRIGOMBO</span>
+                <span className="text-[9px] font-bold uppercase text-[#D4AF37] tracking-widest leading-none mt-1">Y'A GOMBO MUSIC</span>
               </div>
             </div>
 
             {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center gap-1">
               <button 
-                onClick={() => setView("home")}
+                onClick={() => { setView("home"); setCurrentHomeTab("fil"); }}
                 className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "home" ? "text-[#7C3AED] dark:text-[#A78BFA]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "home" && currentHomeTab === "fil" ? "text-[#D4AF37] dark:text-[#D4AF37]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 Le Terrain
@@ -692,7 +708,7 @@ export default function App() {
               <button 
                 onClick={() => setView("renfort_express")}
                 className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1 ${
-                  view === "renfort_express" ? "text-orange-500 dark:text-orange-400 font-extrabold" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "renfort_express" ? "text-[#D4AF37] dark:text-[#D4AF37] font-extrabold" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 🎼 Renfort Express
@@ -701,7 +717,7 @@ export default function App() {
               <button 
                 onClick={() => setView("gombo_list")}
                 className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "gombo_list" ? "text-[#7C3AED] dark:text-[#A78BFA]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "gombo_list" ? "text-[#D4AF37] dark:text-[#D4AF37]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 Les Vibes
@@ -710,7 +726,7 @@ export default function App() {
               <button 
                 onClick={() => navigateTo("annuaire")}
                 className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
-                  view === "annuaire" ? "text-[#7C3AED] dark:text-[#A78BFA] font-black" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "annuaire" ? "text-[#D4AF37] dark:text-[#D4AF37] font-black" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 <span>La Base 🎤</span>
@@ -724,37 +740,37 @@ export default function App() {
                 }`}
               >
                 Coin des Groupes
-                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-amber-500 bg-amber-55 dark:bg-amber-950/20 px-1 rounded-md animate-pulse">VIP ⭐</span>
+                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#D4AF37] bg-[#D4AF37]/10 px-1 rounded-md animate-pulse">VIP ⭐</span>
               </button>
 
               <button 
-                onClick={() => setView("marche")}
+                onClick={() => { setView("home"); setCurrentHomeTab("marche"); }}
                 className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "marche" ? "text-[#7C3AED]" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+                  view === "home" && currentHomeTab === "marche" ? "text-[#D4AF37] dark:text-[#D4AF37] font-black" : "text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 Marché du Coin
-                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Bientôt</span>
+                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#D4AF37] bg-[#D4AF37]/10 px-1 rounded-md">Direct</span>
               </button>
 
               <button 
                 onClick={() => setView("certification")}
                 className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  view === "certification" ? "text-[#7C3AED]" : "text-gray-500 hover:text-gray-400 dark:hover:text-white"
+                  view === "certification" ? "text-[#D4AF37]" : "text-gray-500 hover:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 Talent Certifié
-                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#7C3AED] bg-purple-50 dark:bg-purple-950/20 px-1 rounded-md">Niveau Boss</span>
+                <span className="absolute -top-1 right-0 text-[8px] font-extrabold text-[#D4AF37] bg-[#D4AF37]/10 px-1 rounded-md">Niveau Boss</span>
               </button>
 
               <button 
                 onClick={() => setView("activity")}
                 className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1 ${
-                  view === "activity" ? "text-orange-500 dark:text-orange-400 font-extrabold" : "text-gray-500 hover:text-gray-400 dark:hover:text-white"
+                  view === "activity" ? "text-[#D4AF37] dark:text-[#D4AF37] font-extrabold" : "text-gray-500 hover:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 <span>⚡ Activité</span>
-                <span className="text-[8px] font-black uppercase text-orange-500 bg-orange-50 dark:bg-orange-950/20 px-1.5 py-0.5 rounded leading-none">TEMPS RÉEL</span>
+                <span className="text-[8px] font-black uppercase text-[#D4AF37] bg-[#D4AF37]/10 px-1.5 py-0.5 rounded leading-none">TEMPS RÉEL</span>
               </button>
             </div>
 
@@ -782,12 +798,33 @@ export default function App() {
               {/* Settings / Paramètres */}
               <button
                 onClick={() => setShowSettingsModal(true)}
-                className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
+                className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-[#D4AF37] transition-colors"
                 aria-label="Application Settings"
                 title="Paramètres de l'application"
               >
                 <Settings className="w-5 h-5" />
               </button>
+
+              {/* Real-time Messagerie Chat Icon */}
+              {user && (
+                <button
+                  onClick={() => setView("messages")}
+                  className={`p-2 rounded-xl transition-colors relative flex items-center justify-center min-w-[38px] min-h-[38px] ${
+                    view === "messages" 
+                      ? "bg-[#D4AF37]/15 text-[#D4AF37]" 
+                      : "bg-gray-50 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400 hover:text-[#D4AF37]"
+                  }`}
+                  aria-label="Messagerie privée"
+                  title="Mes messages privés"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  {unreadChatCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black h-4.5 w-4.5 rounded-full flex items-center justify-center animate-pulse border border-white dark:border-[#121214]">
+                      {unreadChatCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
               {/* Real-time Notifications Bell Dropdown */}
               {user && (
@@ -1057,12 +1094,12 @@ export default function App() {
                   {/* Close and Title Bar */}
                   <div className="flex items-center justify-between pb-6 mb-6 border-b border-gray-100 dark:border-gray-800">
                     <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setView("home"); setMobileMenuOpen(false); }}>
-                      <div className="p-2 bg-gradient-to-tr from-orange-500 to-orange-600 rounded-xl text-white">
-                        <Flame className="w-4 h-4 fill-current animate-pulse" />
+                      <div className="p-2 bg-[#D4AF37] rounded-xl text-[#0B0B0B]">
+                        <Flame className="w-4 h-4 fill-current text-[#0B0B0B] animate-pulse" />
                       </div>
-                      <div>
-                        <span className="font-extrabold text-sm tracking-tight text-gray-950 dark:text-white uppercase block leading-none">Y’A GOMBO</span>
-                        <span className="text-[9px] font-black uppercase text-orange-600 dark:text-orange-400 block tracking-wider mt-0.5">MUSIC 🇨🇮</span>
+                      <div className="flex flex-col">
+                        <span className="font-black text-sm tracking-wide text-gray-950 dark:text-white uppercase leading-none">AFRIGOMBO</span>
+                        <span className="text-[9px] font-bold uppercase text-[#D4AF37] tracking-wider leading-none mt-1">Y'A GOMBO MUSIC 🇨🇮</span>
                       </div>
                     </div>
                     <button
@@ -2260,6 +2297,46 @@ export default function App() {
             )
           )}
 
+          {view === "messages" && (
+            profile ? (
+              <motion.div
+                key="messages_page"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <MessagesView
+                  currentUser={currentUser}
+                  currentProfile={profile}
+                  openConvoWithUserId={openConvoWithUserId}
+                  setOpenConvoWithUserId={setOpenConvoWithUserId}
+                  onBack={() => setView("home")}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="messages_auth"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="max-w-md mx-auto py-20 px-4 text-center"
+              >
+                <div className="bg-white dark:bg-[#1e1e24] border border-gray-150 dark:border-gray-800 rounded-3xl p-8 shadow-sm">
+                  <Lock className="w-12 h-12 mx-auto text-[#D4AF37] mb-4 animate-bounce" />
+                  <h3 className="text-lg font-black uppercase text-gray-900 dark:text-white">Connexion Requise</h3>
+                  <p className="text-xs text-gray-550 dark:text-gray-400 mt-2">
+                    Veuillez vous connecter pour accéder à votre messagerie professionnelle en temps réel.
+                  </p>
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="mt-6 w-full py-3 bg-[#D4AF37] hover:bg-[#bfa12d] text-[#0B0B0B] font-bold text-xs uppercase rounded-xl shadow-md cursor-pointer transition-all"
+                  >
+                    Se connecter / S’inscrire
+                  </button>
+                </div>
+              </motion.div>
+            )
+          )}
+
           {view === "activity" && (
             <motion.div
               key="activity_page"
@@ -2376,25 +2453,29 @@ export default function App() {
       {/* --- FOOTER DESIGNS --- */}
       <footer className="bg-white dark:bg-[#151518] border-t border-gray-100 dark:border-gray-800 transition-colors py-12 mt-12 text-xs text-gray-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4 font-sans">
-          <div className="flex justify-center items-center gap-2">
-            <Flame className="w-5 h-5 text-[#7C3AED] fill-current" />
-            <span className="font-extrabold text-xs text-gray-900 dark:text-white tracking-widest uppercase">Y’A GOMBO MUSIC 🇨🇮</span>
+          <div className="flex flex-col items-center justify-center gap-1">
+            <div className="flex justify-center items-center gap-2 mb-1">
+              <Flame className="w-5 h-5 text-[#D4AF37] fill-current" />
+              <span className="font-extrabold text-sm text-gray-900 dark:text-white tracking-widest uppercase">AFRIGOMBO</span>
+            </div>
+            <span className="font-bold text-[10px] text-[#D4AF37] uppercase tracking-widest">Y’A GOMBO MUSIC</span>
+            <span className="text-[9px] text-gray-500 italic mt-1">Le Temple du Gombo : Vos opportunités musicales certifiées, vos cachets sécurisés.</span>
           </div>
           <p className="max-w-md mx-auto leading-relaxed text-[11px] text-gray-500 dark:text-gray-400">
-            La plateforme d'Abidjan pour accélérer et sécuriser les contrats musicaux, facilitée par les transferts instantanés Wave & Orange Money.
+            La plateforme d'Afrique de l'Ouest pour accélérer et sécuriser les opportunités musicales certifiées et les cachets des artistes de scène, facilitée par les transferts instantanés.
           </p>
           
           {/* Legal navigation links */}
-          <div className="flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-[10px] font-extrabold uppercase tracking-widest text-[#7C3AED] dark:text-[#A78BFA] pt-2 border-t border-gray-50 dark:border-gray-800 max-w-sm mx-auto">
-            <button onClick={() => navigateTo("privacy")} className="hover:underline hover:text-purple-700 dark:hover:text-purple-300 cursor-pointer">Confidentialité</button>
-            <span className="text-gray-200 dark:text-gray-800">•</span>
-            <button onClick={() => navigateTo("terms")} className="hover:underline hover:text-purple-700 dark:hover:text-purple-300 cursor-pointer">Conditions (CGU)</button>
-            <span className="text-gray-200 dark:text-gray-800">•</span>
+          <div className="flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-[10px] font-extrabold uppercase tracking-widest text-[#D4AF37] pt-2 border-t border-gray-150 dark:border-gray-800 max-w-sm mx-auto">
+            <button onClick={() => navigateTo("privacy")} className="hover:underline hover:text-[#bfa12d] cursor-pointer">Confidentialité</button>
+            <span className="text-gray-300 dark:text-gray-700">•</span>
+            <button onClick={() => navigateTo("terms")} className="hover:underline hover:text-[#bfa12d] cursor-pointer">Conditions (CGU)</button>
+            <span className="text-gray-300 dark:text-gray-700">•</span>
             <button onClick={() => navigateTo("delete-account")} className="hover:underline hover:text-rose-500 text-rose-600 dark:text-rose-450 cursor-pointer">Supprimer Compte</button>
           </div>
 
           <p className="text-[10px] text-gray-400 dark:text-gray-600 pt-1">
-            © 2026 Y’A GOMBO MUSIC Corp. Tous droits réservés. Développé pour le showbiz ivoirien.
+            © 2026 AFRIGOMBO • Y’A GOMBO MUSIC. Tous droits réservés. Les opportunités musicales certifiées et cachets sécurisés pour le showbiz.
           </p>
         </div>
       </footer>
@@ -2442,12 +2523,12 @@ export default function App() {
       </AnimatePresence>
 
       {/* --- MOBILE BOTTOM NAVIGATION BAR (Y’A GOMBO MUSIC REQUIRED) --- */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md border-t border-gray-150 dark:border-gray-800/80 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-5px_20px_rgba(0,0,0,0.3)] flex items-center justify-around h-16 pb-safe px-2 transition-colors">
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#0B0B0B]/95 backdrop-blur-md border-t border-[#D4AF37]/25 shadow-[0_-5px_20px_rgba(0,0,0,0.4)] flex items-center justify-around h-16 pb-safe px-2 transition-colors">
         {/* Item 1: Le Terrain */}
         <button
           onClick={() => setView("home")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "home" ? "text-[#7C3AED] font-black" : "text-gray-400 dark:text-gray-500"
+            view === "home" ? "text-[#D4AF37] font-black" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           <Flame className="w-5 h-5 fill-current" />
@@ -2458,18 +2539,18 @@ export default function App() {
         <button
           onClick={() => setView("gombo_list")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "gombo_list" ? "text-[#7C3AED] font-black" : "text-gray-400 dark:text-gray-500"
+            view === "gombo_list" ? "text-[#D4AF37] font-black" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           <Search className="w-5 h-5" />
           <span className="text-[9px] font-bold tracking-tight mt-1">Les Vibes</span>
         </button>
 
-        {/* Item 3: Lancer Gombo Selector (Big Floating Orange Circle) */}
+        {/* Item 3: Lancer Gombo Selector (Big Floating Gold Circle) */}
         <div className="relative -mt-6">
           <button
             onClick={() => handleProtectedAction("publish")}
-            className="w-13 h-13 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform border-4 border-white dark:border-[#0F172A]"
+            className="w-13 h-13 bg-[#D4AF37] text-[#0B0B0B] rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform border-4 border-[#0B0B0B]"
             title="Lancer Gombo"
           >
             <Plus className="w-6 h-6 stroke-[3px]" />
@@ -2480,7 +2561,7 @@ export default function App() {
         <button
           onClick={() => setView("renfort_express")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "renfort_express" ? "text-orange-500 font-extrabold" : "text-gray-400 dark:text-gray-500"
+            view === "renfort_express" ? "text-[#D4AF37] font-extrabold" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           <Sparkles className="w-5 h-5" />
@@ -2491,11 +2572,11 @@ export default function App() {
         <button
           onClick={() => handleProtectedAction("profile_edit")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "profile_edit" ? "text-[#7C3AED] font-black" : "text-gray-400 dark:text-gray-500"
+            view === "profile_edit" ? "text-[#D4AF37] font-black" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           {profile?.avatarUrl ? (
-            <img src={profile.avatarUrl} alt="" className="w-5.5 h-5.5 rounded-full object-cover border border-[#7C3AED]" />
+            <img src={profile.avatarUrl} alt="" className="w-5.5 h-5.5 rounded-full object-cover border border-[#D4AF37]" />
           ) : (
             <User className="w-5.5 h-5.5" />
           )}

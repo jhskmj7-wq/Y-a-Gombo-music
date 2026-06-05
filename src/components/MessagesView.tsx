@@ -288,8 +288,8 @@ export default function MessagesView({
             </div>
           ) : conversations.length === 0 ? (
             <div className="p-8 text-center space-y-3">
-              <div className="w-10 h-10 bg-purple-50 dark:bg-purple-950/30 rounded-2xl flex items-center justify-center mx-auto">
-                <MessageSquare className="w-5 h-5 text-purple-500" />
+              <div className="w-10 h-10 bg-[#D4AF37]/10 rounded-2xl flex items-center justify-center mx-auto">
+                <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
               </div>
               <p className="text-xs text-gray-950 dark:text-white font-black uppercase">Pas encore de chat</p>
               <p className="text-[10.5px] text-gray-400 leading-relaxed max-w-[200px] mx-auto">
@@ -308,7 +308,7 @@ export default function MessagesView({
                   onClick={() => setActiveConvo(convo)}
                   className={`w-full p-3.5 text-left transition-all flex items-center gap-3 relative cursor-pointer group ${
                     isActive 
-                      ? "bg-purple-500/5 dark:bg-purple-950/15 border-l-3 border-[#7C3AED]" 
+                      ? "bg-[#D4AF37]/5 dark:bg-[#D4AF37]/10 border-l-3 border-[#D4AF37]" 
                       : "hover:bg-gray-50/50 dark:hover:bg-gray-850"
                   }`}
                 >
@@ -382,7 +382,7 @@ export default function MessagesView({
                     <img 
                       src={partner.avatarUrl} 
                       alt="" 
-                      className="w-10 h-10 rounded-full object-cover border border-purple-500/10 shrink-0"
+                      className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/10 shrink-0"
                       referrerPolicy="no-referrer"
                     />
                     <div className="text-left">
@@ -390,7 +390,7 @@ export default function MessagesView({
                         {partner.name}
                         <BadgeCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                       </p>
-                      <span className="block text-[8px] font-black uppercase text-purple-600 dark:text-purple-400">
+                      <span className="block text-[8px] font-black uppercase text-[#D4AF37]">
                         {partner.role || "Artiste d'Abidjan"} • 🟢 En ligne
                       </span>
                     </div>
@@ -403,8 +403,8 @@ export default function MessagesView({
                 </div>
 
                 {/* Secure Contact Warning Badge */}
-                <div className="px-4 py-2 bg-purple-500/5 dark:bg-purple-950/15 border-b border-gray-100 dark:border-gray-900 text-left flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-[#7C3AED] shrink-0 mt-0.5" />
+                <div className="px-4 py-2 bg-[#D4AF37]/5 dark:bg-[#D4AF37]/10 border-b border-gray-100 dark:border-gray-900 text-left flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
                   <p className="text-[10px] text-gray-500 leading-normal font-medium">
                     Pour votre sécurité, <b>conservez vos discussions, accords et promesses de cachets</b> dans la messagerie interne. Ne partagez vos coordonnées privées qu'après versement d'un acompte ou signature de contrat.
                   </p>
@@ -429,7 +429,7 @@ export default function MessagesView({
                         >
                           <div className={`max-w-[75%] rounded-2xl p-3 shadow-xs text-left ${
                             isMe 
-                              ? "bg-[#7C3AED] text-white rounded-tr-none" 
+                              ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold rounded-tr-none" 
                               : "bg-white dark:bg-[#121622] text-gray-800 dark:text-gray-150 border border-gray-100 dark:border-gray-800/80 rounded-tl-none"
                           }`}>
                             {/* In-chat metadata if not me */}
@@ -495,7 +495,7 @@ export default function MessagesView({
                         type="button"
                         onClick={handleSendImageMessage}
                         disabled={isSending}
-                        className="py-1 px-2.5 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 border border-gray-150 dark:border-gray-800 rounded-lg text-[9px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1 cursor-pointer transition-all disabled:opacity-50"
+                        className="py-1 px-2.5 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 border border-gray-150 dark:border-gray-800 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-1 cursor-pointer transition-all disabled:opacity-50"
                         title="Partager un média"
                       >
                         <ImageIcon className="w-3.5 h-3.5" />
@@ -521,7 +521,7 @@ export default function MessagesView({
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
                       placeholder="Tapez votre message sécurisé..."
-                      className="flex-1 py-3 px-4 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-purple-600 dark:text-white"
+                      className="flex-1 py-3 px-4 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white"
                       disabled={isSending}
                       required
                     />
@@ -540,8 +540,8 @@ export default function MessagesView({
           })()
         ) : (
           <div className="py-16 text-center space-y-4 max-w-sm mx-auto p-6">
-            <div className="w-14 h-14 bg-gradient-to-tr from-purple-500/10 to-orange-500/10 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
-              <MessageSquare className="w-6 h-6 text-[#7C3AED]" />
+            <div className="w-14 h-14 bg-gradient-to-tr from-[#D4AF37]/10 to-orange-500/10 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+              <MessageSquare className="w-6 h-6 text-[#D4AF37]" />
             </div>
             <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider">Salon de Discussion</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
