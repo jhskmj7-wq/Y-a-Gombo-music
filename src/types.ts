@@ -1,4 +1,4 @@
-export type UserRole = "musicien" | "client" | "groupe" | "admin";
+export type UserRole = "musicien" | "organisateur" | "client" | "manager" | "admin";
 
 export type PaymentProvider = "Wave" | "Orange Money" | "MTN Momo" | "Moov Money";
 
@@ -8,6 +8,7 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   artistName?: string;
+  ville?: string;
   commune: string;
   phone: string;
   bio?: string;
@@ -41,6 +42,7 @@ export interface UserProfile {
   avatarUrl?: string; // profile picture (we support bot avatarUrl and photoURL for compatibility)
   photoURL?: string; 
   isVerified?: boolean;
+  isCertified?: boolean;
   displayName?: string;
   provider?: string;
 
@@ -354,6 +356,54 @@ export interface CertificationRequest {
   experience: string;
   mediaUrl: string;
   status: "En attente" | "Approuvé" | "Refusé";
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: string;
+  participants: string[];
+  participantDetails: {
+    [uid: string]: {
+      name: string;
+      avatarUrl?: string; // photoURL / avatarUrl
+      role: string;
+    };
+  };
+  lastMessage?: {
+    text: string;
+    timestamp: string;
+    senderId: string;
+  } | null;
+  unreadCount: {
+    [uid: string]: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  type: "text" | "image" | "audio";
+  mediaUrl?: string | null;
+  timestamp: string;
+}
+
+export interface VerificationRequest {
+  id: string;
+  userId: string;
+  userEmail: string;
+  fullName: string;
+  photoUrl: string;
+  commune: string;
+  metier: string;
+  whatsapp: string;
+  selfieUrl: string;
+  mediaUrl: string;
+  status: "pending" | "approved" | "rejected";
   createdAt: string;
 }
 

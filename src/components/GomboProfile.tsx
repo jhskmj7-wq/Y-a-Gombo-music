@@ -665,13 +665,13 @@ export default function GomboProfile({
 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 text-xs font-bold text-gray-400 dark:text-gray-500 mt-2">
                   <span className="px-2.5 py-1 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-300 uppercase tracking-wider text-[10px]">
-                    🦁 {currentUserProfile.role === "musicien" ? "Musicien" : currentUserProfile.role === "client" ? "Recruteur" : "Groupe Musical"}
+                    🦁 {currentUserProfile.role === "musicien" ? "Musicien" : currentUserProfile.role === "client" ? "Client" : currentUserProfile.role === "organisateur" ? "Organisateur" : currentUserProfile.role === "manager" ? "Manager" : "Admin"}
                   </span>
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5" />
                     {currentUserProfile.commune || "Abidjan"}
                   </span>
-                  {(currentUserProfile.role === "musicien" || currentUserProfile.role === "groupe") && (
+                  {(currentUserProfile.role === "musicien" || (currentUserProfile.role as string) === "groupe") && (
                     <span className="flex items-center gap-1 bg-orange-500/10 text-[#FF7A00] rounded-sm px-1 text-[11px]">
                       🎸 {currentUserProfile.specialties?.join(', ') || currentUserProfile.specialty || "Artiste"}
                     </span>
@@ -1327,7 +1327,7 @@ export default function GomboProfile({
               </div>
             </div>
 
-            {(currentUserProfile.role === "musicien" || currentUserProfile.role === "groupe") && (
+            {(currentUserProfile.role === "musicien" || (currentUserProfile.role as string) === "groupe") && (
               <div className="bg-white dark:bg-[#121214] p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-5">
                 <div>
                   <span className="text-sm font-black text-gray-500 uppercase tracking-widest block mb-1">🎸 Spécialités Musicales (Sélection Multiple)</span>

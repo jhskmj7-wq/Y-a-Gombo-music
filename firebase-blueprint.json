@@ -267,6 +267,55 @@
       },
       "required": ["id", "userId", "artistName", "specialties", "experience", "mediaUrl", "status", "createdAt"]
     },
+    "VerificationRequest": {
+      "title": "Gombo ID Verification Request",
+      "description": "Verification request for Level 2 Gombo ID",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Request ID" },
+        "userId": { "type": "string", "description": "Associated User ID" },
+        "userEmail": { "type": "string", "description": "Associated User Email" },
+        "fullName": { "type": "string", "description": "Nom complet de l'artiste" },
+        "photoUrl": { "type": "string", "description": "Photo de profil specifiée" },
+        "commune": { "type": "string", "description": "Commune de residence" },
+        "metier": { "type": "string", "description": "Métier ou instrument de l'artiste" },
+        "whatsapp": { "type": "string", "description": "Numéro WhatsApp" },
+        "selfieUrl": { "type": "string", "description": "Photo de selfie" },
+        "mediaUrl": { "type": "string", "description": "Lien vers un média artistique" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "Vetting state" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Date creation" }
+      },
+      "required": ["id", "userId", "fullName", "photoUrl", "commune", "metier", "whatsapp", "status", "createdAt"]
+    },
+    "Conversation": {
+      "title": "Chat Conversation",
+      "description": "Conversation between two users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Conversation ID (convo_uid1_uid2)" },
+        "participants": { "type": "array", "description": "Participants list of two user IDs sorted alphabetically" },
+        "unreadCount": { "type": "object", "description": "Maps participant UIDs to unread counter numbers" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last updated" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "First created" }
+      },
+      "required": ["id", "participants", "updatedAt", "createdAt"]
+    },
+    "Message": {
+      "title": "Conversation Message",
+      "description": "A single text, image, or audio message inside a conversation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique message ID" },
+        "conversationId": { "type": "string", "description": "Conversation ID reference pointer" },
+        "senderId": { "type": "string", "description": "UID of the message sender" },
+        "senderName": { "type": "string", "description": "Display name of sender formatted" },
+        "text": { "type": "string", "description": "Message text contents" },
+        "type": { "type": "string", "enum": ["text", "image", "audio"], "description": "Message body format type" },
+        "mediaUrl": { "type": "string", "description": "Download resource path for non-text image/voice streams" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Date of post" }
+      },
+      "required": ["id", "conversationId", "senderId", "text", "type", "timestamp"]
+    },
     "MusicGroup": {
       "title": "Music Group Profile",
       "description": "Information about music groups in Côte d'Ivoire",
@@ -359,6 +408,18 @@
     "/certificationRequests/{requestId}": {
       "schema": "CertificationRequest",
       "description": "Requests folder submitted by users for skill-based standard verification and branding badges"
+    },
+    "/verificationRequests/{requestId}": {
+      "schema": "VerificationRequest",
+      "description": "Verification requests submitted by users for Level 2 Gombo ID eligibility and certified badge triggers"
+    },
+    "/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Chat conversations metadata record with participants mapping index"
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Realtime internal messages logs with images and recorded audio attachments references"
     }
   }
 }

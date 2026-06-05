@@ -31,7 +31,7 @@ import {
   onSnapshot
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
-import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry } from "./types";
+import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry, Conversation, Message, VerificationRequest } from "./types";
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
@@ -595,30 +595,33 @@ export const gomboAuth = {
         throw e;
       }
     } else {
-      // Mock Google Login
-      const mockGoogleEmails = ["star_mali@gombo.ci", "ivoire_dj@gombo.ci", "spectateur@gmail.com"];
-      const randomEmail = mockGoogleEmails[Math.floor(Math.random() * mockGoogleEmails.length)];
+      // Mock Google Login - Generate a fresh unique login to trigger complete onboarding flow
+      const randomEmail = `artiste_${Math.random().toString(36).substring(2, 7)}@gmail.com`;
       const randomId = "goog_" + Math.random().toString(36).substring(2, 9);
       
       const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
-      let matched = users.find(u => u.email === randomEmail);
-      if (!matched) {
-        matched = {
-          uid: randomId,
-          email: randomEmail,
-          firstName: "Artiste",
-          lastName: "Google-Abidjan",
-          displayName: "Artiste Google-Abidjan",
-          provider: "google.com",
-          commune: "Cocody",
-          phone: "+225 07 00 11 22 33",
-          role: "musicien",
-          isProfileComplete: true,
-          createdAt: new Date().toISOString()
-        };
-        users.push(matched);
-        localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
-      }
+      let matched = {
+        uid: randomId,
+        email: randomEmail,
+        firstName: "Artiste",
+        lastName: "Google-Abidjan",
+        displayName: "Artiste Google-Abidjan",
+        provider: "google.com",
+        commune: "Cocody",
+        phone: "",
+        role: "musicien" as const,
+        isProfileComplete: false,
+        avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+        balance: 25000,
+        totalRevenue: 25000,
+        totalWithdrawals: 0,
+        gigsCompleted: 0,
+        applicationsSent: 0,
+        acceptanceRate: 100,
+        createdAt: new Date().toISOString()
+      };
+      users.push(matched);
+      localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
 
       const authData = { uid: matched.uid, email: matched.email, emailVerified: true };
       localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(authData));
@@ -2315,7 +2318,30 @@ export const gomboDB = {
 
     if (!isFirebaseMock && db) {
       try {
+        await setDoc(doc(db, "groups", id), newGroup);
         await setDoc(doc(db, "music_groups", id), newGroup);
+
+        // Also self-add creator as initial member in groupMembers
+        const memberId = "mem_creator_" + id;
+        const newMember = {
+          id: memberId,
+          groupId: id,
+          userId: newGroup.creatorId,
+          name: "Propriétaire",
+          role: "Propriétaire",
+          instrument: "Directeur",
+          groupRole: "proprietaire",
+          photoUrl: newGroup.logoUrl || newGroup.photoUrl || `https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150&auto=format&fit=crop&q=80`,
+          createdAt: new Date().toISOString()
+        };
+        await setDoc(doc(db, "groupMembers", memberId), newMember);
+
+        // Append to members list of group
+        const updatedMembers = [ { id: memberId, name: newMember.name, role: newMember.role, instrument: newMember.instrument, photoUrl: newMember.photoUrl } ];
+        await setDoc(doc(db, "groups", id), { members: updatedMembers, membersCount: 1 }, { merge: true });
+        await setDoc(doc(db, "music_groups", id), { members: updatedMembers, membersCount: 1 }, { merge: true });
+        newGroup.members = updatedMembers;
+        newGroup.membersCount = 1;
       } catch (error) {
         console.warn("⚠️ Mode Firestore inaccessible pour publishMusicGroup.", error);
         setIsFirebaseMock(true);
@@ -2324,6 +2350,33 @@ export const gomboDB = {
 
     if (isFirebaseMock || !db) {
       const list: MusicGroup[] = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+      
+      const memberId = "mem_creator_" + id;
+      const initialMember = {
+        id: memberId,
+        groupId: id,
+        userId: newGroup.creatorId,
+        name: "Propriétaire",
+        role: "Propriétaire",
+        instrument: "Directeur",
+        groupRole: "proprietaire",
+        photoUrl: newGroup.logoUrl || newGroup.photoUrl || `https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150&auto=format&fit=crop&q=80`,
+        createdAt: new Date().toISOString()
+      };
+      
+      const mList = JSON.parse(localStorage.getItem("gombo_group_members") || "[]");
+      mList.push(initialMember);
+      localStorage.setItem("gombo_group_members", JSON.stringify(mList));
+
+      newGroup.members = [{
+        id: memberId,
+        name: initialMember.name,
+        role: initialMember.role,
+        instrument: initialMember.instrument,
+        photoUrl: initialMember.photoUrl
+      }];
+      newGroup.membersCount = 1;
+
       list.push(newGroup);
       localStorage.setItem("gombo_music_groups", JSON.stringify(list));
       triggerStorageEvent();
@@ -2350,6 +2403,7 @@ export const gomboDB = {
   async updateMusicGroup(id: string, updates: Partial<MusicGroup>): Promise<void> {
     if (!isFirebaseMock && db) {
       try {
+        await setDoc(doc(db, "groups", id), updates, { merge: true });
         await setDoc(doc(db, "music_groups", id), updates, { merge: true });
         return;
       } catch (error) {
@@ -2370,6 +2424,7 @@ export const gomboDB = {
   async deleteMusicGroup(id: string): Promise<void> {
     if (!isFirebaseMock && db) {
       try {
+        await deleteDoc(doc(db, "groups", id));
         await deleteDoc(doc(db, "music_groups", id));
         return;
       } catch (error) {
@@ -2382,6 +2437,281 @@ export const gomboDB = {
     const filtered = list.filter(g => g.id !== id);
     localStorage.setItem("gombo_music_groups", JSON.stringify(filtered));
     triggerStorageEvent();
+  },
+
+  // NEW: Group membership and invitations
+  async getGroupMembers(groupId: string): Promise<any[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(query(collection(db, "groupMembers"), where("groupId", "==", groupId)));
+        return snap.docs.map(docSnap => docSnap.data());
+      } catch (err) {
+        console.warn("⚠️ getGroupMembers Firebase fallback:", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_group_members") || "[]");
+    return list.filter((m: any) => m.groupId === groupId);
+  },
+
+  async getGroupInvitations(groupId: string): Promise<any[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(query(collection(db, "groupInvitations"), where("groupId", "==", groupId)));
+        return snap.docs.map(docSnap => docSnap.data());
+      } catch (err) {
+        console.warn("⚠️ getGroupInvitations Firebase fallback:", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_group_invitations") || "[]");
+    return list.filter((inv: any) => inv.groupId === groupId);
+  },
+
+  async getUserInvitations(userId: string): Promise<any[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(query(collection(db, "groupInvitations"), where("receiverId", "==", userId)));
+        return snap.docs.map(docSnap => docSnap.data());
+      } catch (err) {
+        console.warn("⚠️ getUserInvitations Firebase fallback:", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_group_invitations") || "[]");
+    return list.filter((inv: any) => inv.receiverId === userId);
+  },
+
+  async createGroupInvitation(invitationData: { id: string; groupId: string; senderId: string; receiverId: string; status: "en_attente" | "acceptee" | "refusee"; role: string; instrument: string; createdAt: string }): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "groupInvitations", invitationData.id), invitationData);
+        return;
+      } catch (err) {
+        console.warn("⚠️ createGroupInvitation Firebase fallback:", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_group_invitations") || "[]");
+    list.push(invitationData);
+    localStorage.setItem("gombo_group_invitations", JSON.stringify(list));
+    triggerStorageEvent();
+  },
+
+  async respondToGroupInvitation(invitationId: string, status: "acceptee" | "refusee"): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        const invRef = doc(db, "groupInvitations", invitationId);
+        await setDoc(invRef, { status }, { merge: true });
+        
+        if (status === "acceptee") {
+          const snap = await getDoc(invRef);
+          if (snap.exists()) {
+            const data = snap.data();
+            // Fetch receiver name/info to register as member
+            const userSnap = await getDoc(doc(db, "users", data.receiverId));
+            const uName = userSnap.exists() ? `${userSnap.data().firstName} ${userSnap.data().lastName}` : "Artiste Invité";
+            const uPhoto = userSnap.exists() ? userSnap.data().avatarUrl || userSnap.data().photoURL : undefined;
+            
+            const memberId = "mem_" + Math.random().toString(36).substr(2, 9);
+            const newMember = {
+              id: memberId,
+              groupId: data.groupId,
+              userId: data.receiverId,
+              name: uName,
+              role: data.role,
+              instrument: data.instrument,
+              groupRole: "membre",
+              photoUrl: uPhoto || `https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150&auto=format&fit=crop&q=80`,
+              createdAt: new Date().toISOString()
+            };
+            
+            await setDoc(doc(db, "groupMembers", memberId), newMember);
+            
+            // Sync to the groups and music_groups collection array!
+            const groupRef = doc(db, "groups", data.groupId);
+            const groupSnap = await getDoc(groupRef);
+            if (groupSnap.exists()) {
+              const currentMembers = groupSnap.data().members || [];
+              const updatedMembers = [...currentMembers, {
+                id: memberId,
+                name: uName,
+                role: data.role,
+                instrument: data.instrument,
+                photoUrl: newMember.photoUrl
+              }];
+              await setDoc(groupRef, { members: updatedMembers, membersCount: updatedMembers.length }, { merge: true });
+              await setDoc(doc(db, "music_groups", data.groupId), { members: updatedMembers, membersCount: updatedMembers.length }, { merge: true });
+            }
+          }
+        }
+        return;
+      } catch (err) {
+        console.warn("⚠️ respondToGroupInvitation Firebase error:", err);
+      }
+    }
+    
+    // Fallback Mock Storage
+    const list = JSON.parse(localStorage.getItem("gombo_group_invitations") || "[]");
+    const idx = list.findIndex((inv: any) => inv.id === invitationId);
+    if (idx !== -1) {
+      list[idx].status = status;
+      localStorage.setItem("gombo_group_invitations", JSON.stringify(list));
+      
+      if (status === "acceptee") {
+        const data = list[idx];
+        const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+        const foundUser = users.find((u: any) => u.uid === data.receiverId);
+        const uName = foundUser ? `${foundUser.firstName} ${foundUser.lastName}` : "Artiste Invité";
+        const uPhoto = foundUser ? foundUser.avatarUrl || foundUser.photoURL : undefined;
+        
+        const memberId = "mem_" + Math.random().toString(36).substr(2, 9);
+        const newMember = {
+          id: memberId,
+          groupId: data.groupId,
+          userId: data.receiverId,
+          name: uName,
+          role: data.role,
+          instrument: data.instrument,
+          groupRole: "membre",
+          photoUrl: uPhoto || `https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150&auto=format&fit=crop&q=80`,
+          createdAt: new Date().toISOString()
+        };
+        
+        const mList = JSON.parse(localStorage.getItem("gombo_group_members") || "[]");
+        mList.push(newMember);
+        localStorage.setItem("gombo_group_members", JSON.stringify(mList));
+        
+        // Sync to localStorage groups / music_groups
+        const gList = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+        const gIdx = gList.findIndex((g: any) => g.id === data.groupId);
+        if (gIdx !== -1) {
+          const currentMembers = gList[gIdx].members || [];
+          gList[gIdx].members = [...currentMembers, {
+            id: memberId,
+            name: uName,
+            role: data.role,
+            instrument: data.instrument,
+            photoUrl: newMember.photoUrl
+          }];
+          gList[gIdx].membersCount = gList[gIdx].members.length;
+          localStorage.setItem("gombo_music_groups", JSON.stringify(gList));
+        }
+      }
+      triggerStorageEvent();
+    }
+  },
+
+  async addManualGroupMember(groupId: string, memberData: { id: string; name: string; role: string; instrument: string; photoUrl?: string }): Promise<void> {
+    const memberId = memberData.id;
+    const newMember = {
+      id: memberId,
+      groupId,
+      name: memberData.name,
+      role: memberData.role,
+      instrument: memberData.instrument,
+      groupRole: "membre",
+      photoUrl: memberData.photoUrl || `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 999999)}?w=150&auto=format&fit=crop&q=80`,
+      createdAt: new Date().toISOString()
+    };
+    
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "groupMembers", memberId), newMember);
+        
+        // Append to main group arrays
+        const groupRef = doc(db, "groups", groupId);
+        const snap = await getDoc(groupRef);
+        if (snap.exists()) {
+          const currentMembers = snap.data().members || [];
+          const updatedMembers = [...currentMembers, {
+            id: memberId,
+            name: memberData.name,
+            role: memberData.role,
+            instrument: memberData.instrument,
+            photoUrl: newMember.photoUrl
+          }];
+          await setDoc(groupRef, { members: updatedMembers, membersCount: updatedMembers.length }, { merge: true });
+          await setDoc(doc(db, "music_groups", groupId), { members: updatedMembers, membersCount: updatedMembers.length }, { merge: true });
+        }
+        return;
+      } catch (err) {
+        console.warn("⚠️ addManualGroupMember Firebase error:", err);
+      }
+    }
+    
+    const mList = JSON.parse(localStorage.getItem("gombo_group_members") || "[]");
+    mList.push(newMember);
+    localStorage.setItem("gombo_group_members", JSON.stringify(mList));
+    
+    // Sync array inside music_groups in localstorage
+    const gList = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+    const gIdx = gList.findIndex((g: any) => g.id === groupId);
+    if (gIdx !== -1) {
+      const currentMembers = gList[gIdx].members || [];
+      gList[gIdx].members = [...currentMembers, {
+        id: memberId,
+        name: memberData.name,
+        role: memberData.role,
+        instrument: memberData.instrument,
+        photoUrl: newMember.photoUrl
+      }];
+      gList[gIdx].membersCount = gList[gIdx].members.length;
+      localStorage.setItem("gombo_music_groups", JSON.stringify(gList));
+    }
+    triggerStorageEvent();
+  },
+
+  async removeGroupMember(groupId: string, memberId: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await deleteDoc(doc(db, "groupMembers", memberId));
+        
+        // Remove from main arrays
+        const groupRef = doc(db, "groups", groupId);
+        const snap = await getDoc(groupRef);
+        if (snap.exists()) {
+          const currentMembers = snap.data().members || [];
+          const updated = currentMembers.filter((m: any) => m.id !== memberId);
+          await setDoc(groupRef, { members: updated, membersCount: updated.length }, { merge: true });
+          await setDoc(doc(db, "music_groups", groupId), { members: updated, membersCount: updated.length }, { merge: true });
+        }
+        return;
+      } catch (err) {
+        console.warn("⚠️ removeGroupMember Firebase error:", err);
+      }
+    }
+    
+    const mList = JSON.parse(localStorage.getItem("gombo_group_members") || "[]");
+    const filteredM = mList.filter((m: any) => m.id !== memberId);
+    localStorage.setItem("gombo_group_members", JSON.stringify(filteredM));
+    
+    // Remove from array inside music_groups in localStorage
+    const gList = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+    const gIdx = gList.findIndex((g: any) => g.id === groupId);
+    if (gIdx !== -1) {
+      const currentMembers = gList[gIdx].members || [];
+      const updated = currentMembers.filter((m: any) => m.id !== memberId);
+      gList[gIdx].members = updated;
+      gList[gIdx].membersCount = updated.length;
+      localStorage.setItem("gombo_music_groups", JSON.stringify(gList));
+    }
+    triggerStorageEvent();
+  },
+
+  async updateGroupMemberRole(groupId: string, memberId: string, newGroupRole: "proprietaire" | "administrateur" | "membre"): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "groupMembers", memberId), { groupRole: newGroupRole }, { merge: true });
+        return;
+      } catch (err) {
+        console.warn("⚠️ updateGroupMemberRole Firebase error:", err);
+      }
+    }
+    
+    const mList = JSON.parse(localStorage.getItem("gombo_group_members") || "[]");
+    const idx = mList.findIndex((m: any) => m.id === memberId);
+    if (idx !== -1) {
+      mList[idx].groupRole = newGroupRole;
+      localStorage.setItem("gombo_group_members", JSON.stringify(mList));
+      triggerStorageEvent();
+    }
   },
 
   async incrementMusicGroupStat(id: string, stat: "viewsCount" | "contactsCount" | "favoritesCount", amount: number): Promise<void> {
@@ -2522,5 +2852,411 @@ export const gomboDB = {
     const list = JSON.parse(localStorage.getItem("gombo_support_messages") || "[]");
     list.push(docData);
     localStorage.setItem("gombo_support_messages", JSON.stringify(list));
+  },
+
+  // --- NEW LEVEL 2 VERIFICATION REQUESTS ---
+  async createVerificationRequest(reqData: {
+    userId: string;
+    userEmail: string;
+    fullName: string;
+    photoUrl: string;
+    commune: string;
+    metier: string;
+    whatsapp: string;
+    selfieUrl: string;
+    mediaUrl: string;
+  }): Promise<void> {
+    const id = "req_" + Math.random().toString(36).substr(2, 9);
+    const docData: VerificationRequest = {
+      ...reqData,
+      id,
+      status: "pending",
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "verificationRequests", id), docData);
+        
+        // Let's also update the verificationStatus and request field inside user profile
+        await this.updateUserProfile(reqData.userId, {
+          verificationStatus: "standard" // still level 1 google but we can store locally pending
+        });
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour createVerificationRequest.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_verification_requests") || "[]");
+    list.push(docData);
+    localStorage.setItem("gombo_verification_requests", JSON.stringify(list));
+    localStorage.setItem(`gombo_verification_request_${reqData.userId}`, JSON.stringify(docData));
+    
+    // update local user profile
+    await this.updateUserProfile(reqData.userId, {
+      verificationStatus: "standard"
+    });
+  },
+
+  async getVerificationRequestByUser(userId: string): Promise<VerificationRequest | null> {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "verificationRequests"), where("userId", "==", userId));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          return querySnapshot.docs[0].data() as VerificationRequest;
+        }
+        return null;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getVerificationRequestByUser.", error);
+      }
+    }
+    const req = localStorage.getItem(`gombo_verification_request_${userId}`);
+    return req ? JSON.parse(req) as VerificationRequest : null;
+  },
+
+  async getAllVerificationRequests(): Promise<VerificationRequest[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const querySnapshot = await getDocs(collection(db, "verificationRequests"));
+        const results: VerificationRequest[] = [];
+        querySnapshot.forEach((doc) => {
+          results.push(doc.data() as VerificationRequest);
+        });
+        return results;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getAllVerificationRequests.", error);
+      }
+    }
+    return JSON.parse(localStorage.getItem("gombo_verification_requests") || "[]");
+  },
+
+  async updateVerificationRequestStatus(id: string, status: "approved" | "rejected"): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        const docRef = doc(db, "verificationRequests", id);
+        await updateDoc(docRef, { status });
+
+        // If approved, update the corresponding user's profile with Gombo ID level 2 status and badges
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const req = docSnap.data() as VerificationRequest;
+          const userProfileRef = doc(db, "users", req.userId);
+          const userProfileSnap = await getDoc(userProfileRef);
+          if (userProfileSnap.exists()) {
+            const userProfile = userProfileSnap.data() as UserProfile;
+            const currentBadges = userProfile.badges || [];
+            
+            let updatedBadges = [...currentBadges];
+            if (status === "approved") {
+              if (!updatedBadges.includes("🏆 Talent Certifié")) {
+                updatedBadges.push("🏆 Talent Certifié");
+              }
+              // Remove old Nouveau Talent if they had it
+              updatedBadges = updatedBadges.filter(b => b !== "⚪ Nouveau Talent" && b !== "⚪ Nouveau");
+            }
+
+            await updateDoc(userProfileRef, {
+              badges: updatedBadges,
+              isCertified: status === "approved" ? true : userProfile.isCertified,
+              specialty: req.metier || userProfile.specialty,
+              commune: req.commune || userProfile.commune,
+              whatsapp: req.whatsapp || userProfile.whatsapp
+            });
+          }
+        }
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour updateVerificationRequestStatus.", error);
+      }
+    }
+
+    // fallback simulation
+    const list = JSON.parse(localStorage.getItem("gombo_verification_requests") || "[]") as VerificationRequest[];
+    const index = list.findIndex(r => r.id === id);
+    if (index !== -1) {
+      list[index].status = status;
+      localStorage.setItem("gombo_verification_requests", JSON.stringify(list));
+      localStorage.setItem(`gombo_verification_request_${list[index].userId}`, JSON.stringify(list[index]));
+
+      // update local user profile
+      const userProfile = JSON.parse(localStorage.getItem(`gombo_profile_${list[index].userId}`) || "{}") as UserProfile;
+      if (userProfile && userProfile.uid) {
+        const currentBadges = userProfile.badges || [];
+        let updatedBadges = [...currentBadges];
+        if (status === "approved") {
+          if (!updatedBadges.includes("🏆 Talent Certifié")) {
+            updatedBadges.push("🏆 Talent Certifié");
+          }
+          updatedBadges = updatedBadges.filter(b => b !== "⚪ Nouveau Talent" && b !== "⚪ Nouveau");
+        }
+        userProfile.badges = updatedBadges;
+        userProfile.isCertified = status === "approved" ? true : userProfile.isCertified;
+        userProfile.specialty = list[index].metier;
+        userProfile.commune = list[index].commune;
+        userProfile.whatsapp = list[index].whatsapp;
+        localStorage.setItem(`gombo_profile_${list[index].userId}`, JSON.stringify(userProfile));
+      }
+    }
+  },
+
+  // --- INTERNAL MESSAGING SYSTEM ---
+  async getOrCreateConversation(user1Id: string, user2Id: string, user1Details: any, user2Details: any): Promise<string> {
+    const participants = [user1Id, user2Id].sort();
+    const convoId = `convo_${participants[0]}_${participants[1]}`;
+
+    if (!isFirebaseMock && db) {
+      try {
+        const docRef = doc(db, "conversations", convoId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          return convoId;
+        }
+
+        const convoData: Conversation = {
+          id: convoId,
+          participants,
+          participantDetails: {
+            [user1Id]: {
+              name: user1Details.name || "Artiste",
+              avatarUrl: user1Details.avatarUrl || user1Details.photoURL || "",
+              role: user1Details.role || "musicien"
+            },
+            [user2Id]: {
+              name: user2Details.name || "Artiste",
+              avatarUrl: user2Details.avatarUrl || user2Details.photoURL || "",
+              role: user2Details.role || "musicien"
+            }
+          },
+          unreadCount: {
+            [user1Id]: 0,
+            [user2Id]: 0
+          },
+          lastMessage: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        await setDoc(docRef, convoData);
+        return convoId;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour getOrCreateConversation. Fallback local.", error);
+      }
+    }
+
+    const convos = JSON.parse(localStorage.getItem("gombo_conversations") || "[]");
+    let convo = convos.find((c: any) => c.id === convoId);
+    if (!convo) {
+      convo = {
+        id: convoId,
+        participants,
+        participantDetails: {
+          [user1Id]: {
+            name: user1Details.name || "Artiste",
+            avatarUrl: user1Details.avatarUrl || user1Details.photoURL || "",
+            role: user1Details.role || "musicien"
+          },
+          [user2Id]: {
+            name: user2Details.name || "Artiste",
+            avatarUrl: user2Details.avatarUrl || user2Details.photoURL || "",
+            role: user2Details.role || "musicien"
+          }
+        },
+        unreadCount: {
+          [user1Id]: 0,
+          [user2Id]: 0
+        },
+        lastMessage: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      convos.push(convo);
+      localStorage.setItem("gombo_conversations", JSON.stringify(convos));
+      window.dispatchEvent(new Event("gomboConversationsChange"));
+    }
+    return convoId;
+  },
+
+  async sendMessage(convoId: string, senderId: string, senderName: string, text: string, type: "text" | "image" | "audio" = "text", mediaUrl?: string): Promise<void> {
+    const msgId = "msg_" + Math.random().toString(36).substr(2, 9);
+    const timestamp = new Date().toISOString();
+    const msgData: Message = {
+      id: msgId,
+      conversationId: convoId,
+      senderId,
+      senderName,
+      text,
+      type,
+      mediaUrl: mediaUrl || null,
+      timestamp
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "messages", msgId), msgData);
+
+        // Update conversation lastMessage and unread count
+        const convoRef = doc(db, "conversations", convoId);
+        const convoSnap = await getDoc(convoRef);
+        if (convoSnap.exists()) {
+          const convo = convoSnap.data();
+          const recipientId = convo.participants.find((p: string) => p !== senderId);
+          const currentUnread = convo.unreadCount?.[recipientId] || 0;
+
+          await setDoc(convoRef, {
+            lastMessage: {
+              text: type === "text" ? text : type === "image" ? "📷 Image" : "🎵 Message vocal",
+              timestamp,
+              senderId
+            },
+            unreadCount: {
+              ...convo.unreadCount,
+              [recipientId]: currentUnread + 1
+            },
+            updatedAt: timestamp
+          }, { merge: true });
+
+          // Trigger persistent platform notification
+          if (recipientId) {
+            await this.publishNotification({
+              userId: recipientId,
+              title: `Messagerie 💬`,
+              message: `${senderName}: ${type === 'text' ? text.substring(0, 50) : type === 'image' ? 'Image' : 'Vocal'}`,
+              type: "new_message",
+              senderId,
+              senderName,
+              targetId: convoId
+            });
+          }
+        }
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour sendMessage.", error);
+      }
+    }
+
+    // Local Storage Mock Fallback
+    const msgs = JSON.parse(localStorage.getItem("gombo_messages") || "[]");
+    msgs.push(msgData);
+    localStorage.setItem("gombo_messages", JSON.stringify(msgs));
+
+    const convos = JSON.parse(localStorage.getItem("gombo_conversations") || "[]");
+    const convoIndex = convos.findIndex((c: any) => c.id === convoId);
+    if (convoIndex !== -1) {
+      const convo = convos[convoIndex];
+      const recipientId = convo.participants.find((p: string) => p !== senderId);
+      convo.unreadCount = convo.unreadCount || {};
+      convo.unreadCount[recipientId] = (convo.unreadCount[recipientId] || 0) + 1;
+      convo.lastMessage = {
+        text: type === "text" ? text : type === "image" ? "📷 Image" : "🎵 Message vocal",
+        timestamp,
+        senderId
+      };
+      convo.updatedAt = timestamp;
+      localStorage.setItem("gombo_conversations", JSON.stringify(convos));
+      window.dispatchEvent(new Event("gomboConversationsChange"));
+    }
+    window.dispatchEvent(new Event("gomboMessagesChange"));
+  },
+
+  listenConversations(userId: string, callback: (convos: Conversation[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "conversations"), where("participants", "array-contains", userId));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list: Conversation[] = [];
+          snapshot.forEach((doc) => {
+            list.push(doc.data() as Conversation);
+          });
+          list.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+          callback(list);
+        }, (error) => {
+          console.warn("⚠️ listenConversations snapshot error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ listenConversations error:", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const convos = JSON.parse(localStorage.getItem("gombo_conversations") || "[]");
+      const filtered = convos.filter((c: any) => c.participants.includes(userId));
+      filtered.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      callback(filtered);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboConversationsChange", triggerLocal);
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboConversationsChange", triggerLocal);
+    };
+  },
+
+  listenMessages(convoId: string, callback: (msgs: Message[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "messages"), where("conversationId", "==", convoId));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list: Message[] = [];
+          snapshot.forEach((doc) => {
+            list.push(doc.data() as Message);
+          });
+          list.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          callback(list);
+        }, (error) => {
+          console.warn("⚠️ listenMessages snapshot error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ listenMessages error:", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const msgs = JSON.parse(localStorage.getItem("gombo_messages") || "[]");
+      const filtered = msgs.filter((m: any) => m.conversationId === convoId);
+      filtered.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      callback(filtered);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboMessagesChange", triggerLocal);
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboMessagesChange", triggerLocal);
+    };
+  },
+
+  async markConversationAsRead(convoId: string, userId: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        const docRef = doc(db, "conversations", convoId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const convo = docSnap.data();
+          const unread = { ...(convo.unreadCount || {}) };
+          unread[userId] = 0;
+          await updateDoc(docRef, { unreadCount: unread });
+        }
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour markConversationAsRead.", error);
+      }
+    }
+
+    const convos = JSON.parse(localStorage.getItem("gombo_conversations") || "[]");
+    const index = convos.findIndex((c: any) => c.id === convoId);
+    if (index !== -1) {
+      convos[index].unreadCount = convos[index].unreadCount || {};
+      convos[index].unreadCount[userId] = 0;
+      localStorage.setItem("gombo_conversations", JSON.stringify(convos));
+      window.dispatchEvent(new Event("gomboConversationsChange"));
+    }
   }
 };

@@ -964,62 +964,60 @@ export default function App() {
               )}
 
               {/* Dynamic User Profile or Trigger login */}
-              {authReady && (
-                user ? (
-                  <div className="hidden sm:flex items-center gap-2">
-                    {/* User profile option */}
-                    <button
-                      onClick={() => handleProtectedAction("profile_edit")}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-bold ${
-                        view === "profile_edit"
-                          ? "bg-purple-50 border-purple-200 text-[#7C3AED] dark:text-[#A78BFA] dark:bg-purple-950/20 dark:border-purple-900"
-                          : "bg-white dark:bg-[#1a1a1c] border-gray-150 dark:border-gray-800 hover:bg-gray-50 text-gray-700 dark:text-gray-300"
-                      }`}
-                    >
-                      <User className="w-4 h-4 text-orange-500" />
-                      Bonjour {profile?.firstName || "Artiste"}
-                    </button>
-
-                    <button
-                      onClick={() => handleProtectedAction("dashboard")}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-bold ${
-                        view === "dashboard"
-                          ? "bg-purple-50 border-purple-200 text-[#7C3AED] dark:text-[#A78BFA] dark:bg-purple-950/20 dark:border-purple-900"
-                          : "bg-white dark:bg-[#1a1a1c] border-gray-150 dark:border-gray-800 hover:bg-gray-50 text-gray-700 dark:text-gray-300"
-                      }`}
-                      title="Tableau de Bord"
-                    >
-                      <LayoutDashboard className="w-4 h-4 text-purple-500" />
-                      Mes Plans
-                    </button>
-
-                    <button
-                      onClick={() => handleProtectedAction("profile_edit")}
-                      className="w-8.5 h-8.5 rounded-xl overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[#7C3AED] transition-all"
-                    >
-                      <img 
-                        src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
-                        alt="" 
-                        className="w-full h-full object-cover" 
-                      />
-                    </button>
-
-                    <button
-                      onClick={handleLogout}
-                      className="p-2 hover:text-red-500 text-gray-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-all"
-                      title="Se déconnecter"
-                    >
-                      <LogOut className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
+              {user ? (
+                <div className="hidden sm:flex items-center gap-2">
+                  {/* User profile option */}
                   <button
-                    onClick={() => setShowAuthModal(true)}
-                    className="hidden sm:flex px-4.5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl text-xs shadow-md transition-all active:scale-97"
+                    onClick={() => handleProtectedAction("profile_edit")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-bold ${
+                      view === "profile_edit"
+                        ? "bg-purple-50 border-purple-200 text-[#7C3AED] dark:text-[#A78BFA] dark:bg-purple-950/20 dark:border-purple-900"
+                        : "bg-white dark:bg-[#1a1a1c] border-gray-150 dark:border-gray-800 hover:bg-gray-50 text-gray-700 dark:text-gray-300"
+                    }`}
                   >
-                    Se Connecter
+                    <User className="w-4 h-4 text-orange-500" />
+                    Bonjour {profile?.firstName || "Artiste"}
                   </button>
-                )
+
+                  <button
+                    onClick={() => handleProtectedAction("dashboard")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-bold ${
+                      view === "dashboard"
+                        ? "bg-purple-50 border-purple-200 text-[#7C3AED] dark:text-[#A78BFA] dark:bg-purple-950/20 dark:border-purple-900"
+                        : "bg-white dark:bg-[#1a1a1c] border-gray-150 dark:border-gray-800 hover:bg-gray-50 text-gray-700 dark:text-gray-300"
+                    }`}
+                    title="Tableau de Bord"
+                  >
+                    <LayoutDashboard className="w-4 h-4 text-purple-500" />
+                    Mes Plans
+                  </button>
+
+                  <button
+                    onClick={() => handleProtectedAction("profile_edit")}
+                    className="w-8.5 h-8.5 rounded-xl overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[#7C3AED] transition-all"
+                  >
+                    <img 
+                      src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                      alt="" 
+                      className="w-full h-full object-cover" 
+                    />
+                  </button>
+
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 hover:text-red-500 text-gray-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-all"
+                    title="Se déconnecter"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="hidden sm:flex px-4.5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl text-xs shadow-md transition-all active:scale-97"
+                >
+                  Se Connecter
+                </button>
               )}
 
               {/* Universal Hamburger menu button */}
@@ -1076,105 +1074,103 @@ export default function App() {
                   </div>
 
                   {/* USER CONNECTIONS DETAILS & STATE */}
-                  {authReady && (
-                    user ? (
-                      /* LOGGED USER PROFILE CARD & MON ESPACE GOMBO ACTIONS */
-                      <div className="space-y-4">
-                        <div className="p-4 bg-gradient-to-tr from-purple-500/10 to-orange-500/5 dark:from-purple-950/20 dark:to-orange-950/5 rounded-2xl border border-gray-150 dark:border-gray-850 text-left">
-                          <div className="flex items-center gap-3">
-                            <img 
-                              src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
-                              alt="Profil" 
-                              className="w-12 h-12 rounded-full object-cover border-2 border-orange-500 shrink-0 shadow-sm"
-                              referrerPolicy="no-referrer"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-black text-gray-950 dark:text-white text-sm leading-tight truncate uppercase tracking-tight">
-                                {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : "Artiste Gombo"}
-                              </p>
-                              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold flex items-center gap-0.5 mt-0.5">
-                                📍 {profile?.commune || "Abidjan"}
-                              </p>
-                              <span className="inline-block mt-1 text-[8.5px] font-black uppercase text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-1.5 py-0.5 rounded tracking-wide">
-                                🎤 {profile?.role === "musicien" ? "Musicien" : profile?.role === "client" ? "Boss Recruteur" : "Membre Gombo"}
-                              </span>
-                            </div>
+                  {user ? (
+                    /* LOGGED USER PROFILE CARD & MON ESPACE GOMBO ACTIONS */
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gradient-to-tr from-purple-500/10 to-orange-500/5 dark:from-purple-950/20 dark:to-orange-950/5 rounded-2xl border border-gray-150 dark:border-gray-850 text-left">
+                        <div className="flex items-center gap-3.5">
+                          <img 
+                            src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                            alt="Profil" 
+                            className="w-12 h-12 rounded-full object-cover border-2 border-orange-500 shrink-0 shadow-sm"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-extrabold text-gray-950 dark:text-white text-sm leading-tight truncate">
+                              {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : "Artiste Gombo"}
+                            </p>
+                            <p className="text-xs text-gray-555 dark:text-gray-400 font-medium mt-0.5">
+                              {profile?.commune || "Abidjan"}
+                            </p>
+                            <p className="text-xs text-orange-600 dark:text-orange-400 font-bold mt-0.5">
+                              {profile?.role === "musicien" ? "Musicien" : profile?.role === "client" ? "Boss Recruteur" : "Membre Gombo"}
+                            </p>
                           </div>
                         </div>
-
-                        {/* Mon Espace Gombo List */}
-                        <div className="space-y-1.5 border-b border-gray-100 dark:border-gray-800 pb-4 text-left">
-                          <p className="text-[9.5px] font-black tracking-widest text-[#FF7A00] uppercase mb-1.5">👤 Mon Espace Gombo</p>
-                          
-                          <button
-                            onClick={() => { setView("profile_edit"); setMobileMenuOpen(false); }}
-                            className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 transition-colors uppercase tracking-wider cursor-pointer"
-                          >
-                            <User className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                            <span>Mon Profil</span>
-                          </button>
-
-                          <button
-                            onClick={() => { setDashboardInitialTab("gombos"); setView("dashboard"); setMobileMenuOpen(false); }}
-                            className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-350 transition-colors uppercase tracking-wider cursor-pointer"
-                          >
-                            <Briefcase className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                            <span>Mes Publications</span>
-                          </button>
-
-                          <button
-                            onClick={() => { setDashboardInitialTab("applications"); setView("dashboard"); setMobileMenuOpen(false); }}
-                            className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
-                          >
-                            <Plus className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                            <span>Mes Candidatures</span>
-                          </button>
-
-                          <button
-                            onClick={() => { setDashboardInitialTab("reservations"); setView("dashboard"); setMobileMenuOpen(false); }}
-                            className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
-                          >
-                            <Heart className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                            <span>Mes Favoris</span>
-                          </button>
-
-                          <button
-                            onClick={() => { setView("notifications"); setMobileMenuOpen(false); }}
-                            className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Bell className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
-                              <span>Mes Notifications</span>
-                            </div>
-                            {notifications.filter(n => !n.read).length > 0 && (
-                              <span className="bg-red-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded-full">
-                                {notifications.filter(n => !n.read).length}
-                              </span>
-                            )}
-                          </button>
-
-                          <button
-                            onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
-                            className="w-full py-1.5 px-2.5 text-left hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl flex items-center gap-2 text-xs font-semibold text-red-500 transition-colors uppercase tracking-wider cursor-pointer"
-                          >
-                            <LogOut className="w-3.5 h-3.5 shrink-0" />
-                            <span>Déconnexion</span>
-                          </button>
-                        </div>
                       </div>
-                    ) : (
-                      /* NON-LOGGED IN USER GREETING & LOGIN BUTTON */
-                      <div className="p-4 bg-orange-500/5 dark:bg-orange-950/10 rounded-2xl border border-orange-500/10 text-center space-y-2.5">
-                        <p className="text-[10px] font-black uppercase text-orange-600 dark:text-orange-400 tracking-wider">Bienvenue dans Y’A GOMBO MUSIC 🇨🇮</p>
-                        <p className="text-[10px] text-gray-500 leading-relaxed">Connectez-vous pour voir vos opportunités musicales et cachets sécurisés.</p>
+
+                      {/* Mon Espace Gombo List */}
+                      <div className="space-y-1.5 border-b border-gray-100 dark:border-gray-800 pb-4 text-left">
+                        <p className="text-[9.5px] font-black tracking-widest text-[#FF7A00] uppercase mb-1.5">👤 Mon Espace Gombo</p>
+                        
                         <button
-                          onClick={() => { setShowAuthModal(true); setMobileMenuOpen(false); }}
-                          className="w-full py-2 bg-[#FF7A00] hover:bg-[#E06C00] text-white text-center font-black rounded-xl text-xs uppercase cursor-pointer shadow-md select-none"
+                          onClick={() => { setView("profile_edit"); setMobileMenuOpen(false); }}
+                          className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 transition-colors uppercase tracking-wider cursor-pointer"
                         >
-                          Se Connecter
+                          <User className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                          <span>Mon Profil</span>
+                        </button>
+
+                        <button
+                          onClick={() => { setDashboardInitialTab("gombos"); setView("dashboard"); setMobileMenuOpen(false); }}
+                          className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-350 transition-colors uppercase tracking-wider cursor-pointer"
+                        >
+                          <Briefcase className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                          <span>Mes Publications</span>
+                        </button>
+
+                        <button
+                          onClick={() => { setDashboardInitialTab("applications"); setView("dashboard"); setMobileMenuOpen(false); }}
+                          className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                          <span>Mes Candidatures</span>
+                        </button>
+
+                        <button
+                          onClick={() => { setDashboardInitialTab("reservations"); setView("dashboard"); setMobileMenuOpen(false); }}
+                          className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
+                        >
+                          <Heart className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                          <span>Mes Favoris</span>
+                        </button>
+
+                        <button
+                          onClick={() => { setView("notifications"); setMobileMenuOpen(false); }}
+                          className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Bell className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
+                            <span>Mes Notifications</span>
+                          </div>
+                          {notifications.filter(n => !n.read).length > 0 && (
+                            <span className="bg-red-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded-full">
+                              {notifications.filter(n => !n.read).length}
+                            </span>
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                          className="w-full py-1.5 px-2.5 text-left hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl flex items-center gap-2 text-xs font-semibold text-red-500 transition-colors uppercase tracking-wider cursor-pointer"
+                        >
+                          <LogOut className="w-3.5 h-3.5 shrink-0" />
+                          <span>Déconnexion</span>
                         </button>
                       </div>
-                    )
+                    </div>
+                  ) : (
+                    /* NON-LOGGED IN USER GREETING & LOGIN BUTTON */
+                    <div className="p-4 bg-orange-500/5 dark:bg-orange-950/10 rounded-2xl border border-orange-500/10 text-center space-y-2.5">
+                      <p className="text-[10px] font-black uppercase text-orange-600 dark:text-orange-400 tracking-wider">Bienvenue dans Y’A GOMBO MUSIC 🇨🇮</p>
+                      <p className="text-[10px] text-gray-500 leading-relaxed">Connectez-vous pour voir vos opportunités musicales et cachets sécurisés.</p>
+                      <button
+                        onClick={() => { setShowAuthModal(true); setMobileMenuOpen(false); }}
+                        className="w-full py-2 bg-[#FF7A00] hover:bg-[#E06C00] text-white text-center font-black rounded-xl text-xs uppercase cursor-pointer shadow-md select-none"
+                      >
+                        Se Connecter
+                      </button>
+                    </div>
                   )}
 
                   {/* Core Navigation Links */}

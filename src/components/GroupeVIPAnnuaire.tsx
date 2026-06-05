@@ -169,8 +169,48 @@ export default function GroupeVIPAnnuaire({
   // Custom member/gallery item add modal/inputs for Owner
   const [showMemberForm, setShowMemberForm] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
-  const [newMemberRole, setNewMemberRole] = useState("Chanteur");
+  const [newMemberRole, setNewMemberRole] = useState("Chanteur Solo");
   const [newMemberInstrument, setNewMemberInstrument] = useState("Voix");
+  
+  // New States for Groups Role & Invitation System
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [inviteMethod, setInviteMethod] = useState<"manual" | "registered">("manual");
+  const [selectedUserIdToInvite, setSelectedUserIdToInvite] = useState("");
+  const [activeGroupInvitations, setActiveGroupInvitations] = useState<any[]>([]);
+  const [myReceivedInvitations, setMyReceivedInvitations] = useState<any[]>([]);
+
+  // Load users and invitations
+  useEffect(() => {
+    const loadSystemData = async () => {
+      try {
+        const users = await gomboDB.getAllUsers();
+        // Exclude organic admins or non-relevant types if any, filter to musicians / artists or others
+        setAllUsers(users);
+        if (currentUserProfile) {
+          const invs = await gomboDB.getUserInvitations(currentUserProfile.uid);
+          setMyReceivedInvitations(invs);
+        }
+      } catch (err) {
+        console.error("Error loading system data:", err);
+      }
+    };
+    loadSystemData();
+  }, [currentUserProfile?.uid]);
+
+  // Load group-specific invitations when a group is selected
+  useEffect(() => {
+    if (selectedGroup) {
+      const loadGroupInvs = async () => {
+        try {
+          const invs = await gomboDB.getGroupInvitations(selectedGroup.id);
+          setActiveGroupInvitations(invs);
+        } catch (err) {
+          console.error("Error loading group invitations:", err);
+        }
+      };
+      loadGroupInvs();
+    }
+  }, [selectedGroup?.id]);
   
   const [showMediaForm, setShowMediaForm] = useState(false);
   const [newMediaTitle, setNewMediaTitle] = useState("");
@@ -397,38 +437,113 @@ export default function GroupeVIPAnnuaire({
     }
   };
 
-  // Add a member inside active team list
+  // Add a member inside active team list (or send real network invitation)
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGroup) return;
 
-    const newMember: GroupMember = {
-      id: "mem_" + Math.random().toString(36).substr(2, 9),
-      name: newMemberName,
-      role: newMemberRole,
-      instrument: newMemberInstrument,
-      photoUrl: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 999999)}?w=150&auto=format&fit=crop&q=80`
-    };
+    if (inviteMethod === "registered") {
+      if (!selectedUserIdToInvite) {
+        alert("Veuillez sélectionner un artiste enregistré à inviter.");
+        return;
+      }
+      // Check if user is already a member
+      const isAlreadyMember = (selectedGroup.members || []).some((m: any) => m.userId === selectedUserIdToInvite);
+      if (isAlreadyMember) {
+        alert("Cet artiste est déjà membre officiel de votre groupe.");
+        return;
+      }
 
-    const updatedMembers = [...(selectedGroup.members || []), newMember];
-    try {
-      await gomboDB.updateMusicGroup(selectedGroup.id, { members: updatedMembers });
-      setNewMemberName("");
-      setShowMemberForm(false);
-    } catch (err) {
-      console.error(err);
-      alert("Erreur lors de l'ajout du membre.");
+      const invId = "inv_" + Math.random().toString(36).substr(2, 9);
+      const newInvitation = {
+        id: invId,
+        groupId: selectedGroup.id,
+        senderId: currentUserProfile?.uid || "",
+        receiverId: selectedUserIdToInvite,
+        status: "en_attente" as const,
+        role: newMemberRole,
+        instrument: newMemberInstrument,
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        await gomboDB.createGroupInvitation(newInvitation);
+        alert("📨 Invitation de showbiz envoyée avec succès ! L'artiste recevra une notification.");
+        setSelectedUserIdToInvite("");
+        setShowMemberForm(false);
+        // Refresh local list
+        const invs = await gomboDB.getGroupInvitations(selectedGroup.id);
+        setActiveGroupInvitations(invs);
+      } catch (err) {
+        console.error("Invitation failed:", err);
+        alert("Erreur lors de l'envoi de l'invitation.");
+      }
+    } else {
+      // Manual registration
+      if (!newMemberName.trim()) {
+        alert("Veuillez spécifier le nom du musicien.");
+        return;
+      }
+      const memberId = "mem_" + Math.random().toString(36).substr(2, 9);
+      try {
+        await gomboDB.addManualGroupMember(selectedGroup.id, {
+          id: memberId,
+          name: newMemberName,
+          role: newMemberRole,
+          instrument: newMemberInstrument
+        });
+        setNewMemberName("");
+        setShowMemberForm(false);
+        alert("✅ Musicien enregistré avec succès équipe !");
+      } catch (err) {
+        console.error(err);
+        alert("Erreur lors du recrutement du musicien.");
+      }
     }
   };
 
   // Delete physical member check
   const handleDeleteMember = async (memberId: string) => {
-    if (!selectedGroup || !window.confirm("Retirer ce musicien du groupe ?")) return;
-    const updatedMembers = (selectedGroup.members || []).filter(m => m.id !== memberId);
+    if (!selectedGroup || !window.confirm("Retirer officiellement ce musicien de l'équipe ?")) return;
     try {
-      await gomboDB.updateMusicGroup(selectedGroup.id, { members: updatedMembers });
+      await gomboDB.removeGroupMember(selectedGroup.id, memberId);
+      alert("Membre retiré du groupe.");
     } catch (err) {
       console.error(err);
+      alert("Erreur lors du retrait.");
+    }
+  };
+
+  const handleAcceptInvitation = async (invId: string) => {
+    try {
+      await gomboDB.respondToGroupInvitation(invId, "acceptee");
+      alert("🎉 Félicitations ! Vous êtes maintenant membre officiel de l'équipe de showbiz.");
+      if (currentUserProfile) {
+        const invs = await gomboDB.getUserInvitations(currentUserProfile.uid);
+        setMyReceivedInvitations(invs);
+      }
+      // Also soft reload all groups to display the new member live!
+      const fetchedGroups = await gomboDB.getAllMusicGroups();
+      setGroups(fetchedGroups);
+      if (selectedGroup) {
+        const updatedSelected = fetchedGroups.find(g => g.id === selectedGroup.id);
+        if (updatedSelected) setSelectedGroup(updatedSelected);
+      }
+    } catch (err) {
+      console.error("Failed to accept showbiz invitation:", err);
+    }
+  };
+
+  const handleDeclineInvitation = async (invId: string) => {
+    try {
+      if (!window.confirm("Refuser cette invitation de showbiz ?")) return;
+      await gomboDB.respondToGroupInvitation(invId, "refusee");
+      if (currentUserProfile) {
+        const invs = await gomboDB.getUserInvitations(currentUserProfile.uid);
+        setMyReceivedInvitations(invs);
+      }
+    } catch (err) {
+      console.error("Failed to refuse showbiz invitation:", err);
     }
   };
 
@@ -595,6 +710,49 @@ export default function GroupeVIPAnnuaire({
                 )}
               </div>
             </div>
+
+            {/* Showbiz Received Invitations Notification Banner */}
+            {currentUserProfile && myReceivedInvitations.filter(x => x.status === "en_attente").length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-purple-900/40 to-slate-900 border border-purple-500/25 p-5 rounded-3xl"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="animate-pulse flex h-2.5 w-2.5 rounded-full bg-[#A78BFA]" />
+                  <h3 className="text-xs font-black uppercase tracking-widest text-[#A78BFA]">
+                    📨 Vos invitations de Showbiz en attente !
+                  </h3>
+                </div>
+                
+                <div className="space-y-3">
+                  {myReceivedInvitations.filter(x => x.status === "en_attente").map((inv) => {
+                    const group = groups.find(g => g.id === inv.groupId);
+                    return (
+                      <div key={inv.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-purple-950/20 rounded-2xl border border-purple-500/10 text-xs text-white">
+                        <div>
+                          Le groupe <span className="text-[#A78BFA] font-black">{group?.name || "Orchestre VIP"}</span> vous invite en tant que <span className="font-extrabold uppercase tracking-wide">{inv.role}</span> ({inv.instrument}).
+                        </div>
+                        <div className="flex gap-2 w-full sm:w-auto self-end">
+                          <button
+                            onClick={() => handleAcceptInvitation(inv.id)}
+                            className="flex-1 sm:flex-initial px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg text-[10px] uppercase transition cursor-pointer"
+                          >
+                            Accepter
+                          </button>
+                          <button
+                            onClick={() => handleDeclineInvitation(inv.id)}
+                            className="flex-1 sm:flex-initial px-3 py-1.5 bg-rose-600/30 hover:bg-rose-600 hover:text-white text-rose-300 font-extrabold rounded-lg text-[10px] uppercase transition cursor-pointer"
+                          >
+                            Refuser
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
 
             {/* Simulated Advertising & Plan Showcase */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
@@ -1082,14 +1240,43 @@ export default function GroupeVIPAnnuaire({
                   
                   {/* Register dynamic new members overlay for OWNER ONLY */}
                   {currentUserProfile && selectedGroup.creatorId === currentUserProfile.uid && (
-                    <div className="bg-purple-500/[0.02] border border-dashed border-purple-500/30 p-4 rounded-3xl relative">
-                      <button
-                        onClick={() => setShowMemberForm(!showMemberForm)}
-                        className="px-4 py-2 bg-purple-100 dark:bg-purple-950/30 text-purple-650 dark:text-purple-300 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-purple-250 transition-all cursor-pointer flex items-center gap-1.5"
-                      >
-                        {showMemberForm ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
-                        <span>{showMemberForm ? "Annuler" : "Ajouter un musicien à l'équipe"}</span>
-                      </button>
+                    <div className="bg-purple-500/[0.02] border border-dashed border-purple-500/30 p-4 rounded-3xl relative space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <button
+                          onClick={() => setShowMemberForm(!showMemberForm)}
+                          className="px-4 py-2 bg-purple-100 dark:bg-purple-950/30 text-purple-650 dark:text-purple-300 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-purple-250 transition-all cursor-pointer flex items-center gap-1.5"
+                        >
+                          {showMemberForm ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                          <span>{showMemberForm ? "Annuler" : "Ajouter un musicien à l'équipe"}</span>
+                        </button>
+                        
+                        {showMemberForm && (
+                          <div className="flex bg-gray-100 dark:bg-slate-900 p-1 rounded-lg text-[10px] font-bold">
+                            <button
+                              type="button"
+                              onClick={() => setInviteMethod("manual")}
+                              className={`px-3 py-1 rounded-md transition-all ${
+                                inviteMethod === "manual"
+                                  ? "bg-purple-600 text-white"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              ✍️ Enregistrement Manuel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setInviteMethod("registered")}
+                              className={`px-3 py-1 rounded-md transition-all ${
+                                inviteMethod === "registered"
+                                  ? "bg-purple-600 text-white"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              📡 Inviter un Membre Inscrit
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
                       <AnimatePresence>
                         {showMemberForm && (
@@ -1098,26 +1285,48 @@ export default function GroupeVIPAnnuaire({
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
                             onSubmit={handleAddMember} 
-                            className="space-y-4 pt-4 border-t border-purple-500/10 mt-3"
+                            className="space-y-4 pt-4 border-t border-purple-500/10"
                           >
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              {inviteMethod === "registered" ? (
+                                <div>
+                                  <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Sélectionner l'artiste Gombo VIP</label>
+                                  <select
+                                    required
+                                    value={selectedUserIdToInvite}
+                                    onChange={e => setSelectedUserIdToInvite(e.target.value)}
+                                    className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
+                                  >
+                                    <option value="">-- Choisir un artiste --</option>
+                                    {allUsers
+                                      .filter(u => u.uid !== currentUserProfile?.uid && u.role === "musicien")
+                                      .map(u => (
+                                        <option key={u.uid} value={u.uid}>
+                                          {u.firstName} {u.lastName} ({u.specialty || "Musicien"})
+                                        </option>
+                                      ))}
+                                  </select>
+                                </div>
+                              ) : (
+                                <div>
+                                  <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Nom du musicien</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    value={newMemberName}
+                                    onChange={e => setNewMemberName(e.target.value)}
+                                    placeholder="Nom Complet"
+                                    className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
+                                  />
+                                </div>
+                              )}
+                              
                               <div>
-                                <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Nom du musicien</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={newMemberName}
-                                  onChange={e => setNewMemberName(e.target.value)}
-                                  placeholder="Nom Complet"
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
-                                />
-                              </div>
-                              <div>
-                                <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Fonction principal</label>
+                                <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Fonction principale</label>
                                 <select
                                   value={newMemberRole}
                                   onChange={e => setNewMemberRole(e.target.value)}
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
                                 >
                                   <option value="Chanteur Solo">Chanteur Solo</option>
                                   <option value="Choriste">Choriste</option>
@@ -1139,20 +1348,48 @@ export default function GroupeVIPAnnuaire({
                                   value={newMemberInstrument}
                                   onChange={e => setNewMemberInstrument(e.target.value)}
                                   placeholder="Ex: Guitare, Batterie, Keni"
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
                                 />
                               </div>
                             </div>
 
                             <button
                               type="submit"
-                              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition"
+                              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
                             >
-                              Confirmer l'ajout du musicien
+                              {inviteMethod === "registered" ? "📡 Envoyer l'invitation officielle Gombo VIP" : "✍️ Valider l'enregistrement direct"}
                             </button>
                           </motion.form>
                         )}
                       </AnimatePresence>
+
+                      {/* Pending sent group invitations list */}
+                      {activeGroupInvitations.length > 0 && (
+                        <div className="border-t border-purple-500/15 pt-3 mt-2">
+                          <h5 className="text-[10px] uppercase font-black tracking-widest text-[#7C3AED] dark:text-[#A78BFA] pb-2">
+                            📨 Invitations de Showbiz Envoyées ({activeGroupInvitations.filter(x => x.status === "en_attente").length} en attente)
+                          </h5>
+                          <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                            {activeGroupInvitations.map((inv) => {
+                              const recUser = allUsers.find(u => u.uid === inv.receiverId);
+                              return (
+                                <div key={inv.id} className="flex items-center justify-between text-[11px] bg-white dark:bg-purple-950/20 p-2 rounded-xl border border-gray-100 dark:border-purple-950/40">
+                                  <span className="font-bold">
+                                    👤 {recUser ? `${recUser.firstName} ${recUser.lastName}` : "Artiste"} &rarr; <span className="text-purple-600 dark:text-purple-300">{inv.role} ({inv.instrument})</span>
+                                  </span>
+                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                                    inv.status === "en_attente" ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" :
+                                    inv.status === "acceptee" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" :
+                                    "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                                  }`}>
+                                    {inv.status === "en_attente" ? "⏳ En attente" : inv.status === "acceptee" ? "✅ Acceptée" : "❌ Refusée"}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 

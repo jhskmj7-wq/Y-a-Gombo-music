@@ -40,7 +40,9 @@ interface ProfileEditProps {
 export default function ProfileEdit({ initialProfile, onSave, onCancel }: ProfileEditProps) {
   const [firstName, setFirstName] = useState(initialProfile.firstName || "");
   const [lastName, setLastName] = useState(initialProfile.lastName || "");
+  const [artistName, setArtistName] = useState(initialProfile.artistName || "");
   const [phone, setPhone] = useState(initialProfile.phone || "");
+  const [ville, setVille] = useState(initialProfile.ville || "Abidjan");
   const [commune, setCommune] = useState(initialProfile.commune || "Cocody");
   const [bio, setBio] = useState(initialProfile.bio || "");
   const [avatarUrl, setAvatarUrl] = useState(initialProfile.avatarUrl || AVATARS[0]);
@@ -86,14 +88,14 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !commune) {
-      alert("Veuillez remplir les informations obligatoires (Prénom, Nom, Téléphone, Commune).");
+    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !artistName.trim() || !commune) {
+      alert("Veuillez remplir les informations obligatoires (Prénom, Nom, Nom d'artiste, Téléphone, Commune).");
       return;
     }
 
     const cleanedDigits = phone.trim().replace(/\D/g, "");
-    if (cleanedDigits.length < 9) {
-      alert("Le numéro de téléphone saisi est trop court. Un format valide de contact complet doit faire 10 chiffres pour la Côte d'Ivoire (ex: 07 45 89 12 00).");
+    if (cleanedDigits.length < 8) {
+      alert("Le numéro de téléphone saisi est trop court (min. 8 chiffres).");
       return;
     }
 
@@ -102,10 +104,13 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
     const updates: Partial<UserProfile> = {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      artistName: artistName.trim(),
       phone: phone.trim(),
+      ville: ville.trim(),
       commune,
       bio: bio.trim(),
       avatarUrl,
+      photoURL: avatarUrl,
       ...(initialProfile.role === "musicien" ? {
         specialty,
         experience,
@@ -199,6 +204,28 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
 
         {/* Text Fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Nom d’Artiste / de Scène</label>
+            <input
+              type="text"
+              required
+              value={artistName}
+              onChange={(e) => setArtistName(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white font-bold"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Ville de Résidence</label>
+            <input
+              type="text"
+              required
+              value={ville}
+              onChange={(e) => setVille(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+            />
+          </div>
+
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Prénom</label>
             <input

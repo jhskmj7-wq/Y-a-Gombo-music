@@ -281,6 +281,43 @@ service cloud.firestore {
              (!('targetId' in data) || (data.targetId is string && data.targetId.size() <= 128));
     }
 
+    // Validate Verification Request
+    function isValidVerificationRequest(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId == request.auth.uid &&
+             data.fullName is string && data.fullName.size() <= 200 &&
+             data.photoUrl is string && data.photoUrl.size() <= 2083 &&
+             data.commune is string && data.commune.size() <= 150 &&
+             data.metier is string && data.metier.size() <= 150 &&
+             data.whatsapp is string && data.whatsapp.size() <= 50 &&
+             data.status in ['pending', 'approved', 'rejected'] &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('selfieUrl' in data) || (data.selfieUrl is string && data.selfieUrl.size() <= 2083)) &&
+             (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 2083)) &&
+             (!('userEmail' in data) || (data.userEmail is string && data.userEmail.size() <= 200));
+    }
+
+    // Validate Chat Conversation
+    function isValidConversation(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.participants is list && data.participants.size() == 2 &&
+             request.auth.uid in data.participants &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             data.updatedAt is string && data.updatedAt.size() <= 50;
+    }
+
+    // Validate Message
+    function isValidMessage(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.conversationId is string && data.conversationId.size() <= 128 &&
+             data.senderId == request.auth.uid &&
+             data.text is string && data.text.size() <= 5000 &&
+             data.type in ['text', 'image', 'audio'] &&
+             (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 2083)) &&
+             (!('senderName' in data) || (data.senderName is string && data.senderName.size() <= 200)) &&
+             data.timestamp is string && data.timestamp.size() <= 50;
+    }
+
 
     // --- 1. USERS COLLECTION RULES ---
     match /users/{userId} {
@@ -471,6 +508,35 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isSignedIn() && isValidActivity(request.resource.data);
       allow update, delete: if isAdmin();
+    }
+
+    // --- 14. VERIFICATION REQUESTS COLLECTION RULES ---
+    match /verificationRequests/{requestId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && isValidVerificationRequest(request.resource.data);
+      allow update: if isSignedIn() && (isAdmin() || (resource.data.userId == request.auth.uid && request.resource.data.status == resource.data.status && isValidVerificationRequest(request.resource.data)));
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // --- 15. CONVERSATIONS COLLECTION RULES ---
+    match /conversations/{conversationId} {
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.participants || isAdmin());
+      allow create: if isSignedIn() && isValidConversation(request.resource.data);
+      allow update: if isSignedIn() && ((request.auth.uid in resource.data.participants && isValidConversation(request.resource.data)) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // --- 16. MESSAGES COLLECTION RULES ---
+    match /messages/{messageId} {
+      allow read: if isSignedIn() && (
+        resource.data.senderId == request.auth.uid || 
+        exists(/databases/$(database)/documents/conversations/$(resource.data.conversationId)) && 
+        request.auth.uid in get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participants ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && isValidMessage(request.resource.data);
+      allow update: if isSignedIn() && ((resource.data.senderId == request.auth.uid && isValidMessage(request.resource.data)) || isAdmin());
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.senderId == request.auth.uid);
     }
 
   }
