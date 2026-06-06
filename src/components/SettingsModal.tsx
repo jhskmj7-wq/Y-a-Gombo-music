@@ -24,6 +24,8 @@ export default function SettingsModal({
   setThemeMode, 
   onLogout 
 }: SettingsModalProps) {
+  if (!isOpen) return null;
+
   // Navigation / Tabs State
   const [activeTab, setActiveTab] = useState<"apparence" | "notifications" | "securite" | "confidentialite" | "compte" | "apropos">("apparence");
 
@@ -148,7 +150,7 @@ export default function SettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
       <div 
         id="settings-modal-card"
         className="bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all duration-300 scale-100 flex flex-col h-[85vh] max-h-[680px]"

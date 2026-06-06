@@ -145,10 +145,21 @@ export default function App() {
           console.log("💾 [Google OAuth Chrome Transfer] Credentials securely transmitted to Firestore!");
           setChromeAuthSuccess(true);
           
-          // Automatically try to open general custom scheme deep-link to redirect and call the APK back
+          // Automatically and immediately try to open general custom scheme deep-link to redirect and call the APK back
+          const redirectDeepLink = `afrigombo://auth?transferId=${transferId}`;
+          const redirectIntentUrl = `intent://auth?transferId=${transferId}#Intent;scheme=afrigombo;end`;
+
+          // Immediate attempt
+          window.location.href = redirectDeepLink;
+
+          // Sequential timed attempts for Chrome compatibility
           setTimeout(() => {
-            window.location.href = `afrigombo://auth?transferId=${transferId}`;
-          }, 1500);
+            window.location.href = redirectDeepLink;
+          }, 150);
+
+          setTimeout(() => {
+            window.location.href = redirectIntentUrl;
+          }, 600);
           
         } catch (err: any) {
           console.error("❌ [Google OAuth Chrome Transfer] Failed during Chrome auth channel:", err);
@@ -942,210 +953,214 @@ export default function App() {
                 </span>
               </button>
 
-              {/* Settings / Paramètres */}
+              {/* Real-time Messagerie Chat Icon */}
               <button
-                onClick={() => setShowSettingsModal(true)}
-                className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-[#D4AF37] transition-colors"
-                aria-label="Application Settings"
-                title="Paramètres de l'application"
+                onClick={() => handleProtectedAction("messages")}
+                className={`p-2 rounded-xl transition-colors relative flex items-center justify-center min-w-[38px] min-h-[38px] cursor-pointer ${
+                  view === "messages" 
+                    ? "bg-[#D4AF37]/15 text-[#D4AF37]" 
+                    : "bg-gray-50 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400 hover:text-[#D4AF37]"
+                }`}
+                aria-label="Messagerie privée"
+                title="Mes messages privés"
               >
-                <Settings className="w-5 h-5" />
+                <MessageSquare className="w-5 h-5" />
+                {user && unreadChatCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black h-4.5 w-4.5 rounded-full flex items-center justify-center animate-pulse border border-white dark:border-[#121214]">
+                    {unreadChatCount}
+                  </span>
+                )}
               </button>
 
-              {/* Real-time Messagerie Chat Icon */}
-              {user && (
+              {/* Real-time Notifications Bell Dropdown */}
+              <div className="relative">
                 <button
-                  onClick={() => setView("messages")}
-                  className={`p-2 rounded-xl transition-colors relative flex items-center justify-center min-w-[38px] min-h-[38px] ${
-                    view === "messages" 
-                      ? "bg-[#D4AF37]/15 text-[#D4AF37]" 
-                      : "bg-gray-50 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400 hover:text-[#D4AF37]"
-                  }`}
-                  aria-label="Messagerie privée"
-                  title="Mes messages privés"
+                  onClick={() => {
+                    if (!user) {
+                      setShowAuthModal(true);
+                    } else if (window.innerWidth < 640) {
+                      setView("notifications");
+                    } else {
+                      setShowNotifTray(!showNotifTray);
+                    }
+                  }}
+                  className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors relative flex items-center justify-center cursor-pointer"
+                  aria-label="Notifications"
+                  title="Mes notifications en temps réel"
                 >
-                  <MessageSquare className="w-5 h-5" />
-                  {unreadChatCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black h-4.5 w-4.5 rounded-full flex items-center justify-center animate-pulse border border-white dark:border-[#121214]">
-                      {unreadChatCount}
+                  <Bell className="w-5 h-5" />
+                  {user && notifications.filter(n => !n.read).length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black h-5 w-5 rounded-full flex items-center justify-center animate-pulse border-2 border-white dark:border-[#121214]">
+                      {notifications.filter(n => !n.read).length}
                     </span>
                   )}
                 </button>
-              )}
 
-              {/* Real-time Notifications Bell Dropdown */}
-              {user && (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowNotifTray(!showNotifTray)}
-                    className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors relative"
-                    aria-label="Notifications"
-                    title="Mes notifications en temps réel"
-                  >
-                    <Bell className="w-5 h-5" />
-                    {notifications.filter(n => !n.read).length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black h-5 w-5 rounded-full flex items-center justify-center animate-pulse border-2 border-white dark:border-[#121214]">
-                        {notifications.filter(n => !n.read).length}
-                      </span>
-                    )}
-                  </button>
-
-                  <AnimatePresence>
-                    {showNotifTray && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2.5 w-80 bg-white dark:bg-[#121214] border border-gray-150 dark:border-gray-800 rounded-2xl shadow-xl z-50 overflow-hidden"
-                      >
-                        <div className="p-4 border-b border-gray-100 dark:border-gray-850 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/10">
-                          <span className="text-xs font-black tracking-wider text-gray-800 dark:text-white uppercase flex items-center gap-1.5">
-                            🔔 Notifications {notifications.filter(n => !n.read).length > 0 && `(${notifications.filter(n => !n.read).length})`}
-                          </span>
-                          {notifications.filter(n => !n.read).length > 0 && (
-                            <button
-                              onClick={() => {
-                                notifications.forEach(async (n) => {
-                                  if (!n.read) await gomboDB.markNotificationAsRead(n.id);
-                                });
-                              }}
-                              className="text-[10px] font-black uppercase text-orange-600 hover:underline"
-                            >
-                              Tout lire
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Selector Segmented Control for Grouping Format */}
-                        <div className="px-4 py-2 bg-gray-50/70 dark:bg-gray-900/40 border-b border-gray-100 dark:border-gray-850 flex items-center justify-between text-[11px]">
-                          <span className="text-gray-500 dark:text-gray-400 font-bold">Thème d'affichage</span>
+                <AnimatePresence>
+                  {user && showNotifTray && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2.5 w-80 bg-white dark:bg-[#121214] border border-gray-150 dark:border-gray-800 rounded-2xl shadow-xl z-50 overflow-hidden"
+                    >
+                      <div className="p-4 border-b border-gray-100 dark:border-gray-850 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/10">
+                        <span className="text-xs font-black tracking-wider text-gray-800 dark:text-white uppercase flex items-center gap-1.5">
+                          🔔 Notifications {notifications.filter(n => !n.read).length > 0 && `(${notifications.filter(n => !n.read).length})`}
+                        </span>
+                        {notifications.filter(n => !n.read).length > 0 && (
                           <button
-                            type="button"
-                            onClick={() => setGroupNotifications(!groupNotifications)}
-                            className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all select-none ${
-                              groupNotifications 
-                                ? "bg-orange-500 text-white shadow-sm"
-                                : "bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                            }`}
-                          >
-                            {groupNotifications ? "🗂️ Groupé" : "🕘 Chrono"}
-                          </button>
-                        </div>
-
-                        <div className="max-h-80 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-850">
-                          {notifications.length === 0 ? (
-                            <div className="p-6 text-center text-xs text-gray-400 dark:text-gray-500">
-                              Aucune notification pour le moment.
-                            </div>
-                          ) : groupNotifications ? (
-                            (() => {
-                              // Group notifications by type
-                              const groups: Record<string, { label: string; items: GomboNotification[] }> = {
-                                application_accepted: { label: "🎉 Candidatures acceptées", items: [] },
-                                booking: { label: "📅 Demandes de Booking", items: [] },
-                                general: { label: "🔔 Informations Générales", items: [] }
-                              };
-                              notifications.forEach(n => {
-                                if (groups[n.type]) {
-                                  groups[n.type].items.push(n);
-                                } else {
-                                  groups.general.items.push(n);
-                                }
+                            onClick={() => {
+                              notifications.forEach(async (n) => {
+                                if (!n.read) await gomboDB.markNotificationAsRead(n.id);
                               });
-                              const activeGroups = Object.entries(groups).filter(([_, group]) => group.items.length > 0);
-                              return (
-                                <div className="divide-y divide-gray-100 dark:divide-gray-800/60 pb-1">
-                                  {activeGroups.map(([key, group]) => (
-                                    <div key={key} className="p-1">
-                                      <div className="px-3 py-1.5 text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest bg-orange-500/5 rounded-lg mb-1 flex justify-between items-center">
-                                        <span>{group.label}</span>
-                                        <span className="bg-orange-500/10 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded-full text-[9px]">
-                                          {group.items.length}
-                                        </span>
-                                      </div>
-                                      <div className="space-y-1">
-                                        {group.items.map((notif) => (
-                                          <div
-                                            key={notif.id}
-                                            onClick={async () => {
-                                              if (!notif.read) {
-                                                await gomboDB.markNotificationAsRead(notif.id);
-                                              }
-                                              setShowNotifTray(false);
-                                              setView("dashboard");
-                                            }}
-                                            className={`p-3 hover:bg-gray-50/50 dark:hover:bg-gray-850/60 transition-all cursor-pointer text-left rounded-xl ${
-                                              !notif.read ? "bg-orange-500/5 dark:bg-orange-950/15 border-l-2 border-orange-500" : ""
-                                            }`}
-                                          >
-                                            <span className="text-xs font-bold text-gray-900 dark:text-white block">
-                                              {notif.title}
-                                            </span>
-                                            <span className="text-[10.5px] text-gray-500 dark:text-gray-400 mt-0.5 block leading-relaxed">
-                                              {notif.message}
-                                            </span>
-                                            <span className="text-[8.5px] text-gray-400 dark:text-gray-500 mt-1 block">
-                                              {new Date(notif.createdAt).toLocaleDateString("fr-FR", {
-                                                hour: "2-digit",
-                                                minute: "2-digit"
-                                              })}
-                                            </span>
-                                          </div>
-                                        ))}
-                                      </div>
+                            }}
+                            className="text-[10px] font-black uppercase text-orange-600 hover:underline"
+                          >
+                            Tout lire
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Selector Segmented Control for Grouping Format */}
+                      <div className="px-4 py-2 bg-gray-50/70 dark:bg-gray-900/40 border-b border-gray-100 dark:border-gray-850 flex items-center justify-between text-[11px]">
+                        <span className="text-gray-500 dark:text-gray-400 font-bold">Thème d'affichage</span>
+                        <button
+                          type="button"
+                          onClick={() => setGroupNotifications(!groupNotifications)}
+                          className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all select-none ${
+                            groupNotifications 
+                              ? "bg-orange-500 text-white shadow-sm"
+                              : "bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                          }`}
+                        >
+                          {groupNotifications ? "🗂️ Groupé" : "🕘 Chrono"}
+                        </button>
+                      </div>
+
+                      <div className="max-h-80 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-850">
+                        {notifications.length === 0 ? (
+                          <div className="p-6 text-center text-xs text-gray-400 dark:text-gray-500">
+                            Aucune notification pour le moment.
+                          </div>
+                        ) : groupNotifications ? (
+                          (() => {
+                            // Group notifications by type
+                            const groups: Record<string, { label: string; items: GomboNotification[] }> = {
+                              application_accepted: { label: "🎉 Candidatures acceptées", items: [] },
+                              booking: { label: "📅 Demandes de Booking", items: [] },
+                              general: { label: "🔔 Informations Générales", items: [] }
+                            };
+                            notifications.forEach(n => {
+                              if (groups[n.type]) {
+                                groups[n.type].items.push(n);
+                              } else {
+                                groups.general.items.push(n);
+                              }
+                            });
+                            const activeGroups = Object.entries(groups).filter(([_, group]) => group.items.length > 0);
+                            return (
+                              <div className="divide-y divide-gray-100 dark:divide-gray-800/60 pb-1">
+                                {activeGroups.map(([key, group]) => (
+                                  <div key={key} className="p-1">
+                                    <div className="px-3 py-1.5 text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest bg-orange-500/5 rounded-lg mb-1 flex justify-between items-center">
+                                      <span>{group.label}</span>
+                                      <span className="bg-orange-500/10 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded-full text-[9px]">
+                                        {group.items.length}
+                                      </span>
                                     </div>
-                                  ))}
-                                </div>
-                              );
-                            })()
-                          ) : (
-                            notifications.map((notif) => (
-                              <div
-                                key={notif.id}
-                                onClick={async () => {
+                                    <div className="space-y-1">
+                                      {group.items.map((notif) => (
+                                        <div
+                                          key={notif.id}
+                                          onClick={async () => {
+                                            if (!notif.read) {
+                                              await gomboDB.markNotificationAsRead(notif.id);
+                                            }
+                                            setShowNotifTray(false);
+                                            setView("dashboard");
+                                          }}
+                                          className={`p-3 hover:bg-gray-50/50 dark:hover:bg-gray-850/60 transition-all cursor-pointer text-left rounded-xl ${
+                                            !notif.read ? "bg-orange-500/5 dark:bg-orange-950/15 border-l-2 border-orange-500" : ""
+                                          }`}
+                                        >
+                                          <span className="text-xs font-bold text-gray-900 dark:text-white block">
+                                            {notif.title}
+                                          </span>
+                                          <span className="text-[10.5px] text-gray-500 dark:text-gray-400 mt-0.5 block leading-relaxed">
+                                            {notif.message}
+                                          </span>
+                                          <span className="text-[8.5px] text-gray-400 dark:text-gray-500 mt-1 block">
+                                            {new Date(notif.createdAt).toLocaleDateString("fr-FR", {
+                                              hour: "2-digit",
+                                              minute: "2-digit"
+                                            })}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          notifications.map((notif) => (
+                            <div
+                              key={notif.id}
+                              onClick={async () => {
                                   if (!notif.read) {
                                     await gomboDB.markNotificationAsRead(notif.id);
                                   }
                                   setShowNotifTray(false);
                                   setView("dashboard");
-                                }}
-                                className={`p-4 hover:bg-gray-50/50 dark:hover:bg-gray-850 transition-colors cursor-pointer text-left ${
-                                  !notif.read ? "bg-orange-500/5 dark:bg-orange-950/20 border-l-2 border-orange-500" : ""
-                                }`}
-                              >
-                                <span className="text-xs font-bold text-gray-950 dark:text-white block">
-                                  {notif.title}
-                                </span>
-                                <span className="text-[11px] text-gray-550 dark:text-gray-400 mt-1 block leading-relaxed">
-                                  {notif.message}
-                                </span>
-                                <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1.5 block font-medium">
-                                  {new Date(notif.createdAt).toLocaleDateString("fr-FR", {
-                                    hour: "2-digit",
-                                    minute: "2-digit"
-                                  })}
-                                </span>
-                              </div>
-                            ))
-                          )}
-                        </div>
+                              }}
+                              className={`p-4 hover:bg-gray-50/50 dark:hover:bg-gray-850 transition-colors cursor-pointer text-left ${
+                                !notif.read ? "bg-orange-500/5 dark:bg-orange-950/20 border-l-2 border-orange-500" : ""
+                              }`}
+                            >
+                              <span className="text-xs font-bold text-gray-950 dark:text-white block">
+                                {notif.title}
+                              </span>
+                              <span className="text-[11px] text-gray-550 dark:text-gray-400 mt-1 block leading-relaxed">
+                                {notif.message}
+                              </span>
+                              <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1.5 block font-medium">
+                                {new Date(notif.createdAt).toLocaleDateString("fr-FR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit"
+                                })}
+                              </span>
+                            </div>
+                          ))
+                        )}
+                      </div>
 
-                        <div className="p-2.5 border-t border-gray-150 dark:border-gray-800 text-center bg-gray-50/50 dark:bg-gray-900/10">
-                          <button
-                            onClick={() => {
-                              setView("notifications");
-                              setShowNotifTray(false);
-                            }}
-                            className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400 hover:underline flex items-center justify-center gap-1 mx-auto"
-                          >
-                            Voir tout dans le Centre 🔔
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+                      <div className="p-2.5 border-t border-gray-150 dark:border-gray-800 text-center bg-gray-50/50 dark:bg-gray-900/10">
+                        <button
+                          onClick={() => {
+                            setView("notifications");
+                            setShowNotifTray(false);
+                          }}
+                          className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400 hover:underline flex items-center justify-center gap-1 mx-auto"
+                        >
+                          Voir tout dans le Centre 🔔
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Settings / Paramètres */}
+              <button
+                onClick={() => setShowSettingsModal(true)}
+                className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-[#D4AF37] transition-colors cursor-pointer"
+                aria-label="Application Settings"
+                title="Paramètres de l'application"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
 
               {/* Dynamic User Profile or Trigger login */}
               {user ? (
@@ -2630,7 +2645,7 @@ export default function App() {
       {/* --- AUTHENTICATION DIALOG POPUP --- */}
       <AnimatePresence>
         {showAuthModal && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs">
             <div className="absolute inset-0" onClick={() => setShowAuthModal(false)}></div>
             <div className="relative z-10 w-full max-w-xl">
               {/* Close corner control */}
