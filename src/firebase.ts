@@ -6,6 +6,7 @@ import {
   signOut as firebaseSignOut, 
   signInWithPopup, 
   signInWithRedirect,
+  signInWithCredential,
   GoogleAuthProvider, 
   FacebookAuthProvider,
   GithubAuthProvider,
@@ -68,6 +69,60 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 const GOOGLE_PROVIDER = new GoogleAuthProvider();
 const FACEBOOK_PROVIDER = new FacebookAuthProvider();
 const GITHUB_PROVIDER = new GithubAuthProvider();
+
+export const isWebView = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const ua = window.navigator.userAgent || "";
+  
+  // AppsGeyser signature, common webviews, and embedded user-agents
+  const isAndroidWebView = /Android/i.test(ua) && /wv/i.test(ua);
+  const isCustomWebView = /AppsGeyser/i.test(ua) || (window as any).AppsGeyser || (window as any).AndroidClient || (window as any).Android;
+  const isGenericWebView = /(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/i.test(ua) || (/Android/i.test(ua) && /Version\/\d+\.\d+/i.test(ua));
+  const isDisallowedUseragent = /FBAN|FBAV|Instagram|Twitter|Slack|WhatsApp|disallowed_useragent/i.test(ua);
+
+  return isAndroidWebView || isCustomWebView || isGenericWebView || isDisallowedUseragent;
+};
+
+// Check for active transfer ID recovery on boot
+if (typeof window !== "undefined") {
+  const activeTransferId = localStorage.getItem("active_google_transfer_id");
+  if (activeTransferId && !isFirebaseMock && auth && db) {
+    console.log("🕵️ [WebView Auth Recovery] Found active Google Transfer ID on boot:", activeTransferId);
+    
+    const unsubscribe = onSnapshot(doc(db, "temp_auth_transfers", activeTransferId), async (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data && data.status === "success" && data.idToken) {
+          console.log("🎉 [WebView Auth Recovery] Transfer session successfully detected on boot! Logging in...");
+          localStorage.removeItem("active_google_transfer_id");
+          
+          try {
+            const credential = GoogleAuthProvider.credential(data.idToken, data.accessToken || null);
+            await signInWithCredential(auth, credential);
+            
+            // Clean up document for user privacy
+            try {
+              await deleteDoc(doc(db, "temp_auth_transfers", activeTransferId));
+            } catch (e) {
+              console.warn("Non-fatal doc cleanup error during recovery:", e);
+            }
+            
+            // Dispatch a global event so the UI can refresh if needed
+            window.dispatchEvent(new CustomEvent("webViewAuthSuccess", { 
+              detail: { uid: auth.currentUser?.uid, email: auth.currentUser?.email } 
+            }));
+            
+            unsubscribe();
+          } catch (err) {
+            console.error("❌ [WebView Auth Recovery] Failed to log in using booted transfer credential:", err);
+          }
+        }
+      }
+    }, (err) => {
+      console.warn("⚠️ [WebView Auth Recovery] Snapshot error listening to recovery transfer:", err);
+    });
+  }
+}
 
 // Ensure the required connection test run from the skill
 if (!isFirebaseMock && db) {
@@ -549,6 +604,44 @@ export const gomboAuth = {
 
   async loginWithGoogle() {
     console.log("🚀 [Firebase Auth Debug] Initializing Google Login popup...");
+    
+    if (isWebView()) {
+      console.log("📱 [Firebase Auth] WebView detected. Setting up secure Chrome redirect channel...");
+      const transferId = "goog_trans_" + Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+      localStorage.setItem("active_google_transfer_id", transferId);
+      
+      // Create a pending document in Firestore so we can listen to it and write safely
+      if (!isFirebaseMock && db) {
+        try {
+          await setDoc(doc(db, "temp_auth_transfers", transferId), {
+            idToken: "",
+            status: "pending",
+            createdAt: new Date().toISOString()
+          });
+        } catch (err) {
+          console.error("Non-fatal error writing pending auth transfer:", err);
+        }
+      }
+      
+      const currentUrl = window.location.origin;
+      const redirectUrl = `${currentUrl}/?auth_transfer=google&transferId=${transferId}`;
+      const webUrlWithoutHttps = redirectUrl.replace(/^https?:\/\//, "");
+      const chromeIntentUrl = `intent://${webUrlWithoutHttps}#Intent;scheme=https;package=com.android.chrome;end`;
+      
+      // Open the external Chrome browser using an Android Intent
+      window.location.href = chromeIntentUrl;
+      
+      // Fallback redirect if Intent fails to trigger/close window
+      setTimeout(() => {
+        window.open(redirectUrl, "_blank");
+      }, 800);
+      
+      return {
+        webViewRedirectPending: true,
+        transferId
+      } as any;
+    }
+
     if (!isFirebaseMock && auth) {
       try {
         const res = await signInWithPopup(auth, GOOGLE_PROVIDER);

@@ -36,6 +36,24 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
   const [errorMSG, setErrorMSG] = useState("");
   const [successMSG, setSuccessMSG] = useState("");
   const [activeErrorCode, setActiveErrorCode] = useState("");
+  
+  // WebView redirection states
+  const [isRedirectPending, setIsRedirectPending] = useState(false);
+  const [pendingTransferId, setPendingTransferId] = useState("");
+
+  React.useEffect(() => {
+    const handleSuccess = async (e: any) => {
+      console.log("🌟 [AuthScreen WebView Event] webViewAuthSuccess caught!", e.detail);
+      setIsRedirectPending(false);
+      setLoading(false);
+      if (e.detail && e.detail.uid) {
+        await handlePostAuthSuccess(e.detail.uid, e.detail.email || "");
+      }
+    };
+    
+    window.addEventListener("webViewAuthSuccess", handleSuccess);
+    return () => window.removeEventListener("webViewAuthSuccess", handleSuccess);
+  }, []);
 
   const handlePostAuthSuccess = async (uid: string, userEmail: string) => {
     setLoading(true);
@@ -88,7 +106,10 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
     setActiveErrorCode("");
     try {
       const res = await loginWithGoogle();
-      if (res && res.uid) {
+      if (res && res.webViewRedirectPending) {
+        setIsRedirectPending(true);
+        setPendingTransferId(res.transferId);
+      } else if (res && res.uid) {
         await handlePostAuthSuccess(res.uid, res.email || "");
       }
     } catch (err: any) {
@@ -96,7 +117,6 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       const code = err.code || "auth/unknown";
       setActiveErrorCode(code);
       setErrorMSG(getFriendlyErrorMessage(err));
-    } finally {
       setLoading(false);
     }
   };
@@ -187,36 +207,95 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
           )}
         </AnimatePresence>
 
-        {/* Only Allowed Action Buttons */}
-        <div className="space-y-3.5 mb-6">
-          {/* CONTINUER AVEC GOOGLE */}
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className="w-full h-12 flex items-center justify-center gap-3 bg-[#D4AF37] hover:bg-[#be992c] text-[#0B0B0B] rounded-2xl transition-all duration-300 font-extrabold text-xs uppercase tracking-wider active:scale-98 cursor-pointer shadow-lg hover:shadow-[#D4AF37]/20"
-          >
-            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-              <path
-                fill="#0B0B0B"
-                d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.529-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.1C18.28 1.844 15.485 1 12.24 1 6.05 1 1.042 6.01 1.042 12.185S6.05 23.37 12.24 23.37c6.46 0 10.755-4.54 10.755-10.95 0-.735-.08-1.3-.175-1.833h-10.58z"
-              />
-            </svg>
-            <span>{loading ? "Chargement..." : "Continuer avec Google"}</span>
-          </button>
+        {isRedirectPending ? (
+          <div className="p-5 bg-slate-950/40 border border-[#D4A373]/20 rounded-2xl space-y-4 text-center animate-in fade-in zoom-in-95 duration-200 mb-6">
+            <div className="flex justify-center">
+              <div className="w-12 h-12 rounded-full bg-[#D4A373]/10 flex items-center justify-center animate-bounce">
+                <Flame className="w-6 h-6 text-[#D4A373] fill-current" />
+              </div>
+            </div>
+            
+            <div className="space-y-1.5">
+              <h3 className="text-sm font-black text-[#D4A373] uppercase tracking-wider">Connexion externe sécurisée</h3>
+              <p className="text-[11px] text-gray-300 font-medium leading-relaxed max-w-xs mx-auto">
+                Une fenêtre de connexion Google a été initiée dans votre navigateur Google Chrome externe pour contourner les restrictions internes.
+              </p>
+            </div>
+            
+            <div className="py-3 border-t border-b border-white/5 space-y-3.5 text-left pl-1">
+              <div className="flex items-start gap-2.5 text-[10.5px]">
+                <span className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-gray-300 shrink-0">1</span>
+                <p className="text-gray-300 pt-0.5 leading-relaxed">Connectez-vous à votre compte Google standard sur Chrome.</p>
+              </div>
+              <div className="flex items-start gap-2.5 text-[10.5px]">
+                <span className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-gray-300 shrink-0">2</span>
+                <p className="text-gray-300 pt-0.5 leading-relaxed">Une fois fait, revenez dans cette application (ou appuyez sur Retour).</p>
+              </div>
+              <div className="flex items-start gap-2.5 text-[10.5px]">
+                <span className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-gray-300 shrink-0">3</span>
+                <p className="text-gray-300 pt-0.5 leading-relaxed">L'application se synchronisera immédiatement à votre retour.</p>
+              </div>
+            </div>
 
-          {/* CONTINUER AVEC FACEBOOK (Disabled / Préparation) */}
-          <div className="relative group">
+            <div className="pt-1.5 space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const currentUrl = window.location.origin;
+                  const redirectUrl = `${currentUrl}/?auth_transfer=google&transferId=${pendingTransferId}`;
+                  const webUrlWithoutHttps = redirectUrl.replace(/^https?:\/\//, "");
+                  const chromeIntentUrl = `intent://${webUrlWithoutHttps}#Intent;scheme=https;package=com.android.chrome;end`;
+                  window.location.href = chromeIntentUrl;
+                }}
+                className="w-full h-11 bg-[#D4AF37] hover:bg-[#be992c] text-[#0B0B0B] font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-[#D4AF37]/15 transition-all active:scale-98 cursor-pointer"
+              >
+                Réouvrir Chrome sécurisé 🚀
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRedirectPending(false);
+                  setLoading(false);
+                }}
+                className="w-full py-2 bg-transparent hover:bg-white/5 text-slate-400 font-bold text-[10.5px] uppercase transition-colors rounded-xl"
+              >
+                Annuler / Retour
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Only Allowed Action Buttons */
+          <div className="space-y-3.5 mb-6">
+            {/* CONTINUER AVEC GOOGLE */}
             <button
               type="button"
-              disabled
-              className="w-full h-12 flex items-center justify-center gap-3 bg-white/5 border border-white/10 text-slate-500 rounded-2xl font-bold text-xs uppercase tracking-wider cursor-not-allowed opacity-50"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full h-12 flex items-center justify-center gap-3 bg-[#D4AF37] hover:bg-[#be992c] text-[#0B0B0B] rounded-2xl transition-all duration-300 font-extrabold text-xs uppercase tracking-wider active:scale-98 cursor-pointer shadow-lg hover:shadow-[#D4AF37]/20"
             >
-              <Facebook className="w-5 h-5 fill-slate-500 stroke-none shrink-0" />
-              <span>Continuer avec Facebook (préparation)</span>
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                <path
+                  fill="#0B0B0B"
+                  d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.529-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.1C18.28 1.844 15.485 1 12.24 1 6.05 1 1.042 6.01 1.042 12.185S6.05 23.37 12.24 23.37c6.46 0 10.755-4.54 10.755-10.95 0-.735-.08-1.3-.175-1.833h-10.58z"
+                />
+              </svg>
+              <span>{loading ? "Liaison en cours..." : "Continuer avec Google"}</span>
             </button>
+
+            {/* CONTINUER AVEC FACEBOOK (Disabled / Préparation) */}
+            <div className="relative group">
+              <button
+                type="button"
+                disabled
+                className="w-full h-12 flex items-center justify-center gap-3 bg-white/5 border border-white/10 text-slate-500 rounded-2xl font-bold text-xs uppercase tracking-wider cursor-not-allowed opacity-50"
+              >
+                <Facebook className="w-5 h-5 fill-slate-500 stroke-none shrink-0" />
+                <span>Continuer avec Facebook (préparation)</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Escape hatch pass button */}
         {onClose && (

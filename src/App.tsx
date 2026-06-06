@@ -8,6 +8,8 @@ import {
   Share2, Bookmark, Play, Pause, Volume2, Lock, Eye, Check, ChevronLeft, Send, Briefcase, Bell
 } from "lucide-react";
 import { gomboAuth, gomboDB, isFirebaseMock } from "./firebase";
+import { auth, db } from "./lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 import { UserProfile, Gombo, SocialPost, GomboNotification } from "./types";
 import { useAuth } from "./AuthContext";
 
@@ -89,6 +91,74 @@ export default function App() {
 
   // Mock Mode reactive state
   const [mockMode, setMockMode] = useState(isFirebaseMock);
+
+  // Chrome session transfer states
+  const [chromeAuthTransferPending, setChromeAuthTransferPending] = useState(false);
+  const [chromeAuthSuccess, setChromeAuthSuccess] = useState(false);
+  const [chromeAuthError, setChromeAuthError] = useState("");
+  const [transferIdParam, setTransferIdParam] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const params = new URLSearchParams(window.location.search);
+    const authTransfer = params.get("auth_transfer");
+    const transferId = params.get("transferId");
+    
+    if (authTransfer === "google" && transferId) {
+      console.log("🌟 [Google OAuth Chrome Transfer] Active session detected in Chrome! ID:", transferId);
+      setChromeAuthTransferPending(true);
+      setTransferIdParam(transferId);
+      
+      const executeChromeAuth = async () => {
+        try {
+          // Perform sign in using standard popup (it works flawlessly in standalone Chrome browsers!)
+          const res = await gomboAuth.loginWithGoogle();
+          console.log("✅ [Google OAuth Chrome Transfer] Popup success inside Chrome!", res);
+          
+          if (!res || !res.uid) {
+            throw new Error("Impossible d'obtenir les informations de l'utilisateur.");
+          }
+          
+          // Get low-level firebase auth user info
+          if (!auth || !auth.currentUser) {
+            throw new Error("La session Firebase n'a pas pu être instanciée dans Chrome.");
+          }
+          
+          // Obtain the idToken
+          const idToken = await auth.currentUser.getIdToken();
+          
+          // Write credentials to Firestore document
+          if (!db) {
+            throw new Error("Base de données Firestore inaccessible.");
+          }
+          const docRef = doc(db, "temp_auth_transfers", transferId);
+          await setDoc(docRef, {
+            idToken: idToken,
+            accessToken: "", // idToken is enough for credential auth
+            status: "success",
+            uid: auth.currentUser.uid,
+            email: auth.currentUser.email || "",
+            createdAt: new Date().toISOString()
+          }, { merge: true });
+          
+          console.log("💾 [Google OAuth Chrome Transfer] Credentials securely transmitted to Firestore!");
+          setChromeAuthSuccess(true);
+          
+          // Automatically try to open general custom scheme deep-link to redirect and call the APK back
+          setTimeout(() => {
+            window.location.href = `afrigombo://auth?transferId=${transferId}`;
+          }, 1500);
+          
+        } catch (err: any) {
+          console.error("❌ [Google OAuth Chrome Transfer] Failed during Chrome auth channel:", err);
+          setChromeAuthError(err?.message || "La connexion Google a échoué.");
+        }
+      };
+      
+      executeChromeAuth();
+    }
+  }, []);
 
   useEffect(() => {
     const handleMockChange = () => {
@@ -589,6 +659,83 @@ export default function App() {
 
   const urgentGombos = filteredGombos.filter(g => g.urgent);
   const normalGombos = filteredGombos.filter(g => !g.urgent);
+
+  if (chromeAuthTransferPending) {
+    return (
+      <div className="min-h-screen bg-[#070708] flex flex-col items-center justify-center font-sans text-white px-4">
+        <div className="relative max-w-md w-full bg-[#121214] rounded-3xl border border-[#D4A373]/20 p-8 text-center space-y-6 shadow-2xl overflow-hidden">
+          <div className="absolute top-0 left-1/4 w-32 h-32 bg-[#D4A373]/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full bg-[#D4A373]/10 flex items-center justify-center border border-[#D4A373]/20">
+                <Flame className="w-8 h-8 text-[#D4A373] fill-current" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <h1 className="text-2xl font-black tracking-tight text-[#D4A373] uppercase font-display">AFRIGOMBO AUTH SECURE</h1>
+            <p className="text-[10px] font-mono tracking-widest uppercase text-gray-400">Canal de liaison sécurisé actif</p>
+          </div>
+          
+          <div className="py-5 border-t border-b border-gray-800/80 space-y-3">
+            {chromeAuthError ? (
+              <div className="space-y-4 py-2">
+                <div className="w-12 h-12 rounded-full bg-red-500/15 flex items-center justify-center mx-auto text-red-500 border border-red-500/20">
+                  <X className="w-6 h-6 stroke-[3px]" />
+                </div>
+                <p className="text-sm text-red-400 font-bold">{chromeAuthError}</p>
+                <p className="text-xs text-gray-400">Une erreur est survenue lors de la communication sécurisée.</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="w-full py-2.5 bg-[#D4A373] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-[#D4A373]/20 active:scale-98 transition-all"
+                >
+                  Réessayer la connexion
+                </button>
+              </div>
+            ) : chromeAuthSuccess ? (
+              <div className="space-y-4 py-2 animate-in fade-in zoom-in duration-300">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto text-emerald-500 border border-emerald-500/20">
+                  <Check className="w-6 h-6 stroke-[3px]" />
+                </div>
+                <p className="text-sm text-emerald-400 font-bold">CONNEXION VALIDÉE !</p>
+                <p className="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
+                  Votre identité a été vérifiée avec succès. Vous pouvez maintenant retourner dans l'application Android.
+                </p>
+                
+                <a
+                  href={`afrigombo://auth?transferId=${transferIdParam}`}
+                  className="inline-block px-6 py-3 bg-[#D4A373] text-black font-black rounded-xl shadow-lg shadow-[#D4A373]/35 hover:scale-[1.02] active:scale-98 transition-all text-sm w-full uppercase tracking-wider text-center"
+                >
+                  Retourner vers l'application 🚀
+                </a>
+              </div>
+            ) : (
+              <div className="space-y-4 py-4">
+                <div className="flex items-center justify-center gap-2">
+                  <span className="w-2.5 h-2.5 bg-[#D4A373] rounded-full animate-bounce delay-100" />
+                  <span className="w-2.5 h-2.5 bg-[#D4A373] rounded-full animate-bounce delay-200" />
+                  <span className="w-2.5 h-2.5 bg-[#D4A373] rounded-full animate-bounce delay-300" />
+                </div>
+                <p className="text-xs text-gray-300 max-w-xs mx-auto leading-relaxed font-medium">
+                  Connexion sécurisée via le navigateur Google Chrome de votre smartphone...
+                </p>
+                <p className="text-[11px] text-gray-400 italic">
+                  Veuillez valider la fenêtre de dialogue Google qui vient de s'ouvrir.
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <p className="text-[9px] text-slate-500 font-mono tracking-wider">
+            Y'A GOMBO MUSIC - SHOWBIZ IVOIRIEN
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (authLoading) {
     return (

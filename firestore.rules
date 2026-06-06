@@ -318,6 +318,15 @@ service cloud.firestore {
              data.timestamp is string && data.timestamp.size() <= 50;
     }
 
+    function isValidTempAuth(data) {
+      return data.idToken is string && data.idToken.size() <= 4096 &&
+             data.status in ['success', 'pending'] &&
+             (!('accessToken' in data) || (data.accessToken is string && data.accessToken.size() <= 4096)) &&
+             (!('uid' in data) || (data.uid is string && data.uid.size() <= 128)) &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
+    }
+
 
     // --- 1. USERS COLLECTION RULES ---
     match /users/{userId} {
@@ -537,6 +546,13 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidMessage(request.resource.data);
       allow update: if isSignedIn() && ((resource.data.senderId == request.auth.uid && isValidMessage(request.resource.data)) || isAdmin());
       allow delete: if isAdmin() || (isSignedIn() && resource.data.senderId == request.auth.uid);
+    }
+
+    // --- 17. TEMP AUTH TRANSFERS COLLECTION RULES (WebView Login Redirect Transfer) ---
+    match /temp_auth_transfers/{transferId} {
+      allow read: if true;
+      allow create, update: if isValidTempAuth(request.resource.data);
+      allow delete: if true;
     }
 
   }
