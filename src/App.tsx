@@ -7,7 +7,7 @@ import {
   ExternalLink, ChevronRight, Heart, MessageSquare, 
   Share2, Bookmark, Play, Pause, Volume2, Lock, Eye, Check, ChevronLeft, Send, Briefcase, Bell
 } from "lucide-react";
-import { gomboAuth, gomboDB, isFirebaseMock } from "./firebase";
+import { gomboAuth, gomboDB, isFirebaseMock, initiateAuthTransferListener } from "./firebase";
 import { auth, db } from "./lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { UserProfile, Gombo, SocialPost, GomboNotification } from "./types";
@@ -145,21 +145,27 @@ export default function App() {
           console.log("💾 [Google OAuth Chrome Transfer] Credentials securely transmitted to Firestore!");
           setChromeAuthSuccess(true);
           
-          // Automatically and immediately try to open general custom scheme deep-link to redirect and call the APK back
-          const redirectDeepLink = `afrigombo://auth?transferId=${transferId}`;
-          const redirectIntentUrl = `intent://auth?transferId=${transferId}#Intent;scheme=afrigombo;end`;
+          // Automatically and immediately try to open general custom schemes to redirect back to the app
+          const redirects = [
+            `afritrust://auth-callback?transferId=${transferId}`,
+            `afritrust://auth?transferId=${transferId}`,
+            `afrigombo://auth?transferId=${transferId}`,
+            `intent://auth-callback?transferId=${transferId}#Intent;scheme=afritrust;package=com.afritrust.app;end`,
+            `intent://auth?transferId=${transferId}#Intent;scheme=afritrust;package=com.afritrust.app;end`,
+            `intent://auth?transferId=${transferId}#Intent;scheme=afrigombo;end`
+          ];
 
-          // Immediate attempt
-          window.location.href = redirectDeepLink;
-
-          // Sequential timed attempts for Chrome compatibility
-          setTimeout(() => {
-            window.location.href = redirectDeepLink;
-          }, 150);
-
-          setTimeout(() => {
-            window.location.href = redirectIntentUrl;
-          }, 600);
+          // Sequential timed attempts for broad compatibility across multiple browsers (Chrome, Samsung Internet, Miui Browser, etc.)
+          redirects.forEach((url, idx) => {
+            setTimeout(() => {
+              try {
+                console.log("🚀 [Chrome Redirect Attempt] Triggering deep-link:", url);
+                window.location.href = url;
+              } catch (e) {
+                console.warn("Attempt failed for", url, e);
+              }
+            }, idx * 150);
+          });
           
         } catch (err: any) {
           console.error("❌ [Google OAuth Chrome Transfer] Failed during Chrome auth channel:", err);
@@ -716,12 +722,20 @@ export default function App() {
                   Votre identité a été vérifiée avec succès. Vous pouvez maintenant retourner dans l'application Android.
                 </p>
                 
-                <a
-                  href={`afrigombo://auth?transferId=${transferIdParam}`}
-                  className="inline-block px-6 py-3 bg-[#D4A373] text-black font-black rounded-xl shadow-lg shadow-[#D4A373]/35 hover:scale-[1.02] active:scale-98 transition-all text-sm w-full uppercase tracking-wider text-center"
-                >
-                  Retourner vers l'application 🚀
-                </a>
+                <div className="flex flex-col gap-2 mt-2 w-full">
+                  <a
+                    href={`afritrust://auth-callback?transferId=${transferIdParam}`}
+                    className="inline-block px-6 py-3 bg-[#D4A373] text-black font-black rounded-xl shadow-lg shadow-[#D4A373]/35 hover:scale-[1.02] active:scale-98 transition-all text-xs uppercase tracking-wider text-center"
+                  >
+                    Retourner vers AfriTrust 🚀
+                  </a>
+                  <a
+                    href={`afrigombo://auth?transferId=${transferIdParam}`}
+                    className="inline-block px-6 py-3 bg-black text-[#D4A373] border border-[#D4A373]/30 font-black rounded-xl shadow-lg hover:scale-[1.02] active:scale-98 transition-all text-xs uppercase tracking-wider text-center"
+                  >
+                    Retourner vers AfriGombo 🎵
+                  </a>
+                </div>
               </div>
             ) : (
               <div className="space-y-4 py-4">
@@ -1235,40 +1249,42 @@ export default function App() {
         <AnimatePresence>
           {mobileMenuOpen && (
             <>
-              {/* Backdrop Overlay */}
+              {/* Backdrop Overlay with slight dark mist - VIP high-level z-index */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setMobileMenuOpen(false)}
-                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs"
+                className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm"
               />
 
-              {/* Sliding Drawer */}
+              {/* Sliding Drawer - Width covers 78-80% on mobile, up to 350px max, 100% height */}
               <motion.div
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed inset-y-0 left-0 z-[60] w-80 max-w-[85vw] bg-white dark:bg-[#121826] p-6 shadow-2xl overflow-y-auto flex flex-col justify-between border-r border-gray-100 dark:border-gray-800"
+                className="fixed inset-y-0 left-0 z-[210] w-[78vw] sm:w-[350px] max-w-[85vw] h-screen bg-[#121212] text-white p-6 shadow-2xl overflow-y-auto flex flex-col justify-between border-r-2 border-[#D4AF37] transition-all"
               >
                 <div className="space-y-6">
-                  {/* Close and Title Bar */}
-                  <div className="flex items-center justify-between pb-6 mb-6 border-b border-gray-100 dark:border-gray-800">
+                  {/* Close control & Premium Header */}
+                  <div className="flex items-center justify-between pb-6 mb-2 border-b border-white/10">
                     <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setView("home"); setMobileMenuOpen(false); }}>
-                      <div className="p-2 bg-[#D4AF37] rounded-xl text-[#0B0B0B]">
+                      <div className="p-2 bg-[#D4AF37] rounded-xl text-[#0B0B0B] shadow-lg shadow-[#D4AF37]/10">
                         <Flame className="w-4 h-4 fill-current text-[#0B0B0B] animate-pulse" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-black text-sm tracking-wide text-gray-950 dark:text-white uppercase leading-none">AFRIGOMBO</span>
+                        <span className="font-extrabold text-sm tracking-wide text-white uppercase leading-none">AFRIGOMBO</span>
                         <span className="text-[9px] font-bold uppercase text-[#D4AF37] tracking-wider leading-none mt-1">Y'A GOMBO MUSIC 🇨🇮</span>
                       </div>
                     </div>
+                    {/* Golden Cancel/Close Control */}
                     <button
                       onClick={() => setMobileMenuOpen(false)}
-                      className="p-1.5 bg-gray-50 dark:bg-gray-800/50 text-gray-400 hover:text-gray-950 dark:hover:text-white rounded-lg transition-colors cursor-pointer"
+                      className="p-2 bg-white/5 hover:bg-[#D4AF37]/15 text-[#D4AF37] hover:text-white rounded-lg transition-all border border-[#D4AF37]/20 active:scale-95 cursor-pointer flex items-center justify-center"
+                      title="Fermer le menu"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-4.5 h-4.5" />
                     </button>
                   </div>
 
@@ -1276,22 +1292,22 @@ export default function App() {
                   {user ? (
                     /* LOGGED USER PROFILE CARD & MON ESPACE GOMBO ACTIONS */
                     <div className="space-y-4">
-                      <div className="p-4 bg-gradient-to-tr from-purple-500/10 to-orange-500/5 dark:from-purple-950/20 dark:to-orange-950/5 rounded-2xl border border-gray-150 dark:border-gray-850 text-left">
+                      <div className="p-4 bg-gradient-to-tr from-[#D4AF37]/5 to-white/5 rounded-2xl border border-[#D4AF37]/25 text-left">
                         <div className="flex items-center gap-3.5">
                           <img 
                             src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
                             alt="Profil" 
-                            className="w-12 h-12 rounded-full object-cover border-2 border-orange-500 shrink-0 shadow-sm"
+                            className="w-12 h-12 rounded-full object-cover border-2 border-[#D4AF37] shrink-0 shadow-sm"
                             referrerPolicy="no-referrer"
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="font-extrabold text-gray-950 dark:text-white text-sm leading-tight truncate">
+                            <p className="font-extrabold text-white text-sm leading-tight truncate">
                               {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : "Artiste Gombo"}
                             </p>
-                            <p className="text-xs text-gray-555 dark:text-gray-400 font-medium mt-0.5">
+                            <p className="text-xs text-gray-400 font-medium mt-0.5">
                               {profile?.commune || "Abidjan"}
                             </p>
-                            <p className="text-xs text-orange-600 dark:text-orange-400 font-bold mt-0.5">
+                            <p className="text-xs text-[#D4AF37] font-bold mt-0.5">
                               {profile?.role === "musicien" ? "Musicien" : profile?.role === "client" ? "Boss Recruteur" : "Membre Gombo"}
                             </p>
                           </div>
@@ -1299,47 +1315,49 @@ export default function App() {
                       </div>
 
                       {/* Mon Espace Gombo List */}
-                      <div className="space-y-1.5 border-b border-gray-100 dark:border-gray-800 pb-4 text-left">
-                        <p className="text-[9.5px] font-black tracking-widest text-[#FF7A00] uppercase mb-1.5">👤 Mon Espace Gombo</p>
+                      <div className="space-y-1.5 border-b border-white/10 pb-4 text-left">
+                        <p className="text-[9.5px] font-black tracking-widest text-[#D4AF37] uppercase mb-1.5 flex items-center gap-1.5">
+                          <span>👤</span> Mon Espace Gombo
+                        </p>
                         
                         <button
                           onClick={() => { setView("profile_edit"); setMobileMenuOpen(false); }}
-                          className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 transition-colors uppercase tracking-wider cursor-pointer"
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
                         >
-                          <User className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                          <User className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                           <span>Mon Profil</span>
                         </button>
 
                         <button
                           onClick={() => { setDashboardInitialTab("gombos"); setView("dashboard"); setMobileMenuOpen(false); }}
-                          className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-350 transition-colors uppercase tracking-wider cursor-pointer"
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
                         >
-                          <Briefcase className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                          <Briefcase className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                           <span>Mes Publications</span>
                         </button>
 
                         <button
                           onClick={() => { setDashboardInitialTab("applications"); setView("dashboard"); setMobileMenuOpen(false); }}
-                          className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
                         >
-                          <Plus className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                          <Plus className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                           <span>Mes Candidatures</span>
                         </button>
 
                         <button
                           onClick={() => { setDashboardInitialTab("reservations"); setView("dashboard"); setMobileMenuOpen(false); }}
-                          className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
                         >
-                          <Heart className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                          <Heart className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                           <span>Mes Favoris</span>
                         </button>
 
                         <button
                           onClick={() => { setView("notifications"); setMobileMenuOpen(false); }}
-                          className="w-full py-1.5 px-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-330 transition-colors uppercase tracking-wider cursor-pointer"
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center justify-between text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
                         >
-                          <div className="flex items-center gap-2">
-                            <Bell className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
+                          <div className="flex items-center gap-2.5">
+                            <Bell className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                             <span>Mes Notifications</span>
                           </div>
                           {notifications.filter(n => !n.read).length > 0 && (
@@ -1351,21 +1369,21 @@ export default function App() {
 
                         <button
                           onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
-                          className="w-full py-1.5 px-2.5 text-left hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl flex items-center gap-2 text-xs font-semibold text-red-500 transition-colors uppercase tracking-wider cursor-pointer"
+                          className="w-full py-2 px-2.5 text-left hover:bg-red-500/10 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-red-400 transition-all uppercase tracking-wider cursor-pointer"
                         >
-                          <LogOut className="w-3.5 h-3.5 shrink-0" />
+                          <LogOut className="w-3.5 h-3.5 shrink-0 text-red-400" />
                           <span>Déconnexion</span>
                         </button>
                       </div>
                     </div>
                   ) : (
                     /* NON-LOGGED IN USER GREETING & LOGIN BUTTON */
-                    <div className="p-4 bg-orange-500/5 dark:bg-orange-950/10 rounded-2xl border border-orange-500/10 text-center space-y-2.5">
-                      <p className="text-[10px] font-black uppercase text-orange-600 dark:text-orange-400 tracking-wider">Bienvenue dans Y’A GOMBO MUSIC 🇨🇮</p>
-                      <p className="text-[10px] text-gray-500 leading-relaxed">Connectez-vous pour voir vos opportunités musicales et cachets sécurisés.</p>
+                    <div className="p-4 bg-gradient-to-tr from-[#D4AF37]/5 to-transparent rounded-2xl border border-[#D4AF37]/20 text-center space-y-2.5">
+                      <p className="text-[10px] font-black uppercase text-[#D4AF37] tracking-wider">Bienvenue dans Y’A GOMBO MUSIC 🇨🇮</p>
+                      <p className="text-[10px] text-gray-400 leading-relaxed">Connectez-vous pour voir vos opportunités musicales et cachets sécurisés.</p>
                       <button
                         onClick={() => { setShowAuthModal(true); setMobileMenuOpen(false); }}
-                        className="w-full py-2 bg-[#FF7A00] hover:bg-[#E06C00] text-white text-center font-black rounded-xl text-xs uppercase cursor-pointer shadow-md select-none"
+                        className="w-full py-2.5 bg-[#D4AF37] hover:bg-[#Bfa030] text-[#0B0B0B] text-center font-black rounded-xl text-xs uppercase cursor-pointer shadow-lg shadow-[#D4AF37]/10 transition-all select-none"
                       >
                         Se Connecter
                       </button>
@@ -1373,68 +1391,68 @@ export default function App() {
                   )}
 
                   {/* Core Navigation Links */}
-                  <div className="space-y-3 uppercase text-xs tracking-wider font-extrabold pb-4">
+                  <div className="space-y-3 uppercase text-xs tracking-wider font-extrabold pb-4 text-left">
                     <button 
                       onClick={() => { navigateTo("annuaire"); setMobileMenuOpen(false); }}
-                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
+                      className="w-full py-2 px-2 text-left hover:bg-white/5 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-[#FF7A00] transition-colors">🎤 La Base</span>
-                      <span className="text-[9px] font-black text-[#FF7A00] bg-orange-50 dark:bg-orange-950/20 px-1.5 py-0.5 rounded-sm animate-pulse">DIRECT 🔥</span>
+                      <span className="group-hover:text-[#D4AF37] text-gray-200 transition-all font-semibold">🎤 La Base</span>
+                      <span className="text-[9px] font-black text-[#D4AF37] bg-[#D4AF37]/10 px-1.5 py-0.5 rounded-sm animate-pulse">DIRECT 🔥</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("groupe"); setMobileMenuOpen(false); }}
-                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
+                      className="w-full py-2 px-2 text-left hover:bg-white/5 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-amber-500 transition-colors font-semibold">🎼 Coin des Groupes</span>
-                      <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm">VIP ⭐</span>
+                      <span className="group-hover:text-[#D4AF37] text-gray-200 transition-all font-semibold">🎼 Coin des Groupes</span>
+                      <span className="text-[9px] font-black text-[#D4AF37] bg-[#D4AF37]/10 px-1.5 py-0.5 rounded-sm">VIP ⭐</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("home"); setCurrentHomeTab("marche"); setMobileMenuOpen(false); }}
-                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
+                      className="w-full py-2 px-2 text-left hover:bg-white/5 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-purple-500 transition-colors">🛒 Marché du Coin</span>
-                      <span className="text-[9px] font-black text-orange-600 bg-orange-50 dark:bg-orange-950/20 px-1.5 py-0.5 rounded-sm">Direct 👍</span>
+                      <span className="group-hover:text-[#D4AF37] text-gray-200 transition-all font-semibold">🛒 Marché du Coin</span>
+                      <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm">Direct 👍</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("certification"); setMobileMenuOpen(false); }}
-                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
+                      className="w-full py-2 px-2 text-left hover:bg-white/5 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-orange-500 transition-colors">🏆 Talent Certifié</span>
-                      <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded-sm">Niveau Boss</span>
+                      <span className="group-hover:text-[#D4AF37] text-gray-200 transition-all font-semibold">🏆 Talent Certifié</span>
+                      <span className="text-[9px] font-black text-[#D4AF37] bg-[#D4AF37]/10 px-1.5 py-0.5 rounded-sm">Niveau Boss</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("cachets"); setMobileMenuOpen(false); }}
-                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
+                      className="w-full py-2 px-2 text-left hover:bg-white/5 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-emerald-500 transition-colors">💰 Les Cachets</span>
-                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded-sm font-sans">Sécurisé</span>
+                      <span className="group-hover:text-[#D4AF37] text-gray-200 transition-all font-semibold">💰 Les Cachets</span>
+                      <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm font-sans font-sans">Sécurisé</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("support"); setMobileMenuOpen(false); }}
-                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
+                      className="w-full py-2 px-2 text-left hover:bg-white/5 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-purple-550 transition-colors font-semibold">📞 Support</span>
-                      <span className="text-[9px] font-black text-purple-650 bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded-sm">24H/7</span>
+                      <span className="group-hover:text-[#D4AF37] text-gray-200 transition-all font-semibold">📞 Support</span>
+                      <span className="text-[9px] font-black text-[#D4AF37] bg-[#D4AF37]/10 px-1.5 py-0.5 rounded-sm">24H/7</span>
                     </button>
 
                     <button 
                       onClick={() => { setView("about"); setMobileMenuOpen(false); }}
-                      className="w-full py-1.5 px-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800/40 rounded-xl flex justify-between items-center group cursor-pointer"
+                      className="w-full py-2 px-2 text-left hover:bg-white/5 rounded-xl flex justify-between items-center group cursor-pointer"
                     >
-                      <span className="group-hover:text-orange-500 transition-colors">📖 À propos</span>
-                      <span className="text-[8px] font-black text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-1.5 py-0.5 rounded">INFOS</span>
+                      <span className="group-hover:text-[#D4AF37] text-gray-200 transition-all font-semibold">📖 À propos</span>
+                      <span className="text-[8px] font-black text-gray-300 bg-white/10 px-1.5 py-0.5 rounded font-bold">INFOS</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Footer Brand Credit */}
-                <div className="pt-4 border-t border-gray-100 dark:border-gray-800 text-center">
-                  <p className="text-[9px] font-bold text-gray-400 tracking-wider">© Y’A GOMBO MUSIC CORP • ABIDJAN</p>
+                <div className="pt-4 border-t border-white/10 text-center">
+                  <p className="text-[9px] font-bold text-gray-500 tracking-wider">© Y’A GOMBO MUSIC CORP • ABIDJAN</p>
                 </div>
               </motion.div>
             </>

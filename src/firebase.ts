@@ -83,45 +83,122 @@ export const isWebView = (): boolean => {
   return isAndroidWebView || isCustomWebView || isGenericWebView || isDisallowedUseragent;
 };
 
-// Check for active transfer ID recovery on boot
-if (typeof window !== "undefined") {
-  const activeTransferId = localStorage.getItem("active_google_transfer_id");
-  if (activeTransferId && !isFirebaseMock && auth && db) {
-    console.log("🕵️ [WebView Auth Recovery] Found active Google Transfer ID on boot:", activeTransferId);
-    
-    const unsubscribe = onSnapshot(doc(db, "temp_auth_transfers", activeTransferId), async (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        if (data && data.status === "success" && data.idToken) {
-          console.log("🎉 [WebView Auth Recovery] Transfer session successfully detected on boot! Logging in...");
-          localStorage.removeItem("active_google_transfer_id");
+// Shared active listeners map to prevent duplicate readers
+const activeTransferListeners = new Set<string>();
+
+export function initiateAuthTransferListener(transferId: string) {
+  if (!transferId || activeTransferListeners.has(transferId)) return;
+  
+  if (isFirebaseMock || !auth || !db) {
+    console.warn("⚠️ [WebView Auth Listen] Real Firebase not initialized or in Mock Mode. Skipping cloud auth listener.");
+    return;
+  }
+
+  console.log("🕵️ [WebView Auth Listen] Activating snapshot on temp_auth_transfers for ID:", transferId);
+  activeTransferListeners.add(transferId);
+  localStorage.setItem("active_google_transfer_id", transferId);
+
+  const docRef = doc(db, "temp_auth_transfers", transferId);
+  const unsubscribe = onSnapshot(docRef, async (snap) => {
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data && data.status === "success" && data.idToken) {
+        console.log("🎉 [WebView Auth Listen] Session successfully detected! Logging in user standard credentials...");
+        
+        // Remove tracking references
+        activeTransferListeners.delete(transferId);
+        localStorage.removeItem("active_google_transfer_id");
+        unsubscribe();
+
+        try {
+          const credential = GoogleAuthProvider.credential(data.idToken, data.accessToken || null);
+          await signInWithCredential(auth, credential);
           
+          console.log("✅ [WebView Auth Listen] User successfully signed in via Credential!");
+
+          // Clean up temp transfer document for user privacy
           try {
-            const credential = GoogleAuthProvider.credential(data.idToken, data.accessToken || null);
-            await signInWithCredential(auth, credential);
-            
-            // Clean up document for user privacy
-            try {
-              await deleteDoc(doc(db, "temp_auth_transfers", activeTransferId));
-            } catch (e) {
-              console.warn("Non-fatal doc cleanup error during recovery:", e);
-            }
-            
-            // Dispatch a global event so the UI can refresh if needed
-            window.dispatchEvent(new CustomEvent("webViewAuthSuccess", { 
-              detail: { uid: auth.currentUser?.uid, email: auth.currentUser?.email } 
-            }));
-            
-            unsubscribe();
-          } catch (err) {
-            console.error("❌ [WebView Auth Recovery] Failed to log in using booted transfer credential:", err);
+            await deleteDoc(docRef);
+          } catch (e) {
+            console.warn("Non-fatal doc cleanup error during recovery:", e);
           }
+          
+          // Dispatch a global event so the UI can refresh if needed
+          window.dispatchEvent(new CustomEvent("webViewAuthSuccess", { 
+            detail: { uid: auth.currentUser?.uid, email: auth.currentUser?.email } 
+          }));
+        } catch (err) {
+          console.error("❌ [WebView Auth Listen] Failed to log in with secure token:", err);
         }
       }
-    }, (err) => {
-      console.warn("⚠️ [WebView Auth Recovery] Snapshot error listening to recovery transfer:", err);
-    });
+    }
+  }, (err) => {
+    console.warn("⚠️ [WebView Auth Listen] Snapshot transfer error:", err);
+    activeTransferListeners.delete(transferId);
+  });
+}
+
+export function detectAndProcessTransferId(sourceUrl?: string) {
+  try {
+    const urlString = sourceUrl || (typeof window !== "undefined" ? window.location.href : "");
+    if (!urlString) return false;
+
+    // Try parsing search queries
+    const urlObj = new URL(urlString, window.location.origin);
+    let transferId = urlObj.searchParams.get("transferId");
+    
+    // If not found, try manual search check
+    if (!transferId && urlString.includes("transferId=")) {
+      const parts = urlString.split("transferId=");
+      if (parts[1]) {
+        const value = parts[1].split("&")[0].split("#")[0];
+        if (value) transferId = value;
+      }
+    }
+
+    if (transferId) {
+      console.log("🎯 [WebView Auth Catcher] Successfully extracted transferId from URL:", transferId);
+      initiateAuthTransferListener(transferId);
+      return true;
+    }
+  } catch (e) {
+    console.warn("⚠️ [WebView Auth Catcher] Error parsing URL:", e);
   }
+  return false;
+}
+
+// Check for active transfer ID recovery on boot
+if (typeof window !== "undefined") {
+  // 1. Process current URL on boot
+  detectAndProcessTransferId();
+
+  // 2. Fallback to active transfer ID in localStorage
+  const backupId = localStorage.getItem("active_google_transfer_id");
+  if (backupId) {
+    initiateAuthTransferListener(backupId);
+  }
+
+  // 3. Register native window handleOpenURL Cordova interceptor
+  (window as any).handleOpenURL = function (url: string) {
+    console.log("🔗 [Native Deep Link] Cordova handleOpenURL fired with URL:", url);
+    detectAndProcessTransferId(url);
+  };
+
+  // 4. Register window custom scheme events
+  window.addEventListener("handleOpenURL", (e: any) => {
+    const url = e?.detail || e?.url;
+    if (url) {
+      console.log("🔗 [Native Deep Link] handleOpenURL Event caught URL:", url);
+      detectAndProcessTransferId(url);
+    }
+  });
+
+  // 5. General window hash changes or navigation pops
+  const handleNavPop = () => {
+    detectAndProcessTransferId();
+  };
+  window.addEventListener("hashchange", handleNavPop);
+  window.addEventListener("popstate", handleNavPop);
 }
 
 // Ensure the required connection test run from the skill
