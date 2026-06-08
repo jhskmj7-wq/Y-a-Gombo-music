@@ -90,28 +90,72 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           </div>
 
           <div>
-            <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
-              <h2 className="text-2xl font-black tracking-tight text-gray-950 dark:text-white uppercase">
-                {currentUserProfile.firstName} {currentUserProfile.lastName}
-              </h2>
-              {currentUserProfile.artistName && (
-                <span className="text-sm font-black text-[#FF7A00] block">
-                  ({currentUserProfile.artistName})
-                </span>
-              )}
-              <span className="text-[9px] font-black tracking-widest text-[#FF7A00] dark:text-yellow-400 uppercase bg-orange-50 dark:bg-yellow-950/20 px-2 py-0.5 rounded-md">
-                🌟 PRO VÉRIFIÉ
-              </span>
-
-              {/* Activity Streak */}
-              {(() => {
-                const streak = localStorage.getItem("gombo_activity_streak") || "1";
-                return (
-                  <span className="text-[9px] font-bold bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-md border border-orange-100/50 dark:border-orange-950/40">
-                    🔥 {streak} {parseInt(streak) > 1 ? "jours" : "jour"}
+            <div className="flex flex-col gap-1.5 sm:items-start">
+              <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
+                <h2 className="text-2xl font-black tracking-tight text-gray-950 dark:text-white uppercase font-sans">
+                  {currentUserProfile.firstName} {currentUserProfile.lastName}
+                </h2>
+                {currentUserProfile.artistName && (
+                  <span className="text-sm font-black text-[#D4AF37] block">
+                    ({currentUserProfile.artistName})
                   </span>
-                );
-              })()}
+                )}
+                {/* Activity Streak */}
+                {(() => {
+                  const streak = localStorage.getItem("gombo_activity_streak") || "1";
+                  return (
+                    <span className="text-[9px] font-bold bg-amber-500/10 text-[#D4AF37] px-2 py-0.5 rounded-md border border-[#D4AF37]/20">
+                      🔥 {streak} {parseInt(streak) > 1 ? "jours d'affilée" : "jour d'activité"}
+                    </span>
+                  );
+                })()}
+              </div>
+
+              {/* SECTION VIII: GAMIFICATION LEVEL ROW */}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 mt-1 font-sans">
+                {(() => {
+                  const activityCount = (myPosts?.length || 0) + (dynamicAppsCount || 0) + (currentUserProfile.gigsCompleted || 0);
+                  const isActif = activityCount >= 1;
+                  const isCertifie = activityCount >= 5 || currentUserProfile.isCertified === true;
+                  const isBoss = currentUserProfile.role === "client" || currentUserProfile.role === "admin" || (currentUserProfile as any).isPremium === true || currentUserProfile.email === "jhs.kmj7@gmail.com";
+
+                  return (
+                    <>
+                      {/* Badge 1: Nouveau Talent */}
+                      <span className="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/35 shadow-xs">
+                        🥉 Nouveau Talent
+                      </span>
+
+                      {/* Badge 2: Talent Actif */}
+                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 border transition-all ${
+                        isActif 
+                          ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/35 shadow-xs" 
+                          : "bg-gray-800/40 text-gray-500 border-gray-800/80 opacity-40 line-through"
+                      }`} title={isActif ? "Badge obtenu !" : "Envoyez au moins 1 candidature ou post pour débloquer"}>
+                        🥈 Talent Actif
+                      </span>
+
+                      {/* Badge 3: Talent Certifié */}
+                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 border transition-all ${
+                        isCertifie 
+                          ? "bg-purple-500/10 text-purple-400 border-purple-500/35 shadow-xs" 
+                          : "bg-gray-800/40 text-gray-500 border-gray-800/80 opacity-40"
+                      }`} title={isCertifie ? "Talent d'excellence certifié !" : "Cumulez au moins 5 actions pour débloquer"}>
+                        🥇 Talent Certifié
+                      </span>
+
+                      {/* Badge 4: Niveau Boss */}
+                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 border transition-all ${
+                        isBoss 
+                          ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-white font-black border-yellow-500 shadow-sm animate-pulse" 
+                          : "bg-gray-800/40 text-gray-500 border-gray-800/80 opacity-40"
+                      }`} title={isBoss ? "Niveau Boss Suprême !" : "Réservé aux Promoteurs, Admins & Abonnés Premium"}>
+                        👑 Niveau Boss
+                      </span>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
 
             {/* Account Type and UID block */}

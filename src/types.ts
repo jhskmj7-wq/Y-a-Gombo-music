@@ -68,6 +68,8 @@ export interface UserProfile {
 
   themePreference?: "dark-gold" | "light-gold" | "night-navy";
 
+  points?: number; // Point Gamification system
+
   lastLoginAt?: string;
 
   createdAt: string; // ISO String
@@ -439,6 +441,120 @@ export interface AdminLog {
   targetId: string;
   createdAt: string | any; // ISO split string or Firestore Timestamp
 }
+
+export interface AcademyGuide {
+  id: string;
+  title: string;
+  category: "conseils" | "tarifs" | "contrat" | "promotion" | "securite" | "debutant" | "avance";
+  excerpt: string;
+  content: string; // text/markdown info
+  audioUrl?: string; // simulation link
+  videoUrl?: string;
+  pdfUrl?: string;
+  createdAt: string;
+}
+
+export type ContractStatus = "en_attente" | "accepte" | "termine" | "litige";
+
+export interface GomboSafeContract {
+  id: string;
+  creatorId: string;
+  creatorName: string;
+  partnerEmail: string;
+  partnerId?: string;
+  partnerName?: string;
+  title: string;
+  amount: number;
+  commission: number; // in CFA franc (FCFA)
+  conditions: string;
+  status: ContractStatus;
+  creatorAccepted: boolean;
+  partnerAccepted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GomboTicketEvent {
+  id: string;
+  creatorId: string;
+  creatorName: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  price: number; // 0 = gratuit
+  capacity: number;
+  ticketsSold: number;
+  createdAt: string;
+}
+
+export interface PurchasedTicket {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  buyerId: string;
+  buyerName: string;
+  buyerPhone: string;
+  pricePaid: number;
+  ticketCode: string;
+  createdAt: string;
+}
+
+export interface StudioMarketReview {
+  userId: string;
+  userName: string;
+  comment: string;
+  rating: number;
+  createdAt: string;
+}
+
+export interface StudioMarketItem {
+  id: string;
+  name: string;
+  category: "studio" | "beatmaker" | "photographe" | "videaste" | "graphiste" | "costumier" | "materiel";
+  description: string;
+  commune: string;
+  price: string;
+  phone: string;
+  image?: string;
+  rating: number;
+  reviews: StudioMarketReview[];
+  createdAt: string;
+}
+
+export interface CastingCall {
+  id: string;
+  creatorId: string;
+  creatorName: string;
+  title: string;
+  rolesNeeded: string;
+  description: string;
+  deadline: string;
+  commune: string;
+  budget: string;
+  applications: {
+    userId: string;
+    userName: string;
+    phone: string;
+    status: "en_attente" | "convoc" | "refus";
+    createdAt: string;
+  }[];
+  createdAt: string;
+}
+
+export interface VoiceAnnouncement {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  audioUrl: string; // simulation path
+  duration: number; // seconds
+  title: string;
+  commune: string;
+  createdAt: string;
+}
+
 
 
 

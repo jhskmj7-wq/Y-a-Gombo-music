@@ -13,9 +13,10 @@ interface DashboardsProps {
   onRefreshProfile: () => void;
   initialTab?: string;
   onBackToAdmin?: () => void;
+  onNavigateView?: (view: string) => void;
 }
 
-export default function Dashboards({ currentUserProfile, onRefreshProfile, initialTab, onBackToAdmin }: DashboardsProps) {
+export default function Dashboards({ currentUserProfile, onRefreshProfile, initialTab, onBackToAdmin, onNavigateView }: DashboardsProps) {
   const [activeTab, setActiveTab] = useState<
     "applications" | "gombos" | "renfort_express" | "favoris" | "groupes" | "historique" | "reservations" | "admin" | "waiting"
   >(() => {
@@ -59,6 +60,9 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
   const [waitingAnalytics, setWaitingAnalytics] = useState<any[]>([]);
 
   // Bento state resources
+  const [allGombos, setAllGombos] = useState<Gombo[]>([]);
+  const [allRenforts, setAllRenforts] = useState<Renfort[]>([]);
+  const [allGroups, setAllGroups] = useState<MusicGroup[]>([]);
   const [myRenforts, setMyRenforts] = useState<Renfort[]>([]);
   const [myRenfortApps, setMyRenfortApps] = useState<RenfortApplication[]>([]);
   const [favoriteTalents, setFavoriteTalents] = useState<UserProfile[]>([]);
@@ -103,6 +107,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
 
         // 1. Live Gombos
         unsubGombos = gomboDB.listenAllGombos((gombos) => {
+          setAllGombos(gombos);
           // 2. Live Applications
           unsubApps = gomboDB.listenApplications(async (applications) => {
             console.log("⚡ [Dashboard Sync] Live update triggered. Gombos:", gombos.length, "Apps:", applications.length);
@@ -138,6 +143,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
 
         // 3. Live Renforts
         unsubRenfor = gomboDB.listenAllRenforts((allRenfortsList) => {
+          setAllRenforts(allRenfortsList);
           const userRenforts = allRenfortsList.filter(r => r.userId === userUid);
           setMyRenforts(userRenforts);
         });
@@ -149,6 +155,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
 
         // 4. Live Groups
         unsubGroupsList = gomboDB.listenAllMusicGroups((allGroupsList) => {
+          setAllGroups(allGroupsList);
           const userGroupsList = allGroupsList.filter(g => 
             g.creatorId === userUid || 
             (g.followers && g.followers.includes(userUid)) || 
@@ -321,6 +328,58 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
   const groupesCount = myGroups.length;
   const historiqueCount = myActivities.length;
 
+  // 1. Gombos recommendations matching user's commune or musical taste
+  const userCommuneClean = (currentUserProfile.commune || "").trim().toLowerCase();
+  const userGenreClean = (currentUserProfile.musicGenre || "").trim().toLowerCase();
+  const userSpecialtyClean = (currentUserProfile.speciality || currentUserProfile.specialty || "").trim().toLowerCase();
+
+  const recommendedGombosList = allGombos.filter(g => {
+    if (g.clientId === currentUserProfile.uid) return false;
+    if (g.status !== "publie") return false;
+    
+    const matchesCommune = userCommuneClean && g.commune && g.commune.toLowerCase().includes(userCommuneClean);
+    const matchesGenre = userGenreClean && (
+      g.title.toLowerCase().includes(userGenreClean) ||
+      g.description.toLowerCase().includes(userGenreClean) ||
+      (g.eventType && g.eventType.toLowerCase().includes(userGenreClean))
+    );
+    return matchesCommune || matchesGenre;
+  });
+
+  const displayGombos = recommendedGombosList.length > 0 
+    ? recommendedGombosList.slice(0, 3) 
+    : allGombos.filter(g => g.clientId !== currentUserProfile.uid && g.status === "publie").slice(0, 3);
+
+  // 2. Renforts proches (Commune matching)
+  const recommendedRenfortsList = allRenforts.filter(r => {
+    if (r.userId === currentUserProfile.uid) return false;
+    if (r.status !== "ouvert") return false;
+    
+    const matchesCommune = userCommuneClean && r.commune && r.commune.toLowerCase().includes(userCommuneClean);
+    return matchesCommune;
+  });
+
+  const displayRenforts = recommendedRenfortsList.length > 0
+    ? recommendedRenfortsList.slice(0, 3)
+    : allRenforts.filter(r => r.userId !== currentUserProfile.uid && r.status === "ouvert").slice(0, 3);
+
+  // 3. Groupes correspondant aux spécialités
+  const recommendedGroupsList = allGroups.filter(g => {
+    if (g.creatorId === currentUserProfile.uid) return false;
+    if (g.followers && g.followers.includes(currentUserProfile.uid)) return false;
+    if (g.members && g.members.some(m => m.id === currentUserProfile.uid)) return false;
+
+    const matchesSpecialty = userSpecialtyClean && (
+      g.description.toLowerCase().includes(userSpecialtyClean) ||
+      (g.name && g.name.toLowerCase().includes(userSpecialtyClean))
+    );
+    return matchesSpecialty;
+  });
+
+  const displayGroups = recommendedGroupsList.length > 0
+    ? recommendedGroupsList.slice(0, 3)
+    : allGroups.filter(g => g.creatorId !== currentUserProfile.uid).slice(0, 3);
+
   return (
     <div className="space-y-6 text-left">
       {/* Overview Greeting Header Bar */}
@@ -364,6 +423,160 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
               <p className="text-2xl font-black font-mono">
                 {myReservations.reduce((sum, r) => sum + r.amount, 0).toLocaleString()} FCFA
               </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION VI: RECOMMANDATIONS PERSONNALISÉES */}
+      <div className="bg-[#121212] border border-[#D4AF37]/25 rounded-3xl p-5 shadow-sm text-left relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-[#D4AF37]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-800 pb-4 mb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1 px-2.5 bg-[#D4AF37]/10 border border-[#D4AF37]/35 text-[#D4AF37] text-[10px] font-black uppercase rounded-lg tracking-wider">
+                🔮 Intelligence de Recrutement
+              </span>
+              <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-ping" />
+            </div>
+            <h2 className="text-lg font-black text-white mt-1.5 font-sans tracking-tight">
+              Recommandations Personnalisées
+            </h2>
+            <p className="text-gray-400 text-[11px] mt-0.5">
+              Suggestions exclusives adaptées à votre commune (<span className="text-[#D4AF37] font-bold">{currentUserProfile.commune || "Abidjan"}</span>) et votre profil musical.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Column 1: Gombos/Opportunités */}
+          <div className="bg-[#0B0B0B] border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div>
+              <p className="text-xs font-black text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <span>🎯</span> Opportunités par style & zone
+              </p>
+              {displayGombos.length === 0 ? (
+                <p className="text-xs text-gray-500 py-4">Aucune opportunité disponible.</p>
+              ) : (
+                <div className="space-y-3">
+                  {displayGombos.map(g => {
+                    const isPrefMatch = g.commune?.toLowerCase().includes(userCommuneClean) || 
+                                        g.description?.toLowerCase().includes(userGenreClean);
+                    return (
+                      <div key={g.id} className="p-3 bg-[#121212] border border-gray-800 hover:border-[#D4AF37]/40 rounded-xl transition-all">
+                        <div className="flex justify-between items-start gap-1">
+                          <h4 className="text-xs font-black text-white truncate max-w-[140px]">{g.title}</h4>
+                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] shrink-0">
+                            {g.budget.toLocaleString()} F
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 truncate mt-1">{g.location} ({g.commune})</p>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-800/50">
+                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
+                            isPrefMatch ? "bg-amber-950/40 text-amber-400" : "bg-gray-800 text-gray-400"
+                          }`}>
+                            {isPrefMatch ? "🎯 Match parfait" : "⭐ Suggéré"}
+                          </span>
+                          {onNavigateView && (
+                            <button 
+                              onClick={() => onNavigateView("gombo_list")}
+                              className="text-[9px] font-bold text-white hover:text-[#D4AF37] transition-all"
+                            >
+                              Postuler →
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Column 2: Renforts Proches */}
+          <div className="bg-[#0B0B0B] border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div>
+              <p className="text-xs font-black text-cyan-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <span>⚡</span> Renforts proches détectés
+              </p>
+              {displayRenforts.length === 0 ? (
+                <p className="text-xs text-gray-500 py-4">Aucun renfort urgent disponible.</p>
+              ) : (
+                <div className="space-y-3">
+                  {displayRenforts.map(r => {
+                    const isNear = r.commune?.toLowerCase().includes(userCommuneClean);
+                    return (
+                      <div key={r.id} className="p-3 bg-[#121212] border border-gray-800 hover:border-[#D4AF37]/40 rounded-xl transition-all">
+                        <div className="flex justify-between items-start">
+                          <h4 className="text-xs font-black text-white truncate max-w-[140px]">{r.roleNeeded}</h4>
+                          <span className="text-[9px] font-black text-cyan-400">⚡ SOS</span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 truncate mt-1">Lieu: {r.commune} | {r.budget ? `${r.budget.toLocaleString()} F` : "Négociable"}</p>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-800/50">
+                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
+                            isNear ? "bg-cyan-950/40 text-cyan-400" : "bg-gray-800 text-gray-400"
+                          }`}>
+                            {isNear ? "📍 Proche" : "⭐ Recommandé"}
+                          </span>
+                          {onNavigateView && (
+                            <button 
+                              onClick={() => onNavigateView("renfort_express")}
+                              className="text-[9px] font-bold text-white hover:text-[#D4AF37] transition-all"
+                            >
+                              Joindre →
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Column 3: Groupes & Orchestres VIP */}
+          <div className="bg-[#0B0B0B] border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div>
+              <p className="text-xs font-black text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <span>🎼</span> Groupes pour vos spécialités
+              </p>
+              {displayGroups.length === 0 ? (
+                <p className="text-xs text-gray-500 py-4">Aucun groupe musical à proposer.</p>
+              ) : (
+                <div className="space-y-3">
+                  {displayGroups.map(g => {
+                    const isSpecMatch = g.description?.toLowerCase().includes(userSpecialtyClean) || 
+                                        g.name?.toLowerCase().includes(userSpecialtyClean);
+                    return (
+                      <div key={g.id} className="p-3 bg-[#121212] border border-gray-800 hover:border-[#D4AF37]/40 rounded-xl transition-all">
+                        <div className="flex justify-between items-start">
+                          <h4 className="text-xs font-black text-white truncate max-w-[140px]">{g.name}</h4>
+                          <span className="text-[9.5px] text-[#D4AF37] font-black uppercase">Orchestre</span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 truncate mt-1">{g.genres?.join(", ") || "Tous styles"}</p>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-800/50">
+                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
+                            isSpecMatch ? "bg-purple-950/40 text-purple-400" : "bg-gray-800 text-gray-400"
+                          }`}>
+                            {isSpecMatch ? "🎷 Spécialité" : "⭐ Tendance"}
+                          </span>
+                          {onNavigateView && (
+                            <button 
+                              onClick={() => onNavigateView("groupe")}
+                              className="text-[9px] font-bold text-white hover:text-[#D4AF37] transition-all"
+                            >
+                              Intégrer →
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>

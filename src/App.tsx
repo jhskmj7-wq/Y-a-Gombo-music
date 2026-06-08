@@ -73,6 +73,7 @@ import NotificationCenter from "./components/NotificationCenter";
 import ActivityFeedView from "./components/ActivityFeedView";
 import MessagesView from "./components/MessagesView";
 import AdminCentre from "./components/AdminCentre";
+import GomboMusikEcosystem from "./components/GomboMusikEcosystem";
 import { PrivacyPage, TermsPage, DeleteAccountPage, AboutPage, SupportPage, CachetsPage } from "./components/PublicPages";
 
 const ABIDJAN_COMMUNES = [
@@ -1063,6 +1064,16 @@ export default function App() {
               </button>
 
               <button 
+                onClick={() => setView("showbiz20")}
+                className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1 ${
+                  view === "showbiz20" ? "text-amber-400 font-extrabold text-[#D4AF37]" : "text-gray-500 hover:text-gray-400 dark:hover:text-white"
+                }`}
+              >
+                <span>🌟 Écosystème 2.0</span>
+                <span className="absolute -top-2 right-0 text-[7px] font-black uppercase text-white bg-[#D4AF37] px-1 rounded-md leading-none py-0.5 animate-pulse">NOUVEAU</span>
+              </button>
+
+              <button 
                 onClick={() => setView("activity")}
                 className={`relative px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-1 ${
                   view === "activity" ? "text-[#D4AF37] dark:text-[#D4AF37] font-extrabold" : "text-gray-500 hover:text-gray-400 dark:hover:text-white"
@@ -1515,6 +1526,14 @@ export default function App() {
                     >
                       <span className="group-hover:text-[#D4AF37] text-gray-200 transition-all font-semibold">🏆 Talent Certifié</span>
                       <span className="text-[9px] font-black text-[#D4AF37] bg-[#D4AF37]/10 px-1.5 py-0.5 rounded-sm">Niveau Boss</span>
+                    </button>
+
+                    <button 
+                      onClick={() => { setView("showbiz20"); setMobileMenuOpen(false); }}
+                      className="w-full py-2 px-2 text-left hover:bg-white/5 rounded-xl flex justify-between items-center group cursor-pointer"
+                    >
+                      <span className="group-hover:text-amber-400 text-amber-100 transition-all font-semibold flex items-center gap-1">🌟 Écosystème 2.0</span>
+                      <span className="text-[9px] font-black text-white bg-amber-500 px-1.5 py-0.5 rounded-sm animate-pulse font-sans">NOUVEAU</span>
                     </button>
 
                     <button 
@@ -2484,6 +2503,7 @@ export default function App() {
                   onRefreshProfile={refreshProfile}
                   initialTab={dashboardInitialTab}
                   onBackToAdmin={() => setView("admin")}
+                  onNavigateView={setView}
                 />
               </motion.div>
             )
@@ -2649,6 +2669,21 @@ export default function App() {
                 currentUserProfile={profile}
                 onRefreshProfile={refreshProfile}
                 onShowAuth={() => setShowAuthModal(true)}
+                onNavigateView={(targetView) => setView(targetView)}
+              />
+            </motion.div>
+          )}
+
+          {view === "showbiz20" && (
+            <motion.div
+              key="showbiz20"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <GomboMusikEcosystem
+                currentUserProfile={profile}
+                onRefreshProfile={refreshProfile}
                 onNavigateView={(targetView) => setView(targetView)}
               />
             </motion.div>

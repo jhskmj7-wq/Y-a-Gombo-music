@@ -20,14 +20,51 @@ export default function CertificationHub({
   onShowAuth,
   onNavigateView 
 }: CertificationHubProps) {
-  const [activeTab, setActiveTab] = useState<"badges" | "boost" | "payments" | "admin">("badges");
+  const [activeTab, setActiveTab] = useState<"badges" | "premium" | "boost" | "payments" | "admin">("badges");
   const [loading, setLoading] = useState(false);
+  const [premiumSuccess, setPremiumSuccess] = useState(false);
   
   // Simulation & Upload States
   const [showCertModal, setShowCertModal] = useState(false);
   const [selectedMobileNetwork, setSelectedMobileNetwork] = useState<string>("Wave");
   const [mobilePhoneNumber, setMobilePhoneNumber] = useState(currentUserProfile?.phone || "");
   const [simulatedSuccess, setSimulatedSuccess] = useState(false);
+
+  const handleSubscribePremium = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUserProfile) {
+      onShowAuth();
+      return;
+    }
+    setLoading(true);
+    try {
+      // 1. Publish payment of 5,000 FCFA
+      await gomboDB.publishPayment({
+        userId: currentUserProfile.uid,
+        userName: `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Artiste",
+        amount: 5000,
+        purpose: "💎 Abonnement Annuel Premium AFRIGOMBO",
+        provider: selectedMobileNetwork as any,
+        phoneNumber: mobilePhoneNumber,
+        status: "success"
+      });
+
+      // 2. Set profile properties
+      await gomboDB.updateUserProfile(currentUserProfile.uid, {
+        isPremium: true,
+        badges: Array.from(new Set([...(currentUserProfile.badges || []), "💎 Adhérent Premium"]))
+      } as any);
+
+      setPremiumSuccess(true);
+      onRefreshProfile();
+      loadHistory();
+    } catch(err) {
+      console.error(err);
+      alert("Erreur lors de l'activation de votre abonnement Premium.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Form States for Certification Folder
   const [artistName, setArtistName] = useState(currentUserProfile?.artistName || "");
@@ -510,6 +547,7 @@ export default function CertificationHub({
       <div id="tab-navigation" className="flex border-b border-gray-100 dark:border-zinc-805">
         {[
           { id: "badges", label: "🏆 Badges & Dossier", icon: Award },
+          { id: "premium", label: "💎 Premium AFRIGOMBO", icon: Sparkles },
           { id: "boost", label: "🚀 Booster mes posts", icon: Zap },
           { id: "payments", label: "💳 Transactions", icon: DollarSign },
           { id: "admin", label: "🛠️ Console Vetting Admin", icon: Eye }
@@ -714,19 +752,244 @@ export default function CertificationHub({
             </div>
 
           </div>
+        </div>
+      )}
 
-          {/* Pricing Row */}
-          <div className="bg-[#15151c] p-6 rounded-2xl border border-zinc-850 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="space-y-1 text-center sm:text-left">
-              <h4 className="text-sm font-extrabold uppercase text-orange-400 tracking-wider">🔒 CONFIDENTIALITÉ ET SÉCURITÉ GARANTIE</h4>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Vos selfies et vidéos pros sont chiffrés et confidentiels. Vos numéros WhatsApp et e-mails sont dissimulés pour contrer les spams, assurant que les négociations transitent exclusivement par la messagerie interne sécurisée ou de gré à gré après acceptation mutuelle.
-              </p>
-            </div>
-            <div className="text-xl font-black text-white whitespace-nowrap bg-zinc-900 px-4 py-2 rounded-xl border border-zinc-800">
-              0 FCFA <span className="text-xs font-normal text-zinc-500">Service Offert</span>
+      {/* VIEW 1.5: 💎 PREMIUM AFRIGOMBO & MONETIZATION CHECKOUTS */}
+      {activeTab === "premium" && (
+        <div id="premium-membership-panel" className="space-y-8 animate-fadeIn text-left">
+          
+          {/* Main Premium Card */}
+          <div className="bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#0B0B0B] border-2 border-[#D4AF37] rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#D4AF37]/20 to-transparent blur-3xl pointer-events-none rounded-full" />
+            
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
+              <div className="md:col-span-3 space-y-4">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#D4AF37]/10 border border-[#D4AF37]/35 text-[#D4AF37] text-xs font-black uppercase rounded-full">
+                  <span>👑 ADHESION VIP</span>
+                  <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-ping" />
+                </div>
+                <h2 className="text-3xl font-black text-white font-sans tracking-tight">
+                  Premium AFRIGOMBO
+                </h2>
+                <p className="text-zinc-300 text-xs leading-relaxed">
+                  Propulsez votre carrière artistique au sommet de l'Afrique de l'Ouest. Rejoignez le cercle des artistes certifiés prioritaires et maximisez vos cachets.
+                </p>
+
+                {/* Benefits checklist */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-zinc-100 font-semibold">
+                  <div className="flex items-center gap-2">
+                    <span className="p-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37]">✓</span>
+                    <span>👑 Placement Vedette Annuaire</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="p-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37]">✓</span>
+                    <span>💎 Pastille de Prestige "Adhérent Premium"</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="p-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37]">✓</span>
+                    <span>⚡ Renfort Express ultra-prioritaire</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="p-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37]">✓</span>
+                    <span>📈 Statistiques pros de votre page</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card checkout action */}
+              <div className="md:col-span-2 bg-[#0C0C0C]/95 border border-gray-800 rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xl relative">
+                {currentUserProfile?.badges?.includes("💎 Adhérent Premium") || premiumSuccess ? (
+                  <div className="text-center py-6 space-y-3">
+                    <div className="text-4xl text-[#D4AF37] animate-bounce">💎</div>
+                    <h3 className="text-sm font-black text-white uppercase">Premium Activé !</h3>
+                    <p className="text-[11px] text-gray-400">
+                      Vous êtes désormais Membre Premium AFRIGOMBO. Vos avantages sont opérationnels sur Cocody & toute l'Afrique.
+                    </p>
+                    <span className="inline-block text-[9px] font-black uppercase text-amber-500 bg-[#D4AF37]/15 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                      Pastille Premium Active
+                    </span>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubscribePremium} className="space-y-4">
+                    <div className="text-center pb-2 border-b border-gray-800">
+                      <div className="text-2xl font-black text-[#D4AF37] font-mono">5 000 FCFA <span className="text-xs font-normal text-zinc-400">/ an</span></div>
+                      <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mt-0.5">Mobile Money Intégré</p>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      <label className="block text-[10px] font-black uppercase text-zinc-400">Opérateur Local</label>
+                      <div className="grid grid-cols-3 gap-1 bg-zinc-900 p-1 rounded-lg">
+                        {["Wave", "Orange", "MTN"].map(op => {
+                          const isSel = selectedMobileNetwork === op;
+                          return (
+                            <button
+                              key={op}
+                              type="button"
+                              onClick={() => setSelectedMobileNetwork(op)}
+                              className={`py-1.5 rounded text-[10px] font-extrabold uppercase transition-all truncate ${
+                                isSel ? "bg-[#D4AF37] text-black font-black" : "text-zinc-400 hover:text-white"
+                              }`}
+                            >
+                              {op}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 text-xs">
+                      <label className="block text-[10px] font-black uppercase text-zinc-405 text-zinc-400">Numéro de Mobile Money</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="Ex: 0709847253"
+                        value={mobilePhoneNumber}
+                        onChange={e => setMobilePhoneNumber(e.target.value)}
+                        className="w-full bg-zinc-900 border border-gray-800 text-white rounded-lg p-2.5 font-mono text-center focus:border-[#D4AF37] outline-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-3 bg-[#D4AF37] hover:bg-yellow-500 text-black font-black text-xs uppercase tracking-widest rounded-xl transition duration-150 cursor-pointer text-center"
+                    >
+                      {loading ? "Chiffrement du paiement..." : "S'abonner maintenant"}
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* SECTION X: ALTERNATIVE REVENUE STREAMS FOR AFRICAN SHOWBIZ */}
+          <div className="space-y-4">
+            <div className="border-l-4 border-[#D4AF37] pl-3">
+              <h3 className="text-sm font-black text-white uppercase tracking-wider font-sans">
+                🎨 Diversification des Sources de Revenus Artistiques
+              </h3>
+              <p className="text-gray-400 text-xs mt-0.5">
+                Simulez d'autres leviers financiers majeurs conçus pour le showbiz africain.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              {/* Product 1: Sponsored Event / Gombo */}
+              <div className="bg-[#121212] border border-gray-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="p-1 px-2 bg-pink-500/10 text-pink-400 border border-pink-500/25 text-[9px] font-black uppercase rounded-lg">
+                      🎪 Événements
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-bold font-mono">15 000 FCFA</span>
+                  </div>
+                  <h4 className="text-xs font-black text-white uppercase">Événements & Gombos Sponsorisés</h4>
+                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                    Épinglez l'événement de votre orchestre ou bar en tête de liste pour multiplier les spectateurs d'Abidjan.
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!currentUserProfile) { onShowAuth(); return; }
+                    try {
+                      await gomboDB.publishPayment({
+                        userId: currentUserProfile.uid,
+                        userName: `${currentUserProfile.firstName} ${currentUserProfile.lastName}`.trim(),
+                        amount: 15000,
+                        purpose: "🎪 Commande d'un Événement VIP Sponsorisé",
+                        provider: "Wave",
+                        phoneNumber: currentUserProfile.phone || "07777777",
+                        status: "success"
+                      });
+                      alert("🎪 Événement sponsorisé avec succès ! Log de paiement ajouté.");
+                      loadHistory();
+                    } catch(err) { console.error(err); }
+                  }}
+                  className="w-full py-2 bg-zinc-950 hover:bg-zinc-900 text-[#D4AF37] hover:text-white text-[10px] font-black uppercase rounded-xl border border-[#D4AF37]/30 hover:border-[#D4AF37] transition cursor-pointer"
+                >
+                  🎪 Acheter Sponsor
+                </button>
+              </div>
+
+              {/* Product 2: Studio Priority Booking */}
+              <div className="bg-[#121212] border border-gray-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="p-1 px-2 bg-sky-500/10 text-sky-450 border border-sky-500/25 text-[9px] font-black uppercase rounded-lg">
+                      🎧 Enregistrement
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-bold font-mono">10 000 FCFA</span>
+                  </div>
+                  <h4 className="text-xs font-black text-white uppercase">Studios Sponsorisés & Booking</h4>
+                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                    Réservez une session d'enregistrement prioritaire dans les meilleurs studios partenaires équipés à Cocody.
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!currentUserProfile) { onShowAuth(); return; }
+                    try {
+                      await gomboDB.publishPayment({
+                        userId: currentUserProfile.uid,
+                        userName: `${currentUserProfile.firstName} ${currentUserProfile.lastName}`.trim(),
+                        amount: 10000,
+                        purpose: "🎧 Réservation de Studio Premium avec Session Prioritaire",
+                        provider: "Orange Money",
+                        phoneNumber: currentUserProfile.phone || "05555555",
+                        status: "success"
+                      });
+                      alert("🎧 Session de Studio réservée d'office ! Reçu de 10 000 FCFA disponible.");
+                      loadHistory();
+                    } catch(err) { console.error(err); }
+                  }}
+                  className="w-full py-2 bg-zinc-950 hover:bg-zinc-900 text-[#D4AF37] hover:text-white text-[10px] font-black uppercase rounded-xl border border-[#D4AF37]/30 hover:border-[#D4AF37] transition cursor-pointer"
+                >
+                  🎧 Réserver Studio
+                </button>
+              </div>
+
+              {/* Product 3: Live Ticket Sales & Target Ads */}
+              <div className="bg-[#121212] border border-gray-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="p-1 px-2 bg-emerald-500/10 text-emerald-405 border border-emerald-500/25 text-[9px] font-black uppercase rounded-lg">
+                      🎫 Billets
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-bold font-mono">25 040 FCFA</span>
+                  </div>
+                  <h4 className="text-xs font-black text-white uppercase">Vente Directe de Billets Concerts</h4>
+                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                    Intégrez une billetterie mobile Wave/Orange pour vendre vos tickets de concert directement aux fans du showbiz.
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!currentUserProfile) { onShowAuth(); return; }
+                    try {
+                      await gomboDB.publishPayment({
+                        userId: currentUserProfile.uid,
+                        userName: `${currentUserProfile.firstName} ${currentUserProfile.lastName}`.trim(),
+                        amount: 25040,
+                        purpose: "🎫 Ticket de concert - Pack Gold Fan club",
+                        provider: "MTN Momo",
+                        phoneNumber: currentUserProfile.phone || "01111111",
+                        status: "success"
+                      });
+                      alert("🎫 Billet acheté ! Les fonds sont transmis directement sur le wallet de l'artiste.");
+                      loadHistory();
+                    } catch(err) { console.error(err); }
+                  }}
+                  className="w-full py-2 bg-zinc-950 hover:bg-zinc-900 text-[#D4AF37] hover:text-white text-[10px] font-black uppercase rounded-xl border border-[#D4AF37]/30 hover:border-[#D4AF37] transition cursor-pointer"
+                >
+                  🎫 Acheter Billet fan
+                </button>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       )}
 

@@ -33,7 +33,7 @@ import {
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
 import { isCapacitor, performNativeGoogleLogin, performNativeFacebookLogin } from "./lib/capacitor-adapter";
-import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry, Conversation, Message, VerificationRequest, AdminLog } from "./types";
+import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry, Conversation, Message, VerificationRequest, AdminLog, AcademyGuide, GomboSafeContract, GomboTicketEvent, PurchasedTicket, StudioMarketItem, StudioMarketReview, CastingCall, VoiceAnnouncement, ContractStatus } from "./types";
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
@@ -556,6 +556,212 @@ const initMockDB = () => {
         status: "pending"
       }
     ]));
+  }
+
+  // === SEED AFRIGOMBO 2.0 ACADEMY ===
+  if (!localStorage.getItem("gombo_academy_guides")) {
+    const mockAcademy: AcademyGuide[] = [
+      {
+        id: "g1",
+        title: "Comment fixer vos tarifs de cachets à Abidjan",
+        category: "tarifs",
+        excerpt: "Apprenez à calculer votre tarif horaire et journalier selon votre instrument et le type d'événement.",
+        content: "### Introduction\nFixer ses tarifs pour un gombo musical à Cocody ou Marcory n'est pas toujours simple. Voici notre grille conseillée pour l'Afrique de l'Ouest.\n\n### Grille indicative (en FCFA / prestation)\n- **Guitariste / Pianiste solo** : 30 000 à 60 000 FCFA.\n- **Batteur / Bassiste** : 25 000 à 50 000 FCFA.\n- **Chanteur principal** : 50 000 à 100 000 FCFA.\n- **Orchestre complet (Live)** : 300 000 à 800 000 FCFA.\n\n### Facteurs de négociation\n1. **La durée** : Une prestation standard dure 3 heures.\n2. **La sonorisation** : Si vous emportez vos amplis ou si tout est fourni.\n3. **Le transport** : S'il s'agit de l'intérieur du pays (ex: Yamoussoukro, Bassam), exigez des indemnités de route.",
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: "g2",
+        title: "Négocier un contrat d'orchestre en toute sérénité",
+        category: "contrat",
+        excerpt: "Découvrez les clauses indispensables à mettre dans un contrat musical avec un promoteur de bar.",
+        content: "### Protéger ses cachets avec Gombo Safe\nUn accord écrit vaut mieux que dix promesses verbales. Utilisez **Gombo Safe** sur AFRIGOMBO pour bloquer l'accord.\n\n### Clauses indispensables :\n- Le montant exact du cachet, y compris une avance de minimum 30%.\n- L'heure de la balance sonore.\n- Les pénalités en cas d'annulation de dernière minute par le client.\n\nNe montez jamais sur scène sans confirmation écrite !",
+        createdAt: new Date(Date.now() - 3600000 * 4).toISOString()
+      },
+      {
+        id: "g3",
+        title: "Éviter les arnaques et fausses annonces de promoteurs",
+        category: "securite",
+        excerpt: "Conseils pratiques pour démasquer les imposteurs qui profitent des jeunes talents.",
+        content: "### Les signaux d'alertes :\n1. **Le promoteur refuse de donner son vrai nom** ou demande à négocier uniquement sur place sans détails.\n2. **Demande de paiement anticipé** pour prétendus frais de dossier.\n3. **Ambiguité sur le matériel** de sonorisation.\n\n*Sur AFRIGOMBO, fiez-vous au badge ✓ Talent Certifié et passez exclusivement par notre messagerie cryptée !*",
+        createdAt: new Date(Date.now() - 3600000 * 20).toISOString()
+      }
+    ];
+    localStorage.setItem("gombo_academy_guides", JSON.stringify(mockAcademy));
+  }
+
+  // === SEED GOMBO SAFE CONTRACTS ===
+  if (!localStorage.getItem("gombo_safe_contracts")) {
+    const mockContracts: GomboSafeContract[] = [
+      {
+        id: "ctr1",
+        creatorId: "cli1",
+        creatorName: "Serge Kassi",
+        partnerEmail: "yoro@gombo.ci",
+        partnerId: "mus1",
+        partnerName: "Yorobo Sangaré",
+        title: "Prestation Cabaret Privé - Accord Live",
+        amount: 50000,
+        commission: 2500, // 5% AFRIGOMBO Commission
+        conditions: "Le musicien s'engage à assurer la guitare solo pour 4 sets de 45 minutes le samedi 14 juin. Boisson et dîner compris à la charge du promoteur.",
+        status: "en_attente",
+        creatorAccepted: true,
+        partnerAccepted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
+    localStorage.setItem("gombo_safe_contracts", JSON.stringify(mockContracts));
+  }
+
+  // === SEED BILLETTERIE EVENTS ===
+  if (!localStorage.getItem("gombo_ticket_events")) {
+    const mockEvents: GomboTicketEvent[] = [
+      {
+        id: "evt1",
+        creatorId: "cli1",
+        creatorName: "Serge Kassi",
+        title: "Grand Concert Zouglou Live Abidjan",
+        description: "Une soirée explosive avec les meilleurs orchestres de Cocody et Yopougon. Ambiance wôyô garantie !",
+        date: new Date(Date.now() + 86400000 * 5).toISOString().split("T")[0],
+        time: "20:00",
+        location: "Maquis VIP Les Châteaux, Cocody Angré",
+        price: 5000,
+        capacity: 100,
+        ticketsSold: 12,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: "evt2",
+        creatorId: "mus1",
+        creatorName: "Yorobo Sangaré",
+        title: "Masterclass Guitare Rumba & Funk",
+        description: "Venez apprendre les secrets de l'accompagnement rumba congolaise et du coup de médiator africain.",
+        date: new Date(Date.now() + 86400000 * 10).toISOString().split("T")[0],
+        time: "15:00",
+        location: "Centre Culturel d'Adjamé",
+        price: 3000,
+        capacity: 30,
+        ticketsSold: 4,
+        createdAt: new Date(Date.now() - 3600000 * 2).toISOString()
+      }
+    ];
+    localStorage.setItem("gombo_ticket_events", JSON.stringify(mockEvents));
+  }
+
+  // === SEED TICKETS PURCHASED ===
+  if (!localStorage.getItem("gombo_purchased_tickets")) {
+    const mockPurchases: PurchasedTicket[] = [
+      {
+        id: "t_p1",
+        eventId: "evt1",
+        eventTitle: "Grand Concert Zouglou Live Abidjan",
+        buyerId: "mus2",
+        buyerName: "Fanta Kouyaté",
+        buyerPhone: "0512345678",
+        pricePaid: 5000,
+        ticketCode: "AG-7429-1981",
+        createdAt: new Date().toISOString()
+      }
+    ];
+    localStorage.setItem("gombo_purchased_tickets", JSON.stringify(mockPurchases));
+  }
+
+  // === SEED STUDIO MARKET ITEMS ===
+  if (!localStorage.getItem("gombo_studio_market_items")) {
+    const mockStudioItems: StudioMarketItem[] = [
+      {
+        id: "st_1",
+        name: "Studio Red Zone Cocody",
+        category: "studio",
+        description: "Studio d'enregistrement professionnel climatisé. Cabine voix isolée acoustiquement. Ingénieur de son certifié Zouglou & Rap.",
+        commune: "Cocody",
+        price: "15 000 FCFA / Heure",
+        phone: "+225 07 43 89 21 11",
+        image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&q=80&w=400",
+        rating: 4.8,
+        reviews: [
+          { userId: "mus1", userName: "Yorobo Sangaré", comment: "Le meilleur son d'Abidjan ! Micro Neumann exceptionnel.", rating: 5, createdAt: new Date().toISOString() }
+        ],
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: "st_2",
+        name: "Beatmaker K-Melody Beatz",
+        category: "beatmaker",
+        description: "Compositeur et arrangeur de génie. Beats personnalisés pour Coupé-Décalé, Afro-pop, et variété chrétienne.",
+        commune: "Yopougon",
+        price: "40 000 FCFA / Beat exclusif",
+        phone: "+225 05 91 12 00 33",
+        image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=400",
+        rating: 4.5,
+        reviews: [],
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: "st_3",
+        name: "Costumier Showbiz & Scène 'Afritudes'",
+        category: "costumier",
+        description: "Créateur de vêtements d'apparat africains pour orchestres et chanteurs leads. Tissus de qualité.",
+        commune: "Plateau",
+        price: "25 000 FCFA / Tenue",
+        phone: "+225 01 22 34 56 12",
+        rating: 5,
+        reviews: [],
+        createdAt: new Date().toISOString()
+      }
+    ];
+    localStorage.setItem("gombo_studio_market_items", JSON.stringify(mockStudioItems));
+  }
+
+  // === SEED CASTINGS ===
+  if (!localStorage.getItem("gombo_casting_calls")) {
+    const mockCastings: CastingCall[] = [
+      {
+        id: "cst_1",
+        creatorId: "cli1",
+        creatorName: "Serge Kassi",
+        title: "Casting Choristes de Backup - Tournée Nationale",
+        rolesNeeded: "2 Sopranos, 1 Alto",
+        description: "Grand label recherche choristes féminines avec voix puissante pour assurer les chœurs d'une tournée nationale de 6 mois à travers la Côte d'Ivoire.",
+        deadline: new Date(Date.now() + 86400000 * 15).toISOString().split("T")[0],
+        commune: "Cocody",
+        budget: "400 000 FCFA / mois",
+        applications: [
+          { userId: "mus2", userName: "Fanta Kouyaté", phone: "0512345678", status: "en_attente", createdAt: new Date().toISOString() }
+        ],
+        createdAt: new Date().toISOString()
+      }
+    ];
+    localStorage.setItem("gombo_casting_calls", JSON.stringify(mockCastings));
+  }
+
+  // === SEED VOICE ANNOUNCEMENTS ===
+  if (!localStorage.getItem("gombo_voice_announcements")) {
+    const mockVoices: VoiceAnnouncement[] = [
+      {
+        id: "vc1",
+        userId: "cli1",
+        userName: "Serge Kassi",
+        userAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
+        audioUrl: "simulated_announcement_1.mp3",
+        duration: 8,
+        title: "Recherche bassiste d'urgence pour cabaret samedi à Marcory",
+        commune: "Marcory",
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: "vc2",
+        userId: "mus1",
+        userName: "Yorobo Sangaré",
+        userAvatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
+        audioUrl: "simulated_announcement_2.mp3",
+        duration: 12,
+        title: "Je propose mes services de guitare live pour tous projets studio",
+        commune: "Cocody",
+        createdAt: new Date().toISOString()
+      }
+    ];
+    localStorage.setItem("gombo_voice_announcements", JSON.stringify(mockVoices));
   }
 };
 
@@ -3824,6 +4030,573 @@ export const gomboDB = {
       convos[index].unreadCount[userId] = 0;
       localStorage.setItem("gombo_conversations", JSON.stringify(convos));
       window.dispatchEvent(new Event("gomboConversationsChange"));
+    }
+  },
+
+  // === 1. ACADEMY ===
+  listenAcademyGuides(callback: (guides: AcademyGuide[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "academy_guides"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as AcademyGuide);
+          callback(list.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+        }, (error) => {
+          console.error("⚠️ Firestore listenAcademyGuides Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour Academy.", error);
+      }
+    }
+    const triggerLocal = () => {
+      const list = JSON.parse(localStorage.getItem("gombo_academy_guides") || "[]");
+      callback(list.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt)));
+    };
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboAcademyChange", triggerLocal);
+    triggerLocal();
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboAcademyChange", triggerLocal);
+    };
+  },
+
+  async publishAcademyGuide(guide: Omit<AcademyGuide, "id" | "createdAt">): Promise<AcademyGuide> {
+    const fresh: AcademyGuide = {
+      ...guide,
+      id: "guide_" + Math.random().toString(36).substring(2, 9),
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "academy_guides", fresh.id), fresh);
+        return fresh;
+      } catch (err) {
+        console.warn("⚠️ Firestore write failure for Academy, fallback to local.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_academy_guides") || "[]");
+    list.unshift(fresh);
+    localStorage.setItem("gombo_academy_guides", JSON.stringify(list));
+    window.dispatchEvent(new Event("gomboAcademyChange"));
+    return fresh;
+  },
+
+  // === 2. CONTRATS SÉCURISÉS (Gombo Safe) ===
+  listenSafeContracts(userId: string, callback: (contracts: GomboSafeContract[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "safe_contracts"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as GomboSafeContract);
+          const filtered = list.filter(c => c.creatorId === userId || c.partnerEmail?.toLowerCase() === userId?.toLowerCase() || c.partnerId === userId);
+          callback(filtered.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+        }, (error) => {
+          console.error("⚠️ Firestore listenSafeContracts Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour Gombo Safe.", error);
+      }
+    }
+    const triggerLocal = () => {
+      const list = JSON.parse(localStorage.getItem("gombo_safe_contracts") || "[]");
+      const filtered = list.filter((c: any) => c.creatorId === userId || c.partnerEmail?.toLowerCase() === userId?.toLowerCase() || c.partnerId === userId);
+      callback(filtered.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt)));
+    };
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboSafeContractsChange", triggerLocal);
+    triggerLocal();
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboSafeContractsChange", triggerLocal);
+    };
+  },
+
+  async createSafeContract(contract: Omit<GomboSafeContract, "id" | "status" | "creatorAccepted" | "partnerAccepted" | "createdAt" | "updatedAt">): Promise<GomboSafeContract> {
+    const fresh: GomboSafeContract = {
+      ...contract,
+      id: "contract_" + Math.random().toString(36).substring(2, 9),
+      status: "en_attente",
+      creatorAccepted: true, // Auto accepted by creator on make
+      partnerAccepted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "safe_contracts", fresh.id), fresh);
+        return fresh;
+      } catch (err) {
+        console.warn("⚠️ Firestore write failure for Gombo Safe, fallback local.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_safe_contracts") || "[]");
+    list.unshift(fresh);
+    localStorage.setItem("gombo_safe_contracts", JSON.stringify(list));
+    window.dispatchEvent(new Event("gomboSafeContractsChange"));
+    return fresh;
+  },
+
+  async updateSafeContractStatus(contractId: string, status: ContractStatus): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await updateDoc(doc(db, "safe_contracts", contractId), { status, updatedAt: new Date().toISOString() });
+        return;
+      } catch (err) {
+        console.warn("⚠️ Firestore update failure for contract, fallback local.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_safe_contracts") || "[]");
+    const index = list.findIndex((c: any) => c.id === contractId);
+    if (index !== -1) {
+      list[index].status = status;
+      list[index].updatedAt = new Date().toISOString();
+      localStorage.setItem("gombo_safe_contracts", JSON.stringify(list));
+      window.dispatchEvent(new Event("gomboSafeContractsChange"));
+    }
+  },
+
+  async acceptSafeContract(contractId: string, isCreator: boolean): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        const payload: any = { updatedAt: new Date().toISOString() };
+        if (isCreator) payload.creatorAccepted = true;
+        else payload.partnerAccepted = true;
+
+        // Auto move to accepted if both agree
+        const snap = await getDoc(doc(db, "safe_contracts", contractId));
+        if (snap.exists()) {
+          const info = snap.data();
+          const creatorWillBeTrue = isCreator || info.creatorAccepted;
+          const partnerWillBeTrue = !isCreator || info.partnerAccepted;
+          if (creatorWillBeTrue && partnerWillBeTrue) {
+            payload.status = "accepte";
+          }
+        }
+        await updateDoc(doc(db, "safe_contracts", contractId), payload);
+        return;
+      } catch (err) {
+        console.warn("⚠️ Firestore accept Contract error, fallback local.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_safe_contracts") || "[]");
+    const index = list.findIndex((c: any) => c.id === contractId);
+    if (index !== -1) {
+      if (isCreator) list[index].creatorAccepted = true;
+      else list[index].partnerAccepted = true;
+
+      if (list[index].creatorAccepted && list[index].partnerAccepted) {
+        list[index].status = "accepte";
+      }
+      list[index].updatedAt = new Date().toISOString();
+      localStorage.setItem("gombo_safe_contracts", JSON.stringify(list));
+      window.dispatchEvent(new Event("gomboSafeContractsChange"));
+    }
+  },
+
+  // === 3. BILLETTERIE ===
+  listenTicketEvents(callback: (events: GomboTicketEvent[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "ticket_events"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as GomboTicketEvent);
+          callback(list.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+        }, (error) => {
+          console.error("⚠️ Firestore listenTicketEvents Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour la Billetterie.", error);
+      }
+    }
+    const triggerLocal = () => {
+      const list = JSON.parse(localStorage.getItem("gombo_ticket_events") || "[]");
+      callback(list.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt)));
+    };
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboTicketsChangeEvent", triggerLocal);
+    triggerLocal();
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboTicketsChangeEvent", triggerLocal);
+    };
+  },
+
+  async createTicketEvent(event: Omit<GomboTicketEvent, "id" | "ticketsSold" | "createdAt">): Promise<GomboTicketEvent> {
+    const fresh: GomboTicketEvent = {
+      ...event,
+      id: "event_" + Math.random().toString(36).substring(2, 9),
+      ticketsSold: 0,
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "ticket_events", fresh.id), fresh);
+        return fresh;
+      } catch (err) {
+        console.warn("⚠️ Firestore write failure for Billet event, local fallback.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_ticket_events") || "[]");
+    list.unshift(fresh);
+    localStorage.setItem("gombo_ticket_events", JSON.stringify(list));
+    window.dispatchEvent(new Event("gomboTicketsChangeEvent"));
+    return fresh;
+  },
+
+  async purchaseTicket(purchase: Omit<PurchasedTicket, "id" | "ticketCode" | "createdAt">): Promise<PurchasedTicket> {
+    const code = "AG-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.floor(1000 + Math.random() * 9000);
+    const fresh: PurchasedTicket = {
+      ...purchase,
+      id: "ticket_" + Math.random().toString(36).substring(2, 9),
+      ticketCode: code,
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "purchased_tickets", fresh.id), fresh);
+        // Increment event counter
+        const docRef = doc(db, "ticket_events", purchase.eventId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const count = snap.data().ticketsSold || 0;
+          await updateDoc(docRef, { ticketsSold: count + 1 });
+        }
+        return fresh;
+      } catch (err) {
+        console.warn("⚠️ Firestore ticket purchase err, local fallback.", err);
+      }
+    }
+    // Update local ticket counts
+    const events = JSON.parse(localStorage.getItem("gombo_ticket_events") || "[]");
+    const evIdx = events.findIndex((e: any) => e.id === purchase.eventId);
+    if (evIdx !== -1) {
+      events[evIdx].ticketsSold = (events[evIdx].ticketsSold || 0) + 1;
+      localStorage.setItem("gombo_ticket_events", JSON.stringify(events));
+    }
+
+    const list = JSON.parse(localStorage.getItem("gombo_purchased_tickets") || "[]");
+    list.unshift(fresh);
+    localStorage.setItem("gombo_purchased_tickets", JSON.stringify(list));
+    window.dispatchEvent(new Event("gomboTicketsChangeEvent"));
+    return fresh;
+  },
+
+  listenPurchasedTickets(buyerId: string, callback: (tickets: PurchasedTicket[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "purchased_tickets"), where("buyerId", "==", buyerId));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as PurchasedTicket);
+          callback(list.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+        }, (error) => {
+          console.error("⚠️ Firestore listenPurchasedTickets Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible for buyer tickets.", error);
+      }
+    }
+    const triggerLocal = () => {
+      const list = JSON.parse(localStorage.getItem("gombo_purchased_tickets") || "[]");
+      const filtered = list.filter((t: any) => t.buyerId === buyerId);
+      callback(filtered.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt)));
+    };
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboTicketsChangeEvent", triggerLocal);
+    triggerLocal();
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboTicketsChangeEvent", triggerLocal);
+    };
+  },
+
+  listenOrganizerTicketsSold(creatorId: string, callback: (tickets: PurchasedTicket[]) => void): () => void {
+    // Return all purchased tickets whose event is created by organizer
+    const triggerLocal = () => {
+      const tickets: PurchasedTicket[] = JSON.parse(localStorage.getItem("gombo_purchased_tickets") || "[]");
+      const events: GomboTicketEvent[] = JSON.parse(localStorage.getItem("gombo_ticket_events") || "[]");
+      const myEventIds = new Set(events.filter(e => e.creatorId === creatorId).map(e => e.id));
+      const filtered = tickets.filter(t => myEventIds.has(t.eventId));
+      callback(filtered.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+    };
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboTicketsChangeEvent", triggerLocal);
+    triggerLocal();
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboTicketsChangeEvent", triggerLocal);
+    };
+  },
+
+  // === 4. STUDIO MARKET ===
+  listenStudioMarket(callback: (items: StudioMarketItem[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "studio_market_items"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as StudioMarketItem);
+          callback(list.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+        }, (error) => {
+          console.error("⚠️ Firestore listenStudioMarket Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour Studio Market.", error);
+      }
+    }
+    const triggerLocal = () => {
+      const list = JSON.parse(localStorage.getItem("gombo_studio_market_items") || "[]");
+      callback(list.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt)));
+    };
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboStudioMarketChange", triggerLocal);
+    triggerLocal();
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboStudioMarketChange", triggerLocal);
+    };
+  },
+
+  async createStudioMarketItem(item: Omit<StudioMarketItem, "id" | "rating" | "reviews" | "createdAt">): Promise<StudioMarketItem> {
+    const fresh: StudioMarketItem = {
+      ...item,
+      id: "studio_" + Math.random().toString(36).substring(2, 9),
+      rating: 5,
+      reviews: [],
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "studio_market_items", fresh.id), fresh);
+        return fresh;
+      } catch (err) {
+        console.warn("⚠️ Firestore write failure for studio item, fallback local.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_studio_market_items") || "[]");
+    list.unshift(fresh);
+    localStorage.setItem("gombo_studio_market_items", JSON.stringify(list));
+    window.dispatchEvent(new Event("gomboStudioMarketChange"));
+    return fresh;
+  },
+
+  async addStudioMarketReview(itemId: string, review: StudioMarketReview): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        const docRef = doc(db, "studio_market_items", itemId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const current = snap.data() as StudioMarketItem;
+          const reviews = [...(current.reviews || []), review];
+          const averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+          await updateDoc(docRef, { reviews, rating: averageRating });
+        }
+        return;
+      } catch (err) {
+        console.warn("⚠️ Firestore add class review error, fallback local.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_studio_market_items") || "[]");
+    const idx = list.findIndex((c: any) => c.id === itemId);
+    if (idx !== -1) {
+      list[idx].reviews = list[idx].reviews || [];
+      list[idx].reviews.push(review);
+      const total = list[idx].reviews.reduce((sum: number, r: any) => sum + r.rating, 0);
+      list[idx].rating = total / list[idx].reviews.length;
+      localStorage.setItem("gombo_studio_market_items", JSON.stringify(list));
+      window.dispatchEvent(new Event("gomboStudioMarketChange"));
+    }
+  },
+
+  // === 5. CASTINGS & AUDITIONS ===
+  listenCastingCalls(callback: (castings: CastingCall[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "casting_calls"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as CastingCall);
+          callback(list.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+        }, (error) => {
+          console.error("⚠️ Firestore listenCastingCalls Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour Castings.", error);
+      }
+    }
+    const triggerLocal = () => {
+      const list = JSON.parse(localStorage.getItem("gombo_casting_calls") || "[]");
+      callback(list.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt)));
+    };
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboCastingsChange", triggerLocal);
+    triggerLocal();
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboCastingsChange", triggerLocal);
+    };
+  },
+
+  async createCastingCall(casting: Omit<CastingCall, "id" | "applications" | "createdAt">): Promise<CastingCall> {
+    const fresh: CastingCall = {
+      ...casting,
+      id: "casting_" + Math.random().toString(36).substring(2, 9),
+      applications: [],
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "casting_calls", fresh.id), fresh);
+        return fresh;
+      } catch (err) {
+        console.warn("⚠️ Firestore write failure for Casting, fallback local.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_casting_calls") || "[]");
+    list.unshift(fresh);
+    localStorage.setItem("gombo_casting_calls", JSON.stringify(list));
+    window.dispatchEvent(new Event("gomboCastingsChange"));
+    return fresh;
+  },
+
+  async applyToCastingCall(castingId: string, userId: string, userName: string, phone: string): Promise<void> {
+    const applyObj = {
+      userId,
+      userName,
+      phone,
+      status: "en_attente" as const,
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        const docRef = doc(db, "casting_calls", castingId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const info = snap.data() as CastingCall;
+          const applications = [...(info.applications || [])];
+          if (!applications.some(a => a.userId === userId)) {
+            applications.push(applyObj);
+            await updateDoc(docRef, { applications });
+          }
+        }
+        return;
+      } catch (err) {
+        console.warn("⚠️ Firestore casting apply failure, fallback local.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_casting_calls") || "[]");
+    const idx = list.findIndex((c: any) => c.id === castingId);
+    if (idx !== -1) {
+      list[idx].applications = list[idx].applications || [];
+      if (!list[idx].applications.some((a: any) => a.userId === userId)) {
+        list[idx].applications.push(applyObj);
+        localStorage.setItem("gombo_casting_calls", JSON.stringify(list));
+        window.dispatchEvent(new Event("gomboCastingsChange"));
+      }
+    }
+  },
+
+  async updateCastingApplicationStatus(castingId: string, userId: string, status: "en_attente" | "convoc" | "refus"): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        const docRef = doc(db, "casting_calls", castingId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const info = snap.data() as CastingCall;
+          const applications = info.applications.map(a => a.userId === userId ? { ...a, statusOrWhatever: 1, status } : a);
+          await updateDoc(docRef, { applications });
+        }
+        return;
+      } catch (err) {
+        console.warn("⚠️ Firestore casting status update failure, local fallback.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_casting_calls") || "[]");
+    const idx = list.findIndex((c: any) => c.id === castingId);
+    if (idx !== -1) {
+      list[idx].applications = (list[idx].applications || []).map((a: any) => a.userId === userId ? { ...a, status } : a);
+      localStorage.setItem("gombo_casting_calls", JSON.stringify(list));
+      window.dispatchEvent(new Event("gomboCastingsChange"));
+    }
+  },
+
+  // === 6. ANNONCES VOCALES ===
+  listenVoiceAnnouncements(callback: (announces: VoiceAnnouncement[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "voice_announcements"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data() as VoiceAnnouncement);
+          callback(list.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+        }, (error) => {
+          console.error("⚠️ Firestore listenVoiceAnnouncements Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible pour annonces vocales.", error);
+      }
+    }
+    const triggerLocal = () => {
+      const list = JSON.parse(localStorage.getItem("gombo_voice_announcements") || "[]");
+      callback(list.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt)));
+    };
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboVoiceAnnouncesChange", triggerLocal);
+    triggerLocal();
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboVoiceAnnouncesChange", triggerLocal);
+    };
+  },
+
+  async publishVoiceAnnouncement(announce: Omit<VoiceAnnouncement, "id" | "createdAt">): Promise<VoiceAnnouncement> {
+    const fresh: VoiceAnnouncement = {
+      ...announce,
+      id: "voice_" + Math.random().toString(36).substring(2, 9),
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "voice_announcements", fresh.id), fresh);
+        return fresh;
+      } catch (err) {
+        console.warn("⚠️ Firestore publication vocale err, local fallback.", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem("gombo_voice_announcements") || "[]");
+    list.unshift(fresh);
+    localStorage.setItem("gombo_voice_announcements", JSON.stringify(list));
+    window.dispatchEvent(new Event("gomboVoiceAnnouncesChange"));
+    return fresh;
+  },
+
+  // === 7. RECOMPENSES SYSTEM (Gamification scores update) ==
+  async addUserPoints(userId: string, gainedPoints: number): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        const docRef = doc(db, "users", userId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data() as UserProfile;
+          const current = data.points || 0;
+          await updateDoc(docRef, { points: current + gainedPoints });
+        }
+        return;
+      } catch (e) {
+        console.warn("⚠️ Firestore add points, falling back to local.", e);
+      }
+    }
+    const list: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+    const idx = list.findIndex(u => u.uid === userId);
+    if (idx !== -1) {
+      list[idx].points = (list[idx].points || 0) + gainedPoints;
+      localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(list));
+      // Try to dispatch a storage update or customized event
+      window.dispatchEvent(new Event("gomboUsersChange"));
     }
   }
 };

@@ -1799,12 +1799,39 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                   {/* SUB-PANEL D: JOURNAL D'AUDIT ADMIN (Logs) */}
                   {plusSubTab === "logs" && (
                     <div className="space-y-4">
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-[#D4AF37] font-mono tracking-wider font-extrabold block">LEGER D'ARBITRAGE SECURISE</span>
-                        <h3 className="text-xs font-black uppercase text-white font-sans">
-                          Journal des Activités de l'Administration
-                        </h3>
-                        <p className="text-xs text-gray-400">Suivi automatisé inaltérable des validations, exclusions et certifications.</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#202020] pb-3">
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-[#D4AF37] font-mono tracking-wider font-extrabold block">LEGER D'ARBITRAGE SECURISE</span>
+                          <h3 className="text-xs font-black uppercase text-white font-sans">
+                            Journal des Activités de l'Administration
+                          </h3>
+                          <p className="text-[11px] text-gray-400">Suivi automatisé inaltérable des validations, exclusions et certifications.</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (!logs || logs.length === 0) return;
+                            const headers = ["ID", "Admin Email", "Action", "Target ID", "Created At"];
+                            const rows = logs.map(log => [
+                              log.id || "",
+                              log.adminEmail || "",
+                              log.action || "",
+                              log.targetId || "",
+                              log.createdAt || ""
+                            ]);
+                            const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+                              + [headers.join(","), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))].join("\n");
+                            const encodedUri = encodeURI(csvContent);
+                            const link = document.createElement("a");
+                            link.setAttribute("href", encodedUri);
+                            link.setAttribute("download", `afrigombo_admin_audit_logs_${new Date().toISOString().split("T")[0]}.csv`);
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                          className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shrink-0 self-start sm:self-auto cursor-pointer"
+                        >
+                          📥 Exporter en CSV
+                        </button>
                       </div>
 
                       <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
