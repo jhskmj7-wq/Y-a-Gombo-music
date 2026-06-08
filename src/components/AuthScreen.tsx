@@ -4,7 +4,8 @@ import {
   Flame, 
   AlertTriangle,
   Lock,
-  ArrowRight
+  ArrowRight,
+  X
 } from "lucide-react";
 import { gomboAuth, gomboDB } from "../firebase";
 import { useAuth } from "../AuthContext";
@@ -115,6 +116,17 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       >
         {/* Ambient Gold detailing glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white rounded-full bg-white/5 hover:bg-white/10 transition-all z-50 cursor-pointer"
+            aria-label="Fermer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Brand logo header */}
         <div className="mt-4 mb-8">

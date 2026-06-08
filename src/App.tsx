@@ -933,21 +933,7 @@ export default function App() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className={darkMode ? "dark" : ""}>
-        <div className="min-h-screen bg-[#070708] flex items-center justify-center p-4">
-          <div className="w-full max-w-md">
-            <AuthScreen
-              onSuccess={() => {
-                refreshProfile();
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-[#0F0F0F] dark:text-gray-100 transition-colors duration-300 pb-20 md:pb-0">
