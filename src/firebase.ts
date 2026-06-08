@@ -32,6 +32,7 @@ import {
   onSnapshot
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
+import { isCapacitor, performNativeGoogleLogin, performNativeFacebookLogin } from "./lib/capacitor-adapter";
 import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry, Conversation, Message, VerificationRequest } from "./types";
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
@@ -70,11 +71,18 @@ const GOOGLE_PROVIDER = new GoogleAuthProvider();
 const FACEBOOK_PROVIDER = new FacebookAuthProvider();
 const GITHUB_PROVIDER = new GithubAuthProvider();
 
+export const isCapacitorEnv = (): boolean => {
+  return typeof window !== "undefined" && !!(window as any).Capacitor;
+};
+
 export const isWebView = (): boolean => {
   if (typeof window === "undefined") return false;
   const ua = window.navigator.userAgent || "";
   
-  // AppsGeyser signature, common webviews, and embedded user-agents
+  // Explicitly check Capacitor native environment
+  if (isCapacitorEnv()) return true;
+  
+  // Standard webviews and embedded user-agents
   const isAndroidWebView = /Android/i.test(ua) && /wv/i.test(ua);
   const isCustomWebView = /AppsGeyser/i.test(ua) || (window as any).AppsGeyser || (window as any).AndroidClient || (window as any).Android;
   const isGenericWebView = /(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/i.test(ua) || (/Android/i.test(ua) && /Version\/\d+\.\d+/i.test(ua));
@@ -682,6 +690,17 @@ export const gomboAuth = {
   async loginWithGoogle() {
     console.log("🚀 [Firebase Auth Debug] Initializing Google Login popup...");
     
+    // Direct Native Capacitor SSO Integration
+    if (isCapacitor()) {
+      console.log("📱 [Firebase Auth] Running Native Google Login inside Capacitor wrapper...");
+      try {
+        const nativeUser = await performNativeGoogleLogin();
+        return nativeUser;
+      } catch (err) {
+        console.warn("⚠️ Native Google Auth Plugin failed or is unconfigured. Checking fallback...", err);
+      }
+    }
+    
     if (isWebView()) {
       console.log("📱 [Firebase Auth] WebView detected. Setting up secure Chrome redirect channel...");
       const transferId = "goog_trans_" + Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
@@ -802,6 +821,18 @@ export const gomboAuth = {
 
   async loginWithFacebook() {
     console.log("🚀 [Firebase Auth Debug] Initializing Facebook Login popup...");
+    
+    // Direct Native Capacitor SSO Integration
+    if (isCapacitor()) {
+      console.log("📱 [Firebase Auth] Running Native Facebook Login inside Capacitor wrapper...");
+      try {
+        const nativeUser = await performNativeFacebookLogin();
+        return nativeUser;
+      } catch (err) {
+        console.warn("⚠️ Native Facebook Auth Plugin failed or is unconfigured. Checking fallback...", err);
+      }
+    }
+
     if (!isFirebaseMock && auth) {
       try {
         const res = await signInWithPopup(auth, FACEBOOK_PROVIDER);

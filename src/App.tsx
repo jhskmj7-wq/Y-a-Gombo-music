@@ -187,6 +187,69 @@ export default function App() {
     };
   }, []);
 
+  // Deep Link Listener for direct back-redirects and auto login recovery
+  useEffect(() => {
+    const checkDeepLink = () => {
+      try {
+        const urlString = window.location.href;
+        const urlObj = new URL(urlString, window.location.origin);
+        const transferId = urlObj.searchParams.get("transferId");
+        
+        if (transferId) {
+          console.log("🎯 [Deep Link Catcher] Active session transferId discovered in URL:", transferId);
+          initiateAuthTransferListener(transferId);
+          
+          // Clear URL parameter so it doesn't trigger multiple times
+          const params = new URLSearchParams(window.location.search);
+          params.delete("transferId");
+          params.delete("auth_transfer");
+          const query = params.toString();
+          const cleanUrl = window.location.origin + window.location.pathname + (query ? "?" + query : "");
+          window.history.replaceState(null, "", cleanUrl);
+        }
+      } catch (err) {
+        console.warn("⚠️ [Deep Link Catcher] Non-fatal URL parsing error:", err);
+      }
+    };
+
+    checkDeepLink();
+
+    // Native wrappers hybrid hook binders
+    (window as any).onGomboDeepLinkReceived = (url: string) => {
+      console.log("📱 [Native Wrapper Callback] Received deep link URL:", url);
+      try {
+        const parsed = new URL(url);
+        const transferId = parsed.searchParams.get("transferId");
+        if (transferId) {
+          initiateAuthTransferListener(transferId);
+        }
+      } catch (e) {
+        console.warn("⚠️ Incorrect native url format:", url, e);
+      }
+    };
+
+    // Chrome OAuth authentication transfer document listeners
+    const handleTransferAuthSuccess = (e: any) => {
+      console.log("🎉 [App] WebView login complete via Chrome Custom Tab!", e.detail);
+      setActiveToast({
+        id: "google-auth-success-" + Date.now(),
+        title: "Connexion Élite Réussie 🚀",
+        message: "Authentifié avec succès via Google Chrome. Bienvenue sur AFRIGOMBO !"
+      });
+      setView("home");
+    };
+
+    window.addEventListener("webViewAuthSuccess", handleTransferAuthSuccess);
+    window.addEventListener("focus", checkDeepLink);
+    window.addEventListener("hashchange", checkDeepLink);
+
+    return () => {
+      window.removeEventListener("webViewAuthSuccess", handleTransferAuthSuccess);
+      window.removeEventListener("focus", checkDeepLink);
+      window.removeEventListener("hashchange", checkDeepLink);
+    };
+  }, []);
+
   // Navigation / View State
   // 'home' | 'publish' | 'dashboard' | 'profile_edit' | 'annuaire' | 'groupe' | 'marche' | 'certification' | 'privacy' | 'terms' | 'delete-account'
   const [selectedTalentUid, setSelectedTalentUid] = useState<string | null>(() => {

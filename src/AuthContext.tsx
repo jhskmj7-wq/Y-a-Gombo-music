@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Lock } from "lucide-react";
 import { gomboAuth, gomboDB } from "./firebase";
+import { initializePushNotifications } from "./lib/capacitor-adapter";
 import { UserProfile } from "./types";
 
 interface AuthContextType {
@@ -78,6 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: firebaseUser.email,
           emailVerified: firebaseUser.emailVerified
         }));
+
+        // Register push notifications on Android/iOS natively if inside Capacitor
+        initializePushNotifications(firebaseUser.uid).catch((err) => {
+          console.warn("⚠️ Push registration error (expected on web):", err);
+        });
 
         // --- STEP 1: INSTANT PROFILE LOAD (NO WAITING FOR FIRESTORE) ---
         let initialProfile: UserProfile | null = null;
