@@ -33,7 +33,7 @@ import {
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
 import { isCapacitor, performNativeGoogleLogin, performNativeFacebookLogin } from "./lib/capacitor-adapter";
-import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry, Conversation, Message, VerificationRequest } from "./types";
+import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry, Conversation, Message, VerificationRequest, AdminLog } from "./types";
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
@@ -533,6 +533,36 @@ const initMockDB = () => {
       }
     ];
     localStorage.setItem(LOCAL_ACTIVITY_FEED_KEY, JSON.stringify(mockActivities));
+  }
+
+  if (!localStorage.getItem("gombo_admins")) {
+    const mockAdmins = [
+      { email: "johnsylvesterh@gmail.com", role: "super_admin", permissions: ["all"], createdAt: new Date().toISOString() },
+      { email: "jhs.kmj7@gmail.com", role: "super_admin", permissions: ["all"], createdAt: new Date().toISOString() },
+      { email: "sylvestrehounkpevi777@gmail.com", role: "super_admin", permissions: ["all"], createdAt: new Date().toISOString() }
+    ];
+    localStorage.setItem("gombo_admins", JSON.stringify(mockAdmins));
+  }
+  if (!localStorage.getItem("gombo_admin_logs")) {
+    localStorage.setItem("gombo_admin_logs", JSON.stringify([
+      { id: "log_init", adminEmail: "system", action: "INITIALIZE_CENTRE_COMMANDE", targetId: "system", createdAt: new Date().toISOString() }
+    ]));
+  }
+  if (!localStorage.getItem("gombo_reports")) {
+    localStorage.setItem("gombo_reports", JSON.stringify([
+      {
+        id: "rep_mock1",
+        reportedBy: "mus1",
+        reporterEmail: "yoro@gombo.ci",
+        contentId: "gom2",
+        contentType: "gombo",
+        contentTitle: "Claviériste & Batteur pour Mariage Chrétien",
+        authorId: "cli1",
+        reason: "Le budget de 120000 est incorrect selon nos accords.",
+        createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+        status: "pending"
+      }
+    ]));
   }
 };
 
@@ -1722,6 +1752,349 @@ export const gomboDB = {
     localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify(updated));
     triggerStorageEvent();
     window.dispatchEvent(new CustomEvent("gomboNotificationChange", { detail: updated }));
+  },
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(query(collection(db, "notifications"), where("userId", "==", userId), where("read", "==", false)));
+        for (const d of snap.docs) {
+          await setDoc(doc(db, "notifications", d.id), { read: true }, { merge: true });
+        }
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible. Repli sur le Bac à Sable Local pour markAllNotificationsAsRead.", error);
+      }
+    }
+    const notifs: GomboNotification[] = JSON.parse(localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) || "[]");
+    const updated = notifs.map(n => n.userId === userId ? { ...n, read: isFirebaseMock ? true : true } : n);
+    localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify(updated));
+    triggerStorageEvent();
+    window.dispatchEvent(new CustomEvent("gomboNotificationChange", { detail: updated }));
+  },
+
+  async checkIsSuperAdminByEmail(email: string): Promise<boolean> {
+    const list = ["johnsylvesterh@gmail.com", "jhs.kmj7@gmail.com", "sylvestrehounkpevi777@gmail.com"];
+    if (list.includes(email.toLowerCase())) {
+      if (!isFirebaseMock && db) {
+        try {
+          const adminId = email.replace(/[^a-zA-Z0-9]/g, "_");
+          await setDoc(doc(db, "admins", adminId), {
+            email: email.toLowerCase(),
+            role: "super_admin",
+            permissions: ["all"],
+            createdAt: new Date().toISOString()
+          }, { merge: true });
+        } catch (e) {
+          console.warn("⚠️ Non-fatal: auto-registering admin failed under firestore:", e);
+        }
+      }
+      return true;
+    }
+    
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "admins"), where("email", "==", email.toLowerCase()));
+        const snap = await getDocs(q);
+        if (!snap.empty) return true;
+      } catch (e) {
+        console.warn("⚠️ Error checking admins collection in Firestore", e);
+      }
+    }
+    const localAdmins = JSON.parse(localStorage.getItem("gombo_admins") || "[]");
+    return localAdmins.some((a: any) => a.email.toLowerCase() === email.toLowerCase());
+  },
+
+  async addAdminLog(adminEmail: string, action: string, targetId: string): Promise<void> {
+    const id = "log_" + Math.random().toString(36).substring(2, 9) + "_" + Date.now();
+    const newLog: AdminLog = {
+      id,
+      adminEmail,
+      action,
+      targetId,
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "admin_logs", id), {
+          id,
+          action,
+          targetId,
+          performedBy: auth?.currentUser?.email || adminEmail,
+          createdAt: new Date().toISOString()
+        });
+        return;
+      } catch (error) {
+        console.warn("⚠️ Firestore admin log insert failed:", error);
+      }
+    }
+    const logs = JSON.parse(localStorage.getItem("gombo_admin_logs") || "[]");
+    logs.unshift(newLog);
+    localStorage.setItem("gombo_admin_logs", JSON.stringify(logs));
+    triggerStorageEvent();
+  },
+
+  async getAdminLogs(): Promise<AdminLog[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "admin_logs"));
+        return snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            adminEmail: data.adminEmail || data.performedBy || "admin@gombo.ci",
+            action: data.action || "MODIFICATION",
+            targetId: data.targetId || "",
+            createdAt: data.createdAt || new Date().toISOString()
+          };
+        }).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      } catch (error) {
+        console.warn("⚠️ Firestore admin log read failed:", error);
+      }
+    }
+    const logs = JSON.parse(localStorage.getItem("gombo_admin_logs") || "[]");
+    return logs.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async getUsersAdmin(): Promise<UserProfile[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "users"));
+        return snap.docs.map(d => d.data() as UserProfile);
+      } catch (error) {
+        console.warn("⚠️ Firestore fetch users failed", error);
+      }
+    }
+    return JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+  },
+
+  async getPostsAdmin(): Promise<SocialPost[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "posts"));
+        return snap.docs.map(d => d.data() as SocialPost);
+      } catch (error) {
+        console.warn("⚠️ Firestore fetch posts failed", error);
+      }
+    }
+    return JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
+  },
+
+  async getGroupsAdmin(): Promise<MusicGroup[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "music_groups"));
+        return snap.docs.map(d => d.data() as MusicGroup);
+      } catch (error) {
+        console.warn("⚠️ Firestore fetch groups failed", error);
+      }
+    }
+    return JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
+  },
+
+  async getRenfortsAdmin(): Promise<Renfort[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "renforts"));
+        return snap.docs.map(d => d.data() as Renfort);
+      } catch (error) {
+        console.warn("⚠️ Firestore fetch renforts failed", error);
+      }
+    }
+    return JSON.parse(localStorage.getItem(LOCAL_RENFORS_KEY) || "[]");
+  },
+
+  async getSubscriptionsAdmin(): Promise<GomboSubscription[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "subscriptions"));
+        return snap.docs.map(d => d.data() as GomboSubscription);
+      } catch (error) {
+        console.warn("⚠️ Firestore fetch subscriptions failed", error);
+      }
+    }
+    return JSON.parse(localStorage.getItem("gombo_subscriptions") || "[]");
+  },
+
+  async getPaymentsAdmin(): Promise<GomboPayment[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "payments"));
+        return snap.docs.map(d => d.data() as GomboPayment);
+      } catch (error) {
+        console.warn("⚠️ Firestore fetch payments failed", error);
+      }
+    }
+    return JSON.parse(localStorage.getItem("gombo_payments") || "[]");
+  },
+
+  async getReportsAdmin(): Promise<any[]> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDocs(collection(db, "reports"));
+        return snap.docs.map(d => d.data()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      } catch (error) {
+        console.warn("⚠️ Firestore fetch reports failed", error);
+      }
+    }
+    return JSON.parse(localStorage.getItem("gombo_reports") || "[]");
+  },
+
+  async submitReport(report: { reportedBy: string; reporterEmail: string; contentId: string; contentType: string; contentTitle: string; authorId: string; reason: string }): Promise<void> {
+    const id = "rep_" + Math.random().toString(36).substring(2, 9) + "_" + Date.now();
+    const newReport = {
+      ...report,
+      id,
+      status: "pending",
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "reports", id), newReport);
+        return;
+      } catch (error) {
+        console.warn("⚠️ Firestore submit report failed", error);
+      }
+    }
+    const reports = JSON.parse(localStorage.getItem("gombo_reports") || "[]");
+    reports.unshift(newReport);
+    localStorage.setItem("gombo_reports", JSON.stringify(reports));
+    triggerStorageEvent();
+  },
+
+  async toggleUserSuspension(uid: string, suspend: boolean, adminEmail: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "users", uid), { isSuspended: suspend }, { merge: true });
+      } catch (error) {
+        console.warn("⚠️ Firestore toggle suspension failed", error);
+      }
+    }
+    const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+    const idx = users.findIndex(u => u.uid === uid);
+    if (idx !== -1) {
+      users[idx].isSuspended = suspend;
+      localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+      triggerStorageEvent();
+    }
+    await this.addAdminLog(adminEmail, suspend ? "SUSPEND_USER" : "REACTIVE_USER", uid);
+  },
+
+  async toggleUserCertified(uid: string, certify: boolean, adminEmail: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "users", uid), { isCertified: certify }, { merge: true });
+      } catch (error) {
+        console.warn("⚠️ Firestore toggle certified failed", error);
+      }
+    }
+    const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+    const idx = users.findIndex(u => u.uid === uid);
+    if (idx !== -1) {
+      users[idx].isCertified = certify;
+      if (certify) {
+        users[idx].badges = Array.from(new Set([...(users[idx].badges || []), "⭐ Talent Certifié"]));
+        users[idx].verificationStatus = "certifie";
+      } else {
+        users[idx].badges = (users[idx].badges || []).filter(b => b !== "⭐ Talent Certifié");
+        users[idx].verificationStatus = "standard";
+      }
+      localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+      triggerStorageEvent();
+    }
+    await this.addAdminLog(adminEmail, certify ? "CERTIFY_USER" : "REVOKE_CERTIFICATION", uid);
+    
+    // Trigger notification to user
+    await this.sendNotification({
+      userId: uid,
+      title: certify ? "Badge obtenu ! 🏆" : "Badge mis à jour 🏆",
+      message: certify ? "Félicitations ! Vous avez obtenu le badge Talent Certifié ⭐" : "Votre certification a été mise à jour par l'administration d'AFRIGOMBO.",
+      type: "certification_approved"
+    });
+  },
+
+  async banUserPermanently(uid: string, adminEmail: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "users", uid), { isBanned: true, isSuspended: true }, { merge: true });
+      } catch (error) {
+        console.warn("⚠️ Firestore ban user failed", error);
+      }
+    }
+    const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+    const idx = users.findIndex(u => u.uid === uid);
+    if (idx !== -1) {
+      users[idx].isBanned = true;
+      users[idx].isSuspended = true;
+      localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+      triggerStorageEvent();
+    }
+    await this.addAdminLog(adminEmail, "BAN_USER_PERMANENTLY", uid);
+  },
+
+  async deletePostAdmin(postId: string, adminEmail: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await deleteDoc(doc(db, "posts", postId));
+      } catch (error) {
+        console.warn("⚠️ Firestore delete post failed", error);
+      }
+    }
+    const posts: SocialPost[] = JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
+    const updated = posts.filter(p => p.id !== postId);
+    localStorage.setItem("gombo_social_posts", JSON.stringify(updated));
+    triggerStorageEvent();
+    window.dispatchEvent(new Event("gomboSocialPostsChange"));
+    await this.addAdminLog(adminEmail, "DELETE_POST", postId);
+  },
+
+  async togglePostVisibility(postId: string, hide: boolean, adminEmail: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "posts", postId), { isHidden: hide }, { merge: true });
+      } catch (error) {
+        console.warn("⚠️ Firestore toggle post visibility failed", error);
+      }
+    }
+    const posts: any[] = JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
+    const idx = posts.findIndex(p => p.id === postId);
+    if (idx !== -1) {
+      posts[idx].isHidden = hide;
+      localStorage.setItem("gombo_social_posts", JSON.stringify(posts));
+      triggerStorageEvent();
+      window.dispatchEvent(new Event("gomboSocialPostsChange"));
+    }
+    await this.addAdminLog(adminEmail, hide ? "HIDE_POST" : "RESTORE_POST", postId);
+  },
+
+  async auditReportAction(reportId: string, action: "ignore" | "delete" | "suspend" | "ban", adminEmail: string, contentId?: string, authorId?: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "reports", reportId), { status: action === "ignore" ? "ignored" : "resolved" }, { merge: true });
+      } catch (error) {
+        console.warn("⚠️ Firestore update report failed", error);
+      }
+    }
+    const reports = JSON.parse(localStorage.getItem("gombo_reports") || "[]");
+    const idx = reports.findIndex((r: any) => r.id === reportId);
+    if (idx !== -1) {
+      reports[idx].status = action === "ignore" ? "ignored" : "resolved";
+      localStorage.setItem("gombo_reports", JSON.stringify(reports));
+      triggerStorageEvent();
+    }
+
+    if (action === "ignore") {
+      await this.addAdminLog(adminEmail, "REPORT_IGNORED", reportId);
+    } else if (action === "delete" && contentId) {
+      await this.deletePostAdmin(contentId, adminEmail);
+      await this.addAdminLog(adminEmail, "REPORT_RESOLVED_DELETED", contentId);
+    } else if (action === "suspend" && authorId) {
+      await this.toggleUserSuspension(authorId, true, adminEmail);
+      await this.addAdminLog(adminEmail, "REPORT_RESOLVED_SUSPENDED", authorId);
+    } else if (action === "ban" && authorId) {
+      await this.banUserPermanently(authorId, adminEmail);
+      await this.addAdminLog(adminEmail, "REPORT_RESOLVED_BANNED", authorId);
+    }
   },
 
   listenToNotifications(userId: string, callback: (notifications: GomboNotification[]) => void): () => void {

@@ -26,9 +26,11 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        getUserRole() == 'admin';
+      return isSignedIn() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserRole() == 'admin') ||
+        (exists(/databases/$(database)/documents/admins/$(request.auth.uid))) ||
+        (request.auth.token.email in ['johnsylvesterh@gmail.com', 'jhs.kmj7@gmail.com', 'sylvestrehounkpevi777@gmail.com', 'Jhs.kmj7@gmail.com', 'Sylvestrehounkpevi777@gmail.com'] && request.auth.token.email_verified == true)
+      );
     }
 
     // --- STRUCTURAL VALIDATORS (ANTI-UPDATE-GAP SPECS) ---
@@ -327,6 +329,27 @@ service cloud.firestore {
              (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
     }
 
+    function isValidReport(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.reportedBy is string && data.reportedBy.size() <= 128 &&
+             data.contentId is string && data.contentId.size() <= 128 &&
+             data.contentType in ['post', 'user', 'group', 'gombo', 'renfort', 'comment'] &&
+             data.reason is string && data.reason.size() <= 1500 &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             data.status in ['pending', 'ignored', 'resolved'] &&
+             (!('reporterEmail' in data) || (data.reporterEmail is string && data.reporterEmail.size() <= 200)) &&
+             (!('contentTitle' in data) || (data.contentTitle is string && data.contentTitle.size() <= 500)) &&
+             (!('authorId' in data) || (data.authorId is string && data.authorId.size() <= 128));
+    }
+
+    function isValidAFRIGOMBOAdmin(data) {
+      return data.email is string && data.email.size() <= 200 &&
+             data.role in ['super_admin', 'admin'] &&
+             data.permissions is list && data.permissions.size() <= 50 &&
+             (!('id' in data) || (data.id is string && data.id.size() <= 128)) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
+    }
+
 
     // --- 1. USERS COLLECTION RULES ---
     match /users/{userId} {
@@ -553,6 +576,19 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if isValidTempAuth(request.resource.data);
       allow delete: if true;
+    }
+
+    // --- 18. ADMINS COLLECTION RULES ---
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // --- 19. REPORTS COLLECTION RULES ---
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && isValidReport(request.resource.data);
+      allow update, delete: if isAdmin();
     }
 
   }

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Music, Calendar, Clock, MapPin, Search, Plus, User, LogOut, 
   Flame, Sparkles, LayoutDashboard, Settings, Menu, X, Sun, Moon, Laptop, 
-  Star, Award, BookOpen, Users2, ShoppingBag, ShieldCheck, Info,
+  Star, Award, BookOpen, Users2, ShoppingBag, ShieldCheck, Shield, Info,
   ExternalLink, ChevronRight, Heart, MessageSquare, 
   Share2, Bookmark, Play, Pause, Volume2, Lock, Eye, Check, ChevronLeft, Send, Briefcase, Bell
 } from "lucide-react";
@@ -61,6 +61,7 @@ import AnnuaireTalents from "./components/AnnuaireTalents";
 import NotificationCenter from "./components/NotificationCenter";
 import ActivityFeedView from "./components/ActivityFeedView";
 import MessagesView from "./components/MessagesView";
+import AdminCentre from "./components/AdminCentre";
 import { PrivacyPage, TermsPage, DeleteAccountPage, AboutPage, SupportPage, CachetsPage } from "./components/PublicPages";
 
 const ABIDJAN_COMMUNES = [
@@ -286,6 +287,8 @@ export default function App() {
         setView("terms");
       } else if (path === "/delete-account") {
         setView("delete-account");
+      } else if (path === "/admin") {
+        setView("admin");
       } else if (path.startsWith("/talent/")) {
         const uid = path.split("/talent/")[1];
         setSelectedTalentUid(uid);
@@ -295,6 +298,7 @@ export default function App() {
         if (hash === "#/privacy") setView("privacy");
         else if (hash === "#/terms") setView("terms");
         else if (hash === "#/delete-account") setView("delete-account");
+        else if (hash === "#/admin") setView("admin");
       }
     };
 
@@ -310,6 +314,8 @@ export default function App() {
       window.history.pushState(null, "", "/terms");
     } else if (targetView === "delete-account") {
       window.history.pushState(null, "", "/delete-account");
+    } else if (targetView === "admin") {
+      window.history.pushState(null, "", "/admin");
     } else if (targetView === "annuaire") {
       if (selectedTalentUid) {
         window.history.pushState(null, "", `/talent/${selectedTalentUid}`);
@@ -325,6 +331,7 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -510,6 +517,26 @@ export default function App() {
     // Close the auth screen/modal when user is successfully authenticated
     if (currentUser) {
       setShowAuthModal(false);
+    }
+
+    // Super Admin Redirection
+    if (currentUser && currentUser.email) {
+      gomboDB.checkIsSuperAdminByEmail(currentUser.email).then(isSuper => {
+        setIsAdmin(isSuper);
+        if (isSuper) {
+          const notifiedKey = "admin_notified_" + currentUser.uid;
+          if (!sessionStorage.getItem(notifiedKey)) {
+            sessionStorage.setItem(notifiedKey, "true");
+            alert("Bienvenue, Administrateur AFRIGOMBO 👑");
+          }
+          const toggledOffKey = "admin_mode_toggled_off_" + currentUser.uid;
+          if (sessionStorage.getItem(toggledOffKey) !== "true" && view !== "admin") {
+            setView("admin");
+          }
+        }
+      });
+    } else {
+      setIsAdmin(false);
     }
 
     // OBLIGATORY REDIRECTION BEHAVIOR for incomplete profiles
@@ -841,6 +868,23 @@ export default function App() {
             100% { transform: translateX(-100%); }
           }
         `}} />
+      </div>
+    );
+  }
+
+  if (view === "admin") {
+    return (
+      <div className={darkMode ? "dark" : ""}>
+        <AdminCentre 
+          adminEmail={user?.email || "johnsylvesterh@gmail.com"} 
+          adminProfile={profile} 
+          onExitAdminMode={() => {
+            if (user?.uid) {
+              sessionStorage.setItem("admin_mode_toggled_off_" + user.uid, "true");
+            }
+            navigateTo("home");
+          }} 
+        />
       </div>
     );
   }
@@ -1355,6 +1399,22 @@ export default function App() {
                             </span>
                           )}
                         </button>
+
+                        {isAdmin && (
+                          <button
+                            onClick={() => { 
+                              if (user?.uid) {
+                                sessionStorage.removeItem("admin_mode_toggled_off_" + user.uid);
+                              }
+                              setView("admin"); 
+                              setMobileMenuOpen(false); 
+                            }}
+                            className="w-full py-2 px-2.5 text-left bg-gradient-to-r from-amber-500/10 to-transparent hover:from-amber-500/20 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-amber-400 border border-amber-500/25 hover:border-amber-500/50 transition-all uppercase tracking-wider cursor-pointer"
+                          >
+                            <Shield className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                            <span>Centre de Commande 👑</span>
+                          </button>
+                        )}
 
                         <button
                           onClick={() => { handleLogout(); setMobileMenuOpen(false); }}

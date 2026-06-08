@@ -63,6 +63,9 @@ export interface UserProfile {
     groupes: boolean;
   };
 
+  isSuspended?: boolean;
+  isBanned?: boolean;
+
   themePreference?: "light" | "dark" | "system";
 
   createdAt: string; // ISO String
@@ -416,6 +419,22 @@ export interface VerificationRequest {
   mediaUrl: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
+}
+
+export interface AFRIGOMBOAdmin {
+  id?: string;
+  email: string;
+  role: "super_admin" | string;
+  permissions: string[];
+  createdAt: string | any; // Supports Timestamp in firestore / string in local fallback
+}
+
+export interface AdminLog {
+  id?: string;
+  adminEmail: string;
+  action: string;
+  targetId: string;
+  createdAt: string | any; // ISO split string or Firestore Timestamp
 }
 
 

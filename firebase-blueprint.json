@@ -346,6 +346,36 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "creatorId", "name", "type", "createdAt"]
+    },
+    "Admin": {
+      "title": "AFRIGOMBO Admin",
+      "description": "Administrator validation document shape in AFRIGOMBO database",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["super_admin"] },
+        "permissions": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["email", "role", "permissions", "createdAt"]
+    },
+    "Report": {
+      "title": "Reported Content",
+      "description": "Reports raised by users against posts or comments",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reportedBy": { "type": "string" },
+        "reporterEmail": { "type": "string" },
+        "contentId": { "type": "string" },
+        "contentType": { "type": "string" },
+        "contentTitle": { "type": "string" },
+        "authorId": { "type": "string" },
+        "reason": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "reportedBy", "contentId", "contentType", "reason", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -420,6 +450,14 @@
     "/messages/{messageId}": {
       "schema": "Message",
       "description": "Realtime internal messages logs with images and recorded audio attachments references"
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Verification table tracking AFRIGOMBO super administrators validation permissions"
+    },
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Reports raised by users against posts or comments"
     }
   }
 }
