@@ -1522,6 +1522,19 @@ export default function App() {
               exit={{ opacity: 0 }}
               className="space-y-8"
             >
+              {/* Dynamic Admin Announcement Display */}
+              {localStorage.getItem("gombo_system_alert") && (
+                <div className="bg-orange-500/10 border-l-4 border-orange-500 p-4 rounded-r-2xl flex items-start gap-3 shadow-md border border-orange-500/15">
+                  <span className="p-1 bg-[#FF7A00]/20 rounded text-[#FF7A00] shrink-0 font-black text-xs uppercase tracking-wider">👑 SYSTÈME CRÉATEUR</span>
+                  <div>
+                    <h4 className="text-xs font-black uppercase text-gray-950 dark:text-slate-200 tracking-wider">AFRIGOMBO PRO INFO SYSTEME</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 italic font-semibold leading-relaxed">
+                      "{localStorage.getItem("gombo_system_alert")}"
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* HERO PROMO BLOCK / HERO BANNER */}
               <div className="bg-white dark:bg-[#18181B] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 sm:p-10 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="flex-1 space-y-4 text-center md:text-left">
