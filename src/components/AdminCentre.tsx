@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { gomboDB, isFirebaseMock } from "../firebase";
 import { UserProfile, SocialPost, AdminLog, Gombo } from "../types";
+import { useAuth } from "../AuthContext";
 
 interface AdminCentreProps {
   adminEmail: string;
@@ -28,6 +29,7 @@ const MOCK_TELEMETRY_LOGS = [
 ];
 
 export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode }: AdminCentreProps) {
+  const { logout } = useAuth();
   // Navigation tabs
   const [activeTab, setActiveTab] = useState<"cockpit" | "finances" | "gombos" | "posts" | "users" | "reports" | "config" | "groups">("cockpit");
   
@@ -476,7 +478,27 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
               
               {/* TAB 1: GENERAL STATS & TERM COCKPIT */}
               {activeTab === "cockpit" && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="space-y-6">
+                  {/* HERO WELCOME BANNER FOR FONDATORS */}
+                  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#D4AF37]/15 via-[#141414] to-[#141414]/50 border-2 border-[#D4AF37]/35 p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 justify-between shadow-2xl">
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+                    <div className="space-y-3 relative z-10 max-w-2xl text-left">
+                      <h2 className="text-xl sm:text-2xl font-black text-amber-400 tracking-tight flex items-center gap-2">
+                        <span>👑</span> Bienvenue dans le Centre de Commande AFRIGOMBO
+                      </h2>
+                      <p className="text-sm font-black text-slate-100 font-display">
+                        Vous êtes l'un des Fondateurs du Temple du Gombo Musical.
+                      </p>
+                      <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                        Vous disposez d'un accès total pour piloter, protéger et faire grandir la communauté AFRIGOMBO.
+                      </p>
+                    </div>
+                    <div className="shrink-0 flex items-center justify-center p-4 bg-amber-400/10 border border-amber-400/25 rounded-2xl relative z-10">
+                      <Award className="w-12 h-12 text-[#D4AF37] animate-pulse" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   
                   {/* Left Column stats block */}
                   <div className="lg:col-span-2 space-y-6">
@@ -632,8 +654,9 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                     </div>
                   </div>
 
-                  {/* Right Column: Virtual Ticker Console Logs */}
-                  <div className="bg-[#090b14] border border-slate-900 rounded-3xl p-5 flex flex-col justify-between">
+                  {/* Right Column: Virtual Ticker Console Logs & Account Switcher */}
+                  <div className="space-y-6">
+                    <div className="bg-[#090b14] border border-slate-900 rounded-3xl p-5 flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between border-b border-slate-900 pb-3">
                         <span className="text-xs font-black tracking-widest text-slate-200 uppercase flex items-center gap-1.5">
@@ -663,8 +686,67 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                       <span className="font-mono text-slate-400">{terminalFeed.length} logs d'arène</span>
                     </div>
                   </div>
+
+                  {/* CHANGE ADMIN ACCOUNT CARD */}
+                  <div className="bg-[var(--card-bg,#141414)] border border-[#D4AF37]/25 hover:border-[#D4AF37]/50 rounded-3xl p-5 space-y-4 transition shadow-xl">
+                    <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color,#222222)]">
+                      <ShieldAlert className="w-4 h-4 text-[#D4AF37]" />
+                      <h3 className="text-xs font-black tracking-widest text-[#D4AF37] uppercase">Changer de Compte Admin</h3>
+                    </div>
+                    
+                    <p className="text-[10.5px] text-slate-400 font-sans leading-relaxed text-left">
+                      Les trois adresses fondatrices ci-dessous ont le même contrôle total d'AFRIGOMBO. Vous pouvez vous déconnecter pour changer de session Google :
+                    </p>
+
+                    <div className="space-y-2">
+                      {[
+                        "johnsylvesterh@gmail.com",
+                        "sylvestrehounkpevi777@gmail.com",
+                        "jhs.kmj7@gmail.com"
+                      ].map((emailAddress) => {
+                        const isActive = emailAddress.toLowerCase() === adminEmail.toLowerCase();
+                        return (
+                          <div 
+                            key={emailAddress}
+                            className={`p-2.5 rounded-xl border flex items-center justify-between font-mono text-[10px] sm:text-[11px] transition-all text-left ${
+                              isActive 
+                                ? "bg-[#D4AF37]/10 border-[#D4AF37] text-amber-400 font-black" 
+                                : "bg-[#0B0B0B]/40 border-slate-900 text-slate-300"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-amber-400 animate-pulse" : "bg-slate-600"}`} />
+                              <span className="truncate">{emailAddress}</span>
+                            </div>
+                            {isActive ? (
+                              <span className="bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#D4AF37] text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm shrink-0">
+                                Actif 👑
+                              </span>
+                            ) : (
+                              <button
+                                onClick={async () => {
+                                  if (confirm(`Voulez-vous vous déconnecter de la session actuelle pour vous connecter avec l'adresse : ${emailAddress} ?`)) {
+                                    try {
+                                      await logout();
+                                    } catch (err) {
+                                      console.error("Logout failed:", err);
+                                    }
+                                  }
+                                }}
+                                className="bg-slate-900 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/25 hover:text-rose-400 text-slate-400 text-[8.5px] font-black uppercase tracking-wider px-2 py-1 rounded transition shrink-0 cursor-pointer"
+                              >
+                                Déconnecter
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-              )}
+              </div>
+            </div>
+          )}
 
               {/* TAB 2: FINANCES & WITHDRAWAL AUDITING */}
               {activeTab === "finances" && (

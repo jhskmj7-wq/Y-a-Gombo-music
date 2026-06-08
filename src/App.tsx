@@ -44,6 +44,17 @@ const ProfileSkeleton = () => (
 );
 
 // Component Imports
+const SUPER_ADMIN_EMAILS = [
+  "johnsylvesterh@gmail.com",
+  "sylvestrehounkpevi777@gmail.com",
+  "jhs.kmj7@gmail.com"
+];
+
+const isEmailSuperAdmin = (email?: string | null): boolean => {
+  if (!email) return false;
+  return SUPER_ADMIN_EMAILS.includes(email.toLowerCase());
+};
+
 import AuthScreen from "./components/AuthScreen";
 import ProfileEdit from "./components/ProfileEdit";
 import GomboPublish from "./components/GomboPublish";
@@ -520,17 +531,28 @@ export default function App() {
     }
 
     // Super Admin Redirection
-    if (currentUser && currentUser.email) {
+    if (currentUser && currentUser.email && isEmailSuperAdmin(currentUser.email)) {
+      setIsAdmin(true);
+      const notifiedKey = "admin_notified_" + currentUser.uid;
+      if (!sessionStorage.getItem(notifiedKey)) {
+        sessionStorage.setItem(notifiedKey, "true");
+        alert("👑 Bienvenue Super Administrateur AFRIGOMBO");
+      }
+      const toggledOffKey = "admin_mode_toggled_off_" + currentUser.uid;
+      if (sessionStorage.getItem(toggledOffKey) !== "true" && view !== "admin" && view !== "complete_profile") {
+        setView("admin");
+      }
+    } else if (currentUser && currentUser.email) {
       gomboDB.checkIsSuperAdminByEmail(currentUser.email).then(isSuper => {
         setIsAdmin(isSuper);
         if (isSuper) {
           const notifiedKey = "admin_notified_" + currentUser.uid;
           if (!sessionStorage.getItem(notifiedKey)) {
             sessionStorage.setItem(notifiedKey, "true");
-            alert("Bienvenue, Administrateur AFRIGOMBO 👑");
+            alert("👑 Bienvenue Super Administrateur AFRIGOMBO");
           }
           const toggledOffKey = "admin_mode_toggled_off_" + currentUser.uid;
-          if (sessionStorage.getItem(toggledOffKey) !== "true" && view !== "admin") {
+          if (sessionStorage.getItem(toggledOffKey) !== "true" && view !== "admin" && view !== "complete_profile") {
             setView("admin");
           }
         }
@@ -540,7 +562,8 @@ export default function App() {
     }
 
     // OBLIGATORY REDIRECTION BEHAVIOR for incomplete profiles
-    if (currentUser && authProfile && !authProfile.isProfileComplete && view !== "complete_profile") {
+    const isSuper = currentUser?.email ? isEmailSuperAdmin(currentUser.email) : false;
+    if (!isSuper && currentUser && authProfile && !authProfile.isProfileComplete && view !== "complete_profile") {
       console.log("⚠️ [App Debug] Profile is incomplete! Redirecting to complete_profile");
       setView("complete_profile");
     }
@@ -873,6 +896,14 @@ export default function App() {
   }
 
   if (view === "admin") {
+    // Security check: Only the three authorized Super Administrators can access
+    const isSuper = user?.email ? isEmailSuperAdmin(user.email) : false;
+    if (!isSuper) {
+      console.warn("⛔ ACCÈS NON AUTORISÉ : Redirection automatique vers l'accueil.");
+      setTimeout(() => navigateTo("home"), 0);
+      return null;
+    }
+
     return (
       <div className={darkMode ? "dark" : ""}>
         <AdminCentre 
@@ -1309,6 +1340,17 @@ export default function App() {
                         <p className="text-[9.5px] font-black tracking-widest text-[#D4AF37] uppercase mb-1.5 flex items-center gap-1.5">
                           <span>👤</span> Mon Espace Gombo
                         </p>
+
+                        {/* Super Admin Back to Admin button */}
+                        {isEmailSuperAdmin(currentUser?.email) && (
+                          <button
+                            onClick={() => { setView("admin"); setMobileMenuOpen(false); }}
+                            className="w-full py-2.5 px-3 bg-amber-400/10 hover:bg-amber-400/20 border border-[#D4AF37]/40 hover:border-[#D4AF37]/80 rounded-xl flex items-center gap-2.5 text-xs font-black text-[#D4AF37] hover:text-white transition-all uppercase tracking-widest cursor-pointer mb-2.5"
+                          >
+                            <Shield className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                            <span>👑 Retour au Cockpit</span>
+                          </button>
+                        )}
                         
                         <button
                           onClick={() => { setView("profile_edit"); setMobileMenuOpen(false); }}
