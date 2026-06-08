@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  ShieldAlert, Users, Film, Radio, Layers, DollarSign, ListFilter, 
+  Shield, Users, Film, Radio, Layers, DollarSign, ListFilter, 
   Trash2, ShieldCheck, Ban, Sparkles, BookOpen, AlertOctagon, CheckCircle, 
-  X, Search, Award, Grid, Shield, Minimize, RefreshCw, BarChart2, Eye, EyeOff, 
-  Activity, Send, AlertTriangle, Cpu, TrendingUp, Landmark, Flame, Bell, Check, Edit, ChevronRight
+  X, Search, Award, Grid, RefreshCw, BarChart2, Eye, EyeOff, 
+  Activity, Send, AlertTriangle, Cpu, TrendingUp, Landmark, Flame, Bell, Check, Edit, ChevronRight, LogOut, User
 } from "lucide-react";
 import { gomboDB, isFirebaseMock } from "../firebase";
 import { UserProfile, SocialPost, AdminLog, Gombo } from "../types";
@@ -16,23 +16,27 @@ interface AdminCentreProps {
   onExitAdminMode: () => void;
 }
 
-// Simulated real-time streaming operations logs
 const MOCK_TELEMETRY_LOGS = [
-  "⚡ [API Gateway] Route /api/gombos optimized in 4ms",
+  "⚡ [API Gateway] Route /api/gombos optimisée en 4ms",
   "🔑 [Google Auth] Session rafraîchie sous token JWT conforme",
-  "💰 [Finance] Succès du prélèvement de commission - Référence W2026-68",
-  "🛡️ [Juge Gombo] Scanner de contenu automatisé exempt de mots interdits",
+  "💰 [Finance] Succès du prélèvement de commission - Réf Gombo-Pay",
+  "🛡️ [Juge Gombo] Scanner de contenu automatisé exempt de mots bannis",
   "📋 [Validation] Candidature de l'artiste Yorobo Sangaré reçue",
-  "🔔 [Push NS] Notification prioritaires Cocody expédiée à 12 membres",
-  "🔋 [Engine] Threads Node.js alloués: 96, CPU: 8.5%",
-  "📁 [DB Core] Sauvegarde immuable de l'index 'temp_auth_transfers'"
+  "🔔 [Push service] Notification priority Cocody expédiée à 12 membres",
+  "🔋 [Engine] Threads Node.js alloués: 96, CPU: 4.5%",
+  "📁 [DB Core] Sauvegarde de l'index 'temp_auth_transfers' validée"
 ];
 
 export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode }: AdminCentreProps) {
   const { logout } = useAuth();
-  // Navigation tabs
-  const [activeTab, setActiveTab] = useState<"cockpit" | "finances" | "gombos" | "posts" | "users" | "reports" | "config" | "groups">("cockpit");
   
+  // Navigation tabs matching lower tab-bar
+  // cockpit=Tableau, users=Utilisateurs, posts=Publications, reports=Signalements, plus=Plus Configs
+  const [activeTab, setActiveTab] = useState<"cockpit" | "users" | "posts" | "reports" | "plus">("cockpit");
+  
+  // For the "plus" tab sub-sections
+  const [plusSubTab, setPlusSubTab] = useState<"finances" | "groups" | "config" | "about">("finances");
+
   // Base Data States
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [posts, setPosts] = useState<SocialPost[]>([]);
@@ -47,7 +51,6 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   const [withdrawRequests, setWithdrawRequests] = useState<any[]>(() => {
     const saved = localStorage.getItem("gombo_withdraw_requests");
     if (saved) return JSON.parse(saved);
-    // Initial rich mock withdraw actions
     return [
       { id: "wd-001", userEmail: "artiste.momo@gmail.com", userUid: "momo_uid", amount: 15000, provider: "Orange Money", phone: "+225 07 48 99 12 30", status: "pending", date: new Date(Date.now() - 3600000).toISOString() },
       { id: "wd-002", userEmail: "guitariste.solo@gombo.ci", userUid: "solo_uid", amount: 35000, provider: "Wave", phone: "+225 05 99 88 12 11", status: "pending", date: new Date(Date.now() - 7200000).toISOString() },
@@ -66,11 +69,22 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   // Ticker activity feed states
   const [terminalFeed, setTerminalFeed] = useState<string[]>(["📡 Initialisation du tableau de bord de commande..."]);
   
-  // Internal search filters
+  // Notifications states
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [adminNotifications, setAdminNotifications] = useState<any[]>([
+    { id: 1, text: "Demande de retrait Wave de 35 000 FCFA reçue", read: false, time: "Il y a 5 min" },
+    { id: 2, text: "Nouveau signalement déposé concernant un concert", read: false, time: "Il y a 25 min" },
+    { id: 3, text: "Compte de Serge Kassi certifié VIP avec succès", read: true, time: "Il y a 2h" }
+  ]);
+
+  // Internal search filters & sub-tabs filters
   const [searchTerm, setSearchTerm] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState<string>("all");
   const [reportFilter, setReportFilter] = useState<string>("all");
+  const [gomboOrPostFilter, setGomboOrPostFilter] = useState<"gombos" | "posts">("gombos");
   const [gomboFilter, setGomboFilter] = useState<string>("all");
+
+  const unreadNotifsCount = adminNotifications.filter(n => !n.read).length;
 
   // System statistics telemetry
   const [stats, setStats] = useState({
@@ -86,8 +100,8 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
     revenusPremium: 0,
     totalSecuredCachet: 0,
     paymentsSuccess: 0,
-    cpuUsage: 14,
-    latencyMs: 12
+    cpuUsage: 11,
+    latencyMs: 14
   });
 
   // Telemetry loop for simulating server health
@@ -95,17 +109,16 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
     const telemetryInterval = setInterval(() => {
       setStats(prev => ({
         ...prev,
-        cpuUsage: Math.floor(Math.random() * 12) + 6, // 6% to 18% CPU
-        latencyMs: Math.floor(Math.random() * 15) + 8 // 8ms to 23ms latency
+        cpuUsage: Math.floor(Math.random() * 8) + 4, // 4% to 12% CPU
+        latencyMs: Math.floor(Math.random() * 12) + 6 // 6ms to 18ms latency
       }));
 
-      // Stream a random simulation log occasionally
-      if (Math.random() > 0.6) {
+      if (Math.random() > 0.65) {
         const randomMsg = MOCK_TELEMETRY_LOGS[Math.floor(Math.random() * MOCK_TELEMETRY_LOGS.length)];
         const timestamp = new Date().toLocaleTimeString();
-        setTerminalFeed(prev => [`[${timestamp}] ${randomMsg}`, ...prev.slice(0, 10)]);
+        setTerminalFeed(prev => [`[${timestamp}] ${randomMsg}`, ...prev.slice(0, 15)]);
       }
-    }, 4000);
+    }, 5000);
 
     return () => clearInterval(telemetryInterval);
   }, []);
@@ -145,7 +158,6 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
       setGroups(groupsList);
       setRenforts(renfortsList);
 
-      // Calcul standard calculations
       const musicianCount = usersList.filter(u => u.role === "musicien").length;
       const clientCount = usersList.filter(u => u.role === "client" || u.role === "organisateur").length;
       const managerCount = usersList.filter(u => u.role === "manager").length;
@@ -162,7 +174,7 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
         } catch {
           return true;
         }
-      }).length || Math.min(usersList.length, 3);
+      }).length || Math.min(usersList.length, 4);
 
       const securedBudgetsSum = gombosList.reduce((acc, g) => acc + (g.budget || 0), 0);
       const dynamicPremiumRevenue = Math.round(securedBudgetsSum * (parseFloat(commissionRate) / 100 || 0.1));
@@ -183,20 +195,19 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
       }));
       setLoading(false);
     } catch (err) {
-      console.error("Error loading secure admin context data:", err);
+      console.error("Erreur lors du chargement des statistiques d'administration :", err);
       setLoading(false);
     }
   };
 
   useEffect(() => {
     loadData();
-  }, [activeTab]);
+  }, [activeTab, plusSubTab]);
 
-  // Core administrative events Handlers
   const handleToggleSuspension = async (uid: string, currentSuspension: boolean) => {
     if (confirm(`Voulez-vous ${currentSuspension ? "RÉACTIVER" : "SUSPENDRE DIRECTEMENT"} cet utilisateur ?`)) {
       await gomboDB.toggleUserSuspension(uid, !currentSuspension, adminEmail);
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🚧 Statut suspension changé pour l'UID: ${uid}`, ...prev]);
+      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🚧 Statut suspension mis à jour pour l'UID: ${uid}`, ...prev]);
       loadData();
     }
   };
@@ -204,39 +215,39 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   const handleToggleCertification = async (uid: string, currentCertified: boolean) => {
     if (confirm(`Voulez-vous ${currentCertified ? "DÉCERTIFIER" : "CERTIFIER COMME TALENT ⭐ PRINCIPAL"} cet utilisateur ?`)) {
       await gomboDB.toggleUserCertified(uid, !currentCertified, adminEmail);
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ⭐ Certification émise pour l'UID: ${uid}`, ...prev]);
+      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ⭐ Certification modifiée pour l'UID: ${uid}`, ...prev]);
       loadData();
     }
   };
 
   const handleDeletePost = async (postId: string) => {
-    if (confirm("Voulez-vous détruire immuablement cette publication ?")) {
+    if (confirm("Voulez-vous bannir et supprimer définitivement cette publication ?")) {
       await gomboDB.deletePostAdmin(postId, adminEmail);
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🗑️ Publication supprimée immuablement: ${postId}`, ...prev]);
+      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🗑️ Publication supprimée : ${postId}`, ...prev]);
       loadData();
     }
   };
 
   const handleTogglePostVisibility = async (postId: string, currentHidden: boolean) => {
     await gomboDB.togglePostVisibility(postId, !currentHidden, adminEmail);
-    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 👁️ Visibilité alternée pour la publication: ${postId}`, ...prev]);
+    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 👁️ Visibilité basculée pour la publication: ${postId}`, ...prev]);
     loadData();
   };
 
   const handleAuditReport = async (reportId: string, action: "ignore" | "delete" | "suspend" | "ban", contentId?: string, authorId?: string) => {
-    if (confirm(`Prendre la décision : ${action.toUpperCase()} pour ce signalement ?`)) {
+    if (confirm(`Confirmez-vous l'action : ${action.toUpperCase()} ?`)) {
       await gomboDB.auditReportAction(reportId, action, adminEmail, contentId, authorId);
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🛡️ Arbitrage report ${reportId} complété avec succès`, ...prev]);
+      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🛡️ Arbitrage de signalement complété : ${reportId}`, ...prev]);
       loadData();
     }
   };
 
   const handleDeleteGroup = async (groupId: string, name: string) => {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement le groupe "${name}" ? Cette action est irréversible.`)) {
+    if (confirm(`Voulez-vous supprimer définitivement l'orchestre "${name}" ?`)) {
       try {
         await gomboDB.deleteMusicGroup(groupId);
         await gomboDB.addAdminLog(adminEmail, "DELETE_MUSIC_GROUP", groupId);
-        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🗑️ GROUPE DESTRUIT : Le groupe "${name}" a été définitivement supprimé par l'admin.`, ...prev]);
+        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🗑️ Orchestre supprimé : "${name}"`, ...prev]);
         loadData();
       } catch (err) {
         console.error("Error deleting group:", err);
@@ -246,11 +257,11 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
 
   const handleToggleSuspendGroup = async (groupId: string, name: string, isCurrentlySuspended: boolean) => {
     const actionWord = isCurrentlySuspended ? "RÉACTIVER" : "SUSPENDRE DIRECTEMENT";
-    if (confirm(`Voulez-vous ${actionWord} l'orchestre / groupe "${name}" ?`)) {
+    if (confirm(`Voulez-vous ${actionWord} l'orchestre "${name}" ?`)) {
       try {
         await gomboDB.updateMusicGroup(groupId, { isSuspended: !isCurrentlySuspended });
         await gomboDB.addAdminLog(adminEmail, isCurrentlySuspended ? "REACTIVATE_MUSIC_GROUP" : "SUSPEND_MUSIC_GROUP", groupId);
-        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🚧 STATUT GROUPE CHANGÉ : "${name}" est désormais ${isCurrentlySuspended ? 'actif' : 'suspendu'}.`, ...prev]);
+        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🚧 Statut orchestre mis à jour : "${name}"`, ...prev]);
         loadData();
       } catch (err) {
         console.error("Error updating group status:", err);
@@ -258,12 +269,10 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
     }
   };
 
-  // Finance Approval handlers
   const handleApproveWithdraw = (id: string, requesterUid: string, amount: number) => {
-    if (confirm(`Confirmez-vous le versement externe de ${amount.toLocaleString()} FCFA pour ce transfert Showbiz ?`)) {
+    if (confirm(`Confirmez-vous le versement de ${amount.toLocaleString()} FCFA pour ce transfert ?`)) {
       setWithdrawRequests(prev => prev.map(r => r.id === id ? { ...r, status: "approved" } : r));
       
-      // Update specific target profile balance if possible
       if (requesterUid) {
         gomboDB.getUserProfile(requesterUid).then(async (prof) => {
           if (prof) {
@@ -277,32 +286,31 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
           }
         });
       }
-
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 💰 RECONCILIATION SUCCÈS : Transfert ${id} validé par l'admin d'Abidjan.`, ...prev]);
+      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 💰 Commission & Versement d'Abidjan approuvé pour l'ID ${id}.`, ...prev]);
     }
   };
 
   const handleRejectWithdraw = (id: string) => {
-    if (confirm("Voulez-vous rejeter cette demande ? Les fonds resteront gelés pour enquête d'arbitrage.")) {
+    if (confirm("Voulez-vous rejeter ce retrait ? Les fonds seront retournés.")) {
       setWithdrawRequests(prev => prev.map(r => r.id === id ? { ...r, status: "rejected" } : r));
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ❌ TRANSFERT REJETÉ : Arbitrage requis sur l'opération ${id}.`, ...prev]);
+      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ❌ Transfert rejeté pour l'ID ${id}.`, ...prev]);
     }
   };
 
-  // Systems Configuration triggers
   const handleSaveConfig = () => {
     localStorage.setItem("gombo_system_alert", systemAlert);
     localStorage.setItem("gombo_commission_rate", commissionRate);
     alert("Configuration globale d'AFRIGOMBO sauvegardée avec succès !");
-    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ⚙️ Métadonnées config système modifiées. Commission : ${commissionRate}%`, ...prev]);
+    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ⚙️ Commission de placement réajustée à : ${commissionRate}%`, ...prev]);
   };
 
-  // Filter computation rules
+  // Filters logic
   const filteredUsers = users.filter(u => {
     const name = `${u.firstName || ""} ${u.lastName || ""} ${u.artistName || ""}`.toLowerCase();
     const email = (u.email || "").toLowerCase();
+    const phone = (u.phone || "").toLowerCase();
     const term = searchTerm.toLowerCase();
-    const matchesSearch = name.includes(term) || email.includes(term);
+    const matchesSearch = name.includes(term) || email.includes(term) || phone.includes(term);
 
     if (userRoleFilter === "all") return matchesSearch;
     if (userRoleFilter === "certified") return matchesSearch && (u.isCertified || u.verificationStatus === "certifie");
@@ -335,1044 +343,1039 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   });
 
   return (
-    <div className="min-h-screen bg-[#070913] text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-black" id="afrigombo-admin-dashboard-container">
+    <div className="min-h-screen bg-[#0B0B0B] text-[#F8F8F8] font-sans antialiased selection:bg-[#D4AF37] selection:text-black pb-28" id="afrigombo-admin-overhauled">
       
-      {/* 🚀 UPPER HEAVY TELEMETRY HEADER STATUS */}
-      <div className="w-full bg-slate-950/80 border-b border-amber-500/10 px-4 sm:px-6 py-3.5 sticky top-0 z-50 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/10">
-              <Shield className="text-[#070913] w-5 h-5 font-black" />
+      {/* 👑 PREMIUM FIXED TOP HEADER */}
+      <header className="sticky top-0 z-40 bg-[#121212] border-b border-[#2B2B2B] px-4 py-4 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/40 flex items-center justify-center shadow">
+              <Shield className="text-[#D4AF37] w-4.5 h-4.5 stroke-[2px]" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-black tracking-widest text-amber-400 uppercase">
-                  COCKPIT CRÉATEUR • AFRIGOMBO
-                </h1>
-                <span className="bg-amber-500/10 text-amber-400 text-[8.5px] uppercase font-black px-1.5 py-0.5 rounded border border-amber-500/20">
-                  SYSADMIN V4.0
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 font-mono">Moniteur de contrôle sécurisé: {adminEmail}</p>
+              <h1 className="text-sm font-black tracking-widest text-[#D4AF37] uppercase">
+                Centre de Commande AFRIGOMBO
+              </h1>
+              <p className="text-[10px] text-gray-400 font-mono tracking-tight">
+                Le Temple du Gombo Musical
+              </p>
             </div>
           </div>
 
-          {/* TELEMETRY GAUGES */}
-          <div className="flex items-center gap-5 text-slate-400 text-[10.5px] font-mono">
-            <div className="hidden lg:flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-amber-400" />
-              <span>Charge VM:</span>
-              <span className="font-extrabold text-slate-200">{stats.cpuUsage}%</span>
-            </div>
-            <div className="hidden md:flex items-center gap-2">
-              <Activity className="w-4 h-4 text-emerald-400" />
-              <span>Latence:</span>
-              <span className="font-extrabold text-slate-200">{stats.latencyMs}ms</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-emerald-400 font-bold uppercase text-[9px] tracking-wider">Sync Firestore Online</span>
-            </div>
-          </div>
+          <div className="flex items-center gap-3">
+            {/* Notification trigger */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 bg-[#0B0B0B] hover:bg-[#2B2B2B] border border-[#2B2B2B] rounded-lg transition-colors cursor-pointer relative"
+                aria-label="Notifications"
+              >
+                <Bell className="w-4 h-4 text-[#D4AF37]" />
+                {unreadNotifsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse border border-[#121212]" />
+                )}
+              </button>
 
-          <div className="flex items-center gap-2.5">
-            <button 
-              onClick={() => loadData()}
-              className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/30 rounded-xl transition text-slate-300 hover:text-amber-400"
-              title="Rafraîchir les données de l'arène"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
+              <AnimatePresence>
+                {showNotifications && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2.5 w-64 bg-[#121212] border border-[#2B2B2B] rounded-xl shadow-2xl p-3 z-50 overflow-hidden"
+                  >
+                    <div className="flex justify-between items-center pb-2 border-b border-[#2B2B2B] mb-2">
+                      <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-wider">Alertes Actives</span>
+                      <button 
+                        onClick={() => {
+                          setAdminNotifications(prev => prev.map(n => ({...n, read: true})));
+                        }}
+                        className="text-[9px] text-gray-400 hover:text-[#D4AF37] uppercase font-bold"
+                      >
+                        Marquer lu
+                      </button>
+                    </div>
+                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {adminNotifications.map(n => (
+                        <div key={n.id} className={`p-2 rounded-lg text-[11.5px] border ${n.read ? "bg-[#0B0B0B]/40 border-transparent text-gray-400" : "bg-[#2B2B2B]/30 border-[#D4AF37]/10 text-[#F8F8F8]"}`}>
+                          <p className="line-clamp-2 leading-tight font-medium">{n.text}</p>
+                          <span className="text-[9px] text-gray-500 font-mono block mt-1">{n.time}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Logout trigger directly from view */}
             <button
-              onClick={onExitAdminMode}
-              className="px-4 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black text-xs rounded-xl hover:shadow-lg hover:shadow-amber-500/15 hover:scale-[1.02] transform transition cursor-pointer"
+              onClick={async () => {
+                if (confirm("Êtes-vous sûr de vouloir vous déconnecter de votre session Admin d'Abidjan ?")) {
+                  try {
+                    await logout();
+                  } catch (e) {
+                    console.error("Logout failed:", e);
+                  }
+                }
+              }}
+              className="p-2 bg-[#0B0B0B] hover:bg-red-950/20 hover:border-red-500/30 border border-[#2B2B2B] text-gray-400 hover:text-red-400 rounded-lg transition-all cursor-pointer"
+              title="Déconnexion sécurisée"
             >
-              👤 Passer en mode utilisateur
+              <LogOut className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ⚡ GENERAL BROADCAST NOTIFICATION BAR */}
+      <div className="bg-[#121212] border-b border-[#2B2B2B] py-2 px-4 shadow-sm">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs text-slate-300">
+          <div className="flex items-center gap-2 truncate">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="truncate text-[11px] font-medium text-gray-400">Canal Sysadmin : <strong className="text-[#D4AF37]">{adminEmail}</strong></span>
+          </div>
+          <div className="flex gap-4 shrink-0 text-[10px] font-mono text-gray-400">
+            <span>CPU: {stats.cpuUsage}%</span>
+            <span>PING: {stats.latencyMs}ms</span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        
-        {/* GLOBAL BROADCAST BANNER DISPLAY (Admin interactive configuration check) */}
-        <div className="bg-gradient-to-r from-amber-500/10 via-slate-950/80 to-amber-500/5 border-l-4 border-amber-400 p-4 rounded-r-2xl flex items-start gap-3">
-          <Bell className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="text-[10px] font-black tracking-widest text-amber-400 uppercase">ANNOUNCE DIRECTE AFFICHÉE SUR ACCUEIL</p>
-            <p className="text-xs text-slate-200 italic font-mono">"{systemAlert}"</p>
-          </div>
-        </div>
-
-        {/* COMPREHENSIVE SUB-ROUTING NAVIGATION DRAWER TABS */}
-        <div className="flex overflow-x-auto gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-900 scrollbar-none">
-          <button
-            onClick={() => { setActiveTab("cockpit"); setSearchTerm(""); }}
-            className={`px-4 py-2.5 text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl shrink-0 transition flex items-center gap-2 ${activeTab === "cockpit" ? "bg-amber-400 text-[#070913] font-black" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"}`}
-          >
-            <Grid className="w-4 h-4" /> Cockpit Général
-          </button>
-          <button
-            onClick={() => { setActiveTab("finances"); setSearchTerm(""); }}
-            className={`px-4 py-2.5 text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl shrink-0 transition flex items-center gap-2 relative ${activeTab === "finances" ? "bg-amber-400 text-[#070913] font-black" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"}`}
-          >
-            <DollarSign className="w-4 h-4" /> Finances & Retraits
-            {withdrawRequests.filter(r => r.status === "pending").length > 0 && (
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping absolute top-0.5 right-0.5" />
-            )}
-          </button>
-          <button
-            onClick={() => { setActiveTab("gombos"); setSearchTerm(""); }}
-            className={`px-4 py-2.5 text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl shrink-0 transition flex items-center gap-2 ${activeTab === "gombos" ? "bg-amber-400 text-[#070913] font-black" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"}`}
-          >
-            <Layers className="w-4 h-4" /> Modération Gombos
-          </button>
-          <button
-            onClick={() => { setActiveTab("posts"); setSearchTerm(""); }}
-            className={`px-4 py-2.5 text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl shrink-0 transition flex items-center gap-2 ${activeTab === "posts" ? "bg-amber-400 text-[#070913] font-black" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"}`}
-          >
-            <Film className="w-4 h-4" /> Publications / Médias
-          </button>
-          <button
-            onClick={() => { setActiveTab("users"); setSearchTerm(""); }}
-            className={`px-4 py-2.5 text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl shrink-0 transition flex items-center gap-2 ${activeTab === "users" ? "bg-amber-400 text-[#070913] font-black" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"}`}
-          >
-            <Users className="w-4 h-4" /> Comptes Talent
-          </button>
-          <button
-            onClick={() => { setActiveTab("groups"); setSearchTerm(""); }}
-            className={`px-4 py-2.5 text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl shrink-0 transition flex items-center gap-2 ${activeTab === "groups" ? "bg-amber-400 text-[#070913] font-black" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"}`}
-          >
-            <Radio className="w-4 h-4 text-[#FF007A]" /> Groupes VIP ({groups.length})
-          </button>
-          <button
-            onClick={() => { setActiveTab("reports"); setSearchTerm(""); }}
-            className={`px-4 py-2.5 text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl shrink-0 transition flex items-center gap-2 relative ${activeTab === "reports" ? "bg-amber-400 text-[#070913] font-black" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"}`}
-          >
-            <AlertOctagon className="w-4 h-4 text-red-500" /> Signalements ({reports.length})
-          </button>
-          <button
-            onClick={() => { setActiveTab("config"); setSearchTerm(""); }}
-            className={`px-4 py-2.5 text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl shrink-0 transition flex items-center gap-2 ${activeTab === "config" ? "bg-amber-400 text-[#070913] font-black" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"}`}
-          >
-            <BookOpen className="w-4 h-4" /> Configuration Arène
-          </button>
-        </div>
-
-        {/* 🎬 MAIN DOCK DISPLAY CHASSIS */}
+      <main className="max-w-4xl mx-auto px-4 py-6">
         <AnimatePresence mode="wait">
+          
+          {/* loading animation */}
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <RefreshCw className="w-8 h-8 text-amber-400 animate-spin" />
-              <p className="text-xs text-slate-500 tracking-widest font-mono uppercase">LECTURE CYGNE DE DONNÉES EN COURS...</p>
+            <div className="flex flex-col items-center justify-center py-32 gap-3" key="loader">
+              <RefreshCw className="w-7 h-7 text-[#D4AF37] animate-spin" />
+              <p className="text-[10px] font-mono tracking-widest text-[#D4AF37] uppercase">VÉRIFICATION D'ACCÈS SYSTÈME...</p>
             </div>
           ) : (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2 }}
               className="space-y-6"
+              key={activeTab}
             >
               
-              {/* TAB 1: GENERAL STATS & TERM COCKPIT */}
+              {/* ======================================================== */}
+              {/* TAB 1: COCKPIT TABLEAU PRINCIPAL */}
+              {/* ======================================================== */}
               {activeTab === "cockpit" && (
-                <div className="space-y-6">
-                  {/* HERO WELCOME BANNER FOR FONDATORS */}
-                  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#D4AF37]/15 via-[#141414] to-[#141414]/50 border-2 border-[#D4AF37]/35 p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 justify-between shadow-2xl">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-                    <div className="space-y-3 relative z-10 max-w-2xl text-left">
-                      <h2 className="text-xl sm:text-2xl font-black text-amber-400 tracking-tight flex items-center gap-2">
-                        <span>👑</span> Bienvenue dans le Centre de Commande AFRIGOMBO
-                      </h2>
-                      <p className="text-sm font-black text-slate-100 font-display">
-                        Vous êtes l'un des Fondateurs du Temple du Gombo Musical.
+                <div className="space-y-6" id="dashboard-tab">
+                  
+                  {/* message d'accueil */}
+                  <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
+                    
+                    <div className="space-y-2 relative z-10">
+                      <div className="flex items-center gap-1.5 text-[#D4AF37]">
+                        <span className="text-xl">👑</span>
+                        <h2 className="text-base font-black uppercase tracking-wider">Bienvenue Fondateur.</h2>
+                      </div>
+                      <p className="text-sm font-bold text-white tracking-wide">
+                        Vous pilotez AFRIGOMBO.
                       </p>
-                      <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                        Vous disposez d'un accès total pour piloter, protéger et faire grandir la communauté AFRIGOMBO.
-                      </p>
-                    </div>
-                    <div className="shrink-0 flex items-center justify-center p-4 bg-amber-400/10 border border-amber-400/25 rounded-2xl relative z-10">
-                      <Award className="w-12 h-12 text-[#D4AF37] animate-pulse" />
+                      
+                      <div className="h-[1px] bg-[#2B2B2B] my-2" />
+                      
+                      <ul className="space-y-1.5 text-xs text-gray-300 font-sans">
+                        <li className="flex items-center gap-2">
+                          <Check className="w-3.5 h-3.5 text-[#D4AF37]" /> Constructeurs d'opportunités.
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-3.5 h-3.5 text-[#D4AF37]" /> Protégez la communauté.
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-3.5 h-3.5 text-[#D4AF37]" /> Faites grandir le Temple du Gombo Musical.
+                        </li>
+                      </ul>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  
-                  {/* Left Column stats block */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* 📊 CARTES STATISTIQUES PREMIUM (GRILLE MOBILE IMPÉRATIVE DEUX COLONNES) */}
+                  <div className="space-y-2.5">
+                    <h3 className="text-[11px] font-black uppercase tracking-widest text-[#D4AF37] pl-1 select-none">
+                      CONTRÔLES & TENDANCES EN ABUDJAN
+                    </h3>
+                    
+                    <div className="grid grid-cols-2 gap-3.5">
                       
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 shrink-0">
-                          <Users className="w-5 h-5" />
+                      {/* STAT 1: Users */}
+                      <button 
+                        onClick={() => setActiveTab("users")}
+                        className="bg-[#121212] hover:bg-[#121212]/80 border border-[#2B2B2B] rounded-2xl p-4 flex flex-col justify-between text-left h-28 cursor-pointer group transition-all"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-[9.5px] font-black text-gray-400 uppercase tracking-wider font-mono">Utilisateurs</span>
+                          <Users className="w-4.5 h-4.5 text-[#D4AF37]" />
                         </div>
-                        <div>
-                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Total Utilisateurs</p>
-                          <p className="text-lg font-black text-slate-100">{stats.totalUsers}</p>
-                          <p className="text-[9px] text-slate-400">Inscrits AFRIGOMBO</p>
+                        <div className="mt-2.5">
+                          <p className="text-2xl font-black text-[#F8F8F8] tracking-tight">{stats.totalUsers}</p>
+                          <p className="text-[9px] text-[#D4AF37]/80 mt-0.5">+{stats.newUsers} ce mois-ci</p>
+                        </div>
+                      </button>
+
+                      {/* STAT 2: Publications */}
+                      <button 
+                        onClick={() => { setActiveTab("posts"); setGomboOrPostFilter("posts"); }}
+                        className="bg-[#121212] hover:bg-[#121212]/80 border border-[#2B2B2B] rounded-2xl p-4 flex flex-col justify-between text-left h-28 cursor-pointer group transition-all"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-[9.5px] font-black text-gray-400 uppercase tracking-wider font-mono">Publications</span>
+                          <Film className="w-4.5 h-4.5 text-[#D4AF37]" />
+                        </div>
+                        <div className="mt-2.5">
+                          <p className="text-2xl font-black text-[#F8F8F8] tracking-tight">{stats.publications}</p>
+                          <p className="text-[9px] text-gray-500 mt-0.5">Démos artistiques</p>
+                        </div>
+                      </button>
+
+                      {/* STAT 3: Groupes */}
+                      <button 
+                        onClick={() => { setActiveTab("plus"); setPlusSubTab("groups"); }}
+                        className="bg-[#121212] hover:bg-[#121212]/80 border border-[#2B2B2B] rounded-2xl p-4 flex flex-col justify-between text-left h-28 cursor-pointer group transition-all"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-[9.5px] font-black text-gray-400 uppercase tracking-wider font-mono">Orchestres VIP</span>
+                          <Radio className="w-4.5 h-4.5 text-[#D4AF37]" />
+                        </div>
+                        <div className="mt-2.5">
+                          <p className="text-2xl font-black text-[#F8F8F8] tracking-tight">{stats.groupes}</p>
+                          <p className="text-[9px] text-gray-500 mt-0.5">Formations enregistrées</p>
+                        </div>
+                      </button>
+
+                      {/* STAT 4: Renfort Express */}
+                      <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-4 flex flex-col justify-between text-left h-28">
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-[9.5px] font-black text-gray-400 uppercase tracking-wider font-mono">Renfort Express</span>
+                          <Flame className="w-4.5 h-4.5 text-[#D4AF37]" />
+                        </div>
+                        <div className="mt-2.5">
+                          <p className="text-2xl font-black text-[#F8F8F8] tracking-tight">{stats.renfortExpress}</p>
+                          <p className="text-[9px] text-[#D4AF37] mt-0.5">Missions urgentes</p>
                         </div>
                       </div>
 
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0">
-                          <Flame className="w-5 h-5" />
+                      {/* STAT 5: Signalements */}
+                      <button 
+                        onClick={() => setActiveTab("reports")}
+                        className="bg-[#121212] hover:bg-[#121212]/80 border border-[#2B2B2B] rounded-2xl p-4 flex flex-col justify-between text-left h-28 cursor-pointer group transition-all"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-[9.5px] font-black text-gray-400 uppercase tracking-wider font-mono">Signalements</span>
+                          <AlertOctagon className="w-4.5 h-4.5 text-[#D4AF37]" />
                         </div>
-                        <div>
-                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Nouveaux inscrits</p>
-                          <p className="text-lg font-black text-orange-400">{stats.newUsers}</p>
-                          <p className="text-[9px] text-slate-400">7 derniers jours</p>
+                        <div className="mt-2.5">
+                          <p className="text-2xl font-black text-[#F8F8F8] tracking-tight">{reports.length}</p>
+                          <p className="text-[9px] text-red-400 mt-0.5">{reports.filter(r=>r.status==="pending").length} en attente</p>
                         </div>
-                      </div>
+                      </button>
 
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-amber-500 shrink-0">
-                          <Sparkles className="w-5 h-5" />
+                      {/* STAT 6: Premium */}
+                      <button 
+                        onClick={() => { setActiveTab("plus"); setPlusSubTab("finances"); }}
+                        className="bg-[#121212] hover:bg-[#121212]/80 border border-[#D4AF37]/30 rounded-2xl p-4 flex flex-col justify-between text-left h-28 cursor-pointer transition-all border-l-4"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-[9.5px] font-black text-gray-400 uppercase tracking-wider font-mono">Abonnements Premium</span>
+                          <DollarSign className="w-4.5 h-4.5 text-[#D4AF37]" />
                         </div>
-                        <div>
-                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Artistes</p>
-                          <p className="text-lg font-black text-[#D4AF37]">{stats.artistes}</p>
-                          <p className="text-[9px] text-slate-400">Prêts pour scènes</p>
+                        <div className="mt-2.5">
+                          <p className="text-lg font-black text-[#D4AF37] font-mono truncate">{stats.revenusPremium.toLocaleString()} F</p>
+                          <p className="text-[9px] text-gray-500 mt-1">Revenus sécurisés</p>
                         </div>
-                      </div>
+                      </button>
 
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 shrink-0">
-                          <DollarSign className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Producteurs & Clients</p>
-                          <p className="text-lg font-black text-sky-400">{stats.producteurs}</p>
-                          <p className="text-[9px] text-slate-400">Financent les shows</p>
-                        </div>
-                      </div>
+                    </div>
+                  </div>
 
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#FF007A]/10 flex items-center justify-center text-[#FF007A] shrink-0">
-                          <Radio className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Instrumentistes</p>
-                          <p className="text-lg font-black text-[#FF007A]">{stats.instrumentistes}</p>
-                          <p className="text-[9px] text-slate-400">Toutes familles d'instrus</p>
-                        </div>
-                      </div>
+                  {/* 👑 SECTIONS ADMIN (VERTICALES SUR TÉLÉPHONE) */}
+                  <div className="space-y-3">
+                    <h3 className="text-[11px] font-black uppercase tracking-widest text-[#D4AF37] pl-1">
+                      CARTES DE DIRECTIVES COMPLÈTES
+                    </h3>
 
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
-                          <Award className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Managers</p>
-                          <p className="text-lg font-black text-purple-400">{stats.managers}</p>
-                          <p className="text-[9px] text-slate-400">Superviseurs certifiés</p>
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                          <Layers className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Groupes VIP</p>
-                          <p className="text-lg font-black text-emerald-400">{stats.groupes}</p>
-                          <p className="text-[9px] text-slate-400">Orchestres répertoriés</p>
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-400 shrink-0">
-                          <Film className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Publications</p>
-                          <p className="text-lg font-black text-pink-400">{stats.publications}</p>
-                          <p className="text-[9px] text-slate-400">Démos & Contenus</p>
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400 shrink-0">
-                          <Activity className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Renfort Express</p>
-                          <p className="text-lg font-black text-red-500">{stats.renfortExpress}</p>
-                          <p className="text-[9px] text-slate-400">Missions de scènes d'urgence</p>
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-950 border border-[#D4AF37]/25 rounded-2xl p-4 flex flex-col justify-center col-span-2 sm:col-span-2 lg:col-span-3 border-l-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] shrink-0">
-                            <Landmark className="w-5 h-5" />
+                    <div className="space-y-3">
+                      
+                      {/* SECTION 1: Gestion Utilisateurs */}
+                      <div 
+                        onClick={() => setActiveTab("users")}
+                        className="bg-[#121212] hover:bg-[#121212]/85 border border-[#2B2B2B] hover:border-[#D4AF37]/45 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-10 h-10 rounded-xl bg-[#0B0B0B] border border-[#2B2B2B] flex items-center justify-center text-[#D4AF37]">
+                            <Users className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-[10px] uppercase font-mono text-slate-400 tracking-wider">Revenus Premium & Commission globaux</p>
-                            <p className="text-2xl font-black text-amber-400 font-mono">{stats.revenusPremium.toLocaleString()} F CFA</p>
-                            <p className="text-[10px] text-slate-400 mt-0.5">Calculé sur la commission globale de {commissionRate}% du volume d'affaires</p>
+                            <h4 className="text-xs font-black uppercase text-[#F8F8F8]">Gestion Intel Utilisateurs</h4>
+                            <p className="text-[11px] text-gray-400">Suspendre, certifier VIP oú modérer les comédiens et musiciens.</p>
                           </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[#D4AF37] group-hover:translate-x-1 transition-transform shrink-0" />
+                      </div>
+
+                      {/* SECTION 2: Gestion Publications */}
+                      <div 
+                        onClick={() => { setActiveTab("posts"); setGomboOrPostFilter("posts"); }}
+                        className="bg-[#121212] hover:bg-[#121212]/85 border border-[#2B2B2B] hover:border-[#D4AF37]/45 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-10 h-10 rounded-xl bg-[#0B0B0B] border border-[#2B2B2B] flex items-center justify-center text-[#D4AF37]">
+                            <Film className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase text-[#F8F8F8]">Gestion Médias & Publications</h4>
+                            <p className="text-[11px] text-gray-400">Vérifier l'authenticité et supprimer les démos non autorisées.</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[#D4AF37] group-hover:translate-x-1 transition-transform shrink-0" />
+                      </div>
+
+                      {/* SECTION 3: Gestion Groupes */}
+                      <div 
+                        onClick={() => { setActiveTab("plus"); setPlusSubTab("groups"); }}
+                        className="bg-[#121212] hover:bg-[#121212]/85 border border-[#2B2B2B] hover:border-[#D4AF37]/45 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-10 h-10 rounded-xl bg-[#0B0B0B] border border-[#2B2B2B] flex items-center justify-center text-[#D4AF37]">
+                            <Radio className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase text-[#F8F8F8]">Gestion des Orchestres VIP</h4>
+                            <p className="text-[11px] text-gray-400">Superviser l'annuaire des groupes de musique en Côte d'Ivoire.</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[#D4AF37] group-hover:translate-x-1 transition-transform shrink-0" />
+                      </div>
+
+                      {/* SECTION 4: Signalements */}
+                      <div 
+                        onClick={() => { setActiveTab("reports"); }}
+                        className="bg-[#121212] hover:bg-[#121212]/85 border border-[#2B2B2B] hover:border-[#D4AF37]/45 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-10 h-10 rounded-xl bg-[#0B0B0B] border border-[#2B2B2B] flex items-center justify-center text-[#D4AF37]">
+                            <AlertOctagon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase text-[#F8F8F8]">Rapports de Signalements</h4>
+                            <p className="text-[11px] text-gray-400">Gérer les abus et plaintes de l'arène artistique.</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[#D4AF37] group-hover:translate-x-1 transition-transform shrink-0" />
+                      </div>
+
+                      {/* SECTION 5: Monétisation */}
+                      <div 
+                        onClick={() => { setActiveTab("plus"); setPlusSubTab("finances"); }}
+                        className="bg-[#121212] hover:bg-[#121212]/85 border border-[#2B2B2B] hover:border-[#D4AF37]/45 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-10 h-10 rounded-xl bg-[#0B0B0B] border border-[#2B2B2B] flex items-center justify-center text-[#D4AF37]">
+                            <DollarSign className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase text-[#F8F8F8]">Monétisation & Approbations</h4>
+                            <p className="text-[11px] text-gray-400">Suivre les devises de dépôts, commissions et versement Wave.</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[#D4AF37] group-hover:translate-x-1 transition-transform shrink-0" />
+                      </div>
+
+                      {/* SECTION 6: Journal d'activité */}
+                      <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-5 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 bg-[#D4AF37]/10 flex items-center justify-center rounded">
+                            <Activity className="w-3 h-3 text-[#D4AF37]" />
+                          </div>
+                          <span className="text-xs font-black text-white uppercase font-mono tracking-wider">Journal d'activité Live</span>
+                        </div>
+                        
+                        <div className="bg-[#0B0B0B] rounded-xl p-3.5 border border-[#2B2B2B] font-mono text-[10px] space-y-1.5 max-h-40 overflow-y-auto scrollbar-none">
+                          {terminalFeed.slice(0, 5).map((logLine, index) => (
+                            <p key={index} className="text-gray-300 leading-normal truncate">{logLine}</p>
+                          ))}
+                          <span className="text-[9px] text-gray-500 italic font-medium block">Scanner système en temps réeel... OK</span>
                         </div>
                       </div>
 
-                    </div>
-
-                    {/* GROWTH ANALYTICS DRAWBOARD */}
-                    <div className="bg-[#0b0c16] border border-slate-900 p-6 rounded-3xl relative overflow-hidden">
-                      <div className="flex justify-between items-center mb-6">
-                        <div className="space-y-0.5">
-                          <h3 className="text-xs font-black uppercase tracking-wider text-slate-200">TRAFIC & RECOUVREMENT SHOWBIZ</h3>
-                          <p className="text-[11px] text-slate-500">Mois en cours comparé au trimestre précédent (Abidjan)</p>
-                        </div>
-                        <TrendingUp className="w-5 h-5 text-amber-400" />
-                      </div>
-                      
-                      <div className="h-56 w-full flex items-end justify-between px-2 pt-6 relative border-b border-slate-900">
-                        <svg className="absolute inset-0 w-full h-full p-4 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-                          <path d="M 0 90 Q 25 60 50 45 T 100 20" fill="none" stroke="rgba(212, 175, 55, 0.4)" strokeWidth="2" />
-                          <path d="M 0 90 Q 25 70 50 50 T 100 35" fill="none" stroke="rgba(212, 175, 55, 0.12)" strokeWidth="1" />
-                        </svg>
-
-                        {[
-                          { l: "Jan", val: 120000 }, { l: "Feb", val: 180000 }, 
-                          { l: "Mar", val: 240000 }, { l: "Apr", val: 310000 }, 
-                          { l: "May", val: 420000 }, { l: "Jun", val: stats.totalSecuredCachet || 520000 }
-                        ].map((node, i) => (
-                          <div key={i} className="flex flex-col items-center gap-2 group cursor-pointer z-10 w-1/6">
-                            <span className="opacity-0 group-hover:opacity-100 transition duration-150 text-[9px] bg-slate-950 text-emerald-400 border border-slate-800 px-2 py-0.5 rounded font-mono">
-                              {node.val.toLocaleString()} F
-                            </span>
-                            <div 
-                              className="w-5 sm:w-8 bg-gradient-to-t from-amber-500/10 to-amber-400/80 rounded-t shadow-inner shadow-amber-500/25 transition-all duration-300 hover:brightness-125"
-                              style={{ height: `${Math.max(12, Math.min(130, (node.val / 600000) * 120))}px` }}
-                            />
-                            <span className="text-[9px] text-slate-500 uppercase font-mono">{node.l}</span>
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   </div>
 
-                  {/* Right Column: Virtual Ticker Console Logs & Account Switcher */}
-                  <div className="space-y-6">
-                    <div className="bg-[#090b14] border border-slate-900 rounded-3xl p-5 flex flex-col justify-between">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-900 pb-3">
-                        <span className="text-xs font-black tracking-widest text-slate-200 uppercase flex items-center gap-1.5">
-                          <Cpu className="w-4 h-4 text-amber-500" />
-                          TERMINAL SYSTÈME LIVE
-                        </span>
-                        <span className="text-[9px] text-slate-500 font-mono uppercase bg-slate-950 px-2 py-0.5 rounded border border-slate-900">
-                          COBOL_STREAM
-                        </span>
-                      </div>
-
-                      {/* Live scrolling command block */}
-                      <div className="space-y-2 max-h-96 overflow-y-auto pr-1 scrollbar-none font-mono text-[10.5px]">
-                        {terminalFeed.map((f, i) => (
-                          <div key={i} className={`p-2 rounded-lg leading-relaxed ${f.includes("❌") || f.includes("REJET") ? "bg-red-950/20 text-red-300 border-l-2 border-red-500" : f.includes("⭐") || f.includes("succès") || f.includes("VALID") ? "bg-emerald-950/20 text-emerald-300 border-l-2 border-emerald-500" : "bg-slate-950 text-slate-300 border-l-2 border-slate-700"}`}>
-                            {f}
-                          </div>
-                        ))}
-                        <div className="p-2 bg-slate-950 rounded text-slate-500 italic">
-                          [Vérification] En attente de nouveaux événements de production...
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-900/60 mt-4 flex items-center justify-between text-xs text-slate-500">
-                      <span>Total d'événements :</span>
-                      <span className="font-mono text-slate-400">{terminalFeed.length} logs d'arène</span>
-                    </div>
-                  </div>
-
-                  {/* CHANGE ADMIN ACCOUNT CARD */}
-                  <div className="bg-[var(--card-bg,#141414)] border border-[#D4AF37]/25 hover:border-[#D4AF37]/50 rounded-3xl p-5 space-y-4 transition shadow-xl">
-                    <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color,#222222)]">
-                      <ShieldAlert className="w-4 h-4 text-[#D4AF37]" />
-                      <h3 className="text-xs font-black tracking-widest text-[#D4AF37] uppercase">Changer de Compte Admin</h3>
-                    </div>
-                    
-                    <p className="text-[10.5px] text-slate-400 font-sans leading-relaxed text-left">
-                      Les trois adresses fondatrices ci-dessous ont le même contrôle total d'AFRIGOMBO. Vous pouvez vous déconnecter pour changer de session Google :
+                  {/* ACCOUNT MANAGER DIRECT CARRIER FOR HIGHER SAFETY */}
+                  <div className="bg-[#121212] border border-[#D4AF37]/25 rounded-2xl p-5 space-y-3.5">
+                    <h4 className="text-[10px] font-black uppercase text-[#D4AF37] tracking-widest">Co-Pilotes Autorisés</h4>
+                    <p className="text-[11px] text-gray-400 leading-relaxed font-sans">
+                      Trois comptes possèdent les mêmes pouvoirs originels de validation de budget et versement.
                     </p>
-
-                    <div className="space-y-2">
+                    <div className="space-y-1.5 font-mono text-[11px]">
                       {[
                         "johnsylvesterh@gmail.com",
                         "sylvestrehounkpevi777@gmail.com",
                         "jhs.kmj7@gmail.com"
-                      ].map((emailAddress) => {
-                        const isActive = emailAddress.toLowerCase() === adminEmail.toLowerCase();
-                        return (
-                          <div 
-                            key={emailAddress}
-                            className={`p-2.5 rounded-xl border flex items-center justify-between font-mono text-[10px] sm:text-[11px] transition-all text-left ${
-                              isActive 
-                                ? "bg-[#D4AF37]/10 border-[#D4AF37] text-amber-400 font-black" 
-                                : "bg-[#0B0B0B]/40 border-slate-900 text-slate-300"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 truncate">
-                              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-amber-400 animate-pulse" : "bg-slate-600"}`} />
-                              <span className="truncate">{emailAddress}</span>
-                            </div>
-                            {isActive ? (
-                              <span className="bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#D4AF37] text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm shrink-0">
-                                Actif 👑
-                              </span>
-                            ) : (
-                              <button
-                                onClick={async () => {
-                                  if (confirm(`Voulez-vous vous déconnecter de la session actuelle pour vous connecter avec l'adresse : ${emailAddress} ?`)) {
-                                    try {
-                                      await logout();
-                                    } catch (err) {
-                                      console.error("Logout failed:", err);
-                                    }
-                                  }
-                                }}
-                                className="bg-slate-900 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/25 hover:text-rose-400 text-slate-400 text-[8.5px] font-black uppercase tracking-wider px-2 py-1 rounded transition shrink-0 cursor-pointer"
-                              >
-                                Déconnecter
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-              {/* TAB 2: FINANCES & WITHDRAWAL AUDITING */}
-              {activeTab === "finances" && (
-                <div className="space-y-6">
-                  
-                  {/* Alert queue */}
-                  <div className="bg-[#0b0c16] border border-slate-900 p-6 rounded-3xl space-y-4">
-                    <div className="flex justify-between items-center border-b border-slate-900 pb-4">
-                      <div>
-                        <h3 className="text-xs font-black tracking-wider uppercase text-slate-200">DEMANDES DE RETRAIT EN ATTENTE</h3>
-                        <p className="text-[11px] text-slate-500">Arbitrez et validez les virements mobile money de cachets pour les artistes.</p>
-                      </div>
-                      <Landmark className="w-5 h-5 text-amber-400" />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {withdrawRequests.map((req) => (
-                        <div key={req.id} className={`p-5 rounded-2xl border flex flex-col justify-between transition-all ${req.status === "pending" ? "bg-slate-950 border-amber-500/20 shadow-lg shadow-amber-500/5 hover:border-amber-500/40" : "bg-slate-950/50 border-slate-900 opacity-70"}`}>
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase text-white tracking-widest ${req.provider === "Wave" ? "bg-sky-500" : req.provider === "Orange Money" ? "bg-orange-500" : "bg-yellow-500 text-black"}`}>
-                                {req.provider}
-                              </span>
-                              <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider ${req.status === "approved" ? "bg-emerald-500/10 text-emerald-400" : req.status === "rejected" ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400 animate-pulse"}`}>
-                                {req.status === "approved" ? "Payé avec succès" : req.status === "rejected" ? "Refusé / Gelé" : "En cours de validation"}
-                              </span>
-                            </div>
-
-                            <div>
-                              <p className="text-xl font-black text-emerald-400 font-mono">{req.amount.toLocaleString()} FCFA</p>
-                              <p className="text-xs font-medium text-slate-200 mt-1">{req.userEmail}</p>
-                              <p className="text-[10px] text-slate-500 font-mono mt-0.5">Mobile Money : {req.phone}</p>
-                            </div>
-                          </div>
-
-                          {req.status === "pending" && (
-                            <div className="pt-4 border-t border-slate-900 flex gap-2.5 mt-5">
-                              <button
-                                onClick={() => handleRejectWithdraw(req.id)}
-                                className="flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-red-500/30 text-rose-400 text-[10px] font-black uppercase tracking-wider rounded-lg transition-colors cursor-pointer"
-                              >
-                                Rejeter
-                              </button>
-                              <button
-                                onClick={() => handleApproveWithdraw(req.id, req.userUid, req.amount)}
-                                className="flex-1 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-black text-[10px] font-black uppercase tracking-wider rounded-lg hover:shadow-lg transition-all cursor-pointer"
-                              >
-                                Débloquer Pay 💰
-                              </button>
-                            </div>
+                      ].map(mailItem => (
+                        <div key={mailItem} className={`p-2 rounded-xl flex items-center justify-between border ${mailItem.toLowerCase() === adminEmail.toLowerCase() ? "bg-[#D4AF37]/5 border-[#D4AF37]/30 text-white font-bold" : "bg-[#0B0B0B]/60 border-transparent text-gray-400"}`}>
+                          <span className="truncate">{mailItem}</span>
+                          {mailItem.toLowerCase() === adminEmail.toLowerCase() ? (
+                            <span className="text-[8.5px] uppercase font-black tracking-widest text-[#D4AF37]">Actif 👑</span>
+                          ) : (
+                            <span className="text-[8px] text-gray-600 block">Autorisé</span>
                           )}
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Standard Ledgers */}
-                  <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 overflow-hidden">
-                    <h3 className="text-xs font-black uppercase tracking-wider border-b border-slate-900 pb-3 text-slate-200 flex items-center gap-1.5">
-                      <Landmark className="w-4 h-4 text-amber-500" />
-                      RECETTES & ENCAISSEMENTS DES ABONNEMENTS AFRI-VIP
-                    </h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead>
-                          <tr className="border-b border-slate-900 text-slate-500 text-[9.5px] uppercase font-mono tracking-widest bg-black/40">
-                            <th className="p-4">Réf Transaction</th>
-                            <th className="p-4">Client Déposant</th>
-                            <th className="p-4">Service</th>
-                            <th className="p-4">Montant Payé</th>
-                            <th className="p-4 text-right">Date d'Immatriculation</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-900 text-slate-300 font-mono text-[11px]">
-                          <tr className="hover:bg-slate-900/40">
-                            <td className="p-4 text-slate-400">TX-2026-009</td>
-                            <td className="p-4 font-bold text-slate-200">Serge Kassi (Client)</td>
-                            <td className="p-4 text-amber-400 font-sans font-bold">Abonnement VIP Promotech</td>
-                            <td className="p-4 text-emerald-400 font-black">25 000 FCFA</td>
-                            <td className="p-4 text-right text-slate-500">{new Date(Date.now() - 3600000 * 4).toLocaleString()}</td>
-                          </tr>
-                          <tr className="hover:bg-slate-900/40">
-                            <td className="p-4 text-slate-400">TX-2026-010</td>
-                            <td className="p-4 font-bold text-slate-200">Koffi Kouamé (Musique)</td>
-                            <td className="p-4 text-amber-400 font-sans font-bold">Badge Artiste Certifié</td>
-                            <td className="p-4 text-emerald-400 font-black">10 000 FCFA</td>
-                            <td className="p-4 text-right text-slate-500">{new Date(Date.now() - 3600000 * 18).toLocaleString()}</td>
-                          </tr>
-                          <tr className="hover:bg-slate-900/40">
-                            <td className="p-4 text-slate-400">TX-2026-011</td>
-                            <td className="p-4 font-bold text-slate-200">Mélodie d'Afrique (Lounge)</td>
-                            <td className="p-4 text-amber-400 font-sans font-bold">Gombo Dépôt Garantie (Cocody)</td>
-                            <td className="p-4 text-emerald-400 font-black">150 000 FCFA</td>
-                            <td className="p-4 text-right text-slate-500">{new Date(Date.now() - 3600000 * 24).toLocaleString()}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                  {/* PREMIUM SHIFT USER MODE TRIGGER (AT THE BOTTOM OF DASHBOARD FOR HIGH CONVENIENCE) */}
+                  <div className="pt-4 pb-2">
+                    <button
+                      onClick={onExitAdminMode}
+                      className="w-full py-4 bg-gradient-to-r from-[#D4AF37] to-[#D4AF37]/80 hover:brightness-105 active:scale-[0.99] text-black font-black text-xs uppercase tracking-widest rounded-2xl transition duration-200 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <User className="w-4 h-4 fill-current" />
+                      <span>👤 Utiliser AFRIGOMBO comme utilisateur</span>
+                    </button>
+                    <p className="text-center text-[10px] text-gray-500 font-mono mt-2 uppercase tracking-wide">
+                      Bascule instantanée vers l'application classique
+                    </p>
                   </div>
+
                 </div>
               )}
 
-              {/* TAB 3: APPELS DE GOMBO MODERATION */}
-              {activeTab === "gombos" && (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row gap-3 justify-between items-center bg-slate-950 border border-slate-900 p-4 rounded-2xl">
-                    <div className="relative w-full sm:max-w-md">
-                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-                      <input
-                        type="text"
-                        placeholder="Rechercher par gombo, commune, concert..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-[#101424] border border-slate-850 focus:border-amber-500 outline-none rounded-xl py-2 pl-9 pr-4 text-xs font-medium placeholder-slate-500 text-white transition-all font-mono"
-                      />
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setGomboFilter("all")}
-                        className={`px-3 py-1.5 rounded-lg text-[9.5px] font-black uppercase transition tracking-wider ${gomboFilter === "all" ? "bg-amber-400 text-[#070913]" : "bg-slate-900 text-slate-400 hover:text-white"}`}
-                      >
-                        Tous les gombos
-                      </button>
-                      <button
-                        onClick={() => setGomboFilter("urgent")}
-                        className={`px-3 py-1.5 rounded-lg text-[9.5px] font-black uppercase transition tracking-wider ${gomboFilter === "urgent" ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-slate-900 text-slate-400 hover:text-white"}`}
-                      >
-                        Urgent 🚨
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-950 border border-slate-900 rounded-3xl overflow-hidden overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-900 bg-[#0c1020] text-slate-500 text-[10px] uppercase font-mono tracking-widest">
-                          <th className="p-4">Offre / Pitch</th>
-                          <th className="p-4">Commune / Lieu</th>
-                          <th className="p-4">Date de Programmation</th>
-                          <th className="p-4">Cachet Financier</th>
-                          <th className="p-4 text-right">Arbitrage & Force Majeure</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-900">
-                        {filteredGombos.map((g) => (
-                          <tr key={g.id} className="hover:bg-slate-900/30 transition-colors">
-                            <td className="p-4">
-                              <div>
-                                <div className="flex items-center gap-1.5">
-                                  <p className="font-bold text-slate-200 text-sm leading-tight">{g.title}</p>
-                                  {g.urgent && <span className="bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5">🚨 URGENT</span>}
-                                </div>
-                                <p className="text-xs text-slate-400 mt-1 line-clamp-1">{g.description}</p>
-                                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Propriétaire clientID: {g.clientId} ({g.clientName || "Organisateur"})</p>
-                              </div>
-                            </td>
-                            <td className="p-4 font-semibold text-slate-300">
-                              <p className="text-sm">{g.commune}</p>
-                              <p className="text-[10px] text-slate-500">{g.location}</p>
-                            </td>
-                            <td className="p-4 font-mono text-slate-300">
-                              <p>{g.date}</p>
-                              <p className="text-[10.5px] text-slate-500">Heure: {g.time || "21:00"}</p>
-                            </td>
-                            <td className="p-4 text-emerald-400 font-black font-mono text-sm">
-                              {g.budget.toLocaleString()} FCFA
-                            </td>
-                            <td className="p-4 text-right">
-                              <div className="flex justify-end gap-1.5">
-                                <button
-                                  onClick={async () => {
-                                    if (confirm("Mettre cette opportunité en vedette sur l'application ?")) {
-                                      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ⭐ Gombo mis en Vedette: ${g.title}`, ...prev]);
-                                      alert("Gombo propulsé en Vedette 🚀");
-                                    }
-                                  }}
-                                  className="px-2.5 py-1 bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-black rounded-lg transition font-mono text-[9px] font-black uppercase border border-amber-500/25"
-                                >
-                                  Propulser 👑
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    if (confirm(`🚨 Êtes-vous certain de vouloir annuler et détruire le gombo '${g.title}' ? S'il y a un cachet garanti déposé par Wave, il sera remboursé.`)) {
-                                      // Simulated delete
-                                      setGombos(prev => prev.filter(item => item.id !== g.id));
-                                      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🗑️ Force Majeure appliquée. Gombo supprimé : ${g.title}`, ...prev]);
-                                    }
-                                  }}
-                                  className="p-1.5 bg-slate-900 hover:bg-red-500/10 hover:text-red-500 rounded-lg text-slate-500 border border-slate-800 transition"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 4: PUBLICATIONS (EXISTING) */}
-              {activeTab === "posts" && (
-                <div className="space-y-4">
-                  <div className="flex gap-3 justify-between items-center bg-slate-950 border border-slate-900 p-4 rounded-2xl">
-                    <div className="relative w-full max-w-md">
-                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-                      <input
-                        type="text"
-                        placeholder="Rechercher publications..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-[#101424] border border-slate-850 focus:border-amber-500 outline-none rounded-xl py-2 pl-9 pr-4 text-xs font-medium placeholder-slate-500 text-white transition-all font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-950 border border-slate-900 rounded-3xl overflow-hidden overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-900 bg-[#0c1020] text-slate-500 text-[10px] uppercase font-mono tracking-widest">
-                          <th className="p-4">Aperçu</th>
-                          <th className="p-4">Auteur</th>
-                          <th className="p-4">Fidélité</th>
-                          <th className="p-4">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-900">
-                        {filteredPosts.map((p) => {
-                          const isHidden = (p as any).isHidden;
-                          return (
-                            <tr key={p.id} className={`hover:bg-slate-900/30 transition-colors ${isHidden ? "bg-slate-950/80 opacity-50 font-mono" : ""}`}>
-                              <td className="p-4">
-                                <div className="space-y-1">
-                                  <p className="font-bold text-slate-200">{p.title || "Démo sans titre"}</p>
-                                  <p className="text-slate-400 line-clamp-2 max-w-lg">{p.caption}</p>
-                                </div>
-                              </td>
-                              <td className="p-4 font-bold text-slate-300">
-                                {p.userName}
-                              </td>
-                              <td className="p-4 font-mono text-slate-400">
-                                <p>❤️ {p.likesCount || 0} J'aime</p>
-                              </td>
-                              <td className="p-4 text-right">
-                                <div className="flex gap-2 justify-end">
-                                  <button
-                                    onClick={() => handleTogglePostVisibility(p.id, !!isHidden)}
-                                    className={`p-1.5 rounded-lg transition ${isHidden ? "bg-amber-400 text-black font-semibold" : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"}`}
-                                  >
-                                    {isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeletePost(p.id)}
-                                    className="p-1.5 bg-slate-900 text-red-500 hover:bg-red-500/10 border border-slate-800 rounded-lg transition"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 5: COMPTES TALENT (EXISTING USERS CONTROL) */}
+              {/* ======================================================== */}
+              {/* TAB 2: UTILISATEURS / COMPTES TALENT */}
+              {/* ======================================================== */}
               {activeTab === "users" && (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row gap-3 justify-between items-center bg-slate-950 border border-slate-900 p-4 rounded-2xl">
-                    <div className="relative w-full sm:max-w-md">
-                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                <div className="space-y-4" id="users-tab">
+                  <div className="space-y-2">
+                    <h2 className="text-base font-black tracking-wider uppercase text-[#D4AF37]">
+                      👥 Modération des Comptes Talent
+                    </h2>
+                    <p className="text-xs text-gray-400">Donner ou supprimer le badge Or-Superstar, restreindre ou réactiver.</p>
+                  </div>
+
+                  {/* Search and Filters */}
+                  <div className="bg-[#121212] border border-[#2B2B2B] p-4 rounded-2xl space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                       <input
                         type="text"
-                        placeholder="Chercher artiste, e-mail, téléphone..."
+                        placeholder="Chercher par nom, e-mail, téléphone de l'artiste..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-[#101424] border border-slate-850  focus:border-amber-500 outline-none rounded-xl py-2 pl-9 pr-4 text-xs font-medium placeholder-slate-500 text-white transition-all font-mono"
+                        className="w-full bg-[#0B0B0B] border border-[#2B2B2B] focus:border-[#D4AF37] outline-none rounded-xl py-2.5 pl-9 pr-4 text-xs font-medium placeholder-gray-500 text-white transition-colors font-mono"
                       />
                     </div>
 
-                    <div className="flex gap-1.5 overflow-x-auto text-[10px] w-full sm:w-auto">
-                      {["all", "musicien", "client", "certified", "suspended"].map((r) => (
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                      {[
+                        { id: "all", label: "Tous" },
+                        { id: "musicien", label: "Artistes" },
+                        { id: "client", label: "Clients" },
+                        { id: "certified", label: "Certifiés ⭐" },
+                        { id: "suspended", label: "Suspendus" }
+                      ].map((r) => (
                         <button
-                          key={r}
-                          onClick={() => setUserRoleFilter(r)}
-                          className={`px-3 py-1.5 rounded-lg font-black uppercase transition shrink-0 ${userRoleFilter === r ? "bg-amber-400 text-[#070913] font-black" : "bg-slate-900 text-slate-400 hover:text-white"}`}
+                          key={r.id}
+                          onClick={() => setUserRoleFilter(r.id)}
+                          className={`px-3 py-1.5 rounded-lg font-black uppercase text-[9.5px] transition-colors shrink-0 ${userRoleFilter === r.id ? "bg-[#D4AF37] text-black" : "bg-[#0B0B0B] text-gray-400 hover:text-white border border-[#2B2B2B]"}`}
                         >
-                          {r === "all" ? "Tous" : r === "certified" ? "Certifiés ⭐" : r === "suspended" ? "Suspendus" : r}
+                          {r.label}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  <div className="bg-slate-950 border border-slate-900 rounded-3xl overflow-hidden overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-900 bg-[#0c1020] text-slate-500 text-[10px] uppercase font-mono tracking-widest">
-                          <th className="p-4">Identité Talent</th>
-                          <th className="p-4">Rôle</th>
-                          <th className="p-4">Solde Digital</th>
-                          <th className="p-4">Niveau de Certification</th>
-                          <th className="p-4 text-right">Modération Sécurité</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-900">
-                        <AnimatePresence mode="popLayout">
-                          {filteredUsers.map((u) => (
-                            <motion.tr 
-                              key={u.uid} 
-                              layout
-                              initial={{ opacity: 0, y: 15 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              transition={{ duration: 0.25, ease: "easeOut" }}
-                              className={`hover:bg-slate-900/40 transition-colors ${u.isSuspended ? "bg-red-950/10 opacity-75" : ""}`}
+                  {/* List View exclusively on vertical cards, perfectly mobile optimized! No scroll */}
+                  <div className="space-y-3">
+                    {filteredUsers.length === 0 ? (
+                      <div className="text-center py-16 bg-[#121212] border border-[#2B2B2B] rounded-2xl text-gray-400">
+                        <Users className="w-10 h-10 text-gray-650 mx-auto mb-2.5 opacity-45" />
+                        <p className="text-xs font-mono uppercase tracking-widest">Aucun artiste ne correspond aux critères.</p>
+                      </div>
+                    ) : (
+                      filteredUsers.map((u) => (
+                        <div 
+                          key={u.uid}
+                          className={`bg-[#121212] border ${u.isSuspended ? "border-red-500/25 opacity-75" : "border-[#2B2B2B]"} p-4.5 rounded-2xl space-y-4 transition`
+                        }>
+                          <div className="flex items-start gap-3">
+                            <img 
+                              src={u.avatarUrl || u.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.uid}`}
+                              alt="Avatar"
+                              className="w-11 h-11 rounded-full object-cover border border-[#2B2B2B] bg-[#0B0B0B]"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1">
+                                <h3 className="font-bold text-white text-sm truncate">
+                                  {u.artistName || `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Artiste Inconnu"}
+                                </h3>
+                                {u.isCertified && (
+                                  <span className="text-[#D4AF37] text-xs" title="Certifié VIP">⭐</span>
+                                )}
+                              </div>
+                              <p className="text-[10px] font-mono text-gray-400 truncate">{u.email}</p>
+                              <p className="text-[10px] text-gray-400 mt-1">
+                                📞 Tel: <span className="text-white font-mono">{u.phone || "Non spécifié"}</span>
+                              </p>
+                            </div>
+
+                            <span className={`px-2 py-0.5 rounded text-[8px] tracking-widest font-black uppercase shrink-0 ${u.role === "musicien" ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" : "bg-purple-500/10 text-purple-400 border border-purple-500/20"}`}>
+                              {u.role === "musicien" ? "Artiste" : "Client"}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-[10.5px] font-mono py-2.5 border-t border-b border-[#2B2B2B]/60 text-gray-400">
+                            <div>
+                              <span>SOLDE RÉSERVE :</span>
+                              <p className="text-white font-extrabold text-xs">{(u.balance ?? 0).toLocaleString()} F CFA</p>
+                            </div>
+                            <div>
+                              <span>COMMUNE / VILLE :</span>
+                              <p className="text-white font-semibold truncate">{u.commune || "Abidjan"}</p>
+                            </div>
+                          </div>
+
+                          {/* Quick Moderator actions */}
+                          <div className="flex items-center justify-between pt-1">
+                            <button
+                              onClick={() => handleToggleCertification(u.uid, !!u.isCertified)}
+                              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition ${u.isCertified ? "bg-[#D4AF37] text-black font-black" : "bg-[#0B0B0B] hover:bg-gray-800 border border-[#2B2B2B] text-gray-400 hover:text-white"}`}
                             >
-                              <td className="p-4">
-                                <div className="flex items-center gap-3">
-                                  <img 
-                                    src={u.avatarUrl || u.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.uid}`}
-                                    alt="avatar" 
-                                    className="w-9 h-9 rounded-full object-cover bg-slate-900 border border-slate-800"
-                                    referrerPolicy="no-referrer"
-                                  />
-                                  <div>
-                                    <span className="font-extrabold text-slate-100 flex items-center gap-1">
-                                      {u.artistName || `${u.firstName} ${u.lastName}`}
-                                      {u.isCertified && <span className="text-amber-400">⭐</span>}
-                                    </span>
-                                    <span className="text-[10px] text-slate-500 font-mono italic">{u.email}</span>
-                                  </div>
+                              {u.isCertified ? "⭐ Talent Star VIP" : "Passer en VIP"}
+                            </button>
+
+                            <div className="flex gap-2">
+                              {/* Suspend Toggle */}
+                              <button
+                                onClick={() => handleToggleSuspension(u.uid, !!u.isSuspended)}
+                                className={`p-2 rounded-lg border transition duration-150 ${u.isSuspended ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-[#0B0B0B] border-[#2B2B2B] text-red-400 hover:bg-red-950/20"}`}
+                                title={u.isSuspended ? "Activer le profil" : "Suspendre temporairement"}
+                              >
+                                {u.isSuspended ? <Check className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
+                              </button>
+
+                              {/* Hard Ban */}
+                              <button
+                                onClick={async () => {
+                                  if (confirm(`🚨 Êtes-vous certain de vouloir interdire et bannir définitivement le profil d'email : ${u.email} ? Cette action est irréversible.`)) {
+                                    await gomboDB.banUserPermanently(u.uid, adminEmail);
+                                    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 👮 BANNISSEMENT DÉFINITIF : ${u.email}`, ...prev]);
+                                    loadData();
+                                  }
+                                }}
+                                className="p-2 bg-[#0B0B0B] hover:bg-red-950/50 text-gray-500 hover:text-red-500 border border-[#2B2B2B] rounded-lg transition"
+                                title="Bannir définitivement"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ======================================================== */}
+              {/* TAB 3: PUBLICATIONS / DOSSIERS GOMBOS */}
+              {/* ======================================================== */}
+              {activeTab === "posts" && (
+                <div className="space-y-4" id="publications-tab">
+                  
+                  {/* Toggle subtab between Gombos and Posts */}
+                  <div className="bg-[#121212] border border-[#2B2B2B] p-2 rounded-2xl flex">
+                    <button
+                      onClick={() => { setGomboOrPostFilter("gombos"); setSearchTerm(""); }}
+                      className={`flex-1 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-xl transition ${gomboOrPostFilter === "gombos" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white bg-transparent"}`}
+                    >
+                      📢 Appels de Gombo ({gombos.length})
+                    </button>
+                    <button
+                      onClick={() => { setGomboOrPostFilter("posts"); setSearchTerm(""); }}
+                      className={`flex-1 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-xl transition ${gomboOrPostFilter === "posts" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white bg-transparent"}`}
+                    >
+                      🎥 Démos Artistes ({posts.length})
+                    </button>
+                  </div>
+
+                  {/* Search Engine */}
+                  <div className="bg-[#121212] border border-[#2B2B2B] p-4 rounded-2xl space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
+                      <input
+                        type="text"
+                        placeholder={gomboOrPostFilter === "gombos" ? "Rechercher par titre de gombo, budget oú lieu..." : "Rechercher par caption, titre oú nom d'auteur..."}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-[#0B0B0B] border border-[#2B2B2B] focus:border-[#D4AF37] outline-none rounded-xl py-2.5 pl-9 pr-4 text-xs font-medium placeholder-gray-500 text-white transition-colors font-mono"
+                      />
+                    </div>
+
+                    {gomboOrPostFilter === "gombos" && (
+                      <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+                        <button
+                          onClick={() => setGomboFilter("all")}
+                          className={`px-3 py-1.5 rounded-lg text-[9.5px] font-black uppercase transition-colors shrink-0 ${gomboFilter === "all" ? "bg-[#D4AF37] text-black" : "bg-[#0B0B0B] text-gray-400 border border-[#2B2B2B]"}`}
+                        >
+                          Tous
+                        </button>
+                        <button
+                          onClick={() => setGomboFilter("urgent")}
+                          className={`px-3 py-1.5 rounded-lg text-[9.5px] font-black uppercase transition-colors shrink-0 ${gomboFilter === "urgent" ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-[#0B0B0B] text-gray-400 border border-[#2B2B2B]"}`}
+                        >
+                          Urgent 🚨
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Redirection Content Display */}
+                  <div className="space-y-3">
+                    
+                    {/* OPTION A: GOMBOS LISTING */}
+                    {gomboOrPostFilter === "gombos" && (
+                      filteredGombos.length === 0 ? (
+                        <div className="text-center py-16 bg-[#121212] border border-[#2B2B2B] rounded-2xl text-gray-400">
+                          <AlertTriangle className="w-10 h-10 text-gray-650 mx-auto mb-2.5 opacity-45" />
+                          <p className="text-xs font-mono uppercase tracking-widest">Aucune offre de Gombo ne correspond.</p>
+                        </div>
+                      ) : (
+                        filteredGombos.map((g) => (
+                          <div key={g.id} className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl space-y-4">
+                            <div className="flex items-start justify-between gap-1.5">
+                              <div>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <h3 className="font-bold text-white text-sm leading-snug">{g.title}</h3>
+                                  {g.urgent && (
+                                    <span className="bg-red-500/10 border border-red-500/25 text-red-400 text-[8.5px] font-black px-1.5 py-0.5 rounded">🚨 URGENT</span>
+                                  )}
                                 </div>
-                              </td>
-                              <td className="p-4">
-                                <span className={`px-2 py-0.5 rounded text-[8px] tracking-widest font-black uppercase ${u.role === "musicien" ? "bg-blue-500/10 text-sky-400" : "bg-purple-500/10 text-purple-400"}`}>
-                                  {u.role === "musicien" ? "🎸 Musicien" : "💼 Client"}
-                                </span>
-                              </td>
-                              <td className="p-4 font-mono font-bold text-slate-200">
-                                {(u.balance ?? 0).toLocaleString()} F
-                              </td>
-                              <td className="p-4">
-                                <button
-                                  onClick={() => handleToggleCertification(u.uid, !!u.isCertified)}
-                                  className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${u.isCertified ? "bg-amber-400 text-black font-black" : "bg-slate-900 text-slate-500 hover:text-white"}`}
-                                >
-                                  {u.isCertified ? "⭐ Talent Certifié VIP" : "Standard"}
-                                </button>
-                              </td>
-                              <td className="p-4 text-right">
-                                <div className="flex gap-2 justify-end">
+                                <p className="text-[10.5px] text-gray-400 mt-1 text-left leading-relaxed">{g.description}</p>
+                              </div>
+                              <span className="text-emerald-400 font-extrabold font-mono text-xs shrink-0 whitespace-nowrap">
+                                {g.budget.toLocaleString()} F
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono py-2 border-t border-[#2B2B2B]/60 text-gray-400 text-left">
+                              <p>📌 Commune : <strong className="text-white">{g.commune || "Cocody"}</strong></p>
+                              <p>🏢 Lieu : <strong className="text-white">{g.location || "Abidjan"}</strong></p>
+                              <p>📅 Date : <font className="text-white">{g.date}</font></p>
+                              <p>👤 Client ID : <font className="text-[#D4AF37]" title={g.clientId}>{g.clientName || "Organisateur"}</font></p>
+                            </div>
+
+                            <div className="flex justify-between items-center pt-1">
+                              <button
+                                onClick={() => {
+                                  setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 👑 GOMBO PROPULSÉ : ${g.title}`, ...prev]);
+                                  alert("Cette opportunité de cachet musical a été propulsée en vedette !");
+                                }}
+                                className="px-3 py-1.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/25 hover:border-[#D4AF37]/45 rounded-lg transition text-[9px] font-black uppercase tracking-wider"
+                              >
+                                Propulser en Vedette 👑
+                              </button>
+                              
+                              <button
+                                onClick={async () => {
+                                  if (confirm(`🚨 Êtes-vous certain de vouloir annuler et supprimer le gombo '${g.title}' ? S'il y a un budget caution déposé par Wave, il sera transféré de retour.`)) {
+                                    setGombos(prev=>prev.filter(item=>item.id !== g.id));
+                                    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🗑️ Gombo annulé par l'admin : ${g.title}`, ...prev]);
+                                  }
+                                }}
+                                className="p-2 bg-[#0B0B0B] hover:bg-red-950/20 text-gray-500 hover:text-red-500 border border-[#2B2B2B] rounded-lg transition-colors"
+                                title="Supprimer le gombo"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )
+                    )}
+
+                    {/* OPTION B: ARTIST DEMO POSTS LISTING */}
+                    {gomboOrPostFilter === "posts" && (
+                      filteredPosts.length === 0 ? (
+                        <div className="text-center py-16 bg-[#121212] border border-[#2B2B2B] rounded-2xl text-gray-400">
+                          <Film className="w-10 h-10 text-gray-650 mx-auto mb-2.5 opacity-45" />
+                          <p className="text-xs font-mono uppercase tracking-widest">Aucune démo ou vidéo postée.</p>
+                        </div>
+                      ) : (
+                        filteredPosts.map((p) => {
+                          const isHidden = (p as any).isHidden;
+                          return (
+                            <div 
+                              key={p.id}
+                              className={`bg-[#121212] border ${isHidden ? "border-red-500/20 opacity-55" : "border-[#2B2B2B]"} p-4 rounded-2xl space-y-3.5`}
+                            >
+                              <div>
+                                <div className="flex justify-between items-start">
+                                  <h4 className="font-bold text-white text-sm leading-tight">{p.title || "Démo sans titre"}</h4>
+                                  <span className="text-[10px] font-mono text-gray-400">👤 {p.userName || "Artiste Gombo"}</span>
+                                </div>
+                                <p className="text-xs text-gray-400 mt-1 leading-relaxed text-left line-clamp-3">{p.caption}</p>
+                              </div>
+
+                              <div className="flex justify-between items-center pt-2 border-t border-[#2B2B2B]/60 text-xs text-gray-500">
+                                <span>❤️ {p.likesCount || 0} J'aime appréciés</span>
+                                
+                                <div className="flex gap-2">
+                                  {/* Change visibility */}
                                   <button
-                                    onClick={() => handleToggleSuspension(u.uid, !!u.isSuspended)}
-                                    className={`p-1.5 rounded-lg border transition ${u.isSuspended ? "bg-red-500/10 border-red-500 text-red-400" : "bg-slate-900 text-slate-500 border-slate-800 hover:border-amber-500/30 hover:text-amber-400"}`}
-                                    title={u.isSuspended ? "Débloquer l'artiste" : "Suspendre temporairement l'artiste"}
+                                    onClick={() => handleTogglePostVisibility(p.id, !!isHidden)}
+                                    className={`p-2 rounded-lg border transition ${isHidden ? "bg-[#D4AF37] text-black font-semibold border-transparent" : "bg-[#0B0B0B] text-gray-400 hover:text-white border-[#2B2B2B]"}`}
+                                    title={isHidden ? "Rendre public" : "Masquer temporairement"}
                                   >
-                                    {u.isSuspended ? <Check className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
+                                    {isHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                   </button>
+
+                                  {/* Hard delete */}
                                   <button
-                                    onClick={async () => {
-                                      if (confirm("🚨 VOULEZ-VOUS CONDAMNER ET BANNIR DÉFINITIVEMENT CE PROFIL ? Action irréversible.")) {
-                                        await gomboDB.banUserPermanently(u.uid, adminEmail);
-                                        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 👮 BANNISSEMENT DEFINITIF : ${u.email}`, ...prev]);
-                                        loadData();
-                                      }
-                                    }}
-                                    className="p-1.5 bg-slate-900 text-slate-600 border border-slate-800 hover:border-red-500 hover:text-red-500 rounded-lg transition"
+                                    onClick={() => handleDeletePost(p.id)}
+                                    className="p-2 bg-[#0B0B0B] hover:bg-red-500/20 text-gray-500 hover:text-red-500 border border-[#2B2B2B] rounded-lg transition"
+                                    title="Supprimer la démo"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
-                              </td>
-                            </motion.tr>
-                          ))}
-                        </AnimatePresence>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 6: REPORTS & COMPLAINTS MODERATION (EXISTING) */}
-              {activeTab === "reports" && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {filteredReports.map((rep) => (
-                      <div key={rep.id} className="bg-slate-950 border border-slate-900 p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between">
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <span className="bg-red-500/10 border border-red-500/20 text-red-400 text-[8px] font-black px-2 py-0.5 rounded tracking-widest uppercase">
-                              Contenu Inadéquat
-                            </span>
-                            <span className="text-[10px] text-slate-500 font-mono">{new Date(rep.createdAt).toLocaleDateString()}</span>
-                          </div>
-                          
-                          <div className="space-y-1">
-                            <span className="text-[9px] uppercase font-mono text-slate-500">Motif dénoncé :</span>
-                            <p className="text-xs font-semibold italic text-slate-300 bg-slate-900 p-3 rounded-xl border border-slate-850">
-                              "{rep.reason}"
-                            </p>
-                          </div>
-
-                          <div className="text-[10px] font-mono text-slate-500 space-y-1">
-                            <p>Signaleur: <span className="text-slate-300">{rep.reporterEmail || "Anonyme"}</span> (UID {rep.reportedBy})</p>
-                            <p>Target ID concerné: <span className="text-slate-300 break-all">{rep.contentId}</span></p>
-                          </div>
-                        </div>
-
-                        <div className="pt-4 border-t border-slate-900 flex justify-end gap-2 mt-5">
-                          <button
-                            onClick={() => handleAuditReport(rep.id, "ignore")}
-                            className="px-3 py-1.5 bg-slate-900 text-slate-400 text-[10px] font-black uppercase rounded-lg border border-slate-800 hover:bg-slate-800"
-                          >
-                            Ignorer
-                          </button>
-                          <button
-                            onClick={() => handleAuditReport(rep.id, "delete", rep.contentId)}
-                            className="px-3 py-1.5 bg-red-400 text-black text-[10px] font-black uppercase rounded-lg hover:brightness-110"
-                          >
-                            Détruire publication
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {filteredReports.length === 0 && (
-                      <div className="col-span-full text-center py-24 text-slate-600">
-                        <CheckCircle className="w-12 h-12 text-emerald-500/30 mx-auto mb-3" />
-                        <p className="text-xs font-mono uppercase tracking-widest">Le temple est limpide. Aucun signalement à modérer.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* TAB: ORCHESTRES / GROUPES VIP */}
-              {activeTab === "groups" && (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-900">
-                    <div>
-                      <h2 className="text-sm font-black tracking-widest text-[#FF007A] uppercase flex items-center gap-2">
-                        <Radio className="w-4 h-4 text-[#FF007A]" /> ANNUAIRE DES GROUPES VIP & ORCHESTRES
-                      </h2>
-                      <p className="text-[11px] text-slate-400">Gérez, inspectez, suspendez ou supprimez les formations musicales d'AFRIGOMBO.</p>
-                    </div>
-                    <div className="relative w-full sm:w-64">
-                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-                      <input
-                        type="text"
-                        placeholder="Rechercher un groupe, style, commune..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 text-xs bg-slate-900 border border-slate-800 rounded-xl text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#FF007A]/50 transition font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {groups.filter(g => {
-                      const term = searchTerm.toLowerCase();
-                      return (g.name || "").toLowerCase().includes(term) ||
-                             (g.commune || "").toLowerCase().includes(term) ||
-                             (g.ville || "").toLowerCase().includes(term) ||
-                             (g.description || "").toLowerCase().includes(term);
-                    }).map((g) => (
-                      <div 
-                        key={g.id} 
-                        className={`bg-slate-950 border ${g.isSuspended ? 'border-red-500/25' : 'border-slate-900'} p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between transition hover:border-[#FF007A]/25`}
-                      >
-                        {g.isSuspended && (
-                          <div className="absolute top-3 right-3 bg-red-500/10 border border-red-500/35 text-red-500 text-[8px] font-black tracking-widest uppercase px-2 py-0.5 rounded animate-pulse">
-                            SUSPENDU
-                          </div>
-                        )}
-                        <div className="space-y-4">
-                          <div className="flex items-start gap-4">
-                            <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shrink-0 flex items-center justify-center">
-                              {g.logoUrl ? (
-                                <img src={g.logoUrl} alt={g.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                              ) : (
-                                <Radio className="w-6 h-6 text-slate-700" />
-                              )}
+                              </div>
                             </div>
-                            <div className="space-y-0.5 min-w-0">
-                              <h3 className="font-extrabold text-slate-100 uppercase truncate text-sm">{g.name}</h3>
-                              <p className="text-[10px] text-[#FF007A] font-mono tracking-wider uppercase font-bold">{g.type || "Orchestre Live"}</p>
-                              <p className="text-[10px] text-slate-400 font-mono">
-                                📍 {g.commune || "Cocody"}, {g.ville || "Abidjan"}
+                          );
+                        })
+                      )
+                    )}
+
+                  </div>
+                </div>
+              )}
+
+              {/* ======================================================== */}
+              {/* TAB 4: SIGNALEMENTS / COMPLAINTS */}
+              {/* ======================================================== */}
+              {activeTab === "reports" && (
+                <div className="space-y-4" id="reports-tab">
+                  <div className="space-y-1">
+                    <h2 className="text-base font-black tracking-wider uppercase text-red-400 flex items-center gap-1.5">
+                      <AlertOctagon className="w-5 h-5 text-red-500 shrink-0" />
+                      Arbitrage de Signalements ({reports.length})
+                    </h2>
+                    <p className="text-xs text-gray-400">Protéger la réputation et le respect éthique au sein d'AFRIGOMBO.</p>
+                  </div>
+
+                  <div className="space-y-3.5">
+                    {filteredReports.length === 0 ? (
+                      <div className="text-center py-20 bg-[#121212] border border-[#2B2B2B] rounded-2xl text-gray-400">
+                        <CheckCircle className="w-11 h-11 text-emerald-500/35 mx-auto mb-2.5 animate-pulse" />
+                        <p className="text-xs font-mono uppercase tracking-widest">Le temple est vierge. Aucun abus à modérer !</p>
+                      </div>
+                    ) : (
+                      filteredReports.map((rep) => (
+                        <div key={rep.id} className="bg-[#121212] border border-[#2B2B2B] p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between space-y-4">
+                          <div className="space-y-3.5 text-left">
+                            <div className="flex justify-between items-center">
+                              <span className="bg-red-500/10 border border-red-500/25 text-red-400 text-[8px] font-black px-2 py-0.5 rounded tracking-widest uppercase">
+                                Contenu Défectueux / Abus
+                              </span>
+                              <span className="text-[10px] text-gray-500 font-mono">{new Date(rep.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <span className="text-[9px] uppercase font-mono text-gray-500 block">Désaccord motivé :</span>
+                              <p className="text-xs font-medium italic text-gray-300 bg-[#0B0B0B] p-3.5 rounded-xl border border-[#2B2B2B]">
+                                "{rep.reason}"
                               </p>
                             </div>
-                          </div>
 
-                          <p className="text-xs text-slate-400 line-clamp-2 italic">
-                            "{g.description || "Aucune description fournie par le groupe."}"
-                          </p>
-
-                          <div className="grid grid-cols-3 gap-2 py-2 pr-2 border-t border-b border-slate-900 font-mono text-[9px] text-slate-400">
-                            <div>
-                              <span className="text-slate-600 block">MEMBRES</span>
-                              <span className="text-slate-200 font-bold">{g.members?.length || g.membersCount || 2} artistes</span>
-                            </div>
-                            <div>
-                              <span className="text-slate-600 block">PLAN</span>
-                              <span className={`font-black uppercase ${g.plan === 'premium' ? 'text-amber-400' : 'text-emerald-400'}`}>{g.plan || 'standard'}</span>
-                            </div>
-                            <div>
-                              <span className="text-slate-600 block">ABONNÉS</span>
-                              <span className="text-slate-200 font-bold">{g.followers?.length || 0} suivis</span>
+                            <div className="text-[10px] font-mono text-gray-500 space-y-1">
+                              <p>Identifiants signant : <strong className="text-white">{rep.reporterEmail || "Visiteur anonyme"}</strong></p>
+                              <p>Cible de référence : <strong className="text-gray-400 break-all">{rep.contentId}</strong></p>
                             </div>
                           </div>
 
-                          <div className="text-[10px] space-y-1 font-mono text-slate-500">
-                            <p>📧 Email: <span className="text-slate-300">{g.email || "Non renseigné"}</span></p>
-                            <p>📞 Phone: <span className="text-slate-300">{g.phone || "Non renseigné"}</span></p>
-                            <p>💬 WhatsApp: <span className="text-slate-300">{g.whatsapp || "Non renseigné"}</span></p>
+                          <div className="pt-3 border-t border-[#2B2B2B]/60 flex justify-end gap-2.5">
+                            <button
+                              onClick={() => handleAuditReport(rep.id, "ignore")}
+                              className="px-3 py-1.5 bg-[#0B0B0B] hover:bg-gray-800 text-gray-400 hover:text-white text-[10px] font-black uppercase rounded-lg border border-[#2B2B2B]"
+                            >
+                              Ignorer
+                            </button>
+                            <button
+                              onClick={() => handleAuditReport(rep.id, "delete", rep.contentId)}
+                              className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 text-[10px] font-black uppercase rounded-lg border border-red-500/25"
+                            >
+                              Effacer / Bannir
+                            </button>
                           </div>
                         </div>
-
-                        <div className="pt-4 border-t border-slate-900/60 flex justify-end gap-2 mt-5">
-                          <button
-                            onClick={() => handleToggleSuspendGroup(g.id, g.name, !!g.isSuspended)}
-                            className={`px-3 py-1.5 text-[10px] font-black uppercase rounded-lg border transition ${
-                              g.isSuspended 
-                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' 
-                                : 'bg-orange-500/10 border-orange-500/20 text-orange-400 hover:bg-orange-500/20'
-                            }`}
-                          >
-                            {g.isSuspended ? "Réactiver le groupe" : "Suspendre"}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteGroup(g.id, g.name)}
-                            className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase rounded-lg hover:bg-red-500/20 transition"
-                          >
-                            Supprimer définitivement
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {groups.filter(g => {
-                      const term = searchTerm.toLowerCase();
-                      return (g.name || "").toLowerCase().includes(term) ||
-                             (g.commune || "").toLowerCase().includes(term) ||
-                             (g.ville || "").toLowerCase().includes(term) ||
-                             (g.description || "").toLowerCase().includes(term);
-                    }).length === 0 && (
-                      <div className="col-span-full text-center py-24 text-slate-600">
-                        <Radio className="w-12 h-12 text-slate-800 mx-auto mb-3 animate-pulse" />
-                        <p className="text-xs font-mono uppercase tracking-widest">Aucun groupe ne correspond à votre filtre de recherche.</p>
-                      </div>
+                      ))
                     )}
                   </div>
                 </div>
               )}
 
-              {/* TAB 7: CONFIGURATION CONFIGS (INTERACTIVE NEW INTEGRATIONS) */}
-              {activeTab === "config" && (
-                <div className="bg-slate-950 border border-slate-900 p-6 rounded-3xl space-y-6 max-w-2xl">
-                  <div className="border-b border-slate-900 pb-3 flex items-center gap-1.5">
-                    <Radio className="w-5 h-5 text-amber-400 shrink-0" />
-                    <div>
-                      <h3 className="text-xs font-black tracking-widest uppercase text-slate-200">CONFIGURATION SYSTÈME GENERALE</h3>
-                      <p className="text-[11px] text-slate-500">Mettez à jour les constantes d'opération à Abidjan et communes d'AFRIGOMBO.</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 font-mono text-xs">
-                    
-                    {/* Input Alert banner */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alerte de Bannière Système Directe</label>
-                      <textarea
-                        value={systemAlert}
-                        onChange={e => setSystemAlert(e.target.value)}
-                        rows={3}
-                        className="w-full bg-[#101424] border border-slate-850 rounded-xl p-3 text-slate-200 focus:border-amber-500 outline-none font-sans leading-relaxed"
-                        placeholder="Rédigez l'annonce de maintenance ou de message prioritaire..."
-                      />
-                      <p className="text-[9.5px] text-slate-500">Ce message s'affichera immédiatement sur la page d'accueil de tous les musiciens.</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Commission rate */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Taux de Commission Gombo (%)</label>
-                        <input
-                          type="number"
-                          value={commissionRate}
-                          onChange={e => setCommissionRate(e.target.value)}
-                          className="w-full h-10 px-3 bg-[#101424] border border-slate-850 rounded-xl text-slate-100 focus:border-amber-500 outline-none text-xs"
-                          min="0"
-                          max="50"
-                        />
-                        <p className="text-[9.5px] text-slate-500">Prélevé sur les cachets payés aux artistes.</p>
-                      </div>
-
-                      {/* Mock/Cloud Database mode switch info */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mode Base de Données Actif</label>
-                        <div className="h-10 px-3 bg-slate-900 border border-slate-850 rounded-xl text-amber-400 flex items-center justify-between text-xs">
-                          <span className="font-bold">{isFirebaseMock ? "MOCK (LOCAL)" : "CLOUD FIRESTORE"}</span>
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                        </div>
-                        <p className="text-[9.5px] text-slate-500">Géré selon les variables de sécurité du container.</p>
-                      </div>
-                    </div>
-
+              {/* ======================================================== */}
+              {/* TAB 5: PLUS (FINANCES, GROUPES, CONFIG GLOBALE) */}
+              {/* ======================================================== */}
+              {activeTab === "plus" && (
+                <div className="space-y-6" id="plus-tab">
+                  
+                  {/* Top sub-navigation drawers */}
+                  <div className="flex gap-1 bg-[#121212] border border-[#2B2B2B] p-1.5 rounded-2xl overflow-x-auto scrollbar-none">
                     <button
-                      onClick={handleSaveConfig}
-                      className="w-full h-11 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg select-none cursor-pointer mt-4"
+                      onClick={() => setPlusSubTab("finances")}
+                      className={`flex-1 py-2 text-center text-[10px] font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "finances" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
                     >
-                      Enregistrer la Configuration Globale
+                      💰 Retraits ({withdrawRequests.filter(q=>q.status==="pending").length})
+                    </button>
+                    <button
+                      onClick={() => setPlusSubTab("groups")}
+                      className={`flex-1 py-2 text-center text-[10px] font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "groups" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
+                    >
+                      👥 Orchestres
+                    </button>
+                    <button
+                      onClick={() => setPlusSubTab("config")}
+                      className={`flex-1 py-2 text-center text-[10px] font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "config" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
+                    >
+                      ⚙️ Banque Config
                     </button>
                   </div>
+
+                  {/* SUB-PANEL 1: RETRAITS DE CACHET */}
+                  {plusSubTab === "finances" && (
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5">
+                          <Landmark className="w-4.5 h-4.5 text-[#D4AF37]" />
+                          Vérification de versement mobile money
+                        </h3>
+                        <p className="text-xs text-gray-400">Valider manuellement les fonds sécurisés gagnés par les artistes.</p>
+                      </div>
+
+                      <div className="space-y-3">
+                        {withdrawRequests.map((req) => (
+                          <div 
+                            key={req.id} 
+                            className={`p-4.5 rounded-2xl border flex flex-col justify-between transition-all ${req.status === "pending" ? "bg-[#121212] border-[#D4AF37]/35 shadow" : "bg-[#121212]/50 border-[#2B2B2B] opacity-65 text-gray-400"}`}
+                          >
+                            <div className="space-y-3.5 text-left">
+                              <div className="flex justify-between items-center flex-wrap gap-1.5">
+                                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase text-white tracking-widest ${req.provider === "Wave" ? "bg-sky-500" : req.provider === "Orange Money" ? "bg-orange-500" : "bg-yellow-500 text-black"}`}>
+                                  {req.provider}
+                                </span>
+                                <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${req.status === "approved" ? "bg-emerald-500/10 text-emerald-400" : req.status === "rejected" ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400 animate-pulse"}`}>
+                                  {req.status === "approved" ? "Payé avec succès" : req.status === "rejected" ? "Refusé" : "En attente d'Abidjan"}
+                                </span>
+                              </div>
+
+                              <div>
+                                <h3 className="text-lg font-black text-white font-mono">{req.amount.toLocaleString()} F CFA</h3>
+                                <p className="text-xs font-semibold text-gray-200 mt-0.5 truncate">{req.userEmail}</p>
+                                <p className="text-[10px] text-gray-400 font-mono mt-0.5">Destinataire : <font className="text-[#D4AF37]">{req.phone}</font></p>
+                              </div>
+                            </div>
+
+                            {req.status === "pending" && (
+                              <div className="pt-3 border-t border-[#2B2B2B] flex gap-2.5 mt-4">
+                                <button
+                                  onClick={() => handleRejectWithdraw(req.id)}
+                                  className="flex-1 py-2 bg-[#0B0B0B] hover:bg-red-950/20 border border-[#2B2B2B] text-red-400 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer"
+                                >
+                                  Refuser
+                                </button>
+                                <button
+                                  onClick={() => handleApproveWithdraw(req.id, req.userUid, req.amount)}
+                                  className="flex-1 py-2 bg-[#D4AF37] hover:brightness-105 text-black text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer"
+                                >
+                                  Valider Paye 💰
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUB-PANEL 2: ORCHESTRES ET GROUPES VIP */}
+                  {plusSubTab === "groups" && (
+                    <div className="space-y-4">
+                      
+                      {/* Search Bar groups */}
+                      <div className="bg-[#121212] border border-[#2B2B2B] p-4 rounded-2xl flex flex-col md:flex-row gap-3 items-center justify-between">
+                        <div className="space-y-0.5 text-left">
+                          <h4 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">Modérer l'annuaire des Groupes</h4>
+                          <p className="text-[10.5px] text-gray-400">Suspendre ou radier les formations musicales d'Afrique-Orchestres.</p>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Rechercher groupe..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full md:max-w-[200px] bg-[#0B0B0B] border border-[#2B2B2B] rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 font-mono"
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        {groups.filter(g => (g.name || "").toLowerCase().includes(searchTerm.toLowerCase())).map((g) => (
+                          <div 
+                            key={g.id} 
+                            className={`bg-[#121212] border ${g.isSuspended ? "border-red-500/25 opacity-75" : "border-[#2B2B2B]"} p-4.5 rounded-2xl space-y-3.5`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-12 h-12 rounded-xl bg-[#0B0B0B] border border-[#2B2B2B] shrink-0 flex items-center justify-center overflow-hidden">
+                                {g.logoUrl ? (
+                                  <img src={g.logoUrl} alt={g.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <Radio className="w-5 h-5 text-gray-500" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1 text-left">
+                                <h4 className="font-extrabold text-white text-sm uppercase truncate">{g.name}</h4>
+                                <span className="text-[9.5px] text-[#D4AF37] font-mono uppercase tracking-wider">{g.type || "Orchestre"}</span>
+                                <p className="text-[10px] text-gray-400">📍 {g.commune || "Cocody"}, {g.ville || "Abidjan"}</p>
+                              </div>
+                            </div>
+
+                            <p className="text-xs text-gray-400 italic text-left">{g.description || "Pas de description."}</p>
+
+                            <div className="pt-3.5 border-t border-[#2B2B2B] flex justify-end gap-2">
+                              <button
+                                onClick={() => handleToggleSuspendGroup(g.id, g.name, !!g.isSuspended)}
+                                className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-lg border transition ${g.isSuspended ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-orange-500/10 border-orange-500/10 text-[#D4AF37]"}`}
+                              >
+                                {g.isSuspended ? "Activer l'orchestre" : "Suspendre"}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteGroup(g.id, g.name)}
+                                className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] font-black uppercase rounded-lg hover:bg-red-500/20 transition-colors"
+                              >
+                                supprimer déf.
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUB-PANEL 3: GLOBAL CONFIGURATION BANNER/RATE */}
+                  {plusSubTab === "config" && (
+                    <div className="bg-[#121212] border border-[#2B2B2B] p-5 rounded-2xl space-y-5 text-left">
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-[#D4AF37]">
+                          ⚙️ Configuration Constantes d'arènes
+                        </h4>
+                        <p className="text-[11px] text-gray-400">Gérer la commission de service et la bannière broadcast sur l'accueil.</p>
+                      </div>
+
+                      <div className="space-y-4">
+                        
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-mono">Bannière d'alerte Globale d'Accueil</label>
+                          <textarea
+                            value={systemAlert}
+                            onChange={(e) => setSystemAlert(e.target.value)}
+                            rows={3}
+                            className="w-full bg-[#0B0B0B] border border-[#2B2B2B] rounded-xl p-3 text-white focus:border-[#D4AF37] outline-none font-sans text-xs"
+                            placeholder="Annonce affichée sur l'accueil des musiciens..."
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-mono">Commission de Gombo (%)</label>
+                          <input
+                            type="number"
+                            value={commissionRate}
+                            onChange={(e) => setCommissionRate(e.target.value)}
+                            className="w-full bg-[#0B0B0B] border border-[#2B2B2B] focus:border-[#D4AF37] outline-none rounded-xl h-10 px-3 text-xs text-white"
+                            min="0"
+                            max="50"
+                          />
+                        </div>
+
+                        <button
+                          onClick={handleSaveConfig}
+                          className="w-full h-11 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black text-xs uppercase tracking-widest rounded-xl transition cursor-pointer"
+                        >
+                          Sauvegarder les Constantes globales
+                        </button>
+
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               )}
 
             </motion.div>
           )}
+
         </AnimatePresence>
-      </div>
+      </main>
+
+      {/* 📱👑 FIXED BOTTOM MENU DOCK (SINGLE ACCESSIBILITY RESPONSIVE NAV-BAR) */}
+      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-[#121212] border-t border-[#2B2B2B] h-17 px-3 flex items-center justify-around select-none">
+        
+        {/* Cockpit - Tableau */}
+        <button
+          onClick={() => { setActiveTab("cockpit"); setSearchTerm(""); }}
+          className={`flex flex-col items-center justify-center w-14 h-14 transition duration-200 outline-none cursor-pointer ${activeTab === "cockpit" ? "text-[#D4AF37]" : "text-gray-400"}`}
+        >
+          <Grid className="w-5 h-5" />
+          <span className="text-[9px] font-black uppercase mt-1">Tableau</span>
+        </button>
+
+        {/* Users - Utilisateurs */}
+        <button
+          onClick={() => { setActiveTab("users"); setSearchTerm(""); }}
+          className={`flex flex-col items-center justify-center w-14 h-14 transition duration-200 outline-none cursor-pointer ${activeTab === "users" ? "text-[#D4AF37]" : "text-gray-400"}`}
+        >
+          <Users className="w-5 h-5" />
+          <span className="text-[9px] font-black uppercase mt-1">Talents</span>
+        </button>
+
+        {/* Posts - Publications */}
+        <button
+          onClick={() => { setActiveTab("posts"); setSearchTerm(""); }}
+          className={`flex flex-col items-center justify-center w-14 h-14 transition duration-200 outline-none cursor-pointer ${activeTab === "posts" ? "text-[#D4AF37]" : "text-gray-400"}`}
+        >
+          <Film className="w-5 h-5" />
+          <span className="text-[9px] font-black uppercase mt-1">Pubs/Gomb</span>
+        </button>
+
+        {/* Reports - Signalements */}
+        <button
+          onClick={() => { setActiveTab("reports"); setSearchTerm(""); }}
+          className={`flex flex-col items-center justify-center w-14 h-14 transition duration-200 outline-none cursor-pointer ${activeTab === "reports" ? "text-[#D4AF37]" : "text-gray-400"} relative`}
+        >
+          <AlertOctagon className="w-5 h-5" />
+          <span className="text-[9px] font-black uppercase mt-1">Alertes</span>
+          {reports.filter(r=>r.status==="pending").length > 0 && (
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500" />
+          )}
+        </button>
+
+        {/* Plus - Sub sections */}
+        <button
+          onClick={() => { setActiveTab("plus"); setSearchTerm(""); }}
+          className={`flex flex-col items-center justify-center w-14 h-14 transition duration-200 outline-none cursor-pointer ${activeTab === "plus" ? "text-[#D4AF37]" : "text-gray-400"}`}
+        >
+          <Radio className="w-5 h-5" />
+          <span className="text-[9px] font-black uppercase mt-1">Plus</span>
+        </button>
+
+      </footer>
+
     </div>
   );
 }

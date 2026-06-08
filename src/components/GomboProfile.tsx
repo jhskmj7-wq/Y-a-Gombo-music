@@ -1046,6 +1046,20 @@ export default function GomboProfile({
               >
                 📝 Modifier mon profil
               </button>
+
+              {currentUserProfile?.email && [
+                "johnsylvesterh@gmail.com",
+                "sylvestrehounkpevi777@gmail.com",
+                "jhs.kmj7@gmail.com"
+              ].includes(currentUserProfile.email.toLowerCase()) && (
+                <button
+                  type="button"
+                  onClick={() => onNavigateView("admin")}
+                  className="w-full text-center px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-black rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
+                >
+                  👑 Retour au Centre de Commande
+                </button>
+              )}
             </div>
           </div>
 
