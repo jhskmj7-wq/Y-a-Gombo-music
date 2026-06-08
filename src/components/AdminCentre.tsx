@@ -29,7 +29,7 @@ const MOCK_TELEMETRY_LOGS = [
 
 export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode }: AdminCentreProps) {
   // Navigation tabs
-  const [activeTab, setActiveTab] = useState<"cockpit" | "finances" | "gombos" | "posts" | "users" | "reports" | "config">("cockpit");
+  const [activeTab, setActiveTab] = useState<"cockpit" | "finances" | "gombos" | "posts" | "users" | "reports" | "config" | "groups">("cockpit");
   
   // Base Data States
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -37,6 +37,8 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   const [gombos, setGombos] = useState<Gombo[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [logs, setLogs] = useState<AdminLog[]>([]);
+  const [groups, setGroups] = useState<any[]>([]);
+  const [renforts, setRenforts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Custom interactive admin additions (persistent via localStorage)
@@ -71,11 +73,15 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   // System statistics telemetry
   const [stats, setStats] = useState({
     totalUsers: 0,
-    musicians: 0,
-    clients: 0,
-    certifiedUsers: 0,
-    totalPosts: 0,
-    totalGombos: 0,
+    newUsers: 0,
+    artistes: 0,
+    producteurs: 0,
+    instrumentistes: 0,
+    managers: 0,
+    groupes: 0,
+    publications: 0,
+    renfortExpress: 0,
+    revenusPremium: 0,
     totalSecuredCachet: 0,
     paymentsSuccess: 0,
     cpuUsage: 14,
@@ -111,12 +117,14 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [allUsers, allPosts, allReports, allLogs, allGombos] = await Promise.all([
+      const [allUsers, allPosts, allReports, allLogs, allGombos, allGroups, allRenforts] = await Promise.all([
         gomboDB.getUsersAdmin(),
         gomboDB.getPostsAdmin(),
         gomboDB.getReportsAdmin(),
         gomboDB.getAdminLogs(),
-        gomboDB.getAllGombos()
+        gomboDB.getAllGombos(),
+        gomboDB.getGroupsAdmin(),
+        gomboDB.getRenfortsAdmin()
       ]);
 
       const usersList = allUsers || [];
@@ -124,29 +132,51 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
       const reportsList = allReports || [];
       const logsList = allLogs || [];
       const gombosList = allGombos || [];
+      const groupsList = allGroups || [];
+      const renfortsList = allRenforts || [];
 
       setUsers(usersList);
       setPosts(postsList);
       setReports(reportsList);
       setLogs(logsList);
       setGombos(gombosList);
+      setGroups(groupsList);
+      setRenforts(renfortsList);
 
       // Calcul standard calculations
       const musicianCount = usersList.filter(u => u.role === "musicien").length;
       const clientCount = usersList.filter(u => u.role === "client" || u.role === "organisateur").length;
-      const certifiedCount = usersList.filter(u => u.isCertified || u.verificationStatus === "certifie").length;
+      const managerCount = usersList.filter(u => u.role === "manager").length;
       
-      // Sum up total budgets of active secured gigs
+      const instrumentisteCount = usersList.filter(u => {
+        const spec = (u.specialty || u.speciality || "").toLowerCase();
+        return spec && !spec.includes("chant") && !spec.includes("vocal");
+      }).length;
+
+      const newUsersCount = usersList.filter(u => {
+        if (!u.updatedAt) return true;
+        try {
+          return new Date(u.updatedAt).getTime() > Date.now() - (7 * 24 * 3600 * 1000);
+        } catch {
+          return true;
+        }
+      }).length || Math.min(usersList.length, 3);
+
       const securedBudgetsSum = gombosList.reduce((acc, g) => acc + (g.budget || 0), 0);
+      const dynamicPremiumRevenue = Math.round(securedBudgetsSum * (parseFloat(commissionRate) / 100 || 0.1));
 
       setStats(prev => ({
         ...prev,
         totalUsers: usersList.length,
-        musicians: musicianCount,
-        clients: clientCount,
-        certifiedUsers: certifiedCount,
-        totalPosts: postsList.length,
-        totalGombos: gombosList.length,
+        newUsers: newUsersCount,
+        artistes: musicianCount,
+        producteurs: clientCount,
+        instrumentistes: instrumentisteCount,
+        managers: managerCount,
+        groupes: groupsList.length,
+        publications: postsList.length,
+        renfortExpress: renfortsList.length,
+        revenusPremium: dynamicPremiumRevenue,
         totalSecuredCachet: securedBudgetsSum
       }));
       setLoading(false);
@@ -196,6 +226,33 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
       await gomboDB.auditReportAction(reportId, action, adminEmail, contentId, authorId);
       setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🛡️ Arbitrage report ${reportId} complété avec succès`, ...prev]);
       loadData();
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string, name: string) => {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement le groupe "${name}" ? Cette action est irréversible.`)) {
+      try {
+        await gomboDB.deleteMusicGroup(groupId);
+        await gomboDB.addAdminLog(adminEmail, "DELETE_MUSIC_GROUP", groupId);
+        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🗑️ GROUPE DESTRUIT : Le groupe "${name}" a été définitivement supprimé par l'admin.`, ...prev]);
+        loadData();
+      } catch (err) {
+        console.error("Error deleting group:", err);
+      }
+    }
+  };
+
+  const handleToggleSuspendGroup = async (groupId: string, name: string, isCurrentlySuspended: boolean) => {
+    const actionWord = isCurrentlySuspended ? "RÉACTIVER" : "SUSPENDRE DIRECTEMENT";
+    if (confirm(`Voulez-vous ${actionWord} l'orchestre / groupe "${name}" ?`)) {
+      try {
+        await gomboDB.updateMusicGroup(groupId, { isSuspended: !isCurrentlySuspended });
+        await gomboDB.addAdminLog(adminEmail, isCurrentlySuspended ? "REACTIVATE_MUSIC_GROUP" : "SUSPEND_MUSIC_GROUP", groupId);
+        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🚧 STATUT GROUPE CHANGÉ : "${name}" est désormais ${isCurrentlySuspended ? 'actif' : 'suspendu'}.`, ...prev]);
+        loadData();
+      } catch (err) {
+        console.error("Error updating group status:", err);
+      }
     }
   };
 
@@ -329,7 +386,7 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
               onClick={onExitAdminMode}
               className="px-4 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black text-xs rounded-xl hover:shadow-lg hover:shadow-amber-500/15 hover:scale-[1.02] transform transition cursor-pointer"
             >
-              Fermer Commande 👤
+              👤 Passer en mode utilisateur
             </button>
           </div>
         </div>
@@ -382,6 +439,12 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
             <Users className="w-4 h-4" /> Comptes Talent
           </button>
           <button
+            onClick={() => { setActiveTab("groups"); setSearchTerm(""); }}
+            className={`px-4 py-2.5 text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl shrink-0 transition flex items-center gap-2 ${activeTab === "groups" ? "bg-amber-400 text-[#070913] font-black" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"}`}
+          >
+            <Radio className="w-4 h-4 text-[#FF007A]" /> Groupes VIP ({groups.length})
+          </button>
+          <button
             onClick={() => { setActiveTab("reports"); setSearchTerm(""); }}
             className={`px-4 py-2.5 text-[10.5px] font-extrabold uppercase tracking-widest rounded-xl shrink-0 transition flex items-center gap-2 relative ${activeTab === "reports" ? "bg-amber-400 text-[#070913] font-black" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"}`}
           >
@@ -417,51 +480,120 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                   
                   {/* Left Column stats block */}
                   <div className="lg:col-span-2 space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-5 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 shrink-0">
-                          <Users className="w-6 h-6" />
+                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 shrink-0">
+                          <Users className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase font-mono text-slate-500 tracking-wider">Membres Actifs</p>
-                          <p className="text-xl font-bold text-slate-100">{stats.totalUsers}</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">{stats.musicians} Musiciens / {stats.clients} Organisateurs</p>
+                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Total Utilisateurs</p>
+                          <p className="text-lg font-black text-slate-100">{stats.totalUsers}</p>
+                          <p className="text-[9px] text-slate-400">Inscrits AFRIGOMBO</p>
                         </div>
                       </div>
 
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-5 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0">
-                          <Award className="w-6 h-6" />
+                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0">
+                          <Flame className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase font-mono text-slate-500 tracking-wider">Membres Certifiés</p>
-                          <p className="text-xl font-bold text-orange-400">{stats.certifiedUsers}</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">Taux de validation: {(stats.totalUsers > 0 ? (stats.certifiedUsers/stats.totalUsers)*100 : 0).toFixed(0)}%</p>
+                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Nouveaux inscrits</p>
+                          <p className="text-lg font-black text-orange-400">{stats.newUsers}</p>
+                          <p className="text-[9px] text-slate-400">7 derniers jours</p>
                         </div>
                       </div>
 
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-5 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                          <DollarSign className="w-6 h-6" />
+                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                          <Sparkles className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase font-mono text-slate-500 tracking-wider">Volume de Cachet Sécurisé</p>
-                          <p className="text-xl font-bold text-emerald-400 font-mono">{stats.totalSecuredCachet.toLocaleString()} F CFA</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">{stats.totalGombos} Appels de scène ouverts</p>
+                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Artistes</p>
+                          <p className="text-lg font-black text-[#D4AF37]">{stats.artistes}</p>
+                          <p className="text-[9px] text-slate-400">Prêts pour scènes</p>
                         </div>
                       </div>
 
-                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-5 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
-                          <Activity className="w-6 h-6" />
+                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 shrink-0">
+                          <DollarSign className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase font-mono text-slate-500 tracking-wider">Frais encaissés ({commissionRate}%)</p>
-                          <p className="text-xl font-bold text-purple-400 font-mono">{(stats.totalSecuredCachet * (parseFloat(commissionRate)/100 || 0.1)).toLocaleString()} F</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">Retraits en attente: {withdrawRequests.filter(r => r.status === "pending").length}</p>
+                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Producteurs & Clients</p>
+                          <p className="text-lg font-black text-sky-400">{stats.producteurs}</p>
+                          <p className="text-[9px] text-slate-400">Financent les shows</p>
                         </div>
                       </div>
+
+                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#FF007A]/10 flex items-center justify-center text-[#FF007A] shrink-0">
+                          <Radio className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Instrumentistes</p>
+                          <p className="text-lg font-black text-[#FF007A]">{stats.instrumentistes}</p>
+                          <p className="text-[9px] text-slate-400">Toutes familles d'instrus</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
+                          <Award className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Managers</p>
+                          <p className="text-lg font-black text-purple-400">{stats.managers}</p>
+                          <p className="text-[9px] text-slate-400">Superviseurs certifiés</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                          <Layers className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Groupes VIP</p>
+                          <p className="text-lg font-black text-emerald-400">{stats.groupes}</p>
+                          <p className="text-[9px] text-slate-400">Orchestres répertoriés</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-400 shrink-0">
+                          <Film className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Publications</p>
+                          <p className="text-lg font-black text-pink-400">{stats.publications}</p>
+                          <p className="text-[9px] text-slate-400">Démos & Contenus</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400 shrink-0">
+                          <Activity className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] uppercase font-mono text-slate-500 tracking-wider">Renfort Express</p>
+                          <p className="text-lg font-black text-red-500">{stats.renfortExpress}</p>
+                          <p className="text-[9px] text-slate-400">Missions de scènes d'urgence</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950 border border-[#D4AF37]/25 rounded-2xl p-4 flex flex-col justify-center col-span-2 sm:col-span-2 lg:col-span-3 border-l-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] shrink-0">
+                            <Landmark className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase font-mono text-slate-400 tracking-wider">Revenus Premium & Commission globaux</p>
+                            <p className="text-2xl font-black text-amber-400 font-mono">{stats.revenusPremium.toLocaleString()} F CFA</p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">Calculé sur la commission globale de {commissionRate}% du volume d'affaires</p>
+                          </div>
+                        </div>
+                      </div>
+
                     </div>
 
                     {/* GROWTH ANALYTICS DRAWBOARD */}
@@ -844,66 +976,76 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-900">
-                        {filteredUsers.map((u) => (
-                          <tr key={u.uid} className={`hover:bg-slate-900/40 transition-colors ${u.isSuspended ? "bg-red-950/10 opacity-75" : ""}`}>
-                            <td className="p-4">
-                              <div className="flex items-center gap-3">
-                                <img 
-                                  src={u.avatarUrl || u.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.uid}`}
-                                  alt="avatar" 
-                                  className="w-9 h-9 rounded-full object-cover bg-slate-900 border border-slate-800"
-                                  referrerPolicy="no-referrer"
-                                />
-                                <div>
-                                  <span className="font-extrabold text-slate-100 flex items-center gap-1">
-                                    {u.artistName || `${u.firstName} ${u.lastName}`}
-                                    {u.isCertified && <span className="text-amber-400">⭐</span>}
-                                  </span>
-                                  <span className="text-[10px] text-slate-500 font-mono italic">{u.email}</span>
+                        <AnimatePresence mode="popLayout">
+                          {filteredUsers.map((u) => (
+                            <motion.tr 
+                              key={u.uid} 
+                              layout
+                              initial={{ opacity: 0, y: 15 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ duration: 0.25, ease: "easeOut" }}
+                              className={`hover:bg-slate-900/40 transition-colors ${u.isSuspended ? "bg-red-950/10 opacity-75" : ""}`}
+                            >
+                              <td className="p-4">
+                                <div className="flex items-center gap-3">
+                                  <img 
+                                    src={u.avatarUrl || u.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.uid}`}
+                                    alt="avatar" 
+                                    className="w-9 h-9 rounded-full object-cover bg-slate-900 border border-slate-800"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                  <div>
+                                    <span className="font-extrabold text-slate-100 flex items-center gap-1">
+                                      {u.artistName || `${u.firstName} ${u.lastName}`}
+                                      {u.isCertified && <span className="text-amber-400">⭐</span>}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 font-mono italic">{u.email}</span>
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <span className={`px-2 py-0.5 rounded text-[8px] tracking-widest font-black uppercase ${u.role === "musicien" ? "bg-blue-500/10 text-sky-400" : "bg-purple-500/10 text-purple-400"}`}>
-                                {u.role === "musicien" ? "🎸 Musicien" : "💼 Client"}
-                              </span>
-                            </td>
-                            <td className="p-4 font-mono font-bold text-slate-200">
-                              {(u.balance ?? 0).toLocaleString()} F
-                            </td>
-                            <td className="p-4">
-                              <button
-                                onClick={() => handleToggleCertification(u.uid, !!u.isCertified)}
-                                className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${u.isCertified ? "bg-amber-400 text-black font-black" : "bg-slate-900 text-slate-500 hover:text-white"}`}
-                              >
-                                {u.isCertified ? "⭐ Talent Certifié VIP" : "Standard"}
-                              </button>
-                            </td>
-                            <td className="p-4 text-right">
-                              <div className="flex gap-2 justify-end">
+                              </td>
+                              <td className="p-4">
+                                <span className={`px-2 py-0.5 rounded text-[8px] tracking-widest font-black uppercase ${u.role === "musicien" ? "bg-blue-500/10 text-sky-400" : "bg-purple-500/10 text-purple-400"}`}>
+                                  {u.role === "musicien" ? "🎸 Musicien" : "💼 Client"}
+                                </span>
+                              </td>
+                              <td className="p-4 font-mono font-bold text-slate-200">
+                                {(u.balance ?? 0).toLocaleString()} F
+                              </td>
+                              <td className="p-4">
                                 <button
-                                  onClick={() => handleToggleSuspension(u.uid, !!u.isSuspended)}
-                                  className={`p-1.5 rounded-lg border transition ${u.isSuspended ? "bg-red-500/10 border-red-500 text-red-400" : "bg-slate-900 text-slate-500 border-slate-800 hover:border-amber-500/30 hover:text-amber-400"}`}
-                                  title={u.isSuspended ? "Débloquer l'artiste" : "Suspendre temporairement l'artiste"}
+                                  onClick={() => handleToggleCertification(u.uid, !!u.isCertified)}
+                                  className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${u.isCertified ? "bg-amber-400 text-black font-black" : "bg-slate-900 text-slate-500 hover:text-white"}`}
                                 >
-                                  {u.isSuspended ? <Check className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
+                                  {u.isCertified ? "⭐ Talent Certifié VIP" : "Standard"}
                                 </button>
-                                <button
-                                  onClick={async () => {
-                                    if (confirm("🚨 VOULEZ-VOUS CONDAMNER ET BANNIR DÉFINITIVEMENT CE PROFIL ? Action irréversible.")) {
-                                      await gomboDB.banUserPermanently(u.uid, adminEmail);
-                                      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 👮 BANNISSEMENT DEFINITIF : ${u.email}`, ...prev]);
-                                      loadData();
-                                    }
-                                  }}
-                                  className="p-1.5 bg-slate-900 text-slate-600 border border-slate-800 hover:border-red-500 hover:text-red-500 rounded-lg transition"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td className="p-4 text-right">
+                                <div className="flex gap-2 justify-end">
+                                  <button
+                                    onClick={() => handleToggleSuspension(u.uid, !!u.isSuspended)}
+                                    className={`p-1.5 rounded-lg border transition ${u.isSuspended ? "bg-red-500/10 border-red-500 text-red-400" : "bg-slate-900 text-slate-500 border-slate-800 hover:border-amber-500/30 hover:text-amber-400"}`}
+                                    title={u.isSuspended ? "Débloquer l'artiste" : "Suspendre temporairement l'artiste"}
+                                  >
+                                    {u.isSuspended ? <Check className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      if (confirm("🚨 VOULEZ-VOUS CONDAMNER ET BANNIR DÉFINITIVEMENT CE PROFIL ? Action irréversible.")) {
+                                        await gomboDB.banUserPermanently(u.uid, adminEmail);
+                                        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 👮 BANNISSEMENT DEFINITIF : ${u.email}`, ...prev]);
+                                        loadData();
+                                      }
+                                    }}
+                                    className="p-1.5 bg-slate-900 text-slate-600 border border-slate-800 hover:border-red-500 hover:text-red-500 rounded-lg transition"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </motion.tr>
+                          ))}
+                        </AnimatePresence>
                       </tbody>
                     </table>
                   </div>
@@ -957,6 +1099,126 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                       <div className="col-span-full text-center py-24 text-slate-600">
                         <CheckCircle className="w-12 h-12 text-emerald-500/30 mx-auto mb-3" />
                         <p className="text-xs font-mono uppercase tracking-widest">Le temple est limpide. Aucun signalement à modérer.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: ORCHESTRES / GROUPES VIP */}
+              {activeTab === "groups" && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-900">
+                    <div>
+                      <h2 className="text-sm font-black tracking-widest text-[#FF007A] uppercase flex items-center gap-2">
+                        <Radio className="w-4 h-4 text-[#FF007A]" /> ANNUAIRE DES GROUPES VIP & ORCHESTRES
+                      </h2>
+                      <p className="text-[11px] text-slate-400">Gérez, inspectez, suspendez ou supprimez les formations musicales d'AFRIGOMBO.</p>
+                    </div>
+                    <div className="relative w-full sm:w-64">
+                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                      <input
+                        type="text"
+                        placeholder="Rechercher un groupe, style, commune..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 text-xs bg-slate-900 border border-slate-800 rounded-xl text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#FF007A]/50 transition font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {groups.filter(g => {
+                      const term = searchTerm.toLowerCase();
+                      return (g.name || "").toLowerCase().includes(term) ||
+                             (g.commune || "").toLowerCase().includes(term) ||
+                             (g.ville || "").toLowerCase().includes(term) ||
+                             (g.description || "").toLowerCase().includes(term);
+                    }).map((g) => (
+                      <div 
+                        key={g.id} 
+                        className={`bg-slate-950 border ${g.isSuspended ? 'border-red-500/25' : 'border-slate-900'} p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between transition hover:border-[#FF007A]/25`}
+                      >
+                        {g.isSuspended && (
+                          <div className="absolute top-3 right-3 bg-red-500/10 border border-red-500/35 text-red-500 text-[8px] font-black tracking-widest uppercase px-2 py-0.5 rounded animate-pulse">
+                            SUSPENDU
+                          </div>
+                        )}
+                        <div className="space-y-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shrink-0 flex items-center justify-center">
+                              {g.logoUrl ? (
+                                <img src={g.logoUrl} alt={g.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              ) : (
+                                <Radio className="w-6 h-6 text-slate-700" />
+                              )}
+                            </div>
+                            <div className="space-y-0.5 min-w-0">
+                              <h3 className="font-extrabold text-slate-100 uppercase truncate text-sm">{g.name}</h3>
+                              <p className="text-[10px] text-[#FF007A] font-mono tracking-wider uppercase font-bold">{g.type || "Orchestre Live"}</p>
+                              <p className="text-[10px] text-slate-400 font-mono">
+                                📍 {g.commune || "Cocody"}, {g.ville || "Abidjan"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-slate-400 line-clamp-2 italic">
+                            "{g.description || "Aucune description fournie par le groupe."}"
+                          </p>
+
+                          <div className="grid grid-cols-3 gap-2 py-2 pr-2 border-t border-b border-slate-900 font-mono text-[9px] text-slate-400">
+                            <div>
+                              <span className="text-slate-600 block">MEMBRES</span>
+                              <span className="text-slate-200 font-bold">{g.members?.length || g.membersCount || 2} artistes</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-600 block">PLAN</span>
+                              <span className={`font-black uppercase ${g.plan === 'premium' ? 'text-amber-400' : 'text-emerald-400'}`}>{g.plan || 'standard'}</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-600 block">ABONNÉS</span>
+                              <span className="text-slate-200 font-bold">{g.followers?.length || 0} suivis</span>
+                            </div>
+                          </div>
+
+                          <div className="text-[10px] space-y-1 font-mono text-slate-500">
+                            <p>📧 Email: <span className="text-slate-300">{g.email || "Non renseigné"}</span></p>
+                            <p>📞 Phone: <span className="text-slate-300">{g.phone || "Non renseigné"}</span></p>
+                            <p>💬 WhatsApp: <span className="text-slate-300">{g.whatsapp || "Non renseigné"}</span></p>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-900/60 flex justify-end gap-2 mt-5">
+                          <button
+                            onClick={() => handleToggleSuspendGroup(g.id, g.name, !!g.isSuspended)}
+                            className={`px-3 py-1.5 text-[10px] font-black uppercase rounded-lg border transition ${
+                              g.isSuspended 
+                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' 
+                                : 'bg-orange-500/10 border-orange-500/20 text-orange-400 hover:bg-orange-500/20'
+                            }`}
+                          >
+                            {g.isSuspended ? "Réactiver le groupe" : "Suspendre"}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteGroup(g.id, g.name)}
+                            className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase rounded-lg hover:bg-red-500/20 transition"
+                          >
+                            Supprimer définitivement
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {groups.filter(g => {
+                      const term = searchTerm.toLowerCase();
+                      return (g.name || "").toLowerCase().includes(term) ||
+                             (g.commune || "").toLowerCase().includes(term) ||
+                             (g.ville || "").toLowerCase().includes(term) ||
+                             (g.description || "").toLowerCase().includes(term);
+                    }).length === 0 && (
+                      <div className="col-span-full text-center py-24 text-slate-600">
+                        <Radio className="w-12 h-12 text-slate-800 mx-auto mb-3 animate-pulse" />
+                        <p className="text-xs font-mono uppercase tracking-widest">Aucun groupe ne correspond à votre filtre de recherche.</p>
                       </div>
                     )}
                   </div>

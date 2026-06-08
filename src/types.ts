@@ -302,6 +302,7 @@ export interface MusicGroup {
   isVerified?: boolean; // ✅ Groupe Vérifié
   isPremium?: boolean; // 🏆 Groupe Premium
   isPopular?: boolean; // 🔥 Groupe Populaire
+  isSuspended?: boolean; // 🚧 Groupe Suspendu par l'admin
   
   // Plan level (Standard, VIP, Premium)
   plan: "standard" | "vip" | "premium";
