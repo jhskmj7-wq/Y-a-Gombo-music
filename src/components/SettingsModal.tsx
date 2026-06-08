@@ -10,8 +10,8 @@ interface SettingsModalProps {
   onClose: () => void;
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
-  themeMode: "light" | "dark" | "system";
-  setThemeMode: (theme: "light" | "dark" | "system") => void;
+  themeMode: "dark-gold" | "light-gold" | "night-navy";
+  setThemeMode: (theme: "dark-gold" | "light-gold" | "night-navy") => void;
   onLogout?: () => void;
 }
 
@@ -225,9 +225,9 @@ export default function SettingsModal({
 
                 <div className="grid grid-cols-3 gap-2.5">
                   {[
-                    { id: "light", label: "Clair", icon: Sun, desc: "Énergie pure" },
-                    { id: "dark", label: "Sombre", icon: Moon, desc: "Ambiance Cabaret" },
-                    { id: "system", label: "Système", icon: Laptop, desc: "Selon l'OS" }
+                    { id: "dark-gold", label: "Noir & Or", icon: Moon, desc: "Ambiance Cabaret" },
+                    { id: "light-gold", label: "Blanc & Or", icon: Sun, desc: "Énergie pure" },
+                    { id: "night-navy", label: "Bleu Nuit", icon: Shield, desc: "Deep Ocean VIP" }
                   ].map((theme) => {
                     const isSelected = themeMode === theme.id;
                     const ThemeIcon = theme.icon;

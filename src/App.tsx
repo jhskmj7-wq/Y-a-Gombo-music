@@ -78,15 +78,12 @@ const SPECIALTY_OPTIONS = [
 
 export default function App() {
   // Theme state
-  const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => {
-    return (localStorage.getItem("gombo_theme_mode") as "light" | "dark" | "system") || "system";
+  const [themeMode, setThemeMode] = useState<"dark-gold" | "light-gold" | "night-navy">(() => {
+    return (localStorage.getItem("gombo_theme_mode") as "dark-gold" | "light-gold" | "night-navy") || "dark-gold";
   });
   const [darkMode, setDarkMode] = useState(() => {
-    const mode = localStorage.getItem("gombo_theme_mode") || "system";
-    if (mode === "system") {
-      return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    }
-    return mode === "dark";
+    const mode = localStorage.getItem("gombo_theme_mode") || "dark-gold";
+    return mode !== "light-gold";
   });
 
   // Mock Mode reactive state
@@ -466,38 +463,28 @@ export default function App() {
   // Light/Dark and System theme selection and application effect
   useEffect(() => {
     const root = window.document.documentElement;
-    const updateTheme = () => {
-      let isDark = false;
-      if (themeMode === "system") {
-        isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      } else {
-        isDark = themeMode === "dark";
-      }
-      setDarkMode(isDark);
-      if (isDark) {
-        root.classList.add("dark");
-        localStorage.setItem("gombo_theme", "dark");
-      } else {
-        root.classList.remove("dark");
-        localStorage.setItem("gombo_theme", "light");
-      }
-    };
-
-    updateTheme();
+    
+    // Reset old classes
+    root.classList.remove("dark", "theme-dark-gold", "theme-light-gold", "theme-night-navy");
+    
+    // Add exact current theme
+    root.classList.add(`theme-${themeMode}`);
+    
+    // Toggle system dark helper class
+    const isDark = themeMode !== "light-gold";
+    setDarkMode(isDark);
+    if (isDark) {
+      root.classList.add("dark");
+    }
+    
     localStorage.setItem("gombo_theme_mode", themeMode);
+    localStorage.setItem("gombo_theme", isDark ? "dark" : "light");
 
     // Save choice to Firebase if logged in and profile has a different theme
     if (profile?.uid && profile.themePreference !== themeMode) {
       gomboDB.updateUserProfile(profile.uid, {
         themePreference: themeMode
       }).catch(err => console.log("⚠️ Error saving theme preference to profile:", err));
-    }
-
-    if (themeMode === "system") {
-      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-      const handleChange = () => updateTheme();
-      mediaQuery.addEventListener("change", handleChange);
-      return () => mediaQuery.removeEventListener("change", handleChange);
     }
   }, [themeMode, profile?.uid]);
 
@@ -1012,43 +999,6 @@ export default function App() {
             {/* Utility Right Actions */}
             <div className="flex items-center gap-2.5">
               
-              {/* Light/Dark/System 3-Theme Switch */}
-              <button
-                onClick={() => {
-                  const nextTheme = themeMode === "light" ? "dark" : themeMode === "dark" ? "system" : "light";
-                  setThemeMode(nextTheme);
-                }}
-                className="p-2.5 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white transition-colors relative flex items-center justify-center cursor-pointer min-w-[42px] min-h-[42px]"
-                aria-label="Toggle theme"
-                title={`Thème : ${themeMode === "light" ? "Clair" : themeMode === "dark" ? "Sombre" : "Système (Automatique)"}. Cliquer pour changer.`}
-              >
-                {themeMode === "light" && <Sun className="w-5 h-5 text-amber-500 animate-spin-slow" />}
-                {themeMode === "dark" && <Moon className="w-5 h-5 text-[#8B5CF6]" />}
-                {themeMode === "system" && <Laptop className="w-5 h-5 text-blue-500" />}
-                <span className="absolute -bottom-1 -right-1 text-[7px] font-black uppercase text-purple-650 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/45 px-1 py-0.5 rounded leading-none border border-purple-100/50 dark:border-purple-900/30 scale-90">
-                  {themeMode === "light" ? "CLR" : themeMode === "dark" ? "SMB" : "SYS"}
-                </span>
-              </button>
-
-              {/* Real-time Messagerie Chat Icon */}
-              <button
-                onClick={() => handleProtectedAction("messages")}
-                className={`p-2 rounded-xl transition-colors relative flex items-center justify-center min-w-[38px] min-h-[38px] cursor-pointer ${
-                  view === "messages" 
-                    ? "bg-[#D4AF37]/15 text-[#D4AF37]" 
-                    : "bg-gray-50 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400 hover:text-[#D4AF37]"
-                }`}
-                aria-label="Messagerie privée"
-                title="Mes messages privés"
-              >
-                <MessageSquare className="w-5 h-5" />
-                {user && unreadChatCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black h-4.5 w-4.5 rounded-full flex items-center justify-center animate-pulse border border-white dark:border-[#121214]">
-                    {unreadChatCount}
-                  </span>
-                )}
-              </button>
-
               {/* Real-time Notifications Bell Dropdown */}
               <div className="relative">
                 <button
@@ -1229,73 +1179,6 @@ export default function App() {
                 </AnimatePresence>
               </div>
 
-              {/* Settings / Paramètres */}
-              <button
-                onClick={() => setShowSettingsModal(true)}
-                className="p-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-gray-500 dark:text-gray-400 hover:text-[#D4AF37] transition-colors cursor-pointer"
-                aria-label="Application Settings"
-                title="Paramètres de l'application"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-
-              {/* Dynamic User Profile or Trigger login */}
-              {user ? (
-                <div className="hidden sm:flex items-center gap-2">
-                  {/* User profile option */}
-                  <button
-                    onClick={() => handleProtectedAction("profile_edit")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-bold ${
-                      view === "profile_edit"
-                        ? "bg-purple-50 border-purple-200 text-[#7C3AED] dark:text-[#A78BFA] dark:bg-purple-950/20 dark:border-purple-900"
-                        : "bg-white dark:bg-[#1a1a1c] border-gray-150 dark:border-gray-800 hover:bg-gray-50 text-gray-700 dark:text-gray-300"
-                    }`}
-                  >
-                    <User className="w-4 h-4 text-orange-500" />
-                    Bonjour {profile?.firstName || "Artiste"}
-                  </button>
-
-                  <button
-                    onClick={() => handleProtectedAction("dashboard")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-bold ${
-                      view === "dashboard"
-                        ? "bg-purple-50 border-purple-200 text-[#7C3AED] dark:text-[#A78BFA] dark:bg-purple-950/20 dark:border-purple-900"
-                        : "bg-white dark:bg-[#1a1a1c] border-gray-150 dark:border-gray-800 hover:bg-gray-50 text-gray-700 dark:text-gray-300"
-                    }`}
-                    title="Tableau de Bord"
-                  >
-                    <LayoutDashboard className="w-4 h-4 text-purple-500" />
-                    Mes Plans
-                  </button>
-
-                  <button
-                    onClick={() => handleProtectedAction("profile_edit")}
-                    className="w-8.5 h-8.5 rounded-xl overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[#7C3AED] transition-all"
-                  >
-                    <img 
-                      src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
-                      alt="" 
-                      className="w-full h-full object-cover" 
-                    />
-                  </button>
-
-                  <button
-                    onClick={handleLogout}
-                    className="p-2 hover:text-red-500 text-gray-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-all"
-                    title="Se déconnecter"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="hidden sm:flex px-4.5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl text-xs shadow-md transition-all active:scale-97"
-                >
-                  Se Connecter
-                </button>
-              )}
-
               {/* Universal Hamburger menu button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -1389,6 +1272,49 @@ export default function App() {
                         >
                           <User className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                           <span>Mon Profil</span>
+                        </button>
+
+                        <button
+                          onClick={() => { handleProtectedAction("messages"); setMobileMenuOpen(false); }}
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center justify-between text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <MessageSquare className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                            <span>Messages Privés</span>
+                          </div>
+                          {unreadChatCount > 0 && (
+                            <span className="bg-red-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded-full animate-pulse">
+                              {unreadChatCount}
+                            </span>
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const nextTheme = themeMode === "dark-gold" 
+                              ? "light-gold" 
+                              : themeMode === "light-gold" 
+                              ? "night-navy" 
+                              : "dark-gold";
+                            setThemeMode(nextTheme);
+                          }}
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center justify-between text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Moon className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                            <span>Changement Thème</span>
+                          </div>
+                          <span className="text-[8px] font-black uppercase text-[#D4AF37] bg-[#D4AF37]/15 px-1.5 py-0.5 rounded-sm">
+                            {themeMode === "dark-gold" ? "Noir & Or" : themeMode === "light-gold" ? "Blanc & Or" : "Bleu Nuit"}
+                          </span>
+                        </button>
+
+                        <button
+                          onClick={() => { setShowSettingsModal(true); setMobileMenuOpen(false); }}
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
+                        >
+                          <Settings className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                          <span>Réglages ⚙️</span>
                         </button>
 
                         <button

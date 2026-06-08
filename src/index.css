@@ -40,18 +40,27 @@
   --color-gombo-card-dark: #141414;
 }
 
-:root {
-  --bg-color: #F5F5F5; /* Gris Clair */
-  --card-bg: #FFFFFF; /* Blanc */
-  --text-color: #0B0B0B; /* Noir Premium */
-  --border-color: #E2E2E2;
+:root, 
+.theme-light-gold {
+  --bg-color: #FAF9F5; /* Cream Light Gold background */
+  --card-bg: #FFFFFF; /* Pure White background */
+  --text-color: #110E01; /* Deep charcoal almost black */
+  --border-color: #E6E0CE;
 }
 
-.dark {
-  --bg-color: #0B0B0B; /* Noir Premium */
-  --card-bg: #141414; /* Blanc Premium Option with Dark Slate */
-  --text-color: #FFFFFF; /* Blanc */
+.dark, 
+.theme-dark-gold {
+  --bg-color: #0B0B0B; /* Deep Black background */
+  --card-bg: #141414; /* Smooth Charcoal card background */
+  --text-color: #FFFFFF; /* Pure White */
   --border-color: #222222;
+}
+
+.theme-night-navy {
+  --bg-color: #070B19; /* Deep Ocean Navy background */
+  --card-bg: #0F172A; /* Slate Navy card background */
+  --text-color: #F1F5F9; /* Off white / slate light */
+  --border-color: #1E293B;
 }
 
 body {

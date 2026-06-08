@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Heart, MessageSquare, Share2, Bookmark, Play, Pause, 
-  Volume2, Music, Check, User, Send, Sparkles, Star, Briefcase
+  Volume2, Music, Check, User, Send, Sparkles, Star, Briefcase, Flag
 } from "lucide-react";
 import { SocialPost, PostComment, UserProfile } from "../types";
 import { gomboDB } from "../firebase";
@@ -29,6 +29,15 @@ export default function SocialPostCard({
   const [likes, setLikes] = useState(post.likesCount);
   const [hasLiked, setHasLiked] = useState(() => {
     return currentUser ? post.likedBy.includes(currentUser.uid) : false;
+  });
+
+  const [encourages, setEncourages] = useState(post.encouragesCount || 0);
+  const [hasEncouraged, setHasEncouraged] = useState(() => {
+    return currentUser && post.encouragedBy ? post.encouragedBy.includes(currentUser.uid) : false;
+  });
+
+  const [hasReported, setHasReported] = useState(() => {
+    return currentUser && post.reportedBy ? post.reportedBy.includes(currentUser.uid) : false;
   });
 
   const [saves, setSaves] = useState(post.savesCount);
@@ -74,11 +83,89 @@ export default function SocialPostCard({
     if (currentUser) {
       setHasLiked(post.likedBy.includes(currentUser.uid));
       setHasSaved(post.savedBy.includes(currentUser.uid));
+      setHasEncouraged(post.encouragedBy ? post.encouragedBy.includes(currentUser.uid) : false);
+      setHasReported(post.reportedBy ? post.reportedBy.includes(currentUser.uid) : false);
     } else {
       setHasLiked(false);
       setHasSaved(false);
+      setHasEncouraged(false);
+      setHasReported(false);
     }
   }, [currentUser, post]);
+
+  // Encourager / Clap Action
+  const handleEncourageToggle = async () => {
+    if (!currentUser) {
+      onTriggerLogin();
+      return;
+    }
+
+    let updatedEncouragedBy = post.encouragedBy ? [...post.encouragedBy] : [];
+    let newEncourageCount = encourages;
+
+    if (hasEncouraged) {
+      updatedEncouragedBy = updatedEncouragedBy.filter(uid => uid !== currentUser.uid);
+      newEncourageCount = Math.max(0, newEncourageCount - 1);
+    } else {
+      updatedEncouragedBy.push(currentUser.uid);
+      newEncourageCount += 1;
+    }
+
+    setEncourages(newEncourageCount);
+    setHasEncouraged(!hasEncouraged);
+
+    // Save update in DB
+    await gomboDB.updateSocialPost(post.id, {
+      encouragesCount: newEncourageCount,
+      encouragedBy: updatedEncouragedBy
+    });
+
+    // Notify Author
+    if (!hasEncouraged && post.userId !== currentUser.uid) {
+      try {
+        const senderName = currentUserProfile ? `${currentUserProfile.firstName} ${currentUserProfile.lastName}` : "Un artiste";
+        await gomboDB.sendNotification({
+          userId: post.userId,
+          title: "👏 Talent Encouragé !",
+          message: `${senderName} vous envoie des encouragements : « Force à toi, l'artiste ! 🔥 »`,
+          type: "general"
+        });
+      } catch (err) {
+        console.error("⚠️ Failed to dispatch encouragement notification:", err);
+      }
+    }
+  };
+
+  // Signaler / Report Action
+  const handleReportAction = async () => {
+    if (!currentUser) {
+      onTriggerLogin();
+      return;
+    }
+
+    if (hasReported) {
+      alert("Vous avez déjà signalé cette publication aux modérateurs.");
+      return;
+    }
+
+    if (!window.confirm("Voulez-vous vraiment signaler cette publication pour contenu inapproprié ou abusif ?")) {
+      return;
+    }
+
+    let updatedReportedBy = post.reportedBy ? [...post.reportedBy] : [];
+    const newReportsCount = (post.reportsCount || 0) + 1;
+    updatedReportedBy.push(currentUser.uid);
+
+    setHasReported(true);
+
+    // Save update in DB
+    await gomboDB.updateSocialPost(post.id, {
+      reportsCount: newReportsCount,
+      reportedBy: updatedReportedBy
+    });
+
+    alert("Merci d'avoir signalé cette publication. Notre équipe d'Abidjan l'examinera dans les plus brefs délais.");
+  };
 
   // Handle global play state syncing
   useEffect(() => {
@@ -260,8 +347,35 @@ export default function SocialPostCard({
 
     // Increment share counter quietly
     gomboDB.updateSocialPost(post.id, {
-      sharesCount: post.sharesCount + 1
+      sharesCount: (post.sharesCount || 0) + 1
     });
+  };
+
+  const getCategoryBadge = (category?: string) => {
+    const categories: Record<string, { label: string; style: string }> = {
+      demo: { label: "🎤 Démo musicale", style: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
+      recherche: { label: "🎹 Recherche d'instrumentiste", style: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+      renfort: { label: "🎼 Renfort Express", style: "bg-red-100 text-red-800 dark:bg-red-950/30 dark:text-red-400" },
+      concert: { label: "🎉 Annonce de concert", style: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30 dark:text-fuchsia-400" },
+      opportunite: { label: "💼 Opportunité/Gombo", style: "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400" },
+      aide: { label: "🙏 Besoin d'aide", style: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400" },
+      showbiz: { label: "📢 Actualité Showbiz", style: "bg-slate-100 text-slate-800 dark:bg-slate-800/40 dark:text-slate-300" },
+      coeur: { label: "🔥 Coup de cœur", style: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400" },
+    };
+    return categories[category || ""] || null;
+  };
+
+  const getGamifiedBadge = (gigsCount = 0, isCertified = false) => {
+    if (isCertified || gigsCount >= 15) {
+      return { label: "👑 Niveau Boss", style: "text-amber-600 dark:text-[#D4AF37] bg-amber-500/10 border border-amber-500/25" };
+    }
+    if (gigsCount >= 8) {
+      return { label: "🥇 Talent Vérifié", style: "text-rose-550 dark:text-rose-400 bg-rose-500/10 border border-rose-500/25" };
+    }
+    if (gigsCount >= 3) {
+      return { label: "🥈 Talent Actif", style: "text-emerald-600 dark:text-[#D4AF37] bg-emerald-500/10 border border-[#D4AF37]/25" };
+    }
+    return { label: "🥉 Nouveau Talent", style: "text-blue-550 dark:text-blue-400 bg-blue-500/10 border border-blue-500/25" };
   };
 
   return (
@@ -288,18 +402,19 @@ export default function SocialPostCard({
           </div>
           <div>
              <div className="flex items-center gap-1.5 flex-wrap">
-               <span className="font-extrabold text-sm text-gray-950 dark:text-white leading-tight">
-                 {post.userName || "Artiste Gombo"}
-               </span>
-               {authorProfile?.badges && authorProfile.badges.length > 0 ? (
-                 <div className="flex items-center gap-0.5">
-                   {authorProfile.badges.map((b) => (
-                     <span key={b} title={b} className="text-xs cursor-help">{b.split(" ")[0]}</span>
-                   ))}
-                 </div>
-               ) : (
-                 <Check className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
-               )}
+                <span className="font-extrabold text-sm text-gray-950 dark:text-white leading-tight">
+                  {post.userName || "Artiste Gombo"}
+                </span>
+                {(() => {
+                  const gigsCount = authorProfile?.gigsCompleted || 0;
+                  const isCertified = authorProfile?.isCertified || authorProfile?.isVerified || false;
+                  const badge = getGamifiedBadge(gigsCount, isCertified);
+                  return (
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider leading-none ${badge.style}`}>
+                      {badge.label}
+                    </span>
+                  );
+                })()}
              </div>
              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                {post.userRole && (
@@ -324,30 +439,59 @@ export default function SocialPostCard({
              </div>
            </div>
          </div>
- 
-         {post.urgent && (
-            <span className="text-[10px] uppercase font-black bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-2.5 py-1 rounded-full flex items-center gap-0.5 shadow-sm mr-1.5 leading-none animate-pulse">
-              🚀 Boosté
-            </span>
-          )}
-          {/* Follow/Unfollow Artist Button */}
-         <button
-           onClick={handleFollowToggle}
-           className={`px-3.5 py-1.5 text-xs font-black rounded-full transition-all border active:scale-95 ${
-             followed 
-               ? "bg-gray-100 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700" 
-               : "bg-orange-500 border-orange-500 text-white hover:bg-orange-650"
-           }`}
-         >
-           {followed ? "Abonné" : "+ Suivre"}
-         </button>
+  
+         <div className="flex items-center gap-2">
+           {post.urgent && (
+              <span className="text-[10px] uppercase font-black bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-2.5 py-1 rounded-full flex items-center gap-0.5 shadow-sm leading-none animate-pulse">
+                🚀 Boosté
+              </span>
+            )}
+            {/* Follow/Unfollow Artist Button */}
+            <button
+              onClick={handleFollowToggle}
+              className={`px-3 py-1.5 text-[10px] font-black rounded-full transition-all border active:scale-95 ${
+                followed 
+                  ? "bg-gray-100 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700" 
+                  : "bg-orange-500 border-orange-500 text-white hover:bg-orange-650"
+              }`}
+            >
+              {followed ? "Abonné" : "+ Suivre"}
+            </button>
+
+            {/* Signal 🚩 button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleReportAction();
+              }}
+              className={`p-1.5 rounded-xl transition-all border active:scale-90 flex items-center justify-center cursor-pointer ${
+                hasReported
+                  ? "bg-red-500/10 border-red-550/25 text-red-500"
+                  : "bg-gray-50 hover:bg-red-50 dark:bg-gray-850/60 dark:border-gray-800 text-gray-400 hover:text-red-500"
+              }`}
+              title="Signaler cette publication"
+            >
+              <Flag className="w-3.5 h-3.5 fill-current" />
+            </button>
+         </div>
        </div>
- 
+  
        {/* 2. Content Body Caption */}
        <div 
          onClick={() => setShowComments(!showComments)}
          className="px-4 sm:px-5 pb-3.5 space-y-2.5 cursor-pointer hover:bg-gray-50/55 dark:hover:bg-white/[0.015] rounded-2xl transition-all duration-200 py-1.5 mx-1"
        >
+         {/* Obligatory Category Badge display */}
+         {(() => {
+           const badge = getCategoryBadge(post.postCategory || post.type);
+           if (!badge) return null;
+           return (
+             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border dark:border-white/[0.03] ${badge.style}`}>
+               {badge.label}
+             </span>
+           );
+         })()}
+
          {post.title && (
            <h4 className="text-xs font-black text-gray-950 dark:text-white uppercase tracking-tight flex items-center gap-1">
              {post.type === "gombo" && <Briefcase className="w-3.5 h-3.5 text-[#FF7A00]" />}
@@ -517,6 +661,18 @@ export default function SocialPostCard({
           >
             <Heart className={`w-4.5 h-4.5 ${hasLiked ? "fill-current" : ""}`} />
             <span className="text-xs font-bold font-mono">{likes}</span>
+          </button>
+
+          {/* Encourager Claps button */}
+          <button
+            onClick={handleEncourageToggle}
+            className={`flex items-center gap-1.5 focus:outline-none transition-transform active:scale-90 ${
+              hasEncouraged ? "text-amber-500 dark:text-orange-400 font-bold" : "text-gray-500 dark:text-gray-400 hover:text-orange-500"
+            }`}
+            title="Encourager l'artiste !"
+          >
+            <span className="text-sm">👏</span>
+            <span className="text-xs font-bold font-mono">{encourages}</span>
           </button>
 
           {/* Comment button */}

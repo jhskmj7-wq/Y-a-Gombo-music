@@ -169,21 +169,30 @@ export interface SocialPost {
   imageUrl?: string; // Cover artwork link
   createdAt: string;
 
-  // New fields for MVP Phase 2 publication system
-  type?: "gombo" | "demo" | "annonce";
+  // New fields for MVP Phase 2/3 publication system
+  type?: "gombo" | "demo" | "annonce" | string;
+  postCategory?: "demo" | "recherche" | "renfort" | "concert" | "opportunite" | "aide" | "showbiz" | "coeur" | string;
   authorId?: string;
   authorName?: string;
   authorPhoto?: string;
   description?: string;
   commune?: string;
-  mediaUrl?: string;
-  videoUrl?: string;
+  mediaUrl?: string; // Image or main media asset URL
+  videoUrl?: string; // Optional short video accompaniment
+  photoUrl?: string; // Photo post attachments
+  locationDetail?: string; // Precision on city/commune/hall
   budget?: string | number;
   specialty?: string;
   urgent?: boolean;
   commentsCount?: number;
   genre?: string;         // e.g. for Démo
   availability?: string;  // e.g. for Annonce
+  
+  // Interactions tracking
+  encouragesCount?: number;
+  encouragedBy?: string[]; // user UIDs
+  reportsCount?: number;
+  reportedBy?: string[]; // user UIDs
 }
 
 export interface GomboNotification {
