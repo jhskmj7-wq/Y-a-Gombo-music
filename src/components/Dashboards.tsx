@@ -12,9 +12,10 @@ interface DashboardsProps {
   currentUserProfile: UserProfile;
   onRefreshProfile: () => void;
   initialTab?: string;
+  onBackToAdmin?: () => void;
 }
 
-export default function Dashboards({ currentUserProfile, onRefreshProfile, initialTab }: DashboardsProps) {
+export default function Dashboards({ currentUserProfile, onRefreshProfile, initialTab, onBackToAdmin }: DashboardsProps) {
   const [activeTab, setActiveTab] = useState<
     "applications" | "gombos" | "renfort_express" | "favoris" | "groupes" | "historique" | "reservations" | "admin" | "waiting"
   >(() => {
@@ -350,6 +351,14 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             </p>
           </div>
           <div className="flex gap-4 items-center">
+            {onBackToAdmin && ["johnsylvesterh@gmail.com", "sylvestrehounkpevi777@gmail.com", "jhs.kmj7@gmail.com"].includes((currentUserProfile.email || "").toLowerCase()) && (
+              <button
+                onClick={onBackToAdmin}
+                className="px-3 py-2 bg-black/40 hover:bg-black/60 border border-[#D4AF37]/35 hover:border-[#D4AF37] text-[#D4AF37] hover:text-white text-[10px] font-black uppercase rounded-xl tracking-wider transition-all cursor-pointer"
+              >
+                👑 COCKPIT ADMIN
+              </button>
+            )}
             <div className="text-right">
               <p className="text-[10px] text-orange-100 uppercase font-bold tracking-widest">Solde des contrats</p>
               <p className="text-2xl font-black font-mono">

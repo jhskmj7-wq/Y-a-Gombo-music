@@ -2483,6 +2483,7 @@ export default function App() {
                   currentUserProfile={profile}
                   onRefreshProfile={refreshProfile}
                   initialTab={dashboardInitialTab}
+                  onBackToAdmin={() => setView("admin")}
                 />
               </motion.div>
             )
