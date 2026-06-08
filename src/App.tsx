@@ -933,6 +933,22 @@ export default function App() {
     );
   }
 
+  if (!user) {
+    return (
+      <div className={darkMode ? "dark" : ""}>
+        <div className="min-h-screen bg-[#070708] flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <AuthScreen
+              onSuccess={() => {
+                refreshProfile();
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-[#0F0F0F] dark:text-gray-100 transition-colors duration-300 pb-20 md:pb-0">
       
@@ -2852,19 +2868,15 @@ export default function App() {
           <span className="text-[9px] font-bold tracking-tight mt-1">Renfort</span>
         </button>
 
-        {/* Item 5: Mon Coin */}
+        {/* Item 5: Mes Gombos */}
         <button
-          onClick={() => handleProtectedAction("profile_edit")}
+          onClick={() => handleProtectedAction("dashboard")}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
-            view === "profile_edit" ? "text-[#D4AF37] font-black" : "text-gray-400 dark:text-gray-500"
+            view === "dashboard" ? "text-[#D4AF37] font-black" : "text-gray-400 dark:text-gray-500"
           }`}
         >
-          {profile?.avatarUrl ? (
-            <img src={profile.avatarUrl} alt="" className="w-5.5 h-5.5 rounded-full object-cover border border-[#D4AF37]" />
-          ) : (
-            <User className="w-5.5 h-5.5" />
-          )}
-          <span className="text-[9px] font-bold tracking-tight mt-1">Mon Coin</span>
+          <Briefcase className="w-5.5 h-5.5" />
+          <span className="text-[9px] font-bold tracking-tight mt-1">Mes Gombos</span>
         </button>
       </div>
 

@@ -37,11 +37,8 @@ import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPos
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
-const savedMockOver = typeof localStorage !== "undefined" ? localStorage.getItem("isFirebaseMock") : null;
-export let isFirebaseMock = savedMockOver === "true" 
-  ? true 
-  : (firebaseConfig && firebaseConfig.projectId === "ya-gombo-music" ? false : true);
-export let isFirebaseForceReal = firebaseConfig && firebaseConfig.projectId === "ya-gombo-music" && savedMockOver !== "true" ? true : false;
+export let isFirebaseMock = false;
+export let isFirebaseForceReal = true;
 export let pendingSignUpProfile: UserProfile | null = null;
 
 export function getPendingSignUpProfile(): UserProfile | null {
@@ -53,20 +50,11 @@ export function setPendingSignUpProfile(profile: UserProfile | null) {
 }
 
 export function setIsFirebaseMock(val: boolean) {
-  if (val) {
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem("isFirebaseMock", "true");
-    }
-    isFirebaseMock = true;
-    isFirebaseForceReal = false;
-  } else {
-    if (typeof localStorage !== "undefined") {
-      localStorage.removeItem("isFirebaseMock");
-    }
-    isFirebaseMock = firebaseConfig && firebaseConfig.projectId === "ya-gombo-music" ? false : true;
-    isFirebaseForceReal = firebaseConfig && firebaseConfig.projectId === "ya-gombo-music" ? true : false;
+  isFirebaseMock = false;
+  isFirebaseForceReal = true;
+  if (typeof localStorage !== "undefined") {
+    localStorage.removeItem("isFirebaseMock");
   }
-  window.dispatchEvent(new Event("gomboFirebaseMockChange"));
 }
 
 import { app, auth, db, storage } from "./lib/firebase";

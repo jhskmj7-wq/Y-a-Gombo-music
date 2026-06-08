@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Briefcase, Check, X, Phone, UserCheck, Flame, Trash2, 
-  MapPin, Clock, Calendar, Users, Shield, Sparkles, Star, Award, Search, Info 
+  MapPin, Clock, Calendar, Users, Shield, Sparkles, Star, Award, Search, Info,
+  Heart, MessageCircle, Activity, ChevronDown, PlusCircle, ArrowUpRight, Music
 } from "lucide-react";
 import { gomboDB, isFirebaseMock } from "../firebase";
-import { UserProfile, Gombo, Application, Reservation } from "../types";
+import { UserProfile, Gombo, Application, Reservation, Renfort, RenfortApplication, MusicGroup, ActivityFeedEntry } from "../types";
 
 interface DashboardsProps {
   currentUserProfile: UserProfile;
@@ -14,25 +15,25 @@ interface DashboardsProps {
 }
 
 export default function Dashboards({ currentUserProfile, onRefreshProfile, initialTab }: DashboardsProps) {
-  const [activeTab, setActiveTab] = useState<"gombos" | "applications" | "reservations" | "admin" | "waiting">(() => {
-    if (initialTab && ["gombos", "applications", "reservations", "admin", "waiting"].includes(initialTab)) {
+  const [activeTab, setActiveTab] = useState<
+    "applications" | "gombos" | "renfort_express" | "favoris" | "groupes" | "historique" | "reservations" | "admin" | "waiting"
+  >(() => {
+    if (initialTab && ["applications", "gombos", "renfort_express", "favoris", "groupes", "historique", "reservations", "admin", "waiting"].includes(initialTab)) {
       return initialTab as any;
     }
-    return "gombos";
+    return "applications";
   });
 
   useEffect(() => {
-    if (initialTab && ["gombos", "applications", "reservations", "admin", "waiting"].includes(initialTab)) {
+    if (initialTab && ["applications", "gombos", "renfort_express", "favoris", "groupes", "historique", "reservations", "admin", "waiting"].includes(initialTab)) {
       setActiveTab(initialTab as any);
     }
   }, [initialTab]);
 
-  // Keep scrolls independent and not mixed by scrolling to top of page on activeTab transition
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [activeTab]);
   
-  // Mock Mode reactive state
   const [mockMode, setMockMode] = useState(isFirebaseMock);
 
   useEffect(() => {
@@ -45,101 +46,81 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
     };
   }, []);
   
-  // Data States
+  // Base Data States
   const [myGombos, setMyGombos] = useState<Gombo[]>([]);
   const [myApplications, setMyApplications] = useState<Application[]>([]);
   const [myReservations, setMyReservations] = useState<Reservation[]>([]);
-  
-  // Client specific: list of applications received across all my gombos
   const [receivedApplications, setReceivedApplications] = useState<Application[]>([]);
-  
-  // Admin specific states
+
+  // Admin states
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [allGombosList, setAllGombosList] = useState<Gombo[]>([]);
   const [waitingAnalytics, setWaitingAnalytics] = useState<any[]>([]);
 
+  // Bento state resources
+  const [myRenforts, setMyRenforts] = useState<Renfort[]>([]);
+  const [myRenfortApps, setMyRenfortApps] = useState<RenfortApplication[]>([]);
+  const [favoriteTalents, setFavoriteTalents] = useState<UserProfile[]>([]);
+  const [myGroups, setMyGroups] = useState<MusicGroup[]>([]);
+  const [myActivities, setMyActivities] = useState<ActivityFeedEntry[]>([]);
+
   const [loading, setLoading] = useState(true);
 
-  // Load Dashboard Data
-  const loadDashboardData = async () => {
-    setLoading(true);
+  // Load Bento Additional Resources
+  const loadBentoExtraResources = async () => {
     try {
-      const gombos = await gomboDB.getAllGombos();
-      const applications = await gomboDB.getApplications();
-      const reservations = await gomboDB.getReservations();
-
-      if (currentUserProfile.role === "client") {
-        // Gombos posted by this client
-        const clientGombos = gombos.filter(g => g.clientId === currentUserProfile.uid);
-        setMyGombos(clientGombos);
-
-        // Applications received for all my gombos
-        const clientGomboIDs = clientGombos.map(g => g.id);
-        const appsReceived = applications.filter(app => clientGomboIDs.includes(app.gomboId));
-        setReceivedApplications(appsReceived);
-
-        // Reservations where I am the client
-        const clientReservations = reservations.filter(r => r.clientId === currentUserProfile.uid);
-        setMyReservations(clientReservations);
-      } else if (currentUserProfile.role === "musicien") {
-        // Gombos matching filters or general (handled on landing, we just load bookings/applied)
-        // Applications I sent
-        const musicianApps = applications.filter(app => app.musicianId === currentUserProfile.uid);
-        setMyApplications(musicianApps);
-
-        // Reservations obtained
-        const musicianReservations = reservations.filter(r => r.musicianId === currentUserProfile.uid);
-        setMyReservations(musicianReservations);
+      // 1. Load Favorite Talents from localStorage
+      const savedFavs = localStorage.getItem("favorite_talents_list") || "[]";
+      const favIds: string[] = JSON.parse(savedFavs);
+      const fetchedAllUsers = await gomboDB.getAllUsers();
+      if (favIds.length > 0) {
+        setFavoriteTalents(fetchedAllUsers.filter(u => favIds.includes(u.uid)));
+      } else {
+        setFavoriteTalents([]);
       }
-
-      // If user is Admin or logs into admin tab
-      if (currentUserProfile.role === "admin") {
-        const users = await gomboDB.getAllUsers();
-        setAllUsers(users);
-        setAllGombosList(gombos);
-        const waitings = await gomboDB.getWaitingFeaturesCount();
-        setWaitingAnalytics(waitings);
-        setActiveTab("admin");
-      }
-    } catch (err) {
-      console.error("Error loading dashboard metrics:", err);
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.warn("⚠️ Error loading custom favorites list for dashboard Bento", e);
     }
   };
 
   useEffect(() => {
     setLoading(true);
-    console.log("🔗 [Dashboard Live Link] Subscribing to real-time resources...");
-    
     let unsubGombos: (() => void) | null = null;
     let unsubApps: (() => void) | null = null;
+    let unsubRenfor: (() => void) | null = null;
+    let unsubRenforApp: (() => void) | null = null;
+    let unsubGroupsList: (() => void) | null = null;
+    let unsubActFeed: (() => void) | null = null;
 
-    const initDashboardListeners = async () => {
+    const initDashboardSync = async () => {
       try {
         const reservations = await gomboDB.getReservations();
+        const userUid = currentUserProfile.uid;
+
+        // Load local favorites
+        loadBentoExtraResources();
 
         // 1. Live Gombos
         unsubGombos = gomboDB.listenAllGombos((gombos) => {
           // 2. Live Applications
           unsubApps = gomboDB.listenApplications(async (applications) => {
-            console.log("⚡ [Dashboard Live Sync] Live sync triggered. Gombos:", gombos.length, "Apps:", applications.length);
+            console.log("⚡ [Dashboard Sync] Live update triggered. Gombos:", gombos.length, "Apps:", applications.length);
             
             if (currentUserProfile.role === "client") {
-              const clientGombos = gombos.filter(g => g.clientId === currentUserProfile.uid);
+              const clientGombos = gombos.filter(g => g.clientId === userUid);
               setMyGombos(clientGombos);
 
               const clientGomboIDs = clientGombos.map(g => g.id);
               const appsReceived = applications.filter(app => clientGomboIDs.includes(app.gomboId));
               setReceivedApplications(appsReceived);
 
-              const clientReservations = reservations.filter(r => r.clientId === currentUserProfile.uid);
+              const clientReservations = reservations.filter(r => r.clientId === userUid);
               setMyReservations(clientReservations);
             } else if (currentUserProfile.role === "musicien") {
-              const musicianApps = applications.filter(app => app.musicianId === currentUserProfile.uid);
+              const musicianApps = applications.filter(app => app.musicianId === userUid);
               setMyApplications(musicianApps);
 
-              const musicianReservations = reservations.filter(r => r.musicianId === currentUserProfile.uid);
+              const musicianReservations = reservations.filter(r => r.musicianId === userUid);
               setMyReservations(musicianReservations);
             }
 
@@ -151,39 +132,81 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
               setWaitingAnalytics(waitings);
               setActiveTab("admin");
             }
-            setLoading(false);
           });
         });
+
+        // 3. Live Renforts
+        unsubRenfor = gomboDB.listenAllRenforts((allRenfortsList) => {
+          const userRenforts = allRenfortsList.filter(r => r.userId === userUid);
+          setMyRenforts(userRenforts);
+        });
+
+        unsubRenforApp = gomboDB.listenRenfortApplications((allApps) => {
+          const userApps = allApps.filter(app => app.musicianId === userUid);
+          setMyRenfortApps(userApps);
+        });
+
+        // 4. Live Groups
+        unsubGroupsList = gomboDB.listenAllMusicGroups((allGroupsList) => {
+          const userGroupsList = allGroupsList.filter(g => 
+            g.creatorId === userUid || 
+            (g.followers && g.followers.includes(userUid)) || 
+            (g.members && g.members.some(m => m.id === userUid))
+          );
+          setMyGroups(userGroupsList);
+        });
+
+        // 5. Live Activity Logs
+        unsubActFeed = gomboDB.listenToActivityFeed((allActs) => {
+          const userActs = allActs.filter(act => 
+            act.userId === userUid || 
+            act.message.includes(currentUserProfile.firstName) || 
+            act.message.includes(currentUserProfile.lastName) ||
+            JSON.stringify(act).includes(userUid)
+          ).slice(0, 25);
+          setMyActivities(userActs);
+        });
+
+        setLoading(false);
       } catch (err) {
-        console.error("❌ [Dashboard Live Sync] Error binding listeners:", err);
+        console.error("❌ [Dashboard Live Sync] Listener Error:", err);
         setLoading(false);
       }
     };
 
-    initDashboardListeners();
+    initDashboardSync();
+
+    // Favorites changed window trigger
+    const handleFavsChanged = () => {
+      loadBentoExtraResources();
+    };
+    window.addEventListener("storage", handleFavsChanged);
+    window.addEventListener("gomboUserProfileChange", handleFavsChanged);
 
     return () => {
-      console.log("🔌 [Dashboard Live Link] Cleaning up active live link subscriptions...");
       if (unsubGombos) unsubGombos();
       if (unsubApps) unsubApps();
+      if (unsubRenfor) unsubRenfor();
+      if (unsubRenforApp) unsubRenforApp();
+      if (unsubGroupsList) unsubGroupsList();
+      if (unsubActFeed) unsubActFeed();
+      window.removeEventListener("storage", handleFavsChanged);
+      window.removeEventListener("gomboUserProfileChange", handleFavsChanged);
     };
-  }, [currentUserProfile?.uid, currentUserProfile]);
+  }, [currentUserProfile?.uid]);
 
-  // Handle client accepting musician application
+  // Client accepts musician application
   const handleAcceptCandidacy = async (app: Application) => {
     if (!window.confirm(`Confirmer la réservation du gombo avec ${app.musicianName} ?`)) return;
     
     setLoading(true);
     try {
-      // Find the gombo details
       const gombos = await gomboDB.getAllGombos();
       const targetGombo = gombos.find(g => g.id === app.gomboId);
       if (!targetGombo) throw new Error("Gombo introuvable !");
 
-      // Update application status to 'accepte'
       await gomboDB.updateApplicationStatus(app.id, "accepte");
 
-      // Send real-time notification to the accepted musician
       try {
         await gomboDB.sendNotification({
           userId: app.musicianId,
@@ -195,7 +218,6 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
         console.warn("⚠️ Notification could not be sent:", notifErr);
       }
 
-      // Auto-reject other applications for this exact same single-musician gombo (optional UX touch)
       if (targetGombo.musiciansCount === 1) {
         const matchingApps = receivedApplications.filter(a => a.gomboId === app.gomboId && a.id !== app.id);
         for (const otherApp of matchingApps) {
@@ -213,7 +235,6 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
         }
       }
 
-      // Record Reservation
       await gomboDB.confirmBooking({
         gomboId: app.gomboId,
         gomboTitle: app.gomboTitle,
@@ -225,7 +246,6 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
       });
 
       alert(`Performance validée ! Les détails de contact de ${app.musicianName} sont désormais disponibles.`);
-      loadDashboardData();
     } catch (err) {
       console.error(err);
       alert("Une erreur est survenue lors de l'enregistrement de l'accord.");
@@ -234,7 +254,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
     }
   };
 
-  // Handle client rejecting application
+  // Client rejects application
   const handleRejectCandidacy = async (app: Application) => {
     if (!window.confirm("Désapprouver cette candidature ?")) return;
     setLoading(true);
@@ -250,7 +270,6 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
       } catch (notifErr) {
         console.warn("⚠️ Notification could not be sent:", notifErr);
       }
-      loadDashboardData();
     } catch (err) {
       console.error(err);
     } finally {
@@ -264,7 +283,6 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
     try {
       await gomboDB.deleteUserProfile(uid);
       alert("Compte supprimé avec succès.");
-      loadDashboardData();
     } catch (err) {
       console.error(err);
     }
@@ -275,17 +293,37 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
     try {
       await gomboDB.deleteGombo(gomboId);
       alert("Annonce supprimée avec succès.");
-      loadDashboardData();
     } catch (err) {
       console.error(err);
     }
   };
 
+  const handleUnfavorite = (talentUid: string) => {
+    try {
+      const savedFavs = localStorage.getItem("favorite_talents_list") || "[]";
+      let favIds: string[] = JSON.parse(savedFavs);
+      favIds = favIds.filter(id => id !== talentUid);
+      localStorage.setItem("favorite_talents_list", JSON.stringify(favIds));
+      setFavoriteTalents(favoriteTalents.filter(u => u.uid !== talentUid));
+      // Dispatch profile sync to keep in step
+      window.dispatchEvent(new Event("gomboUserProfileChange"));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Computed counters
+  const candidaturesCount = currentUserProfile.role === "client" ? receivedApplications.length : myApplications.length;
+  const opportunitesCount = myGombos.length;
+  const renfortExpressCount = myRenforts.length + myRenfortApps.length;
+  const favorisCount = favoriteTalents.length;
+  const groupesCount = myGroups.length;
+  const historiqueCount = myActivities.length;
+
   return (
-    <div className="space-y-6">
-      {/* Overview Card */}
+    <div className="space-y-6 text-left">
+      {/* Overview Greeting Header Bar */}
       <div className="bg-gradient-to-r from-orange-500 to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
-        {/* Abstract vector wave background */}
         <div className="absolute inset-0 opacity-15 pointer-events-none">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path d="M0,50 Q25,70 50,50 T100,50 L100,100 L0,100 Z" fill="white" />
@@ -296,24 +334,24 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 bg-orange-700/50 rounded-full text-xs font-bold uppercase tracking-wider">
-                Espace {currentUserProfile.role === "admin" ? "Administrateur" : currentUserProfile.role === "client" ? "Club / Employeur" : "Artiste"}
+                Espace {currentUserProfile.role === "admin" ? "Administrateur" : currentUserProfile.role === "client" ? "Club / Boss" : "Artiste"}
               </span>
               {mockMode && (
                 <span className="px-2.5 py-0.5 bg-yellow-400 text-black text-[10px] font-extrabold uppercase rounded-full">
-                  Mode Démonstration Actif
+                  Mode Démo
                 </span>
               )}
             </div>
             <h1 className="text-3xl font-black mt-2">
               Akwaba, {currentUserProfile.firstName} {currentUserProfile.lastName} !
             </h1>
-            <p className="text-orange-100 text-sm mt-1">
-              Gérez facilement vos bookings, candidatures et prestations musicales du showbiz d'Abidjan.
+            <p className="text-orange-100 text-xs mt-1">
+              Pilotez tous vos contrats musicaux, vos bookings directs et vos renforts en un coup d'œil.
             </p>
           </div>
           <div className="flex gap-4 items-center">
             <div className="text-right">
-              <p className="text-xs text-orange-100">Solde estimé contrats</p>
+              <p className="text-[10px] text-orange-100 uppercase font-bold tracking-widest">Solde des contrats</p>
               <p className="text-2xl font-black font-mono">
                 {myReservations.reduce((sum, r) => sum + r.amount, 0).toLocaleString()} FCFA
               </p>
@@ -322,241 +360,252 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
         </div>
       </div>
 
-      {/* Navigation tabs for dashboard subviews */}
-      <div className="flex border-b border-gray-100 dark:border-gray-800 gap-1 overflow-x-auto pb-px">
-        {currentUserProfile.role === "client" && (
-          <>
-            <button
-              onClick={() => setActiveTab("gombos")}
-              className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
-                activeTab === "gombos"
-                  ? "border-[#7C3AED] text-[#7C3AED] dark:text-[#A78BFA]"
-                  : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Mes Gombos Publiés ({myGombos.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("applications")}
-              className={`px-5 py-3 text-sm font-bold border-[#7C3AED] transition-colors shrink-0 ${
-                activeTab === "applications"
-                  ? "border-b-2 text-[#7C3AED] dark:text-[#A78BFA]"
-                  : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Candidatures Reçues ({receivedApplications.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("reservations")}
-              className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
-                activeTab === "reservations"
-                  ? "border-[#7C3AED] text-[#7C3AED] dark:text-[#A78BFA]"
-                  : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Réservations Finalisées ({myReservations.length})
-            </button>
-          </>
-        )}
+      {/* REVOLUTIONARY BENTO BOX INTERACTIVE COUNTING NAVIGATION GRID */}
+      <div>
+        <p className="text-[11px] uppercase font-black text-[#D4AF37] tracking-widest mb-3 flex items-center gap-2">
+          <span>💼</span> Mes Gombos — Tableau de bord
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+          {/* Card 1: Mes Candidatures */}
+          <button
+            onClick={() => setActiveTab("applications")}
+            className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
+              activeTab === "applications"
+                ? "bg-[#D4AF37]/10 border-[#D4AF37] shadow-md scale-102"
+                : "bg-white dark:bg-[#111113] border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+            }`}
+          >
+            <div className="flex justify-between items-start w-full">
+              <span className="p-2 bg-purple-500/10 text-purple-500 rounded-lg">
+                <Briefcase className="w-5 h-5" />
+              </span>
+              <span className="text-2xl font-black font-mono tracking-tight text-gray-900 dark:text-white">
+                {candidaturesCount}
+              </span>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs font-black text-gray-900 dark:text-white truncate">Candidatures</p>
+              <p className="text-[9.5px] text-gray-400 mt-0.5 truncate">
+                {currentUserProfile.role === "client" ? "Candidats reçus" : "Prestations postulées"}
+              </p>
+            </div>
+          </button>
 
-        {currentUserProfile.role === "musicien" && (
-          <>
-            <button
-              onClick={() => setActiveTab("applications")}
-              className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
-                activeTab === "applications"
-                  ? "border-[#7C3AED] text-[#7C3AED] dark:text-[#A78BFA]"
-                  : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Plans Envoyés ({myApplications.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("reservations")}
-              className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
-                activeTab === "reservations"
-                  ? "border-[#7C3AED] text-[#7C3AED] dark:text-[#A78BFA]"
-                  : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Les Cachets d'Abidjan ({myReservations.length})
-            </button>
-          </>
-        )}
+          {/* Card 2: Mes opportunites */}
+          <button
+            onClick={() => setActiveTab("gombos")}
+            className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
+              activeTab === "gombos"
+                ? "bg-[#D4AF37]/10 border-[#D4AF37] shadow-md scale-102"
+                : "bg-white dark:bg-[#111113] border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+            }`}
+          >
+            <div className="flex justify-between items-start w-full">
+              <span className="p-2 bg-orange-500/10 text-[#FF7A00] rounded-lg">
+                <Flame className="w-5 h-5" />
+              </span>
+              <span className="text-2xl font-black font-mono tracking-tight text-gray-900 dark:text-white">
+                {opportunitesCount}
+              </span>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs font-black text-gray-900 dark:text-white truncate">Mes Opportunités</p>
+              <p className="text-[9.5px] text-gray-400 mt-0.5 truncate">Plans de scène publiés</p>
+            </div>
+          </button>
 
-        {currentUserProfile.role === "admin" && (
-          <>
-            <button
-              onClick={() => setActiveTab("admin")}
-              className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
-                activeTab === "admin"
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
-                  : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Gérer les Comptes ({allUsers.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("gombos")}
-              className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
-                activeTab === "gombos"
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
-                  : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Modérer les Annonces ({allGombosList.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("waiting")}
-              className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors shrink-0 ${
-                activeTab === "waiting"
-                  ? "border-orange-500 text-orange-600 dark:text-orange-400"
-                  : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Listes d'attentes Fonctionnalités ({waitingAnalytics.length})
-            </button>
-          </>
-        )}
+          {/* Card 3: Mes Renfort Express */}
+          <button
+            onClick={() => setActiveTab("renfort_express")}
+            className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
+              activeTab === "renfort_express"
+                ? "bg-[#D4AF37]/10 border-[#D4AF37] shadow-md scale-102"
+                : "bg-white dark:bg-[#111113] border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+            }`}
+          >
+            <div className="flex justify-between items-start w-full">
+              <span className="p-2 bg-blue-500/10 text-cyan-500 rounded-lg">
+                <Sparkles className="w-5 h-5" />
+              </span>
+              <span className="text-2xl font-black font-mono tracking-tight text-gray-900 dark:text-white">
+                {renfortExpressCount}
+              </span>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs font-black text-gray-900 dark:text-white truncate">Renfort Express</p>
+              <p className="text-[9.5px] text-gray-400 mt-0.5 truncate">Remplacements urgents</p>
+            </div>
+          </button>
+
+          {/* Card 4: Mes Favoris */}
+          <button
+            onClick={() => setActiveTab("favoris")}
+            className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
+              activeTab === "favoris"
+                ? "bg-[#D4AF37]/10 border-[#D4AF37] shadow-md scale-102"
+                : "bg-white dark:bg-[#111113] border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+            }`}
+          >
+            <div className="flex justify-between items-start w-full">
+              <span className="p-2 bg-red-500/10 text-red-505 rounded-lg">
+                <Heart className="w-5 h-5 fill-current" />
+              </span>
+              <span className="text-2xl font-black font-mono tracking-tight text-gray-900 dark:text-white">
+                {favorisCount}
+              </span>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs font-black text-gray-900 dark:text-white truncate">Favoris</p>
+              <p className="text-[9.5px] text-gray-400 mt-0.5 truncate">Talents du showbiz sauvés</p>
+            </div>
+          </button>
+
+          {/* Card 5: Mes Groupes */}
+          <button
+            onClick={() => setActiveTab("groupes")}
+            className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
+              activeTab === "groupes"
+                ? "bg-[#D4AF37]/10 border-[#D4AF37] shadow-md scale-102"
+                : "bg-white dark:bg-[#111113] border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+            }`}
+          >
+            <div className="flex justify-between items-start w-full">
+              <span className="p-2 bg-[#D4AF37]/10 text-[#D4AF37] rounded-lg">
+                <Music className="w-5 h-5" />
+              </span>
+              <span className="text-2xl font-black font-mono tracking-tight text-gray-900 dark:text-white">
+                {groupesCount}
+              </span>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs font-black text-gray-900 dark:text-white truncate">Mes Groupes</p>
+              <p className="text-[9.5px] text-gray-400 mt-0.5 truncate">Groupes & Orchestres VIP</p>
+            </div>
+          </button>
+
+          {/* Card 6: Mon Historique */}
+          <button
+            onClick={() => setActiveTab("historique")}
+            className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between overflow-hidden cursor-pointer ${
+              activeTab === "historique"
+                ? "bg-[#D4AF37]/10 border-[#D4AF37] shadow-md scale-102"
+                : "bg-white dark:bg-[#111113] border-gray-100 dark:border-gray-800 hover:border-[#D4AF37]/50"
+            }`}
+          >
+            <div className="flex justify-between items-start w-full">
+              <span className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg">
+                <Activity className="w-5 h-5" />
+              </span>
+              <span className="text-2xl font-black font-mono tracking-tight text-gray-900 dark:text-white">
+                {historiqueCount}
+              </span>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs font-black text-gray-900 dark:text-white truncate">Historique</p>
+              <p className="text-[9.5px] text-gray-400 mt-0.5 truncate">Journal d'activités</p>
+            </div>
+          </button>
+        </div>
+
+        {/* Traditional secondary tabs for client reservations or general admin */}
+        <div className="flex gap-2.5 mt-4 border-b border-gray-100 dark:border-gray-850 pb-2">
+          <button
+            onClick={() => setActiveTab("reservations")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === "reservations"
+                ? "bg-emerald-500 text-white"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-gray-950 dark:hover:text-white"
+            }`}
+          >
+            🏆 Réservations Effectives ({myReservations.length})
+          </button>
+
+          {currentUserProfile.role === "admin" && (
+            <>
+              <button
+                onClick={() => setActiveTab("admin")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === "admin"
+                    ? "bg-rose-650 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-rose-500 hover:bg-rose-50"
+                }`}
+              >
+                🛡️ Gérer les Comptes ({allUsers.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("waiting")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === "waiting"
+                    ? "bg-amber-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-amber-500 hover:bg-amber-50"
+                }`}
+              >
+                ⏳ Listes d'Attente ({waitingAnalytics.length})
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {loading && (
         <div className="flex justify-center items-center py-12">
-          <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-3 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
-      {/* --- SUBVIEWS CONTENT RENDERING --- */}
+      {/* SUBVIEWS CONTENT RENDERING */}
       {!loading && (
-        <div className="space-y-4">
+        <div className="space-y-4 pt-1 animate-fadeIn">
           
-          {/* 1. MES GOMBOS (CLIENT) / ALL GOMBOS (ADMIN) */}
-          {activeTab === "gombos" && (
-            <div className="space-y-4">
-              {(currentUserProfile.role === "client" ? myGombos : allGombosList).length === 0 ? (
-                <div className="text-center py-12 bg-white dark:bg-gray-800/20 rounded-2xl border border-gray-100 dark:border-gray-800">
-                  <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">Aucune annonce publiée pour le moment.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(currentUserProfile.role === "client" ? myGombos : allGombosList).map((gombo) => (
-                    <div 
-                      key={gombo.id}
-                      className="bg-white dark:bg-[#1e1e24] p-5 rounded-2xl border border-gray-100 dark:border-gray-800 relative flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex justify-between items-start gap-2 mb-2">
-                          <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                            gombo.status === "publie" 
-                              ? "bg-orange-50 dark:bg-orange-950/20 text-orange-600" 
-                              : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600"
-                          }`}>
-                            Contract {gombo.status === "publie" ? "En ligne" : "Réservé"}
-                          </span>
-                          <span className="font-mono text-sm font-black text-orange-600">
-                            {gombo.budget.toLocaleString()} FCFA
-                          </span>
-                        </div>
-
-                        <h4 className="font-extrabold text-gray-950 dark:text-white text-base mb-1.5">{gombo.title}</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed mb-3">
-                          {gombo.description}
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 text-[11px] text-gray-500 dark:text-gray-400 border-t border-gray-55 dark:border-gray-800 pt-2.5">
-                          <div className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {gombo.commune}</div>
-                          <div className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {gombo.date}</div>
-                          <div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {gombo.time}</div>
-                          <div className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {gombo.musiciansCount} musiciens</div>
-                        </div>
-                      </div>
-
-                      {/* Admin delete shortcut */}
-                      {currentUserProfile.role === "admin" && (
-                        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center text-xs text-gray-400">
-                          <p>Publié par: {gombo.clientName}</p>
-                          <button
-                            onClick={() => handleAdminDeleteGombo(gombo.id)}
-                            className="p-1 px-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-bold flex items-center gap-1 shrink-0"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" /> Supprimer
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-           {/* 2. CANDIDATURES (MUSICIAN OR CLIENT) */}
+          {/* 1. APPLICATIONS PANEL (Sent or Received) */}
           {activeTab === "applications" && (
             <div className="space-y-4">
+              <h3 className="text-base font-black text-gray-950 dark:text-white flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+                <span>📂</span> Mes dossiers de candidatures ({candidaturesCount})
+              </h3>
               
-              {/* MUSICIAN SIDE: APP SENT LIST */}
+              {/* If Musician */}
               {currentUserProfile.role === "musicien" && (
                 myApplications.length === 0 ? (
-                  <div className="text-center py-12 bg-white dark:bg-gray-800/20 rounded-2xl border border-gray-100 dark:border-gray-800">
-                    <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 dark:text-gray-400">Vous n'avez pas encore postulé à des propositions.</p>
+                  <div className="text-center py-12 bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                    <p className="text-sm font-bold text-gray-500">Aucun dossier de candidature envoyé pour le moment.</p>
+                    <p className="text-xs text-gray-400 mt-1">Parcourez Le Terrain pour postuler aux offres de cachets disponibles.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {myApplications.map((app) => (
-                      <div key={app.id} className="bg-white dark:bg-[#1e1e24] p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
-                        <div className="flex justify-between items-start gap-4 mb-2">
-                          <div>
-                            <h4 className="font-extrabold text-[#111] dark:text-white text-base">{app.gomboTitle}</h4>
-                            <p className="text-[10px] text-gray-400 uppercase mt-0.5 font-medium tracking-wide">Candidature postée le {new Date(app.createdAt).toLocaleDateString("fr-FR")}</p>
+                      <div key={app.id} className="bg-white dark:bg-[#141416] p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs relative flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start gap-4 mb-2.5">
+                            <div>
+                              <h4 className="font-extrabold text-[#111] dark:text-white text-base leading-tight">{app.gomboTitle}</h4>
+                              <p className="text-[10px] text-gray-405 font-bold mt-1 uppercase">Dossier n° {app.id.slice(0,8)}</p>
+                            </div>
+                            <span className={`text-[10.5px] font-black px-3 py-1 rounded-full ${
+                              app.status === "en_attente" 
+                                ? "bg-amber-50 text-amber-600 dark:bg-amber-950/20" 
+                                : app.status === "accepte" 
+                                ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20" 
+                                : "bg-red-50 text-red-500 dark:bg-red-955/20"
+                            }`}>
+                              {app.status === "en_attente" ? "⏳ En attente de validation..." : app.status === "accepte" ? "🎉 Accepté !" : "❌ Refusé"}
+                            </span>
                           </div>
-                          <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                            app.status === "en_attente" 
-                              ? "bg-amber-50 text-amber-600 dark:bg-amber-950/20" 
-                              : app.status === "accepte" 
-                              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20" 
-                              : "bg-red-50 text-red-650 dark:bg-red-950/20"
-                          }`}>
-                            {app.status === "en_attente" ? "En attente" : app.status === "accepte" ? "Sélectionné ✅" : "Non retenu ❌"}
-                          </span>
-                        </div>
-                        <div className="mt-3.5 space-y-1.5 text-xs text-gray-600 dark:text-gray-300">
-                          <p>🎛️ Spécialité : <strong className="text-gray-900 dark:text-white">{app.musicianSpecialty || app.specialty || "Non renseigné"}</strong></p>
-                          <p>📅 Disponibilité renseignée : <strong className="text-gray-900 dark:text-white">{app.disponibilite || app.availability || "Totalement disponible"}</strong></p>
-                          <p className="text-xs text-gray-650 dark:text-gray-305 whitespace-pre-wrap leading-relaxed mt-2 p-3 bg-gray-55/60 dark:bg-gray-800/30 rounded-xl border border-gray-100 dark:border-gray-800">
-                            💬 Message : "{app.message}"
-                          </p>
+
+                          <div className="space-y-1.5 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-50 dark:border-gray-800/60 pt-3">
+                            <p>🎸 Spécialité : <strong className="text-gray-900 dark:text-gray-200">{app.musicianSpecialty || "Instrumentiste"}</strong></p>
+                            <p>📅 Disponibilité : <strong className="text-gray-900 dark:text-gray-200">{app.disponibilite || "Totalement disponible"}</strong></p>
+                            <blockquote className="italic border-l-2 border-[#D4AF37] pl-3.5 text-gray-400 dark:text-gray-500 py-1.5 mt-3 bg-gray-50/50 dark:bg-gray-900/10 rounded-r-xl">
+                              "{app.message || "Aucune note additionnelle."}"
+                            </blockquote>
+                          </div>
                         </div>
 
-                        {/* Audio & Video rendering */}
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {(app.audioUrl || app.mediaUrl) && (
-                            <a 
-                              href={app.audioUrl || app.mediaUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="px-3 py-1 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 text-[11px] text-purple-700 dark:text-purple-300 font-bold rounded-lg border border-purple-100/25 transition-all flex items-center gap-1"
-                            >
-                              🎵 Écouter Démo Audio
-                            </a>
-                          )}
-                          {app.videoUrl && (
-                            <a 
-                              href={app.videoUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="px-3 py-1 bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/40 text-[11px] text-orange-700 dark:text-orange-300 font-bold rounded-lg border border-orange-100/25 transition-all flex items-center gap-1"
-                            >
-                              🎥 Voir Vidéo de Scène
-                            </a>
-                          )}
-                        </div>
-                        
                         {app.status === "accepte" && (
-                          <div className="mt-4 p-4 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-2xl border border-emerald-100/40 dark:border-emerald-900/35 text-xs text-emerald-800 dark:text-emerald-400 space-y-2">
-                            <p className="font-bold flex items-center gap-1.5"><Sparkles className="w-4 h-4 fill-current text-emerald-600" /> Félicitations ! Votre profil a été validé pour ce gombo.</p>
-                            <p>Le client va vous joindre par téléphone ou vous envoyer directement l'avance convenue par Wave ou Mobile Money.</p>
+                          <div className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/25 text-emerald-800 dark:text-emerald-400 rounded-2xl text-xs space-y-1.5">
+                            <p className="font-black">✓ Prestation accordée ! Le client a débloqué votre contact.</p>
+                            <p>Coordonnées du client disponibles. Appelez au 05... ou préparez vos partitions avec le recruteur direct.</p>
                           </div>
                         )}
                       </div>
@@ -565,209 +614,125 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 )
               )}
 
-              {/* CLIENT SIDE: RECEIVE APPLICATIONS LIST */}
+              {/* If Client */}
               {currentUserProfile.role === "client" && (
                 receivedApplications.length === 0 ? (
-                  <div className="text-center py-12 bg-white dark:bg-gray-800/20 rounded-2xl border border-gray-100 dark:border-gray-800">
-                    <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 dark:text-gray-400">Aucune candidature n'a été reçue pour vos gombos encore.</p>
+                  <div className="text-center py-12 bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <Users className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                    <p className="text-sm font-bold text-gray-500">Aucune candidature reçue pour vos offres pour l'instant.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {receivedApplications.map((app) => {
-                      // Formatting WhatsApp link directly
                       const waPhone = app.whatsapp || app.musicianPhone || "";
                       const cleanDigits = waPhone.replace(/\D/g, "");
                       let normalizedPhone = cleanDigits;
-                      if (normalizedPhone.startsWith("0") && normalizedPhone.length === 10) {
-                        normalizedPhone = "225" + normalizedPhone;
-                      } else if (normalizedPhone.length === 10 && !normalizedPhone.startsWith("225")) {
-                        normalizedPhone = "225" + normalizedPhone;
-                      } else if (normalizedPhone.length === 10 && normalizedPhone.startsWith("225")) {
-                        // Already includes 225
-                      } else if (normalizedPhone.length === 8) {
-                        normalizedPhone = "225" + normalizedPhone;
-                      }
-                      
-                      const prefilledText = `Bonjour ${app.musicianName}, j'ai reçu votre superbe candidature sur Y'A GOMBO MUSIC pour le plan "${app.gomboTitle}". Votre démo musicale m'intéresse !`;
-                      const waLink = `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(prefilledText)}`;
+                      if (normalizedPhone.startsWith("0") && normalizedPhone.length === 10) normalizedPhone = "225" + normalizedPhone;
+                      const waText = `Bonjour ${app.musicianName}, j'ai reçu votre demande sur AFRIGOMBO pour le plan "${app.gomboTitle}".`;
+                      const waLink = `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(waText)}`;
 
                       return (
-                        <div key={app.id} className="bg-white dark:bg-[#1e1e24] p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
-                          <div className="flex justify-between items-start gap-3">
+                        <div key={app.id} className="bg-white dark:bg-[#141416] p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs">
+                          <div className="flex justify-between items-start gap-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0 border border-purple-100 dark:border-purple-900/30">
-                                <img src={app.musicianAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150"} alt="" className="w-full h-full object-cover" />
-                              </div>
+                              <img 
+                                src={app.musicianAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                                alt="" 
+                                className="w-11 h-11 rounded-full object-cover border-2 border-[#D4AF37]" 
+                              />
                               <div>
-                                <h4 className="font-extrabold text-gray-950 dark:text-white text-base leading-snug flex items-center gap-1.5 flex-wrap">
-                                  {app.musicianName}
-                                  {(() => {
-                                    try {
-                                      const ulist = JSON.parse(localStorage.getItem("gombo_users") || "[]");
-                                      const u = ulist.find((user: any) => user.uid === (app.musicianId || app.userId));
-                                      if (u && u.badges) {
-                                        return u.badges.map((badgeName: string) => {
-                                          const emoji = badgeName.split(" ")[0] || "🟢";
-                                          return (
-                                            <span key={badgeName} title={badgeName} className="text-xs">
-                                              {emoji}
-                                            </span>
-                                          );
-                                        });
-                                      }
-                                    } catch (e) {
-                                      console.error("Failed to load badges for applicant", e);
-                                    }
-                                    return null;
-                                  })()}
-                                </h4>
-                                <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
-                                  {app.musicianSpecialty || app.specialty || "Musicien polyvalent"} • {app.gomboTitle}
-                                </p>
+                                <h4 className="font-black text-gray-950 dark:text-white text-base leading-snug">{app.musicianName}</h4>
+                                <p className="text-xs text-purple-600 dark:text-purple-400 font-bold">{app.gomboTitle}</p>
                               </div>
                             </div>
-                            
-                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                              app.status === "en_attente" 
-                                ? "bg-amber-50 text-amber-600 dark:bg-amber-950/20" 
-                                : app.status === "accepte" 
-                                ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" 
-                                : "bg-red-50 text-red-655 dark:bg-red-950/20"
+                            <span className={`text-[10.5px] font-extrabold px-3 py-1 rounded-full ${
+                              app.status === "en_attente" ? "bg-amber-50 text-amber-600" : app.status === "accepte" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-550"
                             }`}>
-                              {app.status === "en_attente" ? "En attente" : app.status === "accepte" ? "Accepté" : "Refusé"}
+                              {app.status === "en_attente" ? "En attente" : app.status === "accepte" ? "Retenu" : "Refusé"}
                             </span>
                           </div>
 
-                          {/* Candidate details details */}
-                          <div className="mt-3 p-3.5 bg-gray-55/65 dark:bg-gray-800/20 rounded-xl text-xs text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-800 space-y-2">
-                            <div>
-                              <span className="font-bold text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-0.5">Spécialité :</span>
-                              <span className="font-semibold text-gray-800 dark:text-gray-100">{app.musicianSpecialty || app.specialty || "Non renseigné"}</span>
-                            </div>
-                            <div>
-                              <span className="font-bold text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-0.5">Disponibilité :</span>
-                              <span className="font-semibold text-gray-800 dark:text-gray-100">{app.disponibilite || app.availability || "Totalement disponible"}</span>
-                            </div>
-                            <div>
-                              <span className="font-bold text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-0.5">Motivation (Pitch) :</span>
-                              <blockquote className="italic text-gray-650 dark:text-gray-400 bg-white/40 dark:bg-black/10 p-2 rounded-lg border border-gray-100/30">"{app.message}"</blockquote>
-                            </div>
+                          <div className="mt-4 p-4 bg-gray-50/50 dark:bg-gray-900/10 rounded-2xl border border-gray-100 dark:border-gray-800 text-xs text-gray-600 dark:text-gray-300 space-y-2">
+                            <p>🎹 Instrument : <strong className="text-gray-900 dark:text-white">{app.musicianSpecialty || "Musicien"}</strong></p>
+                            <p>📅 Disponibilité : <strong className="text-gray-900 dark:text-white">{app.disponibilite || "Ok"}</strong></p>
+                            <p className="italic bg-white/50 dark:bg-black/10 p-2 rounded-lg border border-gray-100/40">💬 "{app.message}"</p>
                           </div>
 
-                          {/* Demos and Audio / Video rendering */}
-                          <div className="mt-3 flex flex-wrap gap-2.5 items-center">
-                            {(app.audioUrl || app.mediaUrl) && (
-                              <a 
-                                href={app.audioUrl || app.mediaUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="px-3 py-1 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 text-[11px] text-purple-700 dark:text-purple-300 font-bold rounded-lg border border-purple-100/25 transition-all flex items-center gap-1"
-                              >
-                                🎵 Écouter la démo audio
-                              </a>
-                            )}
-                            {app.videoUrl && (
-                              <a 
-                                href={app.videoUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-[11px] text-indigo-700 dark:text-indigo-300 font-bold rounded-lg border border-indigo-100/25 transition-all flex items-center gap-1"
-                              >
-                                🎥 Regarder la vidéo scène
-                              </a>
-                            )}
-                          </div>
-
-                          {/* Action CTA Buttons */}
-                          <div className="flex flex-wrap gap-2 justify-end mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
-                            
-                            {/* Always available WhatsApp direct Chat MVP block */}
+                          {/* Action panel */}
+                          <div className="flex items-center justify-end gap-3.5 mt-4 pt-3.5 border-t border-gray-100 dark:border-gray-850">
                             {waPhone && (
                               <a
                                 href={waLink}
                                 target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-650 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition-all hover:scale-102"
+                                rel="noreferrer"
+                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs flex items-center gap-1.5"
                               >
-                                <Phone className="w-3.5 h-3.5 fill-current" /> Discuter sur WhatsApp
+                                <Phone className="w-3.5 h-3.5 fill-current" /> WhatsApp
                               </a>
                             )}
-
+                            
                             {app.status === "en_attente" && (
-                              <>
+                              <div className="flex gap-2">
                                 <button
                                   onClick={() => handleRejectCandidacy(app)}
-                                  className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl text-xs flex items-center gap-1 transition-all"
+                                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-500 dark:bg-gray-800 dark:hover:bg-gray-750 font-bold rounded-xl text-xs"
                                 >
-                                  ❌ Refuser
+                                  Refuser
                                 </button>
                                 <button
                                   onClick={() => handleAcceptCandidacy(app)}
-                                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-xs transition-all"
+                                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-[#D4AF37] text-white font-bold rounded-xl text-xs"
                                 >
-                                  ✅ Accepter
+                                  Retenir ce talent !
                                 </button>
-                              </>
+                              </div>
                             )}
                           </div>
-
-                          {app.status === "accepte" && (
-                            <div className="mt-3.5 pt-3 border-t border-gray-100 dark:border-gray-800 text-xs">
-                              <span className="font-bold text-gray-500 block uppercase mb-1.5">COORDONNÉES ET CONTACTS RETENUS :</span>
-                              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/10 rounded-xl space-y-1 text-emerald-800 dark:text-emerald-400 border border-emerald-100/30">
-                                <p>📞 Phone de prise de contact : <strong className="underline text-gray-900 dark:text-white">{app.musicianPhone}</strong></p>
-                                <p>💬 Utilisez le bouton "Discuter" pour lui envoyer un message, l'appeler pour finaliser les morceaux, ou lui déposer l'avance de blocage sur son Wave/OM.</p>
-                              </div>
-                            </div>
-                          )}
                         </div>
                       );
                     })}
                   </div>
                 )
               )}
-
             </div>
           )}
 
-          {/* 3. RESERVATIONS FINALISEES / GOMBOS OBTENUS */}
-          {activeTab === "reservations" && (
+          {/* 2. MES OPPORTUNITES OPPORTUNITES (Gombos posted) */}
+          {activeTab === "gombos" && (
             <div className="space-y-4">
-              {myReservations.length === 0 ? (
-                <div className="text-center py-12 bg-white dark:bg-gray-800/20 rounded-2xl border border-gray-100 dark:border-gray-800">
-                  <Star className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">Aucune prestation n'est officiellement réservée encore.</p>
+              <h3 className="text-base font-black text-gray-950 dark:text-white flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+                <span>🔥</span> Mes publications de plans scéniques ({myGombos.length})
+              </h3>
+
+              {myGombos.length === 0 ? (
+                <div className="text-center py-12 bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                  <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-gray-500">Vous n'avez publié aucun contrat live de musique.</p>
+                  <p className="text-xs text-gray-400 mt-1">Utilisez l'option ➕ Publier pour poster un gombo et recruter le meilleur orchestre d'Abidjan.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {myReservations.map((res) => (
-                    <div key={res.id} className="bg-white dark:bg-[#1e1e24] p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-[10px] uppercase font-bold text-emerald-600 bg-emerald-50 px-2 rounded-md">
-                          🔒 Booking Validé Y’A GOMBO MUSIC
-                        </span>
-                        <span className="font-mono text-sm font-black text-emerald-600">
-                          {res.amount.toLocaleString()} FCFA
-                        </span>
-                      </div>
-                      <h4 className="font-black text-gray-950 dark:text-white text-base leading-snug">{res.gomboTitle}</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 text-xs bg-gray-50 dark:bg-gray-800/20 p-3.5 rounded-xl text-gray-600 dark:text-gray-300">
-                        {currentUserProfile.role === "client" ? (
-                          <>
-                            <p>🎸 Artiste : <strong className="text-gray-900 dark:text-white">{res.musicianName}</strong></p>
-                            <p className="flex items-center gap-1">📞 Contact direct : <strong className="text-emerald-600 dark:text-emerald-400 underline">{res.musicianPhone}</strong></p>
-                          </>
-                        ) : (
-                          <>
-                            <p>🤝 Recruteur Client : <strong className="text-gray-900 dark:text-white">Contact direct débloqué</strong></p>
-                            <p className="flex items-center gap-1">📞 Mon téléphone de contact : <strong className="text-gray-900 dark:text-white">{res.musicianPhone}</strong></p>
-                          </>
-                        )}
-                      </div>
-                      <div className="mt-4 flex items-center gap-1.5 text-[11px] text-gray-400">
-                        <Info className="w-4 h-4 text-orange-500" />
-                        <p>Prestation enregistrée. Veuillez utiliser Mobile Money (Wave/Orange/MTN) pour transférer l'avance de blocage.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {myGombos.map((gombo) => (
+                    <div key={gombo.id} className="bg-white dark:bg-[#141416] p-5.5 rounded-3xl border border-gray-150 dark:border-gray-800 shadow-sm relative flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start gap-4 mb-2.5">
+                          <span className={`text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full ${
+                            gombo.status === "publie" 
+                              ? "bg-orange-50 text-orange-600 border border-orange-200" 
+                              : "bg-emerald-50 text-emerald-600"
+                          }`}>
+                            {gombo.status === "publie" ? "En Ligne" : "Complet / Sélection terminé"}
+                          </span>
+                          <span className="font-mono text-sm font-black text-[#D4AF37]">{gombo.budget.toLocaleString()} FCFA</span>
+                        </div>
+
+                        <h4 className="font-black text-gray-900 dark:text-white leading-tight text-base mb-1.5">{gombo.title}</h4>
+                        <p className="text-xs text-gray-450 dark:text-gray-500 line-clamp-3 leading-relaxed mb-4">{gombo.description}</p>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-450 border-t border-gray-50 dark:border-gray-800/60 pt-3">
+                          <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#D4AF37]" /> {gombo.commune}</div>
+                          <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#D4AF37]" /> {gombo.date}</div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -776,46 +741,279 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             </div>
           )}
 
-          {/* 4. ADMIN TAB (ADMIN ONLY) */}
+          {/* 3. RENFORT EXPRESS PANEL */}
+          {activeTab === "renfort_express" && (
+            <div className="space-y-4">
+              <h3 className="text-base font-black text-gray-950 dark:text-white flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+                <span>🎼</span> Mon Journal Renfort Express ({renfortExpressCount})
+              </h3>
+
+              {/* Section 1: Mes publications renfort */}
+              <div className="space-y-3">
+                <p className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">Planifications urgent créés ({myRenforts.length})</p>
+                {myRenforts.length === 0 ? (
+                  <p className="text-xs text-gray-400 italic">Aucun renfort urgent créé par vous pour l'instant.</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {myRenforts.map(rn => (
+                      <div key={rn.id} className="p-4 bg-white dark:bg-[#141416] rounded-2xl border border-gray-100 dark:border-gray-800">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-[10px] uppercase font-bold text-cyan-500 bg-cyan-500/10 px-2 py-0.5 rounded-full">{rn.requestType}</span>
+                          <span className="text-xs font-extrabold text-[#D4AF37]">{rn.budget.toLocaleString()} FCFA</span>
+                        </div>
+                        <h5 className="font-extrabold text-sm text-gray-900 dark:text-white">{rn.title}</h5>
+                        <p className="text-xs text-gray-400 mt-1 line-clamp-1">{rn.description}</p>
+                        <p className="text-[10px] text-gray-500 mt-2">Commune : {rn.commune} • Date : {rn.date}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Section 2: Mes candidatures renfort */}
+              <div className="space-y-3 pt-3">
+                <p className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">Mes réponses de disponibilité ({myRenfortApps.length})</p>
+                {myRenfortApps.length === 0 ? (
+                  <p className="text-xs text-gray-400 italic">Vous n'avez répondu disponible à aucun renfort pour le moment.</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {myRenfortApps.map(ra => (
+                      <div key={ra.id} className="p-4 bg-white dark:bg-[#141416] rounded-2xl border border-gray-155 dark:border-gray-800">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase">Application n° {ra.id.slice(0,6)}</span>
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                            ra.status === "accepte" ? "bg-emerald-500/10 text-emerald-500" : ra.status === "refuse" ? "bg-red-500/10 text-red-505" : "bg-amber-500/10 text-amber-500"
+                          }`}>
+                            {ra.status === "accepte" ? "Accepté ✓" : ra.status === "refuse" ? "Pas retenu" : "⏳ En attente"}
+                          </span>
+                        </div>
+                        <h5 className="font-bold text-sm text-gray-900 dark:text-white">{ra.renfortTitle}</h5>
+                        <p className="text-xs text-gray-500 mt-1">Candidat : {ra.musicianName} • Tél : {ra.musicianPhone}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 4. FAVORIS PANEL */}
+          {activeTab === "favoris" && (
+            <div className="space-y-4">
+              <h3 className="text-base font-black text-gray-950 dark:text-white flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+                <span>❤️</span> Mes talents favoris ({favoriteTalents.length})
+              </h3>
+
+              {favoriteTalents.length === 0 ? (
+                <div className="text-center py-12 bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                  <Heart className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-gray-500">Aucun talent favori enregistré.</p>
+                  <p className="text-xs text-gray-400 mt-1">Explorez l'Annuaire des Talents et cliquez sur ❤️ pour enregistrer des profils.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {favoriteTalents.map((talent) => {
+                    // Pre-filled WhatsApp details
+                    const cleanPhone = talent.phone.replace(/\D/g, "");
+                    const waLink = `https://wa.me/225${cleanPhone}?text=Bonjour%20${talent.firstName},%20votre%20profil%20sur%20AFRIGOMBO%20m'intéresse.`;
+
+                    return (
+                      <div key={talent.uid} className="bg-white dark:bg-[#141416] p-5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs flex items-start gap-4">
+                        <img 
+                          src={talent.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                          alt="" 
+                          className="w-13 h-13 rounded-full object-cover border-2 border-[#D4AF37]" 
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-extrabold text-sm text-gray-900 dark:text-white leading-tight truncate">
+                            {talent.artistName || `${talent.firstName} ${talent.lastName}`}
+                          </h4>
+                          <p className="text-xs text-[#D4AF37] font-bold mt-0.5 truncate">{talent.specialty || "Instrumentiste"}</p>
+                          <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {talent.commune || "Abidjan"}</p>
+
+                          <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-50 dark:border-gray-850">
+                            <a
+                              href={waLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-[10px] rounded-lg flex items-center gap-1.5"
+                            >
+                              <Phone className="w-3 h-3 fill-current" /> Contacter
+                            </a>
+                            <button
+                              onClick={() => handleUnfavorite(talent.uid)}
+                              className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100/80 text-red-500 rounded-lg text-[10px] font-extrabold ml-auto"
+                              title="Retirer des favoris"
+                            >
+                              Retirer
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 5. MES GROUPES PANEL */}
+          {activeTab === "groupes" && (
+            <div className="space-y-4">
+              <h3 className="text-base font-black text-gray-950 dark:text-white flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+                <span>🎼</span> Mes Groupes & Orchestres VIP ({myGroups.length})
+              </h3>
+
+              {myGroups.length === 0 ? (
+                <div className="text-center py-12 bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                  <Music className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3 animate-pulse" />
+                  <p className="text-sm font-bold text-gray-500">Aucun groupe de musique associé à votre session.</p>
+                  <p className="text-xs text-gray-400 mt-1">Créez votre propre orchestre VIP ou abonnez-vous à un groupe dans l'onglet Groupes VIP.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {myGroups.map(grp => (
+                    <div key={grp.id} className="p-5 bg-white dark:bg-[#141416] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={grp.logoUrl || grp.photoUrl || "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&q=80&w=150"} 
+                          alt="" 
+                          className="w-12 h-12 rounded-xl object-cover border-2 border-[#D4AF37]" 
+                        />
+                        <div>
+                          <h4 className="font-extrabold text-sm text-gray-900 dark:text-white leading-tight">{grp.name}</h4>
+                          <p className="text-xs text-gray-400 mt-0.5">{grp.type} • {grp.commune}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-4 pt-3.5 border-t border-gray-55 dark:border-gray-850 text-[10px]">
+                        {grp.isVerified && <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded font-bold">✓ Vérifié</span>}
+                        {grp.plan === "vip" && <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">👑 Orchestre VIP</span>}
+                        {grp.plan === "premium" && <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold">🏆 Premium Gold</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 6. HISTORIQUE PANEL (Personal Activity logs loop) */}
+          {activeTab === "historique" && (
+            <div className="space-y-4">
+              <h3 className="text-base font-black text-gray-950 dark:text-white flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+                <span>📈</span> Mon Journal d'Activités AFRIGOMBO ({myActivities.length})
+              </h3>
+
+              {myActivities.length === 0 ? (
+                <div className="text-center py-12 bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                  <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-gray-500">Aucun journal d'activité enregistré pour vous.</p>
+                  <p className="text-xs text-gray-400 mt-1">Vos actions (publications, candidatures, thèmes, favoris) alimenteront ce journal d'audit.</p>
+                </div>
+              ) : (
+                <div className="bg-black/90 text-zinc-300 font-mono text-[11px] p-5 rounded-3xl border border-gray-800 shadow-2xl h-[460px] overflow-y-auto space-y-3.5 leading-relaxed antialiased">
+                  <p className="text-yellow-500 font-extrabold border-b border-gray-800 pb-1.5">★ SYSTEM FEED LOGS FOR {currentUserProfile.firstName.toUpperCase()} : REGISTERED</p>
+                  {myActivities.map((act) => (
+                    <div key={act.id} className="border-b border-zinc-800/40 pb-2 flex items-start gap-3">
+                      <span className="text-zinc-600 block pt-0.5">[{new Date(act.createdAt).toLocaleTimeString("fr-FR")}]</span>
+                      <div className="flex-1">
+                        <span className="text-yellow-500 font-bold uppercase shrink-0">#{act.type || "SYS_OP"}</span>
+                        <p className="text-zinc-200 mt-0.5 font-sans text-xs">{act.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 7. RESERVATIONS PANEL (Bookings approved) */}
+          {activeTab === "reservations" && (
+            <div className="space-y-4">
+              <h3 className="text-base font-black text-gray-950 dark:text-white flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+                <span>🔒</span> Réservations Effectives & Cachets Enregistrés (Cash : {myReservations.reduce((sum, r) => sum + r.amount, 0).toLocaleString()} FCFA)
+              </h3>
+
+              {myReservations.length === 0 ? (
+                <div className="text-center py-12 bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                  <Star className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-gray-500">Aucun contrat réservé d'un commun accord pour l'instant.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {myReservations.map((res) => (
+                    <div key={res.id} className="bg-white dark:bg-[#141416] p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-[9px] uppercase font-black text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-md">
+                          ✓ Accord scellé sur AFRIGOMBO
+                        </span>
+                        <span className="font-mono text-sm font-black text-emerald-600">
+                          {res.amount.toLocaleString()} FCFA
+                        </span>
+                      </div>
+                      <h4 className="font-black text-gray-950 dark:text-white text-base leading-snug">{res.gomboTitle}</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 text-xs bg-[#FAF9F5] dark:bg-black/15 p-3.5 rounded-2xl text-gray-600 dark:text-gray-350">
+                        {currentUserProfile.role === "client" ? (
+                          <>
+                            <p>🎸 Artiste retenu : <strong className="text-gray-950 dark:text-white">{res.musicianName}</strong></p>
+                            <p>📞 Téléphone de prise de contact : <strong className="text-emerald-500 underline font-extrabold">{res.musicianPhone}</strong></p>
+                          </>
+                        ) : (
+                          <>
+                            <p>🤝 Boss Recruteur : <strong className="text-gray-900 dark:text-white">Contact direct débloqué</strong></p>
+                            <p>📞 Mon téléphone de contact : <strong className="text-gray-900 dark:text-white">{res.musicianPhone}</strong></p>
+                          </>
+                        )}
+                      </div>
+                      <div className="mt-3.5 flex items-center gap-2 text-[10.5px] text-gray-400">
+                        <Info className="w-4 h-4 text-[#D4AF37]" />
+                        <p>Booking enregistré. Veuillez envoyer un Wave ou Orange Money de blocage pour sceller définitivement la prestation.</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 8. GENERAL ADMIN COMPTES PANEL (Admin only) */}
           {activeTab === "admin" && currentUserProfile.role === "admin" && (
-            <div className="space-y-5">
-              
-              {/* Users management */}
-              <div className="bg-white dark:bg-[#1e1e24] p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-md">
-                <h4 className="text-lg font-extrabold text-[#111] dark:text-white mb-4 flex items-center gap-2">
+            <div className="space-y-4 animate-fadeIn">
+              <div className="bg-white dark:bg-[#111113] p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl">
+                <h4 className="text-base font-black text-gray-950 dark:text-white mb-4.5 flex items-center gap-2">
                   <Shield className="w-5.5 h-5.5 text-orange-500" />
                   Gérer les Comptes Utilisateurs ({allUsers.length})
                 </h4>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
+                  <table className="w-full text-left text-xs border-collapse font-sans">
                     <thead>
-                      <tr className="border-b border-gray-100 dark:border-gray-800 text-gray-400 uppercase tracking-wider">
-                        <th className="py-2.5">Utilisateur</th>
+                      <tr className="border-b border-gray-100 dark:border-gray-800 text-gray-400 uppercase tracking-widest text-[9px] font-black pb-2">
+                        <th className="py-2.5">Artiste / Recruteur</th>
                         <th className="py-2.5">Rôle</th>
-                        <th className="py-2.5">Contact</th>
-                        <th className="py-2.5 text-right">Moderation</th>
+                        <th className="py-2.5">Coordonnées</th>
+                        <th className="py-2.5 text-right font-black">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                      {allUsers.map((user) => (
-                        <tr key={user.uid} className="hover:bg-gray-50/40">
-                          <td className="py-3 font-semibold text-gray-900 dark:text-white">
-                            {user.firstName} {user.lastName} 
-                            <span className="block font-normal text-[10px] text-gray-400">{user.email}</span>
+                    <tbody className="divide-y divide-gray-50/50 dark:divide-gray-800/50">
+                      {allUsers.map((u) => (
+                        <tr key={u.uid} className="hover:bg-gray-50/10">
+                          <td className="py-3 font-extrabold text-gray-950 dark:text-white text-xs">
+                            {u.firstName} {u.lastName}
+                            <span className="block text-[10px] text-gray-400 font-medium normal-case mt-0.5">{u.email}</span>
                           </td>
-                          <td className="py-3 capitalize font-bold text-orange-600 dark:text-orange-400">{user.role}</td>
-                          <td className="py-3 text-gray-500">{user.phone} • {user.commune}</td>
+                          <td className="py-3 capitalize text-[#D4AF37] font-extrabold text-xs">{u.role}</td>
+                          <td className="py-3 text-gray-400 text-xs">{u.phone} • {u.commune}</td>
                           <td className="py-3 text-right">
-                            {user.uid !== currentUserProfile.uid ? (
+                            {u.uid !== currentUserProfile.uid ? (
                               <button
-                                onClick={() => handleAdminDeleteUser(user.uid)}
-                                className="p-1 px-2.5 bg-red-50 text-red-650 hover:bg-red-100 rounded-lg text-xs font-bold transition-all"
+                                onClick={() => handleAdminDeleteUser(u.uid)}
+                                className="px-2.5 py-1 bg-red-50 text-red-650 hover:bg-red-100 rounded-lg text-[10.5px] font-black transition-all"
                               >
                                 Supprimer
                               </button>
                             ) : (
-                              <span className="text-[10px] text-gray-400 font-bold">Vous (Admin)</span>
+                              <span className="text-[10px] text-gray-400 font-extrabold">Super Admin</span>
                             )}
                           </td>
                         </tr>
@@ -824,38 +1022,38 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                   </table>
                 </div>
               </div>
-
             </div>
           )}
 
-          {/* 5. WAITING FEATURES ANALYTICS TAB (ADMIN ONLY) */}
+          {/* 9. WAITING LIST FEATURE STATS (Admin only) */}
           {activeTab === "waiting" && currentUserProfile.role === "admin" && (
-            <div className="space-y-4">
-              <div className="bg-white dark:bg-[#1e1e24] p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-md">
-                <h4 className="text-lg font-extrabold text-[#111] dark:text-white mb-4 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-orange-500" />
-                  Statistiques de Lancement - Listes d'attente
+            <div className="space-y-4 animate-fadeIn">
+              <div className="bg-white dark:bg-[#111113] p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl">
+                <h4 className="text-base font-black text-gray-950 dark:text-white mb-3 flex items-center gap-1.5">
+                  <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                  Listes d'Attente pour les Futures Fonctionnalités
                 </h4>
-                <p className="text-xs text-gray-450 mb-4 leading-relaxed">
-                  Cet onglet affiche les intentions d'inscriptions récoltées pour les modules à venir ("Bientôt Disponible"), ce qui témoigne des demandes fortes du showbiz d'Abidjan.
+                <p className="text-xs text-gray-450 leading-relaxed mb-4">
+                  Prospects et inscriptions d'intentions enregistrées pour les modules en préparation sur Y'A GOMBO MUSIC.
                 </p>
 
                 {waitingAnalytics.length === 0 ? (
-                  <p className="text-xs text-center py-6 text-gray-400">Aucun utilisateur inscrit sur la liste d'attente encore.</p>
+                  <p className="text-xs text-center py-6 text-gray-400 italic">Aucune intention exprimée pour l'instant.</p>
                 ) : (
-                  <div className="space-y-3">
-                    {/* Gather metrics per feature */}
+                  <div className="space-y-2.5">
                     {["academie", "groupe", "marche", "certification"].map((feat) => {
                       const list = waitingAnalytics.filter(w => w.featureName === feat);
                       return (
-                        <div key={feat} className="p-3 bg-gray-55/60 dark:bg-gray-800/40 rounded-xl flex items-center justify-between">
+                        <div key={feat} className="p-4 bg-[#FAF9F5] dark:bg-black/15 rounded-2xl flex items-center justify-between border border-gray-100 dark:border-gray-800">
                           <div>
-                            <span className="text-sm font-bold capitalize text-gray-900 dark:text-white">
-                              {feat === "academie" ? "L'Académie" : feat === "groupe" ? "Coin des Groupes" : feat === "marche" ? "Le Marché du Coin" : "Certification Pro"}
+                            <span className="text-xs font-black text-gray-900 dark:text-white capitalize">
+                              {feat === "academie" ? "L'Académie" : feat === "groupe" ? "Coin des Groupes" : feat === "marche" ? "Le Marché d'Occasions" : "Assistance Certification Pro"}
                             </span>
-                            <p className="text-[10px] text-gray-400 mt-0.5">Utilisateurs inscrits : {list.map(l => l.userEmail).join(", ") || "Aucun"}</p>
+                            <p className="text-[9.5px] text-gray-400 mt-1 truncate max-w-sm">
+                              Courriels enregistrés : {list.map(l => l.userEmail).join(", ") || "Aucun"}
+                            </p>
                           </div>
-                          <span className="px-3 py-1 bg-orange-100 text-orange-600 font-black rounded-lg text-xs font-mono">
+                          <span className="px-3 py-1 bg-yellow-500/10 text-[#D4AF37] font-mono font-black text-[11px] rounded-lg border border-[#D4AF37]/20 ml-2">
                             {list.length} inscrits
                           </span>
                         </div>

@@ -66,7 +66,9 @@ export interface UserProfile {
   isSuspended?: boolean;
   isBanned?: boolean;
 
-  themePreference?: "light" | "dark" | "system";
+  themePreference?: "dark-gold" | "light-gold" | "night-navy";
+
+  lastLoginAt?: string;
 
   createdAt: string; // ISO String
 }

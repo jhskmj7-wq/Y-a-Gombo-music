@@ -139,17 +139,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // --- STEP 2: BACKGROUND FIRESTORE SYNC & LISTENER ---
         const syncAndListenFirestore = async () => {
           try {
-            console.log("🔍 [AuthContext DB Sync] Verifying/creating Firestore document in background for:", firebaseUser.uid);
+            console.log("🔍 [AuthContext DB Sync] Verifying/creating/updating Firestore document in background for:", firebaseUser.uid);
+            
+            // Create or merge update users/{uid} automatically with real Google/Firebase credentials
+            const syncData = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || "",
+              displayName: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Artiste Gombo",
+              photoURL: firebaseUser.photoURL || "",
+              avatarUrl: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+              lastLoginAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+            
+            // Perform merge-write to ensure record existence and sync
+            await gomboDB.updateUserProfile(firebaseUser.uid, syncData);
+            
             let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
             
             if (!uProfile && initialProfile) {
               const pendingProfile = gomboDB.getPendingSignUpProfile();
               if (pendingProfile) {
                 console.log("🎯 [AuthContext Sync] Found pending registration data. Saving to Firestore...");
-                uProfile = { ...pendingProfile, uid: firebaseUser.uid };
+                uProfile = { ...pendingProfile, uid: firebaseUser.uid, ...syncData };
               } else {
                 console.log("⚠️ [AuthContext Sync] Creating new Firestore matching profile...");
-                uProfile = { ...initialProfile };
+                uProfile = { ...initialProfile, ...syncData };
               }
               await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
             }
