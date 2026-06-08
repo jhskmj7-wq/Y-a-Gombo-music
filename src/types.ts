@@ -72,6 +72,15 @@ export interface UserProfile {
 
   lastLoginAt?: string;
 
+  // AFRI ID Ecosystem Foundation fields
+  afriId?: string;
+  ecosystemApps?: {
+    afrigombo: boolean;
+    afritrust: boolean;
+    africoach: boolean;
+    [key: string]: boolean;
+  };
+
   createdAt: string; // ISO String
 }
 

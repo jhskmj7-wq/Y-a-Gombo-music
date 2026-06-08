@@ -310,6 +310,76 @@ const LOCAL_RENFORS_KEY = "gombo_renforts";
 const LOCAL_RENFORT_APPLICATIONS_KEY = "gombo_renfort_applications";
 const LOCAL_ACTIVITY_FEED_KEY = "gombo_activity_feed";
 
+// ========================================================
+// --- AFRI ID ECOSYSTEM FOUNDATION GENERATION & SYNC ---
+// ========================================================
+
+export function generateAfriId(): string {
+  const year = new Date().getFullYear();
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let random = "";
+  for (let i = 0; i < 4; i++) {
+    random += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `AFRI-${year}-${random}`;
+}
+
+export async function ensureAfriIdAndSync(profile: UserProfile): Promise<UserProfile> {
+  let changed = false;
+  const updated = { ...profile };
+  
+  if (!updated.afriId) {
+    updated.afriId = generateAfriId();
+    changed = true;
+  }
+  
+  if (!updated.ecosystemApps) {
+    updated.ecosystemApps = {
+      afrigombo: true,
+      afritrust: false,
+      africoach: false
+    };
+    changed = true;
+  } else {
+    if (updated.ecosystemApps.afrigombo !== true) {
+      updated.ecosystemApps.afrigombo = true;
+      changed = true;
+    }
+  }
+
+  // Ensure other required foundational properties
+  if (!updated.createdAt) {
+    updated.createdAt = new Date().toISOString();
+    changed = true;
+  }
+  if (!updated.lastLoginAt) {
+    updated.lastLoginAt = new Date().toISOString();
+    changed = true;
+  }
+
+  if (changed) {
+    console.log(`🔑 [AFRI ID] Generating and syncing Afri ID for user ${profile.uid}: ${updated.afriId}`);
+    try {
+      if (!isFirebaseMock && db) {
+        const userRef = doc(db, "users", profile.uid);
+        await setDoc(userRef, updated, { merge: true });
+      } else {
+        // Mock fallback update
+        const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+        const idx = users.findIndex(u => u.uid === profile.uid);
+        if (idx >= 0) {
+          users[idx] = { ...users[idx], ...updated };
+          localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+        }
+      }
+    } catch (err) {
+      console.warn("⚠️ [AFRI ID] Non-fatal auto-syncing of Afri ID failed:", err);
+    }
+  }
+  
+  return updated;
+}
+
 // Initialize mock local data if empty
 const initMockDB = () => {
   if (!localStorage.getItem(LOCAL_USERS_KEY)) {
@@ -1296,10 +1366,11 @@ export const gomboDB = {
 
   // USERS
   async getUserProfile(uid: string): Promise<UserProfile | null> {
+    let profile: UserProfile | null = null;
     if (!isFirebaseMock && db) {
       try {
         const docSnap = await getDoc(doc(db, "users", uid));
-        return docSnap.exists() ? (docSnap.data() as UserProfile) : null;
+        profile = docSnap.exists() ? (docSnap.data() as UserProfile) : null;
       } catch (error: any) {
         console.warn("⚠️ Mode Firestore inaccessible or rule block for getUserProfile. Error details:", error);
         if (error && error.code === "permission-denied") {
@@ -1311,8 +1382,17 @@ export const gomboDB = {
         }
       }
     }
-    const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
-    return users.find(u => u.uid === uid) || null;
+    if (!profile) {
+      const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+      profile = users.find(u => u.uid === uid) || null;
+    }
+
+    if (profile) {
+      if (!profile.afriId) {
+        profile = await ensureAfriIdAndSync(profile);
+      }
+    }
+    return profile;
   },
 
   async updateUserProfile(uid: string, profile: Partial<UserProfile>): Promise<void> {
@@ -1347,7 +1427,14 @@ export const gomboDB = {
       try {
         const unsubscribe = onSnapshot(doc(db, "users", uid), (docSnap) => {
           if (docSnap.exists()) {
-            callback(docSnap.data() as UserProfile);
+            let data = docSnap.data() as UserProfile;
+            if (!data.afriId) {
+              ensureAfriIdAndSync(data).then(updated => {
+                callback(updated);
+              });
+            } else {
+              callback(data);
+            }
           } else {
             callback(null);
           }
@@ -1357,7 +1444,14 @@ export const gomboDB = {
           try {
             const saved = localStorage.getItem("gombo_active_profile");
             if (saved) {
-              callback(JSON.parse(saved));
+              const parsed = JSON.parse(saved);
+              if (!parsed.afriId) {
+                ensureAfriIdAndSync(parsed).then(updated => {
+                  callback(updated);
+                });
+              } else {
+                callback(parsed);
+              }
             } else {
               callback(null);
             }
@@ -1373,8 +1467,14 @@ export const gomboDB = {
 
     const triggerLocal = () => {
       const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
-      const matched = users.find(u => u.uid === uid) || null;
-      callback(matched);
+      let matched = users.find(u => u.uid === uid) || null;
+      if (matched && !matched.afriId) {
+        ensureAfriIdAndSync(matched).then(updated => {
+          callback(updated);
+        });
+      } else {
+        callback(matched);
+      }
     };
 
     window.addEventListener("storage", triggerLocal);
@@ -1415,6 +1515,42 @@ export const gomboDB = {
     users = users.filter(u => u.uid !== uid);
     localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
     triggerStorageEvent();
+  },
+
+  async syncAfriId(uid: string, targetApp: "afrigombo" | "afritrust" | "africoach"): Promise<UserProfile | null> {
+    const profile = await this.getUserProfile(uid);
+    if (!profile) return null;
+    
+    const updatedProfile = await ensureAfriIdAndSync(profile);
+    if (!updatedProfile.ecosystemApps) {
+      updatedProfile.ecosystemApps = {
+         afrigombo: true,
+         afritrust: false,
+         africoach: false
+      };
+    }
+    updatedProfile.ecosystemApps[targetApp] = true;
+    updatedProfile.lastLoginAt = new Date().toISOString();
+
+    try {
+      if (!isFirebaseMock && db) {
+        await setDoc(doc(db, "users", uid), {
+          ecosystemApps: updatedProfile.ecosystemApps,
+          lastLoginAt: updatedProfile.lastLoginAt
+        }, { merge: true });
+      } else {
+        const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+        const idx = users.findIndex(u => u.uid === uid);
+        if (idx >= 0) {
+          users[idx] = { ...users[idx], ...updatedProfile };
+          localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+        }
+      }
+    } catch (err) {
+      console.error("❌ Error running syncAfriId:", err);
+    }
+
+    return updatedProfile;
   },
 
   // GOMBOS

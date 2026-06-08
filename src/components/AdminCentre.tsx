@@ -104,6 +104,7 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
     signalementsAttente: 0,
     abonnésPremium: 0,
     revenusGeneres: 0,
+    afriIdCount: 0,
     cpuUsage: 4,
     latencyMs: 12
   });
@@ -273,6 +274,8 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
       Math.round(users.length * 0.45) || 3
     );
 
+    const afriIdCount = users.filter(u => u.afriId).length;
+ 
     setStats(prev => ({
       ...prev,
       totalUsers: users.length,
@@ -282,7 +285,8 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
       renfortExpress: renforts.filter(r => r.status === "publie").length,
       signalementsAttente: reports.filter(r => r.status === "pending").length,
       abonnésPremium: premiumActiveSubscriptions || Math.max(1, Math.round(users.length * 0.2)),
-      revenusGeneres: totalRevenues
+      revenusGeneres: totalRevenues,
+      afriIdCount
     }));
 
   }, [users, posts, gombos, reports, groups, renforts, payments, subscriptions, commissionRate]);
@@ -900,6 +904,18 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                           <p className="text-[8.5px] text-emerald-400 font-mono mt-0.5">Commission & Premium</p>
                         </div>
                       </button>
+
+                      {/* STAT 9: AFRI ID Statistics */}
+                      <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-4 flex flex-col justify-between text-left h-24">
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">Identités AFRI ID</span>
+                          <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                        </div>
+                        <div>
+                          <p className="text-xl font-black text-emerald-400 tracking-tight font-mono">{stats.afriIdCount}</p>
+                          <p className="text-[8.5px] mt-0.5 text-gray-500">Inscrits Écosystème Afri</p>
+                        </div>
+                      </div>
 
                     </div>
                   </div>
