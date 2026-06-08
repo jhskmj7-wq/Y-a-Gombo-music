@@ -4,7 +4,7 @@ import {
   Music, Calendar, Clock, MapPin, Search, Plus, User, LogOut, 
   Flame, Sparkles, LayoutDashboard, Settings, Menu, X, Sun, Moon, Laptop, 
   Star, Award, BookOpen, Users2, ShoppingBag, ShieldCheck, Shield, Info,
-  ExternalLink, ChevronRight, Heart, MessageSquare, 
+  ExternalLink, ChevronRight, Heart, MessageSquare, Users, Activity, 
   Share2, Bookmark, Play, Pause, Volume2, Lock, Eye, Check, ChevronLeft, Send, Briefcase, Bell
 } from "lucide-react";
 import { gomboAuth, gomboDB, isFirebaseMock, initiateAuthTransferListener } from "./firebase";
@@ -1421,7 +1421,7 @@ export default function App() {
                           className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
                         >
                           <Briefcase className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
-                          <span>Mes Publications</span>
+                          <span>Mes Opportunités</span>
                         </button>
 
                         <button
@@ -1433,11 +1433,35 @@ export default function App() {
                         </button>
 
                         <button
-                          onClick={() => { setDashboardInitialTab("reservations"); setView("dashboard"); setMobileMenuOpen(false); }}
+                          onClick={() => { setDashboardInitialTab("renfort_express"); setView("dashboard"); setMobileMenuOpen(false); }}
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                          <span>Mes Renforts</span>
+                        </button>
+
+                        <button
+                          onClick={() => { setDashboardInitialTab("favoris"); setView("dashboard"); setMobileMenuOpen(false); }}
                           className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
                         >
                           <Heart className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                           <span>Mes Favoris</span>
+                        </button>
+
+                        <button
+                          onClick={() => { setDashboardInitialTab("groupes"); setView("dashboard"); setMobileMenuOpen(false); }}
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
+                        >
+                          <Users className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                          <span>Mes Groupes</span>
+                        </button>
+
+                        <button
+                          onClick={() => { setDashboardInitialTab("historique"); setView("dashboard"); setMobileMenuOpen(false); }}
+                          className="w-full py-2 px-2.5 text-left hover:bg-white/5 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-gray-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer"
+                        >
+                          <Activity className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                          <span>Mon Historique</span>
                         </button>
 
                         <button

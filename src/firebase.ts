@@ -1048,6 +1048,12 @@ export const gomboAuth = {
           if (!uDoc.exists()) {
             console.log("💾 [Firebase Auth Debug] Creating automated user profile in Firestore for Google Sign-In...");
             const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Showbiz"];
+            const year = new Date().getFullYear();
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let random = "";
+            for (let i = 0; i < 4; i++) {
+              random += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
             const userProfile: UserProfile = {
               uid: res.user.uid,
               email: res.user.email || "",
@@ -1067,7 +1073,13 @@ export const gomboAuth = {
               gigsCompleted: 0,
               applicationsSent: 0,
               acceptanceRate: 100,
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              afriId: `AFRI-${year}-${random}`,
+              ecosystemApps: {
+                afrigombo: true,
+                afritrust: false,
+                africoach: false
+              }
             };
             await setDoc(doc(db, "users", res.user.uid), userProfile);
             console.log("✅ [Firebase Auth Debug] Firestore user profile stored successfully.");
@@ -1088,6 +1100,12 @@ export const gomboAuth = {
       const randomId = "goog_" + Math.random().toString(36).substring(2, 9);
       
       const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+      const year = new Date().getFullYear();
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let random = "";
+      for (let i = 0; i < 4; i++) {
+        random += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
       let matched = {
         uid: randomId,
         email: randomEmail,
@@ -1106,7 +1124,13 @@ export const gomboAuth = {
         gigsCompleted: 0,
         applicationsSent: 0,
         acceptanceRate: 100,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        afriId: `AFRI-${year}-${random}`,
+        ecosystemApps: {
+          afrigombo: true,
+          afritrust: false,
+          africoach: false
+        }
       };
       users.push(matched);
       localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
