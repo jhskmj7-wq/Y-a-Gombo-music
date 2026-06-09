@@ -37,9 +37,9 @@ import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPos
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
-const savedMock = typeof localStorage !== "undefined" ? localStorage.getItem("isFirebaseMock") : null;
-export let isFirebaseMock = savedMock === "true";
-export let isFirebaseForceReal = savedMock !== "true";
+const savedMock = "false";
+export let isFirebaseMock = false;
+export let isFirebaseForceReal = true;
 export let pendingSignUpProfile: UserProfile | null = null;
 
 export function getPendingSignUpProfile(): UserProfile | null {
@@ -51,14 +51,10 @@ export function setPendingSignUpProfile(profile: UserProfile | null) {
 }
 
 export function setIsFirebaseMock(val: boolean) {
-  isFirebaseMock = val;
-  isFirebaseForceReal = !val;
+  isFirebaseMock = false;
+  isFirebaseForceReal = true;
   if (typeof localStorage !== "undefined") {
-    if (val) {
-      localStorage.setItem("isFirebaseMock", "true");
-    } else {
-      localStorage.removeItem("isFirebaseMock");
-    }
+    localStorage.removeItem("isFirebaseMock");
   }
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("gomboFirebaseMockChange"));
@@ -78,6 +74,10 @@ export const isCapacitorEnv = (): boolean => {
 
 export const isWebView = (): boolean => {
   if (typeof window === "undefined") return false;
+  
+  // If we are in an iframe (e.g., AI Studio Preview iframe), force it to use redirect/transfer login
+  if (window.self !== window.top) return true;
+  
   const ua = window.navigator.userAgent || "";
   
   // Explicitly check Capacitor native environment
@@ -1005,7 +1005,7 @@ export const gomboAuth = {
     }
     
     if (isWebView()) {
-      console.log("📱 [Firebase Auth] WebView detected. Setting up secure Chrome redirect channel...");
+      console.log("📱 [Firebase Auth] WebView / iframe detected. Setting up secure Chrome/External browser redirect channel...");
       const transferId = "goog_trans_" + Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
       localStorage.setItem("active_google_transfer_id", transferId);
       
@@ -1024,16 +1024,25 @@ export const gomboAuth = {
       
       const currentUrl = window.location.origin;
       const redirectUrl = `${currentUrl}/?auth_transfer=google&transferId=${transferId}`;
-      const webUrlWithoutHttps = redirectUrl.replace(/^https?:\/\//, "");
-      const chromeIntentUrl = `intent://${webUrlWithoutHttps}#Intent;scheme=https;package=com.android.chrome;end`;
       
-      // Open the external Chrome browser using an Android Intent
-      window.location.href = chromeIntentUrl;
+      const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+      const isAndroid = /Android/i.test(ua);
       
-      // Fallback redirect if Intent fails to trigger/close window
-      setTimeout(() => {
+      if (isAndroid) {
+        const webUrlWithoutHttps = redirectUrl.replace(/^https?:\/\//, "");
+        const chromeIntentUrl = `intent://${webUrlWithoutHttps}#Intent;scheme=https;package=com.android.chrome;end`;
+        
+        // Open the external Chrome browser using an Android Intent
+        window.location.href = chromeIntentUrl;
+        
+        // Fallback redirect if Intent fails to trigger/close window
+        setTimeout(() => {
+          window.open(redirectUrl, "_blank");
+        }, 800);
+      } else {
+        // Desktop / iOS: Open new tab IMMEDIATELY to bypass popup blockers
         window.open(redirectUrl, "_blank");
-      }, 800);
+      }
       
       return {
         webViewRedirectPending: true,

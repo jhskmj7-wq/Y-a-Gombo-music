@@ -825,21 +825,20 @@ export default function App() {
 
   if (chromeAuthTransferPending) {
     return (
-      <div className="min-h-screen bg-[#070708] flex flex-col items-center justify-center font-sans text-white px-4">
-        <div className="relative max-w-md w-full bg-[#121214] rounded-3xl border border-[#D4A373]/20 p-8 text-center space-y-6 shadow-2xl overflow-hidden">
-          <div className="absolute top-0 left-1/4 w-32 h-32 bg-[#D4A373]/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="min-h-screen bg-[#0B0B0B] flex flex-col items-center justify-center font-sans text-white px-4">
+        <div className="relative max-w-md w-full bg-[#121212] rounded-3xl border border-[#D4AF37]/20 p-8 text-center space-y-6 shadow-2xl overflow-hidden">
+          <div className="absolute top-0 left-1/4 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
           
           <div className="flex justify-center">
             <div className="relative">
-              <div className="w-16 h-16 rounded-full bg-[#D4A373]/10 flex items-center justify-center border border-[#D4A373]/20">
-                <Flame className="w-8 h-8 text-[#D4A373] fill-current" />
+              <div className="w-16 h-16 rounded-full bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
+                <Flame className="w-8 h-8 text-[#D4AF37] fill-current" />
               </div>
             </div>
           </div>
           
           <div className="space-y-2">
-            <h1 className="text-2xl font-black tracking-tight text-[#D4A373] uppercase font-display">AFRIGOMBO AUTH SECURE</h1>
+            <h1 className="text-2xl font-black tracking-tight text-[#D4AF37] uppercase font-display">AFRIGOMBO AUTH SECURE</h1>
             <p className="text-[10px] font-mono tracking-widest uppercase text-gray-400">Canal de liaison sécurisé actif</p>
           </div>
           
@@ -853,7 +852,7 @@ export default function App() {
                 <p className="text-xs text-gray-400">Une erreur est survenue lors de la communication sécurisée.</p>
                 <button
                   onClick={() => window.location.reload()}
-                  className="w-full py-2.5 bg-[#D4A373] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-[#D4A373]/20 active:scale-98 transition-all"
+                  className="w-full py-2.5 bg-[#D4AF37] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-[#D4AF37]/20 active:scale-98 transition-all"
                 >
                   Réessayer la connexion
                 </button>
@@ -865,19 +864,25 @@ export default function App() {
                 </div>
                 <p className="text-sm text-emerald-400 font-bold">CONNEXION VALIDÉE !</p>
                 <p className="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
-                  Votre identité a été vérifiée avec succès. Vous pouvez maintenant retourner dans l'application Android.
+                  Votre identité a été vérifiée avec succès. Vous pouvez maintenant retourner dans l'application mobile ou continuer ici si vous êtes sur ordinateur.
                 </p>
                 
                 <div className="flex flex-col gap-2 mt-2 w-full">
+                  <p className="text-[10px] text-amber-500 font-semibold tracking-wider p-2.5 bg-[#D4AF37]/5 rounded-xl border border-[#D4AF37]/15 leading-relaxed">
+                    💻 Sur ordinateur ? Vous pouvez simplement fermer cet onglet car votre session est connectée !
+                  </p>
+                </div>
+                
+                <div className="flex flex-col gap-2 mt-4 w-full">
                   <a
                     href={`afritrust://auth-callback?transferId=${transferIdParam}`}
-                    className="inline-block px-6 py-3 bg-[#D4A373] text-black font-black rounded-xl shadow-lg shadow-[#D4A373]/35 hover:scale-[1.02] active:scale-98 transition-all text-xs uppercase tracking-wider text-center"
+                    className="inline-block px-6 py-3 bg-[#D4AF37] text-[#0B0B0B] font-black rounded-xl shadow-lg shadow-[#D4AF37]/35 hover:scale-[1.02] active:scale-98 transition-all text-xs uppercase tracking-wider text-center"
                   >
                     Retourner vers AfriTrust 🚀
                   </a>
                   <a
                     href={`afrigombo://auth?transferId=${transferIdParam}`}
-                    className="inline-block px-6 py-3 bg-black text-[#D4A373] border border-[#D4A373]/30 font-black rounded-xl shadow-lg hover:scale-[1.02] active:scale-98 transition-all text-xs uppercase tracking-wider text-center"
+                    className="inline-block px-6 py-3 bg-black text-[#D4AF37] border border-[#D4AF37]/30 font-black rounded-xl shadow-lg hover:scale-[1.02] active:scale-98 transition-all text-xs uppercase tracking-wider text-center"
                   >
                     Retourner vers AfriGombo 🎵
                   </a>
@@ -886,15 +891,15 @@ export default function App() {
             ) : (
               <div className="space-y-4 py-4">
                 <div className="flex items-center justify-center gap-2">
-                  <span className="w-2.5 h-2.5 bg-[#D4A373] rounded-full animate-bounce delay-100" />
-                  <span className="w-2.5 h-2.5 bg-[#D4A373] rounded-full animate-bounce delay-200" />
-                  <span className="w-2.5 h-2.5 bg-[#D4A373] rounded-full animate-bounce delay-300" />
+                  <span className="w-2.5 h-2.5 bg-[#D4AF37] rounded-full animate-bounce delay-100" />
+                  <span className="w-2.5 h-2.5 bg-[#D4AF37] rounded-full animate-bounce delay-200" />
+                  <span className="w-2.5 h-2.5 bg-[#D4AF37] rounded-full animate-bounce delay-300" />
                 </div>
                 <p className="text-xs text-gray-300 max-w-xs mx-auto leading-relaxed font-medium">
-                  Connexion sécurisée via le navigateur Google Chrome de votre smartphone...
+                  Connexion sécurisée via le navigateur externe...
                 </p>
                 <p className="text-[11px] text-gray-400 italic">
-                  Veuillez valider la fenêtre de dialogue Google qui vient de s'ouvrir.
+                  Veuillez valider la fenêtre de dialogue Google.
                 </p>
               </div>
             )}
@@ -1008,7 +1013,7 @@ export default function App() {
                   setActiveToast(null);
                   setView("dashboard");
                 }}
-                className="text-[10px] font-black text-[#FF7A00] hover:underline uppercase tracking-wide block pt-1.5"
+                className="text-[10px] font-black text-[#D4AF37] hover:underline uppercase tracking-wide block pt-1.5"
               >
                 👉 Voir mon Tableau de Bord
               </button>
@@ -1656,8 +1661,8 @@ export default function App() {
             >
               {/* Dynamic Admin Announcement Display */}
               {localStorage.getItem("gombo_system_alert") && (
-                <div className="bg-orange-500/10 border-l-4 border-orange-500 p-4 rounded-r-2xl flex items-start gap-3 shadow-md border border-orange-500/15">
-                  <span className="p-1 bg-[#FF7A00]/20 rounded text-[#FF7A00] shrink-0 font-black text-xs uppercase tracking-wider">👑 SYSTÈME CRÉATEUR</span>
+                <div className="bg-[#D4AF37]/10 border-l-4 border-[#D4AF37] p-4 rounded-r-2xl flex items-start gap-3 shadow-md border border-[#D4AF37]/15">
+                  <span className="p-1 bg-[#D4AF37]/20 rounded text-[#D4AF37] shrink-0 font-black text-xs uppercase tracking-wider">👑 SYSTÈME CRÉATEUR</span>
                   <div>
                     <h4 className="text-xs font-black uppercase text-gray-950 dark:text-slate-200 tracking-wider">AFRIGOMBO PRO INFO SYSTEME</h4>
                     <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 italic font-semibold leading-relaxed">
@@ -1689,7 +1694,7 @@ export default function App() {
                   <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                     <button
                       onClick={() => handleProtectedAction("publish")}
-                      className="px-6 py-3 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-bold rounded-xl shadow-md transition-all active:scale-97 flex items-center justify-center gap-2 text-xs"
+                      className="px-6 py-3 bg-[#D4AF37] hover:bg-[#be992c] text-[#0B0B0B] font-black rounded-xl shadow-md transition-all active:scale-97 flex items-center justify-center gap-2 text-xs uppercase tracking-wider"
                     >
                       <Plus className="w-5 h-5 stroke-[2px]" /> Quoi de neuf, l'artiste ?
                     </button>
@@ -1697,23 +1702,23 @@ export default function App() {
                       onClick={() => setView("gombo_list")}
                       className="px-6 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs border border-gray-150 dark:border-gray-700"
                     >
-                      <Briefcase className="w-4 h-4 text-orange-500 fill-orange-500/20" /> Voir les offres de Gombos
+                      <Briefcase className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]/20" /> Voir les offres de Gombos
                     </button>
                   </div>
                 </div>
 
                 {/* Right side illustration */}
                 <div className="relative w-48 h-48 sm:w-56 sm:h-56 hidden md:block shrink-0">
-                  <div className="absolute inset-0 bg-[#FF7A00]/10 rounded-full blur-2xl opacity-60"></div>
+                  <div className="absolute inset-0 bg-[#D4AF37]/10 rounded-full blur-2xl opacity-60"></div>
                   <motion.div
                     animate={{ y: [0, -10, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-full h-full bg-gradient-to-tr from-[#FF7A00] to-amber-500 rounded-3xl p-5 flex flex-col justify-end text-white shadow-xl relative"
+                    className="w-full h-full bg-gradient-to-tr from-[#121212] via-[#2B2B2B] to-[#0B0B0B] border border-[#D4AF37]/30 rounded-3xl p-5 flex flex-col justify-end text-[#D4AF37] shadow-xl relative"
                   >
-                    <Music className="w-12 h-12 absolute top-4 right-4 text-white/30" />
-                    <Star className="w-8 h-8 text-yellow-300 animate-pulse mb-2" />
-                    <p className="font-extrabold text-lg leading-tight uppercase">Y’A GOMBO MUSIC</p>
-                    <p className="text-[10px] text-orange-200">Rejoignez le Fil d'actualité musical</p>
+                    <Music className="w-12 h-12 absolute top-4 right-4 text-[#D4AF37]/30" />
+                    <Star className="w-8 h-8 text-[#D4AF37] animate-pulse mb-2" />
+                    <p className="font-extrabold text-lg leading-tight uppercase text-[#D4AF37]">Y’A GOMBO MUSIC</p>
+                    <p className="text-[10px] text-gray-300 mt-1">Rejoignez le Fil d'actualité musical</p>
                   </motion.div>
                 </div>
               </div>
@@ -1724,7 +1729,7 @@ export default function App() {
                   onClick={() => setCurrentHomeTab("fil")}
                   className={`flex-1 py-3 text-center rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
                     currentHomeTab === "fil"
-                      ? "bg-[#FF7A00] text-white shadow-md font-extrabold scale-102"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] shadow-md font-extrabold scale-102"
                       : "text-gray-500 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
@@ -1734,7 +1739,7 @@ export default function App() {
                   onClick={() => setCurrentHomeTab("marche")}
                   className={`flex-1 py-3 text-center rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 ${
                     currentHomeTab === "marche"
-                      ? "bg-[#FF7A00] text-white shadow-md font-extrabold scale-102"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] shadow-md font-extrabold scale-102"
                       : "text-gray-500 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
@@ -1768,7 +1773,7 @@ export default function App() {
                         onClick={() => {
                           setView("publish");
                         }}
-                        className="px-4 py-2 bg-orange-100 text-orange-600 hover:bg-[#FF7A00] hover:text-white rounded-xl text-xs font-bold transition-all"
+                        className="px-4 py-2 bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0B0B0B] rounded-xl text-xs font-bold transition-all border border-[#D4AF37]/25"
                       >
                         Publier un Son
                       </button>
@@ -1791,7 +1796,7 @@ export default function App() {
                       onClick={() => setSocialFilter("gombo")}
                       className={`px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all ${
                         socialFilter === "gombo"
-                          ? "bg-[#FF7A00] text-white shadow-md shadow-orange-500/15"
+                          ? "bg-[#D4AF37] text-[#0B0B0B] shadow-md shadow-[#D4AF37]/15"
                           : "bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 text-gray-500 hover:text-gray-800 dark:hover:text-white"
                       }`}
                     >
@@ -1801,7 +1806,7 @@ export default function App() {
                       onClick={() => setSocialFilter("demo")}
                       className={`px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all ${
                         socialFilter === "demo"
-                          ? "bg-purple-600 text-white shadow-md shadow-purple-600/15"
+                          ? "bg-[#D4AF37] text-[#0B0B0B] shadow-md shadow-[#D4AF37]/15"
                           : "bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 text-gray-500 hover:text-gray-800 dark:hover:text-white"
                       }`}
                     >
@@ -1811,7 +1816,7 @@ export default function App() {
                       onClick={() => setSocialFilter("annonce")}
                       className={`px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all ${
                         socialFilter === "annonce"
-                          ? "bg-teal-600 text-white shadow-md shadow-teal-650/15"
+                          ? "bg-[#D4AF37] text-[#0B0B0B] shadow-md shadow-[#D4AF37]/15"
                           : "bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 text-gray-500 hover:text-gray-800 dark:hover:text-white"
                       }`}
                     >
@@ -1922,7 +1927,7 @@ export default function App() {
                           alert("Une erreur s'est produite lors de l'enregistrement.");
                         }
                       }}
-                      className="px-6 py-3.5 w-full bg-[#FF7A00] hover:bg-[#E06C00] text-white font-extrabold rounded-2xl text-xs uppercase shadow-md transition-all active:scale-97"
+                      className="px-6 py-3.5 w-full bg-[#D4AF37] hover:bg-[#be992c] text-[#0B0B0B] font-extrabold rounded-2xl text-xs uppercase shadow-md transition-all active:scale-97"
                     >
                       🚀 S'inscrire sur la file d'attente
                     </button>
@@ -2286,7 +2291,7 @@ export default function App() {
             >
               {/* Header Intro */}
               <div className="space-y-2">
-                <span className="px-3 py-1 bg-orange-50 dark:bg-orange-950/30 text-[#FF7A00] text-xs font-black uppercase rounded-lg">
+                <span className="px-3 py-1 bg-[#D4AF37]/5 dark:bg-orange-950/30 text-[#D4AF37] text-xs font-black uppercase rounded-lg">
                   💼 Répertoire des Cachets Showbiz
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-950 dark:text-white uppercase tracking-tight">
@@ -2354,21 +2359,21 @@ export default function App() {
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
-                        className="bg-amber-50/20 dark:bg-amber-950/10 border-2 border-[#FF7A00]/30 p-5 rounded-3xl relative flex flex-col justify-between"
+                        className="bg-amber-50/20 dark:bg-[#121212] border-2 border-[#D4AF37]/35 p-5 rounded-3xl relative flex flex-col justify-between"
                       >
-                        <span className="absolute top-4 right-4 px-2 py-0.5 bg-orange-500 text-white text-[9px] font-black uppercase rounded-md tracking-wider animate-pulse">
+                        <span className="absolute top-4 right-4 px-2 py-0.5 bg-[#D4AF37] text-[#0B0B0B] text-[9px] font-black uppercase rounded-md tracking-wider animate-pulse">
                           Urgent
                         </span>
                         
                         <div>
-                          <p className="text-[10px] text-orange-600 font-black uppercase tracking-wider">{gombo.eventType}</p>
+                          <p className="text-[10px] text-[#D4AF37] font-black uppercase tracking-wider">{gombo.eventType}</p>
                           <h4 className="font-extrabold text-gray-950 dark:text-white text-base mt-1 mb-1.5">{gombo.title}</h4>
                           <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed mb-3">
                             {gombo.description}
                           </p>
 
                           {/* Technical list info */}
-                          <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-500 dark:text-gray-400 border-t border-dashed border-orange-200 dark:border-orange-900/50 pt-2.5">
+                          <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-500 dark:text-gray-400 border-t border-dashed border-[#D4AF37]/20 dark:border-[#D4AF37]/25 pt-2.5">
                             <p>📍 Commune : <strong className="text-gray-800 dark:text-gray-200">{gombo.commune}</strong></p>
                             <p>📅 Date : <strong className="text-gray-800 dark:text-gray-200">{gombo.date}</strong></p>
                             <p>⏰ Début : <strong className="text-gray-800 dark:text-gray-200">{gombo.time}</strong></p>
@@ -2379,7 +2384,7 @@ export default function App() {
                         <div className="mt-4 pt-3.5 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
                           <div>
                             <span className="text-[10px] text-gray-400 block tracking-tight">Cachet Net Garanti :</span>
-                            <span className="font-mono text-base font-black text-[#FF7A00]">{gombo.budget.toLocaleString()} FCFA</span>
+                            <span className="font-mono text-base font-black text-[#D4AF37]">{gombo.budget.toLocaleString()} FCFA</span>
                           </div>
                           
                           {profile?.role === "musicien" || !profile ? (
@@ -2391,7 +2396,7 @@ export default function App() {
                                   setApplyGombo(gombo);
                                 }
                               }}
-                              className="px-4.5 py-2.5 bg-[#FF7A00] hover:bg-[#E06C00] active:scale-97 text-white font-black rounded-xl text-xs transition-colors shadow-md uppercase tracking-wider"
+                              className="px-4.5 py-2.5 bg-[#D4AF37] hover:bg-[#be992c] active:scale-97 text-[#0B0B0B] font-black rounded-xl text-xs transition-colors shadow-md uppercase tracking-wider"
                             >
                               🔥 Je suis chaud
                             </button>
@@ -2462,7 +2467,7 @@ export default function App() {
                                   setApplyGombo(gombo);
                                 }
                               }}
-                              className="px-4 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-[#FF7A00] hover:text-white active:scale-97 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-xs transition-all shadow-xs"
+                              className="px-4 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-[#D4AF37] hover:text-[#0B0B0B] active:scale-97 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-xs transition-all shadow-xs"
                             >
                               🔥 Je suis chaud
                             </button>
