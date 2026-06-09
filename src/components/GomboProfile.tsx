@@ -502,7 +502,68 @@ export default function GomboProfile({
     }
   };
 
-  // Profile Save
+  // Debounced Auto-save Engine for Profile Edits
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  useEffect(() => {
+    // Only run auto-save when panelView === "edit"
+    if (panelView !== "edit") return;
+
+    // Validate absolute minimum requirements to protect data completeness
+    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !commune) return;
+
+    setAutoSaveStatus("saving");
+
+    const timer = setTimeout(async () => {
+      try {
+        const updates: Partial<UserProfile> = {
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          artistName: artistName.trim(),
+          gender,
+          birthDate,
+          phone: phone.trim(),
+          whatsapp: whatsapp.trim() || phone.trim(),
+          commune,
+          ville: ville.trim(),
+          quartier: quartier.trim(),
+          role: accountRole as any,
+          bio: bio.trim(),
+          avatarUrl,
+          photoURL: avatarUrl,
+          specialties,
+          specialty: specialties[0] || "Artiste",
+          speciality: specialties[0] || "Artiste",
+          musicGenres,
+          musicGenre: musicGenres[0] || "Showbiz",
+          experience,
+          experienceYears: experience,
+          availabilities,
+          isAvailableNow: availabilities.includes("Disponible immédiatement"),
+          waveNumber: waveNumber.trim(),
+          orangeMoneyNumber: orangeMoneyNumber.trim(),
+          updatedAt: new Date().toISOString()
+        };
+
+        await gomboDB.updateUserProfile(currentUserProfile.uid, updates);
+        setAutoSaveStatus("saved");
+        // Update profile in parent context silently without interrupting edit view
+        onRefreshProfile();
+        setTimeout(() => setAutoSaveStatus("idle"), 2500);
+      } catch (err) {
+        console.error("Auto-save failed:", err);
+        setAutoSaveStatus("error");
+      }
+    }, 1500); // Debounce delay 1.5s
+
+    return () => clearTimeout(timer);
+  }, [
+    firstName, lastName, artistName, gender, birthDate, phone, whatsapp, 
+    commune, ville, quartier, accountRole, bio, specialties, musicGenres, 
+    experience, availabilities, waveNumber, orangeMoneyNumber, avatarUrl,
+    panelView
+  ]);
+
+  // Profile Save (Manual Trigger)
   const handleEditProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setEditError("");
@@ -728,6 +789,7 @@ export default function GomboProfile({
           editError={editError}
           editSuccess={editSuccess}
           onSubmit={handleEditProfileSubmit}
+          autoSaveStatus={autoSaveStatus}
           onCancel={() => setPanelView("main")}
           avatarUrl={avatarUrl}
           setAvatarUrl={setAvatarUrl}

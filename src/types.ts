@@ -49,7 +49,7 @@ export interface UserProfile {
   provider?: string;
 
   // Monetization / Gamification fields
-  verificationStatus?: "standard" | "certifie" | "verifie"; // Talent Certifié
+  verificationStatus?: "standard" | "certifie" | "verifie" | "missing_info" | "rejected"; // Talent Certifié
   groupStatus?: "standard" | "vip" | "premium"; // Groups level
   groupType?: "Orchestre" | "Groupes Zouglou" | "Chorale" | "Groupes Gospel"; // Category for groups VIP
   badges?: string[]; // ["⭐ Talent Certifié", "🔥 Artiste Actif", "🏆 Top Talent", "🎼 Groupe VIP", "✅ Profil Vérifié"]
@@ -383,7 +383,11 @@ export interface CertificationRequest {
   specialties: string[];
   experience: string;
   mediaUrl: string;
-  status: "En attente" | "Approuvé" | "Refusé";
+  idCardUrl?: string;
+  selfieUrl?: string;
+  musicProofUrl?: string;
+  isExpress?: boolean;
+  status: "En attente" | "En attente (Express)" | "Approuvé" | "Infos complémentaires" | "Refusé";
   createdAt: string;
 }
 
@@ -431,7 +435,9 @@ export interface VerificationRequest {
   whatsapp: string;
   selfieUrl: string;
   mediaUrl: string;
-  status: "pending" | "approved" | "rejected";
+  idCardUrl?: string;
+  isExpress?: boolean;
+  status: "pending" | "pending_express" | "approved" | "missing_info" | "rejected";
   createdAt: string;
 }
 

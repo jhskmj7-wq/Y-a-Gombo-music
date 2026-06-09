@@ -34,10 +34,62 @@
   --color-gold-700: #7a6611;
   --color-gold-950: #110e01;
 
+  /* Map Purple to Or Royal to eliminate purple and unify with Afri visual identity */
+  --color-purple-50: #fbfaf2;
+  --color-purple-100: #f5eed3;
+  --color-purple-200: #ecdda7;
+  --color-purple-300: #e2c974;
+  --color-purple-400: #dcb343;
+  --color-purple-500: #D4AF37;
+  --color-purple-600: #bfa12d;
+  --color-purple-700: #7a6611;
+  --color-purple-800: #493d0a;
+  --color-purple-900: #2d2605;
+  --color-purple-950: #110e01;
+
+  /* Map Violet to Or Royal */
+  --color-violet-50: #fbfaf2;
+  --color-violet-100: #f5eed3;
+  --color-violet-200: #ecdda7;
+  --color-violet-300: #e2c974;
+  --color-violet-400: #dcb343;
+  --color-violet-500: #D4AF37;
+  --color-violet-600: #bfa12d;
+  --color-violet-700: #7a6611;
+  --color-violet-800: #493d0a;
+  --color-violet-900: #2d2605;
+  --color-violet-950: #110e01;
+
+  /* Map Indigo to Or Royal */
+  --color-indigo-50: #fbfaf2;
+  --color-indigo-100: #f5eed3;
+  --color-indigo-200: #ecdda7;
+  --color-indigo-300: #e2c974;
+  --color-indigo-400: #dcb343;
+  --color-indigo-500: #D4AF37;
+  --color-indigo-600: #bfa12d;
+  --color-indigo-700: #7a6611;
+  --color-indigo-800: #493d0a;
+  --color-indigo-900: #2d2605;
+  --color-indigo-950: #110e01;
+
+  /* Map Blue to Or Royal */
+  --color-blue-50: #fbfaf2;
+  --color-blue-100: #f5eed3;
+  --color-blue-200: #ecdda7;
+  --color-blue-300: #e2c974;
+  --color-blue-400: #dcb343;
+  --color-blue-500: #D4AF37;
+  --color-blue-600: #bfa12d;
+  --color-blue-700: #7a6611;
+  --color-blue-800: #493d0a;
+  --color-blue-900: #2d2605;
+  --color-blue-950: #110e01;
+
   --color-gombo-orange: #D4AF37;
   --color-gombo-orange-hover: #bfa12d;
   --color-gombo-dark: #0B0B0B;
-  --color-gombo-card-dark: #141414;
+  --color-gombo-card-dark: #121212;
 }
 
 :root, 
@@ -49,18 +101,12 @@
 }
 
 .dark, 
-.theme-dark-gold {
-  --bg-color: #0B0B0B; /* Deep Black background */
-  --card-bg: #141414; /* Smooth Charcoal card background */
-  --text-color: #FFFFFF; /* Pure White */
-  --border-color: #222222;
-}
-
+.theme-dark-gold,
 .theme-night-navy {
-  --bg-color: #070B19; /* Deep Ocean Navy background */
-  --card-bg: #0F172A; /* Slate Navy card background */
-  --text-color: #F1F5F9; /* Off white / slate light */
-  --border-color: #1E293B;
+  --bg-color: #0B0B0B; /* Noir Premium */
+  --card-bg: #121212; /* Noir Profond */
+  --text-color: #F8F8F8; /* Blanc Cassé */
+  --border-color: #2B2B2B; /* Gris Élégant */
 }
 
 body {

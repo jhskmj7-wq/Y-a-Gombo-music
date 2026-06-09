@@ -648,63 +648,82 @@ export default function SocialPostCard({
          </div>
        ) : null}
 
-      {/* 4. Footer interactions buttons (Likes, Comments, Shares, Saves) */}
-      <div className="px-4 sm:px-5 py-3.5 bg-gray-50/50 dark:bg-gray-850/20 border-t border-gray-50 dark:border-gray-850 flex items-center justify-between">
+      {/* 4. Footer interactions buttons (Likes, Comments, Shares, Saves, Reports) */}
+      <div className="px-3 sm:px-5 py-3.5 bg-gray-50/50 dark:bg-gray-850/20 border-t border-gray-50 dark:border-gray-850 flex flex-wrap items-center justify-between gap-2">
         {/* Buttons Group */}
-        <div className="flex items-center gap-5">
-          {/* Like button */}
+        <div className="flex flex-wrap items-center gap-3.5 sm:gap-5">
+          {/* Like button - J'honore */}
           <button
+            id="btn-honore"
             onClick={handleLikeToggle}
-            className={`flex items-center gap-1.5 focus:outline-none transition-transform active:scale-90 ${
+            className={`flex items-center gap-1.5 focus:outline-none transition-transform active:scale-90 text-[11px] sm:text-xs font-black uppercase cursor-pointer ${
               hasLiked ? "text-red-500 font-extrabold" : "text-gray-500 dark:text-gray-400 hover:text-red-500"
             }`}
           >
-            <Heart className={`w-4.5 h-4.5 ${hasLiked ? "fill-current" : ""}`} />
-            <span className="text-xs font-bold font-mono">{likes}</span>
+            <Heart className={`w-4.5 h-4.5 ${hasLiked ? "fill-current text-red-500" : ""}`} />
+            <span>❤️ J'honore ({likes})</span>
           </button>
 
           {/* Encourager Claps button */}
           <button
+            id="btn-encourager"
             onClick={handleEncourageToggle}
-            className={`flex items-center gap-1.5 focus:outline-none transition-transform active:scale-90 ${
-              hasEncouraged ? "text-amber-500 dark:text-orange-400 font-bold" : "text-gray-500 dark:text-gray-400 hover:text-orange-500"
+            className={`flex items-center gap-1.5 focus:outline-none transition-transform active:scale-90 text-[11px] sm:text-xs font-black uppercase cursor-pointer ${
+              hasEncouraged ? "text-amber-500 font-bold" : "text-gray-500 dark:text-gray-400 hover:text-orange-500"
             }`}
             title="Encourager l'artiste !"
           >
-            <span className="text-sm">👏</span>
-            <span className="text-xs font-bold font-mono">{encourages}</span>
+            <span className="text-sm">👏 Force ({encourages})</span>
           </button>
 
-          {/* Comment button */}
+          {/* Comment button - Palabre */}
           <button
+            id="btn-palabre"
             onClick={() => setShowComments(!showComments)}
-            className={`flex items-center gap-1.5 focus:outline-none transition-colors ${
+            className={`flex items-center gap-1.5 focus:outline-none transition-colors text-[11px] sm:text-xs font-black uppercase cursor-pointer ${
               showComments ? "text-orange-500" : "text-gray-500 dark:text-gray-400 hover:text-orange-500"
             }`}
           >
             <MessageSquare className="w-4.5 h-4.5" />
-            <span className="text-xs font-bold font-mono">{commentsList.length}</span>
+            <span>🗣️ Palabre ({commentsList.length})</span>
           </button>
 
-          {/* Share button */}
+          {/* Share button - Fais tourner */}
           <button
+            id="btn-fais-tourner"
             onClick={handleShare}
-            className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-orange-500 focus:outline-none active:scale-95"
+            className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-orange-500 focus:outline-none active:scale-95 text-[11px] sm:text-xs font-black uppercase cursor-pointer"
           >
             <Share2 className="w-4.5 h-4.5" />
-            <span className="text-xs font-bold font-mono hidden sm:inline">Partager</span>
+            <span>📢 Fais tourner</span>
           </button>
         </div>
 
-        {/* Save/Bookmark button */}
-        <button
-          onClick={handleSaveToggle}
-          className={`p-1 flex items-center gap-1 focus:outline-none transition-transform active:scale-90 ${
-            hasSaved ? "text-orange-500" : "text-gray-500 dark:text-gray-400 hover:text-orange-500"
-          }`}
-        >
-          <Bookmark className={`w-4.5 h-4.5 ${hasSaved ? "fill-current" : ""}`} />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Save/Bookmark button - Je garde */}
+          <button
+            id="btn-je-garde"
+            onClick={handleSaveToggle}
+            className={`p-1 flex items-center gap-1 focus:outline-none transition-transform active:scale-90 text-[11px] sm:text-xs font-black uppercase cursor-pointer ${
+              hasSaved ? "text-orange-500" : "text-gray-500 dark:text-gray-400 hover:text-orange-500"
+            }`}
+          >
+            <Bookmark className={`w-4.5 h-4.5 ${hasSaved ? "fill-current text-orange-500" : ""}`} />
+            <span>📌 Je garde</span>
+          </button>
+
+          {/* Report button - Alerter */}
+          <button
+            id="btn-alerter"
+            onClick={handleReportAction}
+            className={`p-1 flex items-center gap-1 focus:outline-none transition-transform active:scale-90 text-[11px] sm:text-xs font-black uppercase cursor-pointer ${
+              hasReported ? "text-red-500" : "text-gray-550 dark:text-gray-400 hover:text-red-550"
+            }`}
+          >
+            <Flag className="w-4 h-4" />
+            <span>🚨 Alerter</span>
+          </button>
+        </div>
       </div>
 
       {/* 5. Toast alerts section */}

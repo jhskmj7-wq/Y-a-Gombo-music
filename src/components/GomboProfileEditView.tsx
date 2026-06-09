@@ -54,6 +54,7 @@ interface GomboProfileEditViewProps {
   stopCamera: () => void;
   startCamera: () => void;
   handleFileUpload: (file: File) => void;
+  autoSaveStatus?: "idle" | "saving" | "saved" | "error";
 }
 
 const COMMUNES = [
@@ -100,7 +101,8 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
   cameraActive, setCameraActive,
   uploading, uploadProgress,
   capturePhoto, stopCamera, startCamera,
-  handleFileUpload
+  handleFileUpload,
+  autoSaveStatus = "idle"
 }) => {
   const [communeSearch, setCommuneSearch] = useState("");
   const [showCommuneDropdown, setShowCommuneDropdown] = useState(false);
@@ -118,12 +120,30 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
       className="space-y-6 text-[#1A1A1A] dark:text-gray-100 font-sans"
     >
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase flex items-center gap-2">
-          <User className="w-5.5 h-5.5 text-orange-500" />
-          Modifier mon Profil PRO
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase flex items-center gap-2">
+            <User className="w-5.5 h-5.5 text-orange-500" />
+            Modifier mon Profil PRO
+          </h3>
+          {autoSaveStatus === "saving" && (
+            <span className="text-[10px] lowercase font-normal text-amber-500 flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full animate-pulse border border-amber-500/20 w-fit">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> auto-enregistrement...
+            </span>
+          )}
+          {autoSaveStatus === "saved" && (
+            <span className="text-[10px] lowercase font-normal text-emerald-500 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 w-fit">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> synchronisé !
+            </span>
+          )}
+          {autoSaveStatus === "error" && (
+            <span className="text-[10px] lowercase font-normal text-red-500 flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20 w-fit">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> échec de synchro
+            </span>
+          )}
+        </div>
         <button 
           onClick={onCancel}
+          type="button"
           className="text-xs font-black border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-1.5 cursor-pointer"
         >
           Annuler

@@ -116,7 +116,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 {(() => {
                   const activityCount = (myPosts?.length || 0) + (dynamicAppsCount || 0) + (currentUserProfile.gigsCompleted || 0);
                   const isActif = activityCount >= 1;
-                  const isCertifie = activityCount >= 5 || currentUserProfile.isCertified === true;
+                  const isCertifie = activityCount >= 5 || currentUserProfile.isCertified === true || currentUserProfile.verificationStatus === "certifie" || currentUserProfile.badges?.some(b => b.includes("Talent Certifié"));
                   const isBoss = currentUserProfile.role === "client" || currentUserProfile.role === "admin" || (currentUserProfile as any).isPremium === true || currentUserProfile.email === "jhs.kmj7@gmail.com";
 
                   return (

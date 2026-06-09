@@ -46,6 +46,7 @@ export default function SettingsModal({
 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [activeLegalPage, setActiveLegalPage] = useState<"none" | "privacy" | "terms">("none");
 
   // Security and Password change states
   const [oldPassword, setOldPassword] = useState("");
@@ -153,8 +154,58 @@ export default function SettingsModal({
     <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
       <div 
         id="settings-modal-card"
-        className="bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all duration-300 scale-100 flex flex-col h-[85vh] max-h-[680px]"
+        className="bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all duration-300 scale-100 flex flex-col h-[85vh] max-h-[680px] relative"
       >
+        {/* Absolute Overlay for Legal Documents */}
+        {activeLegalPage !== "none" && (
+          <div className="absolute inset-0 bg-white dark:bg-[#111113] z-50 p-6 flex flex-col h-full animate-fadeIn font-sans">
+            <div className="flex justify-between items-center pb-4 border-b border-gray-150 dark:border-gray-800 shrink-0">
+              <h3 className="text-sm font-black uppercase text-gray-900 dark:text-white flex items-center gap-2">
+                <span>{activeLegalPage === "privacy" ? "📋 Politique de Confidentialité — AFRIGOMBO" : "⚖️ Conditions d'Utilisation — Escrow"}</span>
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setActiveLegalPage("none")}
+                className="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-750 rounded-xl text-xs font-black cursor-pointer transition-colors"
+              >
+                Fermer
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 text-xs text-gray-600 dark:text-gray-300 leading-relaxed text-left pr-1 scrollbar-thin">
+              {activeLegalPage === "privacy" ? (
+                <>
+                  <h4 className="font-extrabold text-gray-900 dark:text-white uppercase text-[11px] tracking-wider">1. Collecte des informations</h4>
+                  <p>Nous collectons votre adresse e-mail unique de l'écosystème Afri, votre afriId unique généré automatiquement à la première connexion, vos numéros Mobile Money facultatifs pour les paiements de cachets, et les données de profil d'artiste que vous décidez de rendre publiques.</p>
+                  
+                  <h4 className="font-extrabold text-gray-900 dark:text-white uppercase text-[11px] tracking-wider">2. Utilisation des données</h4>
+                  <p>Vos spécialités de scène, genres musicaux, ville et commune d'Abidjan sont partagés publiquement sur notre annuaire "Base des Talents" pour vous connecter aux opportunités réelles. Vos numéros de téléphone ne sont visibles que par les promoteurs avec qui vous concluez ou postulez à un Gombo officiel.</p>
+                  
+                  <h4 className="font-extrabold text-gray-900 dark:text-white uppercase text-[11px] tracking-wider">3. Firebase & Sécurité</h4>
+                  <p>Toutes nos communications transitent par des canaux HTTPS cryptés vers la plateforme Google Firebase (Firestore Database et Auth) afin d'assurer l'intégrité de vos transactions et l'exclusion stricte de toute usurpation de profil ou d'identité.</p>
+                  
+                  <h4 className="font-extrabold text-gray-900 dark:text-white uppercase text-[11px] tracking-wider">4. Suppression immédiate</h4>
+                  <p>Vous possédez un contrôle souverain sur vos informations. Vous pouvez désactiver votre profil ou initier une suppression immédiate à tout moment depuis l'onglet de gestion "Mon Compte".</p>
+                </>
+              ) : (
+                <>
+                  <h4 className="font-extrabold text-[#D4AF37] uppercase text-[11px] tracking-wider">1. Nature de l'écosystème AFRIGOMBO</h4>
+                  <p>AFRIGOMBO est un espace d'ingénierie et de mise en relation artistique premium. Nous garantissons la validité de l'identité des membres via notre identifiant Afri ID unifié pour éliminer toute fraude ou profils simulés.</p>
+                  
+                  <h4 className="font-extrabold text-[#D4AF37] uppercase text-[11px] tracking-wider">2. Sécurisation Escrow par Mobile Money</h4>
+                  <p>Pour chaque engagement (Gombo), l'acompte de cachet convenu (par ex. 5,000 FCFA pour un booster ou cachet de scène négocié) est placé en séquestre bloqué virtuel sur la plateforme. La somme est transférée au musicien dès la signature de la présence numérique.</p>
+                  
+                  <h4 className="font-extrabold text-[#D4AF37] uppercase text-[11px] tracking-wider">3. Engagements & Remplacements de Scène</h4>
+                  <p>En cas de non-présentation ou de retard injustifié, le promoteur ou chef d'orchestre peut déclarer un litige qui libère la somme vers le séquestre ou l'alloue au "Renfort Express" recruté de manière urgente de rechange.</p>
+                  
+                  <h4 className="font-extrabold text-[#D4AF37] uppercase text-[11px] tracking-wider">4. Retraits de Solde</h4>
+                  <p>Les transferts vers les comptes Wave, Orange Money et MTN Money sont exécutés de manière sécurisée sous 24h après validation des justificatifs par l'équipe d'administration centrale.</p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-orange-500/5 to-transparent">
           <div className="flex items-center gap-3">
@@ -580,9 +631,27 @@ export default function SettingsModal({
                   <p>
                     Tous les cachets et acomptes payés sur le réseau sont garantis par dépôt bloqué (escrow) 100% sécurisé via Mobile Money (Wave, Orange, MTN, Moov).
                   </p>
-                  <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex justify-between text-[10px] text-gray-400 uppercase font-bold">
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex justify-between text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold">
                     <span>© {new Date().getFullYear()} GOMBO SERVICES INC</span>
                     <span>Support : contact@gombo.ci</span>
+                  </div>
+
+                  <div className="pt-3 flex flex-wrap gap-2.5 justify-center text-[10px] font-black border-t border-gray-100 dark:border-gray-800">
+                    <button 
+                      type="button" 
+                      onClick={() => setActiveLegalPage("privacy")} 
+                      className="text-[#FF7A00] hover:underline cursor-pointer uppercase tracking-wider"
+                    >
+                      Politique de Confidentialité 📋
+                    </button>
+                    <span className="text-gray-300 dark:text-gray-700">|</span>
+                    <button 
+                      type="button" 
+                      onClick={() => setActiveLegalPage("terms")} 
+                      className="text-[#FF7A00] hover:underline cursor-pointer uppercase tracking-wider"
+                    >
+                      Conditions d'Utilisation ⚖️
+                    </button>
                   </div>
                 </div>
               </div>

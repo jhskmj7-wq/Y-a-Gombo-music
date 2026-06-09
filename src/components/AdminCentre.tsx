@@ -9,7 +9,7 @@ import {
 import { gomboDB, isFirebaseMock } from "../firebase";
 import { db } from "../lib/firebase";
 import { collection, onSnapshot, query, orderBy, limit, doc, updateDoc, setDoc, addDoc } from "firebase/firestore";
-import { UserProfile, SocialPost, AdminLog, Gombo, MusicGroup, Renfort, GomboSubscription, GomboPayment } from "../types";
+import { UserProfile, SocialPost, AdminLog, Gombo, MusicGroup, Renfort, GomboSubscription, GomboPayment, VerificationRequest } from "../types";
 import { useAuth } from "../AuthContext";
 
 interface AdminCentreProps {
@@ -36,7 +36,7 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   const [activeTab, setActiveTab] = useState<"cockpit" | "users" | "posts" | "reports" | "plus">("cockpit");
   
   // For the "plus" tab sub-sections
-  const [plusSubTab, setPlusSubTab] = useState<"finances" | "monetisation" | "groups" | "logs" | "config">("monetisation");
+  const [plusSubTab, setPlusSubTab] = useState<"finances" | "monetisation" | "groups" | "logs" | "config" | "verifications">("verifications");
 
   // Base Data States (Synchronized via Firestore onSnapshot)
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -46,6 +46,7 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   const [logs, setLogs] = useState<AdminLog[]>([]);
   const [groups, setGroups] = useState<MusicGroup[]>([]);
   const [renforts, setRenforts] = useState<Renfort[]>([]);
+  const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
   const [subscriptions, setSubscriptions] = useState<GomboSubscription[]>([]);
   const [payments, setPayments] = useState<GomboPayment[]>([]);
   const [liveActivities, setLiveActivities] = useState<any[]>([]);
@@ -89,6 +90,7 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   const [searchTerm, setSearchTerm] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState<string>("all");
   const [reportFilter, setReportFilter] = useState<string>("all");
+  const [verifFilter, setVerifFilter] = useState<"pending_all" | "pending_express" | "pending_standard" | "processed">("pending_all");
   const [gomboOrPostFilter, setGomboOrPostFilter] = useState<"gombos" | "posts">("gombos");
   const [gomboFilter, setGomboFilter] = useState<string>("all");
 
@@ -202,6 +204,12 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
         console.warn("Activity Feed rules or table not setup yet, using beautiful real-time engine fallback.");
       }));
 
+      // 11. Verification Requests real-time
+      unsubs.push(onSnapshot(collection(db, "verificationRequests"), (snapshot) => {
+        const list = snapshot.docs.map(doc => doc.data() as VerificationRequest);
+        setVerificationRequests(list);
+      }, (err) => console.error("Verification requests sync err:", err)));
+
       return () => {
         console.log("🧹 [Admin Real-Time] Cleaning up Firestore onSnapshot listeners...");
         unsubs.forEach(unsub => unsub());
@@ -220,6 +228,7 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
         const pay = JSON.parse(localStorage.getItem("gombo_payments") || "[]");
         const sub = JSON.parse(localStorage.getItem("gombo_subscriptions") || "[]");
         const act = JSON.parse(localStorage.getItem("gombo_activity_feed") || "[]");
+        const vr = JSON.parse(localStorage.getItem("gombo_verification_requests") || "[]");
 
         setUsers(u);
         setPosts(p);
@@ -231,6 +240,7 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
         setPayments(pay);
         setSubscriptions(sub);
         setLiveActivities(act);
+        setVerificationRequests(vr);
         setLoading(false);
       };
 
@@ -375,6 +385,21 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
         }
       }
       setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ⭐ Badge certifié mis à jour pour l'UID: ${uid}`, ...prev]);
+    }
+  };
+
+  const handleAuditVerificationRequest = async (reqId: string, status: "approved" | "rejected" | "missing_info") => {
+    if (confirm(`Confirmez-vous l'action "${status.toUpperCase()}" pour cette demande Gombo ID ?`)) {
+      try {
+        await gomboDB.updateVerificationRequestStatus(reqId, status);
+        await gomboDB.addAdminLog(adminEmail, `VERIFICATION_${status.toUpperCase()}`, `req:${reqId}`);
+        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 📋 Demande de vérification ${status.toUpperCase()} : ${reqId}`, ...prev]);
+        
+        // Force local sync event
+        window.dispatchEvent(new Event("storage"));
+      } catch (err: any) {
+        console.error("Auditing verification request failed:", err);
+      }
     }
   };
 
@@ -797,12 +822,12 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                         className="bg-[#121212] hover:bg-[#1c1c1c] border border-[#2B2B2B] hover:border-[#D4AF37]/40 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">Utilisateurs</span>
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">👥 La Famille</span>
                           <Users className="w-4 h-4 text-[#D4AF37]" />
                         </div>
                         <div>
                           <p className="text-xl font-black text-[#F8F8F8] tracking-tight">{stats.totalUsers}</p>
-                          <p className="text-[8.5px] text-gray-500 mt-0.5">Musiciens & Clients</p>
+                          <p className="text-[8.5px] text-gray-500 mt-0.5">Membres inscrits</p>
                         </div>
                       </button>
 
@@ -824,12 +849,12 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                         className="bg-[#121212] hover:bg-[#1c1c1c] border border-[#2B2B2B] hover:border-[#D4AF37]/40 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">Publications</span>
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">📢 Les Gombos</span>
                           <Film className="w-4 h-4 text-[#D4AF37]" />
                         </div>
                         <div>
                           <p className="text-xl font-black text-[#F8F8F8] tracking-tight">{stats.publications}</p>
-                          <p className="text-[8.5px] text-gray-500 mt-0.5">Demos artistiques</p>
+                          <p className="text-[8.5px] text-gray-500 mt-0.5">Opportunités & démos</p>
                         </div>
                       </button>
 
@@ -866,12 +891,12 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                         className="bg-[#121212] hover:bg-[#1c1c1c] border border-[#2B2B2B] hover:border-[#D4AF37]/40 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">Signalements</span>
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">🚨 Les Alertes</span>
                           <AlertOctagon className="w-4 h-4 text-red-500" />
                         </div>
                         <div>
                           <p className="text-xl font-black text-red-400 tracking-tight">{stats.signalementsAttente}</p>
-                          <p className="text-[8.5px] text-gray-500 mt-0.5">En cours d'arbitrage</p>
+                          <p className="text-[8.5px] text-gray-500 mt-0.5">Signalements gombos</p>
                         </div>
                       </button>
 
@@ -881,12 +906,12 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                         className="bg-[#121212] hover:bg-[#1c1c1c] border border-[#2B2B2B] hover:border-[#D4AF37]/40 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">Membres Premium</span>
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">⭐ Les VIP</span>
                           <Sparkles className="w-4 h-4 text-[#D4AF37]" />
                         </div>
                         <div>
                           <p className="text-xl font-black text-[#D4AF37] tracking-tight">{stats.abonnésPremium}</p>
-                          <p className="text-[8.5px] mt-0.5 text-gray-500">Formule Or et VIP</p>
+                          <p className="text-[8.5px] mt-0.5 text-gray-500">Membres VIP Or</p>
                         </div>
                       </button>
 
@@ -896,12 +921,12 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                         className="bg-gradient-to-br from-[#1c1c1c] to-[#121212] border border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all border-l-4"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">Revenus Totaux</span>
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">💰 La Caisse</span>
                           <DollarSign className="w-4 h-4 text-[#D4AF37]" />
                         </div>
                         <div>
                           <p className="text-lg font-black text-[#D4AF37] font-mono truncate">{stats.revenusGeneres.toLocaleString()} F</p>
-                          <p className="text-[8.5px] text-emerald-400 font-mono mt-0.5">Commission & Premium</p>
+                          <p className="text-[8.5px] text-emerald-400 font-mono mt-0.5">Revenus cumulés</p>
                         </div>
                       </button>
 
@@ -1547,6 +1572,12 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                       💰 Monétisation & Plans
                     </button>
                     <button
+                      onClick={() => setPlusSubTab("verifications")}
+                      className={`flex-1 py-2 px-3 text-center text-[10px] whitespace-nowrap font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "verifications" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
+                    >
+                      🤝 Talents à vérifier ({verificationRequests.filter(vr => vr.status === "pending" || vr.status === "pending_express").length})
+                    </button>
+                    <button
                       onClick={() => setPlusSubTab("finances")}
                       className={`flex-1 py-2 px-3 text-center text-[10px] whitespace-nowrap font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "finances" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
                     >
@@ -1687,6 +1718,237 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                         </div>
                       </div>
 
+                    </div>
+                  )}
+
+                  {plusSubTab === "verifications" && (
+                    <div className="space-y-6">
+                      <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 p-6 rounded-2xl border border-zinc-800 space-y-2">
+                        <span className="px-2.5 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded-full text-[9px] font-black tracking-widest uppercase border border-[#D4AF37]/20 font-mono">
+                          CONTROLE D'ACCÈS REGLEMENTAIRE
+                        </span>
+                        <h3 className="text-lg font-black text-white uppercase tracking-wider">
+                          Validation Gombo-ID & Talent Certifié
+                        </h3>
+                        <p className="text-xs text-zinc-400 leading-relaxed font-sans">
+                          Examinez les pièces d'identité officielles, selfies de conformité et audits musicaux. Le traitement Express (500 FCFA payé) confère une priorité absolue de validation. Aucun dossier n'est approuvé par défaut.
+                        </p>
+                      </div>
+
+                      {/* Filter sub-navigation */}
+                      <div className="flex flex-wrap gap-2 items-center justify-between">
+                        <div className="flex flex-wrap gap-1.5 bg-[#121212] p-1 rounded-xl border border-zinc-800">
+                          <button
+                            onClick={() => setVerifFilter("pending_all")}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition ${verifFilter === "pending_all" ? "bg-zinc-800 text-white border border-zinc-700" : "text-zinc-400 hover:text-white"}`}
+                          >
+                            All En cours ({verificationRequests.filter(r => r.status === 'pending' || r.status === 'pending_express').length})
+                          </button>
+                          <button
+                            onClick={() => setVerifFilter("pending_express")}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 ${verifFilter === "pending_express" ? "bg-amber-500/20 text-amber-450 border border-amber-500/35" : "text-amber-500/70 hover:text-amber-400"}`}
+                          >
+                            ⚡ Express Prioritaires ({verificationRequests.filter(r => r.status === 'pending_express').length})
+                          </button>
+                          <button
+                            onClick={() => setVerifFilter("pending_standard")}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 ${verifFilter === "pending_standard" ? "bg-zinc-800 text-white border border-zinc-700" : "text-zinc-400 hover:text-white"}`}
+                          >
+                            🕒 Standard Gratuit ({verificationRequests.filter(r => r.status === 'pending').length})
+                          </button>
+                          <button
+                            onClick={() => setVerifFilter("processed")}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition ${verifFilter === "processed" ? "bg-zinc-800 text-white border border-zinc-700" : "text-gray-400 hover:text-white"}`}
+                          >
+                            Déjà Traités ({verificationRequests.filter(r => r.status !== 'pending' && r.status !== 'pending_express').length})
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Request Dossiers Grid */}
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                        {verificationRequests.filter(vr => {
+                          const isPending = vr.status === "pending" || vr.status === "pending_express";
+                          const matchesSearch = searchTerm ? (
+                            (vr.displayName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (vr.stageName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (vr.whatsapp || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (vr.metier || "").toLowerCase().includes(searchTerm.toLowerCase())
+                          ) : true;
+                          if (!matchesSearch) return false;
+                          if (verifFilter === "pending_all") return isPending;
+                          if (verifFilter === "pending_express") return vr.status === "pending_express";
+                          if (verifFilter === "pending_standard") return vr.status === "pending";
+                          if (verifFilter === "processed") return !isPending;
+                          return true;
+                        }).length === 0 ? (
+                          <div className="col-span-full py-12 text-center bg-[#121212] rounded-2xl border border-zinc-800 p-8">
+                            <Shield className="w-10 h-10 mx-auto text-zinc-600 animate-pulse mb-3" />
+                            <p className="text-xs text-zinc-400 uppercase tracking-widest font-black">Aucun dossier à afficher</p>
+                            <p className="text-[11px] text-zinc-550 mt-1">Tous les candidats de cette sous-section ont été audités !</p>
+                          </div>
+                        ) : (
+                          verificationRequests.filter(vr => {
+                            const isPending = vr.status === "pending" || vr.status === "pending_express";
+                            const matchesSearch = searchTerm ? (
+                              (vr.displayName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (vr.stageName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (vr.whatsapp || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (vr.metier || "").toLowerCase().includes(searchTerm.toLowerCase())
+                            ) : true;
+                            if (!matchesSearch) return false;
+                            if (verifFilter === "pending_all") return isPending;
+                            if (verifFilter === "pending_express") return vr.status === "pending_express";
+                            if (verifFilter === "pending_standard") return vr.status === "pending";
+                            if (verifFilter === "processed") return !isPending;
+                            return true;
+                          }).map(vr => (
+                            <div
+                              key={vr.id}
+                              className={`rounded-2xl border p-5 space-y-4 flex flex-col justify-between transition relative overflow-hidden ${
+                                vr.status === "pending_express" 
+                                  ? "bg-gradient-to-b from-[#221c10] to-[#121212] border-amber-500/40 shadow-lg shadow-amber-500/5 animate-pulse-slow font-sans" 
+                                  : "bg-zinc-950 border-zinc-800 font-sans"
+                              }`}
+                            >
+                              {/* Express Tag Corner */}
+                              {vr.status === "pending_express" && (
+                                <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-[#D4AF37] text-black text-[8px] font-black font-sans uppercase px-3 py-1 rounded-bl-xl tracking-wider flex items-center gap-1">
+                                  ⚡ EXPRESS PAID (500 FCFA)
+                                </div>
+                              )}
+
+                              <div className="space-y-3 font-sans">
+                                {/* Header Info */}
+                                <div className="flex gap-3 items-center">
+                                  <div className="w-11 h-11 rounded-xl bg-zinc-850 border border-zinc-800 overflow-hidden flex items-center justify-center text-white font-extrabold uppercase text-sm">
+                                    {vr.displayName ? vr.displayName.substring(0, 2) : "TA"}
+                                  </div>
+                                  <div className="space-y-0.5 text-left">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <h4 className="text-sm font-extrabold text-white">{vr.stageName || vr.displayName || "Sans Nom"}</h4>
+                                      <span className="text-[10px] text-zinc-500">({vr.displayName})</span>
+                                    </div>
+                                    <p className="text-[11px] text-[#D4AF37] font-sans font-bold uppercase tracking-wide">
+                                      🎭 {vr.metier || "Artiste de scène"} • 📍 Commune: {vr.commune || "Abidjan"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Auditing Assets Section */}
+                                <div className="grid grid-cols-2 gap-2 bg-black/60 p-3 rounded-xl border border-zinc-900">
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-black block">📇 Pièce d'identité</span>
+                                    {vr.idCardUrl ? (
+                                      <a
+                                        href={vr.idCardUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-[10px] text-amber-500 hover:underline flex items-center gap-1 font-bold font-sans truncate"
+                                      >
+                                        📄 Voir Recto-Verso ↗
+                                      </a>
+                                    ) : (
+                                      <span className="text-[10px] text-zinc-600 block italic">Non fournie</span>
+                                    )}
+                                  </div>
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-black block">🤳 Selfie Téléchargé</span>
+                                    {vr.selfieUrl ? (
+                                      <a
+                                        href={vr.selfieUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-[10px] text-amber-500 hover:underline flex items-center gap-1 font-bold font-sans truncate"
+                                      >
+                                        📷 Voir Mon Selfie ↗
+                                      </a>
+                                    ) : (
+                                      <span className="text-[10px] text-zinc-600 block italic">Non fourni</span>
+                                    )}
+                                  </div>
+                                  <div className="col-span-2 pt-2 border-t border-zinc-900/50 space-y-1">
+                                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-black block">🎵 Lien de démonstration musicale</span>
+                                    {vr.proofUrl ? (
+                                      <a
+                                        href={vr.proofUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black flex items-center gap-1 text-xs truncate"
+                                      >
+                                        🎧 ÉCOUTER LA DÉMO SHOWBIZ ↗
+                                      </a>
+                                    ) : (
+                                      <span className="text-[10px] text-zinc-650 block italic">Aucun lien d'activité soumis</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Verification WhatsApp Direct Contact */}
+                                <div className="flex items-center gap-2 text-[10.5px] text-zinc-400 font-sans">
+                                  <span className="font-extrabold text-zinc-500 font-sans">Contact:</span>
+                                  <a
+                                    href={`https://wa.me/${(vr.whatsapp || "").replace(/[^0-9]/g, "")}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-emerald-400 font-bold hover:underline font-mono"
+                                  >
+                                    💬 WhatsApp {vr.whatsapp}
+                                  </a>
+                                  <span>•</span>
+                                  <span className="font-mono text-zinc-550 truncate max-w-[150px]">{vr.email}</span>
+                                </div>
+                              </div>
+
+                              {/* Action Audits Block */}
+                              <div className="pt-3 border-t border-zinc-900 flex flex-wrap gap-2 justify-between items-center bg-black/30 p-2 rounded-xl">
+                                <div className="text-[10px]">
+                                  <span className="text-zinc-500 uppercase">Statut:</span>
+                                  {vr.status === "pending" || vr.status === "pending_express" ? (
+                                    <span className="ml-1 text-amber-500 font-black uppercase tracking-wide animate-pulse">⏳ À Auditer</span>
+                                  ) : vr.status === "approved" ? (
+                                    <span className="ml-1 text-emerald-400 font-black uppercase tracking-wide">🏆 Talent Approuvé</span>
+                                  ) : vr.status === "missing_info" ? (
+                                    <span className="ml-1 text-orange-400 font-black uppercase tracking-wide">❌ Infos Complémentaires</span>
+                                  ) : (
+                                    <span className="ml-1 text-red-500 font-black uppercase tracking-wide">🚫 Refusé (Rejected)</span>
+                                  )}
+                                </div>
+
+                                {(vr.status === "pending" || vr.status === "pending_express") ? (
+                                  <div className="flex gap-1.5 flex-wrap">
+                                    <button
+                                      onClick={() => handleAuditVerificationRequest(vr.id, "approved")}
+                                      className="px-3 py-1.5 bg-emerald-500 text-black font-black text-[9px] uppercase rounded-lg transition hover:bg-emerald-400 cursor-pointer"
+                                    >
+                                      Approuver ✅
+                                    </button>
+                                    <button
+                                      onClick={() => handleAuditVerificationRequest(vr.id, "missing_info")}
+                                      className="px-2.5 py-1.5 bg-orange-500 text-white font-black text-[9px] uppercase rounded-lg transition hover:bg-orange-650 cursor-pointer"
+                                    >
+                                      Compléments 📝
+                                    </button>
+                                    <button
+                                      onClick={() => handleAuditVerificationRequest(vr.id, "rejected")}
+                                      className="px-2.5 py-1.5 bg-red-650 text-white font-black text-[9px] uppercase rounded-lg transition hover:bg-red-800 cursor-pointer"
+                                    >
+                                      Refuser 🚫
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => handleAuditVerificationRequest(vr.id, "approved")}
+                                    className="px-2.5 py-1 text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-700 font-black text-[8px] uppercase rounded-lg transition text-right cursor-pointer"
+                                  >
+                                    🔄 Ré-évaluer (Reset)
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
                     </div>
                   )}
 

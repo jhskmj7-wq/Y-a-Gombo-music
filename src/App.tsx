@@ -348,6 +348,51 @@ export default function App() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+  // Gamification & Retention State values
+  const [talentVotes, setTalentVotes] = useState({ honors: 42, palabres: 3 });
+  const [userVotedTalent, setUserVotedTalent] = useState<string | null>(null);
+  const [defiClaimed, setDefiClaimed] = useState(() => {
+    return localStorage.getItem("defi_claimed_weekly") === "true";
+  });
+
+  const handleClaimDefiPoints = async () => {
+    if (!profile) {
+      setShowAuthModal(true);
+      return;
+    }
+    try {
+      const currentPoints = profile.points || 0;
+      await gomboDB.updateUserProfile(profile.uid, {
+        points: currentPoints + 50
+      });
+      localStorage.setItem("defi_claimed_weekly", "true");
+      setDefiClaimed(true);
+      alert("🏆 Félicitations ! Votre compte Afri a été crédité de +50 Points Afri pour avoir relevé le Défi de la Semaine.");
+    } catch (err) {
+      console.error(err);
+      alert("Une erreur est survenue lors de la réclamation des points.");
+    }
+  };
+
+  const handleInteractTalent = (type: "honor" | "palabre") => {
+    if (!profile) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (userVotedTalent) {
+      alert("Vous avez déjà interagi avec le Talent du Jour !");
+      return;
+    }
+    if (type === "honor") {
+      setTalentVotes(prev => ({ ...prev, honors: prev.honors + 1 }));
+      alert("❤️ Vous venez d'HONORER le Talent du jour ! Votre geste augmente sa réputation sur le Terrain.");
+    } else {
+      setTalentVotes(prev => ({ ...prev, palabres: prev.palabres + 1 }));
+      alert("🗣️ Palabre lancée avec enthousiasme !");
+    }
+    setUserVotedTalent(type);
+  };
+
   // Listing page Filters & Selection
   const [gombos, setGombos] = useState<Gombo[]>([]);
   const [loadingGombos, setLoadingGombos] = useState(true);
@@ -1891,31 +1936,31 @@ export default function App() {
                 <div className="lg:col-span-4 space-y-6 w-full">
                   
                   {/* CARD 1: SÉRIE D'ACTIVITÉ */}
-                  <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:from-orange-950/20 dark:to-transparent border border-orange-100 dark:border-orange-900/40 p-5 rounded-3xl space-y-3 shadow-xs relative overflow-hidden">
+                  <div className="bg-[#0B0B0B] border border-[#2B2B2B] p-5 rounded-3xl space-y-3 shadow-xl relative overflow-hidden">
                     <div className="absolute top-3 right-3 text-2xl animate-bounce">🔥</div>
                     <div>
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-[#FF7A00] dark:text-orange-400 font-mono">Série & Engagement</h4>
-                      <p className="text-lg font-black text-gray-900 dark:text-white mt-1">🔥 {activityStreak} {activityStreak > 1 ? "jours actifs" : "jour actif"}</p>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] font-mono">Série & Engagement</h4>
+                      <p className="text-lg font-black text-[#F8F8F8] mt-1">🔥 {activityStreak} {activityStreak > 1 ? "jours actifs" : "jour actif"}</p>
                     </div>
-                    <p className="text-xs text-gray-400 dark:text-gray-400 leading-relaxed">
+                    <p className="text-xs text-gray-400 leading-relaxed font-sans">
                       Revenez chaque jour à Abidjan pour développer votre réseau de contacts et maintenir votre bonus de référencement !
                     </p>
 
                     {profile && (
-                      <div className="pt-2 border-t border-orange-150/20 dark:border-orange-900/30 flex items-center justify-between text-xs font-bold gap-2">
-                        <span className="text-gray-400 dark:text-gray-500">Votre Statut :</span>
+                      <div className="pt-2 border-t border-[#2B2B2B] flex items-center justify-between text-xs font-bold gap-2 font-mono">
+                        <span className="text-gray-400 font-sans">Votre Statut :</span>
                         {(() => {
                           const gigs = profile.gigsCompleted || 0;
                           const apps = profile.applicationsSent || 0;
                           const rev = profile.totalRevenue || 0;
                           let lvlName = "Nouveau Talent";
-                          let lvlColor = "text-purple-600 bg-purple-50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/30";
+                          let lvlColor = "text-[#D4AF37] bg-[#D4AF37]/10 border border-[#2B2B2B]";
                           if (gigs >= 8 || rev >= 100000 || apps >= 10) {
                             lvlName = "Boss du Gombo";
-                            lvlColor = "text-rose-600 bg-rose-50 dark:bg-rose-950/30 border border-rose-200/50 dark:border-rose-900/40 font-black";
+                            lvlColor = "text-white bg-[#D4AF37] border border-[#D4AF37] font-black";
                           } else if (gigs >= 2 || rev >= 15000 || apps >= 3) {
                             lvlName = "Talent Confirmé";
-                            lvlColor = "text-amber-600 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/40";
+                            lvlColor = "text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/35";
                           }
                           return (
                             <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider ${lvlColor}`}>
@@ -1927,7 +1972,7 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* CARD 2: PROFILE COMPLETION BAR */}
+                  {/* CARD 2: PROFILE COMPLETION BAR UNIFIED */}
                   {profile ? (() => {
                     let score = 0;
                     const missingItems = [];
@@ -1938,44 +1983,44 @@ export default function App() {
                     if (profile.specialty || profile.speciality) score += 20; else missingItems.push("Spécialité");
 
                     return (
-                      <div className="bg-white dark:bg-[#121214] border border-gray-105 dark:border-gray-800 p-5 rounded-3xl space-y-3 shadow-xs">
+                      <div className="bg-[#0B0B0B] border border-[#2B2B2B] p-5 rounded-3xl space-y-3 shadow-xl">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider font-mono">📈 Profil ({score}%)</span>
+                          <span className="font-black text-gray-400 uppercase tracking-wider font-mono">📈 Profil ({score}%)</span>
                           {score < 100 && (
                             <button 
                               onClick={() => setView("dashboard")}
-                              className="text-[10px] font-extrabold text-[#FF7A00] uppercase hover:underline animate-pulse"
+                              className="text-[10px] font-extrabold text-[#D4AF37] uppercase hover:underline animate-pulse cursor-pointer"
                             >
                               Éditer
                             </button>
                           )}
                         </div>
-                        <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-[#FF7A00] to-amber-500" style={{ width: `${score}%` }} />
+                        <div className="h-2 w-full bg-[#2B2B2B] rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-[#D4AF37] to-[#bfa12d]" style={{ width: `${score}%` }} />
                         </div>
-                        {score < 100 ? (
-                          <p className="text-[10px] text-gray-400 font-semibold leading-relaxed">
-                            💡 Reste à remplir : <strong className="text-gray-650 dark:text-gray-300">{missingItems.join(", ")}</strong> pour maximiser votre éligibilité !
+                        {score < 105 ? (
+                          <p className="text-[10px] text-gray-400 font-semibold leading-relaxed font-mono">
+                            💡 Reste : <strong className="text-gray-300">{missingItems.join(", ")}</strong> pour optimiser votre visibilité !
                           </p>
                         ) : (
-                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-                            🎉 Profil optimal à 100% pour recevoir des cachets !
+                          <p className="text-[10px] text-[#D4AF37] font-bold">
+                            🎉 Profil optimal à 100% ! Vous brillez sur le terrain.
                           </p>
                         )}
                       </div>
                     );
                   })() : (
-                    <div className="bg-white dark:bg-[#121214] border border-gray-105 dark:border-gray-800 p-5 rounded-3xl text-center space-y-3 shadow-xs">
+                    <div className="bg-[#0B0B0B] border border-[#2B2B2B] p-5 rounded-3xl text-center space-y-3 shadow-xl">
                       <span className="text-3xl block animate-bounce">🎤</span>
-                      <h4 className="font-extrabold text-xs text-gray-800 dark:text-white uppercase">Créez votre profil</h4>
-                      <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
-                        Rejoignez le Gombo-Réseau, publiez vos démos et gagnez de la visibilité auprès des promoteurs.
+                      <h4 className="font-extrabold text-xs text-white uppercase">Créez votre profil</h4>
+                      <p className="text-[11px] text-gray-400 leading-relaxed">
+                        Rejoignez le réseau Afri, publiez vos démos 30s et gagnez de la visibilité auprès des promoteurs.
                       </p>
                       <button 
                         onClick={() => setShowAuthModal(true)}
-                        className="py-2 px-4 bg-orange-50 dark:bg-orange-950/20 text-[#FF7A00] rounded-xl text-[10px] font-black uppercase text-center w-full block border border-orange-100/40"
+                        className="py-2.5 px-4 bg-[#121212] hover:bg-[#2B2B2B] text-[#D4AF37] rounded-xl text-[10px] font-black uppercase text-center w-full block border border-[#2B2B2B] cursor-pointer"
                       >
-                        Créer mon compte
+                        Créer mon compte d'Artiste
                       </button>
                     </div>
                   )}
@@ -2006,29 +2051,29 @@ export default function App() {
                     }
 
                     return (
-                      <div className="bg-[#121214] border border-[#FF7A00]/25 rounded-3xl p-5 text-white shadow-xl relative overflow-hidden space-y-3.5">
-                        <div className="absolute top-0 right-0 bg-gradient-to-bl from-orange-500 to-transparent p-2 text-[10px] font-extrabold uppercase tracking-widest leading-none text-white rounded-bl-xl">
-                          VEDETTE
+                      <div className="bg-[#0B0B0B] border border-[#2B2B2B] rounded-3xl p-5 text-white shadow-xl relative overflow-hidden space-y-3.5">
+                        <div className="absolute top-0 right-0 bg-[#D4AF37] text-black px-2.5 py-1 text-[8px] font-black uppercase tracking-widest leading-none rounded-bl-xl">
+                          VEDETTE AFRI
                         </div>
                         <div className="space-y-1">
-                          <span className="px-2 py-0.5 bg-[#FF7A00] text-[9px] font-bold uppercase rounded text-white tracking-wider">
-                            ⚡ GOMBO DU JOUR
+                          <span className="px-2 py-0.5 bg-[#D4AF37] text-[8px] font-black text-black uppercase rounded tracking-wider">
+                            ⚡ LE GOMBO DU JOUR
                           </span>
-                          <h4 className="font-black text-sm tracking-tight leading-snug pt-1 text-white uppercase">{featured.title}</h4>
+                          <h4 className="font-black text-sm tracking-tight leading-snug pt-1 text-[#F8F8F8] uppercase">{featured.title}</h4>
                         </div>
                         
                         <p className="text-[11px] text-gray-400 leading-relaxed line-clamp-3">
                           {featured.description}
                         </p>
 
-                        <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-3 text-xs font-bold gap-2">
+                        <div className="flex justify-between items-center bg-[#121212] border border-[#2B2B2B] rounded-2xl p-3 text-xs font-bold gap-2">
                           <div className="space-y-0.5">
-                            <span className="text-[9px] text-[#FF7A00] uppercase block">Cachet Net</span>
-                            <span className="font-mono text-xs text-yellow-300">{(featured.budget).toLocaleString()} FCFA</span>
+                            <span className="text-[9px] text-[#D4AF37] uppercase block">Cachet Net</span>
+                            <span className="font-mono text-xs text-white">{(featured.budget).toLocaleString()} FCFA</span>
                           </div>
                           <div className="text-right space-y-0.5">
-                            <span className="text-[9px] text-gray-400 uppercase block">Commune</span>
-                            <span className="text-xs text-gray-200">📍 {featured.commune}</span>
+                            <span className="text-[9px] text-gray-500 uppercase block">Commune</span>
+                            <span className="text-xs text-gray-300">📍 {featured.commune}</span>
                           </div>
                         </div>
 
@@ -2036,7 +2081,7 @@ export default function App() {
                           onClick={() => {
                             setView("gombo_list");
                           }}
-                          className="w-full text-center py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap active:scale-97 transition-all cursor-pointer"
+                          className="w-full text-center py-2.5 bg-[#D4AF37] hover:bg-[#bfa12d] text-black rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap active:scale-97 transition-all cursor-pointer"
                         >
                           Décrocher le Cachet !
                         </button>
@@ -2044,37 +2089,165 @@ export default function App() {
                     );
                   })()}
 
-                  {/* CARD 4: TOP TALENTS */}
-                  <div className="bg-white dark:bg-[#121214] border border-gray-105 dark:border-gray-800 rounded-3xl p-5 space-y-4 shadow-xs">
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-[#FF7A00] dark:text-orange-400 font-mono">Top Talents</h4>
-                      <p className="text-xs font-bold text-gray-805 dark:text-white mt-1">⭐ Artistes les plus actifs de la semaine</p>
+                  {/* CARD 4: LE TALENT DU JOUR */}
+                  <div className="bg-[#0B0B0B] border border-[#2B2B2B] rounded-3xl p-5 space-y-4 shadow-xl">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37] font-mono">🏆 LE TALENT DU JOUR</h4>
+                        <p className="text-xs font-bold text-white mt-0.5">Artiste à l'honneur</p>
+                      </div>
+                      <span className="px-1.5 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded text-[8px] font-bold uppercase">
+                        POPULAIRE
+                      </span>
                     </div>
 
-                    <div className="space-y-3">
-                      {topTalentsList.map((talent, idx) => (
-                        <div key={idx} className="flex items-center justify-between border-b border-gray-100/40 dark:border-gray-800/40 pb-2.5 last:border-0 last:pb-0">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="relative shrink-0">
-                              <img src={talent.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} alt="" className="w-8 h-8 rounded-full object-cover border border-orange-500/20" />
-                              <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-amber-400 text-gray-950 font-black rounded-full flex items-center justify-center text-[7px] border border-white">
-                                {idx + 1}
-                              </span>
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[11px] font-black text-gray-950 dark:text-white truncate font-sans">
-                                {talent.artistName || `${talent.firstName} ${talent.lastName.substring(0, 1)}.`}
-                              </p>
-                              <span className="text-[9px] font-bold text-gray-400 block dark:text-gray-500 shrink-0 truncate">
-                                🎸 {talent.specialty || "Showbiz Solo"}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="text-right shrink-0">
-                            <span className="px-2 py-0.5 bg-orange-50 dark:bg-orange-950/20 text-[#FF7A00] text-[9px] font-black uppercase rounded font-mono">
-                              🔥 {talent.gigsCompleted} GIGS
-                            </span>
+                    <div className="flex items-center gap-3">
+                      <div className="relative shrink-0">
+                        <img 
+                          src="https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&q=80&w=150" 
+                          alt="Soro K." 
+                          className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/30"
+                        />
+                        <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#D4AF37] text-black font-black rounded-full flex items-center justify-center text-[8px]">
+                          ⭐
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h5 className="text-[11px] font-black text-white truncate uppercase tracking-wide font-sans">Soro K. percussion</h5>
+                        <p className="text-[9px] text-[#D4AF37] font-bold block truncate">🥁 Percussionniste d'exception - Cocody</p>
+                        <p className="text-[8px] text-gray-400 mt-0.5 italic block line-clamp-1">« Dispo pour renforts ou prestations privées ! »</p>
+                      </div>
+                    </div>
+
+                    {/* Interactive Reactions */}
+                    <div className="flex items-center justify-between gap-2 p-2 bg-[#121212] border border-[#2B2B2B] rounded-xl text-[10px]">
+                      <button 
+                        onClick={() => handleInteractTalent("honor")}
+                        className={`flex-grow py-1.5 px-2 rounded-lg font-black uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          userVotedTalent === "honor" 
+                            ? "bg-[#D4AF37]/10 text-[#D4AF37]" 
+                            : "bg-transparent text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        <span>❤️ J'HONORE</span> 
+                        <span className="font-mono">({talentVotes.honors})</span>
+                      </button>
+
+                      <div className="h-4 w-px bg-[#2B2B2B]" />
+
+                      <button 
+                        onClick={() => handleInteractTalent("palabre")}
+                        className={`flex-grow py-1.5 px-2 rounded-lg font-black uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          userVotedTalent === "palabre" 
+                            ? "bg-[#D4AF37]/10 text-[#D4AF37]" 
+                            : "bg-transparent text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        <span>🗣️ PALABRE</span>
+                        <span className="font-mono">({talentVotes.palabres})</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* CARD 5: DÉFI DE LA SEMAINE */}
+                  <div className="bg-[#0B0B0B] border border-[#2B2B2B] rounded-3xl p-5 space-y-3.5 shadow-xl">
+                    <div className="space-y-1">
+                      <span className="px-2 py-0.5 bg-[#D4AF37] text-[8px] text-black font-black uppercase rounded tracking-wider">
+                        🎯 DÉFI DE LA SEMAINE
+                      </span>
+                      <h4 className="font-black text-xs text-[#F8F8F8] uppercase pt-1">
+                        Publier un a cappella ou complétion profil
+                      </h4>
+                    </div>
+
+                    <p className="text-[10px] text-gray-400 leading-normal font-sans">
+                      Édifiez la communauté africaine ! Complétez votre profil ou postez un extrait démo pour remporter +50 Points Afri.
+                    </p>
+
+                    <div className="flex justify-between items-center bg-[#121212] border border-[#2B2B2B] rounded-2xl p-3 text-[11px] font-bold">
+                      <div className="space-y-0.5">
+                        <span className="text-[8px] text-gray-500 uppercase block">Récompense</span>
+                        <span className="text-[#D4AF37] font-black block">🎁 +50 Points Afri</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[8px] text-gray-400 block">Statut</span>
+                        <span className={`text-[10px] font-black uppercase ${defiClaimed ? "text-emerald-400" : "text-[#D4AF37] animate-pulse"}`}>
+                          {defiClaimed ? "✓ Réclamé" : "⏳ À réclamer"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleClaimDefiPoints}
+                      disabled={defiClaimed}
+                      className={`w-full text-center py-2 rounded-xl text-[10px] font-black uppercase transition-all tracking-wider font-mono cursor-pointer ${
+                        defiClaimed 
+                          ? "bg-transparent border border-[#2B2B2B] text-gray-600 cursor-not-allowed" 
+                          : "bg-[#D4AF37] hover:bg-[#bfa12d] text-black"
+                      }`}
+                    >
+                      {defiClaimed ? "Défi Accomplis" : "Réclamer mes Points Afri"}
+                    </button>
+                  </div>
+
+                  {/* CARD 6: RÉCOMPENSES ET POINTS AFRI */}
+                  <div className="bg-[#0B0B0B] border border-[#2B2B2B] rounded-3xl p-5 space-y-4 shadow-xl text-white">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37] font-mono">🌟 MON SOLDE AFRI</h4>
+                        <p className="text-xs font-bold text-[#F8F8F8] mt-0.5">Accumuler les récompenses</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 px-2.5 py-1 rounded-xl text-xs font-black font-mono">
+                        🪙 {profile?.points || 0} PTS
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-[#2B2B2B]" />
+
+                    <div className="space-y-2.5">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wider block font-bold">Avantages à débloquer :</p>
+                      
+                      <div className="space-y-2 text-[10px]">
+                        <div className="flex justify-between items-center bg-[#121212] p-2 rounded-xl border border-white/[0.02]">
+                          <span className="font-semibold text-gray-300 font-sans">⚡ Traitement Express d'évaluation</span>
+                          <span className="font-black text-[#D4AF37] font-mono">100 Pts</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-[#121212] p-2 rounded-xl border border-white/[0.02]">
+                          <span className="font-semibold text-gray-300 font-sans">⭐ Profil Artiste Mis en Avant</span>
+                          <span className="font-black text-[#D4AF37] font-mono">250 Pts</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-[#121212] p-2 rounded-xl border border-white/[0.02]">
+                          <span className="font-semibold text-gray-300 font-sans">🎵 Option Écoute Audio Prioritaire</span>
+                          <span className="font-black text-[#D4AF37] font-mono">500 Pts</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CARD 7: LE TAM-TAM ("Ce qui fait palabre aujourd'hui") */}
+                  <div className="bg-[#0B0B0B] border border-[#2B2B2B] rounded-3xl p-5 space-y-3 shadow-xl">
+                    <div className="flex items-center gap-1.5 border-b border-[#2B2B2B] pb-2">
+                      <span className="text-lg">📢</span>
+                      <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] font-mono">🔔 LE TAM-TAM</h4>
+                        <span className="text-[9.5px] text-gray-500 font-bold block font-sans">Palabres & Tendances Chaudes</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3.5 pt-1.5">
+                      {[
+                        { icon: "🎤", text: "Casting bouillant pour l'Orchestre National de Cocody : 15 instrumentistes auditionnés !", trend: "+450% d'audience" },
+                        { icon: "⚡", text: "Demande de renfort express honorée à Treichville en moins de 30 minutes de chrono.", trend: "Gombo Réglé" },
+                        { icon: "🎹", text: "Le Zouglou fait sensation aujourd'hui sur le canevas Afri. Les répétitions se lancent.", trend: "Tendance Or" }
+                      ].map((item, index) => (
+                        <div key={index} className="space-y-1 text-[10.5px]">
+                          <p className="text-gray-300 font-semibold leading-relaxed flex items-start gap-1 w-full font-sans">
+                            <span className="shrink-0">{item.icon}</span>
+                            <span>{item.text}</span>
+                          </p>
+                          <div className="flex justify-between items-center text-[8.5px] font-black text-[#D4AF37] uppercase font-mono px-4">
+                            <span>{item.trend}</span>
+                            <span>• ACTIF •</span>
                           </div>
                         </div>
                       ))}
@@ -2314,200 +2487,40 @@ export default function App() {
               exit={{ opacity: 0 }}
               className="max-w-2xl mx-auto space-y-8"
             >
-              {/* If no selected choice yet, show magnificent bento selector */}
-              {!newPostTitle && !profile && (
-                <div className="text-center py-12 bg-white dark:bg-[#1a1a1f] rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-xl max-w-md mx-auto space-y-4">
-                  <div className="p-3 bg-orange-100 dark:bg-orange-950 text-orange-600 rounded-full w-fit mx-auto">
+              {profile ? (
+                <GomboPublish
+                  currentUserProfile={profile}
+                  onSuccess={() => {
+                    setView("home");
+                    setCurrentHomeTab("fil");
+                  }}
+                  onCancel={() => {
+                    setView("home");
+                  }}
+                />
+              ) : (
+                <div id="publish-login-notice" className="text-center py-12 bg-white dark:bg-[#1a1a1f] rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-xl max-w-md mx-auto space-y-4">
+                  <div className="p-3 bg-amber-500/10 text-[#D4AF37] rounded-full w-fit mx-auto">
                     <User className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-extrabold text-[#111] dark:text-white uppercase">Connexion Requise</h3>
-                  <p className="text-xs text-gray-500">
-                    Veuillez vous inscrire ou vous connecter à votre profil Y’A GOMBO MUSIC pour publier une opportunité artistique ou partager une démo musicale.
+                  <h3 className="text-lg font-extrabold text-[#111] dark:text-white uppercase tracking-wider">Connexion Requise</h3>
+                  <p className="text-xs text-gray-550 font-medium">
+                    Veuillez vous inscrire ou vous connecter à votre profil AFRIGOMBO pour lancer un gombo et réveiller le showbiz !
                   </p>
                   <button 
+                    id="btn-login-publish"
                     onClick={() => setShowAuthModal(true)}
-                    className="px-6 py-3 bg-[#FF7A00] text-white font-bold rounded-xl text-xs uppercase shadow-md w-full"
+                    className="px-6 py-3 bg-[#D4AF37] text-slate-950 font-extrabold rounded-xl text-xs uppercase shadow-md w-full cursor-pointer tracking-widest"
                   >
                     Se connecter maintenant
                   </button>
                 </div>
               )}
+              {/* REMOVED DUAL */}
 
-              {profile && !newPostTitle && (
-                <div className="space-y-6">
-                  <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-black text-[#111] dark:text-white uppercase tracking-tight">Que souhaitez-vous publier aujourd'hui ?</h2>
-                    <p className="text-xs text-gray-500 max-w-md mx-auto">
-                      Choisissez l'option qui correspond le mieux à votre besoin à Abidjan.
-                    </p>
-                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {/* Bento Option 1: client gombo */}
-                    <div 
-                      onClick={() => setNewPostTitle("gombo")}
-                      className="bg-white dark:bg-[#1a1a1f] p-6 rounded-3xl border border-gray-100 dark:border-gray-850 shadow-sm cursor-pointer hover:border-orange-500 dark:hover:border-orange-500 hover:shadow-md transition-all group text-left"
-                    >
-                      <div className="p-3 bg-orange-50 dark:bg-orange-950/40 text-orange-600 rounded-2xl w-fit group-hover:scale-105 transition-transform">
-                        <Briefcase className="w-6 h-6" />
-                      </div>
-                      <h4 className="font-extrabold text-gray-950 dark:text-white text-base mt-4">Publier un Gombo Musical (Contrat)</h4>
-                      <p className="text-xs text-gray-500 mt-1 lines-clamp-3 leading-relaxed">
-                        Pour les propriétaires de bars/cabarets, mariés ou producteurs. Recrutez des solistes, batteurs ou cuivres qualifiés et sécurisez vos transactions de cachets.
-                      </p>
-                      <div className="mt-6 text-[11px] font-black text-[#FF7A00] flex items-center gap-1 group-hover:underline uppercase tracking-wider">
-                        Ouvrir le formulaire <ChevronRight className="w-4 h-4" />
-                      </div>
-                    </div>
 
-                    {/* Bento Option 2: musicien feed post */}
-                    <div 
-                      onClick={() => setNewPostTitle("social")}
-                      className="bg-white dark:bg-[#1a1a1f] p-6 rounded-3xl border border-gray-100 dark:border-gray-850 shadow-sm cursor-pointer hover:border-orange-500 dark:hover:border-orange-500 hover:shadow-md transition-all group text-left"
-                    >
-                      <div className="p-3 bg-purple-50 dark:bg-purple-950/40 text-[#FF7A00] rounded-2xl w-fit group-hover:scale-105 transition-transform">
-                        <Music className="w-6 h-6" />
-                      </div>
-                      <h4 className="font-extrabold text-gray-950 dark:text-white text-base mt-4">Partager un Post Musical sur le Fil</h4>
-                      <p className="text-xs text-gray-500 mt-1 lines-clamp-3 leading-relaxed">
-                        Pour les musiciens d'Abidjan. Partagez un solo instrumental rapide, un a cappella, ou faites la promo de votre style pour séduire de futurs clients fortunés.
-                      </p>
-                      <div className="mt-6 text-[11px] font-black text-[#FF7A00] flex items-center gap-1 group-hover:underline uppercase tracking-wider">
-                        Ouvrir le formulaire <ChevronRight className="w-4 h-4" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {/* RENDER VIEW 1: PRESTATION GOMBO FORM */}
-              {profile && newPostTitle === "gombo" && (
-                <GomboPublish
-                  currentUserProfile={profile}
-                  onSuccess={() => {
-                    setView("gombo_list");
-                    setNewPostTitle("");
-                    alert("Gombo publié avec succès ! Vos musiciens l'examinent déjà.");
-                  }}
-                  onCancel={() => setNewPostTitle("")}
-                />
-              )}
-
-              {/* RENDER VIEW 2: SOCIAL MUSICIAN FEED POST FORM */}
-              {profile && newPostTitle === "social" && (
-                <div className="bg-white dark:bg-[#1a1a1f] p-6 sm:p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800">
-                  <div className="mb-6">
-                    <h3 className="text-xl font-extrabold text-[#111] dark:text-white flex items-center gap-2">
-                      <Music className="w-5.5 h-5.5 text-orange-500" />
-                      Partager une démo sur le Fil d'Actualité
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Une démo percutante multiplie par 5 vos chances d'être repéré par des promoteurs de cabarets chics à Marcory ou Cocody.
-                    </p>
-                  </div>
-
-                  <form 
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      if (!newPostCaption) {
-                        alert("Veuillez rédiger une description !");
-                        return;
-                      }
-
-                      // Pre seeded cover image fallback
-                      const preseededCovers = [
-                        "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?auto=format&fit=crop&q=80&w=500",
-                        "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&q=80&w=500",
-                        "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=500"
-                      ];
-                      const chosenCover = newPostCover.trim() || preseededCovers[Math.floor(Math.random() * preseededCovers.length)];
-                      const chosenAudio = newPostAudio.trim() || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3";
-
-                      try {
-                        await gomboDB.publishSocialPost({
-                          userId: profile.uid,
-                          userName: `${profile.firstName} ${profile.lastName}`,
-                          userAvatar: profile.avatarUrl,
-                          userRole: profile.specialty || "Musicien Professionnel",
-                          title: newPostTitle === "social" ? (newPostCaption.substring(0, 18) + "...") : "Acoustique Demo",
-                          caption: newPostCaption,
-                          beatProd: newPostBeat || "Live Studio Beat",
-                          tags: newPostTags ? newPostTags.split(",").map(t => t.trim().startsWith("#") ? t.trim() : "#" + t.trim()) : ["#YAGOMBOMUSIC", "#ShowbizCI"],
-                          imageUrl: chosenCover,
-                          audioUrl: chosenAudio
-                        });
-                        alert("Votre démo a bien été diffusée sur le Fil d'actualité musical ! 🚀");
-                        setView("home");
-                        setCurrentHomeTab("fil");
-                        setNewPostTitle("");
-                        setNewPostCaption("");
-                        setNewPostBeat("");
-                        setNewPostTags("");
-                      } catch (err) {
-                        console.error(err);
-                        alert("Impossible de diffuser la démo.");
-                      }
-                    }}
-                    className="space-y-4 text-left"
-                  >
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Légende / Message à l'audience</label>
-                      <textarea
-                        rows={3}
-                        required
-                        placeholder="Ex: Solo de basse improvisé soukous ! Dispo à Yopougon pour cabarets et soirées ce week-end..."
-                        value={newPostCaption}
-                        onChange={(e) => setNewPostCaption(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs focus:outline-none dark:text-white"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Auteur de la Prod (Beatmaker)</label>
-                        <input
-                          type="text"
-                          placeholder="Ex: Acoustique Solo / Prod Kero"
-                          value={newPostBeat}
-                          onChange={(e) => setNewPostBeat(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs focus:outline-none dark:text-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Mots clefs / Hashtags (séparés par virgule)</label>
-                        <input
-                          type="text"
-                          placeholder="Ex: Soukous, AfroGombo, Showbiz"
-                          value={newPostTags}
-                          onChange={(e) => setNewPostTags(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs focus:outline-none dark:text-white"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-orange-50/50 dark:bg-amber-950/20 rounded-2xl border border-orange-100 dark:border-orange-950 text-xs text-orange-850 dark:text-orange-400">
-                      ℹ️ Par défaut, un lecteur audio de démonstration performant et une pochette d'illustration de scène de haute qualité d'Abidjan seront attachés pour sublimer votre intégration !
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
-                      <button
-                        type="button"
-                        onClick={() => setNewPostTitle("")}
-                        className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-xs transition-all"
-                      >
-                        Retour
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl text-xs shadow-md transition-all uppercase tracking-wider"
-                      >
-                        🚀 Diffuser sur le Fil
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
             </motion.div>
           )}
 

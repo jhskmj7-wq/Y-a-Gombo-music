@@ -37,8 +37,9 @@ import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPos
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
-export let isFirebaseMock = false;
-export let isFirebaseForceReal = true;
+const savedMock = typeof localStorage !== "undefined" ? localStorage.getItem("isFirebaseMock") : null;
+export let isFirebaseMock = savedMock === "true";
+export let isFirebaseForceReal = savedMock !== "true";
 export let pendingSignUpProfile: UserProfile | null = null;
 
 export function getPendingSignUpProfile(): UserProfile | null {
@@ -50,10 +51,17 @@ export function setPendingSignUpProfile(profile: UserProfile | null) {
 }
 
 export function setIsFirebaseMock(val: boolean) {
-  isFirebaseMock = false;
-  isFirebaseForceReal = true;
+  isFirebaseMock = val;
+  isFirebaseForceReal = !val;
   if (typeof localStorage !== "undefined") {
-    localStorage.removeItem("isFirebaseMock");
+    if (val) {
+      localStorage.setItem("isFirebaseMock", "true");
+    } else {
+      localStorage.removeItem("isFirebaseMock");
+    }
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("gomboFirebaseMockChange"));
   }
 }
 
@@ -233,11 +241,7 @@ if (!isFirebaseMock && db) {
         setIsFirebaseMock(false);
       } else {
         console.warn("⚠️ Impossible de joindre Firestore. Passage automatique au mode Bac à Sable local / Hors-ligne.", error);
-        if (firebaseConfig && firebaseConfig.projectId === "ya-gombo-music") {
-          setIsFirebaseMock(false);
-        } else {
-          setIsFirebaseMock(true);
-        }
+        setIsFirebaseMock(true);
         if (errMsg.includes("the client is offline")) {
           console.error("Please check your Firebase configuration. Client is offline.");
         }
@@ -315,13 +319,13 @@ const LOCAL_ACTIVITY_FEED_KEY = "gombo_activity_feed";
 // ========================================================
 
 export function generateAfriId(): string {
-  const year = new Date().getFullYear();
+  const timestamp = Date.now();
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let random = "";
   for (let i = 0; i < 4; i++) {
     random += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `AFRI-${year}-${random}`;
+  return `AFRI${timestamp}${random}`;
 }
 
 export async function ensureAfriIdAndSync(profile: UserProfile): Promise<UserProfile> {
@@ -1074,7 +1078,7 @@ export const gomboAuth = {
               applicationsSent: 0,
               acceptanceRate: 100,
               createdAt: new Date().toISOString(),
-              afriId: `AFRI-${year}-${random}`,
+              afriId: generateAfriId(),
               ecosystemApps: {
                 afrigombo: true,
                 afritrust: false,
@@ -1125,7 +1129,7 @@ export const gomboAuth = {
         applicationsSent: 0,
         acceptanceRate: 100,
         createdAt: new Date().toISOString(),
-        afriId: `AFRI-${year}-${random}`,
+        afriId: generateAfriId(),
         ecosystemApps: {
           afrigombo: true,
           afritrust: false,
@@ -3006,7 +3010,7 @@ export const gomboDB = {
     const newReq: CertificationRequest = {
       ...req,
       id,
-      status: "En attente",
+      status: req.isExpress ? "En attente (Express)" : "En attente",
       createdAt: new Date().toISOString()
     };
 
@@ -3066,7 +3070,7 @@ export const gomboDB = {
     return JSON.parse(localStorage.getItem("gombo_certification_requests") || "[]");
   },
 
-  async updateCertificationRequestStatus(requestId: string, status: "En attente" | "Approuvé" | "Refusé"): Promise<void> {
+  async updateCertificationRequestStatus(requestId: string, status: "En attente" | "En attente (Express)" | "Approuvé" | "Infos complémentaires" | "Refusé"): Promise<void> {
     let targetUserId = "";
     let artistName = "Artiste";
 
@@ -3081,30 +3085,25 @@ export const gomboDB = {
           targetUserId = reqData.userId;
           artistName = reqData.artistName || "Artiste";
 
+          const userRef = doc(db, "users", reqData.userId);
+          const currentBadgesResult = await getDocs(query(collection(db, "users"), where("uid", "==", reqData.userId)));
+          let currentBadges: string[] = [];
+          if (!currentBadgesResult.empty) {
+            const uData = currentBadgesResult.docs[0].data();
+            currentBadges = uData.badges || [];
+          }
+
           if (status === "Approuvé") {
-            const userRef = doc(db, "users", reqData.userId);
-            const currentBadgesResult = await getDocs(query(collection(db, "users"), where("uid", "==", reqData.userId)));
-            let currentBadges: string[] = [];
-            if (!currentBadgesResult.empty) {
-              const uData = currentBadgesResult.docs[0].data();
-              currentBadges = uData.badges || [];
-            }
             const updatedBadges = Array.from(new Set([...currentBadges, "🟢 Talent Certifié"]));
             await updateDoc(userRef, {
               verificationStatus: "certifie",
               badges: updatedBadges
             });
-          } else if (status === "Refusé") {
-            const userRef = doc(db, "users", reqData.userId);
-            const currentBadgesResult = await getDocs(query(collection(db, "users"), where("uid", "==", reqData.userId)));
-            let currentBadges: string[] = [];
-            if (!currentBadgesResult.empty) {
-              const uData = currentBadgesResult.docs[0].data();
-              currentBadges = uData.badges || [];
-            }
+          } else {
             const updatedBadges = currentBadges.filter(b => b !== "🟢 Talent Certifié");
+            const vStatus = status === "Infos complémentaires" ? "missing_info" : status === "Refusé" ? "rejected" : "standard";
             await updateDoc(userRef, {
-              verificationStatus: "standard",
+              verificationStatus: vStatus,
               badges: updatedBadges
             });
           }
@@ -3124,24 +3123,18 @@ export const gomboDB = {
         artistName = found.artistName || "Artiste";
         
         // Update in localstorage profiles
-        if (status === "Approuvé") {
-          const uList: UserProfile[] = JSON.parse(localStorage.getItem("gombo_users") || "[]");
-          const uIndex = uList.findIndex(u => u.uid === found.userId);
-          if (uIndex !== -1) {
-            const currentBadges = uList[uIndex].badges || [];
+        const uList: UserProfile[] = JSON.parse(localStorage.getItem("gombo_users") || "[]");
+        const uIndex = uList.findIndex(u => u.uid === found.userId);
+        if (uIndex !== -1) {
+          const currentBadges = uList[uIndex].badges || [];
+          if (status === "Approuvé") {
             uList[uIndex].badges = Array.from(new Set([...currentBadges, "🟢 Talent Certifié"]));
             uList[uIndex].verificationStatus = "certifie";
-            localStorage.setItem("gombo_users", JSON.stringify(uList));
-          }
-        } else if (status === "Refusé") {
-          const uList: UserProfile[] = JSON.parse(localStorage.getItem("gombo_users") || "[]");
-          const uIndex = uList.findIndex(u => u.uid === found.userId);
-          if (uIndex !== -1) {
-            const currentBadges = uList[uIndex].badges || [];
+          } else {
             uList[uIndex].badges = currentBadges.filter(b => b !== "🟢 Talent Certifié");
-            uList[uIndex].verificationStatus = "standard";
-            localStorage.setItem("gombo_users", JSON.stringify(uList));
+            uList[uIndex].verificationStatus = status === "Infos complémentaires" ? "missing_info" : status === "Refusé" ? "rejected" : "standard";
           }
+          localStorage.setItem("gombo_users", JSON.stringify(uList));
         }
         triggerStorageEvent();
       }
@@ -3166,12 +3159,19 @@ export const gomboDB = {
             userName: artistName,
             targetId: targetUserId
           });
+        } else if (status === "Infos complémentaires") {
+          await this.sendNotification({
+            userId: targetUserId,
+            type: "general",
+            title: "Statut Certification ⚠️",
+            message: "Informations complémentaires requises pour obtenir votre badge. Veuillez vérifier les détails de votre demande."
+          });
         } else if (status === "Refusé") {
           await this.sendNotification({
             userId: targetUserId,
             type: "general",
             title: "Statut Certification 🔴",
-            message: "Votre demande de certification n'a pas été approuvée par nos administrateurs. Re-vérifiez vos démos de prestations."
+            message: "Votre demande de certification a été refusée par nos administrateurs. Veuillez re-vérifier vos pièces d'identité et vos démos de prestations."
           });
         }
       }
@@ -3798,12 +3798,14 @@ export const gomboDB = {
     whatsapp: string;
     selfieUrl: string;
     mediaUrl: string;
+    idCardUrl?: string;
+    isExpress?: boolean;
   }): Promise<void> {
     const id = "req_" + Math.random().toString(36).substr(2, 9);
     const docData: VerificationRequest = {
       ...reqData,
       id,
-      status: "pending",
+      status: reqData.isExpress ? "pending_express" : "pending",
       createdAt: new Date().toISOString()
     };
     if (!isFirebaseMock && db) {
@@ -3812,7 +3814,7 @@ export const gomboDB = {
         
         // Let's also update the verificationStatus and request field inside user profile
         await this.updateUserProfile(reqData.userId, {
-          verificationStatus: "standard" // still level 1 google but we can store locally pending
+          verificationStatus: reqData.isExpress ? "pending_express" : "pending"
         });
         return;
       } catch (error) {
@@ -3827,7 +3829,7 @@ export const gomboDB = {
     
     // update local user profile
     await this.updateUserProfile(reqData.userId, {
-      verificationStatus: "standard"
+      verificationStatus: reqData.isExpress ? "pending_express" : "pending"
     });
   },
 
@@ -3864,7 +3866,7 @@ export const gomboDB = {
     return JSON.parse(localStorage.getItem("gombo_verification_requests") || "[]");
   },
 
-  async updateVerificationRequestStatus(id: string, status: "approved" | "rejected"): Promise<void> {
+  async updateVerificationRequestStatus(id: string, status: "approved" | "rejected" | "missing_info"): Promise<void> {
     if (!isFirebaseMock && db) {
       try {
         const docRef = doc(db, "verificationRequests", id);
@@ -3885,13 +3887,18 @@ export const gomboDB = {
               if (!updatedBadges.includes("🏆 Talent Certifié")) {
                 updatedBadges.push("🏆 Talent Certifié");
               }
-              // Remove old Nouveau Talent if they had it
+              if (!updatedBadges.includes("🟢 Talent Certifié")) {
+                updatedBadges.push("🟢 Talent Certifié");
+              }
               updatedBadges = updatedBadges.filter(b => b !== "⚪ Nouveau Talent" && b !== "⚪ Nouveau");
+            } else {
+              updatedBadges = updatedBadges.filter(b => b !== "🏆 Talent Certifié" && b !== "🟢 Talent Certifié");
             }
 
             await updateDoc(userProfileRef, {
               badges: updatedBadges,
-              isCertified: status === "approved" ? true : userProfile.isCertified,
+              verificationStatus: status === "approved" ? "certifie" : status === "missing_info" ? "missing_info" : "rejected",
+              isCertified: status === "approved" ? true : false,
               specialty: req.metier || userProfile.specialty,
               commune: req.commune || userProfile.commune,
               whatsapp: req.whatsapp || userProfile.whatsapp
@@ -3921,14 +3928,33 @@ export const gomboDB = {
           if (!updatedBadges.includes("🏆 Talent Certifié")) {
             updatedBadges.push("🏆 Talent Certifié");
           }
+          if (!updatedBadges.includes("🟢 Talent Certifié")) {
+            updatedBadges.push("🟢 Talent Certifié");
+          }
           updatedBadges = updatedBadges.filter(b => b !== "⚪ Nouveau Talent" && b !== "⚪ Nouveau");
+        } else {
+          updatedBadges = updatedBadges.filter(b => b !== "🏆 Talent Certifié" && b !== "🟢 Talent Certifié");
         }
         userProfile.badges = updatedBadges;
-        userProfile.isCertified = status === "approved" ? true : userProfile.isCertified;
+        userProfile.verificationStatus = status === "approved" ? "certifie" : status === "missing_info" ? "missing_info" : "rejected";
+        userProfile.isCertified = status === "approved" ? true : false;
         userProfile.specialty = list[index].metier;
         userProfile.commune = list[index].commune;
         userProfile.whatsapp = list[index].whatsapp;
         localStorage.setItem(`gombo_profile_${list[index].userId}`, JSON.stringify(userProfile));
+
+        // update listed users list Gombo users
+        const usersList: UserProfile[] = JSON.parse(localStorage.getItem("gombo_users") || "[]");
+        const idx = usersList.findIndex(u => u.uid === list[index].userId);
+        if (idx !== -1) {
+          usersList[idx].badges = updatedBadges;
+          usersList[idx].verificationStatus = userProfile.verificationStatus;
+          usersList[idx].isCertified = userProfile.isCertified;
+          usersList[idx].specialty = userProfile.specialty;
+          usersList[idx].commune = userProfile.commune;
+          usersList[idx].whatsapp = userProfile.whatsapp;
+          localStorage.setItem("gombo_users", JSON.stringify(usersList));
+        }
       }
     }
   },

@@ -77,8 +77,8 @@ export const ProfileCompletionScore: React.FC<ProfileCompletionScoreProps> = ({
           <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider">📈 Score de Complétude du Profil PRO</h3>
           <div className="flex items-center gap-2 mt-1.5 font-sans">
             <span className="text-xl sm:text-2xl font-black text-gray-950 dark:text-white font-mono">{score}%</span>
-            <span className="text-xs font-bold text-gray-400">
-              {score === 100 ? "🎉 Profil 100% complet ! Visible et attractif pour les recruteurs du showbiz." : "Complétez votre profil pour rassurer les promoteurs d’événements."}
+            <span className="text-xs font-bold text-[#D4AF37] dark:text-[#D4AF37] tracking-wide">
+              {score === 100 ? "🎵 Ton profil est prêt à attirer de nouveaux gombos." : "Complétez votre profil pour rassurer les promoteurs d’événements."}
             </span>
           </div>
         </div>

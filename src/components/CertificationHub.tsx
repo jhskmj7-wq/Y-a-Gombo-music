@@ -107,6 +107,10 @@ export default function CertificationHub({
   const [gomboWhatsapp, setGomboWhatsapp] = useState("");
   const [gomboSelfieUrl, setGomboSelfieUrl] = useState("https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150");
   const [gomboMediaUrl, setGomboMediaUrl] = useState("");
+  const [gomboIdCardUrl, setGomboIdCardUrl] = useState("https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&q=80&w=150");
+  const [gomboIsExpress, setGomboIsExpress] = useState(false);
+  const [gomboPaymentProvider, setGomboPaymentProvider] = useState("Wave");
+  const [gomboPaymentPhone, setGomboPaymentPhone] = useState("");
   const [gomboErrorMsg, setGomboErrorMsg] = useState("");
   const [gomboSuccess, setGomboSuccess] = useState(false);
 
@@ -361,7 +365,11 @@ export default function CertificationHub({
     }
     setGomboErrorMsg("");
     if (!gomboFullName.trim() || !gomboCommune.trim() || !gomboMetier.trim() || !gomboWhatsapp.trim()) {
-      setGomboErrorMsg("Veuillez remplir les champs obligatoires (photo, nom complet, commune, métier).");
+      setGomboErrorMsg("Veuillez remplir les champs obligatoires (nom complet, commune, métier).");
+      return;
+    }
+    if (gomboIsExpress && !gomboPaymentPhone.trim()) {
+      setGomboErrorMsg("Veuillez renseigner le numéro mobile money pour le paiement Express de 500 FCFA.");
       return;
     }
     setLoading(true);
@@ -375,14 +383,29 @@ export default function CertificationHub({
         metier: gomboMetier.trim(),
         whatsapp: gomboWhatsapp.trim(),
         selfieUrl: gomboSelfieUrl,
-        mediaUrl: gomboMediaUrl.trim() || "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        mediaUrl: gomboMediaUrl.trim() || "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        idCardUrl: gomboIdCardUrl,
+        isExpress: gomboIsExpress
       });
+
+      if (gomboIsExpress) {
+        await gomboDB.publishPayment({
+          userId: currentUserProfile.uid,
+          userName: gomboFullName.trim(),
+          amount: 500,
+          purpose: "⚡ Traitement Prioritaire Express (24-72h) - Talent Certifié",
+          provider: gomboPaymentProvider as any,
+          phoneNumber: gomboPaymentPhone,
+          status: "success"
+        });
+      }
+
       setGomboSuccess(true);
       onRefreshProfile();
       loadHistory();
     } catch (err: any) {
       console.error(err);
-      setGomboErrorMsg("Une erreur s'est produite lors de la soumission de votre demande Gombo ID.");
+      setGomboErrorMsg("Une erreur s'est produite lors de la soumission de votre demande.");
     } finally {
       setLoading(false);
     }
@@ -491,22 +514,21 @@ export default function CertificationHub({
     <div id="certification-root" className="max-w-4xl mx-auto px-4 py-8 space-y-10">
       
       {/* Visual Rich Header */}
-      <div id="premium-header-panel" className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-tr from-slate-950 via-[#19112F] to-slate-900 border border-purple-900/40 text-white shadow-xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 blur-3xl rounded-full" />
-        <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-orange-600/10 blur-3xl rounded-full" />
+      <div id="premium-header-panel" className="relative overflow-hidden rounded-3xl p-8 bg-[#121212] border border-[#2B2B2B] text-white shadow-xl">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 blur-3xl rounded-full" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 justify-between">
           <div className="space-y-3 text-center md:text-left">
-            <div className="inline-flex p-3 bg-gradient-to-r from-orange-500 to-purple-600 rounded-2xl shadow-lg ring-4 ring-purple-950/50">
-              <Trophy className="w-8 h-8 text-yellow-300 animate-bounce" />
+            <div className="inline-flex p-3 bg-gradient-to-r from-[#D4AF37] to-[#bfa12d] rounded-2xl shadow-lg ring-4 ring-black/50">
+              <Trophy className="w-8 h-8 text-[#0B0B0B] animate-bounce" />
             </div>
             <h1 className="text-3xl font-black tracking-tight uppercase">
-              Certification des Musiciens <span className="text-orange-400">CI</span>
+              Certification des Musiciens <span className="text-[#D4AF37]">CI</span>
             </h1>
             <p className="text-xs text-zinc-300 max-w-xl leading-relaxed">
               Devenez un artiste de confiance certifié sur <strong>Y'A GOMBO</strong>. Augmentez votre crédibilité auprès des recruteurs, promoteurs d'événements et hôtels de Côte d'Ivoire.
             </p>
-            <div className="inline-flex items-center gap-2 px-3  bg-orange-550/15 text-orange-400 border border-orange-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3  bg-[#D4AF37]/10 text-[#D4AF37] border border-[#2B2B2B] rounded-full text-[10px] font-bold uppercase tracking-wider">
               🟢 Système de dossier de certification opérationnel
             </div>
           </div>
@@ -615,19 +637,23 @@ export default function CertificationHub({
                   </div>
 
                   {gomboRequest?.status === "approved" || currentUserProfile?.badges?.includes("🏆 Talent Certifié") ? (
-                    <span className="px-2.5 py-1 bg-yellow-50 text-yellow-600 dark:bg-yellow-950/20 dark:text-yellow-400 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 border border-yellow-500/25">
-                      🏆 Talent Certifié
+                    <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-500 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 border border-emerald-500/25">
+                      ✅ Talent Certifié
                     </span>
-                  ) : gomboRequest?.status === "pending" ? (
-                    <span className="px-2.5 py-1 bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400 rounded-lg text-[10px] font-black uppercase animate-pulse">
-                      ⏳ En cours
+                  ) : gomboRequest?.status === "pending" || gomboRequest?.status === "pending_express" ? (
+                    <span className="px-2.5 py-1 bg-amber-500/10 text-amber-500 rounded-lg text-[10px] font-black uppercase animate-pulse flex items-center gap-1 border border-amber-500/25">
+                      ⏳ Vérification en cours
+                    </span>
+                  ) : gomboRequest?.status === "missing_info" ? (
+                    <span className="px-2.5 py-1 bg-orange-500/10 text-orange-500 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 border border-orange-500/25">
+                      ❌ Infos Complémentaires
                     </span>
                   ) : gomboRequest?.status === "rejected" ? (
-                    <span className="px-2.5 py-1 bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400 rounded-lg text-[10px] font-black uppercase">
-                      ❌ Rejeté
+                    <span className="px-2.5 py-1 bg-red-500/10 text-red-500 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 border border-red-500/25">
+                      🚫 Vérification refusée
                     </span>
                   ) : (
-                    <span className="px-2.5 py-1 bg-zinc-50 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400 rounded-lg text-[10px] font-black uppercase">
+                    <span className="px-2.5 py-1 bg-zinc-500/10 text-zinc-500 rounded-lg text-[10px] font-black uppercase border border-zinc-500/20">
                       Pas Soumis
                     </span>
                   )}
@@ -639,37 +665,69 @@ export default function CertificationHub({
 
                 {/* Status Box or Submit Trigger */}
                 {currentUserProfile ? (
-                  <div className="p-4 bg-purple-50/10 dark:bg-purple-950/5 rounded-xl border border-purple-500/10 space-y-3">
+                  <div className="p-4 bg-zinc-50 dark:bg-[#181824] rounded-xl border border-zinc-250 dark:border-zinc-850 space-y-3">
                     {gomboRequest?.status === "approved" || currentUserProfile?.badges?.includes("🏆 Talent Certifié") ? (
                       <div className="space-y-2">
-                        <div className="text-xs text-emerald-650 dark:text-emerald-400 font-extrabold uppercase flex items-center gap-1.5">
-                          ✓ Gombo ID Approuvé !
+                        <div className="text-xs text-emerald-500 dark:text-emerald-400 font-extrabold uppercase flex items-center gap-1.5 font-sans">
+                          ✓ ✅ Talent Certifié d'excellence !
                         </div>
-                        <p className="text-[11px] text-zinc-400">
-                          Félicitations ! Vous disposez désormais de la certification <strong>🏆 Talent Certifié</strong> d'Abidjan à vie. Vos publications d'animation priment sur les recherches.
+                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed font-sans">
+                          Félicitations ! Votre dossier a été approuvé. Votre badge de <strong>✅ Talent Certifié</strong> est visible publiquement sur votre profil d'Artiste d'Abidjan pour tous les recruteurs !
                         </p>
                       </div>
-                    ) : gomboRequest?.status === "pending" ? (
+                    ) : gomboRequest?.status === "pending" || gomboRequest?.status === "pending_express" ? (
                       <div className="space-y-2">
-                        <div className="text-xs text-amber-650 dark:text-amber-400 font-extrabold uppercase flex items-center gap-1.5">
-                          ⏳ Examen de votre dossier en cours
+                        <div className="text-xs text-amber-550 dark:text-amber-400 font-extrabold uppercase flex items-center gap-1.5 font-sans">
+                          ⏳ Vérification en cours {gomboRequest?.isExpress ? "⚡ Mode Express" : "🕒 Mode Standard"}
                         </div>
-                        <p className="text-[11px] text-zinc-400">
-                          Notre jury artistique analyse actuellement votre selfie et votre média de compétences. Le délai de validation à Cocody est généralement de 2h à 12h.
+                        <p className="text-[11px] text-zinc-550 dark:text-zinc-400 leading-relaxed">
+                          {gomboRequest?.isExpress 
+                            ? "⚡ Traitement Express : Examen prioritaire sous 24h à 72h par nos agents de validation."
+                            : "🕒 Traitement Standard : Examen régulier sous 7 à 14 jours ouvrés."
+                          }
                         </p>
-                        <div className="text-[10px] border-t border-purple-500/10 pt-2 text-zinc-400">
-                          📱 WhatsApp pro : <span className="font-mono text-white">{gomboRequest.whatsapp}</span>
+                        <div className="text-[10px] border-t border-zinc-250 dark:border-zinc-850 pt-2 text-[#D4AF37]">
+                          📱 WhatsApp pro : <span className="font-mono text-zinc-900 dark:text-white">{gomboRequest.whatsapp}</span>
                         </div>
+                      </div>
+                    ) : gomboRequest?.status === "missing_info" ? (
+                      <div className="space-y-3">
+                        <div className="text-xs text-orange-500 dark:text-orange-400 font-bold uppercase flex items-center gap-1.5 font-sans">
+                          ❌ Informations complémentaires requises
+                        </div>
+                        <p className="text-[11px] text-zinc-550 dark:text-zinc-400 leading-relaxed">
+                          Votre dossier est incomplet ou illisible (selfie flou, pièce d'identité incorrecte ou preuve d'activité manquante). Veuillez corriger votre dossier.
+                        </p>
+                        <button
+                          onClick={() => {
+                            setShowGomboFormModal(true);
+                          }}
+                          className="w-full sm:w-auto px-4 py-2 bg-orange-500 hover:bg-orange-650 text-white font-extrabold text-[10px] rounded-xl transition cursor-pointer flex items-center justify-center gap-1 uppercase"
+                        >
+                          🔄 Corriger mon dossier
+                        </button>
+                      </div>
+                    ) : gomboRequest?.status === "rejected" ? (
+                      <div className="space-y-3">
+                        <div className="text-xs text-red-500 dark:text-red-400 font-bold uppercase flex items-center gap-1.5 font-sans">
+                          🚫 Vérification refusée
+                        </div>
+                        <p className="text-[11px] text-zinc-550 dark:text-zinc-400 leading-relaxed">
+                          Notre jury artistique à Abidjan n'a pas pu certifier votre dossier. Vous pouvez composer et soumettre un nouveau dossier artistique plus robuste.
+                        </p>
+                        <button
+                          onClick={() => {
+                            setShowGomboFormModal(true);
+                          }}
+                          className="w-full sm:w-auto px-4 py-2 bg-zinc-900 hover:bg-black text-white font-extrabold text-[10px] rounded-xl transition cursor-pointer flex items-center justify-center gap-1 uppercase border border-zinc-700/40"
+                        >
+                          📝 Resoumettre un dossier
+                        </button>
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        {gomboRequest?.status === "rejected" && (
-                          <div className="text-xs text-red-650 dark:text-red-400 font-bold">
-                            ⚠️ Votre dossier Gombo ID précédent a été rejeté. Vous pouvez modifier vos informations et postuler à nouveau.
-                          </div>
-                        )}
-                        <p className="text-[11px] text-zinc-400">
-                          Pour postuler, vous devez fournir vos informations de contact direct d'Abidjan, un selfie de conformité, et un lien d'audition artistique (YouTube/Drive/Soundcloud).
+                      <div className="space-y-3 font-sans">
+                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                          Pour postuler, préparez votre pièce d'identité, votre selfie de conformité, ainsi qu'un lien d'audition direct (YouTube, Spotify, SoundCloud or Drive).
                         </p>
                         <button
                           onClick={() => {
@@ -677,7 +735,7 @@ export default function CertificationHub({
                           }}
                           className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-purple-650 via-indigo-650 to-purple-800 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs rounded-xl hover:shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 uppercase"
                         >
-                          🏆 Obtenir mon Gombo ID (Gratuit)
+                          🏆 Obtenir ma Certification
                         </button>
                       </div>
                     )}
@@ -1261,44 +1319,22 @@ export default function CertificationHub({
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white dark:bg-[#151520] border border-gray-100 dark:border-zinc-850 rounded-3xl p-6 sm:p-8 max-w-xl w-full relative overflow-y-auto max-h-[90vh] text-zinc-900 dark:text-white shadow-2xl space-y-6 text-left"
             >
-              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-600 to-indigo-600" />
-
-              <button 
-                onClick={() => { setShowGomboFormModal(false); setGomboSuccess(false); setGomboErrorMsg(""); }}
-                className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-900 dark:hover:text-white font-bold text-base"
-              >
-                ✕
-              </button>
-
-              {!gomboSuccess ? (
+                 {!gomboSuccess ? (
                 <form onSubmit={handleApplyGomboID} className="space-y-4">
                   <div className="space-y-1">
                     <h2 className="text-base font-black uppercase tracking-tight text-zinc-950 dark:text-white flex items-center gap-1.5">
-                      🏆 DEMANDE DE GOMBO ID (NIVEAU 2)
+                      🏆 TALENT CERTIFIÉ AFRIGOMBO
                     </h2>
                     <p className="text-[11px] text-zinc-400">
-                      Remplissez vos informations certifiées professionnelles pour l'examen de nos agents de validation de Côte d'Ivoire.
+                      Remplissez votre dossier réel pour l'examen de conformité de nos agents d'audit de Côte d'Ivoire. Le badge ne s'achète pas !
                     </p>
                   </div>
 
                   {gomboErrorMsg && (
-                    <div className="p-3 bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400 rounded-xl text-xs font-bold leading-relaxed">
+                    <div className="p-3 bg-red-50 text-red-650 dark:bg-red-950/20 dark:text-red-400 rounded-xl text-xs font-bold leading-relaxed">
                       ⚠️ {gomboErrorMsg}
                     </div>
                   )}
-
-                  {/* Photo profil input */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-black uppercase text-zinc-400">Photo de Profil Pro (Lien URL ou démo) :</label>
-                    <input
-                      type="url"
-                      required
-                      placeholder="https://..."
-                      value={gomboPhotoUrl}
-                      onChange={(e) => setGomboPhotoUrl(e.target.value)}
-                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600"
-                    />
-                  </div>
 
                   {/* Nom complet */}
                   <div className="space-y-1">
@@ -1306,57 +1342,71 @@ export default function CertificationHub({
                     <input
                       type="text"
                       required
-                      placeholder="Ex : Kouadio John Sylvester d'Anoumabo"
+                      placeholder="Ex : Kouadio John Sylvester"
                       value={gomboFullName}
                       onChange={(e) => setGomboFullName(e.target.value)}
                       className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600"
                     />
                   </div>
 
-                  {/* Commune selector */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-black uppercase text-zinc-400">Votre Commune (Abidjan) :</label>
-                    <select
-                      value={gomboCommune}
-                      onChange={(e) => setGomboCommune(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 rounded-xl text-xs font-semibold focus:outline-none"
-                    >
-                      {["Cocody", "Yopougon", "Abobo", "Treichville", "Marcory", "Plateau", "Koumassi", "Adjamé", "Port-Bouët", "Bingerville"].map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
+                  {/* Row: Commune & Metier */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-black uppercase text-zinc-400">Votre Commune :</label>
+                      <select
+                        value={gomboCommune}
+                        onChange={(e) => setGomboCommune(e.target.value)}
+                        className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850 rounded-xl text-xs font-semibold focus:outline-none"
+                      >
+                        {["Cocody", "Yopougon", "Abobo", "Treichville", "Marcory", "Plateau", "Koumassi", "Adjamé", "Port-Bouët", "Bingerville"].map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-black uppercase text-zinc-400">Spécialité :</label>
+                      <select
+                        value={gomboMetier}
+                        onChange={(e) => setGomboMetier(e.target.value)}
+                        className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850 rounded-xl text-xs font-semibold focus:outline-none"
+                      >
+                        {["Musicien", "Chanteur Solo", "Lead Vocal", "Batteur", "Claviériste", "Guitariste", "Choriste", "Arrangeur", "DJ Mixter", "Saxophoniste", "Autre"].map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
-                  {/* Métier selector */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-black uppercase text-zinc-400">Métier Musical / Spécialité :</label>
-                    <select
-                      value={gomboMetier}
-                      onChange={(e) => setGomboMetier(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 rounded-xl text-xs font-semibold focus:outline-none"
-                    >
-                      {["Musicien", "Chanteur Solo", "Lead Vocal", "Batteur", "Claviériste", "Guitariste", "Choriste", "Arrangeur", "DJ Mixter", "Saxophoniste", "Autre"].map(m => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* WhatsApp */}
+                  {/* Numéro WhatsApp */}
                   <div className="space-y-1">
                     <label className="text-[11px] font-black uppercase text-zinc-400">Numéro WhatsApp direct :</label>
                     <input
                       type="tel"
                       required
-                      placeholder="Ex : +225 07 08 09 10 11"
+                      placeholder="Ex : +225 07 48 99 12 30"
                       value={gomboWhatsapp}
                       onChange={(e) => setGomboWhatsapp(e.target.value)}
-                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 rounded-xl text-xs font-semibold focus:outline-none"
+                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600"
                     />
                   </div>
 
-                  {/* Selfie Url */}
+                  {/* Pièce d'identité */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-black uppercase text-zinc-400">Photo Selfie de Conformité (Lien ou démo) :</label>
+                    <label className="text-[11px] font-black uppercase text-zinc-400">1. Pièce d'identité officielle (Lien photo/recto-verso) :</label>
+                    <input
+                      type="url"
+                      required
+                      placeholder="https://..."
+                      value={gomboIdCardUrl}
+                      onChange={(e) => setGomboIdCardUrl(e.target.value)}
+                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 rounded-xl text-xs font-semibold"
+                    />
+                  </div>
+
+                  {/* Selfie avec la pièce */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-black uppercase text-zinc-400">2. Selfie avec la pièce (Vérification faciale réelle) :</label>
                     <input
                       type="url"
                       required
@@ -1367,30 +1417,101 @@ export default function CertificationHub({
                     />
                   </div>
 
-                  {/* Média Artistique */}
+                  {/* Preuve d'activité musicale */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-black uppercase text-zinc-400">Lien Média Artistique (Preuve de compétences - YouTube, Drive) :</label>
+                    <label className="text-[11px] font-black uppercase text-zinc-400">3. Preuve d'activité musicale (Lien Prestation YouTube, SoundCloud, etc.) :</label>
                     <input
                       type="url"
                       required
-                      placeholder="https://www.youtube.com/watch?v=..."
+                      placeholder="Ex : https://youtube.com/watch?v=..."
                       value={gomboMediaUrl}
                       onChange={(e) => setGomboMediaUrl(e.target.value)}
                       className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 rounded-xl text-xs font-semibold"
                     />
                   </div>
 
+                  {/* CHOIX DU MODE DE TRAITEMENT */}
+                  <div className="space-y-2 border-t border-gray-100 dark:border-zinc-900 pt-3">
+                    <span className="text-[11px] font-black uppercase text-zinc-400 block mb-1">Type de traitement du dossier :</span>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Option Standard */}
+                      <button
+                        type="button"
+                        onClick={() => setGomboIsExpress(false)}
+                        className={`p-3 rounded-xl border text-left transition flex flex-col justify-between h-20 cursor-pointer ${
+                          !gomboIsExpress
+                            ? "bg-purple-500/10 border-[#7C3AED] text-purple-650 dark:text-purple-400"
+                            : "bg-zinc-55 dark:bg-zinc-900/60 border-zinc-150 dark:border-zinc-850 hover:bg-zinc-100 text-zinc-400"
+                        }`}
+                      >
+                        <span className="text-[11px] font-extrabold uppercase">Standard (Gratuit)</span>
+                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block leading-tight">🕒 Traitement en 7 à 14 jours</span>
+                      </button>
+
+                      {/* Option Express */}
+                      <button
+                        type="button"
+                        onClick={() => setGomboIsExpress(true)}
+                        className={`p-3 rounded-xl border text-left transition flex flex-col justify-between h-20 cursor-pointer ${
+                          gomboIsExpress
+                            ? "bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-400"
+                            : "bg-zinc-55 dark:bg-zinc-900/60 border-zinc-150 dark:border-zinc-850 hover:bg-zinc-100 text-zinc-400"
+                        }`}
+                      >
+                        <span className="text-[11px] font-extrabold uppercase flex items-center gap-1">⚡ Express (500 FCFA)</span>
+                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block leading-tight">🚀 Prioritaire en 24 à 72 heures</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Payment panel for Express Vetting */}
+                  {gomboIsExpress && (
+                    <div className="p-3 bg-amber-500/5 dark:bg-amber-950/10 border border-amber-500/25 rounded-2xl space-y-2.5 animate-fadeIn">
+                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-normal">
+                        ⚡ <strong>Note :</strong> Ce paiement accélère uniquement le traitement de votre dossier (24-72h) par nos experts et ne garantit pas l'attribution automatique du badge Talent Certifié.
+                      </p>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="text-[9.5px] font-bold text-zinc-400 uppercase">Moyen de paiement :</label>
+                          <select
+                            value={gomboPaymentProvider}
+                            onChange={(e) => setGomboPaymentProvider(e.target.value)}
+                            className="w-full px-2 py-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs"
+                          >
+                            {["Wave", "Orange Money", "MTN Money"].map(op => (
+                              <option key={op} value={op}>{op}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[9.5px] font-bold text-zinc-400 uppercase">N° de téléphone (Portefeuille) :</label>
+                          <input
+                            type="text"
+                            required={gomboIsExpress}
+                            placeholder="Ex: 0748991230"
+                            value={gomboPaymentPhone}
+                            onChange={(e) => setGomboPaymentPhone(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black uppercase text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full py-3 bg-gradient-to-r from-purple-650 via-indigo-650 to-purple-800 hover:from-purple-700 hover:to-indigo-700 text-white font-black uppercase text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
                         <Check className="w-4 h-4" />
-                        Soumettre ma demande Gombo ID (Gratuit)
+                        {gomboIsExpress ? "🚀 Lancer le Gombo Express (500 FCFA)" : "🚀 Lancer le Gombo Standard (Gratuit)"}
                       </>
                     )}
                   </button>
@@ -1403,7 +1524,10 @@ export default function CertificationHub({
                   <div className="space-y-1.5">
                     <h2 className="text-lg font-black text-zinc-950 dark:text-white uppercase tracking-tight">DEMANDE TRANSMISE !</h2>
                     <p className="text-xs text-zinc-400 max-w-xs mx-auto leading-relaxed">
-                      Votre postulation Gombo ID a été enregistrée avec succès. Notre équipe à Abidjan l'analysera dans les plus brefs délais. Vous recevrez une notification d'approbation dès validation.
+                      {gomboIsExpress 
+                        ? "Votre dossier Express est envoyé avec succès ! Notre équipe showbiz l'analysera en priorité absolue sous 24 à 72 heures."
+                        : "Votre dossier Standard est envoyé avec succès ! Un expert showbiz l'analysera d'ici 7 à 14 jours."
+                      }
                     </p>
                   </div>
                   <button
