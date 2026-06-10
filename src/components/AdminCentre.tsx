@@ -55,7 +55,12 @@ import {
   Zap,
   Coins,
   Star,
-  Crown
+  Crown,
+  Heart,
+  Bookmark,
+  MessageSquare,
+  Calendar,
+  Send
 } from "lucide-react";
 import {
   AreaChart,
@@ -131,21 +136,26 @@ const INITIAL_USERS: User[] = [
 const INITIAL_GOMBOS: Gombo[] = [
   {
     id: "gombo_1",
-    title: "Concert de Gala - Réveillon Privé Abidjan",
-    description: "Recherche un bassiste de Zouglou expérimenté avec son propre matériel pour accompagner un orchestre de variété le samedi soir.",
-    budget: 350000,
+    title: "🎖️ Grand Concert Réveillon Select",
+    description: "Recherche bassiste et guitariste soliste de Zouglou hautement qualifiés. Prestation en direct pour un parterre diplomatique distingué au cœur du Plateau.",
+    budget: 450000,
     commissionRate: 0.10,
     location: "Plateau",
     organizerId: "org_1",
     organizerName: "Le Caveau Elite Venue",
     timestamp: "2026-06-10T09:00:00Z",
     applicantsCount: 6,
-    status: "open"
+    status: "open",
+    isBoosted: true,
+    imageUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80",
+    date: "15 Juin 2026",
+    isUrgent: true,
+    isPopular: false
   },
   {
     id: "gombo_2",
-    title: "Animation de Mariage VIP",
-    description: "Orchestre complet demandé pour un mariage civil de prestige. Prestation de 4 heures avec répertoire traditionnel et coupé-décalé.",
+    title: "💍 Célébration Nuptiale Royale",
+    description: "Prestation de prestige de 4 heures par un orchestre de haut standing. Répertoire fusion classique, rumba et coupé-décalé raffiné.",
     budget: 1200000,
     commissionRate: 0.12,
     location: "Marcory",
@@ -153,7 +163,62 @@ const INITIAL_GOMBOS: Gombo[] = [
     organizerName: "Hôtel Ivoire Prestige",
     timestamp: "2026-06-10T08:30:00Z",
     applicantsCount: 14,
-    status: "open"
+    status: "open",
+    imageUrl: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80",
+    date: "20 Juin 2026",
+    isUrgent: false,
+    isPopular: true
+  },
+  {
+    id: "gombo_3",
+    title: "🎙️ Cabaret Acoustic Heritage & Soul",
+    description: "Recherche diva ou ténor de jazz moderne d'Abidjan pour session de lounge intime. Performance entourée d'un trio acoustique d'élite.",
+    budget: 350000,
+    commissionRate: 0.15,
+    location: "Cocody",
+    organizerId: "org_3",
+    organizerName: "Le Toit d'Abidjan Lounge",
+    timestamp: "2026-06-10T07:20:00Z",
+    applicantsCount: 4,
+    status: "open",
+    imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
+    date: "12 Juin 2026",
+    isUrgent: false,
+    isPopular: true
+  },
+  {
+    id: "gombo_4",
+    title: "🎻 Cocktail d'Ambassade Aristocratique",
+    description: "Cocktail d'expatriés recherchant des joueurs virtuoses d'instruments folkloriques d'Afrique de l'Ouest (Kora ou Balafon concertiste).",
+    budget: 950000,
+    commissionRate: 0.10,
+    location: "Plateau",
+    organizerId: "org_4",
+    organizerName: "Résidence de l'Ambassadeur",
+    timestamp: "2026-06-10T05:10:00Z",
+    applicantsCount: 9,
+    status: "open",
+    imageUrl: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=500&auto=format&fit=crop&q=80",
+    date: "18 Juin 2026",
+    isUrgent: true,
+    isPopular: false
+  },
+  {
+    id: "gombo_5",
+    title: "🎧 Nuit Électro-Sabar d'Abidjan",
+    description: "Performance haut de gamme mêlant percussions traditionnelles de Côte d'Ivoire et synthétiseurs modernes sous la houlette d'un DJ d'exception.",
+    budget: 500000,
+    commissionRate: 0.12,
+    location: "Treichville",
+    organizerId: "org_5",
+    organizerName: "Studio Monument National",
+    timestamp: "2026-06-09T21:40:00Z",
+    applicantsCount: 7,
+    status: "open",
+    imageUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
+    date: "25 Juin 2026",
+    isUrgent: false,
+    isPopular: false
   }
 ];
 
@@ -308,6 +373,20 @@ export default function AdminCentre() {
   });
 
   const [editingProfileUserId, setEditingProfileUserId] = useState<string | null>(null);
+  
+  // --- INTERACTIVE PREMIUM OPPORTUNITIES STATES ---
+  const [savedGomboIds, setSavedGomboIds] = useState<string[]>([]);
+  const [honoredGomboIds, setHonoredGomboIds] = useState<string[]>([]);
+  const [palabreGombo, setPalabreGombo] = useState<Gombo | null>(null);
+  const [palabreMsg, setPalabreMsg] = useState("");
+  const [palabreChatHistory, setPalabreChatHistory] = useState<{ [key: string]: { sender: "artiste" | "organisateur", text: string, time: string }[] }>({
+    "gombo_1": [
+      { sender: "organisateur", text: "Salut l'artiste ! Ton profil majestueux de Gombo ID nous intéresse pour le concert de gala. Es-tu dispo pour une répétition le 14 Juin au Plateau ?", time: "09:30" }
+    ],
+    "gombo_2": [
+      { sender: "organisateur", text: "Honorables salutations de la part de l'Hôtel Ivoire. Vos compétences vocales conviennent parfaitement à notre prestige.", time: "Hier, 18h20" }
+    ]
+  });
   const [profileForm, setProfileForm] = useState<Partial<UserPerformance>>({
     artisticName: "",
     commune: "Cocody",
@@ -569,6 +648,120 @@ export default function AdminCentre() {
       commissionRate: "10",
       location: "Cocody"
     });
+  };
+
+  // --- PREMIUM INTERACTIVES GOMBO HANDLERS ---
+  const toggleSaveGombo = (id: string) => {
+    setSavedGomboIds(prev => {
+      const isSaved = prev.includes(id);
+      if (isSaved) {
+        addToTerminal(`[📌 PERSISTENCE] Gombo retiré du coffre-fort d'or.`);
+        return prev.filter(gid => gid !== id);
+      } else {
+        addToTerminal(`[📌 PERSISTENCE] Gombo précieusement sauvegardé dans votre coffre-fort d'or.`);
+        return [...prev, id];
+      }
+    });
+  };
+
+  const toggleHonorGombo = (id: string) => {
+    setHonoredGomboIds(prev => {
+      const isHonored = prev.includes(id);
+      if (isHonored) {
+        return prev.filter(gid => gid !== id);
+      } else {
+        addToTerminal(`[❤️ COEUR] Vous honorez solennellement ce Gombo d'un témoignage de respect.`);
+        return [...prev, id];
+      }
+    });
+  };
+
+  const applyToGombo = async (id: string) => {
+    setGombos(prev =>
+      prev.map(g => {
+        if (g.id === id) {
+          const alreadyApplied = renforts.some(r => r.gomboId === id && r.applicantId === "current_user");
+          if (alreadyApplied) return g;
+          return { ...g, applicantsCount: g.applicantsCount + 1 };
+        }
+        return g;
+      })
+    );
+
+    // Create a new Renfort (applicant request)
+    const alreadyApplied = renforts.some(r => r.gomboId === id && r.applicantId === "current_user");
+    if (alreadyApplied) {
+      addToTerminal(`[⚠️ DOUBLON] L'appel du Tam-Tam a déjà été entendu pour ce Gombo.`);
+      return;
+    }
+
+    const gombo = gombos.find(g => g.id === id);
+    if (!gombo) return;
+
+    const newRenfort: Renfort = {
+      id: "renfort_" + Date.now(),
+      gomboId: id,
+      gomboTitle: gombo.title,
+      applicantId: "current_user",
+      applicantName: "Artiste Majestueux",
+      applicantArtisticName: "Mon Nom d'Artiste",
+      instrument: "Chant / Instrumentiste Elite",
+      status: "pending",
+      timestamp: new Date().toISOString()
+    };
+
+    setRenforts(prev => [newRenfort, ...prev]);
+    await saveToFirestore("renforts", newRenfort.id, newRenfort);
+    addToTerminal(`[🎤 CANDIDATURE] Félicitations ! Votre candidature pour "${gombo.title}" a été envoyée sur le réseau céleste.`);
+  };
+
+  const submitPalabreMessage = (id: string) => {
+    if (!palabreMsg.trim()) return;
+
+    const targetGombo = gombos.find(g => g.id === id);
+    if (!targetGombo) return;
+
+    const messageObj = {
+      sender: "artiste" as const,
+      text: palabreMsg,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    };
+
+    setPalabreChatHistory(prev => {
+      const currentHistory = prev[id] || [];
+      return {
+        ...prev,
+        [id]: [...currentHistory, messageObj]
+      };
+    });
+
+    setPalabreMsg("");
+
+    // Simulate elite prompt response after 1.5 seconds
+    setTimeout(() => {
+      const answers = [
+        `D'accord l'artiste! Nous apprécions grandement ta démarche de palabrer. Le Gombo ID GMB certifié nous inspire confiance. On se cale au téléphone ?`,
+        `Salut ! Ton talent mérite considération. Nous étudions ton profil et nous ajusterons le cachet au besoin. Restons connectés.`,
+        `Parfaitement compris. Notre budget est garanti par le système d'Afrigombo. Ta dévotion artistique fait plaisir à voir.`
+      ];
+      const randomAnswer = answers[Math.floor(Math.random() * answers.length)];
+
+      const promoterMessageObj = {
+        sender: "organisateur" as const,
+        text: randomAnswer,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      };
+
+      setPalabreChatHistory(prev => {
+        const currentHistory = prev[id] || [];
+        return {
+          ...prev,
+          [id]: [...currentHistory, promoterMessageObj]
+        };
+      });
+
+      addToTerminal(`[🗣️ PALABRER] Nouvel échange reçu de ${targetGombo.organizerName}.`);
+    }, 1500);
   };
 
   const logAdminAction = async (actionType: string, targetId: string, targetName: string, detail: string) => {
@@ -1142,104 +1335,118 @@ export default function AdminCentre() {
                   ---------------------------------------------------- */}
               {activeMenu === "dashboard" && (
                 <>
+                  {/* SYSTEM STATUS BANNER */}
+                  <div className="p-4 rounded-xl bg-[#060606] border border-emerald-500/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.04)]">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <div>
+                        <span className="text-[10px] tracking-widest font-mono text-emerald-400 font-bold uppercase block">Statut Réseau National</span>
+                        <h4 className="text-sm font-display font-semibold text-white">Opérations Optimales & Intégralité Garantie</h4>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-mono text-[#F5F5F5]/40 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
+                      Abidjan • 100% Connecté
+                    </span>
+                  </div>
+
                   {/* BENTO STATS OVERVIEW */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="p-5 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 shadow-sm transition-all">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 transition-all shadow-sm">
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-mono uppercase tracking-wider text-[#F5F5F5]/50">
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-[#F5F5F5]/40">
                           Utilisateurs Certifiés
                         </span>
                         <Users className="w-4 h-4 text-[#D4AF37]" />
                       </div>
-                      <h3 className="text-3xl font-display font-medium text-[#F5F5F5] tracking-tight">
-                        {users.filter(u => u.isCertified).length} / {users.length}
+                      <h3 className="text-3xl font-display font-bold text-[#F5F5F5]">
+                        {users.filter(u => u.isCertified).length} <span className="text-sm text-white/40">/ {users.length}</span>
                       </h3>
-                      <span className="text-[10px] font-mono text-[#10B981] block mt-1">
+                      <span className="text-[9px] font-mono text-[#10B981] block mt-1">
                         +5 certifiés aujourd'hui
                       </span>
                     </div>
 
-                    <div className="p-5 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 shadow-sm transition-all">
+                    <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 transition-all shadow-sm">
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-mono uppercase tracking-wider text-[#F5F5F5]/50">
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-[#F5F5F5]/40">
                           Gombos Ouverts
                         </span>
                         <Briefcase className="w-4 h-4 text-[#D4AF37]" />
                       </div>
-                      <h3 className="text-3xl font-display font-medium text-[#F5F5F5] tracking-tight">
+                      <h3 className="text-3xl font-display font-bold text-[#F5F5F5]">
                         {gombos.filter(g => g.status === "open").length}
                       </h3>
-                      <span className="text-[10px] font-mono text-[#D4AF37] block mt-1">
+                      <span className="text-[9px] font-mono text-[#D4AF37] block mt-1">
                         Valeur : 1 550 000 FCFA
                       </span>
                     </div>
 
-                    <div className="p-5 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 shadow-sm transition-all">
+                    <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 transition-all shadow-sm">
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-mono uppercase tracking-wider text-[#F5F5F5]/50">
-                          Caisse (Commissions 10%)
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-[#F5F5F5]/40">
+                          Caisse Afrigombo (10%)
                         </span>
                         <DollarSign className="w-4 h-4 text-[#D4AF37]" />
                       </div>
-                      <h3 className="text-3xl font-display font-medium text-[#D4AF37] tracking-tight">
-                        {transactions.reduce((acc, curr) => acc + (curr.type === "commission" ? curr.amount : 0), 0).toLocaleString()} <span className="text-sm">FCFA</span>
+                      <h3 className="text-2xl font-display font-bold text-[#D4AF37]">
+                        {transactions.reduce((acc, curr) => acc + (curr.type === "commission" ? curr.amount : 0), 0).toLocaleString()} <span className="text-xs">FCFA</span>
                       </h3>
-                      <span className="text-[10px] font-mono text-[#10B981] block mt-1">
+                      <span className="text-[9px] font-mono text-[#10B981] block mt-1">
                         +18% cette semaine
                       </span>
                     </div>
 
-                    <div className="p-5 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 shadow-sm transition-all">
+                    <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 transition-all shadow-sm">
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-mono uppercase tracking-wider text-[#F5F5F5]/50">
-                          Publications Anormales
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-[#F5F5F5]/40">
+                          Signalements Actifs
                         </span>
                         <AlertOctagon className="w-4 h-4 text-[#EF4444]" />
                       </div>
-                      <h3 className="text-3xl font-display font-medium text-[#EF4444] tracking-tight">
+                      <h3 className="text-3xl font-display font-bold text-[#EF4444]">
                         {posts.filter(p => p.isFlagged).length}
                       </h3>
-                      <span className="text-[10px] font-mono text-[#EF4444] block mt-1">
-                        Mise en suspens provisoire
+                      <span className="text-[9px] font-mono text-[#EF4444] block mt-1">
+                        Modération requise
                       </span>
                     </div>
                   </div>
 
                   {/* MODULE PILOTAGE INTELLIGENT */}
-                  <div className="p-6 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/30 shadow-md">
-                    <div className="flex justify-between items-center mb-6">
+                  <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 shadow-md">
+                    <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37]">
+                        <div className="p-2.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37]">
                           <Radio className="w-5 h-5 animate-pulse" />
                         </div>
                         <div>
-                          <h4 className="text-md font-display font-semibold text-[#F5F5F5] uppercase tracking-wider">
-                            Pilotage Intelligent & Modération Autonome (Étape 7)
+                          <h4 className="text-xs font-mono uppercase font-bold tracking-widest text-[#D4AF37]">
+                            Modération & Intégrité Autonome
                           </h4>
-                          <span className="text-xs text-[#F5F5F5]/50">
-                            Algorithme de surveillance nationale en temps réel
+                          <span className="text-[11px] text-[#F5F5F5]/50">
+                            Filtres sémantiques intelligents
                           </span>
                         </div>
                       </div>
                       
                       <button
                         onClick={triggerGlobalSystemScan}
-                        className="py-2.5 px-6 rounded-lg bg-[#D4AF37] text-[#0B0B0B] hover:bg-[#B48F17] transition-all font-display font-bold text-xs uppercase shadow-[0_0_15px_rgba(212,175,55,0.3)]"
+                        className="py-2.5 px-6 rounded-xl bg-[#D4AF37] text-[#0B0B0B] hover:bg-[#B48F17] transition-all font-display font-extrabold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(212,175,55,0.2)]"
                       >
-                        Lancer le diagnostic intelligent
+                        Lancer le diagnostic système
                       </button>
                     </div>
 
                     {/* Scanner progress display */}
                     {scannerStatus !== "idle" && (
-                      <div className="mb-6 p-4 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/10">
+                      <div className="mb-6 p-4 rounded-xl bg-black border border-[#D4AF37]/15">
                         <div className="flex justify-between text-xs font-mono mb-2">
                           <span className="text-[#F5F5F5]/60">Analyse de la base utilisateur et des spams...</span>
                           <span className="text-[#D4AF37]">
                             {scannerStatus === "scanning" ? "Analyse en cours..." : "Scan completed !"}
                           </span>
                         </div>
-                        <div className="w-full bg-[#D4AF37]/10 rounded-full h-2.5 overflow-hidden">
+                        <div className="w-full bg-[#D4AF37]/10 rounded-full h-2 overflow-hidden">
                           <motion.div
                             initial={{ width: "0%" }}
                             animate={scannerStatus === "scanning" ? { width: "100%" } : { width: "100%" }}
@@ -1255,23 +1462,23 @@ export default function AdminCentre() {
                       <motion.div
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded bg-[#D4AF37]/5 border border-[#D4AF37]/20 mb-4"
+                        className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/20 mb-4"
                       >
                         <div className="text-center md:border-r border-[#D4AF37]/10 p-2">
-                          <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Croissance analysée</span>
-                          <span className="text-xl font-display font-semibold text-[#10B981]">{autoStats.growthRate}</span>
+                          <span className="text-[9px] uppercase font-mono text-[#F5F5F5]/50 block">Croissance calculée</span>
+                          <span className="text-lg font-display font-bold text-[#10B981]">{autoStats.growthRate}</span>
                         </div>
                         <div className="text-center md:border-r border-[#D4AF37]/10 p-2">
-                          <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Utilisateurs suspects</span>
-                          <span className="text-xl font-display font-semibold text-[#EF4444]">{autoStats.suspiciousCount}</span>
+                          <span className="text-[9px] uppercase font-mono text-[#F5F5F5]/50 block">Utilisateurs suspects</span>
+                          <span className="text-lg font-display font-bold text-[#EF4444]">{autoStats.suspiciousCount}</span>
                         </div>
                         <div className="text-center md:border-r border-[#D4AF37]/10 p-2">
-                          <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Publications suspectes</span>
-                          <span className="text-xl font-display font-semibold text-[#EF4444]">{autoStats.anomalyCount}</span>
+                          <span className="text-[9px] uppercase font-mono text-[#F5F5F5]/50 block">Anomalies publications</span>
+                          <span className="text-lg font-display font-bold text-[#EF4444]">{autoStats.anomalyCount}</span>
                         </div>
                         <div className="text-center p-2">
-                          <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Alertes de communes</span>
-                          <span className="text-xl font-display font-semibold text-[#D4AF37]">{autoStats.alertCount}</span>
+                          <span className="text-[9px] uppercase font-mono text-[#F5F5F5]/50 block">Alertes de communes</span>
+                          <span className="text-lg font-display font-bold text-[#D4AF37]">{autoStats.alertCount}</span>
                         </div>
                       </motion.div>
                     )}
@@ -1283,7 +1490,7 @@ export default function AdminCentre() {
                           ⚠️ Anomalies système trouvées en attente de validation :
                         </span>
                         {autoFlaggedPosts.map(post => (
-                          <div key={post.id} className="flex justify-between items-center p-3 rounded bg-red-500/10 border border-red-500/20 text-xs">
+                          <div key={post.id} className="flex justify-between items-center p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs">
                             <div className="flex items-center gap-3">
                               <ShieldAlert className="w-4 h-4 text-[#EF4444]" />
                               <div>
@@ -1318,7 +1525,7 @@ export default function AdminCentre() {
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {gombos.map(gombo => (
-                        <div key={gombo.id} className="p-5 rounded-lg border border-[#D4AF37]/15 bg-[#0B0B0B]/40 hover:border-[#D4AF37]/40 transition-all">
+                        <div key={gombo.id} className="p-5 rounded-2xl border border-[#D4AF37]/15 bg-[#060606] hover:border-[#D4AF37]/40 transition-all">
                           <div className="flex justify-between items-start mb-2">
                             <h5 className="font-display font-semibold text-[#F5F5F5] text-md">
                               {gombo.title}
@@ -1355,57 +1562,164 @@ export default function AdminCentre() {
                                 VIEW: LE TAM-TAM GOMBOS
                   ---------------------------------------------------- */}
               {activeMenu === "gombos" && (
-                <div className="space-y-6">
+                <div className="space-y-8 pb-10">
+                  
+                  {/* ==========================================================
+                               🔥 À NE PAS MANQUER (AUTO-UPDATED BROADCAST)
+                     ========================================================== */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
+                      <h4 className="text-sm font-mono uppercase font-extrabold tracking-widest text-[#EF4444] flex items-center gap-2">
+                        🔥 À ne pas manquer
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* 1. Best Opportunity (Highest Cachet) */}
+                      {(() => {
+                        const best = [...gombos].sort((a, b) => b.budget - a.budget)[0];
+                        if (!best) return null;
+                        return (
+                          <motion.div
+                            whileHover={{ y: -4 }}
+                            className="bg-[#060606] border border-[#D4AF37]/40 rounded-2xl overflow-hidden shadow-[0_4px_25px_rgba(212,175,55,0.06)] flex flex-col justify-between"
+                          >
+                            <div className="relative h-28 w-full bg-cover bg-center" style={{ backgroundImage: `url(${best.imageUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'})` }}>
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#060606] to-transparent" />
+                              <span className="absolute top-3 left-3 bg-[#D4AF37] text-[#0B0B0B] text-[9px] uppercase font-mono font-black px-2.5 py-0.5 rounded-full shadow-lg">
+                                👑 Sommet d'Élite
+                              </span>
+                            </div>
+                            <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                              <div>
+                                <h5 className="font-display font-bold text-sm text-[#F5F5F5] truncate">{best.title}</h5>
+                                <p className="text-[11px] text-[#F5F5F5]/60 line-clamp-1 mt-1">{best.description}</p>
+                              </div>
+                              <div className="flex justify-between items-center pt-2 border-t border-[#D4AF37]/10">
+                                <span className="text-[10px] font-mono text-[#F5F5F5]/40">{best.location}</span>
+                                <span className="text-sm font-mono font-bold text-[#D4AF37]">{best.budget.toLocaleString()} FCFA</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })()}
+
+                      {/* 2. Absolute Urgency */}
+                      {(() => {
+                        const urgent = gombos.find(g => g.isUrgent) || gombos[0];
+                        if (!urgent) return null;
+                        return (
+                          <motion.div
+                            whileHover={{ y: -4 }}
+                            className="bg-[#060606] border border-[#EF4444]/40 rounded-2xl overflow-hidden shadow-[0_4px_25px_rgba(239,68,68,0.06)] flex flex-col justify-between"
+                          >
+                            <div className="relative h-28 w-full bg-cover bg-center" style={{ backgroundImage: `url(${urgent.imageUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80'})` }}>
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#060606] to-transparent" />
+                              <span className="absolute top-3 left-3 bg-[#EF4444] text-[#F5F5F5] text-[9px] uppercase font-mono font-black px-2.5 py-0.5 rounded-full shadow-lg animate-pulse">
+                                🚨 Urgent
+                              </span>
+                            </div>
+                            <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                              <div>
+                                <h5 className="font-display font-bold text-sm text-[#F5F5F5] truncate">{urgent.title}</h5>
+                                <p className="text-[11px] text-[#F5F5F5]/60 line-clamp-1 mt-1">{urgent.description}</p>
+                              </div>
+                              <div className="flex justify-between items-center pt-2 border-t border-[#D4AF37]/10">
+                                <span className="text-[10px] font-mono text-[#F5F5F5]/40">{urgent.location}</span>
+                                <span className="text-sm font-mono font-bold text-[#EF4444]">{urgent.budget.toLocaleString()} FCFA</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })()}
+
+                      {/* 3. Popular Gombo */}
+                      {(() => {
+                        const popular = [...gombos].sort((a, b) => b.applicantsCount - a.applicantsCount)[0];
+                        if (!popular) return null;
+                        return (
+                          <motion.div
+                            whileHover={{ y: -4 }}
+                            className="bg-[#060606] border border-cyan-500/40 rounded-2xl overflow-hidden shadow-[0_4px_25px_rgba(6,182,212,0.06)] flex flex-col justify-between"
+                          >
+                            <div className="relative h-28 w-full bg-cover bg-center" style={{ backgroundImage: `url(${popular.imageUrl || 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=500&auto=format&fit=crop&q=80'})` }}>
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#060606] to-transparent" />
+                              <span className="absolute top-3 left-3 bg-cyan-500 text-black text-[9px] uppercase font-mono font-black px-2.5 py-0.5 rounded-full shadow-lg">
+                                💥 Très Convoité
+                              </span>
+                            </div>
+                            <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                              <div>
+                                <h5 className="font-display font-bold text-sm text-[#F5F5F5] truncate">{popular.title}</h5>
+                                <p className="text-[11px] text-[#F5F5F5]/60 line-clamp-1 mt-1">{popular.description}</p>
+                              </div>
+                              <div className="flex justify-between items-center pt-2 border-t border-[#D4AF37]/10">
+                                <span className="text-[10px] font-mono text-[#F5F5F5]/40">{popular.applicantsCount} prétendants</span>
+                                <span className="text-sm font-mono font-bold text-cyan-400">{popular.budget.toLocaleString()} FCFA</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
                   {/* TAM-TAM Daily highlights section */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
                     {/* Fire Gombo du Jour */}
-                    <div className="p-5 rounded-lg bg-gradient-to-br from-[#0B0B0B] to-[#D4AF37]/10 border border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] relative overflow-hidden">
-                      <div className="absolute right-[-10px] bottom-[-10px] text-[#D4AF37]/10 scale-150 transform rotate-12">
-                        <Flame className="w-24 h-24" />
-                      </div>
-                      <span className="text-[10px] uppercase font-mono bg-[#D4AF37] text-[#0B0B0B] px-2 py-0.5 rounded-full font-bold block w-fit mb-3">
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-[#060606] to-[#D4AF37]/5 border border-[#D4AF37]/30 shadow-[0_4px_25px_rgba(212,175,55,0.06)] relative overflow-hidden flex flex-col justify-between">
+                      <span className="text-[9px] uppercase font-mono bg-[#D4AF37] text-black px-2 py-0.5 rounded-full font-bold w-fit mb-3">
                         🔥 Gombo du Jour
                       </span>
-                      <h4 className="text-sm font-semibold font-display text-[#F5F5F5]">Mariage Traditionnel Bingerville</h4>
-                      <p className="text-[11px] text-[#F5F5F5]/75 mt-1">Budget : 1 800 000 FCFA</p>
+                      <div>
+                        <h4 className="text-xs font-display font-bold text-[#F5F5F5] line-clamp-1">Grand Réveillon Select</h4>
+                        <p className="text-[11px] text-[#D4AF37] mt-1 font-mono">450 000 FCFA</p>
+                      </div>
                     </div>
 
                     {/* Talent du Jour */}
-                    <div className="p-5 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/30">
-                      <span className="text-[10px] uppercase font-mono bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 px-2 py-0.5 rounded-full font-bold block w-fit mb-3">
-                        👑 Talent du Jour
+                    <div className="p-5 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 shadow-sm flex flex-col justify-between">
+                      <span className="text-[9px] uppercase font-mono bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 px-2 py-0.5 rounded-full font-bold w-fit mb-3">
+                        👑 Chef du Réseau
                       </span>
-                      <h4 className="text-sm font-semibold font-display text-[#F5F5F5]">Ariel Sheney G</h4>
-                      <p className="text-[11px] text-[#F5F5F5]/75 mt-1">Commune : Cocody</p>
+                      <div>
+                        <h4 className="text-xs font-display font-bold text-[#F5F5F5]">Ariel Loua</h4>
+                        <p className="text-[11px] text-[#F5F5F5]/60 mt-1">Commune : Cocody</p>
+                      </div>
                     </div>
 
                     {/* Defi du Jour */}
-                    <div className="p-5 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/30">
-                      <span className="text-[10px] uppercase font-mono bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20 px-2 py-0.5 rounded-full font-bold block w-fit mb-3">
-                        🎯 Défi du Gombo
+                    <div className="p-5 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 shadow-sm flex flex-col justify-between">
+                      <span className="text-[9px] uppercase font-mono bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20 px-2 py-0.5 rounded-full font-bold w-fit mb-3">
+                        🎯 Défi Hebdo
                       </span>
-                      <h4 className="text-sm font-semibold font-display text-[#F5F5F5]">Trouve 1 clavier Zouglou</h4>
-                      <p className="text-[11px] text-[#F5F5F5]/75 mt-1">Récompense : +100 XP / +10% Prestige</p>
+                      <div>
+                        <h4 className="text-xs font-display font-bold text-[#F5F5F5]">Zouglou Keyboard Solo</h4>
+                        <p className="text-[11px] text-[#D4AF37] mt-1 font-mono">Récompense : Gombo ID Or</p>
+                      </div>
                     </div>
 
                     {/* Gombos pres de moi (Location highlights) */}
-                    <div className="p-5 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/30">
-                      <span className="text-[10px] uppercase font-mono bg-emerald-500/10 text-[#10B981] border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold block w-fit mb-3">
-                        🌍 Gombos près de moi
+                    <div className="p-5 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 shadow-sm flex flex-col justify-between">
+                      <span className="text-[9px] uppercase font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold w-fit mb-3">
+                        🌍 Autour de moi
                       </span>
-                      <h4 className="text-sm font-semibold font-display text-[#F5F5F5]">Cocody & Yopougon</h4>
-                      <p className="text-[11px] text-[#F5F5F5]/75 mt-1">3 Gombos disponibles dans un rayon de 5km</p>
+                      <div>
+                        <h4 className="text-xs font-display font-bold text-[#F5F5F5]">Cocody & Plateau</h4>
+                        <p className="text-[11px] text-emerald-400 mt-1">Plateformes d'excellence actives</p>
+                      </div>
                     </div>
                   </div>
 
                   {/* FORM TO PUBLISH NEW GOMBO */}
-                  <div className="p-6 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/20">
-                    <h4 className="text-sm uppercase font-mono font-bold tracking-wider text-[#D4AF37] mb-4">
-                      🎼 Publier un Nouveau Gombo sur le Réseau
+                  <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 shadow-md">
+                    <h4 className="text-xs uppercase font-mono font-bold tracking-wider text-[#D4AF37] mb-4 flex items-center gap-2">
+                      <span>🎼</span> Publier un Nouveau Gombo sur le Réseau
                     </h4>
                     <form onSubmit={handleCreateGombo} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Titre de l'Opportunité</label>
+                        <label className="text-[9px] uppercase text-[#F5F5F5]/60 font-mono">Titre de l'Opportunité</label>
                         <input
                           type="text"
                           required
@@ -1417,7 +1731,7 @@ export default function AdminCentre() {
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Budget (FCFA)</label>
+                          <label className="text-[9px] uppercase text-[#F5F5F5]/60 font-mono">Budget cachet (FCFA)</label>
                           <input
                             type="number"
                             required
@@ -1428,7 +1742,7 @@ export default function AdminCentre() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Commission (%)</label>
+                          <label className="text-[9px] uppercase text-[#F5F5F5]/60 font-mono">Commission (%)</label>
                           <select
                             value={newGombo.commissionRate}
                             onChange={(e) => setNewGombo(prev => ({ ...prev, commissionRate: e.target.value }))}
@@ -1444,7 +1758,7 @@ export default function AdminCentre() {
 
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Commune Abidjan</label>
+                          <label className="text-[9px] uppercase text-[#F5F5F5]/60 font-mono">Commune</label>
                           <select
                             value={newGombo.location}
                             onChange={(e) => setNewGombo(prev => ({ ...prev, location: e.target.value }))}
@@ -1458,7 +1772,7 @@ export default function AdminCentre() {
                       </div>
 
                       <div className="space-y-1 md:col-span-2">
-                        <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Description des Prérequis</label>
+                        <label className="text-[9px] uppercase text-[#F5F5F5]/60 font-mono">Description des Prérequis & Horaires</label>
                         <textarea
                           placeholder="Détails de l'événement, instruments, horaires..."
                           value={newGombo.description}
@@ -1470,55 +1784,273 @@ export default function AdminCentre() {
 
                       <button
                         type="submit"
-                        className="py-2.5 bg-[#D4AF37] text-[#0B0B0B] hover:bg-[#B48F17] transition-all rounded font-display font-bold uppercase text-xs tracking-wider shadow-[0_0_10px_rgba(212,175,55,0.2)] md:col-span-2 mt-2"
+                        className="py-2.5 bg-[#D4AF37] text-[#0B0B0B] hover:bg-[#B48F17] transition-all rounded-lg font-display font-extrabold uppercase text-xs tracking-widest shadow-[0_0_15px_rgba(212,175,55,0.2)] md:col-span-2 mt-2"
                       >
                         Enregistrer et publier sur le Tam-Tam
                       </button>
                     </form>
                   </div>
 
-                  {/* GOMBOS DIRECTORY */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm uppercase font-mono font-bold tracking-widest text-[#D4AF37]">
-                      Explorez l'ensemble des Gombos Actifs
-                    </h4>
-                    <div className="space-y-3">
-                      {gombos.map(g => (
-                        <div key={g.id} className={`p-5 rounded-lg border transition-all ${g.isBoosted ? "border-orange-500/40 bg-gradient-to-r from-[#0C0601] to-[#0B0B0B] shadow-[0_0_12px_rgba(249,115,22,0.08)]" : "border-[#D4AF37]/15 bg-[#0B0B0B] hover:border-[#D4AF37]/45"}`}>
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
-                              {g.isBoosted && (
-                                <span className="text-[9px] font-mono bg-gradient-to-r from-orange-500 to-amber-500 text-black px-2 py-0.5 rounded-full font-extrabold flex items-center gap-1 shadow-[0_0_10px_rgba(249,115,22,0.4)] animate-pulse">
-                                  🔥 En vedette
-                                </span>
-                              )}
-                              <h5 className="font-display font-semibold text-md text-[#F5F5F5]">{g.title}</h5>
-                              <span className="text-[9px] font-mono border border-[#D4AF37]/20 text-[#D4AF37] px-2 py-0.5 rounded">
-                                {g.location}
-                              </span>
-                            </div>
-                            <p className="text-xs text-[#F5F5F5]/60 mt-1">{g.description}</p>
-                            <span className="text-[9px] font-mono text-[#F5F5F5]/40 block mt-2">
-                              Publié par {g.organizerName} • applicants : {g.applicantsCount}
-                            </span>
-                          </div>
+                  {/* GOMBOS VITRINE DIRECTORY */}
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-sm uppercase font-mono font-bold tracking-widest text-[#D4AF37]">
+                        ✨ Vitrine Merveilleuse — Gombos Actifs
+                      </h4>
+                      <span className="text-xs text-[#F5F5F5]/50 font-mono">{gombos.length} opportunités disponibles</span>
+                    </div>
 
-                          <div className="text-right shrink-0 ml-4">
-                            <span className="text-[#D4AF37] font-mono font-bold text-lg block">
-                              {g.budget.toLocaleString()} FCFA
-                            </span>
-                            <button
-                              onClick={() => handleAppointGomboDuJour(g.id)}
-                              className="text-[9px] uppercase font-mono font-semibold bg-[#D4AF37]/5 border border-[#D4AF37]/10 text-[#D4AF37] px-2.5 py-1 rounded hover:bg-[#D4AF37]/15 mt-2 transition-all"
-                            >
-                              Faire Gombo du Jour
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                      {gombos.map(g => {
+                        const isSaved = savedGomboIds.includes(g.id);
+                        const isHonored = honoredGomboIds.includes(g.id);
+                        const hasApplied = renforts.some(r => r.gomboId === g.id && r.applicantId === "current_user");
+
+                        return (
+                          <motion.div
+                            key={g.id}
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className={`rounded-3xl overflow-hidden bg-[#060606] border transition-all duration-300 shadow-[0_4px_30px_rgba(212,175,55,0.03)] hover:shadow-[0_8px_45px_rgba(212,175,55,0.09)] ${
+                              g.isBoosted || g.isUrgent
+                                ? "border-[#D4AF37]/45"
+                                : "border-[#D4AF37]/15 hover:border-[#D4AF37]/40"
+                            }`}
+                          >
+                            {/* Card Media Header */}
+                            <div className="relative h-48 w-full bg-cover bg-center overflow-hidden group" style={{ backgroundImage: `url(${g.imageUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'})` }}>
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#060606] via-[#060606]/40 to-transparent" />
+                              
+                              {/* Glowing Badges */}
+                              <div className="absolute top-4 left-4 flex gap-2 flex-wrap items-center">
+                                {g.isBoosted && (
+                                  <span className="text-[8px] bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-lg">
+                                    🔥 En Vedette
+                                  </span>
+                                )}
+                                {g.isUrgent && (
+                                  <span className="text-[8px] bg-red-600 text-[#F5F5F5] px-2.5 py-1 rounded-full font-black uppercase tracking-wider animate-pulse shadow-lg">
+                                    ⚡ Urgent
+                                  </span>
+                                )}
+                              </div>
+
+                              <span className="absolute top-4 right-4 text-[9px] bg-black/60 backdrop-blur-md text-[#D4AF37] px-3 py-1 rounded-full font-mono border border-[#D4AF37]/20">
+                                Abidjan, {g.location}
+                              </span>
+
+                              {/* Small details inside cover */}
+                              <div className="absolute bottom-3 left-4 right-4 flex justify-between items-end">
+                                <div>
+                                  <span className="text-[9px] text-[#F5F5F5]/50 block uppercase font-mono tracking-widest">Promoteur</span>
+                                  <span className="text-xs font-bold text-white flex items-center gap-1">
+                                    {g.organizerName}
+                                    <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                  </span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-[9px] text-[#F5F5F5]/50 block uppercase font-mono tracking-widest">Date Clé</span>
+                                  <span className="text-xs font-bold text-white flex items-center gap-1 justify-end font-mono">
+                                    <Calendar className="w-3 h-3 text-[#D4AF37]" />
+                                    {g.date || "15 Juin 2026"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Card Body */}
+                            <div className="p-6 space-y-4">
+                              <div className="space-y-1.5">
+                                <h5 className="font-display font-extrabold text-[#F5F5F5] text-lg tracking-tight hover:text-[#D4AF37] transition-all">
+                                  {g.title}
+                                </h5>
+                                <p className="text-xs text-[#F5F5F5]/70 leading-relaxed font-sans min-h-[40px]">
+                                  {g.description}
+                                </p>
+                              </div>
+
+                              {/* Cachet Details */}
+                              <div className="py-3 px-4 rounded-xl bg-black/60 border border-[#D4AF37]/10 flex justify-between items-center text-xs">
+                                <div>
+                                  <span className="text-[9px] text-[#F5F5F5]/40 block uppercase font-mono tracking-widest">Cachet de Prestation</span>
+                                  <span className="text-md font-bold font-mono text-[#D4AF37] tracking-tight">
+                                    {g.budget.toLocaleString()} FCFA
+                                  </span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-[9px] text-[#F5F5F5]/40 block uppercase font-mono tracking-widest">Garantie Caisse (10%)</span>
+                                  <span className="text-xs font-bold font-mono text-[#10B981]">
+                                    {(g.budget * g.commissionRate).toLocaleString()} FCFA
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Interactive Action Buttons Tray */}
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/5">
+                                {/* Button: J'honore */}
+                                <motion.button
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => toggleHonorGombo(g.id)}
+                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all outline-none ${
+                                    isHonored
+                                      ? "bg-red-500/15 border border-red-500/30 text-red-400"
+                                      : "bg-[#0B0B0B] border border-white/5 text-[#F5F5F5]/60 hover:text-red-400 hover:border-red-500/20"
+                                  }`}
+                                >
+                                  <Heart className={`w-3.5 h-3.5 ${isHonored ? "fill-current text-red-500" : ""}`} />
+                                  <span>{isHonored ? "Honoré" : "J'honore"}</span>
+                                </motion.button>
+
+                                {/* Button: Palabrer */}
+                                <motion.button
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setPalabreGombo(g)}
+                                  className="py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-[#0B0B0B] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20 transition-all outline-none"
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                  <span>🗣️ Palabrer</span>
+                                </motion.button>
+
+                                {/* Button: Je postule */}
+                                <motion.button
+                                  whileTap={hasApplied ? {} : { scale: 0.95 }}
+                                  disabled={hasApplied}
+                                  onClick={() => applyToGombo(g.id)}
+                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all outline-none ${
+                                    hasApplied
+                                      ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                                      : "bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black hover:opacity-90 shadow-sm"
+                                  }`}
+                                >
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                  <span>{hasApplied ? "Postulé" : "🎤 Postuler"}</span>
+                                </motion.button>
+
+                                {/* Button: Je garde */}
+                                <motion.button
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => toggleSaveGombo(g.id)}
+                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all outline-none ${
+                                    isSaved
+                                      ? "bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37]"
+                                      : "bg-[#0B0B0B] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20"
+                                  }`}
+                                >
+                                  <Bookmark className={`w-3.5 h-3.5 ${isSaved ? "fill-current text-[#D4AF37]" : ""}`} />
+                                  <span>{isSaved ? "Gardé" : "📌 Garder"}</span>
+                                </motion.button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
                     </div>
                   </div>
+
+                  {/* ==========================================================
+                               🗣️ PALABRER (NEGOTIATION/CHAT DIALOG MODAL)
+                     ========================================================== */}
+                  <AnimatePresence>
+                    {palabreGombo && (
+                      <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="w-full max-w-lg bg-[#060606] border border-[#D4AF37] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.2)] flex flex-col h-[520px] justify-between"
+                        >
+                          {/* Chat Header */}
+                          <div className="p-5 border-b border-[#D4AF37]/20 bg-gradient-to-r from-black to-[#060606] flex justify-between items-center shrink-0">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full overflow-hidden bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center font-bold text-[#D4AF37]">
+                                {palabreGombo.organizerName.charAt(0)}
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-display font-bold text-white flex items-center gap-1.5">
+                                  {palabreGombo.organizerName}
+                                  <span className="w-2 h-2 rounded-full bg-emerald-400 block" title="En ligne" />
+                                </h4>
+                                <span className="text-[10px] text-white/50 block truncate max-w-[200px]" title={palabreGombo.title}>
+                                  Négociation : {palabreGombo.title}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <button
+                              onClick={() => setPalabreGombo(null)}
+                              className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-white/10 transition-all font-semibold"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          {/* Chat Messages */}
+                          <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-black/50">
+                            {/* Static Info Indicator */}
+                            <div className="p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded-xl text-[10px] text-center text-[#D4AF37]/80 leading-relaxed font-mono">
+                              🤝 Palabrer — Négociez le cachet ou posez vos questions d'organisation directement avec le promoteur agréé d'Abidjan.
+                            </div>
+
+                            {/* Live Dialogue Thread */}
+                            {(palabreChatHistory[palabreGombo.id] || []).length === 0 ? (
+                              <div className="text-center py-6 text-white/45 text-xs font-mono">
+                                Aucun palabre engagé. Écrivez un premier message courtois pour entamer la discussion !
+                              </div>
+                            ) : (
+                              (palabreChatHistory[palabreGombo.id] || []).map((msg, idx) => {
+                                const isArtiste = msg.sender === "artiste";
+                                return (
+                                  <div
+                                    key={idx}
+                                    className={`flex flex-col max-w-[80%] ${
+                                      isArtiste ? "ml-auto items-end" : "mr-auto items-start"
+                                    }`}
+                                  >
+                                    <div
+                                      className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
+                                        isArtiste
+                                          ? "bg-[#D4AF37] text-black font-semibold rounded-br-none"
+                                          : "bg-white/10 text-white rounded-bl-none"
+                                      }`}
+                                    >
+                                      {msg.text}
+                                    </div>
+                                    <span className="text-[9px] text-[#F5F5F5]/30 block mt-1 font-mono">
+                                      {msg.time}
+                                    </span>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+
+                          {/* Chat Input */}
+                          <div className="p-4 border-t border-white/5 bg-black/80 flex gap-2 items-center shrink-0">
+                            <input
+                              type="text"
+                              value={palabreMsg}
+                              onChange={(e) => setPalabreMsg(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") submitPalabreMessage(palabreGombo.id);
+                              }}
+                              placeholder="Palabrer : négocier budget, horaires, transport..."
+                              className="flex-1 bg-[#0B0B0B] border border-white/10 rounded-xl p-2.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-all"
+                            />
+                            
+                            <motion.button
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => submitPalabreMessage(palabreGombo.id)}
+                              className="w-10 h-10 rounded-xl bg-[#D4AF37] text-black flex items-center justify-center hover:opacity-90 transition-all outline-none shrink-0"
+                            >
+                              <Send className="w-4 h-4" />
+                            </motion.button>
+                          </div>
+                        </motion.div>
+                      </div>
+                    )}
+                  </AnimatePresence>
+
                 </div>
               )}
 
@@ -2633,70 +3165,72 @@ export default function AdminCentre() {
       {/* =========================================================================
                           ZONE C : BRIEF DU JOUR & TERMINAL LOGS (RIGHT)
          ========================================================================= */}
-      <aside className="w-80 border-l border-[#D4AF37]/20 bg-[#0B0B0B] flex flex-col p-6 z-10 shrink-0">
-        
-        {/* DAILY ADMIN BRIEF MODULE */}
-        <div className="space-y-4 mb-6">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] font-semibold flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 animate-spin" />
-              Mon Brief du Jour
-            </span>
-            <span className="text-[10px] font-mono text-[#F5F5F5]/40">{brief.timestamp}</span>
-          </div>
-
-          <div className="p-4 rounded-lg bg-black/40 border border-[#D4AF37]/10 space-y-3.5">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-[#F5F5F5]/60">Nouveaux inscrits :</span>
-              <span className="font-bold text-[#D4AF37]">{brief.newUsersCount}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-[#F5F5F5]/60">Publications de post :</span>
-              <span className="font-semibold text-white">{brief.newPostsCount}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-[#F5F5F5]/60">Nouveaux Gombos :</span>
-              <span className="font-semibold text-white">{brief.newGombosCount}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-[#F5F5F5]/60">Revenus générés :</span>
-              <span className="font-bold text-emerald-400">{brief.revenuesGenerated.toLocaleString()} FCFA</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-[#F5F5F5]/60">Certifications demandées :</span>
-              <span className="font-semibold text-white">{brief.kycRequestsCount}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-[#F5F5F5]/60">Alertes critiques :</span>
-              <span className="font-semibold text-[#EF4444]">{brief.criticalAlertsCount}</span>
+      {perspective === "admin" && (
+        <aside className="w-80 border-l border-[#D4AF37]/20 bg-[#0B0B0B] flex flex-col p-6 z-10 shrink-0">
+          
+          {/* DAILY ADMIN BRIEF MODULE */}
+          <div className="space-y-4 mb-6">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] font-semibold flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 animate-spin" />
+                Mon Brief du Jour
+              </span>
+              <span className="text-[10px] font-mono text-[#F5F5F5]/40">{brief.timestamp}</span>
             </div>
 
-            {/* Quick action broadcast daily statement bulletin */}
-            <button
-              onClick={() => setIsBroadcastModalOpen(true)}
-              className="w-full mt-3 py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] rounded text-center text-xs font-bold uppercase transition-all shadow-[0_0_8px_rgba(212,175,55,0.15)]"
-            >
-              Diffuser un bulletin d'alerte
-            </button>
-          </div>
-        </div>
-
-        {/* ADMINISTRATIVE ACTION LOGS (TERMINAL) */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <span className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] font-semibold flex items-center gap-1.5 mb-3">
-            <Tv className="w-3.5 h-3.5" />
-            Terminal de Commandement
-          </span>
-
-          <div className="flex-1 bg-black/60 border border-[#D4AF37]/10 p-3 rounded-lg font-mono text-[9px] text-[#D4AF37]/80 overflow-y-auto space-y-2 relative scrollbar-thin">
-            {terminalFeed.map((log, index) => (
-              <div key={index} className="leading-relaxed border-b border-white/5 pb-1 last:border-0">
-                {log}
+            <div className="p-4 rounded-lg bg-black/40 border border-[#D4AF37]/10 space-y-3.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-[#F5F5F5]/60">Nouveaux inscrits :</span>
+                <span className="font-bold text-[#D4AF37]">{brief.newUsersCount}</span>
               </div>
-            ))}
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-[#F5F5F5]/60">Publications de post :</span>
+                <span className="font-semibold text-white">{brief.newPostsCount}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-[#F5F5F5]/60">Nouveaux Gombos :</span>
+                <span className="font-semibold text-white">{brief.newGombosCount}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-[#F5F5F5]/60">Revenus générés :</span>
+                <span className="font-bold text-emerald-400">{brief.revenuesGenerated.toLocaleString()} FCFA</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-[#F5F5F5]/60">Certifications demandées :</span>
+                <span className="font-semibold text-white">{brief.kycRequestsCount}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-[#F5F5F5]/60">Alertes critiques :</span>
+                <span className="font-semibold text-[#EF4444]">{brief.criticalAlertsCount}</span>
+              </div>
+
+              {/* Quick action broadcast daily statement bulletin */}
+              <button
+                onClick={() => setIsBroadcastModalOpen(true)}
+                className="w-full mt-3 py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] rounded text-center text-xs font-bold uppercase transition-all shadow-[0_0_8px_rgba(212,175,55,0.15)]"
+              >
+                Diffuser un bulletin d'alerte
+              </button>
+            </div>
           </div>
-        </div>
-      </aside>
+
+          {/* ADMINISTRATIVE ACTION LOGS (TERMINAL) */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <span className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] font-semibold flex items-center gap-1.5 mb-3">
+              <Tv className="w-3.5 h-3.5" />
+              Terminal de Commandement
+            </span>
+
+            <div className="flex-1 bg-black/60 border border-[#D4AF37]/10 p-3 rounded-lg font-mono text-[9px] text-[#D4AF37]/80 overflow-y-auto space-y-2 relative scrollbar-thin">
+              {terminalFeed.map((log, index) => (
+                <div key={index} className="leading-relaxed border-b border-white/5 pb-1 last:border-0">
+                  {log}
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+      )}
 
       {/* =========================================================================
                                      BROADCAST MODAL
