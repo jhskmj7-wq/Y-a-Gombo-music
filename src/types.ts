@@ -1,575 +1,111 @@
-export type UserRole = "musicien" | "organisateur" | "client" | "manager" | "admin";
+export type AdminMenu =
+  | "dashboard"
+  | "gombos"
+  | "renforts"
+  | "kyc"
+  | "revision"
+  | "alertes"
+  | "caisse"
+  | "analytics";
 
-export type PaymentProvider = "Wave" | "Orange Money" | "MTN Momo" | "Moov Money";
-
-export interface UserProfile {
-  uid: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  artistName?: string;
-  ville?: string;
+export interface UserPerformance {
+  level: number;
+  score: number; // 0 - 100
+  artisticName: string;
   commune: string;
-  quartier?: string;
-  phone: string;
-  bio?: string;
-  role: UserRole;
-  specialty?: string; // e.g. "Chanteur", "Guitariste", "Pianiste", "Batteur", "DJ", "Cuivres", "Bassiste", etc.
-  specialties?: string[]; // Multiple specialties
-  experience?: string;
-  mediaGallery?: { id: string; type: "photo" | "audio" | "video" | "youtube"; url: string; title?: string; }[];
-  // New specific fields:
-  speciality?: string; // musical specialty
-  experienceYears?: string; // Years of experience
-  musicGenre?: string; // Genre of music
-  musicGenres?: string[]; // Multiple music genres
-  gender?: string;
-  birthDate?: string;
-  whatsapp?: string;
-  availabilities?: string[];
-  waveNumber?: string;
-  orangeMoneyNumber?: string;
-  balance?: number; // solde disponible
-  totalRevenue?: number; // revenus reçus
-  totalWithdrawals?: number; // retraits effectués
-  gigsCompleted?: number; // gombos réalisés
-  applicationsSent?: number; // candidatures envoyées
-  acceptanceRate?: number; // taux d'acceptation
-  isProfileComplete?: boolean; // toggle if all mandatory fields are filled
-  isAvailableNow?: boolean; // disponível maintenant
-  updatedAt?: string;
-
-  paymentNumber?: string; // Orange / Wave number
-  paymentProvider?: PaymentProvider;
-  avatarUrl?: string; // profile picture (we support bot avatarUrl and photoURL for compatibility)
-  photoURL?: string; 
-  isVerified?: boolean;
-  isCertified?: boolean;
-  displayName?: string;
-  provider?: string;
-
-  // Monetization / Gamification fields
-  verificationStatus?: "standard" | "certifie" | "verifie" | "missing_info" | "rejected"; // Talent Certifié
-  groupStatus?: "standard" | "vip" | "premium"; // Groups level
-  groupType?: "Orchestre" | "Groupes Zouglou" | "Chorale" | "Groupes Gospel"; // Category for groups VIP
-  badges?: string[]; // ["⭐ Talent Certifié", "🔥 Artiste Actif", "🏆 Top Talent", "🎼 Groupe VIP", "✅ Profil Vérifié"]
-  availabilityStatus?: "disponible" | "occupe" | "indisponible";
-
-  notificationSettings?: {
-    gombos: boolean;
-    renforts: boolean;
-    messages: boolean;
-    certifications: boolean;
-    groupes: boolean;
-  };
-
-  isSuspended?: boolean;
-  isBanned?: boolean;
-
-  themePreference?: "dark-gold" | "light-gold" | "night-navy";
-
-  points?: number; // Point Gamification system
-
-  lastLoginAt?: string;
-
-  // AFRI ID Ecosystem Foundation fields
-  afriId?: string;
-  ecosystemApps?: {
-    afrigombo: boolean;
-    afritrust: boolean;
-    africoach: boolean;
-    [key: string]: boolean;
-  };
-
-  createdAt: string; // ISO String
+  specialties: string[];
+  groups: string[];
 }
 
-export type GomboStatus = "publie" | "reserve" | "termine";
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  artisticName: string;
+  commune: string;
+  avatarUrl?: string;
+  isCertified: boolean;
+  kycStatus: "pending" | "approved" | "rejected" | "none";
+  kycDocUrl?: string;
+  status: "active" | "suspended" | "suspect";
+  specialties: string[];
+  groups: string[];
+  performance: UserPerformance;
+  registrationDate: string;
+  revenues: number;
+  gombosCompleted: number;
+  flagsCount: number;
+}
+
+export interface Post {
+  id: string;
+  userId: string;
+  authorName: string;
+  authorArtisticName: string;
+  authorAvatar?: string;
+  content: string;
+  mediaUrl?: string;
+  timestamp: string;
+  likes: number;
+  comments: number;
+  isFlagged: boolean;
+  flagReason?: string;
+  flagTimestamp?: string;
+  aiModerated?: boolean;
+}
 
 export interface Gombo {
   id: string;
-  clientId: string;
-  clientName: string;
   title: string;
   description: string;
-  location: string; // Details e.g. "Bar du Coin", "Hôtel Ivoire"
-  commune: string; // Cocody, Yopougon, Marcory, Plateau, Treichville, Abobo, Koumassi, Adjamé, Port-Bouët, Attécoubé
-  date: string; // YYYY-MM-DD
-  time: string; // HH:MM
-  budget: number; // in CFA franc (FCFA)
-  eventType: string; // "Mariage", "Concert", "Anniversaire", "Bar/Resto", "Privé/Soirée", "Autre"
-  musiciansCount: number; // number of musicians needed
-  status: GomboStatus;
-  urgent: boolean;
-  createdAt: string; // ISO String
-}
-
-export type ApplicationStatus = "en_attente" | "accepte" | "refuse" | "rejete";
-
-export interface Application {
-  id: string;
-  gomboId: string;
-  gomboTitle: string;
-  musicianId: string; // applicant UID
-  musicianName: string;
-  musicianSpecialty: string;
-  musicianPhone: string;
-  musicianAvatar?: string;
-  message: string;
-  mediaUrl?: string; // YouTube, Soundcloud or Drive link
-  status: ApplicationStatus;
-  createdAt: string; // ISO String
-  
-  // Custom applicant fields for Gombo matching flow
-  applicantId?: string;
-  applicantName?: string;
-  applicantPhoto?: string;
-  whatsapp?: string;
-  specialty?: string;
-  disponibilite?: string;
-  availability?: string;
-  audioUrl?: string;
-  videoUrl?: string;
-  userId?: string; // matches security rules
-}
-
-export type ReservationStatus = "confirme" | "complete" | "annule";
-
-export interface Reservation {
-  id: string;
-  gomboId: string;
-  gomboTitle: string;
-  clientId: string;
-  musicianId: string;
-  musicianName: string;
-  musicianPhone: string;
-  amount: number;
-  status: ReservationStatus;
-  createdAt: string; // ISO String
-}
-
-export interface WaitingFeature {
-  id: string;
-  uid: string;
-  userEmail: string;
-  featureName: string;
-  createdAt: string; // ISO String
-}
-
-export interface PostComment {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  text: string;
-  createdAt: string;
-}
-
-export interface SocialPost {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  userRole?: string;
-  title: string;
-  caption: string;
-  beatProd?: string;
-  tags: string[];
-  likesCount: number;
-  comments: PostComment[];
-  sharesCount: number;
-  savesCount: number;
-  likedBy: string[]; // user UIDs
-  savedBy: string[]; // user UIDs
-  audioUrl?: string; // Optional soundtrack link
-  imageUrl?: string; // Cover artwork link
-  createdAt: string;
-
-  // New fields for MVP Phase 2/3 publication system
-  type?: "gombo" | "demo" | "annonce" | string;
-  postCategory?: "demo" | "recherche" | "renfort" | "concert" | "opportunite" | "aide" | "showbiz" | "coeur" | string;
-  authorId?: string;
-  authorName?: string;
-  authorPhoto?: string;
-  description?: string;
-  commune?: string;
-  mediaUrl?: string; // Image or main media asset URL
-  videoUrl?: string; // Optional short video accompaniment
-  photoUrl?: string; // Photo post attachments
-  locationDetail?: string; // Precision on city/commune/hall
-  budget?: string | number;
-  specialty?: string;
-  urgent?: boolean;
-  commentsCount?: number;
-  genre?: string;         // e.g. for Démo
-  availability?: string;  // e.g. for Annonce
-  
-  // Interactions tracking
-  encouragesCount?: number;
-  encouragedBy?: string[]; // user UIDs
-  reportsCount?: number;
-  reportedBy?: string[]; // user UIDs
-}
-
-export interface GomboNotification {
-  id: string;
-  userId: string; // The user receiving the notification
-  title: string;
-  message: string;
-  type: "application_accepted" | "general" | "booking" | "new_gombo" | "new_renfort" | "new_application" | "certification_approved" | "new_follower" | "new_message" | string;
-  read: boolean;
-  isRead?: boolean; // For compat with firestore.rules
-  createdAt: string;
-  senderId?: string;
-  senderName?: string;
-  senderAvatar?: string;
-  targetId?: string;
-}
-
-export interface ActivityFeedEntry {
-  id: string;
-  type: "talent" | "groupe" | "certification" | "gombo";
-  title: string;
-  message: string;
-  createdAt: string;
-  userId?: string;
-  userName?: string;
-  userAvatar?: string;
-  targetId?: string; // e.g. gombo ID, group ID, user ID
+  budget: number; // in FCFA
+  commissionRate: number; // e.g. 0.10 for 10%
+  location: string; // Commune (e.g. Cocody, Yopougon, Marcory)
+  organizerId: string;
+  organizerName: string;
+  timestamp: string;
+  applicantsCount: number;
+  status: "open" | "filled" | "completed";
 }
 
 export interface Renfort {
   id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  title: string;
-  description: string;
-  instrument: string; // Left for simple queries
-  instruments: string[]; // Sélection multiple
-  date: string;
-  time: string;
-  musiciansCount: number;
-  budget: number;
-  commune: string;
-  whatsapp: string;
-  requestType: string; // Répétition, Remplacement, etc
-  genres: string[];
-  status: "publie" | "termine";
-  createdAt: string;
-}
-
-export interface RenfortApplication {
-  id: string;
-  renfortId: string;
-  renfortTitle: string;
-  musicianId: string;
-  musicianName: string;
-  musicianPhone: string;
-  musicianAvatar?: string;
-  musicianSpecialties?: string[];
-  status: "en_attente" | "accepte" | "refuse";
-  createdAt: string;
-}
-
-export interface GroupMember {
-  id: string;
-  name: string;
-  role: string; // Function/Role inside group e.g. "Chanteur", "Bassiste", etc.
+  gomboId: string;
+  gomboTitle: string;
+  applicantId: string;
+  applicantName: string;
+  applicantArtisticName: string;
   instrument: string;
-  photoUrl?: string;
-}
-
-export interface GroupGalleryMedia {
-  id: string;
-  type: "photo" | "video" | "audio";
-  url: string;
-  title?: string;
-}
-
-export interface MusicGroup {
-  id: string;
-  creatorId: string; // Owner of the group who can manage it
-  name: string;
-  photoUrl: string;
-  logoUrl: string;
-  description: string;
-  commune: string;
-  ville: string;
-  phone: string;
-  whatsapp: string;
-  email: string;
-  membersCount: number;
-  creationYear: number;
-  type: string; // Orchestre Live, Groupe Zouglou, etc.
-  genres: string[]; // Selection multiple
-  members: GroupMember[];
-  gallery: GroupGalleryMedia[];
-  
-  // Statistics
-  viewsCount: number;
-  favoritesCount: number;
-  contactsCount: number;
-  
-  // Badges
-  isVerified?: boolean; // ✅ Groupe Vérifié
-  isPremium?: boolean; // 🏆 Groupe Premium
-  isPopular?: boolean; // 🔥 Groupe Populaire
-  isSuspended?: boolean; // 🚧 Groupe Suspendu par l'admin
-  
-  // Plan level (Standard, VIP, Premium)
-  plan: "standard" | "vip" | "premium";
-  
-  // Followers / users who followed this group
-  followers: string[]; // array of user uids
-  
-  createdAt: string;
-}
-
-// Monetization Interfaces for preparations
-export interface GomboSubscription {
-  id: string;
-  userId: string;
-  userName: string;
-  type: "talent_certifie" | "groupe_vip" | "groupe_premium";
-  status: "active" | "expired" | "pending";
-  price: number;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
-}
-
-export interface GomboPayment {
-  id: string;
-  userId: string;
-  userName: string;
-  amount: number;
-  purpose: string; // e.g., "Certification", "Boost 24h", etc.
-  provider: "Wave" | "Orange Money" | "MTN Momo" | "Moov Money";
-  phoneNumber: string;
-  status: "success" | "pending" | "failed";
-  createdAt: string;
-}
-
-export interface GomboBoost {
-  id: string;
-  userId: string;
-  userName: string;
-  targetType: "gombo" | "post";
-  targetId: string; // ID of the boosted item (Gombo or SocialPost)
-  targetTitle: string;
-  duration: "24h" | "3d" | "7d";
-  price: number;
-  expiresAt: string;
-  status: "actif" | "expire";
-  createdAt: string;
-}
-
-export interface GomboCertification {
-  id: string;
-  userId: string;
-  userName: string;
-  type: "certifie" | "verifie";
-  status: "en_attente" | "approuve" | "rejete";
-  videoUrl?: string; // Showcase or audition video url
-  pricePaid?: number;
-  createdAt: string;
-}
-
-export interface CertificationRequest {
-  id: string;
-  userId: string;
-  artistName: string;
-  specialties: string[];
-  experience: string;
-  mediaUrl: string;
-  idCardUrl?: string;
-  selfieUrl?: string;
-  musicProofUrl?: string;
-  isExpress?: boolean;
-  status: "En attente" | "En attente (Express)" | "Approuvé" | "Infos complémentaires" | "Refusé";
-  createdAt: string;
-}
-
-export interface Conversation {
-  id: string;
-  participants: string[];
-  participantDetails: {
-    [uid: string]: {
-      name: string;
-      avatarUrl?: string; // photoURL / avatarUrl
-      role: string;
-    };
-  };
-  lastMessage?: {
-    text: string;
-    timestamp: string;
-    senderId: string;
-  } | null;
-  unreadCount: {
-    [uid: string]: number;
-  };
-  updatedAt: string;
-  createdAt: string;
-}
-
-export interface Message {
-  id: string;
-  conversationId: string;
-  senderId: string;
-  senderName: string;
-  text: string;
-  type: "text" | "image" | "audio";
-  mediaUrl?: string | null;
+  status: "pending" | "accepted" | "rejected";
   timestamp: string;
 }
 
-export interface VerificationRequest {
+export interface Alerte {
   id: string;
   userId: string;
-  userEmail: string;
-  fullName: string;
-  photoUrl: string;
-  commune: string;
-  metier: string;
-  whatsapp: string;
-  selfieUrl: string;
-  mediaUrl: string;
-  idCardUrl?: string;
-  isExpress?: boolean;
-  status: "pending" | "pending_express" | "approved" | "missing_info" | "rejected";
-  createdAt: string;
+  userArtisticName: string;
+  reason: string;
+  severity: "high" | "medium" | "low";
+  timestamp: string;
+  status: "open" | "resolved";
 }
 
-export interface AFRIGOMBOAdmin {
-  id?: string;
-  email: string;
-  role: "super_admin" | string;
-  permissions: string[];
-  createdAt: string | any; // Supports Timestamp in firestore / string in local fallback
-}
-
-export interface AdminLog {
-  id?: string;
-  adminEmail: string;
-  action: string;
-  targetId: string;
-  createdAt: string | any; // ISO split string or Firestore Timestamp
-}
-
-export interface AcademyGuide {
+export interface Transaction {
   id: string;
-  title: string;
-  category: "conseils" | "tarifs" | "contrat" | "promotion" | "securite" | "debutant" | "avance";
-  excerpt: string;
-  content: string; // text/markdown info
-  audioUrl?: string; // simulation link
-  videoUrl?: string;
-  pdfUrl?: string;
-  createdAt: string;
-}
-
-export type ContractStatus = "en_attente" | "accepte" | "termine" | "litige";
-
-export interface GomboSafeContract {
-  id: string;
-  creatorId: string;
-  creatorName: string;
-  partnerEmail: string;
-  partnerId?: string;
-  partnerName?: string;
-  title: string;
-  amount: number;
-  commission: number; // in CFA franc (FCFA)
-  conditions: string;
-  status: ContractStatus;
-  creatorAccepted: boolean;
-  partnerAccepted: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface GomboTicketEvent {
-  id: string;
-  creatorId: string;
-  creatorName: string;
-  title: string;
+  amount: number; // in FCFA
+  type: "commission" | "subscription" | "payout";
   description: string;
-  date: string;
-  time: string;
-  location: string;
-  price: number; // 0 = gratuit
-  capacity: number;
-  ticketsSold: number;
-  createdAt: string;
-}
-
-export interface PurchasedTicket {
-  id: string;
-  eventId: string;
-  eventTitle: string;
-  buyerId: string;
-  buyerName: string;
-  buyerPhone: string;
-  pricePaid: number;
-  ticketCode: string;
-  createdAt: string;
-}
-
-export interface StudioMarketReview {
   userId: string;
-  userName: string;
-  comment: string;
-  rating: number;
-  createdAt: string;
+  userArtisticName: string;
+  timestamp: string;
 }
 
-export interface StudioMarketItem {
-  id: string;
-  name: string;
-  category: "studio" | "beatmaker" | "photographe" | "videaste" | "graphiste" | "costumier" | "materiel";
-  description: string;
-  commune: string;
-  price: string;
-  phone: string;
-  image?: string;
-  rating: number;
-  reviews: StudioMarketReview[];
-  createdAt: string;
+export interface AdminBrief {
+  newUsersCount: number;
+  newPostsCount: number;
+  newGombosCount: number;
+  revenuesGenerated: number; // in FCFA
+  kycRequestsCount: number;
+  criticalAlertsCount: number;
+  timestamp: string;
 }
-
-export interface CastingCall {
-  id: string;
-  creatorId: string;
-  creatorName: string;
-  title: string;
-  rolesNeeded: string;
-  description: string;
-  deadline: string;
-  commune: string;
-  budget: string;
-  applications: {
-    userId: string;
-    userName: string;
-    phone: string;
-    status: "en_attente" | "convoc" | "refus";
-    createdAt: string;
-  }[];
-  createdAt: string;
-}
-
-export interface VoiceAnnouncement {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  audioUrl: string; // simulation path
-  duration: number; // seconds
-  title: string;
-  commune: string;
-  createdAt: string;
-}
-
-
-
-

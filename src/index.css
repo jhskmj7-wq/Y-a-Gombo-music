@@ -1,185 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "Poppins", system-ui, -apple-system, sans-serif;
-  --font-display: "Poppins", "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-  
-  /* Map standard Orange color scale to Or Royal gold so existing elements adapt beautifully */
-  --color-orange-50: #fbfaf2;
-  --color-orange-100: #f5eed3;
-  --color-orange-200: #ecdda7;
-  --color-orange-300: #e2c974;
-  --color-orange-400: #dcb343;
-  --color-orange-500: #D4AF37; /* Or Royal */
-  --color-orange-600: #bfa12d;
-  --color-orange-605: #a88d22;
-  --color-orange-650: #917918;
-  --color-orange-700: #7a6611;
-  --color-orange-850: #493d0a;
-  --color-orange-905: #2d2605;
-  --color-orange-955: #110e01;
-  --color-orange-900: #2d2605;
-  --color-orange-950: #110e01;
-  
-  /* Map Gold Accents */
-  --color-gold-50: #fbfaf2;
-  --color-gold-100: #f5eed3;
-  --color-gold-200: #ecdda7;
-  --color-gold-300: #e2c974;
-  --color-gold-400: #dcb343;
-  --color-gold-500: #D4AF37; /* Or Royal */
-  --color-gold-600: #bfa12d;
-  --color-gold-700: #7a6611;
-  --color-gold-950: #110e01;
-
-  /* Map Purple to Or Royal to eliminate purple and unify with Afri visual identity */
-  --color-purple-50: #fbfaf2;
-  --color-purple-100: #f5eed3;
-  --color-purple-200: #ecdda7;
-  --color-purple-300: #e2c974;
-  --color-purple-400: #dcb343;
-  --color-purple-500: #D4AF37;
-  --color-purple-600: #bfa12d;
-  --color-purple-700: #7a6611;
-  --color-purple-800: #493d0a;
-  --color-purple-900: #2d2605;
-  --color-purple-950: #110e01;
-
-  /* Map Violet to Or Royal */
-  --color-violet-50: #fbfaf2;
-  --color-violet-100: #f5eed3;
-  --color-violet-200: #ecdda7;
-  --color-violet-300: #e2c974;
-  --color-violet-400: #dcb343;
-  --color-violet-500: #D4AF37;
-  --color-violet-600: #bfa12d;
-  --color-violet-700: #7a6611;
-  --color-violet-800: #493d0a;
-  --color-violet-900: #2d2605;
-  --color-violet-950: #110e01;
-
-  /* Map Indigo to Or Royal */
-  --color-indigo-50: #fbfaf2;
-  --color-indigo-100: #f5eed3;
-  --color-indigo-200: #ecdda7;
-  --color-indigo-300: #e2c974;
-  --color-indigo-400: #dcb343;
-  --color-indigo-500: #D4AF37;
-  --color-indigo-600: #bfa12d;
-  --color-indigo-700: #7a6611;
-  --color-indigo-800: #493d0a;
-  --color-indigo-900: #2d2605;
-  --color-indigo-950: #110e01;
-
-  /* Map Blue to Or Royal */
-  --color-blue-50: #fbfaf2;
-  --color-blue-100: #f5eed3;
-  --color-blue-200: #ecdda7;
-  --color-blue-300: #e2c974;
-  --color-blue-400: #dcb343;
-  --color-blue-500: #D4AF37;
-  --color-blue-600: #bfa12d;
-  --color-blue-700: #7a6611;
-  --color-blue-800: #493d0a;
-  --color-blue-900: #2d2605;
-  --color-blue-950: #110e01;
-
-  --color-gombo-orange: #D4AF37;
-  --color-gombo-orange-hover: #bfa12d;
-  --color-gombo-dark: #0B0B0B;
-  --color-gombo-card-dark: #121212;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
-:root, 
-.theme-light-gold {
-  --bg-color: #FAF9F5; /* Cream Light Gold background */
-  --card-bg: #FFFFFF; /* Pure White background */
-  --text-color: #110E01; /* Deep charcoal almost black */
-  --border-color: #E6E0CE;
-}
-
-.dark, 
-.theme-dark-gold,
-.theme-night-navy {
-  --bg-color: #0B0B0B; /* Noir Premium */
-  --card-bg: #121212; /* Noir Profond */
-  --text-color: #F8F8F8; /* Blanc Cassé */
-  --border-color: #2B2B2B; /* Gris Élégant */
-}
-
-body {
-  font-family: var(--font-sans);
-  background-color: var(--bg-color) !important;
-  color: var(--text-color) !important;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-.dark body {
-  background-color: var(--bg-color) !important;
-  color: var(--text-color) !important;
-}
-
-/* Card and container dynamic theme adaptation */
-.bg-white, 
-.bg-gray-50, 
-.bg-gray-100 {
-  background-color: var(--card-bg) !important;
-}
-
-.dark .bg-\[\#121214\],
-.dark .bg-\[\#111113\],
-.dark .bg-\[\#1a1a1c\],
-.dark .bg-\[\#18181B\],
-.dark .bg-\[\#0F0F0F\],
-.dark .bg-\[\#0F172A\] {
-  background-color: var(--card-bg) !important;
-}
-
-/* Borders dynamic adaptation */
-.border-gray-100, 
-.border-gray-150, 
-.border-gray-200, 
-.border-gray-300 {
-  border-color: var(--border-color) !important;
-}
-
-.dark .border-gray-800, 
-.dark .border-gray-850, 
-.dark .border-gray-700 {
-  border-color: var(--border-color) !important;
-}
-
-/* Text dynamic adaptation */
-.text-gray-900, 
-.text-gray-950, 
-.text-gray-800 {
-  color: var(--text-color) !important;
-}
-
-.dark .text-white, 
-.dark .text-gray-100, 
-.dark .text-gray-200, 
-.dark .text-gray-300 {
-  color: var(--text-color) !important;
-}
-
-/* Perfect Custom Scrollbar style */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #0B0B0B;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
+  background: #D4AF37;
+  border-radius: 3px;
 }
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+::-webkit-scrollbar-thumb:hover {
+  background: #B48F17;
 }
