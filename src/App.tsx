@@ -74,6 +74,7 @@ import ActivityFeedView from "./components/ActivityFeedView";
 import MessagesView from "./components/MessagesView";
 import AdminCentre from "./components/AdminCentre";
 import GomboMusikEcosystem from "./components/GomboMusikEcosystem";
+import { TamTamWidget } from "./components/TamTamWidget";
 import { PrivacyPage, TermsPage, DeleteAccountPage, AboutPage, SupportPage, CachetsPage } from "./components/PublicPages";
 
 const ABIDJAN_COMMUNES = [
@@ -1408,10 +1409,10 @@ export default function App() {
                         {isEmailSuperAdmin(currentUser?.email) && (
                           <button
                             onClick={() => { setView("admin"); setMobileMenuOpen(false); }}
-                            className="w-full py-2.5 px-3 bg-amber-400/10 hover:bg-amber-400/20 border border-[#D4AF37]/40 hover:border-[#D4AF37]/80 rounded-xl flex items-center gap-2.5 text-xs font-black text-[#D4AF37] hover:text-white transition-all uppercase tracking-widest cursor-pointer mb-2.5"
+                            className="w-full py-2.5 px-3 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/40 hover:border-[#D4AF37]/80 rounded-xl flex items-center gap-2.5 text-xs font-black text-[#D4AF37] hover:text-white transition-all uppercase tracking-widest cursor-pointer mb-2.5"
                           >
                             <Shield className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                            <span>👑 Retour au Cockpit</span>
+                            <span>👑 Centre de Commandement</span>
                           </button>
                         )}
                         
@@ -2230,34 +2231,13 @@ export default function App() {
                   </div>
 
                   {/* CARD 7: LE TAM-TAM ("Ce qui fait palabre aujourd'hui") */}
-                  <div className="bg-[#0B0B0B] border border-[#2B2B2B] rounded-3xl p-5 space-y-3 shadow-xl">
-                    <div className="flex items-center gap-1.5 border-b border-[#2B2B2B] pb-2">
-                      <span className="text-lg">📢</span>
-                      <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] font-mono">🔔 LE TAM-TAM</h4>
-                        <span className="text-[9.5px] text-gray-500 font-bold block font-sans">Palabres & Tendances Chaudes</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3.5 pt-1.5">
-                      {[
-                        { icon: "🎤", text: "Casting bouillant pour l'Orchestre National de Cocody : 15 instrumentistes auditionnés !", trend: "+450% d'audience" },
-                        { icon: "⚡", text: "Demande de renfort express honorée à Treichville en moins de 30 minutes de chrono.", trend: "Gombo Réglé" },
-                        { icon: "🎹", text: "Le Zouglou fait sensation aujourd'hui sur le canevas Afri. Les répétitions se lancent.", trend: "Tendance Or" }
-                      ].map((item, index) => (
-                        <div key={index} className="space-y-1 text-[10.5px]">
-                          <p className="text-gray-300 font-semibold leading-relaxed flex items-start gap-1 w-full font-sans">
-                            <span className="shrink-0">{item.icon}</span>
-                            <span>{item.text}</span>
-                          </p>
-                          <div className="flex justify-between items-center text-[8.5px] font-black text-[#D4AF37] uppercase font-mono px-4">
-                            <span>{item.trend}</span>
-                            <span>• ACTIF •</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <TamTamWidget 
+                    currentUserProfile={profile}
+                    gombos={gombos}
+                    topTalentsList={topTalentsList}
+                    onNavigateView={navigateTo}
+                    onOpenPostComposer={() => setShowPostComposer(true)}
+                  />
 
                 </div>
 

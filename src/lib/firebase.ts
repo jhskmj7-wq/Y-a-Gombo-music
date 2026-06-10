@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const envs = (import.meta as any).env || {};
@@ -27,7 +27,9 @@ setPersistence(auth, browserLocalPersistence)
     console.error("❌ [Firebase Auth Init] Échec de l'activation de browserLocalPersistence:", err);
   });
 
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true
+});
 const storage = getStorage(app);
 
 export { app, auth, db, storage };

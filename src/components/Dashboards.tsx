@@ -415,7 +415,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 onClick={onBackToAdmin}
                 className="px-3 py-2 bg-black/40 hover:bg-black/60 border border-[#D4AF37]/35 hover:border-[#D4AF37] text-[#D4AF37] hover:text-white text-[10px] font-black uppercase rounded-xl tracking-wider transition-all cursor-pointer"
               >
-                👑 COCKPIT ADMIN
+                👑 Centre de Commandement
               </button>
             )}
             <div className="text-right">

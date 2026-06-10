@@ -156,6 +156,11 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                   );
                 })()}
               </div>
+
+              {/* Motto message */}
+              <div className="mt-2.5 px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/25 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 w-fit animate-pulse">
+                🎼 Ton héritage attire les gombos.
+              </div>
             </div>
 
             {/* Account Type and UID block */}

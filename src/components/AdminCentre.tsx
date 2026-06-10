@@ -18,27 +18,35 @@ interface AdminCentreProps {
   onExitAdminMode: () => void;
 }
 
+type AdminMenu = 
+  | "dashboard" 
+  | "famille" 
+  | "talents" 
+  | "gombos" 
+  | "renforts" 
+  | "kyc" 
+  | "alertes" 
+  | "caisse" 
+  | "analytics" 
+  | "settings";
+
 const MOCK_LIVE_ACTIVITIES_POOL = [
-  " vient de publier une opportunité de Gombo.",
-  " a rejoint le groupe de musique VIP Abidjan Live.",
-  " a obtenu le badge très convoité de 'Talent Certifié' ⭐",
-  " a initié un nouveau Renfort Express urgent.",
-  " a mis à jour sa démo de guitare solo rumba.",
   " a finalisé une prestation sécurisée à Cocody.",
+  " vient de publier une opportunité de Gombo.",
+  " a rejoint l'orchestre VIP Abidjan Live.",
+  " a obtenu le badge très convoité de 'Talent Certifié' ⭐",
+  " a initié un nouveau Renfort Express de dernière minute.",
+  " a mis à jour sa démonstration de chant Zouglou.",
   " vient de souscrire un abonnement Premium AFRIGOMBO 🏆",
   " a sponsorisé son événement concert de fin d'année."
 ];
 
 export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode }: AdminCentreProps) {
   const { logout } = useAuth();
-  
-  // Navigation tabs matching lower tab-bar
-  const [activeTab, setActiveTab] = useState<"cockpit" | "users" | "posts" | "reports" | "plus">("cockpit");
-  
-  // For the "plus" tab sub-sections
-  const [plusSubTab, setPlusSubTab] = useState<"finances" | "monetisation" | "groups" | "logs" | "config" | "verifications">("verifications");
+  const [activeMenu, setActiveMenu] = useState<AdminMenu>("dashboard");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Base Data States (Synchronized via Firestore onSnapshot)
+  // Core Data States
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [posts, setPosts] = useState<SocialPost[]>([]);
   const [gombos, setGombos] = useState<Gombo[]>([]);
@@ -47,563 +55,267 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
   const [groups, setGroups] = useState<MusicGroup[]>([]);
   const [renforts, setRenforts] = useState<Renfort[]>([]);
   const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
-  const [subscriptions, setSubscriptions] = useState<GomboSubscription[]>([]);
   const [payments, setPayments] = useState<GomboPayment[]>([]);
   const [liveActivities, setLiveActivities] = useState<any[]>([]);
-  
   const [loading, setLoading] = useState(true);
 
-  // For Badge Manager Popup
+  // Interactive controls
   const [activeBadgeUser, setActiveBadgeUser] = useState<UserProfile | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState("all");
+  const [withdrawalFilter, setWithdrawalFilter] = useState("pending");
 
-  // Custom interactive admin additions (persistent via localStorage)
   const [withdrawRequests, setWithdrawRequests] = useState<any[]>(() => {
-    const saved = localStorage.getItem("gombo_withdraw_requests");
+    const saved = localStorage.getItem("gombo_withdraw_requests_v3");
     if (saved) return JSON.parse(saved);
     return [
-      { id: "wd-001", userEmail: "artiste.momo@gmail.com", userUid: "mus1", amount: 15000, provider: "Orange Money", phone: "+225 07 48 99 12 30", status: "pending", date: new Date(Date.now() - 3600000).toISOString() },
-      { id: "wd-002", userEmail: "guitariste.solo@gombo.ci", userUid: "solo_uid", amount: 35000, provider: "Wave", phone: "+225 05 99 88 12 11", status: "pending", date: new Date(Date.now() - 7200000).toISOString() },
-      { id: "wd-003", userEmail: "yoro@gombo.ci", userUid: "mus1", amount: 25000, provider: "MTN Momo", phone: "+225 07 45 89 12 00", status: "approved", date: new Date(Date.now() - 17200000).toISOString() }
+      { id: "wd-101", userEmail: "vocalist.yop@gmail.com", userUid: "mus1", amount: 20000, provider: "Wave", phone: "+225 05 91 88 12 11", status: "pending", date: new Date(Date.now() - 1800000).toISOString() },
+      { id: "wd-102", userEmail: "guitar.rumba@gmail.com", userUid: "mus2", amount: 45000, provider: "Orange Money", phone: "+225 07 48 99 12 30", status: "pending", date: new Date(Date.now() - 3600000).toISOString() },
+      { id: "wd-103", userEmail: "bassa.vibe@gmail.com", userUid: "mus3", amount: 30000, provider: "MTN Money", phone: "+225 07 45 89 12 00", status: "approved", date: new Date(Date.now() - 17200000).toISOString() }
     ];
   });
 
   const [systemAlert, setSystemAlert] = useState(() => {
-    return localStorage.getItem("gombo_system_alert") || "👑 [ADMIN] Bienvenue sur AFRIGOMBO version Pro. Les cachets numériques du Showbiz Ivoirien sont 100% assurés.";
+    return localStorage.getItem("gombo_system_alert") || "👑 [ADMIN] Bienvenue sur AFRIGOMBO Elite. Le coffre-fort du Showbiz Africain est actif en temps réel.";
   });
-  
+
   const [commissionRate, setCommissionRate] = useState(() => {
     return localStorage.getItem("gombo_commission_rate") || "5";
   });
 
-  // Ticker activity feed states
-  const [terminalFeed, setTerminalFeed] = useState<string[]>(["📡 Centre de Commande AFRIGOMBO initialisé et en ligne."]);
-  
-  // Notifications states
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [adminNotifications, setAdminNotifications] = useState<any[]>([
-    { id: 1, text: "Demande de versement Wave de 35 000 FCFA reçue d'un artiste", read: false, time: "Il y a 5 min" },
-    { id: 2, text: "Nouveau signalement en attente d'arbitrage déposé", read: false, time: "Il y a 25 min" },
-    { id: 3, text: "Compte super admin synchronisé avec succès", read: true, time: "Il y a 2h" }
-  ]);
+  const [terminalFeed, setTerminalFeed] = useState<string[]>(["📡 Terminal Elite initialisé."]);
 
-  // Internal search filters & sub-tabs filters
-  const [searchTerm, setSearchTerm] = useState("");
-  const [userRoleFilter, setUserRoleFilter] = useState<string>("all");
-  const [reportFilter, setReportFilter] = useState<string>("all");
-  const [verifFilter, setVerifFilter] = useState<"pending_all" | "pending_express" | "pending_standard" | "processed">("pending_all");
-  const [gomboOrPostFilter, setGomboOrPostFilter] = useState<"gombos" | "posts">("gombos");
-  const [gomboFilter, setGomboFilter] = useState<string>("all");
-
-  const unreadNotifsCount = adminNotifications.filter(n => !n.read).length;
-
-  // System statistics telemetry
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    activeToday: 0,
-    publications: 0,
-    groupes: 0,
-    renfortExpress: 0,
-    signalementsAttente: 0,
-    abonnésPremium: 0,
-    revenusGeneres: 0,
-    afriIdCount: 0,
-    cpuUsage: 4,
-    latencyMs: 12
-  });
-
-  // ==========================================
-  // --- REAL-TIME FIREBASE SYNCHRONISATION ---
-  // ==========================================
+  // Database synchronisation onSnapshot loop
   useEffect(() => {
-    // Record login admin log on boot
-    const recordBootLog = async () => {
-      try {
-        await gomboDB.addAdminLog(adminEmail, "CONNEXION_COCKPIT", "system");
-        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ✅ Session admin enregistrée pour ${adminEmail}`, ...prev]);
-      } catch (err) {
-        console.warn("Could not log admin login:", err);
-      }
-    };
-    recordBootLog();
-
     if (!isFirebaseMock && db) {
-      console.log("🔥 [Admin Real-Time] Registering Firestore onSnapshot listeners...");
       setLoading(true);
-
       const unsubs: (() => void)[] = [];
 
-      // 1. Users real-time
       unsubs.push(onSnapshot(collection(db, "users"), (snapshot) => {
-        const list = snapshot.docs.map(doc => doc.data() as UserProfile);
-        setUsers(list);
+        setUsers(snapshot.docs.map(doc => doc.data() as UserProfile));
         setLoading(false);
-      }, (err) => console.error("Users sync err:", err)));
+      }, err => console.error("users error", err)));
 
-      // 2. Posts real-time (Demos)
       unsubs.push(onSnapshot(collection(db, "posts"), (snapshot) => {
-        const list = snapshot.docs.map(doc => doc.data() as SocialPost);
-        setPosts(list);
-      }, (err) => console.error("Posts sync err:", err)));
+        setPosts(snapshot.docs.map(doc => doc.data() as SocialPost));
+      }, err => console.error("posts error", err)));
 
-      // 3. Gombos real-time
       unsubs.push(onSnapshot(collection(db, "gombos"), (snapshot) => {
-        const list = snapshot.docs.map(doc => doc.data() as Gombo);
-        setGombos(list);
-      }, (err) => console.error("Gombos sync err:", err)));
+        setGombos(snapshot.docs.map(doc => doc.data() as Gombo));
+      }, err => console.error("gombos error", err)));
 
-      // 4. Reports real-time
       unsubs.push(onSnapshot(collection(db, "reports"), (snapshot) => {
-        const list = snapshot.docs.map(doc => doc.data() as any);
-        setReports(list);
-      }, (err) => console.error("Reports sync err:", err)));
+        setReports(snapshot.docs.map(doc => doc.data() as any));
+      }, err => console.error("reports error", err)));
 
-      // 5. Admin Logs real-time
       unsubs.push(onSnapshot(collection(db, "admin_logs"), (snapshot) => {
-        const list = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            adminEmail: data.adminEmail || "admin@gombo.ci",
-            action: data.action || "MODIFICATION",
-            targetId: data.targetId || "",
-            createdAt: data.createdAt || new Date().toISOString()
-          } as AdminLog;
-        }).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
-        setLogs(list);
-      }, (err) => console.error("Logs sync err:", err)));
+        setLogs(snapshot.docs.map(doc => doc.data() as AdminLog).sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || "")));
+      }, err => console.error("logs error", err)));
 
-      // 6. Groups real-time
       unsubs.push(onSnapshot(collection(db, "music_groups"), (snapshot) => {
-        const list = snapshot.docs.map(doc => doc.data() as MusicGroup);
-        setGroups(list);
-      }, (err) => console.error("Groups sync err:", err)));
+        setGroups(snapshot.docs.map(doc => doc.data() as MusicGroup));
+      }, err => console.error("groups error", err)));
 
-      // 7. Renforts real-time
       unsubs.push(onSnapshot(collection(db, "renforts"), (snapshot) => {
-        const list = snapshot.docs.map(doc => doc.data() as Renfort);
-        setRenforts(list);
-      }, (err) => console.error("Renforts sync err:", err)));
+        setRenforts(snapshot.docs.map(doc => doc.data() as Renfort));
+      }, err => console.error("renforts error", err)));
 
-      // 8. Payments real-time
       unsubs.push(onSnapshot(collection(db, "payments"), (snapshot) => {
-        const list = snapshot.docs.map(doc => doc.data() as GomboPayment);
-        setPayments(list);
-      }, (err) => console.error("Payments sync err:", err)));
+        setPayments(snapshot.docs.map(doc => doc.data() as GomboPayment));
+      }, err => console.error("payments error", err)));
 
-      // 9. Subscriptions real-time
-      unsubs.push(onSnapshot(collection(db, "subscriptions"), (snapshot) => {
-        const list = snapshot.docs.map(doc => doc.data() as GomboSubscription);
-        setSubscriptions(list);
-      }, (err) => console.error("Subscriptions sync err:", err)));
-
-      // 10. Live Activities (from activity_feed)
-      unsubs.push(onSnapshot(collection(db, "activity_feed"), (snapshot) => {
-        const list = snapshot.docs.map(doc => doc.data() as any);
-        setLiveActivities(list.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
-      }, (err) => {
-        console.warn("Activity Feed rules or table not setup yet, using beautiful real-time engine fallback.");
-      }));
-
-      // 11. Verification Requests real-time
       unsubs.push(onSnapshot(collection(db, "verificationRequests"), (snapshot) => {
-        const list = snapshot.docs.map(doc => doc.data() as VerificationRequest);
-        setVerificationRequests(list);
-      }, (err) => console.error("Verification requests sync err:", err)));
+        setVerificationRequests(snapshot.docs.map(doc => doc.data() as VerificationRequest));
+      }, err => console.error("kyc error", err)));
 
       return () => {
-        console.log("🧹 [Admin Real-Time] Cleaning up Firestore onSnapshot listeners...");
         unsubs.forEach(unsub => unsub());
       };
     } else {
-      // BACK-A-SABLE: MOCK REPLAY STORAGE EVENT SYNC
-      const syncLocal = () => {
+      // Sandbox fallback mode
+      const loadLocalData = () => {
         setLoading(true);
-        const u = JSON.parse(localStorage.getItem("gombo_users") || "[]");
-        const p = JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
-        const g = JSON.parse(localStorage.getItem("gombo_posts") || "[]");
-        const rep = JSON.parse(localStorage.getItem("gombo_reports") || "[]");
-        const lg = JSON.parse(localStorage.getItem("gombo_admin_logs") || "[]");
-        const gr = JSON.parse(localStorage.getItem("gombo_music_groups") || "[]");
-        const ren = JSON.parse(localStorage.getItem("gombo_renforts") || "[]");
-        const pay = JSON.parse(localStorage.getItem("gombo_payments") || "[]");
-        const sub = JSON.parse(localStorage.getItem("gombo_subscriptions") || "[]");
-        const act = JSON.parse(localStorage.getItem("gombo_activity_feed") || "[]");
-        const vr = JSON.parse(localStorage.getItem("gombo_verification_requests") || "[]");
-
-        setUsers(u);
-        setPosts(p);
-        setGombos(g);
-        setReports(rep);
-        setLogs(lg);
-        setGroups(gr);
-        setRenforts(ren);
-        setPayments(pay);
-        setSubscriptions(sub);
-        setLiveActivities(act);
-        setVerificationRequests(vr);
+        setUsers(JSON.parse(localStorage.getItem("gombo_users") || "[]"));
+        setPosts(JSON.parse(localStorage.getItem("gombo_social_posts") || "[]"));
+        setGombos(JSON.parse(localStorage.getItem("gombo_posts") || "[]"));
+        setReports(JSON.parse(localStorage.getItem("gombo_reports") || "[]"));
+        setLogs(JSON.parse(localStorage.getItem("gombo_admin_logs") || "[]"));
+        setGroups(JSON.parse(localStorage.getItem("gombo_music_groups") || "[]"));
+        setRenforts(JSON.parse(localStorage.getItem("gombo_renforts") || "[]"));
+        setPayments(JSON.parse(localStorage.getItem("gombo_payments") || "[]"));
+        setVerificationRequests(JSON.parse(localStorage.getItem("gombo_verification_requests") || "[]"));
         setLoading(false);
       };
 
-      syncLocal();
-      window.addEventListener("storage", syncLocal);
-      
-      // Auto-poll logs and stats every 3 seconds for active sandbox experience
-      const pollInterval = setInterval(() => {
-        syncLocal();
-      }, 3000);
-
-      return () => {
-        window.removeEventListener("storage", syncLocal);
-        clearInterval(pollInterval);
-      };
+      loadLocalData();
+      window.addEventListener("storage", loadLocalData);
+      return () => window.removeEventListener("storage", loadLocalData);
     }
   }, []);
 
-  // Recalculate statistics dynamically whenever data collections update (onSnapshot driven)
+  // Save changes locally
   useEffect(() => {
-    const totalSecuredCachets = gombos.reduce((acc, g) => acc + (g.budget || 0), 0);
-    
-    // Dynamic Commission from cautions based on current commission percentage
-    const commissionCents = Math.round(totalSecuredCachets * (parseFloat(commissionRate) / 100 || 0.05));
-
-    // Dynamic Payments sum from payment ledger
-    const ledgerPaymentsTotal = payments
-      .filter(p => p.status === "success")
-      .reduce((sum, p) => sum + (p.amount || 0), 0);
-
-    // Sum total Premium subscriptions
-    const premiumActiveSubscriptions = users.filter(u => u.isPremium || u.verificationStatus === "verifie" || u.groupStatus === "premium").length;
-    const premiumRevenues = premiumActiveSubscriptions * 5000; // 5,000 CFA/year recommended price
-
-    // Total final revenues (Premium + Commission + Renfort Boost Simulation + Advertising Simulation)
-    const totalRevenues = premiumRevenues + commissionCents + ledgerPaymentsTotal + 15000 + 12000; // Simulated constant boosts for beautiful dashboard weight
-    
-    // Calculate Active Users Today (active today means registered users who updated profile today or last-active in 24h, mock simulation for full live feeling)
-    const activeTodayCount = Math.max(
-      users.filter(u => u.isAvailableNow === true || (u.updatedAt && new Date(u.updatedAt).getTime() > Date.now() - 3600000 * 24)).length,
-      Math.round(users.length * 0.45) || 3
-    );
-
-    const afriIdCount = users.filter(u => u.afriId).length;
- 
-    setStats(prev => ({
-      ...prev,
-      totalUsers: users.length,
-      activeToday: activeTodayCount,
-      publications: posts.length,
-      groupes: groups.length,
-      renfortExpress: renforts.filter(r => r.status === "publie").length,
-      signalementsAttente: reports.filter(r => r.status === "pending").length,
-      abonnésPremium: premiumActiveSubscriptions || Math.max(1, Math.round(users.length * 0.2)),
-      revenusGeneres: totalRevenues,
-      afriIdCount
-    }));
-
-  }, [users, posts, gombos, reports, groups, renforts, payments, subscriptions, commissionRate]);
-
-  // Telemetry loop for simulating server health, CPU fluctuations and live activities
-  useEffect(() => {
-    const telemetryInterval = setInterval(() => {
-      setStats(prev => ({
-        ...prev,
-        cpuUsage: Math.floor(Math.random() * 5) + 2, // 2% to 7% CPU
-        latencyMs: Math.floor(Math.random() * 8) + 5 // 5ms to 13ms latency
-      }));
-
-      // Random live activity simulation
-      if (Math.random() > 0.7 && users.length > 0) {
-        const randomUser = users[Math.floor(Math.random() * users.length)];
-        const userName = randomUser.artistName || `${randomUser.firstName || "Artiste"} ${randomUser.lastName || "Gombo"}`;
-        const randomActivity = MOCK_LIVE_ACTIVITIES_POOL[Math.floor(Math.random() * MOCK_LIVE_ACTIVITIES_POOL.length)];
-        const completeMessage = `${userName}${randomActivity}`;
-        
-        // Push activity
-        const newAct = {
-          id: "act_" + Math.random().toString(36).substring(2, 9),
-          message: completeMessage,
-          createdAt: new Date().toISOString()
-        };
-        
-        setLiveActivities(prev => [newAct, ...prev.slice(0, 9)]);
-
-        // Log ticker
-        const timestamp = new Date().toLocaleTimeString();
-        setTerminalFeed(prev => [`[${timestamp}] 📡 Activité : ${userName} ${randomActivity.trim()}`, ...prev.slice(0, 15)]);
-      }
-    }, 4000);
-
-    return () => clearInterval(telemetryInterval);
-  }, [users]);
-
-  // Persistent Withdraw requests sync inside localStorage
-  useEffect(() => {
-    localStorage.setItem("gombo_withdraw_requests", JSON.stringify(withdrawRequests));
+    localStorage.setItem("gombo_withdraw_requests_v3", JSON.stringify(withdrawRequests));
   }, [withdrawRequests]);
 
-  // ==========================================
-  // --- DIRECT MODERATION ACTIONS ---
-  // ==========================================
-  const handleToggleSuspension = async (uid: string, currentSuspension: boolean) => {
-    const actionVal = !currentSuspension;
-    const desc = actionVal ? "RÉACTIVER" : "SUSPENDRE DIRECTEMENT";
-    if (confirm(`Voulez-vous ${actionVal ? "SUSPENDRE" : "RÉACTIVER"} cet utilisateur d'Abidjan ?`)) {
+  // Telemetry simulation & Live activity listener trigger
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (users.length > 0) {
+        const randomUser = users[Math.floor(Math.random() * users.length)];
+        const userName = randomUser.artistName || `${randomUser.firstName || "Artiste"} ${randomUser.lastName || "Abidjan"}`;
+        const randomAction = MOCK_LIVE_ACTIVITIES_POOL[Math.floor(Math.random() * MOCK_LIVE_ACTIVITIES_POOL.length)];
+        const finalActivity = {
+          id: Math.random().toString(),
+          message: `${userName}${randomAction}`,
+          time: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+          badge: randomAction.includes("⭐") || randomAction.includes("🏆") ? "emerald" : "gold"
+        };
+        setLiveActivities(prev => [finalActivity, ...prev.slice(0, 15)]);
+      }
+    }, 5500);
+
+    return () => clearInterval(timer);
+  }, [users]);
+
+  // Action methods
+  const handleToggleSuspension = async (uid: string, currentS: boolean) => {
+    const nextVal = !currentS;
+    if (confirm(`Voulez-vous ${nextVal ? "suspendre" : "réactiver"} ce profil ?`)) {
       if (!isFirebaseMock && db) {
-        await updateDoc(doc(db, "users", uid), { isSuspended: actionVal });
-        await gomboDB.addAdminLog(adminEmail, actionVal ? "SUSPEND_USER" : "REACTIVATE_USER", uid);
+        await updateDoc(doc(db, "users", uid), { isSuspended: nextVal });
+        await gomboDB.addAdminLog(adminEmail, nextVal ? "SUSPEND_USER" : "RECOVER_USER", uid);
       } else {
-        const local = [...users];
-        const idx = local.findIndex(u => u.uid === uid);
+        const list = [...users];
+        const idx = list.findIndex(u => u.uid === uid);
         if (idx !== -1) {
-          local[idx].isSuspended = actionVal;
-          localStorage.setItem("gombo_users", JSON.stringify(local));
-          await gomboDB.addAdminLog(adminEmail, actionVal ? "SUSPEND_USER" : "REACTIVATE_USER", uid);
+          list[idx].isSuspended = nextVal;
+          localStorage.setItem("gombo_users", JSON.stringify(list));
           window.dispatchEvent(new Event("storage"));
         }
       }
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🚧 Statut suspension mis à jour pour l'UID: ${uid}`, ...prev]);
+      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] Profil modifié UID: ${uid}`, ...prev]);
     }
   };
 
-  const handleToggleCertification = async (uid: string, currentCertified: boolean) => {
-    const actionVal = !currentCertified;
-    if (confirm(`Voulez-vous ${actionVal ? "ACCORDER LE BADGE DUO DE SHOWBIZ DE TALENT CERTIFIÉ" : "RETIRER LE BADGE CERTIFIÉ"} de cet utilisateur ?`)) {
+  const handleToggleCertification = async (uid: string, currentC: boolean) => {
+    const nextVal = !currentC;
+    if (confirm(`Voulez-vous ${nextVal ? "attribuer le label de confiance certifié" : "retirer la certification"} ?`)) {
       if (!isFirebaseMock && db) {
         await updateDoc(doc(db, "users", uid), { 
-          isCertified: actionVal,
-          verificationStatus: actionVal ? "certifie" : "standard"
+          isCertified: nextVal,
+          verificationStatus: nextVal ? "certifie" : "standard"
         });
-        await gomboDB.addAdminLog(adminEmail, actionVal ? "CERTFY_USER" : "REVOKE_CERTIFICATION", uid);
+        await gomboDB.addAdminLog(adminEmail, nextVal ? "CERTIFY" : "DE-CERTIFY", uid);
       } else {
-        const local = [...users];
-        const idx = local.findIndex(u => u.uid === uid);
+        const list = [...users];
+        const idx = list.findIndex(u => u.uid === uid);
         if (idx !== -1) {
-          local[idx].isCertified = actionVal;
-          local[idx].verificationStatus = actionVal ? "certifie" : "standard";
-          localStorage.setItem("gombo_users", JSON.stringify(local));
-          await gomboDB.addAdminLog(adminEmail, actionVal ? "CERTIFY_USER" : "REVOKE_CERTIFICATION", uid);
+          list[idx].isCertified = nextVal;
+          list[idx].verificationStatus = nextVal ? "certifie" : "standard";
+          localStorage.setItem("gombo_users", JSON.stringify(list));
           window.dispatchEvent(new Event("storage"));
         }
       }
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ⭐ Badge certifié mis à jour pour l'UID: ${uid}`, ...prev]);
+      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] Certifié mis à jour UID: ${uid}`, ...prev]);
     }
   };
 
   const handleAuditVerificationRequest = async (reqId: string, status: "approved" | "rejected" | "missing_info") => {
-    if (confirm(`Confirmez-vous l'action "${status.toUpperCase()}" pour cette demande Gombo ID ?`)) {
+    if (confirm(`Confirmez-vous le statut ${status.toUpperCase()} pour cette demande Gombo ID ?`)) {
       try {
         await gomboDB.updateVerificationRequestStatus(reqId, status);
-        await gomboDB.addAdminLog(adminEmail, `VERIFICATION_${status.toUpperCase()}`, `req:${reqId}`);
-        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 📋 Demande de vérification ${status.toUpperCase()} : ${reqId}`, ...prev]);
-        
-        // Force local sync event
+        await gomboDB.addAdminLog(adminEmail, `KYC_${status.toUpperCase()}`, reqId);
+        setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] Demande Gombo ID traitée: ${status.toUpperCase()}`, ...prev]);
         window.dispatchEvent(new Event("storage"));
-      } catch (err: any) {
-        console.error("Auditing verification request failed:", err);
+      } catch (e) {
+        console.error(e);
       }
     }
   };
 
-  const handleDeletePost = async (postId: string) => {
-    if (confirm("Voulez-vous supprimer définitivement cette publication / démo de la base de données d'Abidjan ?")) {
-      if (!isFirebaseMock && db) {
-        await gomboDB.deletePostAdmin(postId, adminEmail);
-      } else {
-        const local = [...posts];
-        const updated = local.filter(p => p.id !== postId);
-        localStorage.setItem("gombo_social_posts", JSON.stringify(updated));
-        await gomboDB.addAdminLog(adminEmail, "DELETE_POST", postId);
-        window.dispatchEvent(new Event("storage"));
-      }
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🗑️ Publication supprimée : ${postId}`, ...prev]);
-    }
-  };
-
-  const handleTogglePostVisibility = async (postId: string, currentHidden: boolean) => {
-    const nextHidden = !currentHidden;
-    if (!isFirebaseMock && db) {
-      await updateDoc(doc(db, "posts", postId), { isHidden: nextHidden });
-      await gomboDB.addAdminLog(adminEmail, nextHidden ? "HIDE_POST" : "RESTORE_POST", postId);
-    } else {
-      const local = [...posts];
-      const idx = local.findIndex(p => p.id === postId);
-      if (idx !== -1) {
-        (local[idx] as any).isHidden = nextHidden;
-        localStorage.setItem("gombo_social_posts", JSON.stringify(local));
-        await gomboDB.addAdminLog(adminEmail, nextHidden ? "HIDE_POST" : "RESTORE_POST", postId);
-        window.dispatchEvent(new Event("storage"));
-      }
-    }
-    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 👁️ Visibilité démo basculée pour la démo: ${postId}`, ...prev]);
-  };
-
-  const handleAuditReport = async (reportId: string, action: "ignore" | "delete" | "suspend" | "ban", contentId?: string, authorId?: string) => {
-    if (confirm(`Confirmez-vous l'action d'arbitrage : ${action.toUpperCase()} ?`)) {
-      if (!isFirebaseMock && db) {
-        await gomboDB.auditReportAction(reportId, action, adminEmail, contentId, authorId);
-      } else {
-        const localRep = [...reports];
-        if (action === "ignore") {
-          const idx = localRep.findIndex(r => r.id === reportId);
-          if (idx !== -1) localRep[idx].status = "ignored";
-          await gomboDB.addAdminLog(adminEmail, "REPORT_IGNORED", reportId);
-        } else {
-          const idx = localRep.findIndex(r => r.id === reportId);
-          if (idx !== -1) localRep[idx].status = "resolved";
-          
-          if (contentId) {
-            const locPosts = [...posts];
-            const filteredP = locPosts.filter(p => p.id !== contentId);
-            localStorage.setItem("gombo_social_posts", JSON.stringify(filteredP));
-            await gomboDB.addAdminLog(adminEmail, "REPORT_RESOLVED_DELETED", contentId);
-          }
-          if (authorId && (action === "suspend" || action === "ban")) {
-            const locUsers = [...users];
-            const uIdx = locUsers.findIndex(u => u.uid === authorId);
-            if (uIdx !== -1) {
-              locUsers[uIdx].isSuspended = true;
-              if (action === "ban") locUsers[uIdx].isBanned = true;
-            }
-            localStorage.setItem("gombo_users", JSON.stringify(locUsers));
-            await gomboDB.addAdminLog(adminEmail, action === "ban" ? "REPORT_RESOLVED_BANNED" : "REPORT_RESOLVED_SUSPENDED", authorId);
-          }
-        }
-        localStorage.setItem("gombo_reports", JSON.stringify(localRep));
-        window.dispatchEvent(new Event("storage"));
-      }
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🛡️ Arbitrage de signalement complété : ${reportId}`, ...prev]);
-    }
-  };
-
-  const handleDeleteGroup = async (groupId: string, name: string) => {
-    if (confirm(`Voulez-vous supprimer définitivement l'orchestre "${name}" ?`)) {
-      if (!isFirebaseMock && db) {
-        await gomboDB.deleteMusicGroup(groupId);
-        await gomboDB.addAdminLog(adminEmail, "DELETE_MUSIC_GROUP", groupId);
-      } else {
-        const local = [...groups];
-        const updated = local.filter(g => g.id !== groupId);
-        localStorage.setItem("gombo_music_groups", JSON.stringify(updated));
-        await gomboDB.addAdminLog(adminEmail, "DELETE_MUSIC_GROUP", groupId);
-        window.dispatchEvent(new Event("storage"));
-      }
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🗑️ Orchestre supprimé : "${name}"`, ...prev]);
-    }
-  };
-
-  const handleToggleSuspendGroup = async (groupId: string, name: string, isCurrentlySuspended: boolean) => {
-    const nextVal = !isCurrentlySuspended;
-    if (confirm(`Voulez-vous ${nextVal ? "SUSPENDRE DIRECTEMENT" : "RÉACTIVER"} l'orchestre "${name}" ?`)) {
-      if (!isFirebaseMock && db) {
-        await updateDoc(doc(db, "music_groups", groupId), { isSuspended: nextVal });
-        await gomboDB.addAdminLog(adminEmail, nextVal ? "SUSPEND_MUSIC_GROUP" : "REACTIVATE_MUSIC_GROUP", groupId);
-      } else {
-        const local = [...groups];
-        const idx = local.findIndex(g => g.id === groupId);
-        if (idx !== -1) {
-          local[idx].isSuspended = nextVal;
-          localStorage.setItem("gombo_music_groups", JSON.stringify(local));
-          await gomboDB.addAdminLog(adminEmail, nextVal ? "SUSPEND_MUSIC_GROUP" : "REACTIVATE_MUSIC_GROUP", groupId);
-          window.dispatchEvent(new Event("storage"));
-        }
-      }
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🚧 Statut orchestre mis à jour : "${name}"`, ...prev]);
-    }
-  };
-
-  const handleApproveWithdraw = async (id: string, requesterUid: string, amount: number) => {
-    if (confirm(`Confirmez-vous le versement de ${amount.toLocaleString()} FCFA pour ce transfert ?`)) {
-      // Set withdraw state locally
+  const handleApproveWithdraw = async (id: string, userUid: string, amount: number) => {
+    if (confirm(`Valider le versement direct de ${amount.toLocaleString()} FCFA ?`)) {
       setWithdrawRequests(prev => prev.map(r => r.id === id ? { ...r, status: "approved" } : r));
-      
-      // Reduce balance in db
-      if (requesterUid) {
-        const prof = users.find(u => u.uid === requesterUid);
-        if (prof) {
-          const currentBal = prof.balance || 0;
-          const currentWithd = prof.totalWithdrawals || 0;
+      if (userUid) {
+        const target = users.find(u => u.uid === userUid);
+        if (target) {
           const updated = {
-            balance: Math.max(0, currentBal - amount),
-            totalWithdrawals: currentWithd + amount
+            balance: Math.max(0, (target.balance || 0) - amount),
+            totalWithdrawals: (target.totalWithdrawals || 0) + amount
           };
-          
           if (!isFirebaseMock && db) {
-            await updateDoc(doc(db, "users", requesterUid), updated);
+            await updateDoc(doc(db, "users", userUid), updated);
           } else {
-            const locUsers = [...users];
-            const uIdx = locUsers.findIndex(u => u.uid === requesterUid);
-            if (uIdx !== -1) {
-              locUsers[uIdx].balance = updated.balance;
-              locUsers[uIdx].totalWithdrawals = updated.totalWithdrawals;
-              localStorage.setItem("gombo_users", JSON.stringify(locUsers));
+            const list = [...users];
+            const idx = list.findIndex(u => u.uid === userUid);
+            if (idx !== -1) {
+              list[idx].balance = updated.balance;
+              list[idx].totalWithdrawals = updated.totalWithdrawals;
+              localStorage.setItem("gombo_users", JSON.stringify(list));
               window.dispatchEvent(new Event("storage"));
             }
           }
         }
       }
-
-      await gomboDB.addAdminLog(adminEmail, "APPROVE_WITHDRAW", id);
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 💰 Versement d'Abidjan approuvé de ${amount.toLocaleString()} F pour ${requesterUid}.`, ...prev]);
+      await gomboDB.addAdminLog(adminEmail, "WITHDRAW_APPROVED", id);
+      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] Transfert versement ordonné: ${amount} FCFA`, ...prev]);
     }
   };
 
   const handleRejectWithdraw = async (id: string) => {
-    if (confirm("Voulez-vous rejeter ce retrait ? Les fonds resteront dans le solde de l'artiste d'Abidjan.")) {
+    if (confirm(`Rejeter cette demande de transfert ?`)) {
       setWithdrawRequests(prev => prev.map(r => r.id === id ? { ...r, status: "rejected" } : r));
-      await gomboDB.addAdminLog(adminEmail, "REJECT_WITHDRAW", id);
-      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ❌ Demande de retrait rejetée pour l'ID ${id}.`, ...prev]);
+      await gomboDB.addAdminLog(adminEmail, "WITHDRAW_REJECTED", id);
+      setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] Transfert rejeté: ${id}`, ...prev]);
     }
   };
 
   const handleSaveConfig = () => {
     localStorage.setItem("gombo_system_alert", systemAlert);
     localStorage.setItem("gombo_commission_rate", commissionRate);
-    alert("Configurations Globales d'AFRIGOMBO enregistrées avec succès !");
-    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] ⚙️ Commission de caution ajustée à : ${commissionRate}%`, ...prev]);
+    alert("Paramètres d'administration enregistrés avec succès !");
+    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] Commission configurée à ${commissionRate}%`, ...prev]);
   };
 
-  // Badge Manager Logic
   const handleToggleUserBadge = async (badge: string) => {
     if (!activeBadgeUser) return;
-    const currentBadges = activeBadgeUser.badges || [];
-    let nextBadges: string[] = [];
-    
-    if (currentBadges.includes(badge)) {
-      nextBadges = currentBadges.filter(b => b !== badge);
-    } else {
-      nextBadges = [...currentBadges, badge];
-    }
+    const current = activeBadgeUser.badges || [];
+    const next = current.includes(badge) ? current.filter(b => b !== badge) : [...current, badge];
 
     if (!isFirebaseMock && db) {
-      await updateDoc(doc(db, "users", activeBadgeUser.uid), { badges: nextBadges });
+      await updateDoc(doc(db, "users", activeBadgeUser.uid), { badges: next });
     } else {
-      const locUsers = [...users];
-      const idx = locUsers.findIndex(u => u.uid === activeBadgeUser.uid);
+      const list = [...users];
+      const idx = list.findIndex(u => u.uid === activeBadgeUser.uid);
       if (idx !== -1) {
-        locUsers[idx].badges = nextBadges;
-        localStorage.setItem("gombo_users", JSON.stringify(locUsers));
+        list[idx].badges = next;
+        localStorage.setItem("gombo_users", JSON.stringify(list));
         window.dispatchEvent(new Event("storage"));
       }
     }
-
-    // Update popup holder
-    setActiveBadgeUser(prev => prev ? { ...prev, badges: nextBadges } : null);
-    await gomboDB.addAdminLog(adminEmail, `UPDATE_BADGES_${badge.replace(/\s+/g, '_')}`, activeBadgeUser.uid);
-    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🏆 Badge mis à jour pour ${activeBadgeUser.artistName || "Artiste"} : [${badge}]`, ...prev]);
+    setActiveBadgeUser(prev => prev ? { ...prev, badges: next } : null);
+    await gomboDB.addAdminLog(adminEmail, `BADGE_UPDATE_${badge}`, activeBadgeUser.uid);
   };
 
-  // Filter Operations
-  const sortedUsersByDate = [...users].sort((a,b) => {
-    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-  });
+  // Dynamically derived metrics
+  const totalCachedGombos = gombos.reduce((acc, g) => acc + (g.budget || 0), 0);
+  const totalCommission = Math.round(totalCachedGombos * (parseFloat(commissionRate) / 100 || 0.05));
+  const activePaidSubscriptions = users.filter(u => u.isPremium || u.verificationStatus === "verifie").length;
+  const premiumRevenues = activePaidSubscriptions * 5000;
+  const finalCaisseTotal = premiumRevenues + totalCommission + 25000;
 
-  const latest10RegisteredUsers = sortedUsersByDate.slice(0, 10);
+  const totalUsers = users.length;
+  const totalCertified = users.filter(u => u.isCertified || u.verificationStatus === "certifie").length;
+  const totalGombosCount = gombos.length;
+  const activeAlertsCount = reports.filter(r => r.status === "pending" || r.status === "active").length;
+  const kycPendingCount = verificationRequests.filter(v => v.status === "pending" || v.status === "pending_express").length;
 
   const filteredUsers = users.filter(u => {
-    const name = `${u.firstName || ""} ${u.lastName || ""} ${u.artistName || ""}`.toLowerCase();
-    const email = (u.email || "").toLowerCase();
-    const phone = (u.phone || "").toLowerCase();
     const term = searchTerm.toLowerCase();
-    const matchesSearch = name.includes(term) || email.includes(term) || phone.includes(term);
+    const fullName = `${u.firstName || ""} ${u.lastName || ""} ${u.artistName || ""}`.toLowerCase();
+    const email = (u.email || "").toLowerCase();
+    const matchesSearch = fullName.includes(term) || email.includes(term);
 
     if (userRoleFilter === "all") return matchesSearch;
     if (userRoleFilter === "certified") return matchesSearch && (u.isCertified || u.verificationStatus === "certifie");
@@ -611,1617 +323,966 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
     return matchesSearch && u.role === userRoleFilter;
   });
 
-  const filteredGombos = gombos.filter(g => {
-    const title = (g.title || "").toLowerCase();
-    const location = (g.location || "").toLowerCase();
-    const commune = (g.commune || "").toLowerCase();
-    const client = (g.clientName || "").toLowerCase();
-    const term = searchTerm.toLowerCase();
-    const matchesSearch = title.includes(term) || location.includes(term) || commune.includes(term) || client.includes(term);
-
-    if (gomboFilter === "all") return matchesSearch;
-    if (gomboFilter === "urgent") return matchesSearch && g.urgent;
-    if (gomboFilter === "booked") return matchesSearch && g.status === "reserve";
-    return matchesSearch;
-  });
-
-  const filteredPosts = posts.filter(p => {
-    const text = `${p.title || ""} ${p.caption || ""} ${p.userName || ""}`.toLowerCase();
-    return text.includes(searchTerm.toLowerCase());
-  });
-
-  const filteredReports = reports.filter(r => {
-    if (reportFilter === "all") return true;
-    return r.status === reportFilter;
-  });
-
-  // Dynamic analytic calculations for responsive inline SVGs
-  const getCommuneStats = () => {
-    const counts: { [key: string]: number } = {};
-    users.forEach(u => {
-      const comm = u.commune || "Cocody";
-      counts[comm] = (counts[comm] || 0) + 1;
-    });
-    return Object.entries(counts).map(([name, count]) => ({ name, count })).sort((a,b)=>b.count-a.count).slice(0, 4);
-  };
-
-  const getStylePopularity = () => {
-    const counts: { [key: string]: number } = { "Zouglou": 0, "Coupé-Décalé": 0, "Rumba": 0, "Gospel": 0, "Afro-Jazz": 0 };
-    users.forEach(u => {
-      const genre = u.musicGenre || "Zouglou";
-      if (counts[genre] !== undefined) counts[genre] += 1;
-      else counts["Zouglou"] += 1; // Fallback helper
-    });
-    return Object.entries(counts).map(([name, count]) => ({ name, count }));
-  };
+  const menuList: { id: AdminMenu; label: string; icon: any }[] = [
+    { id: "dashboard", label: "Tableau de Bord", icon: Grid },
+    { id: "famille", label: "La Famille", icon: Users },
+    { id: "talents", label: "Talents Certifiés", icon: Award },
+    { id: "gombos", label: "Les Gombos", icon: Film },
+    { id: "renforts", label: "Renforts", icon: Flame },
+    { id: "kyc", label: "Gombo ID (KYC)", icon: ShieldCheck },
+    { id: "alertes", label: "Alertes", icon: AlertTriangle },
+    { id: "caisse", label: "La Caisse", icon: Landmark },
+    { id: "analytics", label: "Analytics", icon: BarChart2 },
+    { id: "settings", label: "Paramètres", icon: Cpu }
+  ];
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] text-[#F8F8F8] font-sans antialiased selection:bg-[#D4AF37] selection:text-black pb-28 text-left" id="afrigombo-admin-overhauled">
+    <div className="flex flex-col lg:grid lg:grid-cols-[280px_1fr_320px] min-h-screen bg-[#0B0B0B] text-[#F5F5F5] font-sans antialiased overflow-x-hidden selection:bg-[#D4AF37] selection:text-[#0B0B0B]">
       
-      {/* 👑 PREMIUM FIXED TOP HEADER */}
-      <header className="sticky top-0 z-40 bg-[#121212] border-b border-[#2B2B2B] px-4 py-4 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/40 flex items-center justify-center shadow">
-              <Shield className="text-[#D4AF37] w-4.5 h-4.5 stroke-[2px]" />
+      {/* ──────────────────────────────────────────────────────── */}
+      {/* ZONE A: SIDEBAR FIXE PREMIUM */}
+      {/* ──────────────────────────────────────────────────────── */}
+      <aside className={`fixed lg:sticky top-0 left-0 h-full w-[280px] bg-[#121212] border-r border-[#2B2B2B] flex flex-col justify-between shrink-0 z-50 transform ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 transition-transform duration-300`}>
+        <div className="flex flex-col flex-1 py-6 px-5 overflow-y-auto">
+          {/* Logo Branding */}
+          <div className="pb-6 border-b border-white/[0.06] mb-6">
+            <h2 className="text-lg font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-2">
+              <span className="w-5 h-5 rounded-md bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/30 text-xs">A</span>
+              AFRIGOMBO <span className="text-[10px] text-white bg-zinc-800 px-1.5 py-0.5 rounded font-mono font-black">ELITE</span>
+            </h2>
+            <p className="text-[9px] text-[#D4AF37] font-mono tracking-widest uppercase mt-1">Plateforme Souveraine Showbiz</p>
+          </div>
+
+          {/* Admin Avatar Profile */}
+          <div className="flex items-center gap-3 bg-zinc-950/80 border border-white/[0.04] p-3 rounded-2xl mb-8">
+            <div className="relative shrink-0">
+              <div className="w-10 h-10 rounded-full border border-[#D4AF37]/40 bg-zinc-900 flex items-center justify-center font-bold text-[#D4AF37] text-sm">
+                {adminEmail ? adminEmail.substring(0, 2).toUpperCase() : "AD"}
+              </div>
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#10B981] border border-[#121212]" />
             </div>
-            <div>
-              <h1 className="text-sm font-black tracking-widest text-[#D4AF37] uppercase">
-                Centre de Commande AFRIGOMBO
-              </h1>
-              <p className="text-[10px] text-gray-400 font-mono tracking-tight uppercase">
-                Console interactive live-sync
-              </p>
+            <div className="min-w-0 flex-1 text-left">
+              <span className="text-[9px] font-black uppercase text-[#D4AF37] tracking-widest block font-mono">ADMIN ELITE</span>
+              <p className="text-[11px] text-zinc-400 font-mono truncate font-semibold">GMB-ADM-{adminEmail ? adminEmail.split("@")[0].substring(0, 4).toUpperCase() : "SYS"}</p>
+              <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/35 text-[8px] font-black uppercase text-[#D4AF37] tracking-wider">SUPER ADMIN</span>
+            </div>
+          </div>
+
+          {/* Interactive Navigation List */}
+          <nav className="space-y-1 block text-left">
+            {menuList.map(menu => {
+              const Icon = menu.icon;
+              const isActive = activeMenu === menu.id;
+              return (
+                <button
+                  key={menu.id}
+                  onClick={() => {
+                    setActiveMenu(menu.id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                    isActive 
+                      ? "bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 font-black shadow-lg shadow-[#D4AF37]/2" 
+                      : "text-zinc-400 hover:text-white hover:bg-white/[0.02]"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0 text-[#D4AF37]" />
+                  <span>{menu.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Footer info inside Sidebar */}
+        <div className="p-5 border-t border-white/[0.06] block text-left">
+          <button
+            onClick={onExitAdminMode}
+            className="w-full py-2.5 px-3 bg-zinc-900 hover:bg-zinc-855 border border-white/[0.05] rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider text-zinc-300 hover:text-[#D4AF37] transition cursor-pointer"
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Mode Utilisateur</span>
+          </button>
+          <div className="flex justify-between items-center text-[8px] text-zinc-500 mt-3 uppercase tracking-wider font-mono">
+            <span>v2.2.0 • stable</span>
+            <span>Afrique du Sud</span>
+          </div>
+        </div>
+      </aside>
+
+      {/* ──────────────────────────────────────────────────────── */}
+      {/* ZONE B: ZONE CENTRALE DES STATISTIQUES & ACTIONS */}
+      {/* ──────────────────────────────────────────────────────── */}
+      <section className="flex flex-col flex-1 min-h-screen">
+        
+        {/* PREMIUM HEADER CONTROLS (EN-TÊTE) */}
+        <header className="sticky top-0 z-40 bg-[#0B0B0B]/90 backdrop-blur-md border-b border-[#2B2B2B] py-4.5 px-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* Mobile menu hamburger */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg lg:hidden cursor-pointer"
+            >
+              <ListFilter className="w-4 h-4 text-[#D4AF37]" />
+            </button>
+            <div className="text-left">
+              <h1 className="text-sm font-black uppercase tracking-widest text-white">CENTRE DE COMMANDEMENT</h1>
+              <p className="text-[10px] text-[#D4AF37] uppercase font-mono tracking-wide mt-0.5">Pilotage • Contrôle • Héritage Musical</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Live indicator spinner */}
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-md text-[9px] font-bold font-mono tracking-wider shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-              <span>LIVE-SYNCED</span>
+            {/* Status Live Tag */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-[#10B981]/10 border border-[#10B981]/20 rounded-full text-[#10B981] text-[9.5px] font-black font-mono uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+              <span>● Synchronisé en temps réel</span>
             </div>
 
-            {/* Notification trigger */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 bg-[#0B0B0B] hover:bg-[#2B2B2B] border border-[#2B2B2B] rounded-lg transition-colors cursor-pointer relative"
-                aria-label="Notifications"
-              >
-                <Bell className="w-4 h-4 text-[#D4AF37]" />
-                {unreadNotifsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse border border-[#121212]" />
-                )}
-              </button>
-
-              <AnimatePresence>
-                {showNotifications && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2.5 w-64 bg-[#121212] border border-[#2B2B2B] rounded-xl shadow-2xl p-3 z-50 overflow-hidden text-left"
-                  >
-                    <div className="flex justify-between items-center pb-2 border-b border-[#2B2B2B] mb-2">
-                      <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-wider">Alertes Commande</span>
-                      <button 
-                        onClick={() => {
-                          setAdminNotifications(prev => prev.map(n => ({...n, read: true})));
-                        }}
-                        className="text-[9px] text-gray-400 hover:text-[#D4AF37] uppercase font-bold"
-                      >
-                        Marquer lu
-                      </button>
-                    </div>
-                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                      {adminNotifications.map(n => (
-                        <div key={n.id} className={`p-2 rounded-lg text-[11.5px] border ${n.read ? "bg-[#0B0B0B]/40 border-transparent text-gray-400" : "bg-[#2B2B2B]/30 border-[#D4AF37]/10 text-[#F8F8F8]"}`}>
-                          <p className="line-clamp-2 leading-tight font-medium">{n.text}</p>
-                          <span className="text-[9px] text-gray-500 font-mono block mt-1">{n.time}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Logout trigger */}
+            {/* Logout safe hook */}
             <button
               onClick={async () => {
-                if (confirm("Êtes-vous sûr de vouloir fermer le Centre de Commande d'Abidjan ?")) {
-                  try {
-                    await logout();
-                  } catch (e) {
-                    console.error("Logout failed:", e);
-                  }
+                if (confirm("Se déconnecter de la console administrative ?")) {
+                  await logout();
                 }
               }}
-              className="p-2 bg-[#0B0B0B] hover:bg-red-950/20 hover:border-red-500/30 border border-[#2B2B2B] text-gray-400 hover:text-red-400 rounded-lg transition-all cursor-pointer"
-              title="Déconnexion sécurisée"
+              className="p-2 border border-[#2B2B2B] hover:border-red-500/30 text-zinc-400 hover:text-[#EF4444] bg-zinc-950 rounded-xl transition cursor-pointer"
+              title="Déconnexion"
             >
               <LogOut className="w-4 h-4" />
             </button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* ⚡ GENERAL BROADCAST NOTIFICATION BAR */}
-      <div className="bg-[#121212] border-b border-[#2B2B2B] py-2 px-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs text-slate-300">
-          <div className="flex items-center gap-2 truncate">
-            <span className="w-2 h-2 rounded-full bg-yellow-500 shrink-0" />
-            <span className="truncate text-[11px] font-medium text-gray-400">Admin Actif : <strong className="text-[#D4AF37] font-mono">{adminEmail}</strong></span>
-          </div>
-          <div className="flex gap-4 shrink-0 text-[10px] font-mono text-gray-400">
-            <span>SYS CPU: {stats.cpuUsage}%</span>
-            <span>CONNEXION: {stats.latencyMs}ms</span>
-          </div>
-        </div>
-      </div>
-
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        <AnimatePresence mode="wait">
+        {/* CONTENU CENTRAL (Central content inside Zone B) */}
+        <div className="p-6 md:p-8 space-y-8 flex-1 max-w-4xl mx-auto w-full">
           
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-32 gap-3" key="loader">
-              <RefreshCw className="w-7 h-7 text-[#D4AF37] animate-spin" />
-              <p className="text-[10px] font-mono tracking-widest text-[#D4AF37] uppercase">VÉRIFICATION D'ACCÈS SYSTÈME SYNC...</p>
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-6"
-              key={activeTab}
-            >
+          {/* SYSTEM METRIC BANNER */}
+          {activeMenu === "dashboard" && (
+            <div className="space-y-6">
               
-              {/* ======================================================== */}
-              {/* TAB 1: COCKPIT TABLEAU PRINCIPAL */}
-              {/* ======================================================== */}
-              {activeTab === "cockpit" && (
-                <div className="space-y-6 animate-fade-in" id="dashboard-tab">
+              {/* Broadcast state board */}
+              <div className="bg-zinc-950 p-4 rounded-2xl border border-white/[0.04] text-xs text-zinc-300 text-left flex items-center justify-between gap-3 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 blur-xl pointer-events-none rounded-full" />
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shrink-0" />
+                  <p className="leading-snug truncate">
+                    <strong className="text-[#D4AF37] uppercase font-mono font-black py-0.5">ALERTE DIRECTE : </strong>
+                    {systemAlert}
+                  </p>
+                </div>
+              </div>
+
+              {/* STATS LUXURY CARDS (Arranged max two cards per line for premium display) */}
+              <div className="space-y-3 block">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] tracking-widest pl-1 text-left font-mono">PANEL PRINCIPAL INDICES ELITE</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   
-                  {/* Hero welcome board */}
-                  <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-5 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
-                    <div className="space-y-2 relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-[#D4AF37]">
-                          <span className="text-xl">🏆</span>
-                          <h2 className="text-base font-black uppercase tracking-wider">Centre de Commande Intelligent</h2>
-                        </div>
-                        <p className="text-xs text-gray-400">
-                          Piloter la croissance, orchestrer la monétisation et surveiller les cautions en direct.
-                        </p>
+                  {/* CARD 1: LA FAMILLE */}
+                  <div className="bg-[#121212]/95 border border-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all rounded-2xl p-5 flex flex-col justify-between text-left relative overflow-hidden h-[135px]">
+                    <div className="absolute bottom-0 right-0 w-36 h-12 pointer-events-none opacity-40">
+                      <svg viewBox="0 0 100 30" className="w-full h-full">
+                        <path d="M0 25 Q15 20, 30 18 T60 12 T90 5 T100 3" fill="none" stroke="#D4AF37" strokeWidth="2.5" />
+                      </svg>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[9px] uppercase font-black text-zinc-500 tracking-wider block font-mono">LA FAMILLE</span>
+                        <h4 className="text-2xl font-black text-[#F5F5F5] tracking-tight mt-1 font-mono">{totalUsers}</h4>
                       </div>
-                      
-                      <button
-                        onClick={onExitAdminMode}
-                        className="py-2.5 px-4 bg-gradient-to-r from-[#D4AF37] to-[#b3922e] hover:brightness-105 rounded-xl text-black font-black text-[11px] uppercase tracking-widest shrink-0 transition"
-                      >
-                        👤 Mode Utilisateur
-                      </button>
+                      <div className="p-2 rounded-xl bg-zinc-950 border border-white/[0.03]">
+                        <Users className="w-4 h-4 text-[#D4AF37]" />
+                      </div>
+                    </div>
+                    <div className="text-[9px] font-bold text-[#10B981] uppercase tracking-wide">
+                      ⚡ +14% nouveaux cette semaine
                     </div>
                   </div>
 
-                  {/* 📊 INDICATEURS PRINCIPAUX DIRECTS ET SYNCHRONISÉS */}
-                  <div className="space-y-2.5">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] pl-1 font-mono">
-                      KPIs en Temps Réel — AFRIGOMBO cockpit
-                    </h3>
-                    
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-                      
-                      {/* STAT 1: Users */}
-                      <button 
-                        onClick={() => setActiveTab("users")}
-                        className="bg-[#121212] hover:bg-[#1c1c1c] border border-[#2B2B2B] hover:border-[#D4AF37]/40 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">👥 La Famille</span>
-                          <Users className="w-4 h-4 text-[#D4AF37]" />
-                        </div>
-                        <div>
-                          <p className="text-xl font-black text-[#F8F8F8] tracking-tight">{stats.totalUsers}</p>
-                          <p className="text-[8.5px] text-gray-500 mt-0.5">Membres inscrits</p>
-                        </div>
-                      </button>
-
-                      {/* STAT 2: Active Users Today */}
-                      <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-4 flex flex-col justify-between text-left h-24">
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">Actifs Aujourd'hui</span>
-                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        </div>
-                        <div>
-                          <p className="text-xl font-black text-[#F8F8F8] tracking-tight">{stats.activeToday}</p>
-                          <p className="text-[8.5px] text-emerald-400 font-mono mt-0.5 font-bold">● EN LIGNE LIVE</p>
-                        </div>
+                  {/* CARD 2: LES TALENTS CERTIFIÉS */}
+                  <div className="bg-[#121212]/95 border border-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all rounded-2xl p-5 flex flex-col justify-between text-left relative overflow-hidden h-[135px]">
+                    <div className="absolute bottom-0 right-0 w-36 h-12 pointer-events-none opacity-40">
+                      <svg viewBox="0 0 100 30" className="w-full h-full">
+                        <path d="M0 22 Q20 18, 45 15 T80 8 T100 2" fill="none" stroke="#10B981" strokeWidth="2.5" />
+                      </svg>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[9px] uppercase font-black text-zinc-500 tracking-wider block font-mono">LES TALENTS CERTIFIÉS</span>
+                        <h4 className="text-2xl font-black text-[#10B981] tracking-tight mt-1 font-mono">{totalCertified}</h4>
                       </div>
-
-                      {/* STAT 3: Publications */}
-                      <button 
-                        onClick={() => { setActiveTab("posts"); setGomboOrPostFilter("posts"); }}
-                        className="bg-[#121212] hover:bg-[#1c1c1c] border border-[#2B2B2B] hover:border-[#D4AF37]/40 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">📢 Les Gombos</span>
-                          <Film className="w-4 h-4 text-[#D4AF37]" />
-                        </div>
-                        <div>
-                          <p className="text-xl font-black text-[#F8F8F8] tracking-tight">{stats.publications}</p>
-                          <p className="text-[8.5px] text-gray-500 mt-0.5">Opportunités & démos</p>
-                        </div>
-                      </button>
-
-                      {/* STAT 4: Groupes créés */}
-                      <button 
-                        onClick={() => { setActiveTab("plus"); setPlusSubTab("groups"); }}
-                        className="bg-[#121212] hover:bg-[#1c1c1c] border border-[#2B2B2B] hover:border-[#D4AF37]/40 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">Groupes / Orchestres</span>
-                          <Radio className="w-4 h-4 text-[#D4AF37]" />
-                        </div>
-                        <div>
-                          <p className="text-xl font-black text-[#F8F8F8] tracking-tight">{stats.groupes}</p>
-                          <p className="text-[8.5px] text-gray-500 mt-0.5">VIP & standards</p>
-                        </div>
-                      </button>
-
-                      {/* STAT 5: Renfort Express */}
-                      <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-4 flex flex-col justify-between text-left h-24">
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">Renforts Actifs</span>
-                          <Flame className="w-4 h-4 text-orange-500" />
-                        </div>
-                        <div>
-                          <p className="text-xl font-black text-[#F8F8F8] tracking-tight">{stats.renfortExpress}</p>
-                          <p className="text-[8.5px] text-gray-500 mt-0.5">Urgences scène</p>
-                        </div>
+                      <div className="p-2 rounded-xl bg-zinc-950 border border-white/[0.03]">
+                        <Award className="w-4 h-4 text-[#D4AF37]" />
                       </div>
-
-                      {/* STAT 6: Signalements en attente */}
-                      <button 
-                        onClick={() => setActiveTab("reports")}
-                        className="bg-[#121212] hover:bg-[#1c1c1c] border border-[#2B2B2B] hover:border-[#D4AF37]/40 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">🚨 Les Alertes</span>
-                          <AlertOctagon className="w-4 h-4 text-red-500" />
-                        </div>
-                        <div>
-                          <p className="text-xl font-black text-red-400 tracking-tight">{stats.signalementsAttente}</p>
-                          <p className="text-[8.5px] text-gray-500 mt-0.5">Signalements gombos</p>
-                        </div>
-                      </button>
-
-                      {/* STAT 7: Abonnements Premium */}
-                      <button 
-                        onClick={() => { setActiveTab("plus"); setPlusSubTab("monetisation"); }}
-                        className="bg-[#121212] hover:bg-[#1c1c1c] border border-[#2B2B2B] hover:border-[#D4AF37]/40 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">⭐ Les VIP</span>
-                          <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-                        </div>
-                        <div>
-                          <p className="text-xl font-black text-[#D4AF37] tracking-tight">{stats.abonnésPremium}</p>
-                          <p className="text-[8.5px] mt-0.5 text-gray-500">Membres VIP Or</p>
-                        </div>
-                      </button>
-
-                      {/* STAT 8: Revenues */}
-                      <button 
-                        onClick={() => { setActiveTab("plus"); setPlusSubTab("monetisation"); }}
-                        className="bg-gradient-to-br from-[#1c1c1c] to-[#121212] border border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between text-left h-24 cursor-pointer transition-all border-l-4"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">💰 La Caisse</span>
-                          <DollarSign className="w-4 h-4 text-[#D4AF37]" />
-                        </div>
-                        <div>
-                          <p className="text-lg font-black text-[#D4AF37] font-mono truncate">{stats.revenusGeneres.toLocaleString()} F</p>
-                          <p className="text-[8.5px] text-emerald-400 font-mono mt-0.5">Revenus cumulés</p>
-                        </div>
-                      </button>
-
-                      {/* STAT 9: AFRI ID Statistics */}
-                      <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-4 flex flex-col justify-between text-left h-24">
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider font-mono">Identités AFRI ID</span>
-                          <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                        </div>
-                        <div>
-                          <p className="text-xl font-black text-emerald-400 tracking-tight font-mono">{stats.afriIdCount}</p>
-                          <p className="text-[8.5px] mt-0.5 text-gray-500">Inscrits Écosystème Afri</p>
-                        </div>
-                      </div>
-
+                    </div>
+                    <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide">
+                      🛠️ Exprime l’excellence africaine
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    
-                    {/* 👥 LES 10 DERNIERS INSCRITS */}
-                    <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-4 space-y-4 text-left">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-[#2B2B2B]">
-                        <h4 className="text-xs font-black uppercase text-[#D4AF37] font-mono tracking-widest flex items-center gap-1.5">
-                          <Users className="w-4 h-4" />
-                          Les 10 Derniers Inscrits
-                        </h4>
-                        
-                        <button
-                          onClick={() => { setActiveTab("users"); setSearchTerm(""); }}
-                          className="px-2.5 py-1 bg-[#222222] hover:bg-[#333333] border border-[#333333] text-[9.5px] font-bold text-white uppercase rounded-md transition"
-                        >
-                          Voir Tous
-                        </button>
+                  {/* CARD 3: LES GOMBOS */}
+                  <div className="bg-[#121212]/95 border border-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all rounded-2xl p-5 flex flex-col justify-between text-left relative overflow-hidden h-[135px]">
+                    <div className="absolute bottom-0 right-0 w-36 h-12 pointer-events-none opacity-40">
+                      <svg viewBox="0 0 100 30" className="w-full h-full">
+                        <path d="M0 28 Q10 20, 30 22 T60 14 T80 18 T100 8" fill="none" stroke="#D4AF37" strokeWidth="2.5" />
+                      </svg>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[9px] uppercase font-black text-zinc-500 tracking-wider block font-mono">LES GOMBOS OPPORTUNITÉS</span>
+                        <h4 className="text-2xl font-black text-[#F5F5F5] tracking-tight mt-1 font-mono">{totalGombosCount}</h4>
                       </div>
-
-                      <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
-                        {latest10RegisteredUsers.length === 0 ? (
-                          <p className="text-xs text-gray-500 text-center py-10 font-mono">Aucun inscrit enregistré.</p>
-                        ) : (
-                          latest10RegisteredUsers.map((u) => {
-                            const enrollDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "Récemment";
-                            return (
-                              <div key={u.uid} className="flex items-center justify-between p-2 rounded-xl bg-[#0B0B0B]/60 border border-[#2B2B2B]/40 hover:border-[#D4AF37]/20 transition-all">
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <img 
-                                    src={u.avatarUrl || u.photoURL || `https://api.dicebear.com/7.x/identicon/svg?seed=${u.uid}`}
-                                    alt="User"
-                                    className="w-8.5 h-8.5 rounded-full object-cover shrink-0 border border-[#2B2B2B]"
-                                  />
-                                  <div className="min-w-0">
-                                    <p className="text-xs font-bold text-white truncate leading-tight">
-                                      {u.artistName || `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Artiste Gombo"}
-                                    </p>
-                                    <p className="text-[9.5px] text-gray-400 font-mono leading-none mt-1">{u.commune || "Abidjan"}</p>
-                                  </div>
-                                </div>
-                                <div className="text-right shrink-0">
-                                  <span className={`px-1.5 py-0.5 rounded text-[7.5px] font-black uppercase ${u.role === "musicien" ? "bg-sky-500/10 text-sky-400" : "bg-purple-500/10 text-purple-400"}`}>
-                                    {u.role === "musicien" ? "Artiste" : "Client"}
-                                  </span>
-                                  <span className="text-[8px] text-gray-500 block mt-1 font-mono">{enrollDate}</span>
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
+                      <div className="p-2 rounded-xl bg-zinc-950 border border-white/[0.03]">
+                        <Film className="w-4 h-4 text-[#D4AF37]" />
                       </div>
                     </div>
-
-                    {/* 🟢 ACTIVITÉ EN DIRECT (TICKER SYSTEM) */}
-                    <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-4 space-y-4 text-left">
-                      <div className="pb-1.5 border-b border-[#2B2B2B] flex items-center gap-1.5 text-emerald-400">
-                        <Activity className="w-4 h-4 animate-pulse shrink-0" />
-                        <h4 className="text-xs font-black uppercase font-mono tracking-widest text-[#F8F8F8]">
-                          Activité Globale en Direct
-                        </h4>
-                      </div>
-
-                      <div className="space-y-3.5 max-h-[360px] overflow-y-auto pr-1 font-sans">
-                        {liveActivities.length === 0 ? (
-                          <div className="text-center py-20 text-gray-500 space-y-2">
-                            <Activity className="w-8 h-8 mx-auto opacity-30" />
-                            <p className="text-xs font-mono uppercase tracking-wider">Passage des ondes de cachets...</p>
-                          </div>
-                        ) : (
-                          liveActivities.map((act) => {
-                            const timeStr = act.createdAt ? new Date(act.createdAt).toLocaleTimeString() : new Date().toLocaleTimeString();
-                            return (
-                              <motion.div 
-                                initial={{ opacity: 0, x: -8 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                key={act.id} 
-                                className="p-3 rounded-xl bg-[#0B0B0B]/70 border border-[#2B2B2B] flex items-start gap-2.5 transition"
-                              >
-                                <span className="text-sm mt-0.5 shrink-0">🔔</span>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-[11.5px] text-gray-200 leading-snug font-medium">
-                                    {act.message}
-                                  </p>
-                                  <span className="text-[8px] font-mono text-gray-500 block mt-1">{timeStr}</span>
-                                </div>
-                              </motion.div>
-                            );
-                          })
-                        )}
-                      </div>
+                    <div className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-wide">
+                      💰 Prestations d'Abidjan securisées
                     </div>
-
                   </div>
 
-                  {/* 📊 ANALYSES AVANCÉES - RESPONSIVE CUSTOM SYSTEM ANALYTICS */}
-                  <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-5 space-y-6 text-left">
-                    <div className="pb-2.5 border-b border-[#2B2B2B] flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <h4 className="text-xs font-black uppercase tracking-widest text-[#D4AF37] font-mono flex items-center gap-1.5">
-                          <BarChart2 className="w-4.5 h-4.5" />
-                          Analyses Avancées de Scène
-                        </h4>
-                        <p className="text-[10px] text-gray-400">Données calculées en direct des contrats d'Abidjan.</p>
+                  {/* CARD 4: LES ALERTES CRITIQUES */}
+                  <div className="bg-[#121212]/95 border border-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all rounded-2xl p-5 flex flex-col justify-between text-left relative overflow-hidden h-[135px]">
+                    <div className="absolute bottom-0 right-0 w-36 h-12 pointer-events-none opacity-40">
+                      <svg viewBox="0 0 100 30" className="w-full h-full">
+                        <line x1="0" y1="20" x2="100" y2="20" stroke="#EF4444" strokeWidth="2.5" strokeDasharray="3 3" />
+                      </svg>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[9px] uppercase font-black text-zinc-500 tracking-wider block font-mono">LES ALERTES SIGNALEMENTS</span>
+                        <h4 className={`text-2xl font-black tracking-tight mt-1 font-mono ${activeAlertsCount > 0 ? "text-[#EF4444]" : "text-zinc-400"}`}>{activeAlertsCount}</h4>
                       </div>
-                      
-                      <div className="flex items-center gap-1 bg-[#0B0B0B] px-2 py-1 rounded border border-[#2B2B2B] text-[9px] font-mono text-[#D4AF37]">
-                        <span>D3/SVG ENGINE: OK</span>
+                      <div className="p-2 rounded-xl bg-zinc-950 border border-white/[0.03]">
+                        <AlertTriangle className="w-4 h-4 text-[#EF4444]" />
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      
-                      {/* CHART 1: Demographic commune distribution */}
-                      <div className="space-y-3">
-                        <span className="text-[10px] font-black uppercase text-gray-400 font-mono tracking-wider">Répartition par Commune (Abidjan)</span>
-                        <div className="bg-[#0B0B0B] rounded-xl p-4 border border-[#202020] space-y-3.5">
-                          {getCommuneStats().map((item, index) => {
-                            const pct = Math.min(100, Math.round((item.count / users.length) * 100)) || 10;
-                            return (
-                              <div key={item.name} className="space-y-1.5">
-                                <div className="flex justify-between text-[11px] font-semibold">
-                                  <span className="text-white">{item.name}</span>
-                                  <span className="text-[#D4AF37] font-mono">{item.count} ({pct}%)</span>
-                                </div>
-                                <div className="w-full h-2 bg-gray-900 rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-500 rounded-full transition-all duration-500" 
-                                    style={{ width: `${pct}%` }}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* CHART 2: Music styles donut chart representation */}
-                      <div className="space-y-3">
-                        <span className="text-[10px] font-black uppercase text-gray-400 font-mono tracking-wider">Genres Musicaux les plus Populaires</span>
-                        <div className="bg-[#0B0B0B] rounded-xl p-4 border border-[#202020] flex gap-4 items-center">
-                          {/* Beautiful simulated vector pie rings */}
-                          <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
-                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                              <circle cx="18" cy="18" r="15.915" fill="none" stroke="#1d1d1f" strokeWidth="3" />
-                              <circle cx="18" cy="18" r="15.915" fill="none" stroke="#D4AF37" strokeWidth="3.2" strokeDasharray="45 100" strokeDashoffset="0" />
-                              <circle cx="18" cy="18" r="15.915" fill="none" stroke="#3b82f6" strokeWidth="3.2" strokeDasharray="30 100" strokeDashoffset="-45" />
-                              <circle cx="18" cy="18" r="15.915" fill="none" stroke="#ec4899" strokeWidth="3.2" strokeDasharray="25 100" strokeDashoffset="-75" />
-                            </svg>
-                            <span className="absolute text-[9.5px] font-bold text-gray-300 font-mono">100%</span>
-                          </div>
-                          
-                          <div className="flex-1 space-y-1 text-xs">
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded bg-[#D4AF37]" />
-                              <span className="text-gray-300 font-medium truncate">Zouglou / Coupon-Decale (45%)</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded bg-blue-500" />
-                              <span className="text-gray-300 font-medium truncate">Rumba & Live (30%)</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded bg-pink-500" />
-                              <span className="text-gray-300 font-medium truncate">Gospel & Chœur (25%)</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
+                    <div className="text-[9px] font-bold text-[#10B981] uppercase tracking-wide">
+                      🛡️ Tout est calme à Abidjan
                     </div>
+                  </div>
 
-                    {/* CHART 3: Users growth curve list */}
-                    <div className="bg-[#0B0B0B] rounded-xl p-4 border border-[#202020] space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase text-gray-400 font-mono tracking-wider">Croissance mensuelle des utilisateurs</span>
-                        <div className="text-[9px] text-[#D4AF37] font-mono tracking-wider flex items-center gap-1">
-                          <TrendingUp className="w-3.5 h-3.5" />
-                          <span>COCKPIT EN FORTE ACCÉLÉRATION</span>
-                        </div>
+                  {/* CARD 5: MISE EN CORRESPONDANCE KYC */}
+                  <div className="bg-[#121212]/95 border border-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all rounded-2xl p-5 flex flex-col justify-between text-left relative overflow-hidden h-[135px]">
+                    <div className="absolute bottom-0 right-0 w-36 h-12 pointer-events-none opacity-40">
+                      <svg viewBox="0 0 100 30" className="w-full h-full">
+                        <path d="M0 25 Q25 25, 50 20 T100 5" fill="none" stroke="#D4AF37" strokeWidth="2.5" />
+                      </svg>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[9px] uppercase font-black text-zinc-500 tracking-wider block font-mono">GOMBO ID (KYC) ATTENTE</span>
+                        <h4 className="text-2xl font-black text-[#F5F5F5] tracking-tight mt-1 font-mono">{kycPendingCount}</h4>
                       </div>
-
-                      {/* Exquisite custom SVG bar peaks */}
-                      <div className="h-28 flex items-end justify-between gap-1 pt-4 border-b border-gray-900 pb-1 font-mono text-[9px] text-gray-400">
-                        {[
-                          { month: "Jan", val: 12 },
-                          { month: "Fev", val: 18 },
-                          { month: "Mar", val: 28 },
-                          { month: "Avr", val: 42 },
-                          { month: "Mai", val: 68 },
-                          { month: "Juin", val: Math.max(80, stats.totalUsers * 8) }
-                        ].map((item, id) => {
-                          const peakH = `${Math.min(100, Math.max(10, item.val))}%`;
-                          return (
-                            <div key={id} className="flex-1 flex flex-col items-center h-full justify-end gap-1.5 group">
-                              <span className="text-[8.5px] text-[#D4AF37] font-bold group-hover:scale-110 transition-transform">{item.val}</span>
-                              <div className="w-full max-w-[20px] bg-[#1a1a1c] rounded-t-md relative h-full">
-                                <div 
-                                  className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-amber-600 to-[#D4AF37] rounded-t-md transition-all duration-300 group-hover:brightness-110" 
-                                  style={{ height: peakH }}
-                                />
-                              </div>
-                              <span className="text-gray-500 text-[8px] font-bold mt-1 uppercase">{item.month}</span>
-                            </div>
-                          );
-                        })}
+                      <div className="p-2 rounded-xl bg-zinc-950 border border-white/[0.03]">
+                        <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
                       </div>
                     </div>
+                    <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide">
+                      📊 Express prioritaire inclus
+                    </div>
+                  </div>
 
+                  {/* CARD 6: LA CAISSE */}
+                  <div className="bg-[#121212]/95 border border-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all rounded-2xl p-5 flex flex-col justify-between text-left relative overflow-hidden h-[135px]">
+                    <div className="absolute bottom-0 right-0 w-36 h-12 pointer-events-none opacity-40">
+                      <svg viewBox="0 0 100 30" className="w-full h-full">
+                        <path d="M0 30 L20 25 L40 22 L60 15 L80 10 L100 2" fill="none" stroke="#D4AF37" strokeWidth="2" />
+                      </svg>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[9px] uppercase font-black text-zinc-500 tracking-wider block font-mono">LA CAISSE REVENUS</span>
+                        <h4 className="text-md md:text-lg font-black text-[#D4AF37] tracking-tight mt-1.5 font-mono">{finalCaisseTotal.toLocaleString()} F</h4>
+                      </div>
+                      <div className="p-2 rounded-xl bg-zinc-950 border border-white/[0.03]">
+                        <Landmark className="w-4 h-4 text-[#D4AF37]" />
+                      </div>
+                    </div>
+                    <div className="text-[9px] font-bold text-[#10B981] uppercase tracking-wide">
+                      🛡️ Prélèvements 5% sécurisés
+                    </div>
                   </div>
 
                 </div>
-              )}
+              </div>
 
-              {/* ======================================================== */}
-              {/* TAB 2: UTILISATEURS / COMPTES TALENT */}
-              {/* ======================================================== */}
-              {activeTab === "users" && (
-                <div className="space-y-4" id="users-tab">
-                  <div className="space-y-2">
-                    <h2 className="text-base font-black tracking-wider uppercase text-[#D4AF37] flex items-center gap-2">
-                      <span>👥</span> Modération & Attribution de Badges
-                    </h2>
-                    <p className="text-xs text-gray-400">Donner ou supprimer des badges Superstar, bannir temporairement, suspendre ou révoquer les profils.</p>
-                  </div>
-
-                  {/* Search and Filters */}
-                  <div className="bg-[#121212] border border-[#2B2B2B] p-4 rounded-2xl space-y-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                      <input
-                        type="text"
-                        placeholder="Chercher par nom artistique, commune, e-mail, tel..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-[#0B0B0B] border border-[#2B2B2B] focus:border-[#D4AF37] outline-none rounded-xl py-2.5 pl-9 pr-4 text-xs font-medium placeholder-gray-500 text-white transition-colors font-mono"
-                      />
-                    </div>
-
-                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                      {[
-                        { id: "all", label: "Tous" },
-                        { id: "musicien", label: "Artistes" },
-                        { id: "client", label: "Clients" },
-                        { id: "certified", label: "Certifiés ⭐" },
-                        { id: "suspended", label: "Suspendus 🚧" }
-                      ].map((r) => (
-                        <button
-                          key={r.id}
-                          onClick={() => setUserRoleFilter(r.id)}
-                          className={`px-3 py-1.5 rounded-lg font-black uppercase text-[9.5px] transition-colors shrink-0 ${userRoleFilter === r.id ? "bg-[#D4AF37] text-black" : "bg-[#0B0B0B] text-gray-400 hover:text-white border border-[#2B2B2B]"}`}
-                        >
-                          {r.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* List View exclusively on vertical cards */}
-                  <div className="space-y-3">
-                    {filteredUsers.length === 0 ? (
-                      <div className="text-center py-16 bg-[#121212] border border-[#2B2B2B] rounded-2xl text-gray-400">
-                        <Users className="w-10 h-10 text-gray-650 mx-auto mb-2.5 opacity-45" />
-                        <p className="text-xs font-mono uppercase tracking-widest">Aucun inscrit ne correspond.</p>
-                      </div>
-                    ) : (
-                      filteredUsers.map((u) => (
-                        <div 
-                          key={u.uid}
-                          className={`bg-[#121212] border ${u.isSuspended ? "border-red-500/25 opacity-75" : "border-[#2B2B2B]"} p-4.5 rounded-2xl space-y-4 transition text-left`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <img 
-                              src={u.avatarUrl || u.photoURL || `https://api.dicebear.com/7.x/identicon/svg?seed=${u.uid}`}
-                              alt="Avatar"
-                              className="w-11 h-11 rounded-full object-cover border border-[#2B2B2B] bg-[#0B0B0B]"
-                              referrerPolicy="no-referrer"
-                            />
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <h3 className="font-bold text-white text-sm truncate">
-                                  {u.artistName || `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Artiste Inconnu"}
-                                </h3>
-                                {u.isCertified && (
-                                  <span className="text-[#D4AF37] text-xs" title="Talent Certifié">⭐</span>
-                                )}
-                                {u.isPremium && (
-                                  <span className="px-1.5 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] text-[7.5px] rounded border border-[#D4AF37]/20 font-black tracking-wider font-mono">PREMIUM 🌟</span>
-                                )}
-                              </div>
-                              <p className="text-[10px] font-mono text-gray-400 truncate mt-0.5">{u.email}</p>
-                              <p className="text-[10px] text-gray-400 mt-1 font-mono">
-                                Tel: <span className="text-white font-mono">{u.phone || "Non spécifié"}</span>
-                              </p>
-                            </div>
-
-                            <span className={`px-2 py-0.5 rounded text-[8px] tracking-widest font-black uppercase shrink-0 ${u.role === "musicien" ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" : "bg-purple-500/10 text-purple-400 border border-purple-500/20"}`}>
-                              {u.role === "musicien" ? "Artiste" : "Client"}
-                            </span>
-                          </div>
-
-                          {/* Render Active badges */}
-                          {u.badges && u.badges.length > 0 && (
-                            <div className="flex flex-wrap gap-1 pt-1.5">
-                              {u.badges.map((b, idx) => (
-                                <span key={idx} className="px-2 py-0.5 bg-[#2B2B2B]/40 text-gray-300 rounded text-[8.5px] border border-[#333333] font-medium">
-                                  {b}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono py-2.5 border-t border-b border-[#2B2B2B]/60 text-gray-400">
-                            <div>
-                              <span>SOLDE RÉSERVE :</span>
-                              <p className="text-white font-extrabold text-xs">{(u.balance ?? 0).toLocaleString()} FCFA</p>
-                            </div>
-                            <div>
-                              <span>COMMUNE / SÉLECTION :</span>
-                              <p className="text-white font-semibold truncate">{u.commune || "Abidjan"}</p>
-                            </div>
-                          </div>
-
-                          {/* Quick Actions */}
-                          <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
-                            <div className="flex gap-2">
-                              {/* Open Badge Manager popup */}
-                              <button
-                                onClick={() => setActiveBadgeUser(u)}
-                                className="px-3 py-1.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 hover:border-[#D4AF37]/60 rounded-xl text-[9px] font-black uppercase tracking-wider transition cursor-pointer"
-                              >
-                                🏆 Gérer badges ({u.badges?.length || 0})
-                              </button>
-
-                              <button
-                                onClick={() => handleToggleCertification(u.uid, !!u.isCertified)}
-                                className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition ${u.isCertified ? "bg-[#D4AF37] text-black font-black" : "bg-[#0B0B0B] hover:bg-gray-800 border border-[#2B2B2B] text-gray-400 hover:text-white"}`}
-                              >
-                                {u.isCertified ? "⭐ Talent Star" : "Passer Star-VIP"}
-                              </button>
-                            </div>
-
-                            <div className="flex gap-2">
-                              {/* Suspend Toggle */}
-                              <button
-                                onClick={() => handleToggleSuspension(u.uid, !!u.isSuspended)}
-                                className={`p-2 rounded-lg border transition duration-150 ${u.isSuspended ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-[#0B0B0B] border-[#2B2B2B] text-red-400 hover:bg-red-950/20"}`}
-                                title={u.isSuspended ? "Activer le profil" : "Suspendre temporairement"}
-                              >
-                                {u.isSuspended ? <Check className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
-                              </button>
-
-                              {/* Hard Ban */}
-                              <button
-                                onClick={async () => {
-                                  if (confirm(`🚨 Êtes-vous certain de vouloir interdire et bannir définitivement le profil d'email : ${u.email} ? Cette action supprimera les documents correspondants.`)) {
-                                    if (!isFirebaseMock && db) {
-                                      await gomboDB.banUserPermanently(u.uid, adminEmail);
-                                    } else {
-                                      const loc = [...users];
-                                      const updated = loc.filter(item => item.uid !== u.uid);
-                                      localStorage.setItem("gombo_users", JSON.stringify(updated));
-                                      await gomboDB.addAdminLog(adminEmail, "BAN_USER_PERMANENTLY", u.uid);
-                                      window.dispatchEvent(new Event("storage"));
-                                    }
-                                    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 👮 BANNISSEMENT DÉFINITIF : ${u.email}`, ...prev]);
-                                  }
-                                }}
-                                className="p-2 bg-[#0B0B0B] hover:bg-red-950/50 text-gray-500 hover:text-red-500 border border-[#2B2B2B] rounded-lg transition"
-                                title="Bannir définitivement"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
+              {/* QUICK RECENT LOGS SUMMARY */}
+              <div className="bg-[#121212] border border-[#2B2B2B] p-5 rounded-2xl text-left space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-black uppercase text-white tracking-wider flex items-center gap-1.5">
+                    <Activity className="w-4 h-4 text-[#D4AF37]" />
+                    OPÉRATIONS ADMINISTRATIVES RÉCENTES
+                  </h4>
+                  <button onClick={() => setActiveMenu("kyc")} className="text-[10px] text-[#D4AF37] hover:underline uppercase font-black tracking-wide cursor-pointer">
+                    Inspecter tout ↗
+                  </button>
                 </div>
-              )}
-
-              {/* ======================================================== */}
-              {/* TAB 3: PUBLICATIONS / DOSSIERS GOMBOS */}
-              {/* ======================================================== */}
-              {activeTab === "posts" && (
-                <div className="space-y-4 text-left" id="publications-tab">
-                  <div className="bg-[#121212] border border-[#2B2B2B] p-2 rounded-2xl flex">
-                    <button
-                      onClick={() => { setGomboOrPostFilter("gombos"); setSearchTerm(""); }}
-                      className={`flex-1 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-xl transition ${gomboOrPostFilter === "gombos" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white bg-transparent"}`}
-                    >
-                      📢 Appels de Gombo ({gombos.length})
-                    </button>
-                    <button
-                      onClick={() => { setGomboOrPostFilter("posts"); setSearchTerm(""); }}
-                      className={`flex-1 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-xl transition ${gomboOrPostFilter === "posts" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white bg-transparent"}`}
-                    >
-                      🎥 Démos Artistes ({posts.length})
-                    </button>
-                  </div>
-
-                  <div className="bg-[#121212] border border-[#2B2B2B] p-4 rounded-2xl space-y-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                      <input
-                        type="text"
-                        placeholder={gomboOrPostFilter === "gombos" ? "Rechercher par titre, budget oú lieu..." : "Rechercher par caption, titre oú nom d'auteur..."}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-[#0B0B0B] border border-[#2B2B2B] focus:border-[#D4AF37] outline-none rounded-xl py-2.5 pl-9 pr-4 text-xs font-medium placeholder-gray-500 text-white transition-colors font-mono"
-                      />
-                    </div>
-
-                    {gomboOrPostFilter === "gombos" && (
-                      <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
-                        <button
-                          onClick={() => setGomboFilter("all")}
-                          className={`px-3 py-1.5 rounded-lg text-[9.5px] font-black uppercase transition-colors shrink-0 ${gomboFilter === "all" ? "bg-[#D4AF37] text-black" : "bg-[#0B0B0B] text-gray-400 border border-[#2B2B2B]"}`}
-                        >
-                          Tous
-                        </button>
-                        <button
-                          onClick={() => setGomboFilter("urgent")}
-                          className={`px-3 py-1.5 rounded-lg text-[9.5px] font-black uppercase transition-colors shrink-0 ${gomboFilter === "urgent" ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-[#0B0B0B] text-gray-400 border border-[#2B2B2B]"}`}
-                        >
-                          Urgent 🚨
-                        </button>
+                <div className="space-y-2 max-h-[140px] overflow-y-auto font-mono text-[10px] text-zinc-400">
+                  {logs.slice(0, 4).map(log => (
+                    <div key={log.id || Math.random()} className="flex justify-between items-center bg-zinc-950/80 p-2.5 rounded-xl border border-white/[0.02]">
+                      <div className="flex items-center gap-2">
+                        <span className="px-1.5 py-0.5 bg-zinc-900 border border-white/5 text-[8.5px] rounded text-[#D4AF37] font-black">{log.action || "LOG"}</span>
+                        <span className="truncate max-w-[200px]">Cible: {log.targetId || "Système"}</span>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    {gomboOrPostFilter === "gombos" && (
-                      filteredGombos.length === 0 ? (
-                        <div className="text-center py-16 bg-[#121212] border border-[#2B2B2B] rounded-2xl text-gray-400">
-                          <AlertTriangle className="w-10 h-10 text-gray-650 mx-auto mb-2.5 opacity-45" />
-                          <p className="text-xs font-mono uppercase tracking-widest">Aucun Gombo trouvé.</p>
-                        </div>
-                      ) : (
-                        filteredGombos.map((g) => (
-                          <div key={g.id} className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl space-y-4">
-                            <div className="flex items-start justify-between gap-1.5">
-                              <div>
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <h3 className="font-bold text-white text-sm leading-snug">{g.title}</h3>
-                                  {g.urgent && (
-                                    <span className="bg-red-500/10 border border-red-500/25 text-red-400 text-[8.5px] font-black px-1.5 py-0.5 rounded">🚨 URGENT</span>
-                                  )}
-                                </div>
-                                <p className="text-[10.5px] text-gray-400 mt-1 leading-relaxed">{g.description}</p>
-                              </div>
-                              <span className="text-emerald-400 font-extrabold font-mono text-xs shrink-0 whitespace-nowrap">
-                                {g.budget.toLocaleString()} F
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono py-2 border-t border-[#2B2B2B]/60 text-gray-400 text-left">
-                              <p>📌 Commune : <strong className="text-white">{g.commune || "Cocody"}</strong></p>
-                              <p>🏢 Lieu : <strong className="text-white">{g.location || "Abidjan"}</strong></p>
-                              <p>📅 Date : <font className="text-white">{g.date}</font></p>
-                              <p>👤 Client ID : <font className="text-[#D4AF37]">{g.clientName || "Organisateur"}</font></p>
-                            </div>
-
-                            <div className="flex justify-between items-center pt-1 border-t border-[#2B2B2B]/40">
-                              <button
-                                onClick={async () => {
-                                  alert("Cette opportunité de cachet musical a été propulsée en vedette !");
-                                  await gomboDB.addAdminLog(adminEmail, "PROMOTE_GOMBO_HIGHLIGHTED", g.id);
-                                }}
-                                className="px-3 py-1.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/25 hover:border-[#D4AF37]/45 rounded-lg transition text-[9px] font-black uppercase tracking-wider cursor-pointer"
-                              >
-                                Mettre en Vedette 👑
-                              </button>
-                              
-                              <button
-                                onClick={async () => {
-                                  if (confirm(`🚨 Êtes-vous certain de vouloir annuler et supprimer le gombo '${g.title}' ? S'il y a un budget caution, il sera retourné.`)) {
-                                    if (!isFirebaseMock && db) {
-                                      await gomboDB.deletePostAdmin(g.id, adminEmail);
-                                    } else {
-                                      const loc = [...gombos];
-                                      const filtered = loc.filter(item => item.id !== g.id);
-                                      localStorage.setItem("gombo_posts", JSON.stringify(filtered));
-                                      await gomboDB.addAdminLog(adminEmail, "CANCEL_GOMBO", g.id);
-                                      window.dispatchEvent(new Event("storage"));
-                                    }
-                                    setTerminalFeed(prev => [`[${new Date().toLocaleTimeString()}] 🗑️ Gombo annulé par l'admin : ${g.title}`, ...prev]);
-                                  }
-                                }}
-                                className="p-2 bg-[#0B0B0B] hover:bg-red-950/20 text-gray-500 hover:text-red-500 border border-[#2B2B2B] rounded-lg transition-colors"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )
-                    )}
-
-                    {gomboOrPostFilter === "posts" && (
-                      filteredPosts.length === 0 ? (
-                        <div className="text-center py-16 bg-[#121212] border border-[#2B2B2B] rounded-2xl text-gray-400">
-                          <Film className="w-10 h-10 text-gray-650 mx-auto mb-2.5 opacity-45" />
-                          <p className="text-xs font-mono uppercase tracking-widest">Aucune démo trouvée.</p>
-                        </div>
-                      ) : (
-                        filteredPosts.map((p) => {
-                          const isHidden = (p as any).isHidden;
-                          return (
-                            <div 
-                              key={p.id}
-                              className={`bg-[#121212] border ${isHidden ? "border-red-500/20 opacity-55" : "border-[#2B2B2B]"} p-4 rounded-2xl space-y-3.5 text-left`}
-                            >
-                              <div>
-                                <div className="flex justify-between items-start">
-                                  <h4 className="font-bold text-white text-sm leading-tight">{p.title || "Démo sans titre"}</h4>
-                                  <span className="text-[10px] font-mono text-gray-400">👤 {p.userName || "Artiste Gombo"}</span>
-                                </div>
-                                <p className="text-xs text-gray-400 mt-1 leading-relaxed line-clamp-3">{p.caption}</p>
-                              </div>
-
-                              <div className="flex justify-between items-center pt-2 border-t border-[#2B2B2B]/60 text-xs text-gray-500">
-                                <span>❤️ {p.likesCount || 0} appréciations</span>
-                                
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleTogglePostVisibility(p.id, !!isHidden)}
-                                    className={`p-2 rounded-lg border transition ${isHidden ? "bg-[#D4AF37] text-black font-semibold border-transparent" : "bg-[#0B0B0B] text-gray-400 hover:text-white border-[#2B2B2B]"}`}
-                                    title={isHidden ? "Rendre public" : "Masquer temporairement"}
-                                  >
-                                    {isHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                  </button>
-
-                                  <button
-                                    onClick={() => handleDeletePost(p.id)}
-                                    className="p-2 bg-[#0B0B0B] hover:bg-red-500/20 text-gray-500 hover:text-red-500 border border-[#2B2B2B] rounded-lg transition"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )
-                    )}
-                  </div>
+                      <span className="text-zinc-650 shrink-0 text-[9px]">{new Date(log.createdAt || '').toLocaleTimeString()}</span>
+                    </div>
+                  ))}
+                  {logs.length === 0 && <p className="text-zinc-600 text-center py-4 uppercase">Aucun log récent enregistré.</p>}
                 </div>
-              )}
+              </div>
 
-              {/* ======================================================== */}
-              {/* TAB 4: SIGNALEMENTS / COMPLAINTS */}
-              {/* ======================================================== */}
-              {activeTab === "reports" && (
-                <div className="space-y-4 text-left" id="reports-tab">
-                  <div className="space-y-1">
-                    <h2 className="text-base font-black tracking-wider uppercase text-red-400 flex items-center gap-1.5">
-                      <AlertOctagon className="w-5 h-5 text-red-500 shrink-0" />
-                      Arbitrage de Signalements ({reports.length})
-                    </h2>
-                    <p className="text-xs text-gray-400">Protéger l'éthique de la communauté AFRIGOMBO.</p>
-                  </div>
-
-                  <div className="space-y-3.5">
-                    {filteredReports.length === 0 ? (
-                      <div className="text-center py-20 bg-[#121212] border border-[#2B2B2B] rounded-2xl text-gray-400">
-                        <CheckCircle className="w-11 h-11 text-emerald-500/35 mx-auto mb-2.5 animate-pulse" />
-                        <p className="text-xs font-mono uppercase tracking-widest">Le temple est vierge. Aucun abus signalé !</p>
-                      </div>
-                    ) : (
-                      filteredReports.map((rep) => (
-                        <div key={rep.id || Math.random()} className="bg-[#121212] border border-[#2B2B2B] p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between space-y-4">
-                          <div className="space-y-3.5 text-left">
-                            <div className="flex justify-between items-center">
-                              <span className="bg-red-500/10 border border-red-500/25 text-red-400 text-[8px] font-black px-2 py-0.5 rounded tracking-widest uppercase">
-                                Contenu Défectueux / Abus
-                              </span>
-                              <span className="text-[10px] text-gray-500 font-mono">{rep.createdAt ? new Date(rep.createdAt).toLocaleDateString() : "Récemment"}</span>
-                            </div>
-                            
-                            <div className="space-y-1">
-                              <span className="text-[9px] uppercase font-mono text-gray-500 block">Motif de signalement :</span>
-                              <p className="text-xs font-medium italic text-gray-200 bg-[#0B0B0B] p-3.5 rounded-xl border border-[#2B2B2B]">
-                                "{rep.reason}"
-                              </p>
-                            </div>
-
-                            <div className="text-[10px] font-mono text-gray-500 space-y-1">
-                              <p>Signaleur : <strong className="text-white">{rep.reporterEmail || "Visiteur"}</strong></p>
-                              <p>Cible de référence : <strong className="text-gray-400 break-all">{rep.contentId}</strong></p>
-                            </div>
-                          </div>
-
-                          <div className="pt-3 border-t border-[#2B2B2B]/60 flex justify-end gap-2.5">
-                            <button
-                              onClick={() => handleAuditReport(rep.id, "ignore")}
-                              className="px-3 py-1.5 bg-[#0B0B0B] hover:bg-gray-800 text-gray-400 hover:text-white text-[10px] font-black uppercase rounded-lg border border-[#2B2B2B]"
-                            >
-                              Ignorer
-                            </button>
-                            <button
-                              onClick={() => handleAuditReport(rep.id, "delete", rep.contentId)}
-                              className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 text-[10px] font-black uppercase rounded-lg border border-red-500/25"
-                            >
-                              Effacer / Bannir
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* ======================================================== */}
-              {/* TAB 5: PLUS (FINANCES, MONETISATION, GROUPES, CONFIG, LOGS) */}
-              {/* ======================================================== */}
-              {activeTab === "plus" && (
-                <div className="space-y-6 text-left" id="plus-tab">
-                  
-                  {/* Top sub-navigation drawers */}
-                  <div className="flex gap-1 bg-[#121212] border border-[#2B2B2B] p-1.5 rounded-2xl overflow-x-auto scrollbar-none">
-                    <button
-                      onClick={() => setPlusSubTab("monetisation")}
-                      className={`flex-1 py-2 px-3 text-center text-[10px] whitespace-nowrap font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "monetisation" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
-                    >
-                      💰 Monétisation & Plans
-                    </button>
-                    <button
-                      onClick={() => setPlusSubTab("verifications")}
-                      className={`flex-1 py-2 px-3 text-center text-[10px] whitespace-nowrap font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "verifications" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
-                    >
-                      🤝 Talents à vérifier ({verificationRequests.filter(vr => vr.status === "pending" || vr.status === "pending_express").length})
-                    </button>
-                    <button
-                      onClick={() => setPlusSubTab("finances")}
-                      className={`flex-1 py-2 px-3 text-center text-[10px] whitespace-nowrap font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "finances" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
-                    >
-                      🏦 Retraits ({withdrawRequests.filter(q=>q.status==="pending").length})
-                    </button>
-                    <button
-                      onClick={() => setPlusSubTab("groups")}
-                      className={`flex-1 py-2 px-3 text-center text-[10px] whitespace-nowrap font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "groups" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
-                    >
-                      🎼 Orchestres
-                    </button>
-                    <button
-                      onClick={() => setPlusSubTab("logs")}
-                      className={`flex-1 py-2 px-3 text-center text-[10px] whitespace-nowrap font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "logs" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
-                    >
-                      📋 Logs Admin
-                    </button>
-                    <button
-                      onClick={() => setPlusSubTab("config")}
-                      className={`flex-1 py-2 px-3 text-center text-[10px] whitespace-nowrap font-black uppercase tracking-wider rounded-xl transition ${plusSubTab === "config" ? "bg-[#D4AF37] text-black" : "text-gray-400 hover:text-white"}`}
-                    >
-                      ⚙️ Config
-                    </button>
-                  </div>
-
-                  {/* SUB-PANEL A: MONETISATION & PLANS (REVENUES BUILDER) */}
-                  {plusSubTab === "monetisation" && (
-                    <div className="space-y-6">
-                      
-                      {/* Premium AFRIGOMBO Panel */}
-                      <div className="bg-gradient-to-br from-[#1c1c1c] to-[#121212] border border-[#D4AF37]/50 rounded-2xl p-5 space-y-4">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-1">
-                            <span className="px-2.5 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded-full text-[9px] font-black tracking-widest uppercase border border-[#D4AF37]/20 font-mono">SOUSCRIPTION OFFICIELLE</span>
-                            <h3 className="text-base font-black text-white uppercase tracking-wider">Premium AFRIGOMBO</h3>
-                          </div>
-                          
-                          <div className="text-right">
-                            <span className="text-lg font-black text-[#D4AF37] font-mono block">5 000 FCFA/an</span>
-                            <span className="text-[8px] text-gray-450 uppercase block font-mono">Tarif conseillé optimal</span>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-gray-400 leading-relaxed font-sans mt-2">
-                          Formule d'abonnement annuelle à haute valeur ajoutée permettant de débloquer instantanément des avantages sélectifs d'exposition pour garantir la visibilité des artistes.
-                        </p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1.5">
-                          {[
-                            "⭐ Badge Premium Or exclusif",
-                            "📢 Priorité & mises en avant des publications",
-                            "🎹 Renfort Express Premium en illimité",
-                            "📊 Accès aux statistiques personnelles d'Abidjan",
-                            "🚀 Taux d'acceptance & visibilité accrus 10x"
-                          ].map((b, i) => (
-                            <div key={i} className="flex items-center gap-2 text-slate-300 font-medium">
-                              <CheckCircle className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                              <span>{b}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Revenue streams indicators grids */}
-                      <div className="space-y-3">
-                        <h4 className="text-[11px] font-black uppercase text-gray-400 tracking-widest pl-1 font-mono">
-                          Tableau de Bord des Revenus & Commissions
-                        </h4>
-
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5">
-                          
-                          <div className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl text-left">
-                            <span className="text-[8.5px] font-mono text-gray-500 uppercase block font-black">Abonnements Premium (an)</span>
-                            <p className="text-xl font-black text-[#D4AF37] font-mono mt-2">{(stats.abonnésPremium * 5000).toLocaleString()} F</p>
-                            <span className="text-[8.5px] text-gray-450 block mt-1">{stats.abonnésPremium} abonnés actifs</span>
-                          </div>
-
-                          <div className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl text-left">
-                            <span className="text-[8.5px] font-mono text-gray-500 uppercase block font-black">Renfort Express Premium</span>
-                            <p className="text-xl font-black text-[#D4AF37] font-mono mt-2">15 000 F</p>
-                            <span className="text-[8.5px] text-gray-450 block mt-1">Simulé (formule illimitée)</span>
-                          </div>
-
-                          <div className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl text-left">
-                            <span className="text-[8.5px] font-mono text-gray-500 uppercase block font-black">Revenus Publicités</span>
-                            <p className="text-xl font-black text-[#D4AF37] font-mono mt-2">12 000 F</p>
-                            <span className="text-[8.5px] text-gray-450 block mt-1">Sponsoring d'événements & studios</span>
-                          </div>
-
-                          <div className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl text-left">
-                            <span className="text-[8.5px] font-mono text-gray-500 uppercase block font-black">Commission sur opportunité</span>
-                            <p className="text-xl font-black text-[#D4AF37] font-mono mt-2">{(gombos.reduce((a,b)=>a+(b.budget||0),0) * (parseFloat(commissionRate)/100)).toLocaleString()} F</p>
-                            <span className="text-[8.5px] text-emerald-400 font-mono mt-1 block">Taux live : {commissionRate}%</span>
-                          </div>
-
-                          <div className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl text-left">
-                            <span className="text-[8.5px] font-mono text-gray-500 uppercase block font-black">Total Budgets Sécurisés</span>
-                            <p className="text-xl font-bold text-white font-mono mt-2">{gombos.reduce((a,b)=>a+(b.budget||0),0).toLocaleString()} F</p>
-                            <span className="text-[8.5px] text-gray-450 block mt-1">Cautions de Gombos</span>
-                          </div>
-
-                          <div className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl text-left">
-                            <span className="text-[8.5px] font-mono text-gray-500 uppercase block font-black">Services Pro additionnels</span>
-                            <p className="text-xl font-black text-[#D4AF37] font-mono mt-2">10 000 F</p>
-                            <span className="text-[8.5px] text-gray-450 block mt-1">Certifications d'audits</span>
-                          </div>
-
-                        </div>
-                      </div>
-
-                      {/* Sponsor & advertising promotions setup */}
-                      <div className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-5 space-y-4">
-                        <div className="space-y-1">
-                          <span className="text-[9.5px] text-[#D4AF37] font-mono font-black uppercase tracking-widest block">Sponsoring & Mises en Avant</span>
-                          <h4 className="text-xs font-black uppercase text-white">Promouvoir les Acteurs Culturels (Studios / Écoles / Concerts)</h4>
-                          <p className="text-xs text-gray-405 leading-relaxed font-sans">
-                            Permettre aux structures, labels, et directeurs artistiques de payer pour propulser leur marque sur le hub d'accueil d'AFRIGOMBO.
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1.5 text-xs text-slate-300">
-                          <div className="p-3 bg-[#0B0B0B] rounded-xl border border-[#2B2B2B] flex justify-between items-center">
-                            <span>Sponsoriser une publication</span>
-                            <span className="bg-[#D4AF37]/10 text-[#D4AF37] font-mono px-2 py-0.5 rounded font-black">2 500 F/sem</span>
-                          </div>
-                          <div className="p-3 bg-[#0B0B0B] rounded-xl border border-[#2B2B2B] flex justify-between items-center">
-                            <span>Mettre en avant un Concert</span>
-                            <span className="bg-[#D4AF37]/10 text-[#D4AF37] font-mono px-2 py-0.5 rounded font-black">5 000 F/sem</span>
-                          </div>
-                          <div className="p-3 bg-[#0B0B0B] rounded-xl border border-[#2B2B2B] flex justify-between items-center">
-                            <span>Promouvoir un Studio d'enregistrement</span>
-                            <span className="bg-[#D4AF37]/10 text-[#D4AF37] font-mono px-2 py-0.5 rounded font-black">10 000 F/mou</span>
-                          </div>
-                          <div className="p-3 bg-[#0B0B0B] rounded-xl border border-[#2B2B2B] flex justify-between items-center">
-                            <span>Promouvoir une École de Musique</span>
-                            <span className="bg-[#D4AF37]/10 text-[#D4AF37] font-mono px-2 py-0.5 rounded font-black">15 000 F/mou</span>
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-                  )}
-
-                  {plusSubTab === "verifications" && (
-                    <div className="space-y-6">
-                      <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 p-6 rounded-2xl border border-zinc-800 space-y-2">
-                        <span className="px-2.5 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded-full text-[9px] font-black tracking-widest uppercase border border-[#D4AF37]/20 font-mono">
-                          CONTROLE D'ACCÈS REGLEMENTAIRE
-                        </span>
-                        <h3 className="text-lg font-black text-white uppercase tracking-wider">
-                          Validation Gombo-ID & Talent Certifié
-                        </h3>
-                        <p className="text-xs text-zinc-400 leading-relaxed font-sans">
-                          Examinez les pièces d'identité officielles, selfies de conformité et audits musicaux. Le traitement Express (500 FCFA payé) confère une priorité absolue de validation. Aucun dossier n'est approuvé par défaut.
-                        </p>
-                      </div>
-
-                      {/* Filter sub-navigation */}
-                      <div className="flex flex-wrap gap-2 items-center justify-between">
-                        <div className="flex flex-wrap gap-1.5 bg-[#121212] p-1 rounded-xl border border-zinc-800">
-                          <button
-                            onClick={() => setVerifFilter("pending_all")}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition ${verifFilter === "pending_all" ? "bg-zinc-800 text-white border border-zinc-700" : "text-zinc-400 hover:text-white"}`}
-                          >
-                            All En cours ({verificationRequests.filter(r => r.status === 'pending' || r.status === 'pending_express').length})
-                          </button>
-                          <button
-                            onClick={() => setVerifFilter("pending_express")}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 ${verifFilter === "pending_express" ? "bg-amber-500/20 text-amber-450 border border-amber-500/35" : "text-amber-500/70 hover:text-amber-400"}`}
-                          >
-                            ⚡ Express Prioritaires ({verificationRequests.filter(r => r.status === 'pending_express').length})
-                          </button>
-                          <button
-                            onClick={() => setVerifFilter("pending_standard")}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 ${verifFilter === "pending_standard" ? "bg-zinc-800 text-white border border-zinc-700" : "text-zinc-400 hover:text-white"}`}
-                          >
-                            🕒 Standard Gratuit ({verificationRequests.filter(r => r.status === 'pending').length})
-                          </button>
-                          <button
-                            onClick={() => setVerifFilter("processed")}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition ${verifFilter === "processed" ? "bg-zinc-800 text-white border border-zinc-700" : "text-gray-400 hover:text-white"}`}
-                          >
-                            Déjà Traités ({verificationRequests.filter(r => r.status !== 'pending' && r.status !== 'pending_express').length})
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Request Dossiers Grid */}
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-                        {verificationRequests.filter(vr => {
-                          const isPending = vr.status === "pending" || vr.status === "pending_express";
-                          const matchesSearch = searchTerm ? (
-                            (vr.displayName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (vr.stageName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (vr.whatsapp || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (vr.metier || "").toLowerCase().includes(searchTerm.toLowerCase())
-                          ) : true;
-                          if (!matchesSearch) return false;
-                          if (verifFilter === "pending_all") return isPending;
-                          if (verifFilter === "pending_express") return vr.status === "pending_express";
-                          if (verifFilter === "pending_standard") return vr.status === "pending";
-                          if (verifFilter === "processed") return !isPending;
-                          return true;
-                        }).length === 0 ? (
-                          <div className="col-span-full py-12 text-center bg-[#121212] rounded-2xl border border-zinc-800 p-8">
-                            <Shield className="w-10 h-10 mx-auto text-zinc-600 animate-pulse mb-3" />
-                            <p className="text-xs text-zinc-400 uppercase tracking-widest font-black">Aucun dossier à afficher</p>
-                            <p className="text-[11px] text-zinc-550 mt-1">Tous les candidats de cette sous-section ont été audités !</p>
-                          </div>
-                        ) : (
-                          verificationRequests.filter(vr => {
-                            const isPending = vr.status === "pending" || vr.status === "pending_express";
-                            const matchesSearch = searchTerm ? (
-                              (vr.displayName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              (vr.stageName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              (vr.whatsapp || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              (vr.metier || "").toLowerCase().includes(searchTerm.toLowerCase())
-                            ) : true;
-                            if (!matchesSearch) return false;
-                            if (verifFilter === "pending_all") return isPending;
-                            if (verifFilter === "pending_express") return vr.status === "pending_express";
-                            if (verifFilter === "pending_standard") return vr.status === "pending";
-                            if (verifFilter === "processed") return !isPending;
-                            return true;
-                          }).map(vr => (
-                            <div
-                              key={vr.id}
-                              className={`rounded-2xl border p-5 space-y-4 flex flex-col justify-between transition relative overflow-hidden ${
-                                vr.status === "pending_express" 
-                                  ? "bg-gradient-to-b from-[#221c10] to-[#121212] border-amber-500/40 shadow-lg shadow-amber-500/5 animate-pulse-slow font-sans" 
-                                  : "bg-zinc-950 border-zinc-800 font-sans"
-                              }`}
-                            >
-                              {/* Express Tag Corner */}
-                              {vr.status === "pending_express" && (
-                                <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-[#D4AF37] text-black text-[8px] font-black font-sans uppercase px-3 py-1 rounded-bl-xl tracking-wider flex items-center gap-1">
-                                  ⚡ EXPRESS PAID (500 FCFA)
-                                </div>
-                              )}
-
-                              <div className="space-y-3 font-sans">
-                                {/* Header Info */}
-                                <div className="flex gap-3 items-center">
-                                  <div className="w-11 h-11 rounded-xl bg-zinc-850 border border-zinc-800 overflow-hidden flex items-center justify-center text-white font-extrabold uppercase text-sm">
-                                    {vr.displayName ? vr.displayName.substring(0, 2) : "TA"}
-                                  </div>
-                                  <div className="space-y-0.5 text-left">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                      <h4 className="text-sm font-extrabold text-white">{vr.stageName || vr.displayName || "Sans Nom"}</h4>
-                                      <span className="text-[10px] text-zinc-500">({vr.displayName})</span>
-                                    </div>
-                                    <p className="text-[11px] text-[#D4AF37] font-sans font-bold uppercase tracking-wide">
-                                      🎭 {vr.metier || "Artiste de scène"} • 📍 Commune: {vr.commune || "Abidjan"}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Auditing Assets Section */}
-                                <div className="grid grid-cols-2 gap-2 bg-black/60 p-3 rounded-xl border border-zinc-900">
-                                  <div className="space-y-1">
-                                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-black block">📇 Pièce d'identité</span>
-                                    {vr.idCardUrl ? (
-                                      <a
-                                        href={vr.idCardUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-[10px] text-amber-500 hover:underline flex items-center gap-1 font-bold font-sans truncate"
-                                      >
-                                        📄 Voir Recto-Verso ↗
-                                      </a>
-                                    ) : (
-                                      <span className="text-[10px] text-zinc-600 block italic">Non fournie</span>
-                                    )}
-                                  </div>
-                                  <div className="space-y-1">
-                                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-black block">🤳 Selfie Téléchargé</span>
-                                    {vr.selfieUrl ? (
-                                      <a
-                                        href={vr.selfieUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-[10px] text-amber-500 hover:underline flex items-center gap-1 font-bold font-sans truncate"
-                                      >
-                                        📷 Voir Mon Selfie ↗
-                                      </a>
-                                    ) : (
-                                      <span className="text-[10px] text-zinc-600 block italic">Non fourni</span>
-                                    )}
-                                  </div>
-                                  <div className="col-span-2 pt-2 border-t border-zinc-900/50 space-y-1">
-                                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-black block">🎵 Lien de démonstration musicale</span>
-                                    {vr.proofUrl ? (
-                                      <a
-                                        href={vr.proofUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black flex items-center gap-1 text-xs truncate"
-                                      >
-                                        🎧 ÉCOUTER LA DÉMO SHOWBIZ ↗
-                                      </a>
-                                    ) : (
-                                      <span className="text-[10px] text-zinc-650 block italic">Aucun lien d'activité soumis</span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Verification WhatsApp Direct Contact */}
-                                <div className="flex items-center gap-2 text-[10.5px] text-zinc-400 font-sans">
-                                  <span className="font-extrabold text-zinc-500 font-sans">Contact:</span>
-                                  <a
-                                    href={`https://wa.me/${(vr.whatsapp || "").replace(/[^0-9]/g, "")}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-emerald-400 font-bold hover:underline font-mono"
-                                  >
-                                    💬 WhatsApp {vr.whatsapp}
-                                  </a>
-                                  <span>•</span>
-                                  <span className="font-mono text-zinc-550 truncate max-w-[150px]">{vr.email}</span>
-                                </div>
-                              </div>
-
-                              {/* Action Audits Block */}
-                              <div className="pt-3 border-t border-zinc-900 flex flex-wrap gap-2 justify-between items-center bg-black/30 p-2 rounded-xl">
-                                <div className="text-[10px]">
-                                  <span className="text-zinc-500 uppercase">Statut:</span>
-                                  {vr.status === "pending" || vr.status === "pending_express" ? (
-                                    <span className="ml-1 text-amber-500 font-black uppercase tracking-wide animate-pulse">⏳ À Auditer</span>
-                                  ) : vr.status === "approved" ? (
-                                    <span className="ml-1 text-emerald-400 font-black uppercase tracking-wide">🏆 Talent Approuvé</span>
-                                  ) : vr.status === "missing_info" ? (
-                                    <span className="ml-1 text-orange-400 font-black uppercase tracking-wide">❌ Infos Complémentaires</span>
-                                  ) : (
-                                    <span className="ml-1 text-red-500 font-black uppercase tracking-wide">🚫 Refusé (Rejected)</span>
-                                  )}
-                                </div>
-
-                                {(vr.status === "pending" || vr.status === "pending_express") ? (
-                                  <div className="flex gap-1.5 flex-wrap">
-                                    <button
-                                      onClick={() => handleAuditVerificationRequest(vr.id, "approved")}
-                                      className="px-3 py-1.5 bg-emerald-500 text-black font-black text-[9px] uppercase rounded-lg transition hover:bg-emerald-400 cursor-pointer"
-                                    >
-                                      Approuver ✅
-                                    </button>
-                                    <button
-                                      onClick={() => handleAuditVerificationRequest(vr.id, "missing_info")}
-                                      className="px-2.5 py-1.5 bg-orange-500 text-white font-black text-[9px] uppercase rounded-lg transition hover:bg-orange-650 cursor-pointer"
-                                    >
-                                      Compléments 📝
-                                    </button>
-                                    <button
-                                      onClick={() => handleAuditVerificationRequest(vr.id, "rejected")}
-                                      className="px-2.5 py-1.5 bg-red-650 text-white font-black text-[9px] uppercase rounded-lg transition hover:bg-red-800 cursor-pointer"
-                                    >
-                                      Refuser 🚫
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => handleAuditVerificationRequest(vr.id, "approved")}
-                                    className="px-2.5 py-1 text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-700 font-black text-[8px] uppercase rounded-lg transition text-right cursor-pointer"
-                                  >
-                                    🔄 Ré-évaluer (Reset)
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* SUB-PANEL B: RETRAITS DE CACHETS */}
-                  {plusSubTab === "finances" && (
-                    <div className="space-y-4">
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5">
-                          <Landmark className="w-4.5 h-4.5 text-[#D4AF37]" />
-                          Vérification de versement mobile money (Wave / Orange)
-                        </h3>
-                        <p className="text-xs text-gray-400">Valider manuellement les fonds cautionnés retirés par les lauréats des Gombos d'Abidjan.</p>
-                      </div>
-
-                      <div className="space-y-3">
-                        {withdrawRequests.length === 0 ? (
-                          <p className="text-xs font-mono text-center text-gray-500 py-10">Aucun transfert programmé.</p>
-                        ) : (
-                          withdrawRequests.map((req) => (
-                            <div 
-                              key={req.id} 
-                              className={`p-4.5 rounded-2xl border flex flex-col justify-between transition-all ${req.status === "pending" ? "bg-[#121212] border-[#D4AF37]/35 shadow" : "bg-[#121212]/50 border-[#2B2B2B] opacity-65 text-gray-450"}`}
-                            >
-                              <div className="space-y-3.5 text-left">
-                                <div className="flex justify-between items-center flex-wrap gap-1.5">
-                                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase text-white tracking-widest ${req.provider === "Wave" ? "bg-sky-500" : req.provider === "Orange Money" ? "bg-orange-500" : "bg-yellow-500 text-black"}`}>
-                                    {req.provider}
-                                  </span>
-                                  <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${req.status === "approved" ? "bg-emerald-500/10 text-emerald-400" : req.status === "rejected" ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400 animate-pulse"}`}>
-                                    {req.status === "approved" ? "Transféré" : req.status === "rejected" ? "Refusé" : "En attente de validation"}
-                                  </span>
-                                </div>
-
-                                <div>
-                                  <h3 className="text-lg font-black text-white font-mono">{req.amount.toLocaleString()} F CFA</h3>
-                                  <p className="text-xs font-semibold text-gray-200 mt-0.5 truncate">{req.userEmail}</p>
-                                  <p className="text-[10px] text-gray-400 font-mono mt-0.5">Destinataire : <font className="text-[#D4AF37]">{req.phone}</font></p>
-                                </div>
-                              </div>
-
-                              {req.status === "pending" && (
-                                <div className="pt-3 border-t border-[#2B2B2B] flex gap-2.5 mt-4">
-                                  <button
-                                    onClick={() => handleRejectWithdraw(req.id)}
-                                    className="flex-1 py-2 bg-[#0B0B0B] hover:bg-red-950/20 border border-[#2B2B2B] text-red-400 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer"
-                                  >
-                                    Refuser
-                                  </button>
-                                  <button
-                                    onClick={() => handleApproveWithdraw(req.id, req.userUid, req.amount)}
-                                    className="flex-1 py-2 bg-[#D4AF37] hover:brightness-105 text-black text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer"
-                                  >
-                                    Décaisser manuellement 💰
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* SUB-PANEL C: DIRECTORY MUSIC GROUPS */}
-                  {plusSubTab === "groups" && (
-                    <div className="space-y-4">
-                      
-                      {/* Search Bar groups */}
-                      <div className="bg-[#121212] border border-[#2B2B2B] p-4 rounded-2xl flex flex-col md:flex-row gap-3 items-center justify-between">
-                        <div className="space-y-0.5 text-left">
-                          <h4 className="text-xs font-black uppercase text-[#D4AF37] tracking-wider">Modérer l'annuaire des Orchestres</h4>
-                          <p className="text-[10px] text-gray-400">Suspendre ou radier d'autres orchestres de musiques en Côte-d'Ivoire.</p>
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Rechercher groupe..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="w-full md:max-w-[200px] bg-[#0B0B0B] border border-[#2B2B2B] rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 font-mono focus:border-[#D4AF37] outline-none"
-                        />
-                      </div>
-
-                      <div className="space-y-3">
-                        {groups.filter(g => (g.name || "").toLowerCase().includes(searchTerm.toLowerCase())).map((g) => (
-                          <div 
-                            key={g.id} 
-                            className={`bg-[#121212] border ${g.isSuspended ? "border-red-500/25 opacity-75" : "border-[#2B2B2B]"} p-4.5 rounded-2xl space-y-3.5`}
-                          >
-                            <div className="flex items-start gap-4">
-                              <div className="w-12 h-12 rounded-xl bg-[#0B0B0B] border border-[#2B2B2B] shrink-0 flex items-center justify-center overflow-hidden">
-                                {g.logoUrl ? (
-                                  <img src={g.logoUrl} alt={g.name} className="w-full h-full object-cover animate-fade-in" />
-                                ) : (
-                                  <Radio className="w-5 h-5 text-gray-500" />
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1 text-left">
-                                <h4 className="font-extrabold text-white text-sm uppercase truncate">{g.name}</h4>
-                                <span className="text-[9.5px] text-[#D4AF37] font-mono uppercase tracking-wider">{g.type || "Orchestre"}</span>
-                                <p className="text-[10px] text-gray-400">📍 {g.commune || "Cocody"}, {g.ville || "Abidjan"}</p>
-                              </div>
-                            </div>
-
-                            <p className="text-xs text-gray-400 italic text-left">{g.description || "Pas de description."}</p>
-
-                            <div className="pt-3.5 border-t border-[#2B2B2B] flex justify-end gap-2">
-                              <button
-                                onClick={() => handleToggleSuspendGroup(g.id, g.name, !!g.isSuspended)}
-                                className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-lg border transition cursor-pointer ${g.isSuspended ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-orange-500/10 border-orange-500/10 text-[#D4AF37]"}`}
-                              >
-                                {g.isSuspended ? "Activer l'orchestre" : "Suspendre"}
-                              </button>
-                              <button
-                                onClick={() => handleDeleteGroup(g.id, g.name)}
-                                className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] font-black uppercase rounded-lg hover:bg-red-500/20 transition-colors cursor-pointer"
-                              >
-                                supprimer déf.
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* SUB-PANEL D: JOURNAL D'AUDIT ADMIN (Logs) */}
-                  {plusSubTab === "logs" && (
-                    <div className="space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#202020] pb-3">
-                        <div className="space-y-1">
-                          <span className="text-[10px] text-[#D4AF37] font-mono tracking-wider font-extrabold block">LEGER D'ARBITRAGE SECURISE</span>
-                          <h3 className="text-xs font-black uppercase text-white font-sans">
-                            Journal des Activités de l'Administration
-                          </h3>
-                          <p className="text-[11px] text-gray-400">Suivi automatisé inaltérable des validations, exclusions et certifications.</p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (!logs || logs.length === 0) return;
-                            const headers = ["ID", "Admin Email", "Action", "Target ID", "Created At"];
-                            const rows = logs.map(log => [
-                              log.id || "",
-                              log.adminEmail || "",
-                              log.action || "",
-                              log.targetId || "",
-                              log.createdAt || ""
-                            ]);
-                            const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
-                              + [headers.join(","), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))].join("\n");
-                            const encodedUri = encodeURI(csvContent);
-                            const link = document.createElement("a");
-                            link.setAttribute("href", encodedUri);
-                            link.setAttribute("download", `afrigombo_admin_audit_logs_${new Date().toISOString().split("T")[0]}.csv`);
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                          }}
-                          className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shrink-0 self-start sm:self-auto cursor-pointer"
-                        >
-                          📥 Exporter en CSV
-                        </button>
-                      </div>
-
-                      <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
-                        {logs.length === 0 ? (
-                          <div className="text-center py-16 text-gray-500 font-mono text-xs uppercase">Aucun log enregistré dans le ledger.</div>
-                        ) : (
-                          logs.map((log) => {
-                            const dateStr = log.createdAt ? new Date(log.createdAt).toLocaleString() : "Maintenant";
-                            return (
-                              <div key={log.id || Math.random()} className="p-3 bg-[#0B0B0B] border border-[#202020] rounded-xl flex justify-between items-start gap-4 font-mono text-[10.5px]">
-                                <div className="space-y-1 min-w-0">
-                                  <span className="px-1.5 py-0.5 bg-yellow-500/10 text-yellow-500 rounded text-[8px] font-extrabold tracking-wider">{log.action}</span>
-                                  <p className="text-slate-300 font-medium break-all mt-1">Cible : {log.targetId}</p>
-                                  <span className="text-[8.5px] text-gray-500 block truncate">{log.adminEmail}</span>
-                                </div>
-                                <span className="text-gray-550 shrink-0 text-[9px]">{dateStr}</span>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* SUB-PANEL E: GLOBAL CONFIGURATION GLOBAL CONSTANTS */}
-                  {plusSubTab === "config" && (
-                    <div className="bg-[#121212] border border-[#2B2B2B] p-5 rounded-2xl space-y-5 text-left">
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-black uppercase tracking-wider text-[#D4AF37]">
-                          ⚙️ Configuration Constantes d'arènes
-                        </h4>
-                        <p className="text-[11px] text-gray-400">Modifier instantanément la commission ou le message d'actualité globaux.</p>
-                      </div>
-
-                      <div className="space-y-4">
-                        
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-mono">Bannière d'alerte Globale d'Accueil</label>
-                          <textarea
-                            value={systemAlert}
-                            onChange={(e) => setSystemAlert(e.target.value)}
-                            rows={3}
-                            className="w-full bg-[#0B0B0B] border border-[#2B2B2B] rounded-xl p-3 text-white focus:border-[#D4AF37] outline-none font-sans text-xs"
-                            placeholder="Annonce affichée sur l'accueil des musiciens..."
-                          />
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-mono">Commission de caution prélevée (%)</label>
-                          <input
-                            type="number"
-                            value={commissionRate}
-                            onChange={(e) => setCommissionRate(e.target.value)}
-                            className="w-full bg-[#0B0B0B] border border-[#2B2B2B] focus:border-[#D4AF37] outline-none rounded-xl h-10 px-3 text-xs text-white"
-                            min="2"
-                            max="5"
-                          />
-                          <p className="text-[9px] text-gray-500">Prélèvement de frais d'arbitrage recommandé compris entre 2% et 5%.</p>
-                        </div>
-
-                        <button
-                          onClick={handleSaveConfig}
-                          className="w-full h-11 bg-[#D4AF37] hover:brightness-105 text-black font-black text-xs uppercase tracking-widest rounded-xl transition cursor-pointer"
-                        >
-                          Enregistrer les constantes d'Abidjan
-                        </button>
-
-                      </div>
-                    </div>
-                  )}
-
-                </div>
-              )}
-
-            </motion.div>
+            </div>
           )}
 
-        </AnimatePresence>
-      </main>
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* TAB 2: LA FAMILLE (Users list) */}
+          {/* ──────────────────────────────────────────────────────── */}
+          {activeMenu === "famille" && (
+            <div className="space-y-6">
+              
+              {/* Header card with quick statistics counters */}
+              <div className="bg-zinc-950 border border-white/[0.04] p-5 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between text-left">
+                <div className="space-y-1">
+                  <h3 className="text-base font-black text-white uppercase tracking-wider">GESTION DES MEMBRES</h3>
+                  <p className="text-xs text-zinc-400">Suspendre, promouvoir, certifier ou bannir des artistes du Showbiz ivoirien.</p>
+                </div>
+                <div className="flex md:self-end gap-2 shrink-0">
+                  <input
+                    type="text"
+                    placeholder="Filtrer par nom..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-[#121212] border border-[#2B2B2B] hover:border-zinc-700 focus:border-[#D4AF37] px-3.5 py-2 rounded-xl text-xs text-white placeholder-zinc-550 outline-none w-full md:max-w-[200px]"
+                  />
+                  <select
+                    value={userRoleFilter}
+                    onChange={(e) => setUserRoleFilter(e.target.value)}
+                    className="bg-[#121212] border border-[#2B2B2B] px-3 py-2 rounded-xl text-xs text-white outline-none cursor-pointer"
+                  >
+                    <option value="all">Tous rôles</option>
+                    <option value="artist">Artistes</option>
+                    <option value="client">Clients</option>
+                    <option value="certified">Certifiés</option>
+                    <option value="suspended">Exclus</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Members listings stack */}
+              <div className="space-y-3.5">
+                {filteredUsers.map(u => (
+                  <div key={u.uid} className={`bg-[#121212]/95 border ${u.isSuspended ? "border-[#EF4444]/30" : "border-[#2B2B2B]"} p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-left transition`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="shrink-0 relative">
+                        {u.avatarUrl || u.photoURL ? (
+                          <img src={u.avatarUrl || u.photoURL} className="w-11 h-11 object-cover rounded-full border border-white/[0.05]" alt="" />
+                        ) : (
+                          <div className="w-11 h-11 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center font-bold text-zinc-500">{u.firstName ? u.firstName.substring(0, 1) : "A"}</div>
+                        )}
+                        {(u.isCertified || u.verificationStatus === "certifie") && <span className="absolute -bottom-1 -right-0.5 text-xs">⭐</span>}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center flex-wrap gap-1.5">
+                          <h4 className="font-extrabold text-sm text-white truncate max-w-[170px]">{u.artistName || `${u.firstName || ""} ${u.lastName || ""}`}</h4>
+                          <span className="text-[10px] text-zinc-500 font-mono">{(u.email || '').split("@")[0].substring(0,10)}</span>
+                        </div>
+                        <p className="text-[11px] text-[#D4AF37] uppercase font-bold tracking-wide mt-0.5 font-mono">{u.specialty || u.speciality || "Artiste"}</p>
+                        <span className="text-[10px] text-zinc-500 block truncate font-sans">📞 {u.phone || "Contact non renseigné"} • {u.commune || u.location || "Abidjan"}</span>
+                        
+                        {/* Display custom badges */}
+                        {u.badges && u.badges.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {u.badges.map(b => (
+                              <span key={b} className="px-1.5 py-0.5 rounded bg-zinc-950 border border-[#D4AF37]/20 text-[#D4AF37] text-[8px] font-black uppercase tracking-wider">{b}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Operational controls */}
+                    <div className="flex gap-2 w-full md:w-auto shrink-0 flex-wrap">
+                      <button
+                        onClick={() => handleToggleCertification(u.uid, !!u.isCertified)}
+                        className={`flex-1 md:flex-none px-3 py-2 border text-[9.5px] font-black uppercase rounded-xl transition cursor-pointer ${
+                          u.isCertified ? "bg-[#EF4444]/10 border-[#EF4444]/20 text-[#EF4444]" : "bg-[#10B981]/15 border-[#10B981]/30 text-[#10B981]"
+                        }`}
+                      >
+                        {u.isCertified ? "Décertifier" : "Certifier"}
+                      </button>
+                      <button
+                        onClick={() => handleToggleSuspension(u.uid, !!u.isSuspended)}
+                        className={`flex-1 md:flex-none px-3 py-2 border text-[9.5px] font-black uppercase rounded-xl transition cursor-pointer ${
+                          u.isSuspended ? "bg-[#10B981]/15 border-[#10B981]/30 text-[#10B981]" : "bg-[#EF4444]/10 border-[#EF4444]/20 text-[#EF4444]"
+                        }`}
+                      >
+                        {u.isSuspended ? "Réhabiliter" : "Suspendre"}
+                      </button>
+                      <button
+                        onClick={() => setActiveBadgeUser(u)}
+                        className="px-2.5 py-2 bg-zinc-950 border border-white/[0.05] hover:text-[#D4AF37] text-zinc-400 text-[9.5px] font-black uppercase rounded-xl transition cursor-pointer"
+                      >
+                        Badges (+)
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {filteredUsers.length === 0 && (
+                  <p className="text-zinc-650 font-mono text-center py-12 uppercase text-xs">Aucun membre correspond aux critères.</p>
+                )}
+              </div>
+
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* TAB 3: TALENTS CERTIFIÉS */}
+          {/* ──────────────────────────────────────────────────────── */}
+          {activeMenu === "talents" && (
+            <div className="space-y-6">
+              <div className="bg-zinc-950 border border-white/[0.04] p-5 rounded-2xl text-left space-y-1.5">
+                <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Award className="w-5 h-5 text-[#D4AF37]" />
+                  RÉPERTOIRE DES TALENTS LABELLISÉS
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  Vérification du niveau d'acceptation et des performances des artistes officiellement certifiés par AfriGombo.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {users.filter(u => u.isCertified || u.verificationStatus === "certifie").map(u => (
+                  <div key={u.uid} className="bg-[#121212] border border-[#D4AF37]/25 p-4 rounded-2xl flex items-center justify-between gap-3 text-left">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 bg-zinc-900 overflow-hidden shrink-0">
+                        {u.avatarUrl || u.photoURL ? (
+                          <img src={u.avatarUrl || u.photoURL} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center font-bold text-[#D4AF37] text-xs">S</div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-extrabold text-white text-xs truncate max-w-[150px]">{u.artistName || `${u.firstName || ""} ${u.lastName || ""}`}</h4>
+                        <span className="text-[10px] text-[#D4AF37] font-bold block uppercase tracking-wide font-mono mt-0.5">{u.specialty || u.speciality || "Artiste Musicien"}</span>
+                        <span className="text-[9px] text-zinc-550 font-mono block truncate">{u.commune || "Abidjan"} • certifié</span>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => handleToggleCertification(u.uid, true)}
+                      className="px-2.5 py-1.5 bg-[#EF4444]/10 border border-[#EF4444]/20 text-[#EF4444] text-[8.5px] font-black uppercase rounded-lg transition hover:bg-[#EF4444]/20 cursor-pointer"
+                    >
+                      Retirer certification
+                    </button>
+                  </div>
+                ))}
+                {users.filter(u => u.isCertified || u.verificationStatus === "certifie").length === 0 && (
+                  <div className="col-span-full py-12 text-center bg-[#121212] border border-white/[0.03] rounded-2xl p-6 text-zinc-650 uppercase text-xs font-mono">
+                    Aucun talent labellisé à Abidjan pour l'instant.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* TAB 4: LES GOMBOS */}
+          {/* ──────────────────────────────────────────────────────── */}
+          {activeMenu === "gombos" && (
+            <div className="space-y-6">
+              <div className="bg-zinc-950 border border-white/[0.04] p-5 rounded-2xl flex justify-between items-center text-left flex-wrap gap-3">
+                <div className="space-y-1">
+                  <h3 className="text-base font-black text-white uppercase tracking-wider">PISTE DES OPPORTUNITÉS (GOMBOS)</h3>
+                  <p className="text-xs text-zinc-400">Examen et modération des requêtes budgétaires de concerts et spectacles déposées.</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-black text-[#D4AF37] font-mono block">{(gombos.reduce((a,b)=>a+(b.budget||0),0)).toLocaleString()} FCFA</span>
+                  <span className="text-[8.5px] text-zinc-500 uppercase tracking-wider font-mono">Engagés au total</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {gombos.map(g => (
+                  <div key={g.id} className="bg-[#121212] border border-[#2B2B2B] hover:border-zinc-850 p-4.5 rounded-2xl block text-left space-y-3 transition">
+                    <div className="flex justify-between items-start flex-wrap gap-1.5">
+                      <div>
+                        <span className="text-[8.5px] font-bold text-zinc-550 uppercase tracking-widest font-mono">{g.eventType} • {g.date || "Aujourd'hui"}</span>
+                        <h4 className="font-extrabold text-sm text-white uppercase tracking-tight mt-1">{g.title}</h4>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-black text-[#D4AF37] font-mono">{(g.budget || 0).toLocaleString()} FCFA</span>
+                        {g.urgent && <span className="block text-[8.5px] font-black text-[#EF4444] uppercase tracking-widest animate-pulse mt-0.5">⚡ URGENT</span>}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-zinc-400 leading-relaxed font-sans">{g.description}</p>
+                    
+                    <div className="flex justify-between items-center text-[10px] text-zinc-500 pt-2 border-t border-white/[0.02] flex-wrap gap-1.5 font-mono">
+                      <span>Commune: <strong className="text-[#D4AF37]">{g.commune || "Abidjan"}</strong></span>
+                      <span>Client: <strong className="text-zinc-300">{g.clientName || "Non spécifié"}</strong></span>
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase text-white ${g.status === "publie" ? "bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/25" : "bg-zinc-800 text-zinc-500"}`}>
+                        {g.status === "publie" ? "Public" : "Réservé"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {gombos.length === 0 && (
+                  <p className="text-center text-zinc-650 font-mono py-12 uppercase text-xs">Aucune opportunité dans le carrousel.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* TAB 5: RENFORTS (Standing in list) */}
+          {/* ──────────────────────────────────────────────────────── */}
+          {activeMenu === "renforts" && (
+            <div className="space-y-6">
+              <div className="bg-zinc-950 border border-white/[0.04] p-5 rounded-2xl text-left space-y-1.5">
+                <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Flame className="w-5 h-5 text-[#D4AF37]" />
+                  ALERTES RENFORTS SCÈNES
+                </h3>
+                <p className="text-xs text-zinc-400">Surveillance des remplacements et interventions urgentes pour sauver les événements.</p>
+              </div>
+
+              <div className="space-y-4">
+                {renforts.map(r => (
+                  <div key={r.id || Math.random()} className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl text-left space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[8.5px] font-black text-[#EF4444] uppercase tracking-widest font-mono">🔥 ALERTE RENFORT</span>
+                        <h4 className="text-xs font-black text-white uppercase tracking-wider mt-1">{r.instrument || "Instrumentiste requis"}</h4>
+                      </div>
+                      <span className="text-[10px] font-mono text-[#D4AF37] font-black bg-[#D4AF37]/10 px-2 py-0.5 rounded border border-[#D4AF37]/20">
+                        {r.status === "publie" ? "ACTIFURGENT" : "RÉSOLU"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-400">{r.description || "Demande d'assistance immédiate sur scène."}</p>
+                    <div className="pt-2 border-t border-white/[0.04] flex justify-between text-[9px] text-zinc-550 font-mono">
+                      <span>Lieu: {r.location || "Abidjan"}</span>
+                      <span>Signalé le: {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "Inconnu"}</span>
+                    </div>
+                  </div>
+                ))}
+                {renforts.length === 0 && (
+                  <div className="py-12 bg-[#121212] border border-white/[0.03] rounded-2xl p-6 text-center text-zinc-650 uppercase text-xs font-mono">
+                    Aucune fiche de secours renfort activée.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* TAB 6: GOMBO ID (KYC dossier checking) */}
+          {/* ──────────────────────────────────────────────────────── */}
+          {activeMenu === "kyc" && (
+            <div className="space-y-6">
+              <div className="bg-zinc-950 border border-white/[0.04] p-5 rounded-2xl text-left space-y-1.5">
+                <span className="px-2 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/20 text-[8.5px] font-black font-mono tracking-widest uppercase">CONTROLE D'ACCÈS REGLEMENTAIRE</span>
+                <h3 className="text-base font-black text-white uppercase tracking-wide">VALIDATION DES PIÈCES SOUVERAINES</h3>
+                <p className="text-xs text-zinc-400">
+                  Auditer les dossiers d'artistes pour leur attribuer la reconnaissance Gombo ID de confiance.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
+                {verificationRequests.map(vr => (
+                  <div key={vr.id} className="bg-[#121212] border border-[#2B2B2B] rounded-2xl p-4.5 flex flex-col justify-between space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex gap-2.5 items-center">
+                        <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/[0.04] flex items-center justify-center font-bold text-[#D4AF37]">
+                          {vr.displayName ? vr.displayName.substring(0, 2).toUpperCase() : "AA"}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-extrabold text-xs text-white truncate max-w-[150px]">{vr.stageName || vr.displayName}</h4>
+                          <span className="text-[10px] text-[#D4AF37] font-bold uppercase block tracking-wider font-mono">{vr.metier || "Instrumentiste"}</span>
+                          <span className="text-[8.5px] text-zinc-550 font-mono">📍 {vr.commune || "Abidjan"}</span>
+                        </div>
+                      </div>
+
+                      {/* Display identity doc attachment anchors */}
+                      <div className="bg-zinc-950/80 p-3 rounded-xl border border-white/[0.03] space-y-1.5 text-xs text-zinc-400 font-mono">
+                        <div className="flex justify-between">
+                          <span>📇 ID officiel :</span>
+                          {vr.idCardUrl ? (
+                            <a href={vr.idCardUrl} target="_blank" rel="noopener noreferrer" className="text-[#D4AF37] hover:underline font-bold">Consulter rectoverso ↗</a>
+                          ) : (
+                            <span className="text-[#EF4444] italic">Manquant</span>
+                          )}
+                        </div>
+                        <div className="flex justify-between">
+                          <span>🤳 Selfie direct :</span>
+                          {vr.selfieUrl ? (
+                            <a href={vr.selfieUrl} target="_blank" rel="noopener noreferrer" className="text-[#D4AF37] hover:underline font-bold">Consulter photo ↗</a>
+                          ) : (
+                            <span className="text-[#EF4444] italic">Manquant</span>
+                          )}
+                        </div>
+                        <div className="flex justify-between pt-1 border-t border-white/[0.03]">
+                          <span>🎧 Démo audio-visuelle :</span>
+                          {vr.proofUrl ? (
+                            <a href={vr.proofUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline font-bold">Écouter démo ↗</a>
+                          ) : (
+                            <span className="text-zinc-650 italic">Aucune</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* WhatsApp contact anchors */}
+                      <div className="text-[10px] text-zinc-500">
+                        WhatsApp : <a href={`https://wa.me/${(vr.whatsapp || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-[#10B981] hover:underline font-bold font-mono">{vr.whatsapp}</a>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-[#222] flex justify-between items-center bg-zinc-950/40 p-2 rounded-xl flex-wrap gap-2">
+                      <span className="text-[9.5px] font-mono text-zinc-400 uppercase">
+                        Statut : {vr.status === "pending" || vr.status === "pending_express" ? (
+                          <span className="text-[#D4AF37] font-black animate-pulse ml-1">Attente</span>
+                        ) : vr.status === "approved" ? (
+                          <span className="text-[#10B981] font-black ml-1">Approuvé</span>
+                        ) : (
+                          <span className="text-[#EF4444] font-black ml-1">Refusé</span>
+                        )}
+                      </span>
+
+                      {(vr.status === "pending" || vr.status === "pending_express") && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleAuditVerificationRequest(vr.id, "approved")}
+                            className="px-2.5 py-1 bg-[#10B981] hover:bg-[#10B981]/90 text-[#0B0B0B] font-black text-[8px] uppercase rounded-lg transition cursor-pointer"
+                          >
+                            Valider
+                          </button>
+                          <button
+                            onClick={() => handleAuditVerificationRequest(vr.id, "rejected")}
+                            className="px-2.5 py-1 bg-zinc-900 border border-white/5 text-[#EF4444] hover:text-white font-black text-[8px] uppercase rounded-lg transition cursor-pointer"
+                          >
+                            Refuser
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {verificationRequests.length === 0 && (
+                  <p className="col-span-full text-center text-zinc-650 font-mono py-12 uppercase text-xs">Aucun dossier d'identification à modérer.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* TAB 7: ALERTES (Disputes and signalments list) */}
+          {/* ──────────────────────────────────────────────────────── */}
+          {activeMenu === "alertes" && (
+            <div className="space-y-6">
+              <div className="bg-zinc-950 border border-white/[0.04] p-5 rounded-2xl text-left space-y-1.5">
+                <h3 className="text-base font-black text-[#EF4444] uppercase tracking-wider flex items-center gap-1.5">
+                  <AlertTriangle className="w-5 h-5 text-[#EF4444]" />
+                  COMMISSIONS CONFLITS ET ARBITRAGES
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  Réguler les litiges concernant le non-respect des engagements ou les signalement de médias illicites.
+                </p>
+              </div>
+
+              <div className="space-y-4.5 block">
+                {reports.map((rep) => (
+                  <div key={rep.id} className="bg-[#121212] border border-[#EF4444]/20 p-4.5 rounded-2xl text-left space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[8.5px] font-black text-[#EF4444] uppercase tracking-widest font-mono">DÉCLARATION DU LITIGE</span>
+                        <h4 className="text-xs font-black text-white uppercase tracking-wider mt-1">{rep.reason || "Motif non précisé"}</h4>
+                      </div>
+                      <span className="text-[10px] font-mono text-[#EF4444] font-black bg-[#EF4444]/10 px-2 py-0.5 rounded border border-[#EF4444]/20">
+                        {rep.status === "pending" ? "INSTRUIT" : "RÉSOLU"}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-zinc-400">{rep.comment || "Pas de précisions complémentaires fournies."}</p>
+                    
+                    <div className="flex justify-between items-center text-[9px] text-zinc-550 pt-2 border-t border-white/[0.04] font-mono">
+                      <span>Coupable suggéré: {rep.reporterEmail || "Inconnu"}</span>
+                      {rep.status === "pending" && (
+                        <button
+                          onClick={async () => {
+                            if (confirm(`Écarter ce dossier de litige ?`)) {
+                              if (!isFirebaseMock && db) {
+                                await updateDoc(doc(db, "reports", rep.id), { status: "ignored" });
+                              }
+                              setTerminalFeed(prev => [`🛡️ Litige réglé : ${rep.id}`, ...prev]);
+                            }
+                          }}
+                          className="px-2.5 py-1 bg-[#10B981]/15 border border-[#10B981]/25 text-[#10B981] text-[8.5px] uppercase font-black tracking-wide rounded-lg cursor-pointer"
+                        >
+                          Clore dossier (Ignorer)
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {reports.length === 0 && (
+                  <div className="py-12 bg-[#121212] border border-white/[0.03] rounded-2xl p-6 text-center text-zinc-650 uppercase text-xs font-mono">
+                    Aucun litige ou signalement en arbitrage.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* TAB 8: LA CAISSE (Ledger with Orange/Wave/MTN validation) */}
+          {/* ──────────────────────────────────────────────────────── */}
+          {activeMenu === "caisse" && (
+            <div className="space-y-6">
+              <div className="bg-zinc-950 border border-white/[0.04] p-5 rounded-2xl text-left space-y-2">
+                <span className="px-2 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/25 text-[8.5px] font-black font-mono tracking-widest uppercase">REGISTRE MONÉTAIRE</span>
+                <h3 className="text-base font-black text-white uppercase tracking-wider">SOLDE ET TRANSFERTS MOBILE MONEY</h3>
+                <p className="text-xs text-zinc-400 font-sans">
+                  Suivre attentivement les paiements, abonnements Premium annuels et approuver les demandes de retraits de cachets.
+                </p>
+              </div>
+
+              {/* Grid of payment metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                <div className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl">
+                  <span className="text-[8.5px] font-mono text-zinc-550 block font-black uppercase">Revenus des abonnements (Premium)</span>
+                  <p className="text-xl font-black text-[#D4AF37] mt-1.5 font-mono">{premiumRevenues.toLocaleString()} FCFA</p>
+                  <span className="text-[9px] text-zinc-500 block">Basé sur {activePaidSubscriptions} souscriptions actives d'Abidjan</span>
+                </div>
+                <div className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl">
+                  <span className="text-[8.5px] font-mono text-zinc-550 block font-black uppercase">Commission (Taux : {commissionRate}%)</span>
+                  <p className="text-xl font-black text-[#D4AF37] mt-1.5 font-mono">{totalCommission.toLocaleString()} FCFA</p>
+                  <span className="text-[9px] text-zinc-500 block">Cumulé sur les dépôts de garantie des castings</span>
+                </div>
+              </div>
+
+              {/* Segmented direct withdrawals */}
+              <div className="space-y-3.5">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-black uppercase text-white tracking-widest font-mono">DÉCAISSEMENTS DEMANDÉS EN ATTENTE</h4>
+                  <div className="flex bg-zinc-950 rounded-xl p-0.5 border border-white/[0.04]">
+                    <button
+                      onClick={() => setWithdrawalFilter("pending")}
+                      className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${withdrawalFilter === "pending" ? "bg-zinc-900 text-[#D4AF37] font-black" : "text-zinc-500"}`}
+                    >
+                      En attente
+                    </button>
+                    <button
+                      onClick={() => setWithdrawalFilter("approved")}
+                      className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${withdrawalFilter === "approved" ? "bg-zinc-900 text-[#D4AF37]" : "text-zinc-500"}`}
+                    >
+                      Transférés
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3.5 block">
+                  {withdrawRequests.filter(r => r.status === withdrawalFilter).map(req => (
+                    <div key={req.id} className="bg-[#121212] border border-[#2B2B2B] p-4.5 rounded-2xl flex flex-col justify-between text-left space-y-4">
+                      <div className="flex justify-between items-start flex-wrap gap-2">
+                        <div>
+                          <span className="px-2 py-0.5 bg-zinc-950 border border-white/5 rounded text-[8.5px] font-mono text-[#D4AF37] uppercase font-black tracking-wider">{req.provider}</span>
+                          <h4 className="text-lg font-black text-[#F5F5F5] font-mono mt-1">{req.amount.toLocaleString()} FCFA</h4>
+                          <span className="text-[11px] text-zinc-400 block break-all font-semibold mt-0.5">{req.userEmail}</span>
+                        </div>
+                        <span className="text-[10px] text-[#D4AF37] font-mono">Portable: <strong className="text-white">{req.phone}</strong></span>
+                      </div>
+
+                      {req.status === "pending" && (
+                        <div className="pt-3.5 border-t border-white/[0.03] flex gap-2.5">
+                          <button
+                            onClick={() => handleRejectWithdraw(req.id)}
+                            className="flex-1 py-2 bg-zinc-900 border border-white/5 rounded-xl text-[9.5px] font-black text-[#EF4444] uppercase tracking-wider transition cursor-pointer"
+                          >
+                            Rejeter transfert
+                          </button>
+                          <button
+                            onClick={() => handleApproveWithdraw(req.id, req.userUid, req.amount)}
+                            className="flex-1 py-2 bg-[#D4AF37] hover:brightness-105 text-[#0B0B0B] font-black text-[9.5px] uppercase tracking-wider rounded-xl transition cursor-pointer"
+                          >
+                            Valider versement 💰
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {withdrawRequests.filter(r => r.status === withdrawalFilter).length === 0 && (
+                    <p className="text-center text-zinc-650 font-mono py-10 uppercase text-xs">Aucun transfert dans cette sous-section.</p>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* TAB 9: ANALYTICS (Style popularity charts) */}
+          {/* ──────────────────────────────────────────────────────── */}
+          {activeMenu === "analytics" && (
+            <div className="space-y-6">
+              <div className="bg-zinc-950 border border-white/[0.04] p-5 rounded-2xl text-left space-y-1.5">
+                <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Activity className="w-5 h-5 text-[#D4AF37]" />
+                  ANALYTICS & PRÉFÉRENCES MUSICALES d’ABIDJAN
+                </h3>
+                <p className="text-xs text-zinc-400 font-sans">
+                  Distribution quantitative des artistes inscrits sur la carte et popularité des tendances musicales.
+                </p>
+              </div>
+
+              {/* Vector representation bars */}
+              <div className="bg-[#121212] border border-[#2B2B2B] p-5 rounded-2xl text-left space-y-4">
+                <h4 className="text-xs font-black uppercase text-white tracking-widest font-mono">Popularité des genres majeurs</h4>
+                
+                <div className="space-y-3.5">
+                  {[
+                    { genre: "Coupé-Décalé", count: users.filter(u => u.musicGenre === "Coupé-Décalé").length || 34, percent: "65%" },
+                    { genre: "Zouglou", count: users.filter(u => u.musicGenre === "Zouglou").length || 28, percent: "50%" },
+                    { genre: "Rumba Congolaise", count: users.filter(u => u.musicGenre === "Rumba").length || 18, percent: "32%" },
+                    { genre: "Gospel ivoire", count: users.filter(u => u.musicGenre === "Gospel").length || 12, percent: "20%" }
+                  ].map(g => (
+                    <div key={g.genre} className="space-y-1">
+                      <div className="flex justify-between text-xs font-mono">
+                        <span className="text-zinc-300 font-semibold uppercase">{g.genre}</span>
+                        <span className="text-[#D4AF37] font-bold">{g.count} inscrits</span>
+                      </div>
+                      <div className="w-full bg-[#0B0B0B] h-2 rounded-full border border-white/[0.03] overflow-hidden">
+                        <div className="bg-[#D4AF37] h-full" style={{ width: g.percent }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* TAB 10: CONFIGURATIONS ET PARAMÈTRES (SystemAlert & commissionRate) */}
+          {/* ──────────────────────────────────────────────────────── */}
+          {activeMenu === "settings" && (
+            <div className="bg-[#121212] border border-[#2B2B2B] p-6 rounded-2xl text-left space-y-5">
+              <div className="space-y-1">
+                <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Shield className="w-5 h-5 text-[#D4AF37]" />
+                  CONFIGURATION CONSTANTES DU SYSTEME
+                </h3>
+                <p className="text-xs text-zinc-400">Modifier impérativement la commission d'arbitrage mondiale et le message de broadcast du dôme.</p>
+              </div>
+
+              <div className="space-y-4 pt-1.5">
+                <div className="space-y-1.5 block">
+                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider font-mono">Message d’Alerte de la Bannière d'Accueil</label>
+                  <textarea
+                    rows={3}
+                    value={systemAlert}
+                    onChange={(e) => setSystemAlert(e.target.value)}
+                    className="w-full bg-zinc-950 border border-[#2B2B2B] rounded-xl p-3 text-xs text-white placeholder-zinc-700 focus:border-[#D4AF37] outline-none"
+                    placeholder="Message d'alertes aux utilisateurs..."
+                  />
+                </div>
+
+                <div className="space-y-1.5 block">
+                  <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider font-mono">Frais d'Arbitrage et prélèvements (%)</label>
+                  <input
+                    type="number"
+                    value={commissionRate}
+                    onChange={(e) => setCommissionRate(e.target.value)}
+                    className="w-full bg-zinc-950 border border-[#2B2B2B] focus:border-[#D4AF37] outline-none rounded-xl px-3 h-10 text-xs text-white"
+                    min="1"
+                    max="10"
+                  />
+                  <p className="text-[8.5px] text-zinc-500 font-mono">Taux conseillé : 5%. Seules les valeurs comprises entre 1% et 10% sont agrégées.</p>
+                </div>
+
+                <button
+                  onClick={handleSaveConfig}
+                  className="w-full py-2 px-4 bg-[#D4AF37] hover:brightness-105 text-[#0B0B0B] hover:text-black font-black text-xs uppercase tracking-widest rounded-xl transition cursor-pointer"
+                >
+                  Enregistrer les constantes Elite
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </section>
+
+      {/* ──────────────────────────────────────────────────────── */}
+      {/* ZONE C: ZONE ACTIVITÉ EN DIRECT (Real-time sidebar) */}
+      {/* ──────────────────────────────────────────────────────── */}
+      <aside className="border-t lg:border-t-0 lg:border-l border-[#2B2B2B] bg-[#121212]/30 p-6 flex flex-col justify-start space-y-6 shrink-0 lg:w-[320px]">
+        <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.06] text-left">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#10B981]"></span>
+            </span>
+            <div>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] font-mono">ACTIVITÉ EN DIRECT</h4>
+              <span className="text-[9px] text-zinc-500 block">Mises à jour inaltérables de l'industrie</span>
+            </div>
+          </div>
+          <span className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-widest bg-zinc-950 px-2 py-0.5 rounded border border-white/[0.03]">Abidjan</span>
+        </div>
+
+        {/* Dynamic Activity Feed Container */}
+        <div className="space-y-4 max-h-[380px] lg:max-h-[500px] overflow-y-auto pr-1">
+          {liveActivities.map((act) => (
+            <div key={act.id} className="p-3 bg-zinc-950/80 rounded-2xl border border-white/[0.02] text-left relative overflow-hidden transition-all hover:bg-zinc-950">
+              <p className="text-[11px] text-zinc-300 leading-snug font-medium pr-1.5">{act.message}</p>
+              <div className="flex justify-between items-center text-[9px] text-zinc-550 pt-2 border-t border-white/[0.02] mt-2 font-mono">
+                <span className={act.badge === "emerald" ? "text-[#10B981] font-bold" : "text-[#D4AF37] font-bold"}>
+                  ● {act.badge === "emerald" ? "SUCCÈS" : "DÉROULEMENT"}
+                </span>
+                <span>{act.time}</span>
+              </div>
+            </div>
+          ))}
+          {liveActivities.length === 0 && (
+            <div className="text-center py-16 text-zinc-650 space-y-2 block">
+              <Activity className="w-5 h-5 mx-auto text-zinc-600 animate-pulse" />
+              <p className="text-[9px] font-black uppercase tracking-wider">Synchronisation du flux...</p>
+              <p className="text-[8px] text-zinc-500 font-sans tracking-wide">Faites des actions pour faire vibrer les serveurs.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Operational Security Disclaimer footer inside Zone C */}
+        <div className="p-4 bg-zinc-950/80 rounded-2xl border border-white/[0.04] text-left space-y-1 font-mono text-[8.5px] text-zinc-500 text-center uppercase tracking-wider">
+          <p>🔑 Session ID: {Math.random().toString(36).substring(2, 6).toUpperCase()}</p>
+          <p className="text-[#D4AF37] font-bold">Sécurisé par protocole AfriGombo Elite</p>
+        </div>
+      </aside>
 
       {/* 🏆 INTERACTIVE POPUP BADGE MANAGER */}
       <AnimatePresence>
         {activeBadgeUser && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#0B0B0B]/80 backdrop-blur-sm flex items-center justify-center p-4"
-          >
+          <div className="fixed inset-0 z-50 bg-[#0B0B0B]/85 backdrop-blur-sm flex items-center justify-center p-4">
             <motion.div 
-              initial={{ scale: 0.9, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 15 }}
+              initial={{ scale: 0.94, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.94, opacity: 0 }}
               className="w-full max-w-sm bg-[#121212] border border-[#2B2B2B] p-5 rounded-3xl space-y-4 shadow-2xl relative text-left"
             >
               <button 
                 onClick={() => setActiveBadgeUser(null)}
-                className="absolute top-4 right-4 p-1.5 bg-[#2B2B2B]/40 hover:bg-[#2B2B2B]/80 hover:text-white rounded-lg transition"
-                aria-label="Cerrar modal"
+                className="absolute top-4.5 right-4.5 p-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
 
               <div className="space-y-1">
-                <span className="text-[8px] text-[#D4AF37] font-mono tracking-widest font-black uppercase">SÉLECTION PAR CLICS</span>
+                <span className="text-[8px] text-[#D4AF37] font-mono tracking-widest font-black uppercase">ATTRIBUTION DE LABELS</span>
                 <h3 className="text-sm font-bold text-white uppercase truncate">Gérer les Badges de :</h3>
-                <p className="text-xs text-gray-400 font-extrabold truncate">
-                  {activeBadgeUser.artistName || `${activeBadgeUser.firstName} ${activeBadgeUser.lastName}`}
+                <p className="text-xs text-[#D4AF37] font-black truncate">
+                  {activeBadgeUser.artistName || `${activeBadgeUser.firstName || "Artiste"} ${activeBadgeUser.lastName || "Ivoire"}`}
                 </p>
               </div>
 
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2 pt-1.5 block">
                 {[
                   "⭐ Talent Certifié",
                   "🔥 Artiste Actif",
@@ -2235,84 +1296,35 @@ export default function AdminCentre({ adminEmail, adminProfile, onExitAdminMode 
                     <button
                       key={badge}
                       onClick={() => handleToggleUserBadge(badge)}
-                      className={`w-full p-3 rounded-xl flex items-center justify-between text-xs font-black transition-all uppercase tracking-wider cursor-pointer ${isActive ? "bg-[#D4AF37]/15 border border-[#D4AF37] text-[#D4AF37]" : "bg-[#0B0B0B] border border-[#222222] text-gray-400 hover:text-white"}`}
+                      className={`w-full p-2.5 rounded-xl flex items-center justify-between text-xs font-black transition-all uppercase tracking-wider cursor-pointer ${
+                        isActive 
+                          ? "bg-[#D4AF37]/10 border border-[#D4AF37] text-[#D4AF37]" 
+                          : "bg-zinc-950 border border-white/[0.04] text-zinc-400 hover:text-white"
+                      }`}
                     >
                       <span>{badge}</span>
                       {isActive ? (
                         <Check className="w-4 h-4 text-[#D4AF37]" />
                       ) : (
-                        <PlusCircle className="w-4 h-4 text-gray-600" />
+                        <PlusCircle className="w-4 h-4 text-zinc-600" />
                       )}
                     </button>
                   );
                 })}
               </div>
 
-              <div className="pt-2 border-t border-[#2B2B2B] text-center">
+              <div className="pt-2 border-t border-white/[0.05] text-center">
                 <button
                   onClick={() => setActiveBadgeUser(null)}
-                  className="px-4 py-2 bg-[#2B2B2B] hover:bg-gray-800 text-white rounded-xl text-[10px] uppercase font-black tracking-widest transition"
+                  className="px-4 py-2 bg-zinc-900 border border-white/[0.04] text-white hover:text-[#D4AF37] rounded-xl text-[9px] uppercase font-black tracking-widest transition cursor-pointer"
                 >
-                  Terminer d'Abidjan
+                  Fermer
                 </button>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
-
-      {/* 📱👑 FIXED BOTTOM MENU DOCK */}
-      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-[#121212] border-t border-[#2B2B2B] h-17 px-3 flex items-center justify-around select-none">
-        
-        {/* Cockpit - Tableau */}
-        <button
-          onClick={() => { setActiveTab("cockpit"); setSearchTerm(""); }}
-          className={`flex flex-col items-center justify-center w-14 h-14 transition duration-200 outline-none cursor-pointer ${activeTab === "cockpit" ? "text-[#D4AF37]" : "text-gray-400"}`}
-        >
-          <Grid className="w-5 h-5" />
-          <span className="text-[9px] font-black uppercase mt-1">Cockpit</span>
-        </button>
-
-        {/* Users - Utilisateurs */}
-        <button
-          onClick={() => { setActiveTab("users"); setSearchTerm(""); }}
-          className={`flex flex-col items-center justify-center w-14 h-14 transition duration-200 outline-none cursor-pointer ${activeTab === "users" ? "text-[#D4AF37]" : "text-gray-400"}`}
-        >
-          <Users className="w-5 h-5" />
-          <span className="text-[9px] font-black uppercase mt-1">Comptes</span>
-        </button>
-
-        {/* Posts - Publications */}
-        <button
-          onClick={() => { setActiveTab("posts"); setSearchTerm(""); }}
-          className={`flex flex-col items-center justify-center w-14 h-14 transition duration-200 outline-none cursor-pointer ${activeTab === "posts" ? "text-[#D4AF37]" : "text-gray-400"}`}
-        >
-          <Film className="w-5 h-5" />
-          <span className="text-[9px] font-black uppercase mt-1">Pubs/Gomb</span>
-        </button>
-
-        {/* Reports - Signalements */}
-        <button
-          onClick={() => { setActiveTab("reports"); setSearchTerm(""); }}
-          className={`flex flex-col items-center justify-center w-14 h-14 transition duration-200 outline-none cursor-pointer ${activeTab === "reports" ? "text-[#D4AF37]" : "text-gray-450"} relative`}
-        >
-          <AlertOctagon className="w-5 h-5" />
-          <span className="text-[9px] font-black uppercase mt-1">Alertes</span>
-          {reports.filter(r=>r.status==="pending").length > 0 && (
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-          )}
-        </button>
-
-        {/* Plus - Sub sections */}
-        <button
-          onClick={() => { setActiveTab("plus"); setSearchTerm(""); }}
-          className={`flex flex-col items-center justify-center w-14 h-14 transition duration-200 outline-none cursor-pointer ${activeTab === "plus" ? "text-[#D4AF37]" : "text-gray-400"}`}
-        >
-          <Radio className="w-5 h-5" />
-          <span className="text-[9px] font-black uppercase mt-1">Plus</span>
-        </button>
-
-      </footer>
 
     </div>
   );

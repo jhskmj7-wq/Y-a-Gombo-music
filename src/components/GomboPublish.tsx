@@ -188,8 +188,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         animate={{ opacity: 1, y: 0 }}
         className="bg-black/95 dark:bg-[#0c0c0e] text-white rounded-3xl p-6 sm:p-8 border border-[#D4AF37]/35 shadow-[0_0_30px_rgba(212,175,55,0.15)] relative overflow-hidden"
       >
-        {/* Ivory Coast gold design bar */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-500 via-amber-400 to-emerald-500" />
+        {/* Gold design bar */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#D4AF37]" />
 
         {/* Success Overlay state */}
         <AnimatePresence>
@@ -230,11 +230,11 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         {/* Title view */}
         <div className="mb-6 space-y-1">
           <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-widest flex items-center gap-1.5">
-            <Radio className="w-3 h-3 text-orange-500 animate-pulse" />
-            VIBRATO DE L'AFRIQUE
+            <Radio className="w-3 h-3 text-[#D4AF37] animate-pulse" />
+            L'ADN DU LUXE AFRI
           </span>
-          <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2 uppercase tracking-tight">
-            ⚡ Lancer un Gombo
+          <h2 className="text-xl sm:text-2xl font-black text-[#D4AF37] flex items-center gap-2 uppercase tracking-tight">
+            🚀 Lancer le Gombo
           </h2>
           <p className="text-[11px] text-gray-400 font-medium">
             Entrez dans le temple musical et diffusez instantanément votre opportunité.
@@ -397,7 +397,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               />
               {imageFile ? (
                 <div className="space-y-1 w-full text-center">
-                  <span className="text-xs text-semibold truncate block max-w-[150px] mx-auto text-orange-400">🖼️ {imageFile.name}</span>
+                  <span className="text-xs text-semibold truncate block max-w-[150px] mx-auto text-[#D4AF37]">🖼️ {imageFile.name}</span>
                   <button type="button" onClick={(e) => { e.stopPropagation(); clearFile("image"); }} className="text-[10px] uppercase font-bold text-red-500 inline-flex items-center gap-0.5 mt-2 bg-red-950/20 px-2 py-0.5 rounded">
                     <X className="w-3 h-3" /> Enlever
                   </button>
@@ -462,10 +462,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             <button
               type="submit"
               disabled={loading || uploadingState.image || uploadingState.audio}
-              className="flex-1 px-6 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 font-extrabold text-xs uppercase text-slate-950 rounded-xl shadow-lg transition-all active:scale-97 cursor-pointer text-center font-black tracking-widest flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3.5 bg-[#D4AF37] hover:bg-[#b09028] font-extrabold text-[#0B0B0B] font-sans text-xs uppercase rounded-xl shadow-lg transition-all active:scale-97 cursor-pointer text-center font-black tracking-widest flex items-center justify-center gap-2"
             >
               {loading ? (
-                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[#0B0B0B] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>🚀 Lancer le Gombo</>
               )}

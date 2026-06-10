@@ -77,8 +77,8 @@ export const ProfileCompletionScore: React.FC<ProfileCompletionScoreProps> = ({
           <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider">📈 Score de Complétude du Profil PRO</h3>
           <div className="flex items-center gap-2 mt-1.5 font-sans">
             <span className="text-xl sm:text-2xl font-black text-gray-950 dark:text-white font-mono">{score}%</span>
-            <span className="text-xs font-bold text-[#D4AF37] dark:text-[#D4AF37] tracking-wide">
-              {score === 100 ? "🎵 Ton profil est prêt à attirer de nouveaux gombos." : "Complétez votre profil pour rassurer les promoteurs d’événements."}
+            <span className="text-xs font-extrabold text-[#D4AF37] tracking-wide flex items-center gap-1 animate-pulse">
+              🎼 Ton héritage attire les gombos.
             </span>
           </div>
         </div>
@@ -86,7 +86,7 @@ export const ProfileCompletionScore: React.FC<ProfileCompletionScoreProps> = ({
           <button
             id="btn-complete-profile-quick"
             onClick={onEdit}
-            className="px-4 py-2 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-extrabold rounded-xl text-xs uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer text-center font-sans"
+            className="px-4 py-2 bg-[#D4AF37] hover:bg-[#b09028] text-black font-black rounded-xl text-xs uppercase tracking-wider whitespace-nowrap transition-colors cursor-pointer text-center font-sans shadow-[0_0_15px_rgba(212,175,55,0.2)]"
           >
             🚀 Remplir mon profil
           </button>
@@ -94,9 +94,9 @@ export const ProfileCompletionScore: React.FC<ProfileCompletionScoreProps> = ({
       </div>
 
       {/* Progress Track */}
-      <div className="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden flex">
+      <div className="h-4 w-full bg-gray-100 dark:bg-zinc-900 rounded-full overflow-hidden p-0.5 border border-[#D4AF37]/20 shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)]">
         <div 
-          className="h-full bg-gradient-to-r from-[#FF7A00] to-amber-500 transition-all duration-500" 
+          className="h-full bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#b09028] rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(212,175,55,0.4)]" 
           style={{ width: `${score}%` }}
         />
       </div>
@@ -104,16 +104,16 @@ export const ProfileCompletionScore: React.FC<ProfileCompletionScoreProps> = ({
       {/* Missing items list */}
       {score < 100 && (
         <div className="space-y-2.5 pt-1 animate-fadeIn font-sans">
-          <span className="text-[10px] uppercase font-black text-[#FF7A00] dark:text-orange-400 tracking-widest block font-mono">🎯 Boostez votre visibilité en ajoutant :</span>
+          <span className="text-[10px] uppercase font-black text-[#D4AF37] tracking-widest block font-mono">🎯 Boostez votre héritage en ajoutant :</span>
           <div className="flex flex-wrap gap-2">
             {missing.map((it, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={onEdit}
-                className="px-3 py-1.5 bg-gray-50 hover:bg-orange-50 dark:bg-gray-850 dark:hover:bg-orange-950/20 border border-gray-150 dark:border-gray-800 text-gray-650 dark:text-gray-300 rounded-xl text-[10px] font-bold flex items-center gap-1.5 transition-all text-left cursor-pointer"
+                className="px-3 py-1.5 bg-gray-50 hover:bg-[#D4AF37]/5 dark:bg-zinc-900 dark:hover:bg-[#D4AF37]/10 border border-gray-150 dark:border-zinc-800 text-gray-650 dark:text-gray-300 rounded-xl text-[10px] font-bold flex items-center gap-1.5 transition-all text-left cursor-pointer"
               >
-                <span className="text-orange-550 font-extrabold">{it.bonus}</span>
+                <span className="text-[#D4AF37] font-extrabold">{it.bonus}</span>
                 <span>{it.name}</span>
               </button>
             ))}
