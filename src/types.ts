@@ -6,7 +6,8 @@ export type AdminMenu =
   | "revision"
   | "alertes"
   | "caisse"
-  | "analytics";
+  | "analytics"
+  | "monetisation";
 
 export interface UserPerformance {
   level: number;
@@ -25,7 +26,7 @@ export interface User {
   commune: string;
   avatarUrl?: string;
   isCertified: boolean;
-  kycStatus: "pending" | "approved" | "rejected" | "none";
+  kycStatus: "pending" | "approved" | "rejected" | "none" | "info_required";
   kycDocUrl?: string;
   status: "active" | "suspended" | "suspect";
   specialties: string[];
@@ -35,6 +36,18 @@ export interface User {
   revenues: number;
   gombosCompleted: number;
   flagsCount: number;
+  isVip?: boolean;
+  isPro?: boolean;
+  gomboIdNumber?: string;
+  kycApprovedDate?: string;
+  kycSubmittedDate?: string;
+  kycType?: "standard" | "express";
+  kycComplementaryInfo?: string;
+  kycDocs?: {
+    identityCardUrl?: string;
+    selfieUrl?: string;
+    activityUrl?: string;
+  };
 }
 
 export interface Post {
@@ -52,6 +65,7 @@ export interface Post {
   flagReason?: string;
   flagTimestamp?: string;
   aiModerated?: boolean;
+  isBoosted?: boolean;
 }
 
 export interface Gombo {
@@ -66,6 +80,7 @@ export interface Gombo {
   timestamp: string;
   applicantsCount: number;
   status: "open" | "filled" | "completed";
+  isBoosted?: boolean;
 }
 
 export interface Renfort {
@@ -78,6 +93,7 @@ export interface Renfort {
   instrument: string;
   status: "pending" | "accepted" | "rejected";
   timestamp: string;
+  isExpress?: boolean;
 }
 
 export interface Alerte {
@@ -93,7 +109,15 @@ export interface Alerte {
 export interface Transaction {
   id: string;
   amount: number; // in FCFA
-  type: "commission" | "subscription" | "payout";
+  type:
+    | "commission"
+    | "subscription"
+    | "payout"
+    | "cert_express"
+    | "boost_gombo"
+    | "renfort_express"
+    | "gombo_vip"
+    | "gombo_pro";
   description: string;
   userId: string;
   userArtisticName: string;

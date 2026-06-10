@@ -11,6 +11,7 @@ import {
   limit
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import GomboIdUserDashboard from "./GomboIdUserDashboard";
 import {
   AdminMenu,
   User,
@@ -50,7 +51,11 @@ import {
   XCircle,
   Radio,
   FileCheck,
-  ShieldAlert
+  ShieldAlert,
+  Zap,
+  Coins,
+  Star,
+  Crown
 } from "lucide-react";
 import {
   AreaChart,
@@ -184,7 +189,9 @@ const ANALYTICS_DATA = [
 ];
 
 export default function AdminCentre() {
-  const [activeMenu, setActiveMenu] = useState<AdminMenu>("dashboard");
+  const [activeMenu, setActiveMenu] = useState<any>("user_dashboard");
+  const [perspective, setPerspective] = useState<"admin" | "user">("user");
+  const [activeArtistId, setActiveArtistId] = useState<string>("user_3");
   const [localSaved, setLocalSaved] = useState<boolean>(true);
   const [autoSaveActive, setAutoSaveActive] = useState<boolean>(false);
 
@@ -263,7 +270,8 @@ export default function AdminCentre() {
     alertCount: 2
   });
 
-  const [kycActiveTab, setKycActiveTab] = useState<"pending" | "express" | "approved" | "rejected">("pending");
+  const [kycActiveTab, setKycActiveTab] = useState<"standard" | "express" | "approved" | "rejected" | "info_required">("standard");
+  const [infoMessages, setInfoMessages] = useState<{ [key: string]: string }>({});
   const [globalSearchTerm, setGlobalSearchTerm] = useState("");
   const [isAnnonceModalOpen, setIsAnnonceModalOpen] = useState(false);
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
@@ -310,6 +318,11 @@ export default function AdminCentre() {
   });
 
   const [specInput, setSpecInput] = useState("");
+
+  // --- MONETISATION SIMULATOR STATES ---
+  const [simUserId, setSimUserId] = useState("");
+  const [simProduct, setSimProduct] = useState("cert_express");
+  const [simBoostPrice, setSimBoostPrice] = useState(1000);
   const [groupInput, setGroupInput] = useState("");
 
   // --- FIRESTORE ACTIVE SYNC ROUTINE ---
@@ -341,9 +354,23 @@ export default function AdminCentre() {
         }
       });
 
+      const qTransactions = collection(db, "transactions");
+      const unsubscribeTransactions = onSnapshot(qTransactions, (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedTransactions: Transaction[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedTransactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
+          });
+          // Sort transactions by timestamp desc
+          fetchedTransactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          setTransactions(fetchedTransactions);
+        }
+      });
+
       return () => {
         unsubscribeUsers();
         unsubscribeGombos();
+        unsubscribeTransactions();
       };
     } catch (e) {
       addToTerminal(`[Alerte locale] Lancement offline synchronisé.`);
@@ -417,6 +444,90 @@ export default function AdminCentre() {
     }
   };
 
+  const createTransaction = async (
+    amount: number,
+    type: Transaction["type"],
+    description: string,
+    userId: string,
+    userArtisticName: string
+  ) => {
+    const tx: Transaction = {
+      id: "tx_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+      amount,
+      type,
+      description,
+      userId,
+      userArtisticName,
+      timestamp: new Date().toISOString()
+    };
+    
+    setTransactions(prev => [tx, ...prev]);
+    await saveToFirestore("transactions", tx.id, tx);
+    
+    setBrief(prev => ({
+      ...prev,
+      revenuesGenerated: prev.revenuesGenerated + amount
+    }));
+    
+    addToTerminal(`[💰 LA CAISSE] Paiement de ${amount.toLocaleString()} FCFA reçu : ${description}`);
+  };
+
+  const handlePerformSimulatedPayment = async () => {
+    const targetId = simUserId || (users.length > 0 ? users[0].id : "");
+    if (!targetId) {
+      addToTerminal(`[Alerte] Veuillez d'abord créer ou sélectionner un compte artiste pour simuler.`);
+      return;
+    }
+    const targetUser = users.find(u => u.id === targetId);
+    if (!targetUser) return;
+
+    switch (simProduct) {
+      case "cert_express":
+        await createTransaction(500, "cert_express", `⚡ Certification Express GOMBO ID (24-72h) - ${targetUser.artisticName}`, targetUser.id, targetUser.artisticName);
+        setUsers(prev => prev.map(u => u.id === targetUser.id ? { ...u, kycStatus: "pending" } : u));
+        await saveToFirestore("users", targetUser.id, { ...targetUser, kycStatus: "pending" });
+        addToTerminal(`[⚡ KYC] Demande Express enregistrée pour ${targetUser.artisticName}. Traitement prioritaire sous 24-72h.`);
+        break;
+      case "gombo_vip":
+        await createTransaction(1000, "gombo_vip", `✨ Souscription Mensuelle GOMBO VIP - ${targetUser.artisticName}`, targetUser.id, targetUser.artisticName);
+        setUsers(prev => prev.map(u => u.id === targetUser.id ? { ...u, isVip: true } : u));
+        await saveToFirestore("users", targetUser.id, { ...targetUser, isVip: true });
+        addToTerminal(`[✨ VIP] Compte d'artiste ${targetUser.artisticName} élevé au statut GOMBO VIP (Badge activé).`);
+        break;
+      case "boost_gombo":
+        await createTransaction(simBoostPrice, "boost_gombo", `🔥 Boost Tam-Tam Gombo "En Vedette" (${simBoostPrice} FCFA) - ${targetUser.artisticName}`, targetUser.id, targetUser.artisticName);
+        const userPost = posts.find(p => p.userId === targetUser.id);
+        if (userPost) {
+          setPosts(prev => prev.map(p => p.id === userPost.id ? { ...p, isBoosted: true } : p));
+          addToTerminal(`[🔥 BOOST] Publication "${userPost.content.substring(0, 30)}..." de l'artiste ${targetUser.artisticName} mise EN VEDETTE.`);
+        } else if (posts.length > 0) {
+          const firstPost = posts[0];
+          setPosts(prev => prev.map(p => p.id === firstPost.id ? { ...p, isBoosted: true } : p));
+          addToTerminal(`[🔥 BOOST] Aucune publication trouvée pour ${targetUser.artisticName}. Première publication générale mise EN VEDETTE.`);
+        } else {
+          addToTerminal(`[🔥 BOOST] Aucune publication à booster sur Le Tam-Tam Gombo.`);
+        }
+        break;
+      case "renfort_express":
+        await createTransaction(500, "renfort_express", `⚡ Renfort Express Urgent (Demande d'assistance prioritaire) - ${targetUser.artisticName}`, targetUser.id, targetUser.artisticName);
+        if (renforts.length > 0) {
+          setRenforts(prev => prev.map((r, i) => i === 0 ? { ...r, isExpress: true } : r));
+          addToTerminal(`[⚡ RENFORT] Demande de renfort active taggée ⚡ Renfort Express.`);
+        } else {
+          addToTerminal(`[⚡ RENFORT] Aucun renfort existant. Demande de renfort express prioritaire simulée.`);
+        }
+        break;
+      case "gombo_pro":
+        await createTransaction(5000, "gombo_pro", `💼 Abonnement Gombo PRO Mensuel (Orchestre) - ${targetUser.artisticName}`, targetUser.id, targetUser.artisticName);
+        setUsers(prev => prev.map(u => u.id === targetUser.id ? { ...u, isPro: true } : u));
+        await saveToFirestore("users", targetUser.id, { ...targetUser, isPro: true });
+        addToTerminal(`[💼 PRO] Statut GOMBO PRO activé pour ${targetUser.artisticName} (Panoplie complète d'orchestres).`);
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleCreateGombo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newGombo.title || !newGombo.budget) return;
@@ -460,17 +571,51 @@ export default function AdminCentre() {
     });
   };
 
+  const logAdminAction = async (actionType: string, targetId: string, targetName: string, detail: string) => {
+    const logId = "log_admin_" + Date.now() + "_" + Math.floor(Math.random() * 100);
+    const logData = {
+      id: logId,
+      adminName: "Yoro Admin",
+      actionType,
+      targetUserId: targetId,
+      targetUserName: targetName,
+      detail,
+      timestamp: new Date().toISOString()
+    };
+    await saveToFirestore("admin_logs", logId, logData);
+    addToTerminal(`[LOG ADMIN] Action: ${actionType} | Cible: ${targetUserName} | ${detail}`);
+  };
+
   const handleApproveKYC = async (userId: string, express: boolean = false) => {
+    const targetUser = users.find(u => u.id === userId);
+    if (!targetUser) return;
+
+    // Generate unique ID only on approval
+    const gmbId = "GMB-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.floor(1000 + Math.random() * 9000);
+
     const updatedUsers = users.map(user => {
       if (user.id === userId) {
-        const u = { ...user, kycStatus: "approved" as const, isCertified: true };
+        const u: User = { 
+          ...user, 
+          kycStatus: "approved" as const, 
+          isCertified: true,
+          gomboIdNumber: gmbId,
+          kycApprovedDate: new Date().toLocaleDateString("fr-FR")
+        };
         saveToFirestore("users", user.id, u);
         return u;
       }
       return user;
     });
     setUsers(updatedUsers);
-    addToTerminal(`[👑 CERTIFICATION] Gombo ID approuvé avec succès pour ${users.find(u => u.id === userId)?.artisticName}. ${express ? "⚡ Traitement Express." : ""}`);
+    
+    // Log in admin_logs
+    await logAdminAction(
+      "CERTIFIER_ARTISTE",
+      userId,
+      targetUser.artisticName,
+      `Attribution de l'identifiant permanent ${gmbId}. Type : ${express ? "Express" : "Standard"}`
+    );
 
     setBrief(prev => ({
       ...prev,
@@ -479,16 +624,60 @@ export default function AdminCentre() {
   };
 
   const handleRejectKYC = async (userId: string) => {
+    const targetUser = users.find(u => u.id === userId);
+    if (!targetUser) return;
+
     const updatedUsers = users.map(user => {
       if (user.id === userId) {
-        const u = { ...user, kycStatus: "rejected" as const, isCertified: false };
+        const u: User = { 
+          ...user, 
+          kycStatus: "rejected" as const, 
+          isCertified: false,
+          gomboIdNumber: undefined,
+          kycApprovedDate: undefined
+        };
         saveToFirestore("users", user.id, u);
         return u;
       }
       return user;
     });
     setUsers(updatedUsers);
-    addToTerminal(`[🛡️ GOMBO ID] Certification déclinée pour l'artiste.`);
+
+    // Log in admin_logs
+    await logAdminAction(
+      "REFUSER_CERTIFICATION",
+      userId,
+      targetUser.artisticName,
+      "Dossier décliné car incomplet ou non-conforme"
+    );
+  };
+
+  const handleComplementaryInfoKYC = async (userId: string, message: string) => {
+    if (!message.trim()) return;
+    const targetUser = users.find(u => u.id === userId);
+    if (!targetUser) return;
+
+    const updatedUsers = users.map(user => {
+      if (user.id === userId) {
+        const u: User = { 
+          ...user, 
+          kycStatus: "info_required" as const, 
+          kycComplementaryInfo: message
+        };
+        saveToFirestore("users", user.id, u);
+        return u;
+      }
+      return user;
+    });
+    setUsers(updatedUsers);
+
+    // Log in admin_logs
+    await logAdminAction(
+      "DEMANDE_INFO_COMPLEMENTAIRE",
+      userId,
+      targetUser.artisticName,
+      `Texte requis : "${message}"`
+    );
   };
 
   const handlePerformActionOnPost = (postId: string, action: "approve" | "delete") => {
@@ -625,6 +814,55 @@ export default function AdminCentre() {
             </div>
           </div>
 
+          {/* PERSPECTIVE SWITCHER */}
+          <div className="mb-6 bg-black border border-[#D4AF37]/30 rounded-xl p-3 space-y-2">
+            <span className="text-[9px] uppercase font-mono text-[#D4AF37] block font-bold tracking-wider">🎭 Perspective Actuelle</span>
+            <div className="grid grid-cols-2 gap-1 bg-white/5 p-1 rounded-lg">
+              <button
+                onClick={() => {
+                  setPerspective("user");
+                  setActiveMenu("user_dashboard");
+                }}
+                className={`py-1.5 rounded text-center text-xs font-mono font-bold transition-all ${
+                  perspective === "user" ? "bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black shadow" : "text-white/60 hover:text-white"
+                }`}
+              >
+                Artiste
+              </button>
+              <button
+                onClick={() => {
+                  setPerspective("admin");
+                  setActiveMenu("dashboard");
+                }}
+                className={`py-1.5 rounded text-center text-xs font-mono font-bold transition-all ${
+                  perspective === "admin" ? "bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black shadow" : "text-white/60 hover:text-white"
+                }`}
+              >
+                Admin
+              </button>
+            </div>
+
+            {/* Simulated Active Artist Selector (only in user mode) */}
+            {perspective === "user" && (
+              <div className="space-y-1 pt-1.5 border-t border-white/5">
+                <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Artiste Actif Simulé :</span>
+                <select
+                  value={activeArtistId}
+                  onChange={(e) => {
+                    setActiveArtistId(e.target.value);
+                  }}
+                  className="w-full bg-black border border-white/10 rounded px-1.5 py-1 text-[11px] text-white font-mono focus:outline-none"
+                >
+                  {users.map(u => (
+                    <option key={u.id} value={u.id} className="bg-black text-white">
+                      {u.artisticName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
           {/* SLOGAN PRESTIGE */}
           <div className="p-4 rounded-lg bg-[#D4AF37]/5 border border-[#D4AF37]/10 mb-6 text-center text-xs text-[#D4AF37] italic">
             "🎼 Ton héritage attire les gombos."
@@ -632,101 +870,155 @@ export default function AdminCentre() {
 
           {/* NAVIGATION LINKS */}
           <nav className="space-y-1">
-            <button
-              onClick={() => setActiveMenu("dashboard")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                activeMenu === "dashboard"
-                  ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                  : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Pilotage & Dashboard
-            </button>
+            {perspective === "user" ? (
+              <>
+                <button
+                  onClick={() => setActiveMenu("user_dashboard")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "user_dashboard"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Award className="w-4 h-4" />
+                  Gombo ID Dashboard
+                </button>
 
-            <button
-              onClick={() => setActiveMenu("gombos")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                activeMenu === "gombos"
-                  ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                  : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-              }`}
-            >
-              <Film className="w-4 h-4" />
-              Le Tam-Tam Gombo
-            </button>
+                <button
+                  onClick={() => setActiveMenu("gombos")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "gombos"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Film className="w-4 h-4" />
+                  Le Tam-Tam Gombo
+                </button>
 
-            <button
-              onClick={() => setActiveMenu("renforts")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                activeMenu === "renforts"
-                  ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                  : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-              }`}
-            >
-              <Flame className="w-4 h-4" />
-              Renforts Postulés
-            </button>
+                <button
+                  onClick={() => setActiveMenu("renforts")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "renforts"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Flame className="w-4 h-4" />
+                  Renforts Postulés
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setActiveMenu("dashboard")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "dashboard"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Pilotage & Dashboard
+                </button>
 
-            <button
-              onClick={() => setActiveMenu("kyc")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                activeMenu === "kyc"
-                  ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                  : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4" />
-              Gombo ID (KYC)
-            </button>
+                <button
+                  onClick={() => setActiveMenu("gombos")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "gombos"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Film className="w-4 h-4" />
+                  Le Tam-Tam Gombo
+                </button>
 
-            <button
-              onClick={() => setActiveMenu("revision")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                activeMenu === "revision"
-                  ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                  : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-              }`}
-            >
-              <AlertOctagon className="w-4 h-4" />
-              File de Révision
-            </button>
+                <button
+                  onClick={() => setActiveMenu("renforts")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "renforts"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Flame className="w-4 h-4" />
+                  Renforts Postulés
+                </button>
 
-            <button
-              onClick={() => setActiveMenu("alertes")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                activeMenu === "alertes"
-                  ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                  : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-              }`}
-            >
-              <AlertTriangle className="w-4 h-4" />
-              Alertes de Communes
-            </button>
+                <button
+                  onClick={() => setActiveMenu("kyc")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "kyc"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  Gombo ID (KYC)
+                </button>
 
-            <button
-              onClick={() => setActiveMenu("caisse")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                activeMenu === "caisse"
-                  ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                  : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-              }`}
-            >
-              <Landmark className="w-4 h-4" />
-              La Caisse Gombo
-            </button>
+                <button
+                  onClick={() => setActiveMenu("revision")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "revision"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <AlertOctagon className="w-4 h-4" />
+                  File de Révision
+                </button>
 
-            <button
-              onClick={() => setActiveMenu("analytics")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                activeMenu === "analytics"
-                  ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                  : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-              }`}
-            >
-              <BarChart2 className="w-4 h-4" />
-              Analytics & Courbes
-            </button>
+                <button
+                  onClick={() => setActiveMenu("alertes")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "alertes"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  Alertes de Communes
+                </button>
+
+                <button
+                  onClick={() => setActiveMenu("caisse")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "caisse"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Landmark className="w-4 h-4" />
+                  La Caisse Gombo
+                </button>
+
+                <button
+                  onClick={() => setActiveMenu("monetisation")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "monetisation"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Coins className="w-4 h-4" />
+                  Monétisation Premium
+                </button>
+
+                <button
+                  onClick={() => setActiveMenu("analytics")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "analytics"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <BarChart2 className="w-4 h-4" />
+                  Analytics & Courbes
+                </button>
+              </>
+            )}
           </nav>
         </div>
 
@@ -767,17 +1059,19 @@ export default function AdminCentre() {
         <header className="flex justify-between items-center pb-6 border-b border-[#D4AF37]/10 mb-6 shrink-0">
           <div>
             <h2 className="text-2xl font-display font-medium text-[#F5F5F5] tracking-tight">
+              {activeMenu === "user_dashboard" && "Mon Gombo ID — Certification d'Excellence Artistique"}
               {activeMenu === "dashboard" && "Pilotage Intelligent & Modération"}
               {activeMenu === "gombos" && "Le Grand Tam-Tam & Gombos"}
               {activeMenu === "renforts" && "Renforts Artistes Appliqués"}
               {activeMenu === "kyc" && "Gombo ID - Base des Certifications"}
               {activeMenu === "revision" && "File de Révision Modérateur"}
               {activeMenu === "alertes" && "Centre d'Alerte de Communes d'Abidjan"}
-              {activeMenu === "caisse" && "La Caisse & Revenus Premium"}
+              {activeMenu === "caisse" && "La Caisse d'AFRIGOMBO"}
+              {activeMenu === "monetisation" && "Monétisation Premium d'AFRIGOMBO"}
               {activeMenu === "analytics" && "Analytique d'Héritage Musical"}
             </h2>
             <p className="text-xs text-[#F5F5F5]/60 mt-0.5">
-              Centre de commandement souverain pour un seul administrateur.
+              {perspective === "user" ? "Espace de certification premium et de gestion d'artiste." : "Centre de commandement souverain pour un seul administrateur."}
             </p>
           </div>
 
@@ -816,6 +1110,33 @@ export default function AdminCentre() {
               className="space-y-6"
             >
               
+              {/* ----------------------------------------------------
+                                VIEW: GOMBO ID USER DASHBOARD
+                  ---------------------------------------------------- */}
+              {activeMenu === "user_dashboard" && (() => {
+                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                if (!currentArtist) return <p className="text-white">Aucun artiste disponible. Veuillez en créer un dans l'onglet Admin.</p>;
+                
+                const handleUpdateUser = async (userData: Partial<User>) => {
+                  const targetId = currentArtist.id;
+                  setUsers(prev => prev.map(u => u.id === targetId ? { ...u, ...userData } : u));
+                  await saveToFirestore("users", targetId, userData);
+                };
+
+                const handleCreateTransaction = async (amount: number, type: any, description: string) => {
+                  await createTransaction(amount, type, description, currentArtist.id, currentArtist.artisticName);
+                };
+
+                return (
+                  <GomboIdUserDashboard
+                    currentUser={currentArtist}
+                    onUpdateUser={handleUpdateUser}
+                    onCreateTransaction={handleCreateTransaction}
+                    addToTerminal={(msg: string) => addToTerminal(msg)}
+                  />
+                );
+              })()}
+
               {/* ----------------------------------------------------
                                 VIEW: DASHBOARD & SCAN
                   ---------------------------------------------------- */}
@@ -1163,10 +1484,15 @@ export default function AdminCentre() {
                     </h4>
                     <div className="space-y-3">
                       {gombos.map(g => (
-                        <div key={g.id} className="p-5 rounded-lg border border-[#D4AF37]/15 bg-[#0B0B0B] flex justify-between items-center hover:border-[#D4AF37]/45 transition-all">
+                        <div key={g.id} className={`p-5 rounded-lg border transition-all ${g.isBoosted ? "border-orange-500/40 bg-gradient-to-r from-[#0C0601] to-[#0B0B0B] shadow-[0_0_12px_rgba(249,115,22,0.08)]" : "border-[#D4AF37]/15 bg-[#0B0B0B] hover:border-[#D4AF37]/45"}`}>
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+                              {g.isBoosted && (
+                                <span className="text-[9px] font-mono bg-gradient-to-r from-orange-500 to-amber-500 text-black px-2 py-0.5 rounded-full font-extrabold flex items-center gap-1 shadow-[0_0_10px_rgba(249,115,22,0.4)] animate-pulse">
+                                  🔥 En vedette
+                                </span>
+                              )}
                               <h5 className="font-display font-semibold text-md text-[#F5F5F5]">{g.title}</h5>
                               <span className="text-[9px] font-mono border border-[#D4AF37]/20 text-[#D4AF37] px-2 py-0.5 rounded">
                                 {g.location}
@@ -1207,14 +1533,19 @@ export default function AdminCentre() {
 
                   <div className="space-y-3">
                     {renforts.map(renfort => (
-                      <div key={renfort.id} className="p-5 rounded-lg border border-[#D4AF37]/15 bg-[#0B0B0B] flex justify-between items-center">
+                      <div key={renfort.id} className={`p-5 rounded-lg border transition-all flex justify-between items-center ${renfort.isExpress ? "border-cyan-500/40 bg-gradient-to-r from-[#00171d] to-[#0B0B0B] shadow-[0_0_12px_rgba(6,182,212,0.12)]" : "border-[#D4AF37]/15 bg-[#0B0B0B] hover:border-[#D4AF37]/45"}`}>
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-full bg-[#D4AF37]/5 border border-[#D4AF37]/30 flex items-center justify-center font-bold text-[#D4AF37]">
                             {renfort.applicantArtisticName.charAt(0)}
                           </div>
                           <div>
-                            <h5 className="font-display font-semibold text-sm text-[#F5F5F5]">
+                            <h5 className="font-display font-semibold text-sm text-[#F5F5F5] flex flex-wrap items-center gap-2">
                               {renfort.applicantArtisticName} ({renfort.applicantName})
+                              {renfort.isExpress && (
+                                <span className="text-[9px] bg-cyan-400 text-black px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse">
+                                  ⚡ Renfort Express Urgent
+                                </span>
+                              )}
                             </h5>
                             <span className="text-xs text-[#F5F5F5]/60">
                               Postule pour le rôle de <strong className="text-white">{renfort.instrument}</strong> sur :
@@ -1267,24 +1598,36 @@ export default function AdminCentre() {
                       </p>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => setKycActiveTab("pending")}
-                        className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "pending" ? "bg-[#D4AF37] text-black" : "border border-[#D4AF37]/20 text-[#D4AF37]/80"}`}
+                        onClick={() => setKycActiveTab("standard")}
+                        className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "standard" ? "bg-[#D4AF37] text-black font-bold" : "border border-[#D4AF37]/20 text-[#D4AF37]/80 hover:bg-[#D4AF37]/5"}`}
                       >
-                        En Attente ({users.filter(u => u.kycStatus === "pending").length})
+                        Standard ({users.filter(u => u.kycStatus === "pending" && u.kycType !== "express").length})
+                      </button>
+                      <button
+                        onClick={() => setKycActiveTab("express")}
+                        className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "express" ? "bg-cyan-500 text-black font-bold shadow-[0_0_8px_rgba(6,182,212,0.4)]" : "border border-cyan-500/20 text-cyan-400/80 hover:bg-cyan-500/5"}`}
+                      >
+                        ⚡ Express ({users.filter(u => u.kycStatus === "pending" && u.kycType === "express").length})
                       </button>
                       <button
                         onClick={() => setKycActiveTab("approved")}
-                        className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "approved" ? "bg-[#D4AF37] text-black" : "border border-[#D4AF37]/20 text-[#D4AF37]/80"}`}
+                        className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "approved" ? "bg-emerald-500 text-black font-bold" : "border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/5"}`}
                       >
-                        Certifiés
+                        Validées ({users.filter(u => u.kycStatus === "approved").length})
                       </button>
                       <button
                         onClick={() => setKycActiveTab("rejected")}
-                        className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "rejected" ? "bg-[#D4AF37] text-black" : "border border-[#D4AF37]/20 text-[#D4AF37]/80"}`}
+                        className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "rejected" ? "bg-red-500 text-white font-bold" : "border border-red-500/20 text-red-400 hover:bg-red-500/5"}`}
                       >
-                        Rejetés
+                        Refusées ({users.filter(u => u.kycStatus === "rejected").length})
+                      </button>
+                      <button
+                        onClick={() => setKycActiveTab("info_required")}
+                        className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "info_required" ? "bg-amber-500 text-black font-bold" : "border border-amber-500/20 text-amber-400 hover:bg-amber-500/5"}`}
+                      >
+                        Infos Requises ({users.filter(u => u.kycStatus === "info_required").length})
                       </button>
                     </div>
                   </div>
@@ -1432,60 +1775,178 @@ export default function AdminCentre() {
                   <div className="space-y-3">
                     {filteredUsers
                       .filter(u => {
-                        if (kycActiveTab === "pending") return u.kycStatus === "pending";
+                        if (kycActiveTab === "standard") return u.kycStatus === "pending" && u.kycType !== "express";
+                        if (kycActiveTab === "express") return u.kycStatus === "pending" && u.kycType === "express";
                         if (kycActiveTab === "approved") return u.kycStatus === "approved";
                         if (kycActiveTab === "rejected") return u.kycStatus === "rejected";
+                        if (kycActiveTab === "info_required") return u.kycStatus === "info_required";
                         return true;
                       })
                       .map(user => (
                         <div key={user.id} className="p-5 rounded-lg border border-[#D4AF37]/25 bg-[#0B0B0B] space-y-4">
-                          <div className="flex justify-between items-center">
+                          <div className="flex flex-col lg:flex-row justify-between gap-4 lg:items-center">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-full border-2 border-[#D4AF37] bg-black flex items-center justify-center font-bold text-[#D4AF37]">
-                                {user.artisticName.charAt(0)}
+                              <div className="w-12 h-12 rounded-full border border-[#D4AF37] bg-black flex items-center justify-center font-bold text-[#D4AF37] text-lg">
+                                {user.avatarUrl ? (
+                                  <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                                ) : (
+                                  user.artisticName.charAt(0)
+                                )}
                               </div>
                               <div>
-                                <h5 className="font-display font-semibold text-md text-[#F5F5F5] flex items-center gap-2">
+                                <h5 className="font-display font-semibold text-md text-[#F5F5F5] flex flex-wrap items-center gap-2">
                                   {user.artisticName}
                                   {user.isCertified && (
-                                    <span className="text-[10px] bg-[#D4AF37] text-black px-1.5 py-0.5 rounded uppercase font-mono font-bold tracking-wider">
+                                    <span className="text-[9px] bg-[#D4AF37] text-black px-1.5 py-0.5 rounded font-mono font-bold tracking-wider uppercase">
                                       Elite Certifié
                                     </span>
                                   )}
+                                  {user.kycStatus === "pending" && (
+                                    <span className="text-[9px] bg-cyan-500 text-black px-1.5 py-0.5 rounded font-mono font-bold tracking-wider uppercase">
+                                      {user.kycType === "express" ? "⚡ Express Prioritaire" : "⏳ File Standard"}
+                                    </span>
+                                  )}
+                                  {user.kycStatus === "info_required" && (
+                                    <span className="text-[9px] bg-amber-500 text-black px-1.5 py-0.5 rounded font-mono font-bold tracking-wider uppercase">
+                                      ↺ Infos Requises
+                                    </span>
+                                  )}
+                                  {user.kycStatus === "rejected" && (
+                                    <span className="text-[9px] bg-red-500/20 border border-red-500/30 text-red-500 px-1.5 py-0.5 rounded font-mono font-bold tracking-wider uppercase">
+                                      🚫 Refusé
+                                    </span>
+                                  )}
                                 </h5>
-                                <p className="text-xs text-[#F5F5F5]/60">{user.name} • l'héritage musical de <strong className="text-white">{user.commune}</strong></p>
+                                <p className="text-xs text-[#F5F5F5]/60 mt-0.5">
+                                  {user.name} • Commune : <strong className="text-white">{user.commune}</strong> • Inscrit le : {user.registrationDate || "N/A"}
+                                </p>
                               </div>
                             </div>
 
-                            <div className="flex gap-2">
-                              {user.kycStatus === "pending" && (
-                                <>
-                                  <button
-                                    onClick={() => handleApproveKYC(user.id, true)}
-                                    className="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold text-[10px] uppercase px-3 py-1.5 rounded transition-all"
-                                  >
-                                    Certification Express
-                                  </button>
-                                  <button
-                                    onClick={() => handleRejectKYC(user.id)}
-                                    className="bg-[#EF4444]/20 border border-[#EF4444]/30 hover:bg-[#EF4444]/40 text-[#EF4444] font-semibold text-[10px] uppercase px-3 py-1.5 rounded transition-all"
-                                  >
-                                    Rejeter
-                                  </button>
-                                </>
+                            {/* Main permanent ID display if approved */}
+                            {user.gomboIdNumber && (
+                              <div className="flex flex-col items-end">
+                                <span className="text-[8px] font-mono uppercase text-[#D4AF37] font-semibold tracking-widest">Identifiant GOMBO ID</span>
+                                <span className="font-mono text-xs font-bold text-white bg-[#D4AF37]/15 border border-[#D4AF37]/35 px-2.5 py-0.5 rounded">
+                                  {user.gomboIdNumber}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Documents Preview Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-black/40 border border-white/5 p-4 rounded-xl">
+                            <div className="space-y-1">
+                              <span className="text-[9px] uppercase font-mono text-[#D4AF37]/60 block font-semibold">1. Pièce d'Identité</span>
+                              {user.kycDocs?.identityCardUrl ? (
+                                <a
+                                  href={user.kycDocs.identityCardUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-[#D4AF37] hover:underline font-mono block truncate"
+                                >
+                                  Voir la Pièce Libre ↗
+                                </a>
+                              ) : (
+                                <span className="text-xs text-white/30 italic">Aucune pièce (Simulation active)</span>
                               )}
-                              
-                              <button
-                                onClick={() => startEditingProfile(user)}
-                                className="bg-transparent border border-[#D4AF37]/40 hover:border-[#D4AF37] text-[#D4AF37] text-[10px] uppercase font-mono px-3 py-1.5 rounded transition-all"
-                              >
-                                Modifier Héritage
-                              </button>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-[9px] uppercase font-mono text-[#D4AF37]/60 block font-semibold">2. Selfie de Contrôle</span>
+                              {user.kycDocs?.selfieUrl ? (
+                                <a
+                                  href={user.kycDocs.selfieUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-[#D4AF37] hover:underline font-mono block truncate"
+                                >
+                                  Voir le Selfie Libre ↗
+                                </a>
+                              ) : (
+                                <span className="text-xs text-white/30 italic">Aucun selfie (Simulation active)</span>
+                              )}
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-[9px] uppercase font-mono text-[#D4AF37]/60 block font-semibold">3. Preuve Musicale</span>
+                              {user.kycDocs?.activityUrl || user.kycDocUrl ? (
+                                <a
+                                  href={user.kycDocs?.activityUrl || user.kycDocUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-[#D4AF37] hover:underline font-mono block truncate"
+                                >
+                                  Voir la Preuve en Ligne ↗
+                                </a>
+                              ) : (
+                                <span className="text-xs text-white/30 italic">Aucune preuve (Simulation active)</span>
+                              )}
                             </div>
                           </div>
 
-                          {/* PROFILE PROGRESS BAR SLITS (PHASE 5 REQUIREMENTS) */}
-                          <div className="p-3.5 bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Complementary requested text note if applicable */}
+                          {user.kycStatus === "info_required" && user.kycComplementaryInfo && (
+                            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs">
+                              <span className="font-bold text-amber-400 block font-mono text-[10px] uppercase">↺ Message d'information demandée :</span>
+                              <p className="text-white/80 mt-1 italic">"{user.kycComplementaryInfo}"</p>
+                            </div>
+                          )}
+
+                          {/* Administrative Actions */}
+                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-t border-white/5 pt-4">
+                            <div className="flex flex-wrap gap-2">
+                              {user.kycStatus !== "approved" && (
+                                <button
+                                  onClick={() => handleApproveKYC(user.id, user.kycType === "express")}
+                                  className="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold text-[10px] uppercase px-3 py-1.5 rounded transition-all"
+                                >
+                                  {user.kycType === "express" ? "Certifier (⚡ Express)" : "Certifier le Talent"}
+                                </button>
+                              )}
+                              
+                              {user.kycStatus !== "rejected" && (
+                                <button
+                                  onClick={() => handleRejectKYC(user.id)}
+                                  className="bg-[#EF4444]/20 border border-[#EF4444]/30 hover:bg-[#EF4444]/40 text-[#EF4444] font-semibold text-[10px] uppercase px-3 py-1.5 rounded transition-all"
+                                >
+                                  Refuser Dossier
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => startEditingProfile(user)}
+                                className="bg-transparent border border-white/10 hover:border-[#D4AF37] text-white hover:text-[#D4AF37] text-[10px] uppercase font-mono px-3 py-1.5 rounded transition-all"
+                              >
+                                Éditer Profil
+                              </button>
+                            </div>
+
+                            {/* Direct Complementary Info Request Input */}
+                            {user.kycStatus !== "approved" && (
+                              <div className="w-full md:max-w-md flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Motif d'information manquante..."
+                                  value={infoMessages[user.id] || ""}
+                                  onChange={(e) => setInfoMessages(prev => ({ ...prev, [user.id]: e.target.value }))}
+                                  className="flex-1 bg-black border border-white/15 focus:border-[#D4AF37] focus:outline-none rounded p-1.5 text-xs text-white"
+                                />
+                                <button
+                                  onClick={() => {
+                                    handleComplementaryInfoKYC(user.id, infoMessages[user.id] || "");
+                                    setInfoMessages(prev => ({ ...prev, [user.id]: "" }));
+                                  }}
+                                  className="bg-amber-500 hover:bg-amber-600 text-black font-bold text-[10px] uppercase px-3 py-1.5 rounded"
+                                >
+                                  Demander Infos
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* PROFILE PROGRESS BAR SLITS */}
+                          <div className="p-3.5 bg-white/5 border border-white/5 rounded grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <span className="text-[10px] font-mono uppercase text-[#F5F5F5]/50 block">Spécialités de l'artiste</span>
                               <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -1611,56 +2072,235 @@ export default function AdminCentre() {
               {/* ----------------------------------------------------
                                 VIEW: LA CAISSE GOMBO (FINANCIALS)
                   ---------------------------------------------------- */}
-              {activeMenu === "caisse" && (
-                <div className="space-y-6">
-                  {/* CAISSE SUMMARY CARDS */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40">
-                      <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Part Gombo d'Affaire Enregistrée</span>
-                      <span className="text-2xl font-display font-medium text-[#D4AF37] block mt-1 font-mono">
-                        1 550 000 FCFA
-                      </span>
+              {activeMenu === "caisse" && (() => {
+                const now = new Date();
+                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                const startOfWeek = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+                const startOfMonth = now.getTime() - 30 * 24 * 60 * 60 * 1000;
+
+                const totals = transactions.reduce((sum, t) => sum + (t.type !== "payout" ? t.amount : 0), 0);
+                const daily = transactions
+                  .filter(t => new Date(t.timestamp).getTime() >= startOfToday && t.type !== "payout")
+                  .reduce((sum, t) => sum + t.amount, 0);
+                const weekly = transactions
+                  .filter(t => new Date(t.timestamp).getTime() >= startOfWeek && t.type !== "payout")
+                  .reduce((sum, t) => sum + t.amount, 0);
+                const monthly = transactions
+                  .filter(t => new Date(t.timestamp).getTime() >= startOfMonth && t.type !== "payout")
+                  .reduce((sum, t) => sum + t.amount, 0);
+
+                const cExpress = transactions.filter(t => t.type === "cert_express").reduce((s, t) => s + t.amount, 0);
+                const bGombo = transactions.filter(t => t.type === "boost_gombo").reduce((s, t) => s + t.amount, 0);
+                const rExpress = transactions.filter(t => t.type === "renfort_express").reduce((s, t) => s + t.amount, 0);
+                const gVip = transactions.filter(t => t.type === "gombo_vip").reduce((s, t) => s + t.amount, 0);
+                const gPro = transactions.filter(t => t.type === "gombo_pro").reduce((s, t) => s + t.amount, 0);
+                const otherRev = transactions.filter(t => t.type === "commission" || t.type === "subscription").reduce((s, t) => s + t.amount, 0);
+
+                const premiumSum = cExpress + bGombo + rExpress + gVip + gPro;
+
+                return (
+                  <div className="space-y-6">
+                    {/* TOP STATS: CAISSE REVENUES METRICS */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+                        <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Revenus du Jour</span>
+                        <span className="text-2xl font-display font-bold text-[#D4AF37] block mt-1 font-mono">
+                          {daily.toLocaleString()} <span className="text-sm font-sans font-medium text-[#F5F5F5]/60">FCFA</span>
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-2 text-[9px] font-mono text-[#10B981]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+                          Mise à jour temps réel
+                        </div>
+                      </div>
+
+                      <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+                        <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Revenus de la Semaine</span>
+                        <span className="text-2xl font-display font-bold text-[#D4AF37] block mt-1 font-mono">
+                          {weekly.toLocaleString()} <span className="text-sm font-sans font-medium text-[#F5F5F5]/60">FCFA</span>
+                        </span>
+                        <div className="text-[9px] text-[#F5F5F5]/40 mt-2 font-mono">Derniers 7 jours glissants</div>
+                      </div>
+
+                      <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+                        <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Revenus du Mois</span>
+                        <span className="text-2xl font-display font-bold text-[#D4AF37] block mt-1 font-mono">
+                          {monthly.toLocaleString()} <span className="text-sm font-sans font-medium text-[#F5F5F5]/60">FCFA</span>
+                        </span>
+                        <div className="text-[9px] text-[#F5F5F5]/40 mt-2 font-mono">Derniers 30 jours glissants</div>
+                      </div>
+
+                      <div className="p-5 rounded-lg border border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/5 to-[#D4AF37]/0 shadow-[0_4px_20px_rgba(212,175,55,0.1)]">
+                        <div className="flex justify-between items-start">
+                          <span className="text-[10px] uppercase font-mono text-[#D4AF37] font-semibold block">Revenus Totaux</span>
+                          <Award className="w-4 h-4 text-[#D4AF37]" />
+                        </div>
+                        <span className="text-2xl font-display font-extrabold text-[#D4AF37] block mt-1 font-mono">
+                          {totals.toLocaleString()} <span className="text-sm font-sans font-medium text-[#F5F5F5]">FCFA</span>
+                        </span>
+                        <div className="text-[9px] text-[#D4AF37]/80 mt-2 font-mono">Rentabilité Globale Réelle</div>
+                      </div>
                     </div>
 
-                    <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40">
-                      <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Revenus de commissions acquis</span>
-                      <span className="text-2xl font-display font-medium text-[#10B981] block mt-1 font-mono">
-                        {transactions.reduce((acc, curr) => acc + (curr.type === "commission" ? curr.amount : 0), 0).toLocaleString()} FCFA
-                      </span>
-                    </div>
+                    {/* REPARTITION DES REVENUS SOUVERAINS */}
+                    <div className="p-6 rounded-lg bg-black/30 border border-[#D4AF37]/15">
+                      <h4 className="text-xs uppercase font-mono font-bold tracking-widest text-[#D4AF37] mb-6 flex items-center gap-2">
+                        <Coins className="w-4 h-4" />
+                        Répartition par Flux de Revenus Africains
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* LEFT GRID: DISTRIBUTION list */}
+                        <div className="space-y-4">
+                          {[
+                            { name: "⚡ Certifications Express", amount: cExpress, desc: "Frais de traitement prioritaire de Gombo ID", color: "from-[#10B981] to-[#059669]" },
+                            { name: "🔥 Boost Gombo", amount: bGombo, desc: "Publications d'artistes mises en vedette", color: "from-amber-500 to-red-500" },
+                            { name: "⚡ Renfort Express Urgent", amount: rExpress, desc: "Offres de renforts marquées en urgence", color: "from-cyan-400 to-blue-500" },
+                            { name: "✨ Adhésions Gombo VIP", amount: gVip, desc: "Abonnements d'artistes (1 000 FCFA/mois)", color: "from-purple-500 to-pink-500" },
+                            { name: "💼 Statut Gombo PRO", amount: gPro, desc: "Formules pour Orchestres, Managers e.a.", color: "from-[#D4AF37] to-[#B48F17]" },
+                            { name: "🎼 Commissions standard & Subs", amount: otherRev, desc: "Commissions de 10% sur gombos finalisés", color: "from-gray-500 to-slate-400" },
+                          ].map((item, idx) => {
+                            const percent = totals > 0 ? (item.amount / totals) * 100 : 0;
+                            return (
+                              <div key={idx} className="space-y-1.5 p-3 rounded bg-white/5 border border-white/5">
+                                <div className="flex justify-between items-center text-xs">
+                                  <div>
+                                    <span className="font-semibold text-[#F5F5F5] block">{item.name}</span>
+                                    <span className="text-[10px] text-[#F5F5F5]/40">{item.desc}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="font-mono font-bold text-[#D4AF37] block">
+                                      {item.amount.toLocaleString()} FCFA
+                                    </span>
+                                    <span className="text-[10px] font-mono text-[#F5F5F5]/50 block">
+                                      {percent.toFixed(1)}%
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="w-full bg-[#D4AF37]/5 h-2 rounded-full overflow-hidden border border-white/5">
+                                  <div
+                                    className={`bg-gradient-to-r ${item.color} h-full`}
+                                    style={{ width: `${percent}%` }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
 
-                    <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40">
-                      <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Revenus Souscriptions Elite Premium</span>
-                      <span className="text-2xl font-display font-medium text-[#D4AF37] block mt-1 font-mono">
-                        {transactions.reduce((acc, curr) => acc + (curr.type === "subscription" ? curr.amount : 0), 0).toLocaleString()} FCFA
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* TRANSACTION LOG */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm uppercase font-mono font-bold tracking-widest text-[#D4AF37]">
-                      Journal de Transactions de Caisse
-                    </h4>
-                    <div className="space-y-2.5">
-                      {transactions.map(tx => (
-                        <div key={tx.id} className="p-4 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/10 flex justify-between items-center text-xs">
-                          <div className="flex items-center gap-3">
-                            <Landmark className="w-4 h-4 text-[#D4AF37]" />
-                            <div>
-                              <span className="font-semibold block">{tx.description}</span>
-                              <span className="text-[#F5F5F5]/45 text-[10px] font-mono">{tx.timestamp} • Artiste: {tx.userArtisticName}</span>
+                        {/* RIGHT GRID: ARCHITECTURE SUMMARY */}
+                        <div className="flex flex-col justify-between p-5 rounded-lg bg-[#D4AF37]/5 border border-[#D4AF37]/10">
+                          <div>
+                            <span className="text-xs uppercase font-mono font-semibold text-[#D4AF37] tracking-wider block mb-2">
+                              Souveraineté Économique Africaine
+                            </span>
+                            <p className="text-xs text-[#F5F5F5]/70 leading-relaxed space-y-2">
+                              La répartition d'AFRIGOMBO est optimisée pour une rentabilité équilibrée. 
+                              Toutes les transactions s'effectuent via un flux transactionnel en temps réel connecté à Firestore. 
+                              Cette architecture intègre une couche d'abstraction ouverte pour connecter nativement les SDKs africains:
+                            </p>
+                            
+                            {/* FUTURE PAYMENTS PLATFORM BADGES */}
+                            <div className="grid grid-cols-2 gap-2 mt-4 font-mono text-[10px]">
+                              <div className="p-2 border border-[#D4AF37]/20 rounded bg-black/40 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                                Wave Sénégal/CI
+                              </div>
+                              <div className="p-2 border border-[#D4AF37]/20 rounded bg-black/40 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                                Orange Money
+                              </div>
+                              <div className="p-2 border border-[#D4AF37]/20 rounded bg-black/40 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                                MTN Mobile Money
+                              </div>
+                              <div className="p-2 border border-[#D4AF37]/20 rounded bg-black/40 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                                Moov Money
+                              </div>
+                              <div className="p-2 border border-[#D4AF37]/30 rounded bg-[#D4AF37]/10 flex items-center gap-2 col-span-2 justify-center text-[#D4AF37]">
+                                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                                Passerelle CinetPay (Afrique de l'Ouest)
+                              </div>
                             </div>
                           </div>
-                          <span className={`font-mono font-bold text-md ${tx.type === "payout" ? "text-red-400" : "text-emerald-400"}`}>
-                            {tx.type === "payout" ? "-" : "+"}{tx.amount.toLocaleString()} FCFA
-                          </span>
+
+                          <div className="border-t border-[#D4AF37]/10 pt-4 mt-6 text-[11px] text-[#F5F5F5]/50 italic">
+                            💡 Chaque transaction listée ci-contre est répercutée en temps réel et persistée de manière offline-first.
+                          </div>
                         </div>
-                      ))}
+                      </div>
+                    </div>
+
+                    {/* DYNAMIC REAL-TIME TRANSACTION DIARY */}
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-sm uppercase font-mono font-bold tracking-widest text-[#D4AF37]">
+                          Journal des paiements de Caisse (Firebase Live)
+                        </h4>
+                        <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/40">
+                          {transactions.length} transactions indexées
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-2 bg-black/20 p-4 rounded-lg border border-white/5 max-h-96 overflow-y-auto scrollbar-thin">
+                        {transactions.map(tx => {
+                          let typeBadge = "";
+                          let typeColor = "";
+                          switch (tx.type) {
+                            case "cert_express":
+                              typeBadge = "⚡ Express";
+                              typeColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                              break;
+                            case "boost_gombo":
+                              typeBadge = "🔥 Boost";
+                              typeColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+                              break;
+                            case "renfort_express":
+                              typeBadge = "⚡ Renfort";
+                              typeColor = "text-cyan-400 bg-cyan-500/10 border-cyan-500/20";
+                              break;
+                            case "gombo_vip":
+                              typeBadge = "✨ VIP Sub";
+                              typeColor = "text-purple-400 bg-purple-500/10 border-purple-500/20";
+                              break;
+                            case "gombo_pro":
+                              typeBadge = "💼 PRO Sub";
+                              typeColor = "text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/20";
+                              break;
+                            default:
+                              typeBadge = "🎼 Commission";
+                              typeColor = "text-gray-400 bg-gray-500/10 border-gray-500/20";
+                          }
+
+                          return (
+                            <div key={tx.id} className="p-3.5 rounded bg-[#010101]/60 border border-white/5 flex justify-between items-center text-xs hover:border-[#D4AF37]/25 transition-all">
+                              <div className="flex items-center gap-3">
+                                <div className={`px-2 py-0.5 rounded text-[9px] font-mono border font-bold ${typeColor}`}>
+                                  {typeBadge}
+                                </div>
+                                <div>
+                                  <span className="font-semibold text-white block">{tx.description}</span>
+                                  <span className="text-[#F5F5F5]/40 text-[9px] font-mono">
+                                    {new Date(tx.timestamp).toLocaleString()} • Artiste : <strong className="text-[#D4AF37]">{tx.userArtisticName}</strong>
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="font-mono font-bold text-sm text-emerald-400">
+                                +{tx.amount.toLocaleString()} FCFA
+                              </span>
+                            </div>
+                          );
+                        })}
+
+                        {transactions.length === 0 && (
+                          <div className="text-center py-8 text-xs text-[#F5F5F5]/40">
+                            Aucune transaction de caisse enregistrée pour le moment.
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* ----------------------------------------------------
                                 VIEW: ANALYTICS & COURBES
@@ -1749,6 +2389,241 @@ export default function AdminCentre() {
                   </div>
                 </div>
               )}
+
+              {/* ----------------------------------------------------
+                                VIEW: MONETISATION PREMIUM
+                  ---------------------------------------------------- */}
+              {activeMenu === "monetisation" && (() => {
+                const premiumTx = transactions.filter(t => t.type !== "commission" && t.type !== "subscription" && t.type !== "payout");
+                const totalPremiumRevenues = premiumTx.reduce((sum, t) => sum + t.amount, 0);
+                const countPremiumSales = premiumTx.length;
+
+                const cExpressCount = transactions.filter(t => t.type === "cert_express").length;
+                const bGomboCount = transactions.filter(t => t.type === "boost_gombo").length;
+                const rExpressCount = transactions.filter(t => t.type === "renfort_express").length;
+                const gVipCount = transactions.filter(t => t.type === "gombo_vip").length;
+                const gProCount = transactions.filter(t => t.type === "gombo_pro").length;
+
+                const sortedProducts = [
+                  { name: "⚡ Certifications Express (500 FCFA)", count: cExpressCount, rev: cExpressCount * 500, type: "cert_express", badge: "Express" },
+                  { name: "🔥 Boost Tam-Tam Gombo (500-2k FCFA)", count: bGomboCount, rev: transactions.filter(t => t.type === "boost_gombo").reduce((s,t)=>s+t.amount,0), type: "boost_gombo", badge: "Boost" },
+                  { name: "⚡ Renfort Express Urgent (500 FCFA)", count: rExpressCount, rev: rExpressCount * 500, type: "renfort_express", badge: "Renfort" },
+                  { name: "✨ Adhésions Gombo VIP (1 000 FCFA/m)", count: gVipCount, rev: gVipCount * 1000, type: "gombo_vip", badge: "VIP" },
+                  { name: "💼 Statut Gombo PRO (5 000 FCFA/m)", count: gProCount, rev: gProCount * 5000, type: "gombo_pro", badge: "PRO" }
+                ].sort((a,b) => b.count - a.count);
+
+                return (
+                  <div className="space-y-6">
+                    {/* TOP DOCK OF NUMERICS */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-md">
+                        <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Nombre d'achats Premium</span>
+                        <span className="text-2xl font-display font-bold text-[#D4AF37] block mt-1 font-mono">
+                          {countPremiumSales} <span className="text-xs font-sans text-[#F5F5F5]/40 font-normal">transactions</span>
+                        </span>
+                        <span className="text-[9px] text-[#10B981] font-mono block mt-1.5">✓ 100% Synchronisé avec Firestore</span>
+                      </div>
+
+                      <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-md">
+                        <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Revenus Premium cumulés</span>
+                        <span className="text-2xl font-display font-bold text-emerald-400 block mt-1 font-mono">
+                          {totalPremiumRevenues.toLocaleString()} <span className="text-sm font-sans text-emerald-500 font-normal">FCFA</span>
+                        </span>
+                        <span className="text-[9px] text-zinc-400 font-mono block mt-1.5">Souverains, hors commissions</span>
+                      </div>
+
+                      <div className="p-5 rounded-lg border border-[#D4AF37] bg-[#D4AF37]/5 shadow-md">
+                        <span className="text-[10px] uppercase font-mono text-[#D4AF37] font-semibold block">Produit Étoile (Leader)</span>
+                        <span className="text-xl font-display font-extrabold text-[#F5F5F5] block mt-1 truncate">
+                          {sortedProducts[0]?.count > 0 ? sortedProducts[0].name.split("(")[0] : "Aucun achat encore"}
+                        </span>
+                        <span className="text-[9px] text-[#D4AF37] font-mono block mt-1">
+                          {sortedProducts[0]?.count > 0 ? `${sortedProducts[0].count} activations enregistrées` : "Preneur en attente"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* TWO COLUMN WORKSPACE */}
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                      
+                      {/* COLUMN 1: INTERACTIVE SIMULATOR CENTER */}
+                      <div className="p-6 rounded-lg bg-black/30 border border-[#D4AF37]/15 space-y-4">
+                        <div>
+                          <h4 className="text-sm uppercase font-display font-bold text-[#D4AF37] flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-[#D4AF37]" />
+                            Simulateur Transactionnel Premium
+                          </h4>
+                          <p className="text-xs text-[#F5F5F5]/50 mt-1">
+                            Simulez l'activation instantanée d'un service premium par un artiste d'Abidjan pour valider le workflow de la caisse.
+                          </p>
+                        </div>
+
+                        {/* SELECT TARGET ARTIST */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-mono uppercase text-[#F5F5F5]/60 block font-semibold">Artiste Acheteur</label>
+                          <select
+                            value={simUserId}
+                            onChange={(e) => setSimUserId(e.target.value)}
+                            className="w-full text-xs bg-[#0B0B0B] border border-[#D4AF37]/20 focus:border-[#D4AF37] text-white px-3 py-2.5 rounded-lg focus:outline-none"
+                          >
+                            <option value="">-- Choisir un artiste simulé --</option>
+                            {users.map(u => (
+                              <option key={u.id} value={u.id}>
+                                {u.artisticName} ({u.commune}) — {u.isVip ? "👑 VIP" : ""} {u.isPro ? "💼 PRO" : ""} {u.isCertified ? "✓ Certifié" : "Non-Certifié"}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* SELECT PREMIUM OFFERING */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-mono uppercase text-[#F5F5F5]/60 block font-semibold">Produit à Activer</label>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                            {[
+                              { id: "cert_express", name: "⚡ Cert Express", price: "500 FCFA", desc: "Priorisation KYC" },
+                              { id: "gombo_vip", name: "👑 Gombo VIP", price: "1 000 FCFA/m", desc: "Badge & Pinned post" },
+                              { id: "boost_gombo", name: "🔥 Boost Tam-Tam", price: "1 000 FCFA", desc: "Mise en vedette" },
+                              { id: "renfort_express", name: "⚡ Renfort Express", price: "500 FCFA", desc: "Marque Urgence" },
+                              { id: "gombo_pro", name: "💼 Gombo PRO", price: "5 000 FCFA/m", desc: "Pour Orchestres" }
+                            ].map((prod) => (
+                              <button
+                                key={prod.id}
+                                type="button"
+                                onClick={() => setSimProduct(prod.id)}
+                                className={`p-2.5 rounded-lg border text-left flex flex-col justify-between transition-all ${
+                                  simProduct === prod.id
+                                    ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]"
+                                    : "bg-[#0B0B0B]/50 border-white/5 hover:border-[#D4AF37]/30 text-[#F5F5F5]/70"
+                                }`}
+                              >
+                                <span className="font-bold flex justify-between items-center w-full">
+                                  <span>{prod.name}</span>
+                                  <span className="font-mono text-[10px]">{prod.price}</span>
+                                </span>
+                                <span className="text-[9px] opacity-60 block mt-1">{prod.desc}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* SPECIFIC BOOST AMOUNT SELECTOR (ONLY IF BOOST_GOMBO) */}
+                        {simProduct === "boost_gombo" && (
+                          <div className="space-y-1.5 p-3 rounded-lg bg-orange-500/5 border border-orange-500/15 animate-fadeIn">
+                            <label className="text-[10px] font-mono uppercase text-orange-400 block font-semibold">Budget du Boost</label>
+                            <div className="flex gap-2 text-xs">
+                              {[500, 1000, 2000].map(amt => (
+                                <button
+                                  key={amt}
+                                  type="button"
+                                  onClick={() => setSimBoostPrice(amt)}
+                                  className={`flex-1 py-1.5 rounded border font-mono font-bold transition-all ${
+                                    simBoostPrice === amt
+                                      ? "bg-amber-500/20 border-amber-500 text-amber-400 shadow"
+                                      : "bg-black/30 border-white/10 hover:bg-black/55 text-zinc-400"
+                                  }`}
+                                >
+                                  {amt} FCFA
+                                </button>
+                              ))}
+                            </div>
+                            <span className="text-[9px] text-[#F5F5F5]/40 block italic mt-1 leading-normal">Le budget définit le poids d'exposition : 500 (24h), 1000 (3 jours), 2000 (7 jours)</span>
+                          </div>
+                        )}
+
+                        {/* SUBMIT BUTTON */}
+                        <button
+                          type="button"
+                          onClick={handlePerformSimulatedPayment}
+                          className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-amber-500 via-[#D4AF37] to-yellow-500 text-black font-semibold text-xs uppercase tracking-wider shadow-[0_4px_15px_rgba(212,175,55,0.25)] hover:bg-opacity-95 active:scale-[0.99] transition-all"
+                        >
+                          💸 Simuler le Paiement de l'Artiste
+                        </button>
+                      </div>
+
+                      {/* COLUMN 2: LEADERBOARD OF PREMIUM USAGES */}
+                      <div className="p-6 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/15">
+                        <h4 className="text-xs uppercase font-mono font-bold tracking-widest text-[#D4AF37] mb-6 flex items-center gap-2">
+                          <BarChart2 className="w-4 h-4" />
+                          Classement des Produits les plus Utilisés
+                        </h4>
+                        
+                        <div className="space-y-5">
+                          {sortedProducts.map((p, idx) => {
+                            const pct = countPremiumSales > 0 ? (p.count / countPremiumSales) * 100 : 0;
+                            return (
+                              <div key={idx} className="space-y-1 bg-white/[0.02] p-3 rounded border border-white/[0.02] hover:border-amber-500/10 transition-all">
+                                <div className="flex justify-between items-center text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-[10px] text-[#F5F5F5]/30">#{idx+1}</span>
+                                    <span className="font-semibold text-white">{p.name.split(" (")[0]}</span>
+                                  </div>
+                                  <div className="text-right font-mono text-[10px]">
+                                    <span className="font-bold text-[#D4AF37]">{p.count} ventes</span>
+                                    <span className="text-[#F5F5F5]/40 ml-2">({pct.toFixed(0)}%)</span>
+                                  </div>
+                                </div>
+                                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5">
+                                  <div
+                                    className="bg-gradient-to-r from-amber-400 to-[#D4AF37] h-full rounded-full transition-all duration-500"
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                                <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono pt-1">
+                                  <span>{pct === 0 ? "En attente d'activité" : "Volume de commandes"}</span>
+                                  <span className="text-emerald-400 font-bold">+{p.rev.toLocaleString()} FCFA</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* DOCK OF DETAILED PRICINGS & RULES */}
+                    <div className="p-6 rounded-lg bg-[#D4AF37]/5 border border-[#D4AF37]/10">
+                      <h4 className="text-xs uppercase font-mono font-bold tracking-widest text-[#D4AF37] mb-4 flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4" />
+                        Charte d'Éthique & Solidarité Artistique
+                      </h4>
+                      <p className="text-xs text-[#F5F5F5]/70 leading-relaxed mb-4">
+                        🚨 <strong>Principe de Souveraineté : "Ne jamais bloquer les fonctions essentielles"</strong>. 
+                        Toute la monétisation additionnelle d'AFRIGOMBO s'ajoute en tant que services facultatifs à valeur ajoutée pour propulser les carrières. 
+                        Un artiste ivoirien sans ressources peut toujours : ✓ Publier sur le Tam-Tam, ✓ Chercher des opportunités de concerts, ✓ Candidater, ✓ Être certifié par file d'attente gratuite. Les contributions financières proviennent uniquement de la valeur d'accélération fournie.
+                      </p>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                        <div className="p-4 rounded bg-black/40 border border-[#D4AF37]/10">
+                          <span className="font-bold text-[#D4AF37] block text-xs">⚡ Cert Express</span>
+                          <span className="font-mono text-xs font-bold text-white block mt-1">500 FCFA</span>
+                          <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Traitement KYC express sous 24h-72h.</p>
+                        </div>
+                        <div className="p-4 rounded bg-black/40 border border-[#D4AF37]/10">
+                          <span className="font-bold text-purple-400 block text-xs">✨ Gombo VIP</span>
+                          <span className="font-mono text-xs font-bold text-white block mt-1">1 000 FCFA/m</span>
+                          <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Badge VIP, profil propulsé et publications épinglées.</p>
+                        </div>
+                        <div className="p-4 rounded bg-black/40 border border-[#D4AF37]/10">
+                          <span className="font-bold text-orange-400 block text-xs">🔥 Boost Gombo</span>
+                          <span className="font-mono text-xs font-bold text-white block mt-1">500 - 2k FCFA</span>
+                          <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Bannière de distinction En vedette sur les tam-tams.</p>
+                        </div>
+                        <div className="p-4 rounded bg-black/40 border border-[#D4AF37]/10">
+                          <span className="font-bold text-cyan-400 block text-xs">⚡ Renfort Express</span>
+                          <span className="font-mono text-xs font-bold text-white block mt-1">500 FCFA</span>
+                          <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Marquage d'urgence immédiat sur les renforts.</p>
+                        </div>
+                        <div className="p-4 rounded bg-black/40 border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
+                          <span className="font-bold text-emerald-400 block text-xs">💼 Gombo PRO</span>
+                          <span className="font-mono text-xs font-bold text-white block mt-1">5 000 FCFA/m</span>
+                          <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Multi-utilisateurs, exports de données CSV et rapports.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })()}
 
             </motion.div>
           </AnimatePresence>
