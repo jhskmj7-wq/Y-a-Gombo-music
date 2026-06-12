@@ -457,7 +457,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 <span>🎯</span> Opportunités par style & zone
               </p>
               {displayGombos.length === 0 ? (
-                <p className="text-xs text-gray-500 py-4">Aucune opportunité disponible.</p>
+                <p className="text-xs text-[#D4AF37] italic py-4 font-display">Le prochain gombo n'attend peut-être que toi.</p>
               ) : (
                 <div className="space-y-3">
                   {displayGombos.map(g => {

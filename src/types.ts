@@ -48,6 +48,22 @@ export interface User {
     selfieUrl?: string;
     activityUrl?: string;
   };
+  averageRating?: number;
+  ratingCount?: number;
+}
+
+export interface GomboReview {
+  id: string;
+  gomboId: string;
+  gomboTitle: string;
+  reviewerId: string;
+  reviewerName: string;
+  revieweeId: string;
+  revieweeName: string;
+  rating: number;
+  comment: string;
+  timestamp: string;
+  type: "client_to_musician" | "musician_to_client";
 }
 
 export interface Post {

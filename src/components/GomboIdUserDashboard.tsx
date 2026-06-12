@@ -121,9 +121,9 @@ export default function GomboIdUserDashboard({
     }
 
     return {
-      label: "Non Certifié",
-      color: "text-zinc-500 bg-zinc-500/5 border-zinc-500/10",
-      desc: "Vous n'avez pas demandé de GOMBO ID d'excellence."
+      label: "Héritage à Révéler",
+      color: "text-zinc-500 bg-zinc-500/5 border-zinc-500/15",
+      desc: "Ton héritage musical mérite d'être raconté. Demandez votre GOMBO ID pour sceller votre prestige."
     };
   };
 
@@ -250,8 +250,8 @@ export default function GomboIdUserDashboard({
                                  GOMBO ID CARD (AFRITRUST TRUST ID STYLE)
          ========================================================================= */}
       <motion.div
-        whileHover={{ scale: 1.01, y: -2 }}
-        className="relative overflow-hidden rounded-2xl border border-[#D4AF37]/35 bg-[#0B0B0B] p-6 shadow-[0_4px_30px_rgba(212,175,55,0.06)] cursor-pointer group"
+        whileHover={{ scale: 1.02, y: -3 }}
+        className="relative overflow-hidden rounded-3xl border-2 border-[#D4AF37]/50 bg-gradient-to-br from-[#0B0B0C] via-[#050506] to-[#010102] p-8 shadow-[0_15px_45px_rgba(212,175,55,0.12)] cursor-pointer group transition-all duration-300"
         onClick={() => setIsOpen(true)}
       >
         {/* Holographic glowing lines background */}
@@ -291,6 +291,15 @@ export default function GomboIdUserDashboard({
                   </span>
                 )}
               </h3>
+
+              {/* Rating indicator */}
+              {(currentUser.averageRating !== undefined && currentUser.ratingCount !== undefined && currentUser.ratingCount > 0) && (
+                <div className="flex items-center gap-1.5 text-xs text-[#D4AF37] font-mono">
+                  <span className="text-orange-500 text-sm">★</span>
+                  <span className="font-bold text-white">{currentUser.averageRating}</span>
+                  <span className="text-white/40">({currentUser.ratingCount} avis)</span>
+                </div>
+              )}
               
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                 {currentUser.gomboIdNumber ? (

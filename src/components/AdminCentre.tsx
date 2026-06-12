@@ -20,7 +20,8 @@ import {
   Renfort,
   Alerte,
   Transaction,
-  AdminBrief
+  AdminBrief,
+  GomboReview
 } from "../types";
 import {
   motion,
@@ -60,7 +61,9 @@ import {
   Bookmark,
   MessageSquare,
   Calendar,
-  Send
+  Send,
+  Sun,
+  Moon
 } from "lucide-react";
 import {
   AreaChart,
@@ -253,12 +256,67 @@ const ANALYTICS_DATA = [
   { name: "Dim", inscrits: 61, gombos: 39, commission: 290000 }
 ];
 
-export default function AdminCentre() {
+const INITIAL_REVIEWS: GomboReview[] = [
+  {
+    id: "rev_1",
+    gomboId: "gombo_1",
+    gomboTitle: "🎖️ Grand Concert Réveillon Select",
+    reviewerId: "org_1",
+    reviewerName: "Le Caveau Elite Venue",
+    revieweeId: "user_1",
+    revieweeName: "Ariel Loua",
+    rating: 5,
+    comment: "Prestation magistrale ! Ariel a enflammé la scène diplomatique hier soir. Grand professionnalisme.",
+    timestamp: "2026-06-11T23:00:00Z",
+    type: "client_to_musician"
+  },
+  {
+    id: "rev_2",
+    gomboId: "gombo_1",
+    gomboTitle: "🎖️ Grand Concert Réveillon Select",
+    reviewerId: "user_1",
+    reviewerName: "Ariel Loua",
+    revieweeId: "org_1",
+    revieweeName: "Le Caveau Elite Venue",
+    rating: 5,
+    comment: "Superbe accueil au Caveau, sonorisation digne des standards internationaux et cachet versé sans délai.",
+    timestamp: "2026-06-12T00:15:00Z",
+    type: "musician_to_client"
+  }
+];
+
+interface AdminCentreProps {
+  darkMode: boolean;
+  setDarkMode: (val: boolean) => void;
+}
+
+export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
   const [activeMenu, setActiveMenu] = useState<any>("user_dashboard");
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
   const [activeArtistId, setActiveArtistId] = useState<string>("user_3");
   const [localSaved, setLocalSaved] = useState<boolean>(true);
   const [autoSaveActive, setAutoSaveActive] = useState<boolean>(false);
+
+  // Simulated admin email & Super Admin unlocks state
+  const [adminEmail, setAdminEmail] = useState<string>("admin@gombo.ci");
+  const [isSuperUnlocked, setIsSuperUnlocked] = useState<boolean>(false);
+  const [isSuperWelcomeOpen, setIsSuperWelcomeOpen] = useState<boolean>(false);
+
+  // Custom Reviews & Gombo completeness state
+  const [reviews, setReviews] = useState<GomboReview[]>(INITIAL_REVIEWS);
+  const [completingGombo, setCompletingGombo] = useState<Gombo | null>(null);
+
+  // Complete Gombo reviews form state
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewComment, setReviewComment] = useState<string>("");
+  const [reviewMusicianId, setReviewMusicianId] = useState<string>("");
+  const [reciprocalRating, setReciprocalRating] = useState<number>(5);
+  const [reciprocalComment, setReciprocalComment] = useState<string>("");
+  const [enableReciprocal, setEnableReciprocal] = useState<boolean>(true);
+
+  // System parameters
+  const [systemCommissionRate, setSystemCommissionRate] = useState<number>(10);
+
 
   // --- CORE APPLICATION STATES ---
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
@@ -446,10 +504,22 @@ export default function AdminCentre() {
         }
       });
 
+      const qReviews = collection(db, "reviews");
+      const unsubscribeReviews = onSnapshot(qReviews, (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedReviews: GomboReview[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedReviews.push({ id: docSnap.id, ...docSnap.data() } as GomboReview);
+          });
+          setReviews(fetchedReviews);
+        }
+      });
+
       return () => {
         unsubscribeUsers();
         unsubscribeGombos();
         unsubscribeTransactions();
+        unsubscribeReviews();
       };
     } catch (e) {
       addToTerminal(`[Alerte locale] Lancement offline synchronisé.`);
@@ -648,6 +718,63 @@ export default function AdminCentre() {
       commissionRate: "10",
       location: "Cocody"
     });
+  };
+
+  const handleCompleteGombo = async () => {
+    if (!completingGombo) return;
+    try {
+      await saveToFirestore("gombos", completingGombo.id, { status: "completed" });
+      setGombos(prev => prev.map(g => g.id === completingGombo.id ? { ...g, status: "completed" } : g));
+
+      const selectedMusician = users.find(u => u.id === reviewMusicianId) || users[0];
+      if (!selectedMusician) {
+        alert("Veuillez sélectionner un artiste à évaluer.");
+        return;
+      }
+
+      const clientReviewId = "rev_client_" + Date.now();
+      const clientReview: GomboReview = {
+        id: clientReviewId,
+        gomboId: completingGombo.id,
+        gomboTitle: completingGombo.title,
+        reviewerId: "current_client_user",
+        reviewerName: completingGombo.organizerName || "Organisateur Gombo",
+        revieweeId: selectedMusician.id,
+        revieweeName: selectedMusician.artisticName,
+        rating: reviewRating,
+        comment: reviewComment || "Prestation impériale et d'un grand professionnalisme sur scène !",
+        timestamp: new Date().toISOString(),
+        type: "client_to_musician"
+      };
+
+      await saveToFirestore("reviews", clientReviewId, clientReview);
+      setReviews(prev => [clientReview, ...prev]);
+
+      if (enableReciprocal) {
+        const musicianReviewId = "rev_musician_" + Date.now();
+        const musicianReview: GomboReview = {
+          id: musicianReviewId,
+          gomboId: completingGombo.id,
+          gomboTitle: completingGombo.title,
+          reviewerId: selectedMusician.id,
+          reviewerName: selectedMusician.artisticName,
+          revieweeId: "current_client_user",
+          revieweeName: completingGombo.organizerName || "Organisateur Gombo",
+          rating: reciprocalRating,
+          comment: reciprocalComment || "Très bon accueil ! Sonorisation excellente et organisation de haut standing.",
+          timestamp: new Date().toISOString(),
+          type: "musician_to_client"
+        };
+        await saveToFirestore("reviews", musicianReviewId, musicianReview);
+        setReviews(prev => [musicianReview, ...prev]);
+      }
+
+      addToTerminal(`[INFO] Gombo Clôturé : L'événement "${completingGombo.title}" est complété. Évaluation de ${selectedMusician.artisticName} enregistrée.`);
+      setCompletingGombo(null);
+    } catch(err) {
+      console.error(err);
+      addToTerminal(`[ERREUR] Impossible de clôturer le gombo.`);
+    }
   };
 
   // --- PREMIUM INTERACTIVES GOMBO HANDLERS ---
@@ -1210,6 +1337,27 @@ export default function AdminCentre() {
                   <BarChart2 className="w-4 h-4" />
                   Analytics & Courbes
                 </button>
+
+                {adminEmail === "jhs.kmj7@gmail.com" && (
+                  <button
+                    onClick={() => {
+                      if (isSuperUnlocked) {
+                        setActiveMenu("super_admin");
+                      } else {
+                        setIsSuperWelcomeOpen(true);
+                      }
+                      addToTerminal(`[Cabinet] Accéder à la zone de Haute Prélature.`);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 mt-1.5 rounded-lg text-xs font-black font-display uppercase tracking-wider transition-all duration-300 ${
+                      activeMenu === "super_admin"
+                        ? "bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+                        : "text-purple-400 hover:text-purple-300 hover:bg-purple-950/20 border border-purple-500/20 animate-pulse"
+                    }`}
+                  >
+                    <Crown className="w-4 h-4 text-amber-300" />
+                    Cabinet Souverain 👑
+                  </button>
+                )}
               </>
             )}
           </nav>
@@ -1251,20 +1399,20 @@ export default function AdminCentre() {
         {/* UPPER STATUS BAR */}
         <header className="flex justify-between items-center pb-6 border-b border-[#D4AF37]/10 mb-6 shrink-0">
           <div>
-            <h2 className="text-2xl font-display font-medium text-[#F5F5F5] tracking-tight">
-              {activeMenu === "user_dashboard" && "Mon Gombo ID — Certification d'Excellence Artistique"}
-              {activeMenu === "dashboard" && "Pilotage Intelligent & Modération"}
-              {activeMenu === "gombos" && "Le Grand Tam-Tam & Gombos"}
-              {activeMenu === "renforts" && "Renforts Artistes Appliqués"}
-              {activeMenu === "kyc" && "Gombo ID - Base des Certifications"}
-              {activeMenu === "revision" && "File de Révision Modérateur"}
-              {activeMenu === "alertes" && "Centre d'Alerte de Communes d'Abidjan"}
-              {activeMenu === "caisse" && "La Caisse d'AFRIGOMBO"}
-              {activeMenu === "monetisation" && "Monétisation Premium d'AFRIGOMBO"}
-              {activeMenu === "analytics" && "Analytique d'Héritage Musical"}
+            <h2 className="text-2xl font-display font-extrabold text-[#F5F5F5] tracking-wide">
+              {activeMenu === "user_dashboard" && "Mon Gombo ID d'Excellence"}
+              {activeMenu === "dashboard" && "Le Grand Salon & Pilotat"}
+              {activeMenu === "gombos" && "L'Écrin des Opportunités"}
+              {activeMenu === "renforts" && "Les Solidarités Scéniques"}
+              {activeMenu === "kyc" && "La Base des Talents Majeurs"}
+              {activeMenu === "revision" && "La File de Révision Modérale"}
+              {activeMenu === "alertes" && "Les Murmures des Communes"}
+              {activeMenu === "caisse" && "Le Coffre-Fort d'AFRIGOMBO"}
+              {activeMenu === "monetisation" && "Le Club des Mécènes & Boosts"}
+              {activeMenu === "analytics" && "Les Courbes de la Musique"}
             </h2>
-            <p className="text-xs text-[#F5F5F5]/60 mt-0.5">
-              {perspective === "user" ? "Espace de certification premium et de gestion d'artiste." : "Centre de commandement souverain pour un seul administrateur."}
+            <p className="text-xs text-[#F5F5F5]/60 mt-1.5">
+              {perspective === "user" ? "Façonnez votre légende et gérez vos certifications d'excellence." : "Prenez le pouls des vibrations et de la renommée de nos talents."}
             </p>
           </div>
 
@@ -1309,6 +1457,17 @@ export default function AdminCentre() {
               {activeMenu === "user_dashboard" && (() => {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-white">Aucun artiste disponible. Veuillez en créer un dans l'onglet Admin.</p>;
+
+                // Calculate ratings dynmically
+                const artistReviews = reviews.filter(r => r.revieweeId === currentArtist.id && r.type === "client_to_musician");
+                const avgRating = artistReviews.length > 0
+                  ? parseFloat((artistReviews.reduce((sum, r) => sum + r.rating, 0) / artistReviews.length).toFixed(1))
+                  : 5.0;
+                const artistWithRating = {
+                  ...currentArtist,
+                  averageRating: avgRating,
+                  ratingCount: artistReviews.length
+                };
                 
                 const handleUpdateUser = async (userData: Partial<User>) => {
                   const targetId = currentArtist.id;
@@ -1322,7 +1481,7 @@ export default function AdminCentre() {
 
                 return (
                   <GomboIdUserDashboard
-                    currentUser={currentArtist}
+                    currentUser={artistWithRating}
                     onUpdateUser={handleUpdateUser}
                     onCreateTransaction={handleCreateTransaction}
                     addToTerminal={(msg: string) => addToTerminal(msg)}
@@ -1335,6 +1494,90 @@ export default function AdminCentre() {
                   ---------------------------------------------------- */}
               {activeMenu === "dashboard" && (
                 <>
+                  {/* SIMULATEUR D'ACCÈS & PORT DE HAUTE PRÉLATURE */}
+                  <div className="p-6 rounded-2xl bg-[#060606] border border-[#FF6600]/30 shadow-[0_0_25px_rgba(255,102,0,0.05)] space-y-4 mb-4">
+                    <div className="flex justify-between items-center flex-wrap gap-4">
+                      <div>
+                        <h4 className="text-xs font-mono uppercase font-black tracking-widest text-[#FF6600] flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 bg-[#FF6600] rounded-full animate-pulse" />
+                          🎭 Simulateur d'Identité Administrative d'Élite
+                        </h4>
+                        <p className="text-[11px] text-[#F5F5F5]/60 mt-0.5 font-sans">
+                          Définissez votre adresse email pour changer vos privilèges administratifs en temps réel.
+                        </p>
+                      </div>
+
+                      {/* Quick preset switches */}
+                      <div className="flex gap-2 text-xs">
+                        <button
+                          onClick={() => {
+                            setAdminEmail("info@gombo.ci");
+                            setIsSuperUnlocked(false);
+                            addToTerminal(`[Simulateur] Connecté en tant qu'Administrateur Standard (info@gombo.ci). Zone Suprême Verrouillée.`);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg border font-mono text-[10px] font-bold transition-all uppercase tracking-wider ${
+                            adminEmail !== "jhs.kmj7@gmail.com"
+                              ? "bg-white/10 text-white border-white/20 shadow-md"
+                              : "bg-transparent text-white/50 border-white/5 hover:bg-white/5"
+                          }`}
+                        >
+                          👤 Admin Standard
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAdminEmail("jhs.kmj7@gmail.com");
+                            addToTerminal(`[Simulateur] Connexion d'Élite détectée : jhs.kmj7@gmail.com. Accès au Cabinet Souverain Déverrouillé.`);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg border font-mono text-[10px] font-bold transition-all uppercase tracking-wider ${
+                            adminEmail === "jhs.kmj7@gmail.com"
+                              ? "bg-gradient-to-r from-amber-500 to-orange-600 text-black border-transparent shadow-[0_0_15px_rgba(249,115,22,0.4)] font-black"
+                              : "bg-transparent text-amber-500/80 border-amber-500/10 hover:border-amber-500/30"
+                          }`}
+                        >
+                          👑 Super Admin Céleste
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3 pt-3 border-t border-white/5">
+                      <div className="flex-1 w-full">
+                        <input
+                          type="email"
+                          value={adminEmail}
+                          onChange={(e) => {
+                            setAdminEmail(e.target.value);
+                            if (e.target.value === "jhs.kmj7@gmail.com") {
+                              addToTerminal(`[Simulateur] Connexion d'Élite par saisie directe : jhs.kmj7@gmail.com`);
+                            }
+                          }}
+                          placeholder="Saisissez un email d'administrateur..."
+                          className="w-full bg-black border border-white/10 rounded-lg py-2 px-3 text-xs text-white placeholder:text-white/20 font-mono focus:border-[#FF6600] focus:outline-none focus:ring-0"
+                        />
+                      </div>
+
+                      {/* Prestigious Cabinet Suprême Button */}
+                      <button
+                        onClick={() => {
+                          if (adminEmail === "jhs.kmj7@gmail.com") {
+                            setIsSuperWelcomeOpen(true);
+                            setIsSuperUnlocked(false);
+                            addToTerminal(`[Cabinet] Lancement du protocole d'accueil souverain d'AFRIGOMBO.`);
+                          } else {
+                            alert("❌ ACCÈS REJETÉ\n\nVous êtes actuellement configuré(e) comme Administrateur Standard. Les administrateurs locaux n'ont pas droit d'accès au Cabinet Souverain.\n\nSélectionnez le préréglage 'Super Admin Céleste' (email jhs.kmj7@gmail.com) pour lever la restriction.");
+                          }
+                        }}
+                        className={`w-full sm:w-auto py-2.5 px-6 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ${
+                          adminEmail === "jhs.kmj7@gmail.com"
+                            ? "bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:scale-105 active:scale-95 animate-pulse"
+                            : "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed opacity-50"
+                        }`}
+                      >
+                        <Crown className="w-4 h-4 text-amber-300" />
+                        <span>Cabinet Impérial (Super Admin)</span>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* SYSTEM STATUS BANNER */}
                   <div className="p-4 rounded-xl bg-[#060606] border border-emerald-500/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.04)]">
                     <div className="flex items-center gap-2.5">
@@ -1344,9 +1587,6 @@ export default function AdminCentre() {
                         <h4 className="text-sm font-display font-semibold text-white">Opérations Optimales & Intégralité Garantie</h4>
                       </div>
                     </div>
-                    <span className="text-[9px] font-mono text-[#F5F5F5]/40 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
-                      Abidjan • 100% Connecté
-                    </span>
                   </div>
 
                   {/* BENTO STATS OVERVIEW */}
@@ -1354,60 +1594,60 @@ export default function AdminCentre() {
                     <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 transition-all shadow-sm">
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-[10px] font-mono uppercase tracking-widest text-[#F5F5F5]/40">
-                          Utilisateurs Certifiés
+                          Talents Certifiés d'Élite
                         </span>
                         <Users className="w-4 h-4 text-[#D4AF37]" />
                       </div>
-                      <h3 className="text-3xl font-display font-bold text-[#F5F5F5]">
-                        {users.filter(u => u.isCertified).length} <span className="text-sm text-white/40">/ {users.length}</span>
+                      <h3 className="text-4xl lg:text-5xl font-display font-extrabold text-[#D4AF37] tracking-tight">
+                        {users.filter(u => u.isCertified).length}<span className="text-lg text-white/30 font-sans ml-1">/ {users.length}</span>
                       </h3>
                       <span className="text-[9px] font-mono text-[#10B981] block mt-1">
-                        +5 certifiés aujourd'hui
+                        +5 virtuoses distingués aujourd'hui
                       </span>
                     </div>
 
                     <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 transition-all shadow-sm">
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-[10px] font-mono uppercase tracking-widest text-[#F5F5F5]/40">
-                          Gombos Ouverts
+                          Gombos Actifs Scellés
                         </span>
                         <Briefcase className="w-4 h-4 text-[#D4AF37]" />
                       </div>
-                      <h3 className="text-3xl font-display font-bold text-[#F5F5F5]">
+                      <h3 className="text-4xl lg:text-5xl font-display font-extrabold text-[#F5F5F5] tracking-tight">
                         {gombos.filter(g => g.status === "open").length}
                       </h3>
                       <span className="text-[9px] font-mono text-[#D4AF37] block mt-1">
-                        Valeur : 1 550 000 FCFA
+                        Valeur de scène : 1 550 000 FCFA
                       </span>
                     </div>
 
                     <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 transition-all shadow-sm">
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-[10px] font-mono uppercase tracking-widest text-[#F5F5F5]/40">
-                          Caisse Afrigombo (10%)
+                          Le Coffre Trésorier (10%)
                         </span>
                         <DollarSign className="w-4 h-4 text-[#D4AF37]" />
                       </div>
-                      <h3 className="text-2xl font-display font-bold text-[#D4AF37]">
-                        {transactions.reduce((acc, curr) => acc + (curr.type === "commission" ? curr.amount : 0), 0).toLocaleString()} <span className="text-xs">FCFA</span>
+                      <h3 className="text-3xl lg:text-4xl font-display font-bold text-[#10B981] tracking-tight">
+                        {transactions.reduce((acc, curr) => acc + (curr.type === "commission" ? curr.amount : 0), 0).toLocaleString()} <span className="text-xs font-sans">FCFA</span>
                       </h3>
                       <span className="text-[9px] font-mono text-[#10B981] block mt-1">
-                        +18% cette semaine
+                        +18% de contributions d'excellence
                       </span>
                     </div>
 
                     <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 transition-all shadow-sm">
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-[10px] font-mono uppercase tracking-widest text-[#F5F5F5]/40">
-                          Signalements Actifs
+                          Régulations de Scène
                         </span>
                         <AlertOctagon className="w-4 h-4 text-[#EF4444]" />
                       </div>
-                      <h3 className="text-3xl font-display font-bold text-[#EF4444]">
+                      <h3 className="text-4xl lg:text-5xl font-display font-extrabold text-[#EF4444] tracking-tight">
                         {posts.filter(p => p.isFlagged).length}
                       </h3>
-                      <span className="text-[9px] font-mono text-[#EF4444] block mt-1">
-                        Modération requise
+                      <span className="text-[9px] font-mono text-red-400 block mt-1">
+                        Modération requise pour l'élégance
                       </span>
                     </div>
                   </div>
@@ -1556,6 +1796,131 @@ export default function AdminCentre() {
                     </div>
                   </div>
                 </>
+              )}
+
+              {/* ----------------------------------------------------
+                                VIEW: CABINET SUPRÊME PRIVÉ (SUPER ADMIN ONLY)
+                  ---------------------------------------------------- */}
+              {activeMenu === "super_admin" && (
+                <div className="space-y-6 pb-20 animate-fadeIn">
+                  <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-900/10 via-black to-orange-950/10 border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.06)] flex justify-between items-center flex-wrap gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400">
+                        <Crown className="w-6 h-6 animate-pulse" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono uppercase font-black text-purple-400 tracking-wider">Zone Souveraine de l'Élite</span>
+                        <h3 className="text-xl font-display font-black text-white">Console Privée de Haute Prélature</h3>
+                        <p className="text-xs text-white/60">Gérez l'ensemble du réseau avec un contrôle souverain absolu.</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setActiveMenu("dashboard");
+                        addToTerminal(`[INFO] Cabinet Impérial fermé.`);
+                      }}
+                      className="px-4 py-2 text-xs font-semibold uppercase bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg transition-all"
+                    >
+                      Retour au Pilotage Standard ↩
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Panel 1: Liquidity & Treasury Controls */}
+                    <div className="p-6 rounded-2xl bg-[#060606] border border-purple-500/25 space-y-4">
+                      <h4 className="text-sm font-display font-bold text-purple-300 flex items-center gap-2">
+                        <Coins className="w-4 h-4 text-purple-400" />
+                        Trésorerie Globale d'Académie
+                      </h4>
+                      <p className="text-xs text-white/60">Contrôlez les fonds virtuels de la Caisse AFRIGOMBO.</p>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <button
+                          onClick={async () => {
+                            await createTransaction(500000, "commission", "Injection Suprême de Trésorerie", "jhs.kmj7@gmail.com", "Super Admin");
+                            addToTerminal(`[DÉCRET IMPÉRIAL] 500 000 FCFA injectés dans la Caisse Gombo.`);
+                          }}
+                          className="p-4 bg-purple-600/15 border border-purple-500/30 hover:bg-purple-600/30 text-purple-200 text-xs font-mono font-bold rounded-xl transition-all"
+                        >
+                          💸 Injecter 500k FCFA
+                        </button>
+                        <button
+                          onClick={async () => {
+                            await createTransaction(-200000, "commission", "Retrait Souverain de Trésorerie", "jhs.kmj7@gmail.com", "Super Admin");
+                            addToTerminal(`[DÉCRET IMPÉRIAL] 200 000 FCFA retirés de la Caisse Gombo.`);
+                          }}
+                          className="p-4 bg-orange-600/15 border border-orange-500/30 hover:bg-orange-600/30 text-orange-200 text-xs font-mono font-bold rounded-xl transition-all"
+                        >
+                          ⚡ Retirer 200k FCFA
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Panel 2: Commission Slider */}
+                    <div className="p-6 rounded-2xl bg-[#060606] border border-purple-500/25 space-y-4">
+                      <h4 className="text-sm font-display font-bold text-purple-300 flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-purple-400" />
+                        Paramètres de Commissions Systèmes
+                      </h4>
+                      <div className="flex justify-between items-center text-xs font-mono">
+                        <span className="text-white/60">Taux actuel d'AFRIGOMBO :</span>
+                        <span className="text-xl font-bold text-pink-400">{systemCommissionRate}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="50"
+                        value={systemCommissionRate}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          setSystemCommissionRate(val);
+                          addToTerminal(`[DÉCRET IMPÉRIAL] Commission système ajustée à ${val}%.`);
+                        }}
+                        className="w-full accent-purple-500 bg-white/5 h-2 rounded-lg cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[10px] text-white/40 font-mono">
+                        <span>Min (1%)</span>
+                        <span>Max (50%)</span>
+                      </div>
+                    </div>
+
+                    {/* Panel 3: Global CERTIFICATION Decrees */}
+                    <div className="p-6 rounded-2xl bg-[#060606] border border-purple-500/25 space-y-4 md:col-span-2">
+                      <h4 className="text-sm font-display font-bold text-purple-300 flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-purple-400" />
+                        Décret de Force Majeure / Certification Globale
+                      </h4>
+                      <p className="text-xs text-white/60 font-sans">
+                        Certifiez l'ensemble des artistes enregistrés en Côte d'Ivoire en une fraction de seconde pour accélérer le dynamisme culturel du pays, ou purgez l'historique de modération.
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-4 pt-2">
+                        <button
+                          onClick={async () => {
+                            setUsers(prev => prev.map(u => ({ ...u, isCertified: true, kycStatus: "approved" as any })));
+                            for (let u of users) {
+                              await saveToFirestore("users", u.id, { isCertified: true, kycStatus: "approved" });
+                            }
+                            addToTerminal(`[DÉCRET IMPÉRIAL] Force Majeure : L'intégralité des artistes ont été certifiés d'office.`);
+                          }}
+                          className="py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white text-xs font-mono font-bold rounded-xl shadow-md transition-all uppercase tracking-wider"
+                        >
+                          🌟 Certifier Tous les Talents (1-Click Global)
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setReviews([]);
+                            addToTerminal(`[DÉCRET IMPÉRIAL] Purge d'avis : Réinitialisation locale des avis d'abus.`);
+                          }}
+                          className="py-3 px-6 bg-transparent border border-white/10 hover:border-red-500/40 text-white/70 hover:text-white text-xs font-mono font-bold rounded-xl transition-all uppercase tracking-wider"
+                        >
+                          🧹 Purger la File de Contestation
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* ----------------------------------------------------
@@ -1892,23 +2257,21 @@ export default function AdminCentre() {
                                 <motion.button
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => toggleHonorGombo(g.id)}
-                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all outline-none ${
+                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all outline-none min-h-[36px] ${
                                     isHonored
                                       ? "bg-red-500/15 border border-red-500/30 text-red-400"
                                       : "bg-[#0B0B0B] border border-white/5 text-[#F5F5F5]/60 hover:text-red-400 hover:border-red-500/20"
                                   }`}
                                 >
-                                  <Heart className={`w-3.5 h-3.5 ${isHonored ? "fill-current text-red-500" : ""}`} />
-                                  <span>{isHonored ? "Honoré" : "J'honore"}</span>
+                                  <span>{isHonored ? "❤️ Honoré" : "❤️ J'honore"}</span>
                                 </motion.button>
 
                                 {/* Button: Palabrer */}
                                 <motion.button
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => setPalabreGombo(g)}
-                                  className="py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-[#0B0B0B] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20 transition-all outline-none"
+                                  className="py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 bg-[#0B0B0B] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20 transition-all outline-none min-h-[36px]"
                                 >
-                                  <MessageSquare className="w-3.5 h-3.5" />
                                   <span>🗣️ Palabrer</span>
                                 </motion.button>
 
@@ -1917,30 +2280,50 @@ export default function AdminCentre() {
                                   whileTap={hasApplied ? {} : { scale: 0.95 }}
                                   disabled={hasApplied}
                                   onClick={() => applyToGombo(g.id)}
-                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all outline-none ${
+                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all outline-none min-h-[36px] ${
                                     hasApplied
                                       ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                                      : "bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black hover:opacity-90 shadow-sm"
+                                      : "bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black hover:opacity-95 shadow-sm"
                                   }`}
                                 >
-                                  <CheckCircle className="w-3.5 h-3.5" />
-                                  <span>{hasApplied ? "Postulé" : "🎤 Postuler"}</span>
+                                  <span>{hasApplied ? "🎤 Postulé" : "🎤 Je postule"}</span>
                                 </motion.button>
 
                                 {/* Button: Je garde */}
                                 <motion.button
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => toggleSaveGombo(g.id)}
-                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all outline-none ${
+                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all outline-none min-h-[36px] ${
                                     isSaved
                                       ? "bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37]"
                                       : "bg-[#0B0B0B] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20"
                                   }`}
                                 >
-                                  <Bookmark className={`w-3.5 h-3.5 ${isSaved ? "fill-current text-[#D4AF37]" : ""}`} />
-                                  <span>{isSaved ? "Gardé" : "📌 Garder"}</span>
+                                  <span>{isSaved ? "📌 Gardé" : "📌 Je garde"}</span>
                                 </motion.button>
                               </div>
+
+                              {/* Button: Clôturer la prestation */}
+                              {g.status !== "completed" ? (
+                                <button
+                                  onClick={() => {
+                                    setCompletingGombo(g);
+                                    setReviewMusicianId(users[0]?.id || "");
+                                    setReviewRating(5);
+                                    setReviewComment("");
+                                    setReciprocalRating(5);
+                                    setReciprocalComment("");
+                                    setEnableReciprocal(true);
+                                  }}
+                                  className="w-full mt-3 py-2 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-black hover:border-transparent text-emerald-400 font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-[0_0_12px_rgba(16,185,129,0.1)]"
+                                >
+                                  <span>🏆 Clôturer la prestation & Noter</span>
+                                </button>
+                              ) : (
+                                <div className="w-full mt-3 py-2 px-3 rounded-xl bg-zinc-800/50 border border-zinc-700/60 text-zinc-500 font-mono text-[10px] uppercase flex items-center justify-center gap-2 tracking-wide font-bold">
+                                  <span>✅ Prestation Terminée & Évaluée</span>
+                                </div>
+                              )}
                             </div>
                           </motion.div>
                         );
@@ -2352,6 +2735,33 @@ export default function AdminCentre() {
                                 <p className="text-xs text-[#F5F5F5]/60 mt-0.5">
                                   {user.name} • Commune : <strong className="text-white">{user.commune}</strong> • Inscrit le : {user.registrationDate || "N/A"}
                                 </p>
+                                
+                                {/* Render dynamic client star ratings for the musician */}
+                                {(() => {
+                                  const artistReviews = reviews.filter(r => r.revieweeId === user.id && r.type === "client_to_musician");
+                                  const avgRating = artistReviews.length > 0 
+                                    ? parseFloat((artistReviews.reduce((sum, r) => sum + r.rating, 0) / artistReviews.length).toFixed(1))
+                                    : 5.0;
+                                  const hasReviews = artistReviews.length > 0;
+                                  return (
+                                    <div className="flex items-center gap-1.5 mt-1.5">
+                                      <div className="flex text-amber-400">
+                                        {[1,2,3,4,5].map(star => (
+                                          <Star 
+                                            key={star} 
+                                            className={`w-3.5 h-3.5 ${star <= Math.round(avgRating) ? "fill-amber-400 text-amber-400" : "text-white/10"}`}
+                                          />
+                                        ))}
+                                      </div>
+                                      <span className="text-[10px] font-mono font-bold text-amber-300">
+                                        {avgRating.toFixed(1)} / 5.0
+                                      </span>
+                                      <span className="text-[9px] text-[#F5F5F5]/40 font-mono">
+                                        ({hasReviews ? `${artistReviews.length} avis` : "Pas encore d'évaluations"})
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </div>
 
@@ -2507,6 +2917,44 @@ export default function AdminCentre() {
                               </div>
                             </div>
                           </div>
+
+                          {/* WRITTEN FEEDBACK AND REVIEWS DISPLAY PANEL */}
+                          {(() => {
+                            const artistReviews = reviews.filter(r => r.revieweeId === user.id);
+                            if (artistReviews.length === 0) return null;
+                            return (
+                              <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
+                                <span className="text-[10px] font-mono uppercase font-black text-[#D4AF37] block tracking-widest">
+                                  💬 Témoignages & Évaluations du Réseau ({artistReviews.length})
+                                </span>
+                                <div className="space-y-2 max-h-40 overflow-y-auto pr-1 scrollbar-thin">
+                                  {artistReviews.map(rev => (
+                                    <div key={rev.id} className="p-3 rounded-lg bg-white/5 border border-white/5 space-y-1.5 animate-fadeIn">
+                                      <div className="flex justify-between items-center flex-wrap gap-2 text-[10px]">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span className="font-semibold text-white">{rev.reviewerName}</span>
+                                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] font-mono">
+                                            {rev.type === "client_to_musician" ? "Client ➜ Musicien" : "Musicien ➜ Client"}
+                                          </span>
+                                        </div>
+                                        <span className="text-zinc-500 font-mono text-[9px]">{rev.timestamp.split("T")[0]}</span>
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-1">
+                                        {[1,2,3,4,5].map(star => (
+                                          <Star key={star} className={`w-3 h-3 ${star <= rev.rating ? "fill-amber-400 text-amber-400" : "text-white/20"}`} />
+                                        ))}
+                                      </div>
+
+                                      <p className="text-xs text-[#F5F5F5]/85 italic leading-relaxed">
+                                        "{rev.comment}"
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       ))}
                   </div>
@@ -3230,6 +3678,244 @@ export default function AdminCentre() {
             </div>
           </div>
         </aside>
+      )}
+
+      {/* =========================================================================
+                               CLÔTURE & ÉVALUATION MODAL (COMBO RATINGS)
+         ========================================================================= */}
+      {completingGombo && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`w-full max-w-lg p-6 rounded-2xl border space-y-4 shadow-2xl transition-all ${
+              darkMode ? "bg-[#0B0B0C] border-[#FF6600]/30" : "bg-white border-zinc-200 shadow-xl"
+            }`}
+          >
+            <div className="flex justify-between items-center pb-2 border-b border-white/5">
+              <div>
+                <span className="text-[10px] font-mono uppercase font-black text-[#FF6600]">Évaluation d'Excellence Gombo</span>
+                <h4 className={`text-md font-display font-extrabold ${darkMode ? "text-white" : "text-zinc-805"}`}>
+                  Clôturer Prestation : "{completingGombo.title}"
+                </h4>
+              </div>
+              <button 
+                onClick={() => setCompletingGombo(null)} 
+                className={`text-2xl font-bold font-mono ${darkMode ? "text-white/40 hover:text-white" : "text-zinc-400 hover:text-zinc-700"}`}
+              >
+                &times;
+              </button>
+            </div>
+
+            <p className={`text-xs leading-relaxed ${darkMode ? "text-white/60" : "text-zinc-500"}`}>
+              Le Gombo est terminé ! Pour finaliser et libérer les garanties de la caisse, laissez une note de confiance et un commentaire d'excellence sur le musicien.
+            </p>
+
+            <div className="space-y-4 pt-1">
+              {/* Option 1: Choose Musician */}
+              <div className="space-y-1">
+                <label className={`text-[10px] uppercase font-mono block font-bold ${darkMode ? "text-white/50" : "text-zinc-500"}`}>
+                  Artiste ayant honoré le Gombo :
+                </label>
+                <select
+                  value={reviewMusicianId}
+                  onChange={(e) => setReviewMusicianId(e.target.value)}
+                  className={`w-full text-xs rounded-lg p-2 font-mono focus:outline-none focus:border-[#FF6600] ${
+                    darkMode ? "bg-black border-white/10 text-white" : "bg-zinc-100 border-zinc-300 text-zinc-800"
+                  }`}
+                >
+                  <option value="" disabled>-- Sélectionner l'artiste certifié --</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id} className="bg-black text-white">
+                      {u.artisticName} ({u.name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Option 2: Star rating (1-5 stars) */}
+              <div className="space-y-2">
+                <label className={`text-[10px] uppercase font-mono block font-bold ${darkMode ? "text-white/50" : "text-zinc-500"}`}>
+                  Note Accordée à l'Artiste : ({reviewRating} Étoiles)
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      className="transition-all hover:scale-110"
+                    >
+                      <Star 
+                        className={`w-7 h-7 ${
+                          star <= reviewRating 
+                            ? "text-amber-400 fill-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" 
+                            : "text-zinc-550"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Option 3: Written review */}
+              <div className="space-y-1">
+                <label className={`text-[10px] uppercase font-mono block font-bold ${darkMode ? "text-white/50" : "text-zinc-500"}`}>
+                  Témoignage écrit & Feedback :
+                </label>
+                <textarea
+                  required
+                  rows={2}
+                  placeholder="Ex: Ponctualité exemplaire, virtuosité remarquable et aisance scénique incomparable. Je recommande absolument."
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  className={`w-full text-xs rounded-lg p-2 focus:outline-none focus:border-[#FF6600] ${
+                    darkMode ? "bg-black border-white/10 text-white" : "bg-zinc-100 border-zinc-300 text-zinc-800"
+                  }`}
+                />
+              </div>
+
+              {/* OPTIONAL RECIPROCAL REVIEW FOR THE CLIENT/EVENT */}
+              <div className={`p-4 rounded-xl border space-y-3 ${
+                darkMode ? "bg-black/40 border-white/5 text-white" : "bg-zinc-50 border-zinc-200 text-zinc-800"
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="enableReciprocal"
+                      checked={enableReciprocal}
+                      onChange={(e) => setEnableReciprocal(e.target.checked)}
+                      className="w-4 h-4 accent-purple-600 cursor-pointer"
+                    />
+                    <label htmlFor="enableReciprocal" className="text-xs font-semibold cursor-pointer select-none">
+                      Activer l'évaluation de retour (Artiste ➜ Client)
+                    </label>
+                  </div>
+                  <span className="text-xs text-white/40 cursor-help font-bold" title="Permet d'évaluer réciproquement l'accueil de l'organisateur.">❓</span>
+                </div>
+
+                {enableReciprocal && (
+                  <div className="space-y-3 pt-1 border-t border-white/5 animate-fadeIn">
+                    <div className="space-y-1">
+                      <span className="text-[9px] uppercase font-mono text-zinc-400 block font-bold">
+                        Note pour l'Organisateur & Événement : ({reciprocalRating} Étoiles)
+                      </span>
+                      <div className="flex gap-1.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setReciprocalRating(star)}
+                            className="transition-all hover:scale-105"
+                          >
+                            <Star 
+                              className={`w-5 h-5 ${
+                                star <= reciprocalRating 
+                                  ? "text-purple-400 fill-purple-400" 
+                                  : "text-zinc-600"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[9px] uppercase font-mono text-zinc-400 block font-bold">
+                        Commentaire de l'Artiste :
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="Ex: Excellent accueil au cabaret, sonorisation haut standing et cachet remis rubis sur ongle."
+                        value={reciprocalComment}
+                        onChange={(e) => setReciprocalComment(e.target.value)}
+                        className={`w-full text-[11px] rounded p-1.5 focus:outline-none focus:border-purple-500 ${
+                          darkMode ? "bg-[#060606] border-white/10 text-white" : "bg-white border-zinc-300 text-zinc-800"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-2">
+              <button
+                onClick={() => setCompletingGombo(null)}
+                className={`px-4 py-2 border text-xs rounded-xl hover:bg-white/5 transition-all ${
+                  darkMode ? "border-white/10 text-[#F5F5F5]" : "border-zinc-300 text-zinc-700"
+                }`}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleCompleteGombo}
+                disabled={!reviewMusicianId}
+                className={`px-5 py-2 text-white font-display font-black text-xs uppercase rounded-xl transition-all shadow-md ${
+                  !reviewMusicianId 
+                    ? "bg-zinc-700 cursor-not-allowed text-zinc-400" 
+                    : "bg-gradient-to-r from-[#FF6600] to-[#FF6600]/80 hover:opacity-90"
+                }`}
+              >
+                Confirmer & Clôturer Gombo 🏆
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* =========================================================================
+                              SUPER ADMINISTRATOR WELCOME INTRO OVERLAY
+         ========================================================================= */}
+      {isSuperWelcomeOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-[#060606]/95 backdrop-blur-md z-50 flex items-center justify-center p-4"
+        >
+          <div className="max-w-md w-full bg-black border border-purple-500/30 rounded-3xl p-8 text-center space-y-6 shadow-[0_0_50px_rgba(168,85,247,0.15)]">
+            <div className="w-16 h-16 bg-gradient-to-tr from-purple-600 via-pink-600 to-[#FF6600] rounded-full flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(236,72,153,0.5)]">
+              <Crown className="w-8 h-8 text-white animate-bounce" />
+            </div>
+            <div className="space-y-2">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-purple-400 font-extrabold block">Décret Royal Activé</span>
+              <h3 className="text-2xl font-display font-black text-white">Salutations, Maître de l'Afrique Musicale</h3>
+              <p className="text-xs text-white/75 leading-relaxed font-sans">
+                "L'Empire d'AFRIGOMBO est entièrement sous vos ordres souverains. Les cachets, les licences d'or et l'intégralité des talents nationaux reposent entre vos mains expertes."
+              </p>
+            </div>
+            
+            {/* Simulated Loading Bar */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-[10px] font-mono text-white/40">
+                <span>Synchronisation des pouvoirs suprêmes</span>
+                <span className="text-orange-500 font-bold">100%</span>
+              </div>
+              <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 1.2 }}
+                  className="bg-gradient-to-r from-purple-500 via-pink-500 to-[#FF6600] h-full"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setIsSuperWelcomeOpen(false);
+                setIsSuperUnlocked(true);
+                setActiveMenu("super_admin");
+                addToTerminal(`[INFO] Cabinet Impérial déverrouillé par le Propriétaire jhs.kmj7@gmail.com.`);
+              }}
+              className="w-full py-3 bg-gradient-to-r from-purple-600 to-[#FF6600] text-white hover:opacity-90 font-display font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all"
+            >
+              Gouverner l'Application 👑
+            </button>
+          </div>
+        </motion.div>
       )}
 
       {/* =========================================================================
