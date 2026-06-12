@@ -88,7 +88,12 @@ export default function FounderThrone({
   onClose
 }: FounderThroneProps) {
   // Enforce access control
-  const isAuthorizedFounder = adminEmail === "johnsylvesterh@gmail.com";
+  const AUTHORIZED_FOUNDERS = [
+    "johnsylvesterh@gmail.com",
+    "sylvestrehounkpevi777@gmail.com",
+    "jhs.kmj7@gmail.com"
+  ];
+  const isAuthorizedFounder = AUTHORIZED_FOUNDERS.includes(adminEmail?.trim().toLowerCase());
 
   // --- 1. TRANSITION IMPÉRIALE STATES ---
   const [showIntro, setShowIntro] = useState(isAuthorizedFounder);
@@ -434,7 +439,7 @@ export default function FounderThrone({
             🔒 ZONE SOUVERAINE VERROUILLÉE
           </h2>
           <p className="text-xs text-zinc-400 leading-relaxed font-mono">
-            La sécurité spirituelle du Trône du Fondateur est active. Seule l'adresse royale authentifiée <strong className="text-rose-400 font-mono">johnsylvesterh@gmail.com</strong> dispose des privilèges requis pour charger cet incubateur.
+            La sécurité spirituelle du Trône du Fondateur est active. Seules les adresses royales authentifiées du Temple disposent des privilèges requis pour charger cet incubateur.
           </p>
           <div className="p-4 bg-zinc-950/80 border border-white/5 rounded-2xl text-left text-[11px] text-zinc-500 font-mono space-y-2 mt-4">
             <div className="flex justify-between border-b border-white/5 pb-1">

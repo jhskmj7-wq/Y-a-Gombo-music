@@ -730,7 +730,7 @@ export default function GomboProfile({
           currentUserProfile={currentUserProfile}
           onRefreshProfile={onRefreshProfile}
           onNavigateView={onNavigateView}
-          setPanelView={setPanelView}
+          setPanelView={(panel) => setPanelView(panel as any)}
           availabilityStatus={availabilityStatus}
           handleUpdateAvailabilityStatus={handleUpdateAvailabilityStatus}
           updatingAvailability={updatingAvailability}
@@ -770,7 +770,7 @@ export default function GomboProfile({
           quartier={quartier}
           setQuartier={setQuartier}
           accountRole={accountRole}
-          setAccountRole={setAccountRole}
+          setAccountRole={(val) => setAccountRole(val as any)}
           bio={bio}
           setBio={setBio}
           specialties={specialties}
@@ -810,7 +810,7 @@ export default function GomboProfile({
     <div className="max-w-4xl mx-auto px-4 py-6 text-[#1A1A1A] dark:text-gray-100">
       
       {/* 1. MAIN BOARD SCREEN */}
-      {panelView === "main" && (
+      {(panelView as string) === "main" && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -1404,7 +1404,7 @@ export default function GomboProfile({
       )}
 
       {/* 2. EDIT PROFILE PANEL */}
-      {panelView === "edit" && (
+      {(panelView as string) === "edit" && (
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}

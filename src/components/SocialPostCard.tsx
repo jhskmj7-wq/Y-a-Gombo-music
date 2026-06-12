@@ -451,7 +451,7 @@ export default function SocialPostCard({
         <div className="flex items-center gap-3">
           <div className="relative w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-amber-400">
             <img 
-              referrerPolicy="no-referrer"
+              
               src={authorProfile?.avatarUrl || authorProfile?.photoURL || post.userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
               alt={post.userName} 
               className="w-full h-full rounded-full object-cover border border-white dark:border-[#121212]" 
@@ -702,7 +702,7 @@ export default function SocialPostCard({
              src={post.videoUrl} 
              controls 
              preload="metadata"
-             referrerPolicy="no-referrer"
+             
              className="w-full max-h-80 bg-black rounded-2xl border border-gray-150 dark:border-[#2B2B2B] object-contain shadow-xs"
            />
          </div>

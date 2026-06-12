@@ -342,7 +342,7 @@ export default function MessagesView({
                         ? "text-gray-950 dark:text-white font-extrabold" 
                         : "text-gray-400 dark:text-gray-500 font-medium"
                     }`}>
-                      {convo.lastMessage?.text || "Aucun message..."}
+                      {(convo.lastMessage as any)?.text || convo.lastMessage || "Aucun message..."}
                     </p>
                   </div>
                 </button>

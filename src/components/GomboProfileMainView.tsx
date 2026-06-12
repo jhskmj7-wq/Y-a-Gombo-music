@@ -166,7 +166,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             {/* Account Type and UID block */}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2 font-mono text-xs text-gray-400 select-none">
               <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded font-black uppercase text-[10px]">
-                🦁 {currentUserProfile.role === "musicien" ? "Artiste / Musicien" : currentUserProfile.role === "client" ? "Client" : currentUserProfile.role === "organisateur" ? "Organisateur" : "Manager"}
+                🦁 {(currentUserProfile.role as string) === "musicien" ? "Artiste / Musicien" : (currentUserProfile.role as string) === "client" ? "Client" : (currentUserProfile.role as string) === "organisateur" ? "Organisateur" : "Manager"}
               </span>
               <div className="flex items-center gap-1 font-mono text-[10px] bg-gray-50 dark:bg-gray-800/40 px-2 py-0.5 rounded border border-gray-100 dark:border-gray-800">
                 <span>UID: {currentUserProfile.uid.slice(0, 8)}...</span>

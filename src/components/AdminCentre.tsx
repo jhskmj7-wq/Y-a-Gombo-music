@@ -22,8 +22,10 @@ import {
   Alerte,
   Transaction,
   AdminBrief,
-  GomboReview
+  GomboReview,
+  UserPerformance
 } from "../types";
+import { audioSynth } from "../lib/audio";
 import {
   motion,
   AnimatePresence
@@ -68,7 +70,9 @@ import {
   Sliders,
   LogOut,
   Music,
-  Settings
+  Settings,
+  Sparkles,
+  Activity
 } from "lucide-react";
 import {
   AreaChart,
@@ -590,6 +594,64 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     }
   }, [activeMenu]);
 
+  // --- SYNC /FOUNDER-THRONE PATH & ACCESS PRIVILEGES ---
+  useEffect(() => {
+    const AUTHORIZED_FOUNDERS = [
+      "johnsylvesterh@gmail.com",
+      "sylvestrehounkpevi777@gmail.com",
+      "jhs.kmj7@gmail.com"
+    ];
+
+    const currentPath = window.location.pathname;
+
+    if (currentPath === "/founder-throne") {
+      const isFounder = AUTHORIZED_FOUNDERS.includes(adminEmail?.trim().toLowerCase());
+      if (isFounder) {
+        if (activeMenu !== "super_admin") {
+          setActiveMenu("super_admin");
+          addToTerminal(`[Trône] Accès direct autorisé via l'URI souveraine.`);
+        }
+      } else {
+        // Redirect unauthorized users without leaving a trace
+        addToTerminal(`[SÉCURITÉ] Tentative de contournement URI par non-fondateur bloquée. Redirection immédiate.`);
+        window.history.replaceState({}, "", "/");
+        if (activeMenu === "super_admin") {
+          setActiveMenu("dashboard");
+        }
+      }
+    } else {
+      // If we are on / but activeMenu is "super_admin", push path
+      if (activeMenu === "super_admin") {
+        window.history.pushState({}, "", "/founder-throne");
+      }
+    }
+  }, [adminEmail, activeMenu]);
+
+  // Handle browser back button (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      const AUTHORIZED_FOUNDERS = [
+        "johnsylvesterh@gmail.com",
+        "sylvestrehounkpevi777@gmail.com",
+        "jhs.kmj7@gmail.com"
+      ];
+      if (window.location.pathname === "/founder-throne") {
+        const isFounder = AUTHORIZED_FOUNDERS.includes(adminEmail?.trim().toLowerCase());
+        if (isFounder) {
+          setActiveMenu("super_admin");
+        } else {
+          window.history.replaceState({}, "", "/");
+        }
+      } else {
+        if (activeMenu === "super_admin") {
+          setActiveMenu("dashboard");
+        }
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [adminEmail, activeMenu]);
+
   // --- AUTOMATIC BACKGROUND MODERATION ROUTINE ("PILOTAGE AUTOMATIQUE") ---
   useEffect(() => {
     const interval = setInterval(() => {
@@ -967,7 +1029,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       timestamp: new Date().toISOString()
     };
     await saveToFirestore("admin_logs", logId, logData);
-    addToTerminal(`[LOG ADMIN] Action: ${actionType} | Cible: ${targetUserName} | ${detail}`);
+    addToTerminal(`[LOG ADMIN] Action: ${actionType} | Cible: ${targetName} | ${detail}`);
   };
 
   const handleApproveKYC = async (userId: string, express: boolean = false) => {
@@ -1489,7 +1551,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   Analytics & Courbes
                 </button>
 
-                {adminEmail === "johnsylvesterh@gmail.com" && (
+                {["johnsylvesterh@gmail.com", "sylvestrehounkpevi777@gmail.com", "jhs.kmj7@gmail.com"].includes(adminEmail?.trim().toLowerCase()) && (
                   <button
                     onClick={() => {
                       setActiveMenu("super_admin");
@@ -2618,7 +2680,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[SIMULATEUR] Session commutée en Admin Standard.");
                             }}
                             className={`px-3 py-1.5 rounded-xl font-mono text-[10px] uppercase font-black border transition-all ${
-                              adminEmail !== "johnsylvesterh@gmail.com" && adminEmail !== "jhs.kmj7@gmail.com"
+                              !["johnsylvesterh@gmail.com", "sylvestrehounkpevi777@gmail.com", "jhs.kmj7@gmail.com"].includes(adminEmail?.trim().toLowerCase())
                                 ? "bg-[#D4AF37] text-black border-[#D4AF37]"
                                 : "bg-black text-zinc-400 border-white/5 hover:border-white/10"
                             }`}
@@ -2627,18 +2689,33 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           </button>
                           <button
                             onClick={() => {
-                              setAdminEmail("jhs.kmj7@gmail.com");
+                              setAdminEmail("sylvestrehounkpevi777@gmail.com");
                               setIsSuperUnlocked(false);
                               try { audioSynth.playTamTam(false); } catch (err) {}
-                              addToTerminal("[SIMULATEUR] Session commutée en Super Administrateur (jhs.kmj7).");
+                              addToTerminal("[SIMULATEUR] Session commutée en Fondateur Sylvestre (sylvestrehounkpevi777).");
                             }}
                             className={`px-3 py-1.5 rounded-xl font-mono text-[10px] uppercase font-black border transition-all ${
-                              adminEmail === "jhs.kmj7@gmail.com"
-                                ? "bg-[#D4AF37] text-black border-[#D4AF37]"
+                              adminEmail === "sylvestrehounkpevi777@gmail.com"
+                                ? "bg-amber-500 text-black border-transparent"
                                 : "bg-black text-zinc-400 border-white/5 hover:border-white/10"
                             }`}
                           >
-                            Super Admin
+                            Fondateur Sylvestre
+                          </button>
+                          <button
+                            onClick={() => {
+                              setAdminEmail("jhs.kmj7@gmail.com");
+                              setIsSuperUnlocked(false);
+                              try { audioSynth.playTamTam(false); } catch (err) {}
+                              addToTerminal("[SIMULATEUR] Session commutée en Fondateur Sylvester (jhs.kmj7).");
+                            }}
+                            className={`px-3 py-1.5 rounded-xl font-mono text-[10px] uppercase font-black border transition-all ${
+                              adminEmail === "jhs.kmj7@gmail.com"
+                                ? "bg-amber-500 text-black border-transparent"
+                                : "bg-black text-zinc-400 border-white/5 hover:border-white/10"
+                            }`}
+                          >
+                            Fondateur Sylvester
                           </button>
                           <button
                             onClick={() => {
@@ -2652,7 +2729,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 : "bg-black text-amber-500 border-[#D4AF37]/15 hover:border-[#D4AF37]/40"
                             }`}
                           >
-                            Fondateur Suprême
+                            Fondateur Suprême (John)
                           </button>
                         </div>
                       </div>
@@ -2691,6 +2768,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   saveToFirestore={saveToFirestore}
                   createTransaction={createTransaction}
                   onClose={() => {
+                    window.history.pushState({}, "", "/");
                     setActiveMenu("dashboard");
                     addToTerminal(`[INFO] Cabinet du Trône fermé.`);
                   }}
