@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import GomboIdUserDashboard from "./GomboIdUserDashboard";
+import FounderThrone from "./FounderThrone";
 import {
   AdminMenu,
   User,
@@ -63,7 +64,11 @@ import {
   Calendar,
   Send,
   Sun,
-  Moon
+  Moon,
+  Sliders,
+  LogOut,
+  Music,
+  Settings
 } from "lucide-react";
 import {
   AreaChart,
@@ -291,7 +296,7 @@ interface AdminCentreProps {
 }
 
 export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
-  const [activeMenu, setActiveMenu] = useState<any>("user_dashboard");
+  const [activeMenu, setActiveMenu] = useState<any>("user_heritage");
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
   const [activeArtistId, setActiveArtistId] = useState<string>("user_3");
   const [localSaved, setLocalSaved] = useState<boolean>(true);
@@ -1193,39 +1198,126 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             {perspective === "user" ? (
               <>
                 <button
-                  onClick={() => setActiveMenu("user_dashboard")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "user_dashboard"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  onClick={() => setActiveMenu("user_heritage")}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
+                    activeMenu === "user_heritage"
+                      ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
                   }`}
                 >
                   <Award className="w-4 h-4" />
-                  Gombo ID Dashboard
+                  Mon Héritage
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("gombos")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "gombos"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  onClick={() => setActiveMenu("user_gombo_id")}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
+                    activeMenu === "user_gombo_id"
+                      ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
                   }`}
                 >
-                  <Film className="w-4 h-4" />
-                  Le Tam-Tam Gombo
+                  <FileCheck className="w-4 h-4" />
+                  GOMBO ID
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("renforts")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "renforts"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  onClick={() => setActiveMenu("user_mes_gombos")}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
+                    activeMenu === "user_mes_gombos"
+                      ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Mes Gombos
+                </button>
+
+                <button
+                  onClick={() => setActiveMenu("user_mes_groupes")}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
+                    activeMenu === "user_mes_groupes"
+                      ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  Mes Groupes
+                </button>
+
+                <button
+                  onClick={() => setActiveMenu("user_renforts")}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
+                    activeMenu === "user_renforts"
+                      ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
                   }`}
                 >
                   <Flame className="w-4 h-4" />
-                  Renforts Postulés
+                  Renforts
+                </button>
+
+                <button
+                  onClick={() => setActiveMenu("user_opportunities")}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
+                    activeMenu === "user_opportunities"
+                      ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Radio className="w-4 h-4" />
+                  Opportunités
+                </button>
+
+                <button
+                  onClick={() => setActiveMenu("user_settings")}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
+                    activeMenu === "user_settings"
+                      ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Sliders className="w-4 h-4" />
+                  Paramètres
+                </button>
+
+                <button
+                  onClick={() => setActiveMenu("user_notifications")}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
+                    activeMenu === "user_notifications"
+                      ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Bell className="w-4 h-4" />
+                  Notifications (Tambours)
+                </button>
+
+                <button
+                  onClick={() => setActiveMenu("user_edit_profile")}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
+                    activeMenu === "user_edit_profile"
+                      ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Settings className="w-4 h-4" />
+                  Modifier mon profil
+                </button>
+
+                <button
+                  onClick={() => {
+                    const confirmLogout = window.confirm("Souhaitez-vous réinitialiser votre session d'artiste et vous déconnecter ?");
+                    if (confirmLogout) {
+                      setActiveArtistId("user_1");
+                      setActiveMenu("user_heritage");
+                      addToTerminal("[INFO] Session d'artiste déconnectée. Retour à Ariel Loua.");
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-205"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Déconnexion
                 </button>
               </>
             ) : (
@@ -1338,24 +1430,20 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   Analytics & Courbes
                 </button>
 
-                {adminEmail === "jhs.kmj7@gmail.com" && (
+                {adminEmail === "johnsylvesterh@gmail.com" && (
                   <button
                     onClick={() => {
-                      if (isSuperUnlocked) {
-                        setActiveMenu("super_admin");
-                      } else {
-                        setIsSuperWelcomeOpen(true);
-                      }
-                      addToTerminal(`[Cabinet] Accéder à la zone de Haute Prélature.`);
+                      setActiveMenu("super_admin");
+                      addToTerminal(`[Trône] Le Fondateur Unique accède à son trône royal.`);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 mt-1.5 rounded-lg text-xs font-black font-display uppercase tracking-wider transition-all duration-300 ${
+                    className={`w-full flex items-center gap-3 px-4 py-3 mt-2 rounded-lg text-xs font-black font-mono uppercase tracking-widest transition-all duration-300 border ${
                       activeMenu === "super_admin"
-                        ? "bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)]"
-                        : "text-purple-400 hover:text-purple-300 hover:bg-purple-950/20 border border-purple-500/20 animate-pulse"
+                        ? "bg-gradient-to-r from-black via-zinc-950 to-zinc-900 border-[#D4AF37] text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                        : "text-[#D4AF37] bg-black hover:bg-[#D4AF37]/5 border-[#D4AF37]/30 hover:border-[#D4AF37] animate-pulse"
                     }`}
                   >
-                    <Crown className="w-4 h-4 text-amber-300" />
-                    Cabinet Souverain 👑
+                    <Crown className="w-4 h-4 text-[#D4AF37]" />
+                    👑 TRÔNE DU FONDATEUR
                   </button>
                 )}
               </>
@@ -1400,7 +1488,16 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         <header className="flex justify-between items-center pb-6 border-b border-[#D4AF37]/10 mb-6 shrink-0">
           <div>
             <h2 className="text-2xl font-display font-extrabold text-[#F5F5F5] tracking-wide">
-              {activeMenu === "user_dashboard" && "Mon Gombo ID d'Excellence"}
+              {activeMenu === "user_heritage" && "Mon Héritage Impérial 🎼"}
+              {activeMenu === "user_gombo_id" && "Mon Gombo ID d'Excellence"}
+              {activeMenu === "user_mes_gombos" && "Mes Gombos & Prestations"}
+              {activeMenu === "user_mes_groupes" && "Mes Alliances d'Orchestre"}
+              {activeMenu === "user_renforts" && "Module de Renforts Scéniques"}
+              {activeMenu === "user_opportunities" && "Opportunités d'Or d'Abidjan"}
+              {activeMenu === "user_settings" && "Paramètres du Transmetteur"}
+              {activeMenu === "user_notifications" && "Les Vibrations du Tam-Tam"}
+              {activeMenu === "user_edit_profile" && "Modifier mon Profil"}
+              {activeMenu === "super_admin" && "Le Trône Souverain du Fondateur"}
               {activeMenu === "dashboard" && "Le Grand Salon & Pilotat"}
               {activeMenu === "gombos" && "L'Écrin des Opportunités"}
               {activeMenu === "renforts" && "Les Solidarités Scéniques"}
@@ -1452,13 +1549,98 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             >
               
               {/* ----------------------------------------------------
-                                VIEW: GOMBO ID USER DASHBOARD
+                                STEP I: TABLEAU UTILISATEUR (10 CORE SECTIONS)
                   ---------------------------------------------------- */}
-              {activeMenu === "user_dashboard" && (() => {
+              {activeMenu === "user_heritage" && (() => {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
-                if (!currentArtist) return <p className="text-white">Aucun artiste disponible. Veuillez en créer un dans l'onglet Admin.</p>;
+                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste sélectionné.</p>;
+                return (
+                  <div className="space-y-6 animate-fadeIn">
+                    <div className="p-6 rounded-2xl bg-gradient-to-r from-zinc-950 via-[#0B0B0B] to-zinc-900 border border-[#D4AF37]/20 shadow-xl space-y-4">
+                      <div className="flex justify-between items-start flex-wrap gap-4 pb-4 border-b border-white/5">
+                        <div className="flex gap-4 items-center">
+                          <div className="w-16 h-16 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37] flex items-center justify-center">
+                            <Music className="w-8 h-8 text-[#D4AF37]" />
+                          </div>
+                          <div>
+                            <span className="text-[10px] uppercase font-mono text-[#D4AF37] tracking-widest block font-bold">Temple de l'Héritage Artistique</span>
+                            <h2 className="text-2xl font-display font-black text-white mt-1">{currentArtist.artisticName}</h2>
+                            <p className="text-xs text-zinc-400 font-mono mt-0.5">{currentArtist.name} • {currentArtist.commune}, Abidjan</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] uppercase font-mono text-zinc-500 block">Niveau d'Académie</span>
+                          <strong className="text-2xl font-display font-black text-[#D4AF37] block mt-0.5">Rang {currentArtist.performance.level} / 5</strong>
+                          <span className="text-[9px] text-zinc-400 font-mono bg-white/5 px-2 py-0.5 rounded">Prestige Optimal</span>
+                        </div>
+                      </div>
 
-                // Calculate ratings dynmically
+                      {/* Score widgets */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                        <div className="p-4 bg-black border border-white/5 rounded-xl">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase block">Score de Talent</span>
+                          <strong className="text-xl font-bold text-white block mt-1">{currentArtist.performance.score} / 100</strong>
+                        </div>
+                        <div className="p-4 bg-black border border-white/5 rounded-xl">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase block">Gombos Honorés</span>
+                          <strong className="text-xl font-bold text-emerald-400 block mt-1">{currentArtist.gombosCompleted} Spectacles</strong>
+                        </div>
+                        <div className="p-4 bg-black border border-white/5 rounded-xl">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase block">Revenus Cumulés</span>
+                          <strong className="text-l text-white block mt-1 font-mono font-bold text-amber-500">{(currentArtist.revenues || 450000).toLocaleString()} FCFA</strong>
+                        </div>
+                        <div className="p-4 bg-black border border-white/5 rounded-xl">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase block">Statut Réseau</span>
+                          <div className="flex items-center gap-1.5 mt-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                            <strong className="text-xs text-emerald-400 uppercase font-mono">{currentArtist.status === "active" ? "Actif" : "En attente"}</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Specialty tags */}
+                      <div className="space-y-2 pt-2">
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase block">Spécialités artistiques certifiées :</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {currentArtist.specialties.map(spec => (
+                            <span key={spec} className="px-2.5 py-1 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] font-mono border border-[#D4AF37]/25 font-bold uppercase">
+                              🎤 {spec}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Historical Earnings Progression Graph */}
+                    <div className="p-6 bg-zinc-950 border border-white/5 rounded-2xl space-y-4">
+                      <h3 className="text-xs font-mono uppercase text-[#D4AF37] tracking-wider font-bold">Progression Cumulée des Cachets</h3>
+                      <div className="h-48 w-full font-mono text-xs">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={ANALYTICS_DATA}>
+                            <defs>
+                              <linearGradient id="glowGombo" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.25}/>
+                                <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                            <XAxis dataKey="name" stroke="#555" />
+                            <YAxis stroke="#555" />
+                            <Tooltip contentStyle={{ backgroundColor: "#000", border: '1px solid #D4AF37', color: '#fff' }} />
+                            <Area type="monotone" dataKey="commission" stroke="#D4AF37" fillOpacity={1} fill="url(#glowGombo)" strokeWidth={2} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {activeMenu === "user_gombo_id" && (() => {
+                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
+
+                // Calculate ratings dynamically
                 const artistReviews = reviews.filter(r => r.revieweeId === currentArtist.id && r.type === "client_to_musician");
                 const avgRating = artistReviews.length > 0
                   ? parseFloat((artistReviews.reduce((sum, r) => sum + r.rating, 0) / artistReviews.length).toFixed(1))
@@ -1489,6 +1671,388 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 );
               })()}
 
+              {activeMenu === "user_mes_gombos" && (() => {
+                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
+                return (
+                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn">
+                    <div className="pb-3 border-b border-white/5">
+                      <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                        💼 Mes Prestations & Évaluations Réciproques
+                      </h3>
+                      <p className="text-xs text-zinc-400">Suivez vos gombos réservés et notez mutuellement vos organisateurs.</p>
+                    </div>
+
+                    {/* Prestations list */}
+                    <div className="space-y-4">
+                      {gombos.slice(0, 2).map((gombo, index) => (
+                        <div key={gombo.id} className="p-4 bg-black border border-white/5 rounded-xl space-y-3">
+                          <div className="flex justify-between items-start flex-wrap gap-2">
+                            <div>
+                              <strong className="text-sm text-white block">{gombo.title}</strong>
+                              <span className="text-[10px] text-zinc-500 font-mono">Organisé par : {gombo.organizerName} • {gombo.location}</span>
+                            </div>
+                            <span className="px-2.5 py-1 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] font-bold uppercase">
+                              Cachet : {gombo.budget.toLocaleString()} FCFA
+                            </span>
+                          </div>
+
+                          {/* Reciprocal feedback review trigger */}
+                          <div className="p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded-lg space-y-2">
+                            <span className="text-[10px] uppercase font-mono text-[#D4AF37] block font-bold">✍️ Évaluation Réciproque d'Académie :</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-zinc-300">Note Accordée :</span>
+                              <div className="flex gap-1 text-[#D4AF37]">
+                                {[1, 2, 3, 4, 5].map(n => (
+                                  <Star key={n} className="w-3.5 h-3.5 fill-current cursor-pointer" />
+                                ))}
+                              </div>
+                            </div>
+                            <textarea
+                              rows={2}
+                              placeholder="Ex: Excellent accueil, la régie technique était très professionnelle, et le paiement a été honoré dès la fin de la performance !"
+                              className="w-full bg-black border border-white/10 rounded-lg p-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                            />
+                            <button
+                              onClick={() => {
+                                addToTerminal(`[ÉVALUATION] Évaluation impériale transmise pour Gombo ${gombo.id}`);
+                                alert("⭐ Votre avis réciproque d'honneur a été scellé dans le marbre d'AFRIGOMBO !");
+                              }}
+                              className="px-4 py-1.5 bg-[#D4AF37] hover:bg-[#B48F17] text-black text-[10px] font-mono font-bold uppercase rounded transition-all"
+                            >
+                              Soumettre l'avis
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {activeMenu === "user_mes_groupes" && (() => {
+                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
+                return (
+                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn">
+                    <div className="pb-3 border-b border-white/5 flex justify-between items-center">
+                      <div>
+                        <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                          👥 Mes Orchestres & Alliances Régionales
+                        </h3>
+                        <p className="text-xs text-zinc-400">Affiliez-vous à des groupings pour briguer les Gombos VIP d'Abidjan.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Active Group cards user belongs to */}
+                      {currentArtist.groups.map(group => (
+                        <div key={group} className="p-4 bg-black border border-[#D4AF37]/30 rounded-xl space-y-2">
+                          <strong className="text-xs uppercase font-mono tracking-wider text-[#D4AF37] block">🎼 {group}</strong>
+                          <span className="text-[10px] text-zinc-500 font-mono block">Rôle : Guitariste Solo / Soliste Majeur</span>
+                          <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold font-mono">Affiliation Active</span>
+                        </div>
+                      ))}
+
+                      {/* Add new orchestration alliance */}
+                      <div className="p-4 bg-black border border-white/5 rounded-xl space-y-3">
+                        <span className="text-xs font-bold text-white block uppercase">Créer une Alliance Musicale</span>
+                        <input
+                          type="text"
+                          placeholder="Nom de l'orchestre / grouping..."
+                          className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-xs focus:outline-none focus:border-[#D4AF37]"
+                          onKeyDown={async (e: any) => {
+                            if (e.key === "Enter" && e.target.value.trim()) {
+                              const v = e.target.value.trim();
+                              const updatedGrps = [...currentArtist.groups, v];
+                              setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, groups: updatedGrps } : u));
+                              await saveToFirestore("users", currentArtist.id, { groups: updatedGrps });
+                              addToTerminal(`[ALLIANCE] Nouvel orchestre créé : ${v}`);
+                              e.target.value = "";
+                              alert(`🎼 Alliance ${v} enregistrée avec succès !`);
+                            }
+                          }}
+                        />
+                        <span className="text-[9px] text-zinc-500 font-mono block">Appuyez sur Entrée pour enregistrer l'orchestre régional.</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {activeMenu === "user_renforts" && (() => {
+                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
+                return (
+                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn">
+                    <div className="pb-3 border-b border-white/5">
+                      <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                        ⚡ Module de Renfort Scénique Express
+                      </h3>
+                      <p className="text-xs text-zinc-400">Recherchez d'urgence un instrumentiste ou un choriste sur scène à Abidjan.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Form launch dynamic backup */}
+                      <div className="p-5 bg-black border border-white/5 rounded-xl space-y-4">
+                        <span className="text-xs font-bold font-mono text-[#D4AF37] uppercase block border-b border-white/5 pb-2">🎯 Dispatcher une Alerte de Renfort</span>
+                        
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Instrument ou Backup requis :</label>
+                          <select className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-xs focus:outline-none">
+                            <option>Bassiste Zouglou d'élite</option>
+                            <option>Percussionniste Sabar en urgence</option>
+                            <option>Duo de Backup Singers (Chœur)</option>
+                            <option>Joueur de Kora Concertiste</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Commune du Concert :</label>
+                          <select className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-xs focus:outline-none">
+                            {IVORIAN_COMMUNES.map(c => <option key={c}>{c}</option>)}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Budget et Urgence :</label>
+                          <select className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-xs focus:outline-none">
+                            <option>Urgent - Prestation ce soir (50 000 FCFA)</option>
+                            <option>Normal - Ce week-end (35 000 FCFA)</option>
+                            <option>Elite - Tournée Nationale (120 005 FCFA)</option>
+                          </select>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            addToTerminal(`[RENFORT EXPRESS] Alerte de renfort envoyée vers tous les terminaux de la commune !`);
+                            alert("📣 Alerte de Renfort Express envoyée aux talents à proximité !");
+                          }}
+                          className="w-full py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-black text-xs font-mono font-black uppercase rounded-lg transition-all"
+                        >
+                          Lancer le Renfort Scénique ⚡
+                        </button>
+                      </div>
+
+                      {/* Active reinforcements view */}
+                      <div className="space-y-2">
+                        <span className="text-xs uppercase font-mono text-zinc-500 font-bold block">Appels de Renforts en cours</span>
+                        <div className="p-4 bg-black border border-white/5 rounded-xl min-h-60 space-y-3">
+                          <div className="p-3 bg-red-500/5 border border-red-500/20 rounded-lg">
+                            <div className="flex justify-between text-xs">
+                              <strong className="text-white">Guitariste Solo Zouglou</strong>
+                              <span className="text-red-400 font-mono text-[9px] uppercase animate-pulse">Prestation ce soir !</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-400 mt-1">Lieu : Toit d'Abidjan • Cocody • Cachet : 65 000 FCFA</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {activeMenu === "user_opportunities" && (() => {
+                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
+                return (
+                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn">
+                    <div className="pb-3 border-b border-white/5">
+                      <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                        🌍 Le Bulletin d'Or des Opportunités
+                      </h3>
+                      <p className="text-xs text-zinc-400">Postulez en un clic sur des contrats d'excellence certifiés.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {gombos.map(gombo => (
+                        <div key={gombo.id} className="p-4 bg-black border border-white/5 hover:border-[#D4AF37]/30 rounded-xl space-y-3 transition-all flex flex-col justify-between">
+                          <div>
+                            <div className="flex justify-between items-start">
+                              <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-wider">{gombo.location}</span>
+                              {gombo.isBoosted && (
+                                <span className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] font-mono text-[9px] px-1.5 py-0.5 rounded font-bold animate-pulse">
+                                  CONTRAT D'ACCORD DE SOUVERAINETÉ (BOOSTED)
+                                </span>
+                              )}
+                            </div>
+                            <strong className="text-sm text-white block mt-1">{gombo.title}</strong>
+                            <p className="text-xs text-zinc-400 mt-2 line-clamp-2 leading-relaxed">{gombo.description}</p>
+                          </div>
+
+                          <div className="pt-4 flex justify-between items-center border-t border-white/5 mt-3">
+                            <strong className="text-sm font-mono text-[#D4AF37]">{gombo.budget.toLocaleString()} FCFA</strong>
+                            <button
+                              onClick={() => {
+                                addToTerminal(`[CANDIDATURE] Candidature officielle de ${currentArtist.artisticName} pour ${gombo.title}`);
+                                alert(`🎯 Candidature scellée sur "${gombo.title}" ! Bonne chance !`);
+                              }}
+                              className="px-4 py-1.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-transparent rounded-lg text-xs font-mono font-bold text-[#D4AF37] hover:text-black transition-all"
+                            >
+                              Postuler Direct 🎯
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {activeMenu === "user_settings" && (() => {
+                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
+                return (
+                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn">
+                    <div className="pb-3 border-b border-white/5">
+                      <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                        ⚙ Paramètres du Compte d'Académie
+                      </h3>
+                      <p className="text-xs text-zinc-400">Configurez la sensibilité de votre terminal aux Tambours d'Abidjan.</p>
+                    </div>
+
+                    <div className="space-y-4 max-w-lg">
+                      <div className="p-4 bg-black border border-white/5 rounded-xl flex justify-between items-center">
+                        <div>
+                          <strong className="text-xs text-white block">Vibration Sonique des Tambours</strong>
+                          <span className="text-[10px] text-zinc-500">Sensibilité haptique aux notifications du Trône.</span>
+                        </div>
+                        <input type="checkbox" defaultChecked className="w-4 h-4 cursor-pointer accent-[#D4AF37]" />
+                      </div>
+
+                      <div className="p-4 bg-black border border-white/5 rounded-xl flex justify-between items-center">
+                        <div>
+                          <strong className="text-xs text-white block">Visibilité Publique d'Hérédité</strong>
+                          <span className="text-[10px] text-zinc-500">Permet aux organisateurs d'orchestres de Plateau de vous démarcher en direct.</span>
+                        </div>
+                        <input type="checkbox" defaultChecked className="w-4 h-4 cursor-pointer accent-[#D4AF37]" />
+                      </div>
+
+                      <div className="p-4 bg-black border border-white/5 rounded-xl space-y-2">
+                        <strong className="text-xs text-white block">Fréquence de synchronisation locale</strong>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button className="py-2.5 bg-[#D4AF37] text-black text-[10px] font-mono font-bold rounded uppercase">Instantané</button>
+                          <button className="py-2.5 bg-zinc-900 text-zinc-400 text-[10px] font-mono font-bold rounded uppercase hover:text-white">Lente</button>
+                          <button className="py-2.5 bg-zinc-900 text-zinc-400 text-[10px] font-mono font-bold rounded uppercase hover:text-white">Économique</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {activeMenu === "user_notifications" && (() => {
+                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
+                return (
+                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn">
+                    <div className="pb-3 border-b border-white/5 flex justify-between items-center">
+                      <div>
+                        <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                          📢 Tambours (Notifications Réseau)
+                        </h3>
+                        <p className="text-xs text-zinc-400">Écoutez les vibrations de l'Académie émise par l'administration.</p>
+                      </div>
+                      <div className="relative w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/35 text-[#D4AF37] animate-ping" />
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="p-4 bg-black border border-amber-500/20 rounded-xl space-y-2">
+                        <div className="flex justify-between items-center text-[10px] font-mono font-bold">
+                          <span className="text-[#D4AF37]">👑 DECRET SUBLIME DE FONDATION</span>
+                          <span className="text-zinc-500">Aujourd'hui, 09:12</span>
+                        </div>
+                        <p className="text-xs text-zinc-300 font-semibold leading-relaxed">
+                          "Félicitations aux artistes d'Abidjan ! La commission par défaut est à présent de 10% pour accroître le cachet conservé par les guitaristes Zouglou."
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-black border border-white/5 rounded-xl space-y-2">
+                        <div className="flex justify-between items-center text-[10px] font-mono">
+                          <span className="text-zinc-500">⚖️ Administration Gombo ID</span>
+                          <span className="text-zinc-500">Hier</span>
+                        </div>
+                        <p className="text-xs text-zinc-400">
+                          Votre dossier de certification standard est classé prioritaire suite à la vérification d'excellence.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {activeMenu === "user_edit_profile" && (() => {
+                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
+                return (
+                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn">
+                    <div className="pb-3 border-b border-white/5">
+                      <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                        ✍ Modifier mon profil d'Académie
+                      </h3>
+                      <p className="text-xs text-zinc-400">Mettez à jour vos spécialités et coordonnées d'excellence.</p>
+                    </div>
+
+                    <div className="space-y-4 max-w-lg">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Nom Artistique :</label>
+                          <input
+                            type="text"
+                            defaultValue={currentArtist.artisticName}
+                            onBlur={async (e) => {
+                              const artisticName = e.target.value;
+                              setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, artisticName } : u));
+                              await saveToFirestore("users", currentArtist.id, { artisticName });
+                              addToTerminal(`[PROFIL] Nom artistique mis à jour pour ${artisticName}`);
+                            }}
+                            className="w-full bg-black border border-white/10 rounded-xl p-2 text-xs focus:outline-none focus:border-[#D4AF37]"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Commune principale :</label>
+                          <select
+                            defaultValue={currentArtist.commune}
+                            onChange={async (e) => {
+                              const commune = e.target.value;
+                              setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, commune } : u));
+                              await saveToFirestore("users", currentArtist.id, { commune });
+                              addToTerminal(`[PROFIL] Commune mise à jour : ${commune}`);
+                            }}
+                            className="w-full bg-black border border-white/10 rounded-xl p-2 text-xs focus:outline-none focus:border-[#D4AF37]"
+                          >
+                            {IVORIAN_COMMUNES.map(c => <option key={c}>{c}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Spécialités Nationales (Séparées par virgule) :</label>
+                        <input
+                          type="text"
+                          defaultValue={currentArtist.specialties.join(", ")}
+                          onBlur={async (e) => {
+                            const specialties = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
+                            setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, specialties } : u));
+                            await saveToFirestore("users", currentArtist.id, { specialties });
+                            addToTerminal(`[PROFIL] Spécialités mises à jour : ${specialties.join(", ")}`);
+                          }}
+                          className="w-full bg-black border border-white/10 rounded-xl p-2 text-xs focus:outline-none focus:border-[#D4AF37]"
+                        />
+                      </div>
+
+                      <button
+                        onClick={() => alert("🏆 Modifications de profil enregistrées en temps réel sur Firestore !")}
+                        className="w-full py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-black text-xs font-mono font-black uppercase rounded-lg transition-all"
+                      >
+                        Enregistrer modifications
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* ----------------------------------------------------
                                 VIEW: DASHBOARD & SCAN
                   ---------------------------------------------------- */}
@@ -1508,7 +2072,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       </div>
 
                       {/* Quick preset switches */}
-                      <div className="flex gap-2 text-xs">
+                      <div className="flex flex-wrap gap-2 text-xs">
                         <button
                           onClick={() => {
                             setAdminEmail("info@gombo.ci");
@@ -1516,7 +2080,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             addToTerminal(`[Simulateur] Connecté en tant qu'Administrateur Standard (info@gombo.ci). Zone Suprême Verrouillée.`);
                           }}
                           className={`px-3 py-1.5 rounded-lg border font-mono text-[10px] font-bold transition-all uppercase tracking-wider ${
-                            adminEmail !== "jhs.kmj7@gmail.com"
+                            adminEmail !== "jhs.kmj7@gmail.com" && adminEmail !== "sylvestrehounkpevi777@gmail.com" && adminEmail !== "johnsylvesterh@gmail.com"
                               ? "bg-white/10 text-white border-white/20 shadow-md"
                               : "bg-transparent text-white/50 border-white/5 hover:bg-white/5"
                           }`}
@@ -1526,15 +2090,29 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         <button
                           onClick={() => {
                             setAdminEmail("jhs.kmj7@gmail.com");
-                            addToTerminal(`[Simulateur] Connexion d'Élite détectée : jhs.kmj7@gmail.com. Accès au Cabinet Souverain Déverrouillé.`);
+                            setIsSuperUnlocked(false);
+                            addToTerminal(`[Simulateur] Id d'Élite activé : jhs.kmj7@gmail.com. Trône exclusif invisible.`);
                           }}
                           className={`px-3 py-1.5 rounded-lg border font-mono text-[10px] font-bold transition-all uppercase tracking-wider ${
-                            adminEmail === "jhs.kmj7@gmail.com"
-                              ? "bg-gradient-to-r from-amber-500 to-orange-600 text-black border-transparent shadow-[0_0_15px_rgba(249,115,22,0.4)] font-black"
-                              : "bg-transparent text-amber-500/80 border-amber-500/10 hover:border-amber-500/30"
+                            adminEmail === "jhs.kmj7@gmail.com" || adminEmail === "sylvestrehounkpevi777@gmail.com"
+                              ? "bg-gradient-to-r from-teal-500 to-indigo-600 text-white border-transparent shadow-[0_0_15px_rgba(30,144,255,0.4)] font-black"
+                              : "bg-transparent text-teal-400 border-teal-500/10 hover:border-teal-500/30"
                           }`}
                         >
-                          👑 Super Admin Céleste
+                          🛡️ Super Admin (jhs.kmj7)
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAdminEmail("johnsylvesterh@gmail.com");
+                            addToTerminal(`[Simulateur] Connexion du Fondateur Unique : johnsylvesterh@gmail.com. Trône disponible.`);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg border font-mono text-[10px] font-bold transition-all uppercase tracking-wider ${
+                            adminEmail === "johnsylvesterh@gmail.com"
+                              ? "bg-gradient-to-r from-amber-500 to-amber-700 text-black border-transparent shadow-[0_0_15px_rgba(212,175,55,0.4)] font-black animate-pulse"
+                              : "bg-transparent text-amber-500 border-amber-500/10 hover:border-amber-500/30"
+                          }`}
+                        >
+                          👑 Trône (johnsylvesterh)
                         </button>
                       </div>
                     </div>
@@ -1546,8 +2124,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           value={adminEmail}
                           onChange={(e) => {
                             setAdminEmail(e.target.value);
-                            if (e.target.value === "jhs.kmj7@gmail.com") {
-                              addToTerminal(`[Simulateur] Connexion d'Élite par saisie directe : jhs.kmj7@gmail.com`);
+                            if (e.target.value === "johnsylvesterh@gmail.com") {
+                              addToTerminal(`[Simulateur] Saisie directe du Fondateur : johnsylvesterh@gmail.com`);
                             }
                           }}
                           placeholder="Saisissez un email d'administrateur..."
@@ -1558,22 +2136,24 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       {/* Prestigious Cabinet Suprême Button */}
                       <button
                         onClick={() => {
-                          if (adminEmail === "jhs.kmj7@gmail.com") {
+                          if (adminEmail === "johnsylvesterh@gmail.com") {
                             setIsSuperWelcomeOpen(true);
                             setIsSuperUnlocked(false);
                             addToTerminal(`[Cabinet] Lancement du protocole d'accueil souverain d'AFRIGOMBO.`);
+                          } else if (adminEmail === "jhs.kmj7@gmail.com" || adminEmail === "sylvestrehounkpevi777@gmail.com") {
+                            alert("🛡️ ACCÈS REJETÉ AU TRÔNE\n\nVous êtes actuellement configuré(e) comme Super Admin. Seul le Fondateur suprême authentique (email johnsylvesterh@gmail.com) peut accéder au Trône souverain et piloter l'écosystème AFRI.");
                           } else {
-                            alert("❌ ACCÈS REJETÉ\n\nVous êtes actuellement configuré(e) comme Administrateur Standard. Les administrateurs locaux n'ont pas droit d'accès au Cabinet Souverain.\n\nSélectionnez le préréglage 'Super Admin Céleste' (email jhs.kmj7@gmail.com) pour lever la restriction.");
+                            alert("❌ ACCÈS REJETÉ\n\nVous êtes actuellement configuré(e) comme Administrateur Standard. Les administrateurs locaux n'ont pas droit d'accès au Cabinet.\n\nSélectionnez le préréglage 'Trône' (johnsylvesterh@gmail.com) pour lever la restriction.");
                           }
                         }}
                         className={`w-full sm:w-auto py-2.5 px-6 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ${
-                          adminEmail === "jhs.kmj7@gmail.com"
+                          adminEmail === "johnsylvesterh@gmail.com"
                             ? "bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:scale-105 active:scale-95 animate-pulse"
                             : "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed opacity-50"
                         }`}
                       >
                         <Crown className="w-4 h-4 text-amber-300" />
-                        <span>Cabinet Impérial (Super Admin)</span>
+                        <span>Entrée Cabinet (Founder Only)</span>
                       </button>
                     </div>
                   </div>
@@ -1799,128 +2379,31 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {/* ----------------------------------------------------
-                                VIEW: CABINET SUPRÊME PRIVÉ (SUPER ADMIN ONLY)
+                                VIEW: CABINET SUPRÊME PRIVÉ (LE TRÔNE DU FONDATEUR)
                   ---------------------------------------------------- */}
               {activeMenu === "super_admin" && (
-                <div className="space-y-6 pb-20 animate-fadeIn">
-                  <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-900/10 via-black to-orange-950/10 border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.06)] flex justify-between items-center flex-wrap gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400">
-                        <Crown className="w-6 h-6 animate-pulse" />
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-mono uppercase font-black text-purple-400 tracking-wider">Zone Souveraine de l'Élite</span>
-                        <h3 className="text-xl font-display font-black text-white">Console Privée de Haute Prélature</h3>
-                        <p className="text-xs text-white/60">Gérez l'ensemble du réseau avec un contrôle souverain absolu.</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setActiveMenu("dashboard");
-                        addToTerminal(`[INFO] Cabinet Impérial fermé.`);
-                      }}
-                      className="px-4 py-2 text-xs font-semibold uppercase bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg transition-all"
-                    >
-                      Retour au Pilotage Standard ↩
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Panel 1: Liquidity & Treasury Controls */}
-                    <div className="p-6 rounded-2xl bg-[#060606] border border-purple-500/25 space-y-4">
-                      <h4 className="text-sm font-display font-bold text-purple-300 flex items-center gap-2">
-                        <Coins className="w-4 h-4 text-purple-400" />
-                        Trésorerie Globale d'Académie
-                      </h4>
-                      <p className="text-xs text-white/60">Contrôlez les fonds virtuels de la Caisse AFRIGOMBO.</p>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <button
-                          onClick={async () => {
-                            await createTransaction(500000, "commission", "Injection Suprême de Trésorerie", "jhs.kmj7@gmail.com", "Super Admin");
-                            addToTerminal(`[DÉCRET IMPÉRIAL] 500 000 FCFA injectés dans la Caisse Gombo.`);
-                          }}
-                          className="p-4 bg-purple-600/15 border border-purple-500/30 hover:bg-purple-600/30 text-purple-200 text-xs font-mono font-bold rounded-xl transition-all"
-                        >
-                          💸 Injecter 500k FCFA
-                        </button>
-                        <button
-                          onClick={async () => {
-                            await createTransaction(-200000, "commission", "Retrait Souverain de Trésorerie", "jhs.kmj7@gmail.com", "Super Admin");
-                            addToTerminal(`[DÉCRET IMPÉRIAL] 200 000 FCFA retirés de la Caisse Gombo.`);
-                          }}
-                          className="p-4 bg-orange-600/15 border border-orange-500/30 hover:bg-orange-600/30 text-orange-200 text-xs font-mono font-bold rounded-xl transition-all"
-                        >
-                          ⚡ Retirer 200k FCFA
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Panel 2: Commission Slider */}
-                    <div className="p-6 rounded-2xl bg-[#060606] border border-purple-500/25 space-y-4">
-                      <h4 className="text-sm font-display font-bold text-purple-300 flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-purple-400" />
-                        Paramètres de Commissions Systèmes
-                      </h4>
-                      <div className="flex justify-between items-center text-xs font-mono">
-                        <span className="text-white/60">Taux actuel d'AFRIGOMBO :</span>
-                        <span className="text-xl font-bold text-pink-400">{systemCommissionRate}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="1"
-                        max="50"
-                        value={systemCommissionRate}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value);
-                          setSystemCommissionRate(val);
-                          addToTerminal(`[DÉCRET IMPÉRIAL] Commission système ajustée à ${val}%.`);
-                        }}
-                        className="w-full accent-purple-500 bg-white/5 h-2 rounded-lg cursor-pointer"
-                      />
-                      <div className="flex justify-between text-[10px] text-white/40 font-mono">
-                        <span>Min (1%)</span>
-                        <span>Max (50%)</span>
-                      </div>
-                    </div>
-
-                    {/* Panel 3: Global CERTIFICATION Decrees */}
-                    <div className="p-6 rounded-2xl bg-[#060606] border border-purple-500/25 space-y-4 md:col-span-2">
-                      <h4 className="text-sm font-display font-bold text-purple-300 flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-purple-400" />
-                        Décret de Force Majeure / Certification Globale
-                      </h4>
-                      <p className="text-xs text-white/60 font-sans">
-                        Certifiez l'ensemble des artistes enregistrés en Côte d'Ivoire en une fraction de seconde pour accélérer le dynamisme culturel du pays, ou purgez l'historique de modération.
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-4 pt-2">
-                        <button
-                          onClick={async () => {
-                            setUsers(prev => prev.map(u => ({ ...u, isCertified: true, kycStatus: "approved" as any })));
-                            for (let u of users) {
-                              await saveToFirestore("users", u.id, { isCertified: true, kycStatus: "approved" });
-                            }
-                            addToTerminal(`[DÉCRET IMPÉRIAL] Force Majeure : L'intégralité des artistes ont été certifiés d'office.`);
-                          }}
-                          className="py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white text-xs font-mono font-bold rounded-xl shadow-md transition-all uppercase tracking-wider"
-                        >
-                          🌟 Certifier Tous les Talents (1-Click Global)
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            setReviews([]);
-                            addToTerminal(`[DÉCRET IMPÉRIAL] Purge d'avis : Réinitialisation locale des avis d'abus.`);
-                          }}
-                          className="py-3 px-6 bg-transparent border border-white/10 hover:border-red-500/40 text-white/70 hover:text-white text-xs font-mono font-bold rounded-xl transition-all uppercase tracking-wider"
-                        >
-                          🧹 Purger la File de Contestation
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <FounderThrone
+                  adminEmail={adminEmail}
+                  users={users}
+                  setUsers={setUsers}
+                  gombos={gombos}
+                  setGombos={setGombos}
+                  transactions={transactions}
+                  setTransactions={setTransactions}
+                  alerts={alerts}
+                  setAlerts={setAlerts}
+                  reviews={reviews}
+                  setReviews={setReviews}
+                  systemCommissionRate={systemCommissionRate}
+                  setSystemCommissionRate={setSystemCommissionRate}
+                  addToTerminal={addToTerminal}
+                  saveToFirestore={saveToFirestore}
+                  createTransaction={createTransaction}
+                  onClose={() => {
+                    setActiveMenu("dashboard");
+                    addToTerminal(`[INFO] Cabinet du Trône fermé.`);
+                  }}
+                />
               )}
 
               {/* ----------------------------------------------------
@@ -3908,7 +4391,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 setIsSuperWelcomeOpen(false);
                 setIsSuperUnlocked(true);
                 setActiveMenu("super_admin");
-                addToTerminal(`[INFO] Cabinet Impérial déverrouillé par le Propriétaire jhs.kmj7@gmail.com.`);
+                addToTerminal(`[INFO] Cabinet du Fondateur déverrouillé par johnsylvesterh@gmail.com.`);
               }}
               className="w-full py-3 bg-gradient-to-r from-purple-600 to-[#FF6600] text-white hover:opacity-90 font-display font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all"
             >
