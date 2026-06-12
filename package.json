@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && ln -sf $(pwd)/dist /dist || (cd app/applet && vite build && ln -sf $(pwd)/dist /dist)",
-    "real-dev": "vite"
+    "real-dev": "vite",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "firebase": "^10.8.0",

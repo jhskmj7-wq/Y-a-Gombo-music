@@ -194,7 +194,7 @@ export default function FounderThrone({
     // Trigger premium tactile vibration on Android / Web standard
     try {
       if (window.navigator?.vibrate) {
-        window.navigator.vibrate(120); // Sublime initial vibration
+        window.navigator.vibrate([100, 50, 100]); // Sublime pattern
       }
     } catch (e) {
       console.log("Tactile vibration omitted", e);
@@ -205,12 +205,12 @@ export default function FounderThrone({
     const t2 = setTimeout(() => {
       setIntroStep(2);
       try { window.navigator?.vibrate?.(60); } catch (e) {}
-    }, 900);
-    const t3 = setTimeout(() => setIntroStep(3), 1800);
+    }, 1100);
+    const t3 = setTimeout(() => setIntroStep(3), 2105);
     const t4 = setTimeout(() => {
       setShowIntro(false);
       addToTerminal("👑 [SOUVERAINETÉ] Le Trône d'Or est entièrement chargé et prêt pour le Fondateur John.");
-    }, 2800);
+    }, 3100); // 3 seconds maximum as requested
 
     return () => {
       clearTimeout(t1);
@@ -541,52 +541,56 @@ export default function FounderThrone({
                 <Crown className="w-14 h-14 text-[#D4AF37] animate-pulse" />
               </motion.div>
 
-              <div className="space-y-3 h-28 flex flex-col justify-center">
+              <div className="space-y-4 h-36 flex flex-col justify-center">
                 <AnimatePresence mode="wait">
                   {introStep === 1 && (
                     <motion.div
                       key="step1"
-                      initial={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -12 }}
-                      transition={{ duration: 0.4 }}
-                      className="space-y-1"
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.5 }}
+                      className="space-y-2"
                     >
-                      <h3 className="text-[#D4AF37] font-display font-black text-xl uppercase tracking-widest">
-                        Bienvenue, Fondateur.
+                      <h3 className="text-[#D4AF37] font-sans font-extrabold text-2xl uppercase tracking-widest">
+                        AFRIGOMBO ELITE
                       </h3>
-                      <p className="text-xs text-zinc-500 font-mono">Abidjan s'incline devant sa vision d'excellence.</p>
+                      <p className="text-sm text-zinc-300 font-mono italic">
+                        "Le Temple du Gombo reconnaît son Gardien."
+                      </p>
                     </motion.div>
                   )}
 
                   {introStep === 2 && (
                     <motion.div
                       key="step2"
-                      initial={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -12 }}
-                      transition={{ duration: 0.4 }}
-                      className="space-y-1"
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.5 }}
+                      className="space-y-2"
                     >
-                      <h4 className="text-zinc-100 font-mono font-bold text-sm uppercase tracking-wide">
-                        Le Temple du Gombo reconnaît son Gardien.
+                      <h4 className="text-[#D4AF37] font-sans font-extrabold text-2xl uppercase tracking-widest">
+                        AFRIGOMBO ELITE
                       </h4>
-                      <p className="text-[11px] text-zinc-650">Afritrust • AfriID • AfriCoach • AfriMarket</p>
+                      <p className="text-xs text-zinc-400 font-mono">
+                        "Le Temple du Gombo reconnaît son Gardien."
+                      </p>
                     </motion.div>
                   )}
 
                   {introStep === 3 && (
                     <motion.div
                       key="step3"
-                      initial={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -12 }}
-                      transition={{ duration: 0.4 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.5 }}
                       className="flex flex-col items-center gap-2"
                     >
-                      <div className="w-10 h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent rounded-full animate-pulse" />
-                      <span className="text-[10px] text-[#D4AF37] uppercase font-mono tracking-widest font-black">
-                        Préparation du Trône...
+                      <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent rounded-full animate-pulse" />
+                      <span className="text-xs text-[#D4AF37] uppercase font-mono tracking-widest font-bold">
+                        Chargement du Trône Impérial...
                       </span>
                     </motion.div>
                   )}
