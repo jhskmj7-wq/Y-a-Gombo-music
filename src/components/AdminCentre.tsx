@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import GomboIdUserDashboard from "./GomboIdUserDashboard";
+import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
 import FounderThrone from "./FounderThrone";
 import {
   AdminMenu,
@@ -302,12 +303,23 @@ interface AdminCentreProps {
 }
 
 export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
-  const [activeMenu, setActiveMenu] = useState<any>("user_heritage");
+  const [activeMenu, setActiveMenu] = useState<any>("user_terrain");
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
   const [activeArtistId, setActiveArtistId] = useState<string>("user_3");
   const [localSaved, setLocalSaved] = useState<boolean>(true);
   const [autoSaveActive, setAutoSaveActive] = useState<boolean>(false);
+
+  // Le Terrain, Vibes, and dynamic publishing interactions states
+  const [terrainTab, setTerrainTab] = useState<"all" | "musicien" | "contrat">("all");
+  const [appliedGombos, setAppliedGombos] = useState<string[]>([]);
+  const [newPostContent, setNewPostContent] = useState<string>("");
+  const [newGomboTitle, setNewGomboTitle] = useState<string>("");
+  const [newGomboDesc, setNewGomboDesc] = useState<string>("");
+  const [newGomboPrice, setNewGomboPrice] = useState<number>(55050);
+  const [newGomboCommune, setNewGomboCommune] = useState<string>("Cocody");
+  const [newPubType, setNewPubType] = useState<"post" | "gombo">("post");
+  const [likedPosts, setLikedPosts] = useState<string[]>([]);
 
   // Simulated admin email & Super Admin unlocks state
   const [adminEmail, setAdminEmail] = useState<string>("admin@gombo.ci");
@@ -1275,17 +1287,17 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         
         {/* LOGO & HEADING */}
         <div>
-          <div className="flex items-center justify-between gap-2 mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#D4AF37] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)]">
-                <Radio className="text-[#0B0B0B] w-6 h-6" />
+          <div className="flex items-center justify-between gap-2 mb-6">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/35 flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                <Flame className="text-[#D4AF37] w-5 h-5 animate-pulse" />
               </div>
               <div>
-                <h1 className="text-xl font-display font-bold uppercase tracking-wider text-[#D4AF37]">
+                <h1 className="text-md font-sans font-black uppercase tracking-wider text-white">
                   Afrigombo
                 </h1>
-                <span className="text-[10px] uppercase font-mono tracking-widest text-[#F5F5F5]/60 block -mt-1">
-                  Elite - Command Center
+                <span className="text-[8px] uppercase font-mono tracking-widest text-[#D4AF37] block -mt-1 font-bold">
+                  Y'A GOMBO MUSIC
                 </span>
               </div>
             </div>
@@ -1293,50 +1305,78 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             {/* CLOSE BUTTON */}
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 rounded-lg transition-all focus:outline-none flex items-center justify-center border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer"
+              className="p-1.5 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 rounded-lg transition-all focus:outline-none flex items-center justify-center border border-[#D4AF37]/25 hover:border-[#D4AF37] cursor-pointer"
               title="Fermer le menu"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          {/* PERSPECTIVE SWITCHER */}
-          <div className="mb-6 bg-black border border-[#D4AF37]/30 rounded-xl p-3 space-y-2">
-            <span className="text-[9px] uppercase font-mono text-[#D4AF37] block font-bold tracking-wider">🎭 Perspective Actuelle</span>
-            
-            {perspective === "user" ? (
-              <div className="py-1.5 rounded text-center text-xs font-mono font-bold bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black shadow">
-                Artiste
-              </div>
-            ) : (
-              <div className="py-1.5 rounded text-center text-xs font-mono font-bold bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 uppercase">
-                Admin
-              </div>
-            )}
+          {/* USER PROFILE CARD */}
+          {(() => {
+            const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+            return (
+              <div className="mb-5 bg-zinc-900/60 border border-[#D4AF37]/15 rounded-xl p-3.5 space-y-2.5">
+                <div className="flex items-center gap-3">
+                  {/* Photo ronde */}
+                  <div className="relative shrink-0">
+                    <div className="w-11 h-11 rounded-full border border-[#D4AF37]/45 overflow-hidden bg-[#D4AF37]/10 flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.15)]">
+                      {currentArtist && (currentArtist.avatarUrl || currentArtist.photoURL) ? (
+                        <img 
+                          src={currentArtist.avatarUrl || currentArtist.photoURL} 
+                          alt={currentArtist.artisticName} 
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <Music className="w-5 h-5 text-[#D4AF37]" />
+                      )}
+                    </div>
+                    {currentArtist?.isCertified && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border border-black flex items-center justify-center" title="Certifié">
+                        <span className="text-[8px] text-white font-bold">✓</span>
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-sans font-black text-white leading-tight truncate">
+                      {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
+                    </h3>
+                    <p className="text-[9px] text-[#D4AF37] font-mono uppercase tracking-wide font-bold">
+                      {currentArtist ? currentArtist.commune : "Abidjan"}, CI
+                    </p>
+                    <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase border border-[#D4AF37]/20 font-extrabold">
+                      Musicien
+                    </span>
+                  </div>
+                </div>
 
-            {/* Simulated Active Artist Selector (only in user mode) */}
-            {perspective === "user" && (
-              <div className="space-y-1 pt-1.5 border-t border-[#D4AF37]/20">
-                <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Artiste Actif Simulé :</span>
-                <select
-                  value={activeArtistId}
-                  onChange={(e) => {
-                    setActiveArtistId(e.target.value);
-                  }}
-                  className="w-full bg-black border border-white/10 rounded px-1.5 py-1 text-[11px] text-white font-mono focus:outline-none"
-                >
-                  {users.map(u => (
-                    <option key={u.id} value={u.id} className="bg-black text-white">
-                      {u.artisticName}
-                    </option>
-                  ))}
-                </select>
+                {/* Simulated Active Artist Selector */}
+                {perspective === "user" && (
+                  <div className="space-y-1 pt-2 border-t border-[#D4AF37]/10">
+                    <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Artiste Actif Simulé :</span>
+                    <select
+                      value={activeArtistId}
+                      onChange={(e) => {
+                        setActiveArtistId(e.target.value);
+                      }}
+                      className="w-full bg-black border border-white/10 rounded px-1.5 py-1 text-[10px] text-white font-mono focus:outline-none cursor-pointer"
+                    >
+                      {users.map(u => (
+                        <option key={u.id} value={u.id} className="bg-black text-white">
+                          {u.artisticName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })()}
 
           {/* SLOGAN PRESTIGE */}
-          <div className="p-4 rounded-lg bg-[#D4AF37]/5 border border-[#D4AF37]/10 mb-6 text-center text-xs text-[#D4AF37] italic">
+          <div className="p-3.5 rounded-lg bg-[#D4AF37]/5 border border-[#D4AF37]/10 mb-4 text-center text-[11px] text-[#D4AF37] italic">
             "🎼 Ton héritage attire les gombos."
           </div>
 
@@ -1344,6 +1384,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <nav className="space-y-1">
             {perspective === "user" ? (
               <>
+                <button
+                  onClick={() => {
+                    setActiveMenu("user_terrain");
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
+                    activeMenu === "user_terrain"
+                      ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Flame className="w-4 h-4" />
+                  Le Terrain
+                </button>
+
                 <button
                   onClick={() => {
                     setActiveMenu("user_heritage");
@@ -1415,7 +1470,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       : "text-white/70 hover:text-white hover:bg-[#D4AF37]/5 hover:translate-x-1"
                   }`}
                 >
-                  <Flame className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4" />
                   Renforts
                 </button>
 
@@ -1461,7 +1516,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   }`}
                 >
                   <Bell className="w-4 h-4" />
-                  Notifications (Tambours)
+                  Notifications
                 </button>
 
                 <button
@@ -1485,10 +1540,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     setActiveMenu("dashboard");
                     setIsSidebarOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all duration-205 border border-[#D4AF37]/20 hover:border-[#D4AF37]"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-semibold uppercase text-[#D4AF37] bg-[#D4AF37]/5 hover:bg-[#D4AF37]/15 transition-all duration-205 border border-[#D4AF37]/25 hover:border-[#D4AF37]"
                 >
                   <ShieldAlert className="w-4 h-4" />
-                  Perspective Admin
+                  CENTRE DE COMMANDE
                 </button>
 
                 <button
@@ -1496,7 +1551,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     const confirmLogout = window.confirm("Souhaitez-vous réinitialiser votre session d'artiste et vous déconnecter ?");
                     if (confirmLogout) {
                       setActiveArtistId("user_1");
-                      setActiveMenu("user_heritage");
+                      setActiveMenu("user_terrain");
                       setIsSidebarOpen(false);
                       addToTerminal("[INFO] Session d'artiste déconnectée. Retour à Ariel Loua.");
                     }
@@ -1728,66 +1783,85 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
          ========================================================================= */}
       <main className="flex-1 bg-[#0B0B0B] flex flex-col overflow-y-auto px-8 py-6">
         
-        {/* UPPER STATUS BAR */}
-        <header className="flex justify-between items-center pb-6 border-b border-[#D4AF37]/10 mb-6 shrink-0 gap-4">
-          <div className="flex items-start gap-4">
-            {/* HAMBURGER TRIGGER BUTTON */}
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="mt-1 p-2 text-[#D4AF37] hover:text-white bg-transparent hover:bg-[#D4AF37]/10 border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-lg transition-all focus:outline-none flex items-center justify-center cursor-pointer"
-              title="Ouvrir le menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-
+        {/* UPPER STATUS BAR (AFRIGOMBO STANDARD HEADER) */}
+        <header className="flex justify-between items-center pb-5 border-b border-[#D4AF37]/15 mb-6 shrink-0 gap-4 flex-wrap">
+          <div className="flex items-center gap-3.5">
+            {/* Yellow Flame Logo */}
+            <div className="w-10 h-10 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.45)]">
+              <Flame className="text-[#0B0B0B] w-6 h-6 stroke-[2.5]" />
+            </div>
             <div>
-              <h2 className="text-2xl font-display font-extrabold text-[#F5F5F5] tracking-wide">
-                {activeMenu === "user_heritage" && "Mon Héritage Impérial 🎼"}
-                {activeMenu === "user_gombo_id" && "Mon Gombo ID d'Excellence"}
-                {activeMenu === "user_mes_gombos" && "Mes Gombos & Prestations"}
-                {activeMenu === "user_mes_groupes" && "Mes Alliances d'Orchestre"}
-                {activeMenu === "user_renforts" && "Module de Renforts Scéniques"}
-                {activeMenu === "user_opportunities" && "Opportunités d'Or d'Abidjan"}
+              <h1 className="text-lg font-sans font-black tracking-tight text-white leading-tight uppercase flex items-center gap-1">
+                AFRIGOMBO <span className="text-xs text-[#D4AF37]/80 font-normal">/</span> <span className="text-xs text-[#D4AF37] font-black font-mono tracking-wider">Y'A GOMBO MUSIC</span>
+              </h1>
+              <p className="text-[10px] font-mono uppercase text-zinc-400 font-bold tracking-wider">
+                {activeMenu === "user_terrain" && "Le Terrain d'Action 🗺️"}
+                {activeMenu === "user_heritage" && "L'Alliance de l'Héritage 🎼"}
+                {activeMenu === "user_gombo_id" && "Mon empreinte de Portance"}
+                {activeMenu === "user_mes_gombos" && "Mes Contrats Actifs"}
+                {activeMenu === "user_mes_groupes" && "Mes Alliances Académiques"}
+                {activeMenu === "user_renforts" && "Appels de Renforts"}
+                {activeMenu === "user_opportunities" && "Flux des Cachets"}
                 {activeMenu === "user_settings" && "Paramètres du Transmetteur"}
-                {activeMenu === "user_notifications" && "Les Vibrations du Tam-Tam"}
-                {activeMenu === "user_edit_profile" && "Modifier mon Profil"}
-                {activeMenu === "super_admin" && "Le Trône Souverain du Fondateur"}
-                {activeMenu === "dashboard" && "Le Grand Salon & Pilotat"}
-                {activeMenu === "gombos" && "L'Écrin des Opportunités"}
-                {activeMenu === "renforts" && "Les Solidarités Scéniques"}
-                {activeMenu === "kyc" && "La Base des Talents Majeurs"}
-                {activeMenu === "revision" && "La File de Révision Modérale"}
-                {activeMenu === "alertes" && "Les Murmures des Communes"}
-                {activeMenu === "caisse" && "Le Coffre-Fort d'AFRIGOMBO"}
-                {activeMenu === "monetisation" && "Le Club des Mécènes & Boosts"}
-                {activeMenu === "analytics" && "Les Courbes de la Musique"}
-              </h2>
-              <p className="text-xs text-[#F5F5F5]/60 mt-1.5">
-                {perspective === "user" ? "Façonnez votre légende et gérez vos certifications d'excellence." : "Prenez le pouls des vibrations et de la renommée de nos talents."}
+                {activeMenu === "user_notifications" && "Les Tambours de l'Actu"}
+                {activeMenu === "user_edit_profile" && "Modifier l'empreinte"}
+                {activeMenu === "super_admin" && "Trône Souverain Unique"}
+                {activeMenu === "dashboard" && "Salon de Pilotage Admin"}
+                {activeMenu === "gombos" && "Gestionnaire des Cachets"}
+                {activeMenu === "renforts" && "Traitement des Alliances"}
+                {activeMenu === "kyc" && "Vérification des Talents"}
+                {activeMenu === "revision" && "File d'Arbitration"}
+                {activeMenu === "alertes" && "Signaux de Communes"}
+                {activeMenu === "caisse" && "La Caisse Communataire"}
+                {activeMenu === "monetisation" && "Le Club d'Élite Premium"}
+                {activeMenu === "analytics" && "Statistiques de Portance"}
+                {activeMenu === "privacy" && "Charte de Confidentialité"}
+                {activeMenu === "terms" && "Conditions Générales (CGU)"}
+                {activeMenu === "delete_account" && "Suppression de l'Empreinte"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Real Search bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-[#F5F5F5]/40" />
+          <div className="flex items-center gap-3">
+            {/* Interactive Search Bar wrapper */}
+            <div className="relative hidden sm:block">
+              <Search className="absolute left-3 top-2 w-3.5 h-3.5 text-[#F5F5F5]/40" />
               <input
                 type="text"
                 placeholder="Chercher artiste, commune..."
                 value={globalSearchTerm}
                 onChange={(e) => setGlobalSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 w-64 text-xs rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/20 focus:border-[#D4AF37] focus:outline-none transition-all placeholder:text-[#F5F5F5]/30 text-[#F5F5F5] font-mono"
+                className="pl-8 pr-3 py-1.5 w-48 text-[11px] rounded-lg bg-[#121214] border border-[#D4AF37]/20 focus:border-[#D4AF37] focus:outline-none transition-all placeholder:text-[#F5F5F5]/30 text-[#F5F5F5] font-mono"
               />
             </div>
 
             {/* Offline/Online Fire Sync state Indicator */}
-            <div className="flex items-center gap-2 bg-[#D4AF37]/5 px-3 py-1.5 rounded-lg border border-[#D4AF37]/10">
-              <span className={`w-2 h-2 rounded-full ${autoSaveActive ? "bg-[#D4AF37] animate-ping" : "bg-[#10B981]"}`} />
-              <span className="text-[10px] font-mono uppercase text-[#F5F5F5]/60">
-                {autoSaveActive ? "Sync..." : "Firestore Connecté"}
-              </span>
+            <div className="flex items-center gap-1.5 bg-[#D4AF37]/5 px-2.5 py-1.5 rounded-lg border border-[#D4AF37]/10">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[9px] font-mono uppercase text-zinc-500">Live</span>
             </div>
+
+            {/* Notifications Icon (Bell) */}
+            <button
+              onClick={() => {
+                setActiveMenu("user_notifications");
+                addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
+              }}
+              className="p-2 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-lg transition-all border border-zinc-800 hover:border-[#D4AF37]/50 flex items-center justify-center cursor-pointer relative"
+              title="Notifications"
+            >
+              <Bell className="w-4.5 h-4.5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-[#D4AF37] rounded-full" />
+            </button>
+
+            {/* HAMBURGER TRIGGER BUTTON */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-lg transition-all focus:outline-none flex items-center justify-center cursor-pointer"
+              title="Ouvrir le menu"
+            >
+              <Menu className="w-4.5 h-4.5" />
+            </button>
           </div>
         </header>
 
@@ -1806,6 +1880,622 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               {/* ----------------------------------------------------
                                 STEP I: TABLEAU UTILISATEUR (10 CORE SECTIONS)
                   ---------------------------------------------------- */}
+              {/* ----------------------------------------------------
+                                NEW CORE EXPERIENCES FOR USER PERSPECTIVE
+                  ---------------------------------------------------- */}
+
+              {/* 1. LE TERRAIN - CENTRAL HUB FEED & opportunities GOMBOS */}
+              {activeMenu === "user_terrain" && (() => {
+                const searchStr = globalSearchTerm.toLowerCase();
+                
+                // Filter posts
+                const filteredFeedPosts = posts.filter(p => 
+                  p.content.toLowerCase().includes(searchStr) ||
+                  p.authorArtisticName.toLowerCase().includes(searchStr)
+                );
+
+                // Filter gombos
+                const GombosToRender = gombos.filter(g => 
+                  g.title.toLowerCase().includes(searchStr) ||
+                  g.description.toLowerCase().includes(searchStr) ||
+                  g.location.toLowerCase().includes(searchStr)
+                );
+
+                // Toast status when applying
+                return (
+                  <div className="space-y-8 animate-fadeIn pb-24">
+                    {/* Welcome prestige poster banner */}
+                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-zinc-950 via-[#121214] to-zinc-900 border border-[#D4AF37]/20 p-6 sm:p-8 shadow-xl">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#D4AF37]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
+                      <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <span className="text-[10px] uppercase font-mono text-[#D4AF37] tracking-widest block font-extrabold">AFRIGOMBO PORTAL</span>
+                          <h2 className="text-2xl font-display font-black text-white tracking-tight">LE TERRAIN D'INTELLIGENCE</h2>
+                          <p className="text-xs text-zinc-400 max-w-xl">
+                            Consultez l'actu bouillante du showbiz à Abidjan, décrochez des cachets d'or ou postez de nouvelles alliances.
+                          </p>
+                        </div>
+                        
+                        <button
+                          onClick={() => {
+                            setActiveMenu("user_publish");
+                            audioSynth.playValidationSuccess();
+                          }}
+                          className="px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] text-xs font-mono font-extrabold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-[0_4px_15px_rgba(212,175,55,0.2)]"
+                        >
+                          <Plus className="w-4 h-4 stroke-[2.5]" />
+                          Publier une opportunité
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Navigation Tabs filter within Le Terrain */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
+                      <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 p-1 rounded-xl">
+                        <button
+                          onClick={() => setTerrainTab("all")}
+                          className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase transition-all whitespace-nowrap cursor-pointer ${
+                            terrainTab === "all" ? "bg-[#D4AF37] text-[#0B0B0B]" : "text-zinc-400 hover:text-white"
+                          }`}
+                        >
+                          Tout l'Écran
+                        </button>
+                        <button
+                          onClick={() => setTerrainTab("musicien")}
+                          className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase transition-all whitespace-nowrap cursor-pointer ${
+                            terrainTab === "musicien" ? "bg-[#D4AF37] text-[#0B0B0B]" : "text-zinc-400 hover:text-white"
+                          }`}
+                        >
+                          Échos d'Artistes
+                        </button>
+                        <button
+                          onClick={() => setTerrainTab("contrat")}
+                          className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase transition-all whitespace-nowrap cursor-pointer ${
+                            terrainTab === "contrat" ? "bg-[#D4AF37] text-[#0B0B0B]" : "text-zinc-400 hover:text-white"
+                          }`}
+                        >
+                          Les Cachets
+                        </button>
+                      </div>
+
+                      <div className="text-[11px] font-mono text-zinc-500">
+                        {GombosToRender.length} cachets & {filteredFeedPosts.length} murmures sur scène
+                      </div>
+                    </div>
+
+                    {/* MAIN SPLIT COLUMNS SECTION */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                      
+                      {/* LEFT OR MAIN: GOMBOS / CONTRATS GRID */}
+                      {(terrainTab === "all" || terrainTab === "contrat") && (
+                        <div className={`${terrainTab === "contrat" ? "lg:col-span-12" : "lg:col-span-7"} space-y-5`}>
+                          <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-3 bg-[#D4AF37] rounded-full" />
+                            <h3 className="text-sm font-sans font-black text-white uppercase tracking-wider">
+                              Les Cachets d'Or Disponibles
+                            </h3>
+                          </div>
+
+                          {GombosToRender.length === 0 ? (
+                            <div className="p-10 text-center rounded-2xl bg-zinc-900/40 border border-white/5 text-zinc-500 text-xs font-mono">
+                              Aucun contrat (Gombo) ne correspond à vos filtres actuels.
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-1 gap-5">
+                              {GombosToRender.map(g => {
+                                const hasApplied = appliedGombos.includes(g.id);
+                                return (
+                                  <motion.div
+                                    key={g.id}
+                                    whileHover={{ scale: 1.005, y: -2 }}
+                                    className="relative flex flex-col justify-between overflow-hidden rounded-2xl bg-[#121214] border border-[#D4AF37]/15 p-5 transition-all duration-200"
+                                  >
+                                    {g.isBoosted && (
+                                      <div className="absolute top-0 right-0 bg-[#D4AF37] text-[#0B0B0B] text-[8px] font-mono font-extrabold uppercase px-3 py-1 rounded-bl-xl shadow flex items-center gap-1">
+                                        <Zap className="w-3 h-3 fill-current" /> BOOSTÉ MAX
+                                      </div>
+                                    )}
+
+                                    <div className="space-y-3">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] uppercase font-mono bg-white/5 text-zinc-400 px-2 py-0.5 rounded border border-white/10">
+                                          📍 {g.location}
+                                        </span>
+                                        <span className="text-[#D4AF37] text-xs font-mono font-bold">• {g.date || "Date Récente"}</span>
+                                      </div>
+
+                                      <div>
+                                        <h4 className="text-md font-sans font-black text-white hover:text-[#D4AF37] transition-all">
+                                          {g.title}
+                                        </h4>
+                                        <p className="text-[11px] font-sans text-zinc-400 leading-relaxed mt-1">
+                                          {g.description}
+                                        </p>
+                                      </div>
+
+                                      <div className="flex items-center justify-between pb-3 border-b border-white/5 flex-wrap gap-2">
+                                        <span className="text-[9px] uppercase font-mono text-zinc-500 font-bold">
+                                          Organisé par : <strong className="text-zinc-300">{g.organizerName}</strong>
+                                        </span>
+                                        <span className="text-[9px] font-mono text-[#D4AF37]">
+                                          👨‍🎤 {g.applicantsCount + (hasApplied ? 1 : 0)} postulants
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    <div className="mt-4 flex items-center justify-between flex-wrap gap-3">
+                                      <div>
+                                        <span className="text-[8px] uppercase font-mono text-zinc-500 block font-bold">VALEUR DU CACHET :</span>
+                                        <strong className="text-lg font-sans font-black text-[#D4AF37] tracking-tight">
+                                          {(g.budget || 250000).toLocaleString("fr-FR")} FCFA
+                                        </strong>
+                                      </div>
+
+                                      <button
+                                        onClick={() => {
+                                          if (hasApplied) return;
+                                          setAppliedGombos(prev => [...prev, g.id]);
+                                          audioSynth.playValidationSuccess();
+                                          addToTerminal(`[🎼 CONTRAT] Soumission de portance sur : ${g.title}`);
+                                        }}
+                                        className={`px-5 py-2.5 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 shadow-md ${
+                                          hasApplied
+                                            ? "bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 cursor-not-allowed"
+                                            : "bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] hover:shadow-[0_0_15px_rgba(212,175,55,0.25)] cursor-pointer"
+                                        }`}
+                                      >
+                                        {hasApplied ? "✓ DOSSIER DE SOUVERAINETÉ TRANSMIS" : "DÉCROCHER LE CACHET ! 🎯"}
+                                      </button>
+                                    </div>
+                                    
+                                    {hasApplied && (
+                                      <motion.p
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="text-[9px] text-emerald-400 font-mono mt-3 border-t border-emerald-500/10 pt-2 text-center"
+                                      >
+                                        ✓ Votre candidature d'artiste a été ancrée au tambour d'AFRIGOMBO !
+                                      </motion.p>
+                                    )}
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* RIGHT COLUMN: RECENT POSTS ECHOS D'ARTISTES */}
+                      {(terrainTab === "all" || terrainTab === "musicien") && (
+                        <div className={`${terrainTab === "musicien" ? "lg:col-span-12" : "lg:col-span-5"} space-y-5`}>
+                          <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-3 bg-[#D4AF37] rounded-full" />
+                            <h3 className="text-sm font-sans font-black text-white uppercase tracking-wider">
+                              Murmures & Alliances Showbiz
+                            </h3>
+                          </div>
+
+                          {filteredFeedPosts.length === 0 ? (
+                            <div className="p-10 text-center rounded-2xl bg-zinc-900/40 border border-white/5 text-zinc-500 text-xs font-mono">
+                              Aucune mise à jour trouvée sur Le Terrain.
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {filteredFeedPosts.map(p => {
+                                const isLiked = likedPosts.includes(p.id);
+                                return (
+                                  <div key={p.id} className="bg-[#121214] border border-zinc-800 rounded-2xl p-4.5 space-y-3">
+                                    <div className="flex justify-between items-start gap-2">
+                                      <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-full bg-zinc-800 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] font-black text-xs font-mono">
+                                          {p.authorArtisticName?.charAt(0)}
+                                        </div>
+                                        <div>
+                                          <h5 className="text-[11px] font-sans font-black text-white uppercase">
+                                            {p.authorArtisticName}
+                                          </h5>
+                                          <span className="text-[8px] font-mono text-zinc-500 block">
+                                            {p.authorName} • CI
+                                          </span>
+                                        </div>
+                                      </div>
+                                      
+                                      <span className="text-[7px] font-mono text-zinc-500">
+                                        {p.timestamp ? new Date(p.timestamp).toLocaleDateString() : "Live"}
+                                      </span>
+                                    </div>
+
+                                    <p className="text-[11px] font-sans text-zinc-300 leading-normal bg-zinc-950 p-2.5 rounded-lg border border-white/5">
+                                      {p.content}
+                                    </p>
+
+                                    {p.isFlagged && (
+                                      <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-2 text-[8px] font-mono text-red-400 uppercase">
+                                        ⚠️ SIGNALÉ : {p.flagReason || "Contenu révisé"}
+                                      </div>
+                                    )}
+
+                                    <div className="flex items-center gap-3 pt-1 text-[10px] font-mono text-zinc-400">
+                                      <button
+                                        onClick={() => {
+                                          if (isLiked) {
+                                            setLikedPosts(prev => prev.filter(id => id !== p.id));
+                                          } else {
+                                            setLikedPosts(prev => [...prev, p.id]);
+                                            audioSynth.playValidationSuccess();
+                                          }
+                                        }}
+                                        className={`flex items-center gap-1 transition-colors hover:text-red-400 cursor-pointer ${isLiked ? "text-red-500 font-bold" : ""}`}
+                                      >
+                                        <Heart className={`w-3.5 h-3.5 ${isLiked ? "fill-current" : ""}`} /> 
+                                        <span>{p.likes + (isLiked ? 1 : 0)} vibration</span>
+                                      </button>
+                                      
+                                      <span className="text-zinc-700">•</span>
+                                      <span>💬 {p.comments} parlers</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                    </div>
+
+                    {/* =========================================================================
+                                             FOOTER COMPLETE SECTION
+                       ========================================================================= */}
+                    <footer className="mt-16 border-t border-zinc-800 bg-[#070708] rounded-3xl p-6 sm:p-8 space-y-6">
+                      <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-zinc-900">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center">
+                            <Flame className="text-[#D4AF37] w-5 h-5 animate-bounce" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-sans font-black text-white uppercase tracking-widest block leading-tight">Y'A GOMBO MUSIC</span>
+                            <span className="text-[7.5px] uppercase font-mono tracking-widest text-[#D4AF37]/75 font-black block">Elite Sovereignty Consortium</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-mono text-zinc-400">
+                          <button
+                            onClick={() => {
+                              setActiveMenu("terms");
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="hover:text-[#D4AF37] transition-all cursor-pointer font-bold"
+                          >
+                            CGU
+                          </button>
+                          <span className="text-zinc-800">•</span>
+                          <button
+                            onClick={() => {
+                              setActiveMenu("privacy");
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="hover:text-[#D4AF37] transition-all cursor-pointer font-bold"
+                          >
+                            CONFIDENTIALITÉ
+                          </button>
+                          <span className="text-zinc-800">•</span>
+                          <button
+                            onClick={() => {
+                              setActiveMenu("delete_account");
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="text-red-500/80 hover:text-red-400 hover:underline transition-all cursor-pointer font-bold"
+                          >
+                            SUPPRIMER COMPTE
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[9px] font-mono text-zinc-500 text-center sm:text-left">
+                        <p>
+                          AFRIGOMBO SHOWBIZ • Conçu avec rigueur et prestige pour les maîtres de scène en Côte d'Ivoire.
+                        </p>
+                        <p>
+                          © 2026. Souveraineté Artistique Garantie.
+                        </p>
+                      </div>
+                    </footer>
+
+                  </div>
+                );
+              })()}
+
+              {/* 2. LES VIBES - SEARCH FOR OTHER ARTISTS & alliances */}
+              {activeMenu === "user_vibes" && (() => {
+                const searchStr = globalSearchTerm.toLowerCase();
+                const filteredArtists = users.filter(u => 
+                  u.artisticName.toLowerCase().includes(searchStr) ||
+                  u.commune.toLowerCase().includes(searchStr) ||
+                  (u.specialties && u.specialties.some(s => s.toLowerCase().includes(searchStr)))
+                );
+
+                return (
+                  <div className="space-y-6 animate-fadeIn pb-24">
+                    <div className="p-5 rounded-2xl bg-[#121214] border border-[#D4AF37]/15">
+                      <h3 className="text-md font-sans font-black text-white uppercase tracking-wide">
+                        🔍 Les Vibes : Moteur de Recherche d'Alliances
+                      </h3>
+                      <p className="text-xs text-zinc-400 mt-1">
+                        Découvrez d'autres virtuoses à Abidjan, explorez leurs spécialités et scellez des partenariats artistiques prestigieux.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredArtists.map(artist => (
+                        <motion.div
+                          key={artist.id}
+                          whileHover={{ scale: 1.015, y: -3 }}
+                          className="bg-[#121214] rounded-2xl border border-zinc-800/80 p-5 space-y-4 flex flex-col justify-between"
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-full border border-[#D4AF37]/25 overflow-hidden bg-black flex items-center justify-center font-bold font-mono text-md text-[#D4AF37]">
+                                {artist.avatarUrl ? (
+                                  <img src={artist.avatarUrl} alt={artist.artisticName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                ) : (
+                                  artist.artisticName.charAt(0)
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-sans font-black text-white truncate">
+                                  {artist.artisticName}
+                                </h4>
+                                <span className="text-[10px] uppercase font-mono text-zinc-500">
+                                  📍 {artist.commune}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-mono text-zinc-500 uppercase block font-bold">SPÉCIALITÉS D'ALLIANCE :</span>
+                              <div className="flex flex-wrap gap-1">
+                                {(artist.specialties || ["Virtuose multi-instrumental"]).map((s, idx) => (
+                                  <span key={idx} className="text-[8px] font-mono bg-white/5 border border-white/10 text-zinc-300 px-1.5 py-0.5 rounded">
+                                    {s}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <p className="text-[10px] text-zinc-400 leading-snug italic bg-zinc-950 p-2.5 rounded-lg border border-white/5">
+                              "{artist.bio || "Ce virtuose de scène cultive l'excellence sans fard à Abidjan."}"
+                            </p>
+                          </div>
+
+                          <div className="border-t border-zinc-950 pt-3.5 flex items-center justify-between">
+                            <div className="text-left">
+                              <span className="text-[8px] uppercase font-mono text-zinc-500 block">SCORE ACADÉMIE :</span>
+                              <span className="text-xs font-mono font-bold text-[#D4AF37]">
+                                Rang {artist.performance?.level || "3"} / 5
+                              </span>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                audioSynth.playValidationSuccess();
+                                addToTerminal(`[🎼 ALLIANCE] Proposition de raccordement d'or envoyée à : ${artist.artisticName}`);
+                                alert(`Demande d'alliance d'or notifiée ! Notre transmetteur a fait vibrer les tambours de ${artist.artisticName}.`);
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-[#0B0B0B] text-[10px] font-mono font-black border border-[#D4AF37]/35 uppercase tracking-wider transition-all cursor-pointer"
+                            >
+                              Proposer une Alliance 🤝
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 3. USER PUBLISH VIEW */}
+              {activeMenu === "user_publish" && (() => {
+                const triggerPubSubmit = () => {
+                  const activeArtist = users.find(u => u.id === activeArtistId) || users[0];
+                  
+                  if (newPubType === "post") {
+                    if (!newPostContent.trim()) {
+                      alert("Veuillez renseigner le contenu de votre message murmure !");
+                      return;
+                    }
+                    const newP: Post = {
+                      id: "post_new_" + Date.now(),
+                      userId: activeArtistId,
+                      authorName: activeArtist.name,
+                      authorArtisticName: activeArtist.artisticName,
+                      content: newPostContent,
+                      likes: 0,
+                      comments: 0,
+                      isFlagged: false,
+                      timestamp: new Date().toISOString()
+                    };
+                    setPosts(prev => [newP, ...prev]);
+                    addToTerminal(`[🎼 PUBLICATION] Nouveau murmure d'or diffusé sur Le Terrain !`);
+                  } else {
+                    if (!newGomboTitle.trim() || !newGomboDesc.trim()) {
+                      alert("Veuillez renseigner un titre et une description prestigieuse !");
+                      return;
+                    }
+                    const newG: Gombo = {
+                      id: "gombo_new_" + Date.now(),
+                      title: "🎖️ " + newGomboTitle,
+                      description: newGomboDesc,
+                      budget: newGomboPrice,
+                      commissionRate: 0.10,
+                      location: newGomboCommune,
+                      organizerId: activeArtistId,
+                      organizerName: activeArtist.artisticName,
+                      timestamp: new Date().toISOString(),
+                      applicantsCount: 0,
+                      status: "open",
+                      isBoosted: false,
+                      date: "Date Souveraine"
+                    };
+                    setGombos(prev => [newG, ...prev]);
+                    addToTerminal(`[🎼 CONTRAT] Nouveau cachet (Gombo) d'honneur ouvert sur Le Terrain !`);
+                  }
+
+                  // Reset inputs
+                  setNewPostContent("");
+                  setNewGomboTitle("");
+                  setNewGomboDesc("");
+                  audioSynth.playValidationSuccess();
+                  setActiveMenu("user_terrain");
+                };
+
+                return (
+                  <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn pb-24">
+                    <div className="bg-[#121214] border border-[#D4AF37]/20 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+                      <div className="border-b border-white/5 pb-4">
+                        <span className="text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] font-bold">TRANSMETTEUR INTEGRÉ</span>
+                        <h3 className="text-xl font-display font-black text-white">PUBLIER SUR LE TERRAIN</h3>
+                        <p className="text-xs text-zinc-400 mt-1">
+                          Votre message sera retransmis à travers toute la république du Showbiz dans la seconde.
+                        </p>
+                      </div>
+
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">NATURE DE LA PORTANCE :</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setNewPubType("post")}
+                            className={`p-3.5 rounded-xl border text-xs font-bold uppercase transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
+                              newPubType === "post"
+                                ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]"
+                                : "bg-black/30 border-zinc-800 text-zinc-400 hover:text-white"
+                            }`}
+                          >
+                            <MessageSquare className="w-5 h-5" />
+                            <span>Mise à jour d'Actu (Murmure)</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setNewPubType("gombo")}
+                            className={`p-3.5 rounded-xl border text-xs font-bold uppercase transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
+                              newPubType === "gombo"
+                                ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]"
+                                : "bg-black/30 border-zinc-800 text-zinc-400 hover:text-white"
+                            }`}
+                          >
+                            <Briefcase className="w-5 h-5" />
+                            <span>Ouvrir un Cachet (Contrat)</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {newPubType === "post" ? (
+                        <div className="space-y-4 text-left">
+                          <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">MURMURE À TRANSMETTRE :</label>
+                          <textarea
+                            value={newPostContent}
+                            onChange={(e) => setNewPostContent(e.target.value)}
+                            placeholder="Que se passe-t-il sur la scène ce soir ? Laissez votre empreinte..."
+                            className="w-full h-32 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3.5 text-xs text-white placeholder-zinc-600 focus:outline-none transition-all resize-none font-sans"
+                          />
+                        </div>
+                      ) : (
+                        <div className="space-y-4 text-left">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">TITRE SPECTACULAIRE :</label>
+                              <input
+                                type="text"
+                                value={newGomboTitle}
+                                onChange={(e) => setNewGomboTitle(e.target.value)}
+                                placeholder="Concert live, Showcase VIP..."
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none placeholder-zinc-600 font-sans"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">COMMUNE D'IMPACT :</label>
+                              <select
+                                value={newGomboCommune}
+                                onChange={(e) => setNewGomboCommune(e.target.value)}
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-sans cursor-pointer"
+                              >
+                                {IVORIAN_COMMUNES.map(c => (
+                                  <option key={c} value={c} className="bg-black text-white">{c}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">VALEUR DU CACHET (FCFA) :</label>
+                              <input
+                                type="number"
+                                value={newGomboPrice}
+                                onChange={(e) => setNewGomboPrice(parseInt(e.target.value) || 0)}
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DESCRIPTION DE LA PRESTATION :</label>
+                            <textarea
+                              value={newGomboDesc}
+                              onChange={(e) => setNewGomboDesc(e.target.value)}
+                              placeholder="Quels types d'instruments recherchez-vous ? Règle de cachets, horaires..."
+                              className="w-full h-28 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-xs text-white placeholder-zinc-600 focus:outline-none transition-all resize-none font-sans"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="pt-4 border-t border-white/5 flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setActiveMenu("user_terrain")}
+                          className="flex-1 py-3 text-xs font-mono font-bold uppercase rounded-xl border border-zinc-800 text-zinc-400 hover:bg-white/5 transition-all cursor-pointer"
+                        >
+                          Annuler
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={triggerPubSubmit}
+                          className="flex-1 py-3 text-xs font-mono font-black uppercase rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] transition-all cursor-pointer shadow-md"
+                        >
+                          Publier sur Le Terrain 📡
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 4. PRIVACY PAGE DIRECT ANCHOR */}
+              {activeMenu === "privacy" && (
+                <div className="animate-fadeIn">
+                  <PrivacyPage onBack={() => setActiveMenu("user_terrain")} />
+                </div>
+              )}
+
+              {/* 5. TERMS PAGE DIRECT ANCHOR */}
+              {activeMenu === "terms" && (
+                <div className="animate-fadeIn">
+                  <TermsPage onBack={() => setActiveMenu("user_terrain")} />
+                </div>
+              )}
+
+              {/* 6. DELETE ACCOUNT DIRECT ANCHOR */}
+              {activeMenu === "delete_account" && (
+                <div className="animate-fadeIn">
+                  <DeleteAccountPage onBack={() => setActiveMenu("user_terrain")} />
+                </div>
+              )}
+
               {activeMenu === "user_heritage" && (() => {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste sélectionné.</p>;
@@ -4902,6 +5592,77 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             </button>
           </div>
         </motion.div>
+      )}
+
+      {/* =========================================================================
+                                     FIXED BOTTOM NAVIGATION BAR
+         ========================================================================= */}
+      {perspective === "user" && (
+        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-[#0B0B0B]/95 sm:bg-[#121214]/95 backdrop-blur-md border-t sm:border border-zinc-800/80 p-3 px-6 sm:px-8 flex justify-between sm:gap-12 items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_30px_rgb(0,0,0,0.8)] w-full sm:w-auto min-w-[320px] max-w-lg mx-auto">
+          <button
+            onClick={() => {
+              setActiveMenu("user_terrain");
+              audioSynth.playValidationSuccess();
+            }}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none ${
+              activeMenu === "user_terrain" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Flame className="w-5 h-5" />
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Le Terrain</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveMenu("user_vibes");
+              audioSynth.playValidationSuccess();
+            }}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none ${
+              activeMenu === "user_vibes" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Search className="w-5 h-5" />
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Les Vibes</span>
+          </button>
+
+          {/* Central floating golden plus button */}
+          <button
+            onClick={() => {
+              setActiveMenu("user_publish");
+              audioSynth.playValidationSuccess();
+            }}
+            className="w-11 h-11 -mt-6 rounded-full bg-[#D4AF37] hover:bg-[#B48F17] flex items-center justify-center text-[#0B0B0B] shadow-[0_5px_15px_rgba(212,175,55,0.4)] hover:shadow-[0_8px_25px_rgba(212,175,55,0.55)] transition-all transform hover:scale-110 cursor-pointer border border-[#0B0B0B] active:scale-95"
+            title="Publier sur Le Terrain"
+          >
+            <Plus className="w-6 h-6 stroke-[3.5]" />
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveMenu("user_renforts");
+              audioSynth.playValidationSuccess();
+            }}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none ${
+              activeMenu === "user_renforts" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Star className="w-5 h-5" />
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Renfort</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveMenu("user_mes_gombos");
+              audioSynth.playValidationSuccess();
+            }}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none ${
+              activeMenu === "user_mes_gombos" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Briefcase className="w-5 h-5" />
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Mes Gombos</span>
+          </button>
+        </div>
       )}
 
       {/* =========================================================================

@@ -250,99 +250,120 @@ export default function GomboIdUserDashboard({
                                  GOMBO ID CARD (AFRITRUST TRUST ID STYLE)
          ========================================================================= */}
       <motion.div
-        whileHover={{ scale: 1.02, y: -3 }}
-        className="relative overflow-hidden rounded-3xl border-2 border-[#D4AF37]/50 bg-gradient-to-br from-[#0B0B0C] via-[#050506] to-[#010102] p-8 shadow-[0_15px_45px_rgba(212,175,55,0.12)] cursor-pointer group transition-all duration-300"
-        onClick={() => setIsOpen(true)}
+        whileHover={{ scale: 1.01, y: -2 }}
+        className="relative overflow-hidden rounded-3xl border border-[#D4AF37]/35 bg-[#121214] p-6 sm:p-8 shadow-[0_0_30px_rgba(212,175,55,0.08)] transition-all duration-300"
       >
-        {/* Holographic glowing lines background */}
-        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#D4AF37]/30 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-0 w-32 h-32 bg-contain bg-[#D4AF37]/5 rounded-bl-full pointer-events-none border-l border-b border-[#D4AF37]/10" />
+        {/* Subtle decorative security grids in background */}
+        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-[#D4AF37]/10 to-transparent rounded-full blur-2xl pointer-events-none" />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+        {/* Digital ID Header Banner */}
+        <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-4 mb-6">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-mono tracking-widest font-black text-white/50 uppercase">
+              RÉPUBLIQUE DU SHOWBIZ • GOMBO TRUST ID
+            </span>
+          </div>
+          {currentUser.kycStatus === "approved" ? (
+            <span className="text-[9px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+              AUTHENTIFIÉ ✓
+            </span>
+          ) : (
+            <span className="text-[9px] font-mono bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+              PERSPECTIVE DE SOUVERAINETÉ
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col md:flex-row items-start justify-between gap-6">
           
+          {/* Main ID Details Block */}
           <div className="flex items-center gap-5">
-            {/* Avatar / Holographic placeholder wrapper */}
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full border border-[#D4AF37]/50 bg-black flex items-center justify-center font-bold text-2xl text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] overflow-hidden">
+            {/* Avatar section of Gombo ID card */}
+            <div className="relative shrink-0">
+              <div className="w-20 h-20 rounded-full border-2 border-[#D4AF37] bg-[#0B0B0B] flex items-center justify-center font-bold text-3xl text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.25)] overflow-hidden">
                 {currentUser.avatarUrl ? (
-                  <img src={currentUser.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={currentUser.avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   currentUser.artisticName.charAt(0)
                 )}
               </div>
               {currentUser.kycStatus === "approved" && (
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#D4AF37] border-2 border-black flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.8)]">
-                  <Check className="w-3.5 h-3.5 text-black stroke-[3]" />
+                <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#D4AF37] border-2 border-[#121214] flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.6)]">
+                  <Award className="w-3.5 h-3.5 text-black stroke-[3]" />
                 </div>
               )}
             </div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase tracking-widest font-mono text-[#D4AF37] font-semibold">AFRIGOMBO ELITE</span>
-                <span className="h-1 w-1 bg-white/20 rounded-full" />
-                <span className="text-[10px] lowercase font-mono text-[#F5F5F5]/40">{currentUser.email}</span>
-              </div>
-              <h3 className="text-xl font-display font-semibold text-white tracking-tight flex items-center gap-2">
-                {currentUser.artisticName}
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-2xl font-display font-black text-white tracking-tight">
+                  {currentUser.artisticName}
+                </h3>
                 {currentUser.kycStatus === "approved" && (
-                  <span className="text-[10px] bg-gradient-to-r from-[#D4AF37] to-[#F5F5F5] text-black px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow">
-                    Talent Certifié
+                  <span className="inline-flex items-center gap-1 text-[9px] bg-[#D4AF37] text-black px-2 py-0.5 rounded font-black uppercase tracking-wider shadow">
+                    ★ ARTISTE CERTIFIÉ
                   </span>
                 )}
-              </h3>
-
-              {/* Rating indicator */}
-              {(currentUser.averageRating !== undefined && currentUser.ratingCount !== undefined && currentUser.ratingCount > 0) && (
-                <div className="flex items-center gap-1.5 text-xs text-[#D4AF37] font-mono">
-                  <span className="text-orange-500 text-sm">★</span>
-                  <span className="font-bold text-white">{currentUser.averageRating}</span>
-                  <span className="text-white/40">({currentUser.ratingCount} avis)</span>
-                </div>
-              )}
+              </div>
+              <p className="text-xs text-white/60 font-medium">Nom civil : {currentUser.name}</p>
               
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                {currentUser.gomboIdNumber ? (
-                  <span className="font-mono font-bold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-2 py-0.5 rounded">
-                    {currentUser.gomboIdNumber}
-                  </span>
-                ) : (
-                  <span className="font-mono text-white/50 italic text-[11px]">
-                    Identifiant en attente de certification
-                  </span>
-                )}
-
-                <span className="text-[#F5F5F5]/40">•</span>
-                <span className="text-xs text-white/60">{currentUser.commune}</span>
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 pt-1.5">
+                <span className="text-[10px] uppercase font-mono bg-white/5 border border-white/10 text-white/50 px-2 py-0.5 rounded">
+                  {currentUser.gomboIdNumber || "ID_ASSESSMENT_PENDING"}
+                </span>
+                <span className="text-[#D4AF37] font-mono text-[10px]">📍 {currentUser.commune}</span>
+                <span className="text-white/30">•</span>
+                <span className="text-[10px] text-zinc-400 font-semibold">{currentUser.role === "admin" ? "Sénateur / Admin" : "Musicien Professionnel"}</span>
               </div>
             </div>
           </div>
 
-          {/* Right state action block */}
-          <div className="flex flex-col items-start md:items-end gap-2 bg-black/40 border border-white/5 p-3.5 rounded-xl min-w-[200px]">
-            <span className="text-[9px] uppercase font-mono text-[#F5F5F5]/40">Statut GOMBO ID</span>
-            <div className={`px-2.5 py-1 text-xs rounded-full font-bold tracking-wide uppercase border ${statusInfo.color}`}>
-              {statusInfo.label}
+          {/* Micro stats and certification badge */}
+          <div className="w-full md:w-auto flex flex-col sm:flex-row md:flex-col items-stretch md:items-end gap-3 bg-black/40 border border-white/5 p-4 rounded-2xl min-w-[220px]">
+            <div className="flex-1">
+              <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">STATUT DE L'EMPREINTE :</span>
+              <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-black tracking-wide uppercase border ${statusInfo.color}`}>
+                {statusInfo.label}
+              </span>
             </div>
             
-            {currentUser.kycSubmittedDate && (
-              <span className="text-[10px] font-mono text-[#F5F5F5]/40">
-                Demande du : {currentUser.kycSubmittedDate}
-              </span>
-            )}
-            
-            {currentUser.kycApprovedDate && (
-              <span className="text-[10px] font-mono text-emerald-400">
-                Certifié le : {currentUser.kycApprovedDate}
-              </span>
-            )}
-
-            <span className="text-[10px] text-[#D4AF37]/80 hover:text-[#D4AF37] font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-all mt-1">
-              Gérer ma certification <ArrowRight className="w-3.5 h-3.5" />
-            </span>
+            <div className="text-left md:text-right border-t md:border-t-0 sm:border-l md:border-l-0 border-white/5 pt-2 sm:pt-0 md:pt-2 sm:pl-3 md:pl-0">
+              <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">NIVEAU DE CONFIANCE :</span>
+              <strong className="text-sm font-sans font-black text-[#D4AF37] block mt-0.5">
+                {currentUser.kycStatus === "approved" ? "99.9% PRESTIGE MAX" : "SOUVERAINETÉ STANDARD"}
+              </strong>
+            </div>
           </div>
 
         </div>
+
+        {/* =========================================================================
+                 MASSIVE "TRUST ID" INTERACTIVE BANNER BUTTON (FULL WIDTH ACTUATOR)
+           ========================================================================= */}
+        <div className="mt-8">
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            onClick={() => setIsOpen(true)}
+            className="w-full py-4 px-6 rounded-2xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] font-display font-black tracking-widest uppercase transition-all duration-300 shadow-[0_0_25px_rgba(212,175,55,0.25)] flex items-center justify-center gap-3 cursor-pointer text-center"
+          >
+            <ShieldCheck className="w-6 h-6 text-[#0B0B0B] stroke-[2.5]" />
+            <span className="text-sm sm:text-base tracking-widest">
+              {currentUser.kycStatus === "none" ? "ACTIVER MON GOMBO ID (TRUST ID) 🛡️" : ""}
+              {currentUser.kycStatus === "pending" ? "GOMBO ID TRANSMIS • VOIR MON DOSSIER ⏳" : ""}
+              {currentUser.kycStatus === "approved" ? "GOMBO ID DE SOUVERAINETÉ CERTIFIÉ ★" : ""}
+              {currentUser.kycStatus === "rejected" ? "GOMBO ID REJETÉ • RETENTER L'IMPACT 🚫" : ""}
+              {currentUser.kycStatus === "info_required" ? "ACTION REQUISE • CORRIGER L'ID 🟡" : ""}
+            </span>
+          </motion.button>
+          
+          <p className="text-center text-[10px] text-zinc-500 font-mono mt-3">
+            La clé d'excellence est régulée par le consortium souverain d'AFRIGOMBO Showbiz.
+          </p>
+        </div>
+
       </motion.div>
 
       {/* =========================================================================
