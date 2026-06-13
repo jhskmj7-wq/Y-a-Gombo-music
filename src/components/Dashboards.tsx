@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { gomboDB, isFirebaseMock } from "../firebase";
 import { UserProfile, Gombo, Application, Reservation, Renfort, RenfortApplication, MusicGroup, ActivityFeedEntry } from "../types";
+import GriotIA from "./GriotIA";
 
 interface DashboardsProps {
   currentUserProfile: UserProfile;
@@ -1289,6 +1290,8 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
 
         </div>
       )}
+      {/* GRIOT IA - Floating Assistant Console */}
+      <GriotIA />
     </div>
   );
 }

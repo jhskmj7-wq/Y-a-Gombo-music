@@ -591,5 +591,13 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // --- 20. SOVEREIGN THRONE CONFIG RULES ---
+    match /throne/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (
+        request.auth.token.email == 'johnsylvesterh@gmail.com' && request.auth.token.email_verified == true
+      );
+    }
+
   }
 }

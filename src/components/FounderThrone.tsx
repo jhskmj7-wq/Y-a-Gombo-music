@@ -32,7 +32,7 @@ import {
 import { User, Gombo, Transaction, Alerte, GomboReview } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { db } from "../lib/firebase";
-import { collection, onSnapshot, doc, updateDoc, query } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, query, setDoc } from "firebase/firestore";
 
 interface FounderThroneProps {
   adminEmail: string;
@@ -88,12 +88,30 @@ export default function FounderThrone({
   onClose
 }: FounderThroneProps) {
   // Enforce access control
-  const AUTHORIZED_FOUNDERS = [
-    "johnsylvesterh@gmail.com",
+  const [founders, setFounders] = useState<string[]>(["johnsylvesterh@gmail.com"]);
+  const [superAdmins, setSuperAdmins] = useState<string[]>([
     "sylvestrehounkpevi777@gmail.com",
     "jhs.kmj7@gmail.com"
-  ];
-  const isAuthorizedFounder = AUTHORIZED_FOUNDERS.includes(adminEmail?.trim().toLowerCase());
+  ]);
+
+  useEffect(() => {
+    if (!db) return;
+    const docRef = doc(db, "throne", "config");
+    const unsub = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (Array.isArray(data.founders)) {
+          setFounders(data.founders.map((e: string) => e.trim().toLowerCase()));
+        }
+        if (Array.isArray(data.superAdmins)) {
+          setSuperAdmins(data.superAdmins.map((e: string) => e.trim().toLowerCase()));
+        }
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const isAuthorizedFounder = founders.includes(adminEmail?.trim().toLowerCase()) || adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com";
 
   // --- 1. TRANSITION IMPÉRIALE STATES ---
   const [showIntro, setShowIntro] = useState(isAuthorizedFounder);
@@ -139,11 +157,7 @@ export default function FounderThrone({
     }
   ]);
 
-  // Protected Super Admins
-  const [superAdmins, setSuperAdmins] = useState<string[]>([
-    "sylvestrehounkpevi777@gmail.com",
-    "jhs.kmj7@gmail.com"
-  ]);
+  // Dynamic Super Admins and Co-Founders are loaded synchronically above
 
   // Univers Afri App specifications
   const [afriApps, setAfriApps] = useState<AfriApp[]>([
@@ -307,6 +321,19 @@ export default function FounderThrone({
     await saveToFirestore("journal_imperial", newLog.id, newLog);
   };
 
+  const saveThroneConfigToFirestore = async (newFounders: string[], newSuperAdmins: string[]) => {
+    if (!db) return;
+    try {
+      const docRef = doc(db, "throne", "config");
+      await setDoc(docRef, {
+        founders: newFounders,
+        superAdmins: newSuperAdmins
+      }, { merge: true });
+    } catch (err) {
+      console.error("Error saving throne config to Firestore:", err);
+    }
+  };
+
   // --- 7. FOUNDER INTERACTIVE DECREES ---
   const handleAddSuperAdminEmail = async () => {
     const email = newSuperAdminEmail.trim().toLowerCase();
@@ -327,18 +354,41 @@ export default function FounderThrone({
     setSuperAdmins(updated);
     setNewSuperAdminEmail("");
     await logToImperialJournal(`Désignation et élévation de l'administrateur d'élite : ${email}`, "royal");
+    await saveThroneConfigToFirestore(founders, updated);
     alert(`👑 L'utilisateur ${email} a été élevé au rang de Super Administrateur avec succès.`);
   };
 
   const handleRevokeSuperAdmin = async (email: string) => {
-    if (email === "johnsylvesterh@gmail.com") {
-      alert("🛑 ACTION DESTRUCTIVE BLOQUÉE\n\nLe Trône du Fondateur est immuable et ancré dans le noyau d'AFRIGOMBO.");
+    const cleanedEmail = email.trim().toLowerCase();
+    if (cleanedEmail === "johnsylvesterh@gmail.com") {
+      alert("🛑 ACTION DESTRUCTIVE BLOQUÉE\n\nLe Trône du fondateur est immuable et ancré dans le noyau d'AFRIGOMBO.");
       return;
     }
-    const updated = superAdmins.filter((a) => a !== email);
+    const updated = superAdmins.filter((a) => a !== cleanedEmail);
     setSuperAdmins(updated);
-    await logToImperialJournal(`Révocation totale des droits d'excellence administrative pour : ${email}`, "danger");
-    alert(`🛡️ L'adresse ${email} a été retirée de la hiérarchie de sécurité.`);
+    await logToImperialJournal(`Révocation totale des droits d'excellence administrative pour : ${cleanedEmail}`, "danger");
+    await saveThroneConfigToFirestore(founders, updated);
+    alert(`🛡️ L'adresse ${cleanedEmail} a été retirée de la hiérarchie de sécurité.`);
+  };
+
+  const handlePromoteToFounder = async (email: string) => {
+    const cleanedEmail = email.trim().toLowerCase();
+    if (!cleanedEmail) return;
+    if (founders.includes(cleanedEmail)) {
+      alert("👑 Cet utilisateur est déjà Co-Fondateur du Trône.");
+      return;
+    }
+    
+    // Remove from super admins and add to founders
+    const updatedSuperAdmins = superAdmins.filter(a => a !== cleanedEmail);
+    const updatedFounders = [...founders, cleanedEmail];
+    
+    setSuperAdmins(updatedSuperAdmins);
+    setFounders(updatedFounders);
+    
+    await logToImperialJournal(`Souveraineté suprême partagée : Élévation de ${cleanedEmail} au rang de Co-Fondateur du Trône`, "royal");
+    await saveThroneConfigToFirestore(updatedFounders, updatedSuperAdmins);
+    alert(`👑 Félicitations ! ${cleanedEmail} a été promu au rang suprême de Co-Fondateur du Trône.`);
   };
 
   const handleToggleCompanionApp = async (appId: string) => {
@@ -970,36 +1020,75 @@ export default function FounderThrone({
                   </div>
 
                   {/* Render hierarchy */}
-                  <div className="space-y-3">
-                    <span className="text-[10px] text-zinc-500 uppercase font-mono block font-bold">
-                      Liste des Administrateurs Habilités (Simulateur d'Énergie)
-                    </span>
+                  <div className="space-y-4">
+                    {/* Founders & Co-founders */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] text-zinc-500 uppercase font-mono block font-bold">
+                        👑 Ligue Suprême des Fondateurs (Accès Trône Souverain)
+                      </span>
+                      {founders.map((email) => (
+                        <div
+                          key={email}
+                          className="flex justify-between items-center p-4 bg-gradient-to-r from-amber-500/10 to-transparent border border-[#D4AF37]/25 hover:border-[#D4AF37]/55 rounded-xl text-xs font-mono transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
+                            <span className="text-white font-black truncate max-w-[180px] sm:max-w-none">
+                              {email}
+                            </span>
+                          </div>
 
-                    {superAdmins.map((email) => (
-                      <div
-                        key={email}
-                        className="flex justify-between items-center p-4 bg-black border border-white/5 hover:border-zinc-900 rounded-xl text-xs font-mono transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="w-2.5 h-2.5 bg-[#D4AF37] rounded-full animate-pulse" />
-                          <span className="text-white font-black truncate max-w-[200px] sm:max-w-none">
-                            {email}
+                          <span className="text-[9px] text-[#D4AF37] bg-[#D4AF37]/15 border border-[#D4AF37]/35 px-2.5 py-1 rounded-md font-bold uppercase tracking-wider">
+                            {email === "johnsylvesterh@gmail.com" ? "Fondateur Suprême" : "Co-Fondateur"}
                           </span>
                         </div>
+                      ))}
+                    </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-[9px] text-zinc-650 bg-white/5 px-2 py-1 rounded">
-                            Standard
-                          </span>
-                          <button
-                            onClick={() => handleRevokeSuperAdmin(email)}
-                            className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-black font-black uppercase text-[9px] py-1 px-3.5 rounded-lg transition-all"
+                    {/* Standard Super Admins */}
+                    <div className="space-y-2 pt-2">
+                      <span className="text-[10px] text-zinc-500 uppercase font-mono block font-bold">
+                        👥 Conseil des Super Administrateurs (Gestion Standard)
+                      </span>
+
+                      {superAdmins.length === 0 ? (
+                        <p className="text-xs text-zinc-650 italic font-mono py-2 pl-2">Aucun Super Administrateur au Conseil.</p>
+                      ) : (
+                        superAdmins.map((email) => (
+                          <div
+                            key={email}
+                            className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center p-4 bg-black border border-white/5 hover:border-zinc-900 rounded-xl text-xs font-mono transition-colors animate-fadeIn"
                           >
-                            Révoquer
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                            <div className="flex items-center gap-3">
+                              <span className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse" />
+                              <span className="text-white font-black truncate max-w-[200px] sm:max-w-none">
+                                {email}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                              <span className="text-[9px] text-zinc-650 bg-white/5 px-2 py-1 rounded">
+                                Super Admin
+                              </span>
+                              
+                              <button
+                                onClick={() => handlePromoteToFounder(email)}
+                                className="bg-amber-500/10 hover:bg-amber-500 border border-amber-500/20 hover:border-transparent text-amber-400 hover:text-black font-black uppercase text-[9px] py-1 px-2.5 rounded-lg transition-all"
+                              >
+                                👑 Promouvoir Fondateur
+                              </button>
+
+                              <button
+                                onClick={() => handleRevokeSuperAdmin(email)}
+                                className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-black font-black uppercase text-[9px] py-1 px-3 rounded-lg transition-all"
+                              >
+                                Révoquer
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
                     
                     {/* Conserved admin visual validation rules */}
                     <div className="p-4 bg-teal-950/20 border border-teal-900/45 rounded-xl flex items-start gap-4 mt-6">

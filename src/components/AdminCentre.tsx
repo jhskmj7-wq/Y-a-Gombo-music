@@ -309,6 +309,35 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   // Simulated admin email & Super Admin unlocks state
   const [adminEmail, setAdminEmail] = useState<string>("admin@gombo.ci");
   const [isSuperUnlocked, setIsSuperUnlocked] = useState<boolean>(false);
+
+  // Dynamic real-time Firestore configs mapping for the Sovereignty Throne
+  const [dynamicFounders, setDynamicFounders] = useState<string[]>(["johnsylvesterh@gmail.com"]);
+  const [dynamicSuperAdmins, setDynamicSuperAdmins] = useState<string[]>(["sylvestrehounkpevi777@gmail.com", "jhs.kmj7@gmail.com"]);
+
+  useEffect(() => {
+    if (!db) return;
+    const docRef = doc(db, "throne", "config");
+    const unsub = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (Array.isArray(data.founders)) {
+          setDynamicFounders(data.founders.map((e: string) => e.trim().toLowerCase()));
+        }
+        if (Array.isArray(data.superAdmins)) {
+          setDynamicSuperAdmins(data.superAdmins.map((e: string) => e.trim().toLowerCase()));
+        }
+      } else {
+        // Bootstrap config if current user is the root founder
+        if (adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com") {
+          setDoc(docRef, {
+            founders: ["johnsylvesterh@gmail.com"],
+            superAdmins: ["sylvestrehounkpevi777@gmail.com", "jhs.kmj7@gmail.com"]
+          }).catch(err => console.warn("Bootstrap config error:", err));
+        }
+      }
+    });
+    return () => unsub();
+  }, [adminEmail]);
   const [isSuperWelcomeOpen, setIsSuperWelcomeOpen] = useState<boolean>(false);
 
   // Custom Reviews & Gombo completeness state
@@ -596,16 +625,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   // --- SYNC /FOUNDER-THRONE PATH & ACCESS PRIVILEGES ---
   useEffect(() => {
-    const AUTHORIZED_FOUNDERS = [
-      "johnsylvesterh@gmail.com",
-      "sylvestrehounkpevi777@gmail.com",
-      "jhs.kmj7@gmail.com"
-    ];
-
     const currentPath = window.location.pathname;
 
     if (currentPath === "/founder-throne") {
-      const isFounder = AUTHORIZED_FOUNDERS.includes(adminEmail?.trim().toLowerCase());
+      const isFounder = dynamicFounders.includes(adminEmail?.trim().toLowerCase()) || adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com";
       if (isFounder) {
         if (activeMenu !== "super_admin") {
           setActiveMenu("super_admin");
@@ -625,18 +648,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         window.history.pushState({}, "", "/founder-throne");
       }
     }
-  }, [adminEmail, activeMenu]);
+  }, [adminEmail, activeMenu, dynamicFounders]);
 
   // Handle browser back button (popstate)
   useEffect(() => {
     const handlePopState = () => {
-      const AUTHORIZED_FOUNDERS = [
-        "johnsylvesterh@gmail.com",
-        "sylvestrehounkpevi777@gmail.com",
-        "jhs.kmj7@gmail.com"
-      ];
       if (window.location.pathname === "/founder-throne") {
-        const isFounder = AUTHORIZED_FOUNDERS.includes(adminEmail?.trim().toLowerCase());
+        const isFounder = dynamicFounders.includes(adminEmail?.trim().toLowerCase()) || adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com";
         if (isFounder) {
           setActiveMenu("super_admin");
         } else {
@@ -650,7 +668,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [adminEmail, activeMenu]);
+  }, [adminEmail, activeMenu, dynamicFounders]);
 
   // --- AUTOMATIC BACKGROUND MODERATION ROUTINE ("PILOTAGE AUTOMATIQUE") ---
   useEffect(() => {
@@ -1551,7 +1569,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   Analytics & Courbes
                 </button>
 
-                {["johnsylvesterh@gmail.com", "sylvestrehounkpevi777@gmail.com", "jhs.kmj7@gmail.com"].includes(adminEmail?.trim().toLowerCase()) && (
+                {adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com" && (
                   <button
                     onClick={() => {
                       setActiveMenu("super_admin");
