@@ -343,6 +343,29 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [dynamicFounders, setDynamicFounders] = useState<string[]>(["johnsylvesterh@gmail.com"]);
   const [dynamicSuperAdmins, setDynamicSuperAdmins] = useState<string[]>(["sylvestrehounkpevi777@gmail.com", "jhs.kmj7@gmail.com"]);
 
+  const AUTHORIZED_ADMIN_EMAILS = [
+    "admin@gombo.ci",
+    "johnsylvesterh@gmail.com",
+    "sylvestrehounkpevi777@gmail.com",
+    "jhs.kmj7@gmail.com"
+  ];
+
+  const userRole = profile?.role || "invité";
+  const userEmail = currentUser?.email?.toLowerCase() || "";
+  const isAuthorizedAdmin = !!(currentUser && (
+    AUTHORIZED_ADMIN_EMAILS.includes(userEmail) ||
+    userRole === "admin" ||
+    userRole === "super_admin"
+  ));
+  const isAuthorizedSuperFounder = !!(currentUser && userEmail === "jhs.kmj7@gmail.com");
+
+  // Keep adminEmail synced with actual firebase user email for database operations
+  useEffect(() => {
+    if (currentUser?.email) {
+      setAdminEmail(currentUser.email);
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     if (!db) return;
     const docRef = doc(db, "throne", "config");
@@ -657,37 +680,40 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     const currentPath = window.location.pathname;
 
     if (currentPath === "/founder-throne") {
-      const isFounder = dynamicFounders.includes(adminEmail?.trim().toLowerCase()) || adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com";
-      if (isFounder) {
+      if (isAuthorizedSuperFounder) {
         if (activeMenu !== "super_admin") {
           setActiveMenu("super_admin");
-          addToTerminal(`[Trône] Accès direct autorisé via l'URI souveraine.`);
+          setPerspective("admin");
+          addToTerminal(`[Trône] Accès direct autorisé au Fondateur.`);
         }
       } else {
-        // Redirect unauthorized users without leaving a trace
-        addToTerminal(`[SÉCURITÉ] Tentative de contournement URI par non-fondateur bloquée. Redirection immédiate.`);
+        addToTerminal(`[SÉCURITÉ] Tentative de contournement URI Super Admin bloquée.`);
         window.history.replaceState({}, "", "/");
-        if (activeMenu === "super_admin") {
+        setPerspective("user");
+        setActiveMenu("user_terrain");
+      }
+    } else {
+      if (activeMenu === "super_admin") {
+        if (isAuthorizedSuperFounder) {
+          window.history.pushState({}, "", "/founder-throne");
+        } else {
           setActiveMenu("dashboard");
         }
       }
-    } else {
-      // If we are on / but activeMenu is "super_admin", push path
-      if (activeMenu === "super_admin") {
-        window.history.pushState({}, "", "/founder-throne");
-      }
     }
-  }, [adminEmail, activeMenu, dynamicFounders]);
+  }, [currentUser, activeMenu, isAuthorizedSuperFounder]);
 
   // Handle browser back button (popstate)
   useEffect(() => {
     const handlePopState = () => {
       if (window.location.pathname === "/founder-throne") {
-        const isFounder = dynamicFounders.includes(adminEmail?.trim().toLowerCase()) || adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com";
-        if (isFounder) {
+        if (isAuthorizedSuperFounder) {
           setActiveMenu("super_admin");
+          setPerspective("admin");
         } else {
           window.history.replaceState({}, "", "/");
+          setPerspective("user");
+          setActiveMenu("user_terrain");
         }
       } else {
         if (activeMenu === "super_admin") {
@@ -697,7 +723,34 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [adminEmail, activeMenu, dynamicFounders]);
+  }, [currentUser, activeMenu, isAuthorizedSuperFounder]);
+
+  // Watertight access security rules enforcement for administration pages (Level 2 & 3)
+  useEffect(() => {
+    if (perspective === "admin") {
+      if (!currentUser) {
+        setPerspective("user");
+        setActiveMenu("user_terrain");
+        setIsAuthModalOpen(true);
+        addToTerminal("[🛡️ SECURE] Authentification requise pour l'administration.");
+        return;
+      }
+
+      if (!isAuthorizedAdmin) {
+        setPerspective("user");
+        setActiveMenu("user_terrain");
+        alert("🔒 ACCÈS DÉFENDU\n\nVotre compte Gmail d'artiste ne possède pas les accréditations requises pour administrer AFRIGOMBO.");
+        addToTerminal(`[🛡️ SECURE] Accès administratif bloqué pour l'adresse ${currentUser.email}.`);
+        return;
+      }
+
+      if (activeMenu === "super_admin" && !isAuthorizedSuperFounder) {
+        setActiveMenu("dashboard");
+        alert("🔒 ACCÈS FONDATEUR UNIQUE INTERDIT\n\nCe sanctuaire système est réservé au Super Fondateur Unique.");
+        addToTerminal(`[🛡️ SECURE] Tentative d'accès non autorisée au Trône par ${currentUser.email} rejetée.`);
+      }
+    }
+  }, [perspective, activeMenu, currentUser, isAuthorizedAdmin, isAuthorizedSuperFounder]);
 
   // --- AUTOMATIC BACKGROUND MODERATION ROUTINE ("PILOTAGE AUTOMATIQUE") ---
   useEffect(() => {
@@ -1592,17 +1645,19 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   Modifier mon profil
                 </button>
 
-                <button
-                  onClick={() => {
-                    setPerspective("admin");
-                    setActiveMenu("dashboard");
-                    setIsSidebarOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-semibold uppercase text-[#D4AF37] bg-[#D4AF37]/5 hover:bg-[#D4AF37]/15 transition-all duration-205 border border-[#D4AF37]/25 hover:border-[#D4AF37]"
-                >
-                  <ShieldAlert className="w-4 h-4" />
-                  CENTRE DE COMMANDE
-                </button>
+                {isAuthorizedAdmin && (
+                  <button
+                    onClick={() => {
+                      setPerspective("admin");
+                      setActiveMenu("dashboard");
+                      setIsSidebarOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-semibold uppercase text-[#D4AF37] bg-[#D4AF37]/5 hover:bg-[#D4AF37]/15 transition-all duration-205 border border-[#D4AF37]/25 hover:border-[#D4AF37]"
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    CENTRE DE COMMANDE
+                  </button>
+                )}
 
                 {currentUser && (
                   <button
@@ -1796,17 +1851,24 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => {
-                    const confirmLogout = window.confirm("Souhaitez-vous vous déconnecter du salon d'administration ?");
+                  onClick={async () => {
+                    const confirmLogout = window.confirm("Souhaitez-vous vous déconnecter de votre session d'administration ?");
                     if (confirmLogout) {
-                      setPerspective("user");
-                      setActiveArtistId("user_1");
-                      setActiveMenu("user_heritage");
-                      setIsSidebarOpen(false);
-                      addToTerminal("[INFO] Administration fermée. Retour au mode Artiste.");
+                      try {
+                        await logout();
+                        setPerspective("user");
+                        setActiveArtistId("user_1");
+                        setActiveMenu("user_terrain");
+                        setIsSidebarOpen(false);
+                        try { audioSynth.playValidationSuccess(); } catch (err) {}
+                        addToTerminal("[INFO] Administration fermée. Session déconnectée.");
+                      } catch (err: any) {
+                        console.error("Error signing out admin:", err);
+                        alert("Impossible de se déconnecter.");
+                      }
                     }
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 mt-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-red-x-500 text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-205"
+                  className="w-full flex items-center gap-3 px-4 py-3 mt-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-205 cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   Déconnexion
@@ -1889,6 +1951,19 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           </div>
 
           <div className="flex items-center gap-3">
+            {perspective === "admin" && (
+              <button
+                onClick={() => {
+                  setPerspective("user");
+                  setActiveMenu("user_terrain");
+                  addToTerminal("[INFO] Retour au Terrain d'Action.");
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-mono font-bold uppercase text-[#D4AF37] hover:text-black hover:bg-[#D4AF37] border border-[#D4AF37]/30 rounded-lg transition-all cursor-pointer"
+              >
+                ← Retour au Terrain
+              </button>
+            )}
+
             {/* Interactive Search Bar wrapper */}
             <div className="relative hidden sm:block">
               <Search className="absolute left-3 top-2 w-3.5 h-3.5 text-[#F5F5F5]/40" />
