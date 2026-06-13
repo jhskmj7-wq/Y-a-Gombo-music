@@ -72,7 +72,9 @@ import {
   Music,
   Settings,
   Sparkles,
-  Activity
+  Activity,
+  Menu,
+  X
 } from "lucide-react";
 import {
   AreaChart,
@@ -301,6 +303,7 @@ interface AdminCentreProps {
 
 export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
   const [activeMenu, setActiveMenu] = useState<any>("user_heritage");
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
   const [activeArtistId, setActiveArtistId] = useState<string>("user_3");
   const [localSaved, setLocalSaved] = useState<boolean>(true);
@@ -1257,58 +1260,63 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   return (
     <div className="flex h-screen bg-[#0B0B0B] text-[#F5F5F5] font-sans antialiased overflow-hidden">
       
+      {/* BACKDROP FOR SLIDING SIDEBAR */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 transition-opacity duration-300 cursor-pointer pointer-events-auto"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* =========================================================================
-                               ZONE A : SIDEBAR COLONNE FIXE (LEFT)
+                              ZONE A : SIDEBAR COLONNE FIXE (SLIDEOUT DRAWER)
          ========================================================================= */}
-      <aside className="w-72 border-r border-[#D4AF37]/20 bg-[#0B0B0B] flex flex-col justify-between p-6 z-10 shrink-0">
+      <aside className={`fixed inset-y-0 left-0 w-72 border-r border-[#D4AF37]/20 bg-[#0B0B0B] flex flex-col justify-between p-6 z-50 transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} shrink-0`}>
         
         {/* LOGO & HEADING */}
         <div>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-lg bg-[#D4AF37] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)]">
-              <Radio className="text-[#0B0B0B] w-6 h-6" />
+          <div className="flex items-center justify-between gap-2 mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[#D4AF37] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+                <Radio className="text-[#0B0B0B] w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-xl font-display font-bold uppercase tracking-wider text-[#D4AF37]">
+                  Afrigombo
+                </h1>
+                <span className="text-[10px] uppercase font-mono tracking-widest text-[#F5F5F5]/60 block -mt-1">
+                  Elite - Command Center
+                </span>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-display font-bold uppercase tracking-wider text-[#D4AF37]">
-                Afrigombo
-              </h1>
-              <span className="text-[10px] uppercase font-mono tracking-widest text-[#F5F5F5]/60 block -mt-1">
-                Elite - Command Center
-              </span>
-            </div>
+            
+            {/* CLOSE BUTTON */}
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 rounded-lg transition-all focus:outline-none flex items-center justify-center border border-[#D4AF37]/20 hover:border-[#D4AF37] cursor-pointer"
+              title="Fermer le menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           {/* PERSPECTIVE SWITCHER */}
           <div className="mb-6 bg-black border border-[#D4AF37]/30 rounded-xl p-3 space-y-2">
             <span className="text-[9px] uppercase font-mono text-[#D4AF37] block font-bold tracking-wider">🎭 Perspective Actuelle</span>
-            <div className="grid grid-cols-2 gap-1 bg-white/5 p-1 rounded-lg">
-              <button
-                onClick={() => {
-                  setPerspective("user");
-                  setActiveMenu("user_dashboard");
-                }}
-                className={`py-1.5 rounded text-center text-xs font-mono font-bold transition-all ${
-                  perspective === "user" ? "bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black shadow" : "text-white/60 hover:text-white"
-                }`}
-              >
+            
+            {perspective === "user" ? (
+              <div className="py-1.5 rounded text-center text-xs font-mono font-bold bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black shadow">
                 Artiste
-              </button>
-              <button
-                onClick={() => {
-                  setPerspective("admin");
-                  setActiveMenu("dashboard");
-                }}
-                className={`py-1.5 rounded text-center text-xs font-mono font-bold transition-all ${
-                  perspective === "admin" ? "bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black shadow" : "text-white/60 hover:text-white"
-                }`}
-              >
+              </div>
+            ) : (
+              <div className="py-1.5 rounded text-center text-xs font-mono font-bold bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 uppercase">
                 Admin
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Simulated Active Artist Selector (only in user mode) */}
             {perspective === "user" && (
-              <div className="space-y-1 pt-1.5 border-t border-white/5">
+              <div className="space-y-1 pt-1.5 border-t border-[#D4AF37]/20">
                 <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Artiste Actif Simulé :</span>
                 <select
                   value={activeArtistId}
@@ -1337,7 +1345,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             {perspective === "user" ? (
               <>
                 <button
-                  onClick={() => setActiveMenu("user_heritage")}
+                  onClick={() => {
+                    setActiveMenu("user_heritage");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_heritage"
                       ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1349,7 +1360,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("user_gombo_id")}
+                  onClick={() => {
+                    setActiveMenu("user_gombo_id");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_gombo_id"
                       ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1361,7 +1375,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("user_mes_gombos")}
+                  onClick={() => {
+                    setActiveMenu("user_mes_gombos");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_mes_gombos"
                       ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1373,7 +1390,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("user_mes_groupes")}
+                  onClick={() => {
+                    setActiveMenu("user_mes_groupes");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_mes_groupes"
                       ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1385,7 +1405,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("user_renforts")}
+                  onClick={() => {
+                    setActiveMenu("user_renforts");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_renforts"
                       ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1397,7 +1420,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("user_opportunities")}
+                  onClick={() => {
+                    setActiveMenu("user_opportunities");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_opportunities"
                       ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1409,7 +1435,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("user_settings")}
+                  onClick={() => {
+                    setActiveMenu("user_settings");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_settings"
                       ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1421,7 +1450,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("user_notifications")}
+                  onClick={() => {
+                    setActiveMenu("user_notifications");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_notifications"
                       ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1433,7 +1465,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("user_edit_profile")}
+                  onClick={() => {
+                    setActiveMenu("user_edit_profile");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_edit_profile"
                       ? "bg-[#D4AF37] text-black font-semibold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1446,14 +1481,27 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 <button
                   onClick={() => {
+                    setPerspective("admin");
+                    setActiveMenu("dashboard");
+                    setIsSidebarOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all duration-205 border border-[#D4AF37]/20 hover:border-[#D4AF37]"
+                >
+                  <ShieldAlert className="w-4 h-4" />
+                  Perspective Admin
+                </button>
+
+                <button
+                  onClick={() => {
                     const confirmLogout = window.confirm("Souhaitez-vous réinitialiser votre session d'artiste et vous déconnecter ?");
                     if (confirmLogout) {
                       setActiveArtistId("user_1");
                       setActiveMenu("user_heritage");
+                      setIsSidebarOpen(false);
                       addToTerminal("[INFO] Session d'artiste déconnectée. Retour à Ariel Loua.");
                     }
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-205"
+                  className="w-full flex items-center gap-3 px-4 py-2 mt-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-205"
                 >
                   <LogOut className="w-4 h-4" />
                   Déconnexion
@@ -1462,7 +1510,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             ) : (
               <>
                 <button
-                  onClick={() => setActiveMenu("dashboard")}
+                  onClick={() => {
+                    setActiveMenu("dashboard");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
                     activeMenu === "dashboard"
                       ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1474,7 +1525,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("gombos")}
+                  onClick={() => {
+                    setActiveMenu("gombos");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
                     activeMenu === "gombos"
                       ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1486,7 +1540,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("renforts")}
+                  onClick={() => {
+                    setActiveMenu("renforts");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
                     activeMenu === "renforts"
                       ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1498,7 +1555,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("kyc")}
+                  onClick={() => {
+                    setActiveMenu("kyc");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
                     activeMenu === "kyc"
                       ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1510,7 +1570,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("revision")}
+                  onClick={() => {
+                    setActiveMenu("revision");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
                     activeMenu === "revision"
                       ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1522,7 +1585,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("alertes")}
+                  onClick={() => {
+                    setActiveMenu("alertes");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
                     activeMenu === "alertes"
                       ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1534,7 +1600,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("caisse")}
+                  onClick={() => {
+                    setActiveMenu("caisse");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
                     activeMenu === "caisse"
                       ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1546,7 +1615,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("monetisation")}
+                  onClick={() => {
+                    setActiveMenu("monetisation");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
                     activeMenu === "monetisation"
                       ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1558,7 +1630,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
-                  onClick={() => setActiveMenu("analytics")}
+                  onClick={() => {
+                    setActiveMenu("analytics");
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
                     activeMenu === "analytics"
                       ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -1573,6 +1648,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   <button
                     onClick={() => {
                       setActiveMenu("super_admin");
+                      setIsSidebarOpen(false);
                       addToTerminal(`[Trône] Le Fondateur Unique accède à son trône royal.`);
                     }}
                     className={`w-full flex items-center gap-3 px-4 py-3 mt-2 rounded-lg text-xs font-black font-mono uppercase tracking-widest transition-all duration-300 border ${
@@ -1585,6 +1661,35 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     👑 Entrer dans le Trône
                   </button>
                 )}
+
+                <button
+                  onClick={() => {
+                    setPerspective("user");
+                    setActiveMenu("user_heritage");
+                    setIsSidebarOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 mt-4 text-left rounded-lg text-xs font-mono font-bold uppercase text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all duration-205 border border-[#D4AF37]/20 hover:border-[#D4AF37]"
+                >
+                  <Users className="w-4 h-4" />
+                  Perspective Artiste
+                </button>
+
+                <button
+                  onClick={() => {
+                    const confirmLogout = window.confirm("Souhaitez-vous vous déconnecter du salon d'administration ?");
+                    if (confirmLogout) {
+                      setPerspective("user");
+                      setActiveArtistId("user_1");
+                      setActiveMenu("user_heritage");
+                      setIsSidebarOpen(false);
+                      addToTerminal("[INFO] Administration fermée. Retour au mode Artiste.");
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 mt-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-red-x-500 text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-205"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Déconnexion
+                </button>
               </>
             )}
           </nav>
@@ -1624,32 +1729,43 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       <main className="flex-1 bg-[#0B0B0B] flex flex-col overflow-y-auto px-8 py-6">
         
         {/* UPPER STATUS BAR */}
-        <header className="flex justify-between items-center pb-6 border-b border-[#D4AF37]/10 mb-6 shrink-0">
-          <div>
-            <h2 className="text-2xl font-display font-extrabold text-[#F5F5F5] tracking-wide">
-              {activeMenu === "user_heritage" && "Mon Héritage Impérial 🎼"}
-              {activeMenu === "user_gombo_id" && "Mon Gombo ID d'Excellence"}
-              {activeMenu === "user_mes_gombos" && "Mes Gombos & Prestations"}
-              {activeMenu === "user_mes_groupes" && "Mes Alliances d'Orchestre"}
-              {activeMenu === "user_renforts" && "Module de Renforts Scéniques"}
-              {activeMenu === "user_opportunities" && "Opportunités d'Or d'Abidjan"}
-              {activeMenu === "user_settings" && "Paramètres du Transmetteur"}
-              {activeMenu === "user_notifications" && "Les Vibrations du Tam-Tam"}
-              {activeMenu === "user_edit_profile" && "Modifier mon Profil"}
-              {activeMenu === "super_admin" && "Le Trône Souverain du Fondateur"}
-              {activeMenu === "dashboard" && "Le Grand Salon & Pilotat"}
-              {activeMenu === "gombos" && "L'Écrin des Opportunités"}
-              {activeMenu === "renforts" && "Les Solidarités Scéniques"}
-              {activeMenu === "kyc" && "La Base des Talents Majeurs"}
-              {activeMenu === "revision" && "La File de Révision Modérale"}
-              {activeMenu === "alertes" && "Les Murmures des Communes"}
-              {activeMenu === "caisse" && "Le Coffre-Fort d'AFRIGOMBO"}
-              {activeMenu === "monetisation" && "Le Club des Mécènes & Boosts"}
-              {activeMenu === "analytics" && "Les Courbes de la Musique"}
-            </h2>
-            <p className="text-xs text-[#F5F5F5]/60 mt-1.5">
-              {perspective === "user" ? "Façonnez votre légende et gérez vos certifications d'excellence." : "Prenez le pouls des vibrations et de la renommée de nos talents."}
-            </p>
+        <header className="flex justify-between items-center pb-6 border-b border-[#D4AF37]/10 mb-6 shrink-0 gap-4">
+          <div className="flex items-start gap-4">
+            {/* HAMBURGER TRIGGER BUTTON */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="mt-1 p-2 text-[#D4AF37] hover:text-white bg-transparent hover:bg-[#D4AF37]/10 border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-lg transition-all focus:outline-none flex items-center justify-center cursor-pointer"
+              title="Ouvrir le menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            <div>
+              <h2 className="text-2xl font-display font-extrabold text-[#F5F5F5] tracking-wide">
+                {activeMenu === "user_heritage" && "Mon Héritage Impérial 🎼"}
+                {activeMenu === "user_gombo_id" && "Mon Gombo ID d'Excellence"}
+                {activeMenu === "user_mes_gombos" && "Mes Gombos & Prestations"}
+                {activeMenu === "user_mes_groupes" && "Mes Alliances d'Orchestre"}
+                {activeMenu === "user_renforts" && "Module de Renforts Scéniques"}
+                {activeMenu === "user_opportunities" && "Opportunités d'Or d'Abidjan"}
+                {activeMenu === "user_settings" && "Paramètres du Transmetteur"}
+                {activeMenu === "user_notifications" && "Les Vibrations du Tam-Tam"}
+                {activeMenu === "user_edit_profile" && "Modifier mon Profil"}
+                {activeMenu === "super_admin" && "Le Trône Souverain du Fondateur"}
+                {activeMenu === "dashboard" && "Le Grand Salon & Pilotat"}
+                {activeMenu === "gombos" && "L'Écrin des Opportunités"}
+                {activeMenu === "renforts" && "Les Solidarités Scéniques"}
+                {activeMenu === "kyc" && "La Base des Talents Majeurs"}
+                {activeMenu === "revision" && "La File de Révision Modérale"}
+                {activeMenu === "alertes" && "Les Murmures des Communes"}
+                {activeMenu === "caisse" && "Le Coffre-Fort d'AFRIGOMBO"}
+                {activeMenu === "monetisation" && "Le Club des Mécènes & Boosts"}
+                {activeMenu === "analytics" && "Les Courbes de la Musique"}
+              </h2>
+              <p className="text-xs text-[#F5F5F5]/60 mt-1.5">
+                {perspective === "user" ? "Façonnez votre légende et gérez vos certifications d'excellence." : "Prenez le pouls des vibrations et de la renommée de nos talents."}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
