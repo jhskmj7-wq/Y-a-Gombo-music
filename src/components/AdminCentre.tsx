@@ -11,6 +11,8 @@ import {
   limit
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { useAuth } from "../AuthContext";
+import AuthScreen from "./AuthScreen";
 import GomboIdUserDashboard from "./GomboIdUserDashboard";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
 import FounderThrone from "./FounderThrone";
@@ -303,6 +305,18 @@ interface AdminCentreProps {
 }
 
 export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
+  const { currentUser, profile, logout } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+
+  const requireAuthThen = (action: () => void) => {
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+      try { audioSynth.playKoraSuccess(); } catch (err) {}
+    } else {
+      action();
+    }
+  };
+
   const [activeMenu, setActiveMenu] = useState<any>("user_terrain");
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
@@ -1313,67 +1327,93 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           </div>
 
           {/* USER PROFILE CARD */}
-          {(() => {
-            const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
-            return (
-              <div className="mb-5 bg-zinc-900/60 border border-[#D4AF37]/15 rounded-xl p-3.5 space-y-2.5">
-                <div className="flex items-center gap-3">
-                  {/* Photo ronde */}
-                  <div className="relative shrink-0">
-                    <div className="w-11 h-11 rounded-full border border-[#D4AF37]/45 overflow-hidden bg-[#D4AF37]/10 flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.15)]">
-                      {currentArtist && (currentArtist.avatarUrl || currentArtist.photoURL) ? (
-                        <img 
-                          src={currentArtist.avatarUrl || currentArtist.photoURL} 
-                          alt={currentArtist.artisticName} 
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <Music className="w-5 h-5 text-[#D4AF37]" />
+          {!currentUser ? (
+            <button
+              onClick={() => {
+                setIsSidebarOpen(false);
+                setIsAuthModalOpen(true);
+                try { audioSynth.playKoraSuccess(); } catch (err) {}
+              }}
+              className="w-full mb-5 bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] rounded-2xl p-4 text-center cursor-pointer font-black tracking-wider transition-all duration-200 transform hover:scale-[1.02] shadow-[0_4px_15px_rgba(212,175,55,0.3)] flex flex-col items-center justify-center gap-1.5 border border-transparent"
+            >
+              <Flame className="w-6 h-6 fill-current animate-pulse text-[#0B0B0B]" />
+              <div className="text-xs uppercase font-display font-black leading-tight text-[#0B0B0B]">
+                BIENVENUE DANS Y'A GOMBO MUSIC
+              </div>
+              <div className="text-[10px] uppercase font-mono font-extrabold bg-[#0B0B0B] text-[#D4AF37] px-2.5 py-1 rounded-lg">
+                SE CONNECTER
+              </div>
+            </button>
+          ) : (
+            (() => {
+              const currentArtist = profile ? {
+                id: profile.uid,
+                artisticName: profile.displayName || `${profile.firstName || 'Artiste'} ${profile.lastName || 'Gombo'}`.trim(),
+                commune: profile.commune || 'Cocody',
+                avatarUrl: profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+                isCertified: true,
+              } : (users.find(u => u.id === activeArtistId) || users[0]);
+
+              return (
+                <div className="mb-5 bg-zinc-900/60 border border-[#D4AF37]/15 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    {/* Photo ronde */}
+                    <div className="relative shrink-0">
+                      <div className="w-11 h-11 rounded-full border border-[#D4AF37]/45 overflow-hidden bg-[#D4AF37]/10 flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.15)] font-display font-black">
+                        {currentArtist && (currentArtist.avatarUrl || (currentArtist as any).photoURL) ? (
+                          <img 
+                            src={currentArtist.avatarUrl || (currentArtist as any).photoURL} 
+                            alt={currentArtist.artisticName} 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <Music className="w-5 h-5 text-[#D4AF37]" />
+                        )}
+                      </div>
+                      {currentArtist?.isCertified && (
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border border-black flex items-center justify-center" title="Certifié">
+                          <span className="text-[8px] text-white font-bold">✓</span>
+                        </span>
                       )}
                     </div>
-                    {currentArtist?.isCertified && (
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border border-black flex items-center justify-center" title="Certifié">
-                        <span className="text-[8px] text-white font-bold">✓</span>
+                    
+                    <div className="min-w-0">
+                      <h3 className="text-xs font-sans font-black text-white leading-tight truncate flex items-center gap-1">
+                        {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
+                      </h3>
+                      <p className="text-[9px] text-[#D4AF37] font-mono uppercase tracking-wide font-bold">
+                        {currentArtist ? currentArtist.commune : "Abidjan"}, CI
+                      </p>
+                      <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase border border-[#D4AF37]/20 font-extrabold">
+                        Musicien
                       </span>
-                    )}
+                    </div>
                   </div>
-                  
-                  <div className="min-w-0">
-                    <h3 className="text-xs font-sans font-black text-white leading-tight truncate">
-                      {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
-                    </h3>
-                    <p className="text-[9px] text-[#D4AF37] font-mono uppercase tracking-wide font-bold">
-                      {currentArtist ? currentArtist.commune : "Abidjan"}, CI
-                    </p>
-                    <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase border border-[#D4AF37]/20 font-extrabold">
-                      Musicien
-                    </span>
-                  </div>
-                </div>
 
-                {/* Simulated Active Artist Selector */}
-                {perspective === "user" && (
-                  <div className="space-y-1 pt-2 border-t border-[#D4AF37]/10">
-                    <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Artiste Actif Simulé :</span>
-                    <select
-                      value={activeArtistId}
-                      onChange={(e) => {
-                        setActiveArtistId(e.target.value);
-                      }}
-                      className="w-full bg-black border border-white/10 rounded px-1.5 py-1 text-[10px] text-white font-mono focus:outline-none cursor-pointer"
-                    >
-                      {users.map(u => (
-                        <option key={u.id} value={u.id} className="bg-black text-white">
-                          {u.artisticName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+                  {/* Simulated Active Artist Selector */}
+                  {perspective === "user" && !profile && (
+                    <div className="space-y-1 pt-2 border-t border-[#D4AF37]/10">
+                      <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Artiste Actif Simulé :</span>
+                      <select
+                        value={activeArtistId}
+                        onChange={(e) => {
+                          setActiveArtistId(e.target.value);
+                        }}
+                        className="w-full bg-black border border-white/10 rounded px-1.5 py-1 text-[10px] text-white font-mono focus:outline-none cursor-pointer"
+                      >
+                        {users.map(u => (
+                          <option key={u.id} value={u.id} className="bg-black text-white">
+                            {u.artisticName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              );
+            })()
+          )}
 
           {/* SLOGAN PRESTIGE */}
           <div className="p-3.5 rounded-lg bg-[#D4AF37]/5 border border-[#D4AF37]/10 mb-4 text-center text-[11px] text-[#D4AF37] italic">
@@ -1401,8 +1441,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 <button
                   onClick={() => {
-                    setActiveMenu("user_heritage");
-                    setIsSidebarOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_heritage");
+                      setIsSidebarOpen(false);
+                    });
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_heritage"
@@ -1416,8 +1458,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 <button
                   onClick={() => {
-                    setActiveMenu("user_gombo_id");
-                    setIsSidebarOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_gombo_id");
+                      setIsSidebarOpen(false);
+                    });
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_gombo_id"
@@ -1431,8 +1475,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 <button
                   onClick={() => {
-                    setActiveMenu("user_mes_gombos");
-                    setIsSidebarOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_mes_gombos");
+                      setIsSidebarOpen(false);
+                    });
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_mes_gombos"
@@ -1446,8 +1492,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 <button
                   onClick={() => {
-                    setActiveMenu("user_mes_groupes");
-                    setIsSidebarOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_mes_groupes");
+                      setIsSidebarOpen(false);
+                    });
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_mes_groupes"
@@ -1461,8 +1509,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 <button
                   onClick={() => {
-                    setActiveMenu("user_renforts");
-                    setIsSidebarOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_renforts");
+                      setIsSidebarOpen(false);
+                    });
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_renforts"
@@ -1476,8 +1526,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 <button
                   onClick={() => {
-                    setActiveMenu("user_opportunities");
-                    setIsSidebarOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_opportunities");
+                      setIsSidebarOpen(false);
+                    });
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_opportunities"
@@ -1491,8 +1543,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 <button
                   onClick={() => {
-                    setActiveMenu("user_settings");
-                    setIsSidebarOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_settings");
+                      setIsSidebarOpen(false);
+                    });
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_settings"
@@ -1506,8 +1560,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 <button
                   onClick={() => {
-                    setActiveMenu("user_notifications");
-                    setIsSidebarOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_notifications");
+                      setIsSidebarOpen(false);
+                    });
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_notifications"
@@ -1521,8 +1577,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 <button
                   onClick={() => {
-                    setActiveMenu("user_edit_profile");
-                    setIsSidebarOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_edit_profile");
+                      setIsSidebarOpen(false);
+                    });
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-bold uppercase transition-all duration-205 ${
                     activeMenu === "user_edit_profile"
@@ -1546,21 +1604,29 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   CENTRE DE COMMANDE
                 </button>
 
-                <button
-                  onClick={() => {
-                    const confirmLogout = window.confirm("Souhaitez-vous réinitialiser votre session d'artiste et vous déconnecter ?");
-                    if (confirmLogout) {
-                      setActiveArtistId("user_1");
-                      setActiveMenu("user_terrain");
-                      setIsSidebarOpen(false);
-                      addToTerminal("[INFO] Session d'artiste déconnectée. Retour à Ariel Loua.");
-                    }
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-2 mt-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-205"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Déconnexion
-                </button>
+                {currentUser && (
+                  <button
+                    onClick={async () => {
+                      const confirmLogout = window.confirm("Souhaitez-vous vous déconnecter de votre session d'artiste ?");
+                      if (confirmLogout) {
+                        try {
+                          await logout();
+                          setActiveMenu("user_terrain");
+                          setIsSidebarOpen(false);
+                          try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          addToTerminal("[INFO] Session d'artiste déconnectée. Retour en mode Invité.");
+                        } catch (err: any) {
+                          console.error("Error signing out:", err);
+                          alert("Impossible de se déconnecter.");
+                        }
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2 mt-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-205 cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Déconnexion
+                  </button>
+                )}
               </>
             ) : (
               <>
@@ -5628,8 +5694,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           {/* Central floating golden plus button */}
           <button
             onClick={() => {
-              setActiveMenu("user_publish");
-              audioSynth.playValidationSuccess();
+              requireAuthThen(() => {
+                setActiveMenu("user_publish");
+                audioSynth.playValidationSuccess();
+              });
             }}
             className="w-11 h-11 -mt-6 rounded-full bg-[#D4AF37] hover:bg-[#B48F17] flex items-center justify-center text-[#0B0B0B] shadow-[0_5px_15px_rgba(212,175,55,0.4)] hover:shadow-[0_8px_25px_rgba(212,175,55,0.55)] transition-all transform hover:scale-110 cursor-pointer border border-[#0B0B0B] active:scale-95"
             title="Publier sur Le Terrain"
@@ -5639,8 +5707,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
           <button
             onClick={() => {
-              setActiveMenu("user_renforts");
-              audioSynth.playValidationSuccess();
+              requireAuthThen(() => {
+                setActiveMenu("user_renforts");
+                audioSynth.playValidationSuccess();
+              });
             }}
             className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none ${
               activeMenu === "user_renforts" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
@@ -5652,8 +5722,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
           <button
             onClick={() => {
-              setActiveMenu("user_mes_gombos");
-              audioSynth.playValidationSuccess();
+              requireAuthThen(() => {
+                setActiveMenu("user_mes_gombos");
+                audioSynth.playValidationSuccess();
+              });
             }}
             className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none ${
               activeMenu === "user_mes_gombos" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
@@ -5712,6 +5784,20 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </button>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {isAuthModalOpen && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="w-full max-w-sm relative">
+            <AuthScreen 
+              onSuccess={() => {
+                setIsAuthModalOpen(false);
+                addToTerminal("[🛡️ AUTH] Authentification réussie via Firebase Auth !");
+              }} 
+              onClose={() => setIsAuthModalOpen(false)}
+            />
+          </div>
         </div>
       )}
 
