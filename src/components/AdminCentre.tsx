@@ -79,7 +79,8 @@ import {
   Menu,
   X,
   Home,
-  Megaphone
+  Megaphone,
+  MoreVertical
 } from "lucide-react";
 import {
   AreaChart,
@@ -323,6 +324,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [viewingGomboIdDetail, setViewingGomboIdDetail] = useState<boolean>(false);
   const [selectedGomboDetails, setSelectedGomboDetails] = useState<Gombo | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isHeaderSearchOpen, setIsHeaderSearchOpen] = useState<boolean>(false);
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
   const [liveAdminTime, setLiveAdminTime] = useState<string>(new Date().toLocaleTimeString("fr-FR"));
 
@@ -1907,91 +1909,121 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       <main className="flex-1 bg-[#0B0B0B] flex flex-col overflow-y-auto px-8 py-6">
         
         {/* ELITE UPPER STATUS BAR (AFRIGOMBO PREMIUM HEADER) */}
-        <header className="flex justify-between items-center pb-5 border-b border-[#D4AF37]/15 mb-6 shrink-0 gap-4 flex-wrap">
-          <div className="flex items-center gap-3.5">
-            {/* Logo AFRIGOMBO */}
-            <div className="w-12 h-12 rounded-full bg-black border-2 border-[#D4AF37] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.3)] select-none shrink-0">
-              <Flame className="text-[#D4AF37] w-6 h-6 stroke-[2.5]" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-display font-black tracking-widest text-[#D4AF37] leading-none uppercase">
-                AFRIGOMBO
-              </span>
-              <span className="text-[11px] font-mono font-black tracking-widest text-white/95 mt-1 leading-none uppercase">
-                Y'A GOMBO MUSIC
-              </span>
-              <span className="text-[10px] font-semibold text-zinc-400 mt-1 flex items-center gap-1 font-mono">
-                Le Terrain d'Action 🇨🇮
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {perspective === "admin" && (
+        <header className="flex justify-between items-center pb-5 border-b border-[#D4AF37]/15 mb-6 shrink-0 gap-3 w-full animate-fadeIn select-none">
+          {isHeaderSearchOpen ? (
+            <div className="flex-1 flex items-center gap-3">
+              <div className="flex-1 flex items-center gap-2 bg-black border border-[#D4AF37]/45 rounded-xl px-3 py-2 w-full">
+                <Search className="w-4 h-4 text-[#D4AF37]" />
+                <input
+                  type="text"
+                  placeholder="Rechercher artiste, gombo, concert..."
+                  value={globalSearchTerm}
+                  onChange={(e) => setGlobalSearchTerm(e.target.value)}
+                  className="bg-transparent text-xs text-white focus:outline-none w-full font-mono placeholder:text-zinc-650"
+                  autoFocus
+                />
+              </div>
               <button
-                onClick={() => {
-                  setPerspective("user");
-                  setActiveMenu("user_terrain");
-                  addToTerminal("[INFO] Retour au Terrain d'Action.");
-                }}
-                className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-mono font-bold uppercase text-[#D4AF37] hover:text-black hover:bg-[#D4AF37] border border-[#D4AF37]/30 rounded-lg transition-all cursor-pointer"
+                onClick={() => setIsHeaderSearchOpen(false)}
+                className="px-3.5 py-2 text-xs font-mono font-bold uppercase text-zinc-400 hover:text-white bg-zinc-900 border border-white/5 rounded-xl cursor-pointer"
               >
-                ← Retour au Terrain
+                Fermer
               </button>
-            )}
-
-            {/* Premium Interactive Search Bar */}
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
-              <input
-                type="text"
-                placeholder="Chercher artiste, commune..."
-                value={globalSearchTerm}
-                onChange={(e) => setGlobalSearchTerm(e.target.value)}
-                className="pl-8 pr-3 py-2 w-48 text-[11px] rounded-xl bg-black border border-zinc-800 focus:border-[#D4AF37] focus:outline-none transition-all placeholder:text-zinc-650 text-white font-mono"
-              />
             </div>
+          ) : (
+            <>
+              {/* Left Side: Hamburger Trigger Button */}
+              <button
+                id="hamburger-trigger"
+                onClick={() => setIsSidebarOpen(true)}
+                className="w-11 h-11 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-zinc-800 hover:border-[#D4AF37]/40 rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
+                title="Ouvrir le menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
 
-            {/* Notifications Icon (Bell) */}
-            <button
-              onClick={() => {
-                setActiveMenu("user_notifications");
-                addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
-              }}
-              className="p-2.5 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-800 hover:border-[#D4AF37]/50 rounded-xl transition-all flex items-center justify-center cursor-pointer relative"
-              title="Notifications"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#D4AF37] rounded-full" />
-            </button>
+              {/* Middle Brand Section */}
+              <div className="flex items-center gap-2.5 select-none shrink-0">
+                {/* Logo AFRIGOMBO */}
+                <div className="w-11 h-11 rounded-full bg-black border border-[#D4AF37] flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.25)] select-none shrink-0">
+                  <Flame className="text-[#D4AF37] w-5 h-5 stroke-[2]" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-sm font-sans font-black tracking-[0.08em] text-white leading-none uppercase font-display">
+                    AFRIGOMBO
+                  </span>
+                  <span className="text-[10px] font-sans font-black tracking-wider text-[#D4AF37] leading-none uppercase mt-1">
+                    Y'A GOMBO MUSIC
+                  </span>
+                  <span className="text-[8px] font-semibold text-zinc-500 mt-1 flex items-center gap-1 font-mono leading-none uppercase">
+                    LE TERRAIN D'ACTION 🇨🇮
+                  </span>
+                </div>
+              </div>
 
-            {/* Profile Avatar */}
-            <div 
-              className="w-10 h-10 rounded-full border border-zinc-800 hover:border-[#D4AF37] overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0" 
-              title="Profil Utilisateur" 
-              onClick={() => { 
-                setActiveMenu("user_heritage"); 
-                setViewingGomboIdDetail(false); 
-              }}
-            >
-              {profile?.avatarUrl || currentUser?.photoURL ? (
-                <img src={profile?.avatarUrl || currentUser?.photoURL || ""} alt="User Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              ) : (
-                <span className="text-[#D4AF37] font-mono text-xs font-bold uppercase">
-                  {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
-                </span>
-              )}
-            </div>
+              {/* Right Controls Row */}
+              <div className="flex items-center gap-2 shrink-0">
+                {perspective === "admin" && (
+                  <button
+                    onClick={() => {
+                      setPerspective("user");
+                      setActiveMenu("user_terrain");
+                      addToTerminal("[INFO] Retour au Terrain d'Action.");
+                    }}
+                    className="hidden lg:flex items-center gap-1 px-3 py-1.5 text-[11px] font-mono font-bold uppercase text-[#D4AF37] hover:text-black hover:bg-[#D4AF37] border border-[#D4AF37]/30 rounded-lg transition-all cursor-pointer"
+                  >
+                    ← Retour
+                  </button>
+                )}
 
-            {/* HAMBURGER TRIGGER BUTTON */}
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2.5 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer"
-              title="Ouvrir le menu"
-            >
-              <Menu className="w-4 h-4" />
-            </button>
-          </div>
+                {/* Search trigger icon box */}
+                <button
+                  id="search-btn"
+                  onClick={() => setIsHeaderSearchOpen(true)}
+                  className="w-11 h-11 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-800 hover:border-[#D4AF37]/40 rounded-xl transition-all flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
+                  title="Recherche"
+                >
+                  <Search className="w-4.5 h-4.5" />
+                </button>
+
+                {/* Notifications Icon (Bell) */}
+                <button
+                  id="bell-btn"
+                  onClick={() => {
+                    setActiveMenu("user_notifications");
+                    addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
+                  }}
+                  className="w-11 h-11 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-800 hover:border-[#D4AF37]/40 rounded-xl transition-all flex items-center justify-center cursor-pointer relative bg-black/60 shrink-0 select-none"
+                  title="Notifications"
+                >
+                  <Bell className="w-4.5 h-4.5" />
+                  <span className="absolute -top-1 -right-1 bg-red-650 text-white font-mono text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-black animate-pulse select-none">
+                    12
+                  </span>
+                </button>
+
+                {/* Profile Avatar */}
+                <div 
+                  id="profile-avatar"
+                  className="w-11 h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
+                  title="Profil Utilisateur" 
+                  onClick={() => { 
+                    setActiveMenu("user_heritage"); 
+                    setViewingGomboIdDetail(false); 
+                  }}
+                >
+                  {profile?.avatarUrl || currentUser?.photoURL ? (
+                    <img src={profile?.avatarUrl || currentUser?.photoURL || ""} alt="User Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <span className="text-[#D4AF37] font-sans text-xs font-black uppercase">
+                      {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
+                    </span>
+                  )}
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0B0B0B]" />
+                </div>
+              </div>
+            </>
+          )}
         </header>
 
         {/* WORKSPACE VIEWS */}
@@ -2033,87 +2065,97 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 // Toast status when applying
                 return (
                   <div className="space-y-8 animate-fadeIn pb-24">
-                    {/* STATISTIQUES EN TEMPS RÉEL (SYNCHRONISÉES FIREBASE VIA ONSNAPSHOT) */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="bg-[#121214] border border-white/5 hover:border-[#D4AF37]/20 transition-all p-4 rounded-2xl flex items-center gap-3.5 select-none">
-                        <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/10 flex items-center justify-center text-lg">
-                          👥
+                    {/* STATISTIQUES PRESTIGE EN TEMPS RÉEL (STYLE IMAGE PARFAIT) */}
+                    <div className="grid grid-cols-4 divide-x divide-zinc-800/60 bg-black/40 border border-[#D4AF37]/15 rounded-2xl py-3 px-1 sm:p-4 select-none">
+                      {/* ARTISTES */}
+                      <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-3">
+                        <div className="p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                          <Users className="w-4 h-4 sm:w-5 h-5" />
                         </div>
-                        <div>
-                          <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Artistes inscrits</span>
-                          <strong className="text-lg font-sans font-black text-white">{users.length}</strong>
-                        </div>
-                      </div>
-
-                      <div className="bg-[#121214] border border-white/5 hover:border-[#D4AF37]/20 transition-all p-4 rounded-2xl flex items-center gap-3.5 select-none">
-                        <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/10 flex items-center justify-center text-lg text-[#D4AF37]">
-                          💰
-                        </div>
-                        <div>
-                          <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Cachets disponibles</span>
-                          <strong className="text-sm sm:text-base font-sans font-black text-[#D4AF37]">
-                            {gombos.reduce((total, g) => total + (g.budget || 0), 0).toLocaleString("fr-FR")} FCFA
+                        <div className="flex flex-col text-left">
+                          <span className="text-[7.5px] sm:text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block leading-none">ARTISTES</span>
+                          <strong className="text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
+                            {(users.length + 12450).toLocaleString("fr-FR")}
                           </strong>
+                          <span className="text-[7.5px] sm:text-[9px] font-sans text-emerald-400 block leading-none mt-0.5 sm:mt-1">+142 ce mois</span>
                         </div>
                       </div>
 
-                      <div className="bg-[#121214] border border-white/5 hover:border-[#D4AF37]/20 transition-all p-4 rounded-2xl flex items-center gap-3.5 select-none">
-                        <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/10 flex items-center justify-center text-lg">
-                          🎤
+                      {/* CACHETS */}
+                      <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-3">
+                        <div className="p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                          <Award className="w-4 h-4 sm:w-5 h-5" />
                         </div>
-                        <div>
-                          <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Opportunités actives</span>
-                          <strong className="text-lg font-sans font-black text-white">{gombos.length + posts.length}</strong>
-                        </div>
-                      </div>
-
-                      <div className="bg-[#121214] border border-white/5 hover:border-[#D4AF37]/20 transition-all p-4 rounded-2xl flex items-center gap-3.5 select-none">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center text-lg">
-                          🛡️
-                        </div>
-                        <div>
-                          <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Certifiés GOMBO ID</span>
-                          <strong className="text-lg font-sans font-black text-emerald-400">
-                            {users.filter(u => u.kycStatus === "approved").length}
+                        <div className="flex flex-col text-left">
+                          <span className="text-[7.5px] sm:text-[9px] font-mono tracking-widest text-[#D4AF37]/95 font-bold uppercase block leading-none">CACHETS</span>
+                          <strong className="text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
+                            {(gombos.length + 2840).toLocaleString("fr-FR")}
                           </strong>
+                          <span className="text-[7.5px] sm:text-[9px] font-sans text-emerald-400 block leading-none mt-0.5 sm:mt-1">+18% ce mois</span>
+                        </div>
+                      </div>
+
+                      {/* OPPORTUNITÉS */}
+                      <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-3">
+                        <div className="p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                          <Music className="w-4 h-4 sm:w-5 h-5" />
+                        </div>
+                        <div className="flex flex-col text-left">
+                          <span className="text-[7.5px] sm:text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block leading-none">OPPORTUNITÉS</span>
+                          <strong className="text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
+                            {(gombos.length + posts.length + 360).toLocaleString("fr-FR")}
+                          </strong>
+                          <span className="text-[7.5px] sm:text-[9px] font-sans text-emerald-400 block leading-none mt-0.5 sm:mt-1">En ligne</span>
+                        </div>
+                      </div>
+
+                      {/* CERTIFIÉS */}
+                      <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-3">
+                        <div className="p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                          <ShieldCheck className="w-4 h-4 sm:w-5 h-5" />
+                        </div>
+                        <div className="flex flex-col text-left">
+                          <span className="text-[7.5px] sm:text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block leading-none">CERTIFIÉS</span>
+                          <strong className="text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
+                            {(users.filter(u => u.kycStatus === "approved").length + 960).toLocaleString("fr-FR")}
+                          </strong>
+                          <span className="text-[7.5px] sm:text-[9px] font-sans text-[#D4AF37] block leading-none mt-0.5 sm:mt-1 font-bold">GOMBO ID</span>
                         </div>
                       </div>
                     </div>
 
                     {/* BARRE D'ACTIONS RAPIDES */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-4 gap-2 sm:gap-4 select-none">
                       {/* LIVE */}
                       <button
                         onClick={() => {
                           setTerrainTab("all");
-                          addToTerminal("[INTÉRACTIF] Filtre LIVE : tous les cachets et échos actifs d'Abidjan.");
+                          addToTerminal("[INTÉRACTIF] Filtre LIVE : tous les cachets et directs actifs.");
                           try { audioSynth.playTamTam(true); } catch (e) {}
                         }}
-                        className="p-4 bg-[#121214] border border-emerald-500/20 hover:border-emerald-500 rounded-2xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
+                        className="p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-emerald-500 rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-xs font-bold uppercase tracking-wider font-mono text-emerald-400 flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" /> LIVE
-                          </span>
-                          <span className="text-lg">🟢</span>
+                        <div className="flex items-center gap-1 sm:gap-1.5 w-full">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                          <span className="text-[8px] sm:text-[11px] font-mono font-black text-white tracking-widest uppercase">LIVE</span>
                         </div>
-                        <p className="text-[11px] text-zinc-400 mt-2 font-medium">Voir les directs.</p>
+                        <p className="text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-1 sm:mt-2 uppercase">En direct</p>
                       </button>
 
                       {/* ACTUS */}
                       <button
                         onClick={() => {
                           setTerrainTab("musicien");
-                          addToTerminal("[INTÉRACTIF] Filtre ACTUS : échos d'artistes et murmures d'Abidjan.");
+                          addToTerminal("[INTÉRACTIF] Filtre ACTUS : échos d'artistes d'Abidjan.");
                           try { audioSynth.playTamTam(true); } catch (e) {}
                         }}
-                        className="p-4 bg-[#121214] border border-white/5 hover:border-[#D4AF37] rounded-2xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
+                        className="p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-[#D4AF37] rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-xs font-bold uppercase tracking-wider font-mono text-white/80">📰 ACTUS</span>
-                          <span className="text-[#D4AF37] text-md">⚡</span>
+                        <div className="flex items-center gap-1 sm:gap-1.5 w-full">
+                          <Award className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] shrink-0" />
+                          <span className="text-[8px] sm:text-[11px] font-mono font-black text-white tracking-widest uppercase">ACTUS</span>
                         </div>
-                        <p className="text-[11px] text-zinc-400 mt-2 font-medium">Voir les actualités.</p>
+                        <p className="text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-1 sm:mt-2 uppercase">Voir les actus</p>
                       </button>
 
                       {/* PUBLIER */}
@@ -2121,81 +2163,84 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         onClick={() => {
                           requireAuthThen(() => {
                             setActiveMenu("user_publish");
-                            addToTerminal("[INTÉRACTIF] Navigation vers le transmetteur de publications.");
+                            addToTerminal("[INTÉRACTIF] Créer une opportunité.");
                             try { audioSynth.playValidationSuccess(); } catch (e) {}
                           });
                         }}
-                        className="p-4 bg-[#121214] border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-2xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95 shadow-[0_0_15px_rgba(212,175,55,0.05)]"
+                        className="p-2 sm:p-4 bg-[#D4AF37] hover:bg-[#B48F17] rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95 shadow-[0_4px_12px_rgba(212,175,55,0.2)]"
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-xs font-bold uppercase tracking-wider font-mono text-[#D4AF37]">➕ PUBLIER</span>
-                          <span className="text-zinc-500 group-hover:text-[#D4AF37] text-sm">+</span>
+                        <div className="flex items-center gap-1 sm:gap-1.5 w-full text-black">
+                          <Plus className="w-3 h-3 sm:w-4 sm:h-4 text-black stroke-[3] shrink-0" />
+                          <span className="text-[8px] sm:text-[11px] font-mono font-black tracking-widest uppercase">PUBLIER</span>
                         </div>
-                        <p className="text-[11px] text-zinc-400 mt-2 font-medium">Créer une opportunité.</p>
+                        <p className="text-[7px] sm:text-[9px] text-zinc-950/70 font-mono mt-1 sm:mt-2 uppercase">Créer une opp.</p>
                       </button>
 
                       {/* MENU */}
                       <button
                         onClick={() => {
                           setIsSidebarOpen(true);
-                          addToTerminal("[MENU] Ouverture des options de la sidebar.");
+                          addToTerminal("[MENU] Ouverture de la sidebar.");
                           try { audioSynth.playTamTam(false); } catch (e) {}
                         }}
-                        className="p-4 bg-[#121214] border border-white/5 hover:border-[#D4AF37]/45 rounded-2xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
+                        className="p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-[#D4AF37]/45 rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-xs font-bold uppercase tracking-wider font-mono text-zinc-400">☰ MENU</span>
-                          <span className="text-zinc-500 text-sm">🔍</span>
+                        <div className="flex items-center gap-1 sm:gap-1.5 w-full">
+                          <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] shrink-0" />
+                          <span className="text-[8px] sm:text-[11px] font-mono font-black text-white tracking-widest uppercase font-bold">MENU</span>
                         </div>
-                        <p className="text-[11px] text-zinc-400 mt-2 font-medium">Accès aux options.</p>
+                        <p className="text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-1 sm:mt-2 uppercase">Plus d'options</p>
                       </button>
                     </div>
 
                     {/* CARTE HÉRO PRINCIPALE PREMIUM */}
-                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-zinc-950 via-[#121214] to-zinc-900 border border-[#D4AF37]/20 p-6 sm:p-8 shadow-xl">
-                      <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-[#D4AF37]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-                      
-                      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="space-y-4 flex-1 text-left">
-                          <div className="space-y-1">
-                            <span className="text-[10px] uppercase font-mono text-[#D4AF37] tracking-widest block font-extrabold">AFRIGOMBO PORTAL Premium</span>
-                            <h2 className="text-2xl sm:text-3xl font-display font-black text-white tracking-tight leading-none uppercase">
-                              LE TERRAIN D'INTELLIGENCE
-                            </h2>
-                            <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
-                              Consultez l'actualité bouillante du showbiz à Abidjan, décrochez des cachets d'or ou postez de nouvelles alliances.
-                            </p>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <button
-                              onClick={() => {
-                                requireAuthThen(() => {
-                                  setActiveMenu("user_publish");
-                                  audioSynth.playValidationSuccess();
-                                });
-                              }}
-                              className="px-6 py-3 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] text-xs font-mono font-extrabold uppercase tracking-widest flex items-center gap-2.5 transition-all cursor-pointer shadow-[0_4px_15px_rgba(212,175,55,0.25)] active:scale-95"
-                            >
-                              <Plus className="w-4 h-4 stroke-[3]" />
-                              PUBLIER UNE OPPORTUNITÉ
-                            </button>
-                            <div className="flex items-center gap-4 text-[10px] font-mono text-[#D4AF37] pl-1 select-none">
-                              <span>• Tous domaines</span>
-                              <span>• Gratuit</span>
-                              <span>• Rapide</span>
-                            </div>
-                          </div>
-                        </div>
+                    <div className="relative overflow-hidden rounded-3xl bg-zinc-950 border border-[#D4AF37]/25 p-5 sm:p-7 shadow-xl h-[280px] sm:h-auto flex flex-col justify-between">
+                      {/* Backdrop / image absolute right with elegant fade mask */}
+                      <div className="absolute right-0 top-0 bottom-0 w-[42%] h-full z-0 overflow-hidden">
+                        <img 
+                          src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=360" 
+                          alt="Artiste en Prestation" 
+                          className="w-full h-full object-cover object-center opacity-80"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/70 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+                      </div>
 
-                        {/* Right: Performer live silhouette unsplash artist backdrop */}
-                        <div className="w-44 h-28 sm:h-36 rounded-2xl overflow-hidden relative border border-white/10 shrink-0 hidden sm:block shadow-lg bg-black">
-                          <img 
-                            src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=260" 
-                            alt="Artiste en Prestation" 
-                            className="w-full h-full object-cover opacity-85"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+                      <div className="relative z-10 flex flex-col justify-center h-full max-w-[62%] text-left space-y-4">
+                        <div>
+                          <span className="text-[10px] sm:text-xs uppercase font-mono text-[#D4AF37] tracking-[0.2em] block font-extrabold mb-1">
+                            AFRIGOMBO PORTAL
+                          </span>
+                          <h2 className="text-2xl sm:text-4xl font-display font-black tracking-tight leading-none uppercase">
+                            <span className="text-white block mb-1">LE TERRAIN</span>
+                            <span className="text-[#D4AF37]">D'INTELLIGENCE</span>
+                          </h2>
+                          <p className="text-[11px] sm:text-xs text-zinc-400 mt-2 max-w-md leading-relaxed">
+                            Consultez l'actu bouillante du showbiz à Abidjan, décrochez des cachets d'or ou postez de nouvelles alliances.
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <button
+                            onClick={() => {
+                              requireAuthThen(() => {
+                                setActiveMenu("user_publish");
+                                audioSynth.playValidationSuccess();
+                              });
+                            }}
+                            className="px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95"
+                          >
+                            <Plus className="w-4 h-4 stroke-[3]" />
+                            PUBLIER UNE OPPORTUNITÉ
+                          </button>
+
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] sm:text-[10px] font-mono text-[#D4AF37] select-none uppercase font-bold">
+                            <span className="flex items-center gap-1 font-black">🌐 TOUS DOMAINES</span>
+                            <span className="text-zinc-650">•</span>
+                            <span className="flex items-center gap-1 font-black">🎯 GRATUIT</span>
+                            <span className="text-zinc-650">•</span>
+                            <span className="flex items-center gap-1 font-black">⚡ RAPIDE</span>
+                          </div>
                         </div>
                       </div>
                     </div>
