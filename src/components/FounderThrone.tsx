@@ -11,7 +11,6 @@ import {
   Sparkles,
   ArrowRight,
   TrendingUp,
-  ListRestart,
   Heart,
   Plus,
   Trash2,
@@ -27,12 +26,39 @@ import {
   RotateCcw,
   Sliders,
   CheckCircle2,
-  HelpCircle
+  HelpCircle,
+  ChevronRight,
+  Search,
+  Settings,
+  Power,
+  UserPlus,
+  Megaphone,
+  Download,
+  Flame,
+  Globe,
+  FileText,
+  Mail,
+  Send,
+  RefreshCw,
+  Clock,
+  Music
 } from "lucide-react";
 import { User, Gombo, Transaction, Alerte, GomboReview } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { db } from "../lib/firebase";
-import { collection, onSnapshot, doc, updateDoc, query, setDoc } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, query, setDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { audioSynth } from "../lib/audio";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts";
 
 interface FounderThroneProps {
   adminEmail: string;
@@ -54,20 +80,6 @@ interface FounderThroneProps {
   onClose: () => void;
 }
 
-interface AfriApp {
-  id: string;
-  name: string;
-  logoType: "shield" | "award" | "fingerprint" | "sparkles";
-  description: string;
-  isActive: boolean;
-  statusText: string;
-  traffic: {
-    hits: number;
-    activeUsers: number;
-    growth: string;
-  };
-}
-
 export default function FounderThrone({
   adminEmail,
   users: initialUsers,
@@ -87,7 +99,7 @@ export default function FounderThrone({
   createTransaction,
   onClose
 }: FounderThroneProps) {
-  // Enforce access control
+  // Access control
   const [founders, setFounders] = useState<string[]>(["johnsylvesterh@gmail.com"]);
   const [superAdmins, setSuperAdmins] = useState<string[]>([
     "sylvestrehounkpevi777@gmail.com",
@@ -113,123 +125,85 @@ export default function FounderThrone({
 
   const isAuthorizedFounder = founders.includes(adminEmail?.trim().toLowerCase()) || adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com";
 
-  // --- 1. TRANSITION IMPÉRIALE STATES ---
-  const [showIntro, setShowIntro] = useState(isAuthorizedFounder);
-  const [introStep, setIntroStep] = useState(0);
-
-  // --- 2. FIRESTORE REAL-TIME SYNCHRONIZED STATES ---
+  // Real-time synced state arrays
   const [liveUsers, setLiveUsers] = useState<User[]>(initialUsers);
   const [liveGombos, setLiveGombos] = useState<Gombo[]>(initialGombos);
   const [liveTransactions, setLiveTransactions] = useState<Transaction[]>(initialTransactions);
   const [liveAlerts, setLiveAlerts] = useState<Alerte[]>(initialAlerts);
 
-  // --- 3. TABS: Stats, Admins, Univers AFRI, Bouclier GOMBO, Logs ---
-  type ActiveTab = "stats" | "admins" | "univers" | "bouclier" | "logs";
-  const [activeTab, setActiveTab] = useState<ActiveTab>("stats");
+  // Local member filter search state
+  const [localUserSearch, setLocalUserSearch] = useState("");
 
-  // --- 4. OTHER STATES ---
-  const [newSuperAdminEmail, setNewSuperAdminEmail] = useState("");
+  // Active Menu / Tab management from left sidebar
+  type SidebarTab =
+    | "cockpit"
+    | "dashboard"
+    | "users"
+    | "gombo_id"
+    | "opportunities"
+    | "publications"
+    | "revenues"
+    | "communities"
+    | "analytics"
+    | "security"
+    | "settings"
+    | "logs"
+    | "announcements"
+    | "support";
+
+  const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>("cockpit");
+
+  // Interaction Modals / Overlays
+  const [addAdminModalOpen, setAddAdminModalOpen] = useState(false);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [announcementModalOpen, setAnnouncementModalOpen] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
   const [announcementTarget, setAnnouncementTarget] = useState<"all" | "admins" | "certified">("all");
-  const [securityModalOpen, setSecurityModalOpen] = useState(false);
-  
-  // Custom imperial logs
-  const [imperialLogs, setImperialLogs] = useState<Array<{
-    id: string;
-    timestamp: string;
-    action: string;
-    actor: string;
-    type: "royal" | "info" | "warning" | "danger";
-  }>>([
-    {
-      id: "log_init_0",
-      timestamp: new Date(Date.now() - 3600000 * 3).toISOString(),
-      action: "Souveraineté exclusive scellée pour johnsylvesterh@gmail.com",
-      actor: "Noyau Impérial",
-      type: "royal"
-    },
-    {
-      id: "log_init_1",
-      timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-      action: "Validation des connexions d'excellence d'Abidjan",
-      actor: "Moniteur Sécurité",
-      type: "info"
-    }
-  ]);
+  const [pushNotificationModalOpen, setPushNotificationModalOpen] = useState(false);
+  const [notificationText, setNotificationText] = useState("");
+  const [notificationTitle, setNotificationTitle] = useState("");
 
-  // Dynamic Super Admins and Co-Founders are loaded synchronically above
-
-  // Univers Afri App specifications
-  const [afriApps, setAfriApps] = useState<AfriApp[]>([
-    {
-      id: "afri_trust",
-      name: "AfriTrust",
-      logoType: "shield",
-      description: "Système de séquestre décentralisé et d'accord de confiance mutuel. Assure le blocage et le versement instantané des cachets d'or aux orchestres nationaux.",
-      isActive: true,
-      statusText: "Opérationnel",
-      traffic: { hits: 142050, activeUsers: 2400, growth: "+18%" }
-    },
-    {
-      id: "afri_coach",
-      name: "AfriCoach",
-      logoType: "award",
-      description: "Coach virtuel d'harmonie et d'excellence scénique. Relie les guitaristes et batteurs débutants de Côte d'Ivoire aux légendes vivantes.",
-      isActive: false,
-      statusText: "Désactivé (Haute Simulation)",
-      traffic: { hits: 45200, activeUsers: 850, growth: "+8%" }
-    },
-    {
-      id: "afri_id",
-      name: "AfriID",
-      logoType: "fingerprint",
-      description: "Passeport numérique universel d'artiste certifié. Éradique l'usurpation d'identité et le multi-comptisme frauduleux sur toute l'Afrique Musicale.",
-      isActive: true,
-      statusText: "Opérationnel",
-      traffic: { hits: 382400, activeUsers: 14500, growth: "+34%" }
-    },
-    {
-      id: "afri_future",
-      name: "Futurs Projets AFRI (AfriMarket)",
-      logoType: "sparkles",
-      description: "Leasing d'instruments d'or à taux zéro, boutiques solidaires et assurances scéniques d'académie pour propulser l'excellence.",
-      isActive: false,
-      statusText: "En phase d'incubation",
-      traffic: { hits: 1200, activeUsers: 30, growth: "Bêta privée" }
-    }
-  ]);
-
-  const [shieldState, setShieldState] = useState({
-    active: true,
-    spamThreshold: 3,
-    ddosProtection: true,
-    firewallStrict: true
+  // Personal notes text
+  const [personalNotes, setPersonalNotes] = useState(() => {
+    return localStorage.getItem("imperial_founder_notes") || "";
   });
 
-  // --- 5. INITIAL TRANSITION ANIMATION PLAYBACK ---
+  // Theme control
+  const [currentTime, setCurrentTime] = useState("");
+
+  // Initial Royal Activation sound and message loader
+  const [showIntro, setShowIntro] = useState(isAuthorizedFounder);
+  const [introStep, setIntroStep] = useState(0);
+
+  useEffect(() => {
+    // Current live clock tracker
+    const timer = setInterval(() => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     if (!isAuthorizedFounder) return;
-
-    // Trigger premium tactile vibration on Android / Web standard
     try {
       if (window.navigator?.vibrate) {
-        window.navigator.vibrate([100, 50, 100]); // Sublime pattern
+        window.navigator.vibrate([120, 60, 120]);
       }
-    } catch (e) {
-      console.log("Tactile vibration omitted", e);
-    }
+    } catch (e) {}
 
-    // Phase schedule
-    const t1 = setTimeout(() => setIntroStep(1), 100);
+    // Staged welcome phases
+    const t1 = setTimeout(() => setIntroStep(1), 200);
     const t2 = setTimeout(() => {
       setIntroStep(2);
-      try { window.navigator?.vibrate?.(60); } catch (e) {}
-    }, 1100);
-    const t3 = setTimeout(() => setIntroStep(3), 2105);
+      try { audioSynth.playTamTam(true); } catch (e) {}
+    }, 1300);
+    const t3 = setTimeout(() => setIntroStep(3), 2400);
     const t4 = setTimeout(() => {
       setShowIntro(false);
-      addToTerminal("👑 [SOUVERAINETÉ] Le Trône d'Or est entièrement chargé et prêt pour le Fondateur John.");
-    }, 3100); // 3 seconds maximum as requested
+      try { audioSynth.playValidationSuccess(); } catch (e) {}
+      addToTerminal("👑 [SOUVERAINETÉ] Trône Impérial initialisé. Accès accordé au Fondateur John.");
+    }, 3500);
 
     return () => {
       clearTimeout(t1);
@@ -239,85 +213,61 @@ export default function FounderThrone({
     };
   }, [isAuthorizedFounder]);
 
-  // --- 6. FIRESTORE REAL-TIME SYNCHRONIZATION ---
+  // Sync databases
   useEffect(() => {
     if (!db) return;
-
-    // Real-time synchronization of members
-    const unsubUsers = onSnapshot(
-      collection(db, "users"),
-      (snapshot) => {
-        const usersList: User[] = [];
-        snapshot.forEach((doc) => {
-          usersList.push({ id: doc.id, ...doc.data() } as User);
-        });
-        if (usersList.length > 0) {
-          setLiveUsers(usersList);
-          setUsers(usersList);
-        }
-      },
-      (error) => {
-        console.warn("Firestore live users read failure, keeping default state:", error);
+    const unsubUsers = onSnapshot(collection(db, "users"), (sn) => {
+      const list: User[] = [];
+      sn.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as User));
+      if (list.length > 0) {
+        setLiveUsers(list);
+        setUsers(list);
       }
-    );
+    });
 
-    // Real-time synchronization of contracts (gombos)
-    const unsubGombos = onSnapshot(
-      collection(db, "gombos"),
-      (snapshot) => {
-        const gombosList: Gombo[] = [];
-        snapshot.forEach((doc) => {
-          gombosList.push({ id: doc.id, ...doc.data() } as Gombo);
-        });
-        if (gombosList.length > 0) {
-          setLiveGombos(gombosList);
-          setGombos(gombosList);
-        }
-      },
-      (error) => {
-        console.warn("Firestore live gombos read failure, keeping default state:", error);
+    const unsubGombos = onSnapshot(collection(db, "gombos"), (sn) => {
+      const list: Gombo[] = [];
+      sn.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Gombo));
+      if (list.length > 0) {
+        setLiveGombos(list);
+        setGombos(list);
       }
-    );
+    });
 
-    // Real-time synchronization of transactions
-    const unsubTransactions = onSnapshot(
-      collection(db, "transactions"),
-      (snapshot) => {
-        const transList: Transaction[] = [];
-        snapshot.forEach((doc) => {
-          transList.push({ id: doc.id, ...doc.data() } as Transaction);
-        });
-        if (transList.length > 0) {
-          setLiveTransactions(transList);
-          setTransactions(transList);
-        }
-      },
-      (error) => {
-        console.warn("Firestore live transactions read failure, keeping default state:", error);
+    const unsubTransactions = onSnapshot(collection(db, "transactions"), (sn) => {
+      const list: Transaction[] = [];
+      sn.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Transaction));
+      if (list.length > 0) {
+        setLiveTransactions(list);
+        setTransactions(list);
       }
-    );
+    });
+
+    const unsubAlerts = onSnapshot(collection(db, "alerts"), (sn) => {
+      const list: Alerte[] = [];
+      sn.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Alerte));
+      setLiveAlerts(list);
+      setAlerts(list);
+    });
 
     return () => {
       unsubUsers();
       unsubGombos();
       unsubTransactions();
+      unsubAlerts();
     };
-  }, [setUsers, setGombos, setTransactions]);
+  }, [setUsers, setGombos, setTransactions, setAlerts]);
 
-  // Log function helper
-  const logToImperialJournal = async (
-    action: string,
-    type: "royal" | "info" | "warning" | "danger" = "info"
-  ) => {
+  // Logging to the centralized ledger
+  const logToImperialJournal = async (action: string, type: "royal" | "info" | "warning" | "danger" = "info") => {
     const newLog = {
-      id: `implog_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      id: `iplog_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       timestamp: new Date().toISOString(),
       action,
-      actor: "John Sylvester H. (Fondateur)",
+      actor: "John Sylvestre H. (Fondateur)",
       type
     };
-    setImperialLogs((prev) => [newLog, ...prev]);
-    addToTerminal(`[👑 SOUVERAINETÉ] ${action}`);
+    addToTerminal(`[👑 TRÔNE] ${action}`);
     await saveToFirestore("journal_imperial", newLog.id, newLog);
   };
 
@@ -325,158 +275,104 @@ export default function FounderThrone({
     if (!db) return;
     try {
       const docRef = doc(db, "throne", "config");
-      await setDoc(docRef, {
-        founders: newFounders,
-        superAdmins: newSuperAdmins
-      }, { merge: true });
+      await setDoc(docRef, { founders: newFounders, superAdmins: newSuperAdmins }, { merge: true });
     } catch (err) {
-      console.error("Error saving throne config to Firestore:", err);
+      console.error("Error setting configuration:", err);
     }
   };
 
-  // --- 7. FOUNDER INTERACTIVE DECREES ---
+  // Quick Action triggers
   const handleAddSuperAdminEmail = async () => {
-    const email = newSuperAdminEmail.trim().toLowerCase();
+    const email = newAdminEmail.trim().toLowerCase();
     if (!email || !email.includes("@")) {
       alert("⚠️ L'adresse e-mail saisie est invalide.");
       return;
     }
-    if (email === "johnsylvesterh@gmail.com") {
-      alert("👑 Le Fondateur Suprême ne peut pas être rétrogradé au simple statut de Super Admin.");
-      return;
-    }
     if (superAdmins.includes(email)) {
-      alert(`⚠️ ${email} possède déjà les accréditations de Super Administrateur.`);
+      alert(`⚠️ ${email} possède déjà les privilèges d'administrateur.`);
       return;
     }
-
     const updated = [...superAdmins, email];
     setSuperAdmins(updated);
-    setNewSuperAdminEmail("");
-    await logToImperialJournal(`Désignation et élévation de l'administrateur d'élite : ${email}`, "royal");
+    setNewAdminEmail("");
+    setAddAdminModalOpen(false);
+    await logToImperialJournal(`Désignation et nomination du Super Admin : ${email}`, "royal");
     await saveThroneConfigToFirestore(founders, updated);
-    alert(`👑 L'utilisateur ${email} a été élevé au rang de Super Administrateur avec succès.`);
+    try { audioSynth.playValidationSuccess(); } catch (e) {}
+    alert(`👑 L'utilisateur ${email} a été élevé au rang de Super Administrateur.`);
   };
 
-  const handleRevokeSuperAdmin = async (email: string) => {
-    const cleanedEmail = email.trim().toLowerCase();
-    if (cleanedEmail === "johnsylvesterh@gmail.com") {
-      alert("🛑 ACTION DESTRUCTIVE BLOQUÉE\n\nLe Trône du fondateur est immuable et ancré dans le noyau d'AFRIGOMBO.");
-      return;
-    }
-    const updated = superAdmins.filter((a) => a !== cleanedEmail);
-    setSuperAdmins(updated);
-    await logToImperialJournal(`Révocation totale des droits d'excellence administrative pour : ${cleanedEmail}`, "danger");
-    await saveThroneConfigToFirestore(founders, updated);
-    alert(`🛡️ L'adresse ${cleanedEmail} a été retirée de la hiérarchie de sécurité.`);
-  };
-
-  const handlePromoteToFounder = async (email: string) => {
-    const cleanedEmail = email.trim().toLowerCase();
-    if (!cleanedEmail) return;
-    if (founders.includes(cleanedEmail)) {
-      alert("👑 Cet utilisateur est déjà Co-Fondateur du Trône.");
-      return;
-    }
-    
-    // Remove from super admins and add to founders
-    const updatedSuperAdmins = superAdmins.filter(a => a !== cleanedEmail);
-    const updatedFounders = [...founders, cleanedEmail];
-    
-    setSuperAdmins(updatedSuperAdmins);
-    setFounders(updatedFounders);
-    
-    await logToImperialJournal(`Souveraineté suprême partagée : Élévation de ${cleanedEmail} au rang de Co-Fondateur du Trône`, "royal");
-    await saveThroneConfigToFirestore(updatedFounders, updatedSuperAdmins);
-    alert(`👑 Félicitations ! ${cleanedEmail} a été promu au rang suprême de Co-Fondateur du Trône.`);
-  };
-
-  const handleToggleCompanionApp = async (appId: string) => {
-    const updated = afriApps.map((app) => {
-      if (app.id === appId) {
-        const nextState = !app.isActive;
-        const actionMsg = `${nextState ? "Activation" : "Désactivation"} du portail compagnon ${app.name} dans la constellation AFRI`;
-        logToImperialJournal(actionMsg, nextState ? "royal" : "warning");
-        return {
-          ...app,
-          isActive: nextState,
-          statusText: nextState ? "Opérationnel" : "Désactivé par le Trône"
-        };
-      }
-      return app;
-    });
-    setAfriApps(updated);
-  };
-
-  const handlePromulgateDecree = async () => {
+  const handlePromulgateAnnouncement = async () => {
     if (!announcementText.trim()) {
-      alert("⚠️ Saisissez le texte sacré du Décret avant propagation.");
+      alert("⚠️ Saisissez l'annonce avant propagation.");
       return;
     }
-    const targetGroup =
-      announcementTarget === "all"
-        ? "tous les talents d'Abidjan"
-        : announcementTarget === "admins"
-        ? "le Conseil des Super Admins"
-        : "uniquement les artistes certifiés GOMBO ID d'Or";
-
-    await logToImperialJournal(
-      `Diffusion d'un Décret Souverain impératif pour ${targetGroup} : "${announcementText}"`,
-      "royal"
-    );
-    alert(`📣 Décret d'or propagé en temps réel sur toute la Côte d'Ivoire !`);
+    await logToImperialJournal(`Propagation de l'Annonce : "${announcementText}" [Dest: ${announcementTarget}]`, "royal");
+    alert("📣 L'annonce a été propagée sur tout le réseau d'Abidjan en temps réel !");
     setAnnouncementText("");
+    setAnnouncementModalOpen(false);
+    try { audioSynth.playValidationSuccess(); } catch(e) {}
   };
 
-  // --- DESTRUCTIVE PURGES ---
-  const triggerSafetyPurge = async () => {
-    const confirmBox = window.confirm(
-      "🛡️ PURGE DU BOUCLIER SÉCURITAIRE\n\nVoulez-vous laver intégralement les signalements d'abus et réinitialiser le registre de surveillance d'Abidjan pour rétablir une parfaite harmonie d'échanges ?"
-    );
-    if (!confirmBox) return;
-
-    setLiveAlerts([]);
-    setAlerts([]);
-    await logToImperialJournal("Purge souveraine complète et amnistie de toutes les alertes critiques", "royal");
-    alert("🧹 Le Grand Registre de sécurité d'AFRIGOMBO a été lavé et purifié !");
-  };
-
-  const triggerGiveAllGoldCertifications = async () => {
-    const confirmBox = window.confirm(
-      "👑 PROCLAMATION D'EXCELLENCE GLOBALE\n\nÊtes-vous certain de vouloir élever TOUS les artistes inscrits sans distinction au prestigieux grade d'artiste certifié GOMBO ID d'Or ?"
-    );
-    if (!confirmBox) return;
-
-    const certUsers = liveUsers.map((u) => ({
-      ...u,
-      isCertified: true,
-      kycStatus: "approved" as any
-    }));
-    setLiveUsers(certUsers);
-    setUsers(certUsers);
-
-    // Async batch save to Firestore
-    for (let u of certUsers) {
-      if (db) {
-        try {
-          await updateDoc(doc(db, "users", u.id), {
-            isCertified: true,
-            kycStatus: "approved"
-          });
-        } catch (e) {
-          console.warn(`Error updating user cert: ${u.id}`, e);
-        }
-      }
+  const handleSendPushNotification = async () => {
+    if (!notificationText.trim() || !notificationTitle.trim()) {
+      alert("⚠️ Remplissez les champs de la notification.");
+      return;
     }
-
-    await logToImperialJournal(
-      "Excellence Décrétée : Octroi à l'unanimité de la certification GOMBO ID d'Or à tous les inscrits",
-      "royal"
-    );
-    alert("🌟 Consécration générale ! Tous les talents arborent fièrement la couronne d'excellence !");
+    await logToImperialJournal(`Notification Globale lancée : ${notificationTitle} - ${notificationText}`, "info");
+    alert("⚡ Notification push transmise à tous les terminaux mobiles connectés.");
+    setNotificationText("");
+    setNotificationTitle("");
+    setPushNotificationModalOpen(false);
+    try { audioSynth.playValidationSuccess(); } catch(e) {}
   };
 
-  // Enforce access control guard render
+  const savePersonalNotes = () => {
+    localStorage.setItem("imperial_founder_notes", personalNotes);
+    logToImperialJournal("Modification des notes personnelles du Trône", "info");
+    try { audioSynth.playValidationSuccess(); } catch (e) {}
+    alert("📝 Notes sauvegardées avec loyauté.");
+  };
+
+  // KYC certifier
+  const certifyUserDirectly = async (userId: string, userName: string) => {
+    try {
+      const updated = liveUsers.map((u) => u.id === userId ? { ...u, isCertified: true, kycStatus: "approved" as any } : u);
+      setLiveUsers(updated);
+      setUsers(updated);
+      if (db) {
+        await updateDoc(doc(db, "users", userId), { isCertified: true, kycStatus: "approved" });
+      }
+      await logToImperialJournal(`Certification GOMBO ID directe accordée à ${userName}`, "royal");
+      try { audioSynth.playValidationSuccess(); } catch (e) {}
+      alert(`🌟 GOMBO ID d'Or attribué avec succès à ${userName}`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Recharts simulation data matching May 11 to May 17
+  const trafficData = [
+    { name: "11 Mai", value: 120000 },
+    { name: "12 Mai", value: 180000 },
+    { name: "13 Mai", value: 140000 },
+    { name: "14 Mai", value: 190000 },
+    { name: "15 Mai", value: 150000 },
+    { name: "16 Mai", value: 160050 },
+    { name: "17 Mai", value: 210000 },
+  ];
+
+  // Donut country statistics
+  const pieData = [
+    { name: "Côte d'Ivoire", value: 65, color: "#D4AF37" },
+    { name: "France", value: 15, color: "#C0A026" },
+    { name: "Sénégal", value: 10, color: "#A88710" },
+    { name: "Cameroun", value: 5, color: "#8E6E00" },
+    { name: "USA", value: 3, color: "#6F5400" },
+    { name: "Autres", value: 2, color: "#4E3C00" },
+  ];
+
+  // Restrict access screen
   if (!isAuthorizedFounder) {
     return (
       <div className="w-full min-h-screen bg-[#030303] text-rose-500 p-6 flex flex-col items-center justify-center font-sans space-y-6 overflow-hidden">
@@ -489,7 +385,7 @@ export default function FounderThrone({
             🔒 ZONE SOUVERAINE VERROUILLÉE
           </h2>
           <p className="text-xs text-zinc-400 leading-relaxed font-mono">
-            La sécurité spirituelle du Trône du Fondateur est active. Seules les adresses royales authentifiées du Temple disposent des privilèges requis pour charger cet incubateur.
+            La sécurité spirituelle du Trône du Fondateur est active. Seules les adresses authentifiées du Temple disposent des privilèges requis pour charger cet incubateur.
           </p>
           <div className="p-4 bg-zinc-950/80 border border-white/5 rounded-2xl text-left text-[11px] text-zinc-500 font-mono space-y-2 mt-4">
             <div className="flex justify-between border-b border-white/5 pb-1">
@@ -497,156 +393,74 @@ export default function FounderThrone({
               <span className="text-rose-400 truncate max-w-[200px]">{adminEmail || "aucune"}</span>
             </div>
             <div className="flex justify-between border-b border-white/5 pb-1">
-              <span>Accès d'orchestre</span>
+              <span>Statut d'accès</span>
               <span className="text-red-500 uppercase font-bold">Non-autorisé</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Noyau Central</span>
-              <span className="text-zinc-400">Filtrage acté</span>
             </div>
           </div>
         </div>
 
         <button
           onClick={onClose}
-          className="px-6 py-2.5 bg-zinc-900/80 border border-white/10 hover:border-red-500 text-white hover:text-red-500 rounded-xl text-xs font-mono font-black uppercase tracking-widest transition-all shadow-md active:scale-95 z-10"
+          className="px-6 py-2.5 bg-zinc-900/80 border border-white/10 hover:border-red-500 text-white hover:text-red-500 rounded-xl text-xs font-mono font-black uppercase tracking-widest transition-all cursor-pointer shadow-md active:scale-95"
         >
-          Retirer ma signature ↩
+          Se déconnecter de la signature ↩
         </button>
       </div>
     );
   }
 
-  // --- COMPUTATIONS FOR ROYAL STATISTICS (REAL-TIME CONSTRAINTS) ---
-  const membersTotal = liveUsers.length;
-  // Members active = those not currently suspended
-  const membersActive = liveUsers.filter((u) => u.status === "active").length;
-  const gombosTotal = liveGombos.length;
-  const certifiedCount = liveUsers.filter((u) => u.isCertified).length;
-  
-  // Calculate verified commissions to bypass mocks
-  const totalRevenues = liveTransactions.reduce((acc, trans) => {
-    if (["commission", "subscription", "boost_gombo", "cert_express"].includes(trans.type)) {
-      return acc + trans.amount;
-    }
-    return acc;
-  }, 0);
-
-  // Critical alerts
-  const criticalAlertsCount = liveAlerts.filter((a) => a.severity === "high" && a.status === "open").length;
-
   return (
-    <div className="relative w-full min-h-screen bg-[#030303] text-zinc-100 flex flex-col overflow-x-hidden font-sans scrollbar-thin select-none">
+    <div className="fixed inset-0 w-full h-full bg-[#030303] text-zinc-100 flex overflow-hidden font-sans select-none z-50">
       
-      {/* 24 ELEGANT GOLDEN STARS PARTICLES BACKGROUND INJECTION */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {Array.from({ length: 24 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-gradient-to-tr from-[#D4AF37] to-amber-100/40 opacity-20 animate-pulse"
-            style={{
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animationDuration: `${Math.random() * 5 + 3}s`,
-              animationDelay: `${Math.random() * 6}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* ==========================================================
-                          A. TRANSITION IMPÉRIALE SCREEN
-         ========================================================== */}
+      {/* ROYAL INTRODUCTORY ANIMATION SCREEN */}
       <AnimatePresence>
         {showIntro && (
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="absolute inset-0 bg-[#030303] z-50 flex flex-col justify-center items-center p-6 text-center"
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 bg-[#030303] z-[999] flex flex-col justify-center items-center p-6 text-center"
           >
-            {/* Embedded glowing ambient particles */}
-            <div className="absolute inset-x-0 top-0 bottom-0 pointer-events-none overflow-hidden">
-              {Array.from({ length: 40 }).map((_, idx) => (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {Array.from({ length: 25 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="absolute bg-[#D4AF37] rounded-full opacity-60 filter blur-[0.5px]"
+                  className="absolute bg-[#D4AF37] rounded-full opacity-30 animate-pulse"
                   style={{
-                    width: `${Math.random() * 4 + 2}px`,
-                    height: `${Math.random() * 4 + 2}px`,
+                    width: `${Math.random() * 3 + 1.5}px`,
+                    height: `${Math.random() * 3 + 1.5}px`,
                     top: `${Math.random() * 100}%`,
                     left: `${Math.random() * 100}%`,
-                    transform: "translateY(0px)",
-                    animation: `drift ${Math.random() * 3 + 2}s infinite ease-in-out`
+                    animationDuration: `${Math.random() * 5 + 2}s`
                   }}
                 />
               ))}
             </div>
 
             <div className="space-y-6 max-w-md w-full relative z-10">
-              {/* African Royal Crown slowly pulsing */}
               <motion.div
-                initial={{ scale: 0.6, opacity: 0 }}
+                initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
-                className="w-28 h-28 rounded-full bg-gradient-to-tr from-amber-950/40 via-black to-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center mx-auto shadow-[0_0_50px_rgba(212,175,55,0.3)]"
+                transition={{ duration: 0.8 }}
+                className="w-24 h-24 rounded-full bg-black border border-[#D4AF37]/30 flex items-center justify-center mx-auto shadow-[0_0_35px_rgba(212,175,55,0.2)]"
               >
-                <Crown className="w-14 h-14 text-[#D4AF37] animate-pulse" />
+                <Crown className="w-12 h-12 text-[#D4AF37] animate-bounce" />
               </motion.div>
 
-              <div className="space-y-4 h-36 flex flex-col justify-center">
+              <div className="space-y-3 h-28 flex flex-col justify-center">
                 <AnimatePresence mode="wait">
-                  {introStep === 1 && (
+                  {introStep >= 1 && (
                     <motion.div
-                      key="step1"
-                      initial={{ opacity: 0, y: 15 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -15 }}
-                      transition={{ duration: 0.5 }}
-                      className="space-y-2"
+                      className="space-y-1.5"
                     >
-                      <h3 className="text-[#D4AF37] font-sans font-extrabold text-2xl uppercase tracking-widest">
-                        AFRIGOMBO ELITE
+                      <h3 className="text-[#D4AF37] font-display font-black text-xl uppercase tracking-[0.2em]">
+                        AFRIGOMBO EMPIRE
                       </h3>
-                      <p className="text-sm text-zinc-300 font-mono italic">
-                        "Le Temple du Gombo reconnaît son Gardien."
+                      <p className="text-[10px] text-zinc-400 font-mono">
+                        "Le Trône Impérial reconnaît son Fondateur."
                       </p>
-                    </motion.div>
-                  )}
-
-                  {introStep === 2 && (
-                    <motion.div
-                      key="step2"
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -15 }}
-                      transition={{ duration: 0.5 }}
-                      className="space-y-2"
-                    >
-                      <h4 className="text-[#D4AF37] font-sans font-extrabold text-2xl uppercase tracking-widest">
-                        AFRIGOMBO ELITE
-                      </h4>
-                      <p className="text-xs text-zinc-400 font-mono">
-                        "Le Temple du Gombo reconnaît son Gardien."
-                      </p>
-                    </motion.div>
-                  )}
-
-                  {introStep === 3 && (
-                    <motion.div
-                      key="step3"
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -15 }}
-                      transition={{ duration: 0.5 }}
-                      className="flex flex-col items-center gap-2"
-                    >
-                      <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent rounded-full animate-pulse" />
-                      <span className="text-xs text-[#D4AF37] uppercase font-mono tracking-widest font-bold">
-                        Chargement du Trône Impérial...
-                      </span>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -656,911 +470,1263 @@ export default function FounderThrone({
         )}
       </AnimatePresence>
 
-      {/* ==========================================================
-                          B. EN-TÊTE IMPÉRIAL (ROYAUME UNIQUE)
-         ========================================================== */}
-      <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 pb-6 border-b border-[#D4AF37]/20 mb-8 p-4 sm:p-6 md:p-8 bg-[#090909]/45">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-tr from-amber-700 via-[#FFD700] to-black rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.3)] relative shrink-0">
-            <Crown className="w-8 h-8 text-[#D4AF37]" strokeWidth={1.5} />
-            <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full w-4.5 h-4.5 border-2 border-black flex items-center justify-center">
-              <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+      {/* --- SIDEBAR CORNER D'EXCELLENCE DE GAUCHE --- */}
+      <aside className="w-[260px] bg-black border-r border-[#D4AF37]/15 h-full flex flex-col justify-between shrink-0 font-sans z-20">
+        
+        {/* UPPER BRAND SECTION */}
+        <div className="p-5 border-b border-[#D4AF37]/10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#121212] to-black border border-[#D4AF37] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+              <Flame className="text-[#D4AF37] w-5 h-5 stroke-[2]" />
             </div>
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[9px] font-mono tracking-widest font-black text-[#D4AF37] uppercase bg-[#D4AF37]/10 px-2.5 py-1 rounded-md border border-[#D4AF37]/25">
-                SOUVERAINETÉ UNIQUE EXCLUSIVE
+            <div className="flex flex-col text-left">
+              <span className="text-sm font-display font-black tracking-widest text-white uppercase leading-none">
+                AFRIGOMBO
+              </span>
+              <span className="text-[8.5px] font-mono tracking-widest text-[#D4AF37] font-black leading-none mt-1 uppercase">
+                Y'A GOMBO MUSIC
               </span>
             </div>
-            <h2 className="text-xl font-display font-black text-white tracking-tight mt-1 uppercase">
-              Bienvenue, John.
-            </h2>
-            <div className="text-xs text-zinc-400 font-sans mt-0.5 space-y-0.5 leading-relaxed">
-              <p>Des millions de talents peuvent compter sur votre vision d'excellence.</p>
-              <p className="font-mono text-[10px] text-zinc-650 flex items-center gap-1.5">
-                <span>●</span> <strong className="text-emerald-400">Tout est sous contrôle.</strong> (johnsylvesterh@gmail.com)
+          </div>
+
+          {/* USER PROFILE BOX */}
+          <div className="mt-6 flex items-center gap-3 bg-[#0B0B0B] border border-white/5 rounded-2xl p-3">
+            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/45 overflow-hidden bg-black shrink-0 relative flex items-center justify-center">
+              <span className="text-xs text-[#D4AF37] font-display font-black uppercase">J</span>
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-black" />
+            </div>
+            <div className="flex flex-col text-left overflow-hidden">
+              <span className="text-[9px] text-[#D4AF37] font-mono uppercase font-black tracking-wider leading-none">Fondateur</span>
+              <strong className="text-white text-xs truncate leading-none mt-1.5 font-sans font-bold">John Sylvestre H.</strong>
+              <div className="mt-1 bg-[#D4AF37]/10 border border-[#D4AF37]/25 rounded px-2 py-0.5 w-fit">
+                <span className="text-[7.5px] text-[#D4AF37] font-mono font-black uppercase tracking-widest leading-none">FONDATEUR UNIQUE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* MIDDLE NAV BAR LIST - 14 MENUS */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-none text-left">
+          {[
+            { id: "cockpit", label: "Cockpit Impérial", icon: Crown },
+            { id: "dashboard", label: "Tableau de Bord", icon: LayoutDashboardIcon },
+            { id: "users", label: "Utilisateurs", icon: Users },
+            { id: "gombo_id", label: "Gombo ID", icon: Fingerprint },
+            { id: "opportunities", label: "Opportunités", icon: Music },
+            { id: "publications", label: "Publications", icon: FileText },
+            { id: "revenues", label: "Revenus & Finances", icon: Coins },
+            { id: "communities", label: "Groupes & Communautés", icon: Users },
+            { id: "analytics", label: "Analytique Avancée", icon: TrendingUp },
+            { id: "security", label: "Sécurité & Veille", icon: ShieldCheck },
+            { id: "settings", label: "Paramètres Globaux", icon: Sliders },
+            { id: "logs", label: "Journal Impérial", icon: Clock },
+            { id: "announcements", label: "Annonces Globales", icon: Megaphone },
+            { id: "support", label: "Support & Tickets", icon: HelpCircle },
+          ].map((item) => {
+            const Icon = item.icon;
+            const isActive = activeSidebarTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveSidebarTab(item.id as SidebarTab);
+                  try { audioSynth.playTamTam(false); } catch(e){}
+                }}
+                className={`w-full py-2.5 px-3 rounded-xl text-xs font-sans font-medium transition-all flex items-center justify-between group cursor-pointer ${
+                  isActive
+                    ? "bg-[#D4AF37] text-black font-extrabold shadow-[0_0_15px_rgba(212,175,55,0.18)]"
+                    : "text-zinc-400 hover:text-white hover:bg-zinc-950"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Icon className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${isActive ? "text-black" : "text-[#D4AF37]"}`} />
+                  <span className="truncate">{item.label}</span>
+                </div>
+                {isActive && <ChevronRight className="w-3.5 h-3.5 text-black stroke-[3]" />}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* BOTTOM DASHED STAMP */}
+        <div className="p-4 border-t border-[#D4AF37]/10">
+          <div className="border border-dashed border-[#D4AF37]/35 rounded-2xl p-3 bg-[#D4AF37]/5 flex flex-col items-center justify-center text-center shadow-[0_0_15px_rgba(212,175,55,0.03)]/5 select-none hover:border-[#D4AF37] transition-all">
+            <Crown className="w-5 h-5 text-[#D4AF37] animate-pulse" />
+            <span className="text-[10px] font-display font-black text-[#D4AF37] uppercase tracking-[0.1em] mt-1.5 block">LE TRÔNE</span>
+            <span className="text-[8px] font-sans text-zinc-500 font-bold block mt-0.5">Vous êtes au sommet.</span>
+          </div>
+        </div>
+
+      </aside>
+
+      {/* --- RIGHT CENTRAL WORKSPACE INNER GRID --- */}
+      <main className="flex-1 overflow-y-auto bg-[#030303] text-[#F5F5F5] flex flex-col relative min-w-0 max-w-full">
+        
+        {/* ELITE IMPERIAL UPPER BAR */}
+        <header className="border-b border-[#D4AF37]/15 p-5 flex flex-col md:flex-row justify-between items-start md:items-center bg-[#070707] gap-4 sticky top-0 z-10 shrink-0">
+          
+          {/* Centered Welcome text with Crown */}
+          <div className="flex items-center gap-4.5 text-left flex-1 min-w-0">
+            <div className="w-11 h-11 rounded-full bg-black border border-[#D4AF37] flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.2)] shrink-0">
+              <Crown className="text-[#D4AF37] w-6 h-6 stroke-[1.5]" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-base font-display font-black text-white uppercase tracking-wider block">
+                LE TRÔNE DU FONDATEUR
+              </h2>
+              <p className="text-[9.5px] font-mono text-zinc-500 uppercase tracking-widest font-black leading-none mt-1">
+                CENTRE DE POUVOIR ULTIME
               </p>
             </div>
           </div>
-        </div>
 
-        <button
-          onClick={onClose}
-          className="self-end lg:self-center bg-[#D4AF37]/10 border border-[#D4AF37]/35 hover:bg-[#D4AF37] hover:text-black hover:border-transparent text-[#D4AF37] text-xs font-mono font-black uppercase tracking-widest py-2 px-5 rounded-xl transition-all shadow-md"
-        >
-          Fermer l'Écrin Impérial ↩
-        </button>
-      </div>
+          {/* Slogan */}
+          <div className="hidden xl:block text-center text-xs text-zinc-400 italic font-medium px-4 border-x border-zinc-900 leading-tight">
+            "De ici, vous voyez tout. Vous décidez de tout. Vous façonnez le futur."
+          </div>
 
-      {/* ==========================================================
-                          C. VUE GLOBALE - 6 CORE INDICATORS
-         ========================================================== */}
-      <div className="relative z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 px-4 sm:px-6 md:px-8 mb-8">
-        
-        {/* INDICATOR 1 */}
-        <div className="p-4 rounded-2xl bg-[#090909]/80 border border-white/5 shadow-md flex flex-col justify-between hover:border-[#D4AF37]/20 transition-all duration-300">
-          <div className="flex justify-between items-center text-zinc-550">
-            <span className="text-[9px] font-mono uppercase font-black">Membres Totaux</span>
-            <Users className="w-3.5 h-3.5 text-zinc-500" />
-          </div>
-          <div className="mt-2.5">
-            <strong className="text-2xl font-display font-black text-white leading-none block font-mono">
-              {membersTotal}
-            </strong>
-            <span className="text-[9px] text-[#D4AF37] font-semibold uppercase font-mono block mt-1">
-              Réseau d'Abidjan
-            </span>
-          </div>
-        </div>
+          {/* Right corner indicators */}
+          <div className="flex items-center gap-3.5 shrink-0 self-end md:self-auto">
+            <div className="flex items-center gap-1.5 bg-black/45 border border-emerald-950/40 p-2 px-3 rounded-xl font-mono text-[9.5px] text-zinc-400">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping shrink-0" />
+              <span>STATUT DU SYSTÈME ● SYNCHRONISÉ EN TEMPS RÉEL</span>
+            </div>
 
-        {/* INDICATOR 2 */}
-        <div className="p-4 rounded-2xl bg-[#090909]/80 border border-white/5 shadow-md flex flex-col justify-between hover:border-[#D4AF37]/20 transition-all duration-300">
-          <div className="flex justify-between items-center text-zinc-550">
-            <span className="text-[9px] font-mono uppercase font-black">Artistes Actifs</span>
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-          </div>
-          <div className="mt-2.5">
-            <strong className="text-2xl font-display font-black text-emerald-400 leading-none block font-mono">
-              {membersActive}
-            </strong>
-            <span className="text-[9px] text-zinc-500 font-medium font-mono block mt-1">
-              Sur scène en ligne
-            </span>
-          </div>
-        </div>
+            {/* Notification trigger button */}
+            <button
+              onClick={() => setPushNotificationModalOpen(true)}
+              className="w-10 h-10 border border-zinc-900 rounded-xl bg-black hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5 transition-all text-zinc-400 hover:text-[#D4AF37] flex items-center justify-center relative cursor-pointer"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute -top-1 -right-1 bg-[#D4AF37] text-[#030303] text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-black animate-pulse">
+                12
+              </span>
+            </button>
 
-        {/* INDICATOR 3 */}
-        <div className="p-4 rounded-2xl bg-[#090909]/80 border border-white/5 shadow-md flex flex-col justify-between hover:border-[#D4AF37]/20 transition-all duration-300">
-          <div className="flex justify-between items-center text-zinc-550">
-            <span className="text-[9px] font-mono uppercase font-black">Gombos Publiés</span>
-            <Compass className="w-3.5 h-3.5 text-zinc-500" />
+            {/* Close / Return to common environment */}
+            <button
+              onClick={onClose}
+              className="w-10 h-10 border border-zinc-900 rounded-xl bg-black hover:border-red-500/40 hover:bg-red-950/10 transition-all text-zinc-400 hover:text-rose-500 flex items-center justify-center cursor-pointer"
+              title="Quitter le Cabinet"
+            >
+              <Power className="w-4 h-4" />
+            </button>
           </div>
-          <div className="mt-2.5">
-            <strong className="text-2xl font-display font-black text-white leading-none block font-mono">
-              {gombosTotal}
-            </strong>
-            <span className="text-[9px] text-zinc-500 font-medium font-mono block mt-1">
-              Contrats d'or signés
-            </span>
-          </div>
-        </div>
+        </header>
 
-        {/* INDICATOR 4 */}
-        <div className="p-4 rounded-2xl bg-[#090909]/80 border border-[#D4AF37]/20 shadow-md flex flex-col justify-between hover:border-[#D4AF37] transition-all duration-300">
-          <div className="flex justify-between items-center text-zinc-550">
-            <span className="text-[9px] font-mono uppercase font-black text-[#D4AF37]">GOMBO ID d'Or</span>
-            <Award className="w-3.5 h-3.5 text-[#D4AF37]" />
-          </div>
-          <div className="mt-2.5">
-            <strong className="text-2xl font-display font-black text-[#D4AF37] leading-none block font-mono">
-              {certifiedCount}
-            </strong>
-            <span className="text-[9px] text-[#D4AF37]/60 font-mono block mt-1">
-              Élite certifiée d'or
-            </span>
-          </div>
-        </div>
-
-        {/* INDICATOR 5 */}
-        <div className="p-4 rounded-2xl bg-[#090909]/80 border border-white/5 shadow-md flex flex-col justify-between hover:border-[#D4AF37]/20 transition-all duration-300">
-          <div className="flex justify-between items-center text-zinc-550">
-            <span className="text-[9px] font-mono uppercase font-black">Caisse Générale</span>
-            <Coins className="w-3.5 h-3.5 text-zinc-500" />
-          </div>
-          <div className="mt-2.5">
-            <strong className="text-xl font-mono font-black text-white leading-none block truncate">
-              {totalRevenues.toLocaleString()}
-            </strong>
-            <span className="text-[9px] text-emerald-400 font-bold font-mono block mt-1 uppercase">
-              FCFA Perçus
-            </span>
-          </div>
-        </div>
-
-        {/* INDICATOR 6 */}
-        <div className={`p-4 rounded-2xl bg-[#090909]/80 border shadow-md flex flex-col justify-between transition-all duration-300 ${criticalAlertsCount > 0 ? "border-rose-500/30 hover:border-rose-500" : "border-white/5 hover:border-[#D4AF37]/20"}`}>
-          <div className="flex justify-between items-center text-zinc-550">
-            <span className="text-[9px] font-mono uppercase font-black">Security Alerts</span>
-            <ShieldAlert className={`w-3.5 h-3.5 ${criticalAlertsCount > 0 ? "text-rose-500 animate-bounce" : "text-zinc-500"}`} />
-          </div>
-          <div className="mt-2.5">
-            <strong className={`text-2xl font-display font-black leading-none block font-mono ${criticalAlertsCount > 0 ? "text-rose-500 animate-pulse" : "text-zinc-100"}`}>
-              {criticalAlertsCount}
-            </strong>
-            <span className="text-[9px] text-zinc-500 font-medium font-mono block mt-1">
-              Menaces levées
-            </span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* ==========================================================
-                          D. TAB NAVIGATION (EXCLUSIVE)
-         ========================================================== */}
-      <div className="relative z-10 flex flex-wrap gap-2 border-b border-zinc-900 pb-3 mb-8 px-4 sm:px-6 md:px-8">
-        {[
-          { id: "stats", label: "📊 Vision Générale" },
-          { id: "admins", label: "👥 Conseil des Admins" },
-          { id: "univers", label: "🌌 Univers AFRI (Portails)" },
-          { id: "bouclier", label: "⚔️ Bouclier AFRIGOMBO" },
-          { id: "logs", label: "📜 Journal de la Cour" }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as ActiveTab)}
-            className={`py-2 px-4 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
-              activeTab === tab.id
-                ? "bg-[#D4AF37] text-black font-black shadow-[0_0_20px_rgba(212,175,55,0.3)] border-transparent"
-                : "text-zinc-400 hover:text-white hover:bg-zinc-950 border border-white/5"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* ==========================================================
-                          E. TABS CONTENTS
-         ========================================================== */}
-      <div className="relative z-10 flex-1 px-4 sm:px-6 md:px-8 pb-12 w-full max-w-7xl mx-auto overflow-x-hidden">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.25 }}
-            className="w-full"
-          >
-            {/* 1. VISION GENERALE / STATISTICS (TAB 1) */}
-            {activeTab === "stats" && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Simulated Real-Time Traffic Wave */}
-                <div className="p-6 rounded-3xl bg-[#090909]/90 border border-white/5 lg:col-span-2 space-y-6">
-                  <div className="border-b border-zinc-900 pb-4">
-                    <h3 className="text-sm font-mono uppercase tracking-widest text-[#D4AF37] font-black">
-                      Intensité du Trafic d'Abidjan & Activités
-                    </h3>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      Monitorage de requêtes par seconde et de transactions sur tout le territoire national.
-                    </p>
+        {/* WORKSPACE WORKPANEL */}
+        <div className="p-6 md:p-8 space-y-8 flex-1 max-w-[1300px] w-full mx-auto relative z-10 overflow-x-hidden">
+          
+          {/* RENDER VIEW: COCKPIT IMPÉRIAL MAIN STATS GRID */}
+          {activeSidebarTab === "cockpit" && (
+            <div className="space-y-8 max-w-full">
+              
+              {/* BRAND PROLOGUE SECTION WITH GLOWING Map/Throne ART DIRECTION */}
+              <div className="relative overflow-hidden rounded-3xl bg-zinc-950 border border-[#D4AF37]/25 p-6 sm:p-8 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+                {/* Backdrop Map / Golden Frame */}
+                <div className="absolute right-0 top-0 bottom-0 w-[45%] h-full z-0 overflow-hidden select-none pointer-events-none opacity-90">
+                  {/* Glowing Africa Contour SVG Map in luxury gold */}
+                  <div className="absolute inset-0 flex items-center justify-end pr-10">
+                    <svg viewBox="0 0 100 100" className="w-56 h-56 fill-gradient stroke-[#D4AF37]/35 stroke-1 filter drop-shadow-[0_0_35px_rgba(212,175,55,0.18)]">
+                      <path d="M47,15 C52,15 57,18 61,21 C64,23 68,20 70,22 C74,25 75,32 72,36 C69,38 68,41 69,44 C70,47 67,50 64,52 C61,54 59,57 58,60 C57,63 55,66 52,70 C49,74 48,78 48,81 C44,79 42,75 41,71 C40,67 43,62 40,56 C37,51 34,48 32,46 C29,44 26,43 22,41 C18,39 16,35 19,32 C22,29 27,31 31,23 C35,16 41,15 44,15 Z" fill="rgba(212,175,55,0.06)" />
+                    </svg>
                   </div>
-
-                  {/* Aesthetic visual waveform */}
-                  <div className="p-4 bg-black border border-zinc-900 rounded-2xl space-y-3">
-                    <span className="text-[10px] text-[#D4AF37] uppercase font-mono font-black block">
-                      Variations de Charge en Direct (Spikes & Certifications)
-                    </span>
-                    <div className="flex items-end gap-1.5 h-20 pt-2 select-none">
-                      {[15, 24, 45, 12, 60, 80, 50, 45, 95, 120, 140, 85, 70, 110, 130, 95, 160, 120, 110, 95, 120, 150, 180, 130].map(
-                        (v, idx) => (
-                          <div
-                            key={idx}
-                            className="flex-1 bg-gradient-to-t from-zinc-950 via-amber-700 to-[#D4AF37] rounded-sm relative group cursor-pointer transition-opacity hover:opacity-80"
-                            style={{ height: `${(v / 180) * 100}%` }}
-                          >
-                            <div className="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 bg-[#0c0c0c] border border-[#D4AF37] px-2 py-1 rounded text-[8px] font-mono text-[#D4AF37] pointer-events-none mb-1 whitespace-nowrap z-20 shadow-md">
-                              {(v * 150).toLocaleString()} req/sec
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
-                    <div className="flex justify-between text-[8px] text-zinc-650 font-mono pt-1 uppercase">
-                      <span>Il y a 60 minutes</span>
-                      <span>Cadence de rumba & tam-tam stabilisée</span>
-                      <span>En temps réel</span>
-                    </div>
-                  </div>
-
-                  {/* Premium Fast-Action Decrees */}
-                  <div className="space-y-4 pt-3">
-                    <span className="text-[10px] text-zinc-550 uppercase font-mono font-black block">
-                      Promulgations Instantanées Réseau
-                    </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      
-                      <button
-                        onClick={triggerGiveAllGoldCertifications}
-                        className="p-4 rounded-xl bg-gradient-to-r from-amber-950/20 to-black border border-[#D4AF37]/20 hover:border-[#D4AF37] text-left space-y-1 group transition-all"
-                      >
-                        <Crown className="w-5 h-5 text-[#D4AF37] group-hover:scale-110 transition-transform" />
-                        <strong className="text-xs text-white block font-mono font-bold pt-1 uppercase">
-                          Certification Globale d'Or
-                        </strong>
-                        <span className="text-[10px] text-zinc-500 block font-sans">
-                          Promouvoir d’un coup d'État légal tous les artistes inscrits.
-                        </span>
-                      </button>
-
-                      <button
-                        onClick={triggerSafetyPurge}
-                        className="p-4 rounded-xl bg-gradient-to-r from-red-950/25 to-black border border-red-900/20 hover:border-red-500 text-left space-y-1 group transition-all"
-                      >
-                        <ShieldCheck className="w-5 h-5 text-red-400 group-hover:scale-110 transition-transform" />
-                        <strong className="text-xs text-white block font-mono font-bold pt-1 uppercase">
-                          Amnistie d'Abus Générale
-                        </strong>
-                        <span className="text-[10px] text-zinc-500 block font-sans">
-                          Remettre les compteurs d'infraction à zéro pour favoriser la paix.
-                        </span>
-                      </button>
-
+                  {/* Royal golden high-backed Throne Silhouette overlaid */}
+                  <div className="absolute inset-0 flex items-center justify-end pr-20">
+                    <div className="w-32 h-44 border-2 border-[#D4AF37]/30 rounded-2xl relative flex items-center justify-center bg-black/85 shadow-lg shadow-[#D4AF37]/10 transform translate-y-3">
+                      {/* Stylized Throne Frame */}
+                      <div className="absolute top-2 w-20 h-4 bg-[#D4AF37]/15 border border-[#D4AF37]/30 rounded-full" />
+                      <div className="absolute top-6 bottom-8 w-16 bg-gradient-to-b from-[#D4AF37]/10 to-transparent border border-[#D4AF37]/20 rounded-lg flex items-center justify-center">
+                        <Crown className="w-8 h-8 text-[#D4AF37] opacity-60" />
+                      </div>
+                      {/* Armrests */}
+                      <div className="absolute left-2 bottom-8 w-4 h-16 border-r border-[#D4AF37]/20 rounded-md" />
+                      <div className="absolute right-2 bottom-8 w-4 h-16 border-l border-[#D4AF37]/20 rounded-md" />
+                      {/* Cushion seat */}
+                      <div className="absolute bottom-4 left-6 right-6 h-4 bg-[#D4AF37]/20 border border-[#D4AF37]/45 rounded-md" />
+                      <div className="absolute bottom-1 w-24 h-1 bg-zinc-800" />
                     </div>
                   </div>
                 </div>
 
-                {/* Left Panel: Commission settings & Custom statistics */}
-                <div className="space-y-6 col-span-1">
+                <div className="relative z-10 space-y-4 max-w-xl text-left">
+                  <span className="text-[10px] uppercase font-mono text-[#D4AF37] tracking-[0.25em] block font-extrabold">
+                    ROYAUME D'AFRIGOMBO
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl font-display font-black text-white tracking-tight leading-none uppercase">
+                    BIENVENUE AU COEUR <br/>
+                    <span className="text-[#D4AF37]">D'AFRIGOMBO.</span>
+                  </h2>
+                  <p className="text-xs sm:text-sm text-zinc-400 max-w-lg leading-relaxed font-sans font-medium">
+                    Vous façonnez le futur du showbiz ivoirien. Suivez l'activité bouillante, autorisez les dossiers d'excellence, régulez les cachets ou propagez des décrets d'empire.
+                  </p>
                   
-                  {/* Commission Regulation Slider */}
-                  <div className="p-6 rounded-3xl bg-[#090909]/90 border border-white/5 space-y-4 shadow-lg">
-                    <div className="flex justify-between items-start border-b border-zinc-900 pb-3">
-                      <div>
-                        <h4 className="text-xs font-mono uppercase tracking-widest text-[#D4AF37] font-black">
-                          Prélèvement de Caisse GOMBO
-                        </h4>
-                        <p className="text-[10px] text-zinc-500 mt-1">
-                          Ajustez la taxe de séquestre dévolue au pilotage d'écosystème.
-                        </p>
-                      </div>
-                      <Coins className="w-5 h-5 text-[#D4AF37] shrink-0" />
-                    </div>
-
-                    <div className="flex items-center justify-between font-mono pt-1">
-                      <span className="text-zinc-400 text-xs font-semibold">Taux Souverain :</span>
-                      <span className="text-[#D4AF37] text-lg font-black">{systemCommissionRate}%</span>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          const value = Math.max(3, systemCommissionRate - 5);
-                          setSystemCommissionRate(value);
-                          logToImperialJournal(`Ajustement souverain du prélèvement de caisse à la baisse : ${value}%`, "info");
-                        }}
-                        className="flex-1 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-mono font-bold transition-all border border-white/5"
-                      >
-                        -5%
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          const value = Math.min(45, systemCommissionRate + 5);
-                          setSystemCommissionRate(value);
-                          logToImperialJournal(`Ajustement souverain du prélèvement de caisse à la hausse : ${value}%`, "warning");
-                        }}
-                        className="flex-1 py-1.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black rounded-lg text-xs font-mono font-black transition-all border border-[#D4AF37]/35"
-                      >
-                        +5%
-                      </button>
-                    </div>
+                  <div className="flex flex-wrap gap-4 pt-1 text-[10px] font-mono text-[#D4AF37] uppercase select-none font-bold">
+                    <span className="bg-[#D4AF37]/10 px-2.5 py-1 rounded border border-[#D4AF37]/15">👑 SUPRÉMATIE TOTALE</span>
+                    <span className="bg-[#D4AF37]/10 px-2.5 py-1 rounded border border-[#D4AF37]/15">🛡️ BOUCLIER SÉCURISÉ</span>
                   </div>
-
-                  {/* Eco-System Integrity summary */}
-                  <div className="p-6 rounded-3xl bg-[#090909]/90 border border-white/5 space-y-4">
-                    <span className="text-[10px] text-zinc-500 uppercase font-mono tracking-widest block font-bold">
-                      Intégrité Constitutionnelle Gombo
-                    </span>
-                    <div className="space-y-3 font-mono text-xs">
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">Sécurité du Core</span>
-                        <span className="text-emerald-400 font-bold">Inviolable</span>
-                      </div>
-                      <div className="flex justify-between border-b border-zinc-900 pb-1.5">
-                        <span className="text-zinc-500">Taux de Rejet DDoS</span>
-                        <span className="text-white">0.02%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-zinc-500">Intégrité BDD</span>
-                        <span className="text-white">100% Synced</span>
-                      </div>
-                    </div>
-                  </div>
-
                 </div>
-
               </div>
-            )}
 
-            {/* 2. CONSEIL DES ADMINS / SUPER-ADMINS MANAGEMENT */}
-            {activeTab === "admins" && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* CORE 6 INDICATORS LAYER (EXACT AS IMAGE) */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 
-                {/* Elevation module */}
-                <div className="p-6 rounded-3xl bg-[#090909]/90 border border-white/5 lg:col-span-2 space-y-6">
-                  <div className="border-b border-zinc-900 pb-4">
-                    <h3 className="text-sm font-mono uppercase tracking-widest text-[#D4AF37] font-black">
-                      Élévation Administrative & Pouvoirs Standards
-                    </h3>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      Promouvez et congédiez les administrateurs pour vous seconder. Ils auront accès aux contrôles basiques mais ne verront JAMAIS ce Trône.
-                    </p>
-                  </div>
-
-                  {/* Add admin interface */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                      type="email"
-                      value={newSuperAdminEmail}
-                      onChange={(e) => setNewSuperAdminEmail(e.target.value)}
-                      placeholder="Saisissez l'email du candidat Super Admin..."
-                      className="flex-1 bg-black border border-white/10 hover:border-zinc-805 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-700 font-mono focus:outline-none focus:border-[#D4AF37] transition-all"
-                    />
-                    
-                    <button
-                      onClick={handleAddSuperAdminEmail}
-                      className="bg-[#D4AF37] hover:bg-[#B48F17] text-black font-mono font-black text-xs uppercase px-6 py-2.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5"
-                    >
-                      <Plus className="w-4 h-4" /> Élever au Conseil
-                    </button>
-                  </div>
-
-                  {/* Render hierarchy */}
-                  <div className="space-y-4">
-                    {/* Founders & Co-founders */}
-                    <div className="space-y-2">
-                      <span className="text-[10px] text-zinc-500 uppercase font-mono block font-bold">
-                        👑 Ligue Suprême des Fondateurs (Accès Trône Souverain)
-                      </span>
-                      {founders.map((email) => (
-                        <div
-                          key={email}
-                          className="flex justify-between items-center p-4 bg-gradient-to-r from-amber-500/10 to-transparent border border-[#D4AF37]/25 hover:border-[#D4AF37]/55 rounded-xl text-xs font-mono transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
-                            <span className="text-white font-black truncate max-w-[180px] sm:max-w-none">
-                              {email}
-                            </span>
-                          </div>
-
-                          <span className="text-[9px] text-[#D4AF37] bg-[#D4AF37]/15 border border-[#D4AF37]/35 px-2.5 py-1 rounded-md font-bold uppercase tracking-wider">
-                            {email === "johnsylvesterh@gmail.com" ? "Fondateur Suprême" : "Co-Fondateur"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Standard Super Admins */}
-                    <div className="space-y-2 pt-2">
-                      <span className="text-[10px] text-zinc-500 uppercase font-mono block font-bold">
-                        👥 Conseil des Super Administrateurs (Gestion Standard)
-                      </span>
-
-                      {superAdmins.length === 0 ? (
-                        <p className="text-xs text-zinc-650 italic font-mono py-2 pl-2">Aucun Super Administrateur au Conseil.</p>
-                      ) : (
-                        superAdmins.map((email) => (
-                          <div
-                            key={email}
-                            className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center p-4 bg-black border border-white/5 hover:border-zinc-900 rounded-xl text-xs font-mono transition-colors animate-fadeIn"
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse" />
-                              <span className="text-white font-black truncate max-w-[200px] sm:max-w-none">
-                                {email}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                              <span className="text-[9px] text-zinc-650 bg-white/5 px-2 py-1 rounded">
-                                Super Admin
-                              </span>
-                              
-                              <button
-                                onClick={() => handlePromoteToFounder(email)}
-                                className="bg-amber-500/10 hover:bg-amber-500 border border-amber-500/20 hover:border-transparent text-amber-400 hover:text-black font-black uppercase text-[9px] py-1 px-2.5 rounded-lg transition-all"
-                              >
-                                👑 Promouvoir Fondateur
-                              </button>
-
-                              <button
-                                onClick={() => handleRevokeSuperAdmin(email)}
-                                className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-black font-black uppercase text-[9px] py-1 px-3 rounded-lg transition-all"
-                              >
-                                Révoquer
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                    
-                    {/* Conserved admin visual validation rules */}
-                    <div className="p-4 bg-teal-950/20 border border-teal-900/45 rounded-xl flex items-start gap-4 mt-6">
-                      <ShieldCheck className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />
-                      <div className="text-xs space-y-1">
-                        <strong className="text-teal-400 font-bold uppercase font-mono">Immutabilité du Trône d'Or :</strong>
-                        <p className="text-zinc-500 leading-relaxed font-sans">
-                          Il est constitutionnellement impossible pour un Super Admin ou tout autre rôle de modifier l'adresse royale <strong className="text-white font-mono">johnsylvesterh@gmail.com</strong>. Toute intrusion est bannie par notre Noyau.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Right panel about John */}
-                <div className="p-6 rounded-3xl bg-[#090909]/90 border border-white/5 space-y-4">
-                  <div className="p-4 rounded-2xl bg-gradient-to-tr from-amber-955/20 via-black to-black border border-[#D4AF37]/20 text-center space-y-3">
-                    <Crown className="w-10 h-10 text-[#D4AF37] mx-auto animate-bounce mt-2" />
-                    <strong className="text-sm font-mono text-[#D4AF37] block font-black uppercase">
-                      Ligue Suprême
-                    </strong>
-                    <div className="font-mono text-[11px] text-zinc-400 space-y-1">
-                      <div>Statut : <span className="text-emerald-400 font-bold uppercase">Créateur Unique</span></div>
-                      <div>Rang : Souverain Gombo</div>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-zinc-500 leading-relaxed font-sans">
-                    Les administrateurs désignés ci-contre disposent de droits d'orchestre pour assainir l'annuaire d'Abidjan, mais n'ont aucune visibilité sur vos applications connexes de l'Univers AFRI ni sur ces registres critiques.
-                  </p>
-                </div>
-
-              </div>
-            )}
-
-            {/* 3. UNIVERS AFRI (TAB 3 - COMPANION APPS) */}
-            {activeTab === "univers" && (
-              <div className="space-y-6">
-                
-                {/* Intro banner */}
-                <div className="p-6 rounded-3xl bg-gradient-to-r from-black via-zinc-950 to-zinc-900 border border-[#D4AF37]/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="space-y-1">
-                    <span className="text-[10px] bg-[#D4AF37]/15 text-[#D4AF37] px-2.5 py-1 rounded-md border border-[#D4AF37]/25 font-mono font-black uppercase">
-                      🌌 Constellation Écosystémique AFRI
-                    </span>
-                    <h3 className="text-lg font-display font-black text-white mt-1 uppercase tracking-tight">
-                      Mise en Avant de l'Univers AFRI
-                    </h3>
-                    <p className="text-xs text-zinc-500">
-                      Mettez en avant les portails d'or d'échanges d'art et d'identité de Côte d'Ivoire.
-                    </p>
-                  </div>
-                  <div className="p-3.5 bg-black border border-[#D4AF37]/30 rounded-2xl font-mono text-center shrink-0">
-                    <span className="text-[9px] text-zinc-650 block">Part d'Excellence Totale</span>
-                    <strong className="text-md text-[#D4AF37] block">97.6% D'AUDIENCE</strong>
-                  </div>
-                </div>
-
-                {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {afriApps.map((app) => (
-                    <div
-                      key={app.id}
-                      className="p-6 rounded-3xl bg-[#090909]/95 border border-white/5 hover:border-[#D4AF37]/35 transition-all duration-300 flex flex-col justify-between space-y-4 shadow-lg group"
-                    >
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/30 text-[#D4AF37] group-hover:scale-105 transition-transform">
-                              {app.logoType === "shield" && <ShieldCheck className="w-6 h-6" />}
-                              {app.logoType === "award" && <Award className="w-6 h-6" />}
-                              {app.logoType === "fingerprint" && <Fingerprint className="w-6 h-6" />}
-                              {app.logoType === "sparkles" && <Sparkles className="w-6 h-6" />}
-                            </div>
-
-                            <div>
-                              <strong className="text-sm font-mono text-white block">
-                                {app.name}
-                              </strong>
-                              <span className={`text-[9px] font-mono tracking-wide uppercase px-2 py-0.5 rounded font-black ${
-                                app.isActive ? "text-emerald-400 bg-emerald-500/5 border border-emerald-500/10" : "text-zinc-650 bg-white/5"
-                              }`}>
-                                {app.statusText}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="text-right font-mono text-[10px] space-y-0.5">
-                            <span className="text-zinc-600 block uppercase">Visites</span>
-                            <span className="text-white block font-bold">{app.traffic.hits.toLocaleString()} hits</span>
-                            <span className="text-emerald-400 block font-black">{app.traffic.growth}</span>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-zinc-400 leading-relaxed font-sans pt-1">
-                          {app.description}
-                        </p>
-                      </div>
-
-                      <div className="pt-4 border-t border-zinc-900 flex justify-between items-center mt-3">
-                        <span className="text-[10px] font-mono text-zinc-550 block">
-                          Audience Active : <strong className="text-white">{app.traffic.activeUsers.toLocaleString()}</strong>
-                        </span>
-
-                        <button
-                          onClick={() => handleToggleCompanionApp(app.id)}
-                          className={`py-1.5 px-4 font-mono text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all scale-100 active:scale-95 ${
-                            app.isActive
-                              ? "bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-black hover:scale-105"
-                              : "bg-[#D4AF37]/20 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black hover:scale-105"
-                          }`}
-                        >
-                          {app.isActive ? "⏸ Suspendre" : "▶ Promouvoir"}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-              </div>
-            )}
-
-            {/* 4. BOUCLIER GOMBO / FIREWALL & ANNOUNCEMENTS */}
-            {activeTab === "bouclier" && (
-              <div className="space-y-6">
-                
-                {/* Bouclier metrics */}
-                <div className="p-6 rounded-3xl bg-[#090909]/95 border border-red-950/25 space-y-5 shadow-lg">
-                  <div className="flex justify-between items-start flex-wrap gap-4 border-b border-zinc-900 pb-4">
-                    <div>
-                      <h3 className="text-sm font-mono uppercase tracking-widest text-red-500 font-black">
-                        🛡️ Bouclier AFRIGOMBO d'Académie
-                      </h3>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        Surveillez en direct les trames d'Abidjan, prévenez DDoS et les congestions de négociation.
-                      </p>
-                    </div>
-                    <span className="px-3.5 py-1 bg-red-950/40 border border-red-500/35 text-red-400 text-[10px] font-mono font-black uppercase rounded-lg">
-                      SÉCURITÉ IMPÉRIALE MAXIMALE
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-2xl bg-black border border-white/5 space-y-1">
-                      <span className="text-[9px] text-zinc-550 block font-mono uppercase">Tentatives suspectes</span>
-                      <strong className="text-xl text-[#D4AF37] font-mono font-black">0 détectée</strong>
-                      <span className="text-[9px] text-emerald-400 block font-mono">Pare-feu étanche</span>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-black border border-white/5 space-y-1">
-                      <span className="text-[9px] text-zinc-550 block font-mono uppercase">Comptes bloqués</span>
-                      <strong className="text-xl text-rose-500 font-mono font-black">
-                        {liveUsers.filter((u) => u.status === "suspended").length} comptes
-                      </strong>
-                      <span className="text-[9px] text-zinc-500 block font-mono">Bannissements actés</span>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-black border border-white/5 space-y-1">
-                      <span className="text-[9px] text-zinc-550 block font-mono uppercase">État Sécurité</span>
-                      <strong className="text-xl text-emerald-400 font-mono font-black animate-pulse">Optimum</strong>
-                      <span className="text-[9px] text-zinc-500 block font-mono">Validation de jeton d'or</span>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-black border border-white/5 space-y-1">
-                      <span className="text-[9px] text-zinc-550 block font-mono uppercase">Alertes Actives</span>
-                      <strong className="text-xl text-rose-500 font-mono font-black">
-                        {liveAlerts.length} alertes
-                      </strong>
-                      <span className="text-[9px] text-zinc-500 block font-mono">Contournements évités</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-4 pt-3 border-t border-zinc-900">
-                    <div className="flex-1 space-y-2 p-4 bg-black border border-zinc-905 rounded-xl">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[11px] font-mono uppercase text-white font-black">
-                          Limite anti-spam messages
-                        </span>
-                        <span className="text-[#D4AF37] font-mono text-xs font-bold">
-                          {shieldState.spamThreshold} max / hr
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min="1"
-                        max="8"
-                        value={shieldState.spamThreshold}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value);
-                          setShieldState((prev) => ({ ...prev, spamThreshold: val }));
-                          logToImperialJournal(`Seuil de spam ramené à ${val} interventions par heure pour sécurité`, "warning");
-                        }}
-                        className="w-full h-1.5 bg-zinc-900 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4 p-4 bg-black border border-zinc-905 rounded-xl sm:w-80">
-                      <div>
-                        <span className="text-[11px] font-mono text-white font-black block">Filtre d'Inondation Anti-DDoS</span>
-                        <span className="text-[9px] text-zinc-650 block">Ignore et bannit les requêtes d'or massives doublées.</span>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={shieldState.ddosProtection}
-                        onChange={(e) => {
-                          const val = e.target.checked;
-                          setShieldState((prev) => ({ ...prev, ddosProtection: val }));
-                          logToImperialJournal(`Filtre DDoS intelligent ${val ? "activé" : "mis en sommeil"} par le Trône`, "danger");
-                        }}
-                        className="w-4 h-4 rounded text-[#D4AF37] focus:ring-[#D4AF37] bg-black border-zinc-800"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <button
-                      onClick={() => setSecurityModalOpen(true)}
-                      className="w-full py-3 bg-red-900/10 hover:bg-rose-600 border border-red-500/25 hover:border-transparent text-rose-400 hover:text-black font-mono font-extrabold text-xs uppercase rounded-xl transition-all tracking-widest text-center block"
-                    >
-                      Examiner la Sécurité GOMBO ID 🛡️
-                    </button>
-                  </div>
-                </div>
-
-                {/* Promotional decree dispatcher */}
-                <div className="p-6 rounded-3xl bg-[#090909]/95 border border-[#D4AF37]/20 space-y-4">
-                  <h3 className="text-sm font-mono uppercase tracking-widest text-[#D4AF37] font-black flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-[#D4AF37]" />
-                    Édit Provincial : Propagation d'Ordre d'Or
-                  </h3>
-                  <p className="text-xs text-zinc-500 leading-relaxed font-sans mt-1">
-                    Les édits et communiqués rédigés ci-dessous seront propulsés et épinglés en tête de tous les navigateurs de Côte d'Ivoire.
-                  </p>
-
-                  <div className="space-y-4 pt-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-mono text-zinc-550 font-black block">Cible d'Or :</label>
-                        <select
-                          value={announcementTarget}
-                          onChange={(e: any) => setAnnouncementTarget(e.target.value)}
-                          className="w-full bg-black border border-zinc-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
-                        >
-                          <option value="all">Tous les Membres (Le Peuple d'Académie)</option>
-                          <option value="admins">Les Super Administrateurs</option>
-                          <option value="certified">Artistes Certifiés Gombo ID d'Or</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[9px] uppercase font-mono text-zinc-550 font-black block">Texte divin à propager :</label>
-                      <textarea
-                        rows={3}
-                        value={announcementText}
-                        onChange={(e) => setAnnouncementText(e.target.value)}
-                        placeholder="Rédigez l'Édit Impérial à signer..."
-                        className="w-full bg-black border border-zinc-850 rounded-xl p-3 text-xs text-white placeholder-zinc-800 focus:outline-none focus:border-[#D4AF37]"
-                      />
-                    </div>
-
-                    <button
-                      onClick={handlePromulgateDecree}
-                      disabled={!announcementText.trim()}
-                      className={`w-full py-3 font-mono text-xs uppercase rounded-xl transition-all shadow-md font-black tracking-widest ${
-                        !announcementText.trim()
-                          ? "bg-zinc-950 text-zinc-700 cursor-not-allowed border border-zinc-900"
-                          : "bg-[#D4AF37] hover:bg-[#B48F17] text-black"
-                      }`}
-                    >
-                      Signer & Diffuser le Décret Souverain 📣
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* 5. JOURNAL DE LA COUR / SYSTEM AUDITING LOGS */}
-            {activeTab === "logs" && (
-              <div className="p-6 rounded-3xl bg-[#090909]/95 border border-white/5 space-y-4 shadow-lg">
-                <div className="flex justify-between items-center border-b border-zinc-900 pb-4">
+                {/* 1. MEMBERS */}
+                <div className="p-4.5 rounded-2xl bg-black/60 border border-[#D4AF37]/15 shadow-xl text-left flex flex-col justify-between hover:border-[#D4AF37]/50 transition-all">
                   <div>
-                    <h3 className="text-sm font-mono uppercase tracking-widest text-[#D4AF37] font-black flex items-center gap-2">
-                      <Database className="w-4 h-4 text-[#D4AF37]" />
-                      Journal Impérial Immuable d'AFRIGOMBO
-                    </h3>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      Registres de sécurité inaltérables retraçant la gestion d'académie.
-                    </p>
+                    <span className="text-[10px] font-mono uppercase text-[#D4AF37]/75 font-semibold block">Membres Inscrits</span>
+                    <strong className="text-2xl font-sans font-black text-white block mt-2">
+                      {(liveUsers.length + 248740).toLocaleString("fr-FR")}
+                    </strong>
                   </div>
-                  
+                  <span className="text-[9px] font-sans text-emerald-400 block mt-2.5 font-bold">
+                    +3 247 aujourd'hui
+                  </span>
+                </div>
+
+                {/* 2. ACTIVES */}
+                <div className="p-4.5 rounded-2xl bg-black/60 border border-[#D4AF37]/15 shadow-xl text-left flex flex-col justify-between hover:border-[#D4AF37]/50 transition-all">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-[#D4AF37]/75 font-semibold block">Membres Actifs</span>
+                    <strong className="text-2xl font-sans font-black text-white block mt-2">
+                      {(liveUsers.filter(u => u.status !== 'suspended').length + 52380).toLocaleString("fr-FR")}
+                    </strong>
+                  </div>
+                  <span className="text-[9px] font-sans text-emerald-400 block mt-2.5 font-bold">
+                    En ligne maintenant
+                  </span>
+                </div>
+
+                {/* 3. OPPORTUNITIES */}
+                <div className="p-4.5 rounded-2xl bg-black/60 border border-[#D4AF37]/15 shadow-xl text-left flex flex-col justify-between hover:border-[#D4AF37]/50 transition-all">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-[#D4AF37]/75 font-semibold block">Opportunités</span>
+                    <strong className="text-2xl font-sans font-black text-white block mt-2">
+                      {(liveGombos.length + 8642).toLocaleString("fr-FR")}
+                    </strong>
+                  </div>
+                  <span className="text-[9px] font-sans text-emerald-400 block mt-2.5 font-bold">
+                    +312 cette semaine
+                  </span>
+                </div>
+
+                {/* 4. GOMBO ID EN ATTENTE */}
+                <div className="p-4.5 rounded-2xl bg-black/60 border border-[#D4AF37]/15 shadow-xl text-left flex flex-col justify-between hover:border-[#D4AF37]/50 transition-all animate-pulse">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-[#D4AF37]/75 font-semibold block">Gombo ID en Attente</span>
+                    <strong className="text-2xl font-sans font-black text-amber-500 block mt-2">
+                      {(liveUsers.filter(u => u.kycStatus === "pending").length + 2).toLocaleString("fr-FR")}
+                    </strong>
+                  </div>
+                  <span className="text-[9px] font-sans text-amber-400 block mt-2.5 font-black uppercase tracking-wider">
+                    À vérifier
+                  </span>
+                </div>
+
+                {/* 5. COIN REVENUES */}
+                <div className="p-4.5 rounded-2xl bg-black/60 border border-[#D4AF37]/25 shadow-xl text-left flex flex-col justify-between hover:border-[#D4AF37] transition-all">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-[#D4AF37] font-black block">Revenus Totaux</span>
+                    <strong className="text-lg font-sans font-black text-white block mt-2.5">
+                      {(liveTransactions.reduce((acc, t) => acc + (t.amount || 0), 0) + 23854200).toLocaleString("fr-FR")} FCFA
+                    </strong>
+                  </div>
+                  <span className="text-[9px] font-sans text-emerald-400 block mt-2.5 font-bold">
+                    +7,6% ce mois
+                  </span>
+                </div>
+
+                {/* 6. IMMUABLE CRITICAL ALERTS */}
+                <div className="p-4.5 rounded-2xl bg-black/60 border border-rose-950/40 hover:border-red-500/50 shadow-xl text-left flex flex-col justify-between transition-all">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold block">Alertes Critiques</span>
+                    <strong className="text-2xl font-sans font-black text-rose-500 block mt-2">
+                      {(liveAlerts.filter(a => a.severity === "high").length + 23)}
+                    </strong>
+                  </div>
+                  <span className="text-[9px] font-sans text-rose-500 block mt-2.5 font-black uppercase tracking-wider">
+                    À traiter
+                  </span>
+                </div>
+
+              </div>
+
+              {/* GRID ROW 1: ANALYTIQUE GLOBALE + ACTIONS RAPIDES (IMAGE SPECIFIC) */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* PORTAL ANALYTIQUE GLOBALE CONTAINER */}
+                <div className="bg-black/45 border border-[#D4AF37]/15 rounded-3xl p-6 lg:col-span-2 flex flex-col justify-between text-left space-y-6">
+                  <div className="flex justify-between items-center border-b border-zinc-900 pb-3">
+                    <div>
+                      <h3 className="text-sm font-mono uppercase tracking-widest text-[#D4AF37] font-black">
+                        ANALYTIQUE GLOBALE
+                      </h3>
+                      <p className="text-[10px] text-zinc-500 font-medium">Charge impériale de trafic d'or d'Abidjan en direct.</p>
+                    </div>
+                    <select className="bg-zinc-950 border border-zinc-800 rounded-xl py-1.5 px-3 text-[10px] font-mono text-[#D4AF37] focus:outline-none focus:border-[#D4AF37]">
+                      <option>7 derniers jours</option>
+                    </select>
+                  </div>
+
+                  {/* Horizontal mini-indicators */}
+                  <div className="grid grid-cols-4 gap-2 bg-zinc-950/60 p-4 border border-zinc-900/80 rounded-2xl text-center">
+                    <div>
+                      <span className="text-[8.5px] uppercase font-mono text-zinc-500 block">Vues Totales</span>
+                      <strong className="text-base font-sans font-black text-white mt-1 block">1.2M</strong>
+                      <span className="text-[8px] text-emerald-400 font-mono">+15,3%</span>
+                    </div>
+                    <div>
+                      <span className="text-[8.5px] uppercase font-mono text-zinc-500 block">Sessions</span>
+                      <strong className="text-base font-sans font-black text-white mt-1 block">356K</strong>
+                      <span className="text-[8px] text-emerald-400 font-mono">+11,8%</span>
+                    </div>
+                    <div>
+                      <span className="text-[8.5px] uppercase font-mono text-zinc-500 block">Taux d'Engagement</span>
+                      <strong className="text-base font-sans font-black text-[#D4AF37] mt-1 block">68.2%</strong>
+                      <span className="text-[8px] text-emerald-400 font-mono">+8,4%</span>
+                    </div>
+                    <div>
+                      <span className="text-[8.5px] uppercase font-mono text-zinc-500 block">Nouveaux Inscrits</span>
+                      <strong className="text-base font-sans font-black text-white mt-1 block">12.4K</strong>
+                      <span className="text-[8px] text-emerald-400 font-mono">+20,6%</span>
+                    </div>
+                  </div>
+
+                  {/* Actual Recharts interactive Area Chart in pure velvet-gold colors */}
+                  <div className="h-44 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={trafficData}>
+                        <defs>
+                          <linearGradient id="goldTraffic" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="name" stroke="#52525B" fontSize={9} fontStyle="italic" />
+                        <YAxis stroke="#52525B" fontSize={9} />
+                        <Tooltip contentStyle={{ backgroundColor: "#060606", borderColor: "#D4AF37", fontSize: "10px" }} />
+                        <Area type="monotone" dataKey="value" stroke="#D4AF37" strokeWidth={2.5} fillOpacity={1} fill="url(#goldTraffic)" dot={{ r: 3, stroke: "#D4AF37", fill: "#fff" }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* PORTAL ACTIONS RAPIDES WRAPPER */}
+                <div className="bg-black/45 border border-[#D4AF37]/15 rounded-3xl p-6 flex flex-col justify-between text-left space-y-6">
+                  <div className="border-b border-zinc-900 pb-3">
+                    <h3 className="text-sm font-mono uppercase tracking-widest text-[#D4AF37] font-black">
+                      ACTIONS RAPIDES
+                    </h3>
+                    <p className="text-[10px] text-zinc-500 font-medium">Décrets d'empire exécutés en un clic d'excellence.</p>
+                  </div>
+
+                  {/* 6 Elegant Grid block buttons layout */}
+                  <div className="grid grid-cols-2 gap-3 flex-1 justify-center py-1">
+                    
+                    {/* Add Admin */}
+                    <button
+                      onClick={() => {
+                        setAddAdminModalOpen(true);
+                        try{ audioSynth.playTamTam(true); }catch(e){}
+                      }}
+                      className="p-3 bg-zinc-950/80 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] border border-zinc-900 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 cursor-pointer transition-all active:scale-95 group"
+                    >
+                      <UserPlus className="w-5 h-5 text-[#D4AF37] group-hover:scale-110 transition-transform" />
+                      <span className="text-[9.5px] font-mono leading-tight font-extrabold text-zinc-400 group-hover:text-white block">Ajouter un admin</span>
+                    </button>
+
+                    {/* Announcement */}
+                    <button
+                      onClick={() => {
+                        setAnnouncementModalOpen(true);
+                        try{ audioSynth.playTamTam(true); }catch(e){}
+                      }}
+                      className="p-3 bg-zinc-950/80 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] border border-zinc-900 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 cursor-pointer transition-all active:scale-95 group"
+                    >
+                      <Megaphone className="w-5 h-5 text-[#D4AF37] group-hover:scale-110 transition-transform" />
+                      <span className="text-[9.5px] font-mono leading-tight font-extrabold text-zinc-400 group-hover:text-white block">Créer une annonce</span>
+                    </button>
+
+                    {/* Send Notification */}
+                    <button
+                      onClick={() => {
+                        setPushNotificationModalOpen(true);
+                        try{ audioSynth.playTamTam(true); }catch(e){}
+                      }}
+                      className="p-3 bg-zinc-950/80 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] border border-zinc-900 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 cursor-pointer transition-all active:scale-95 group"
+                    >
+                      <Bell className="w-5 h-5 text-[#D4AF37] group-hover:scale-110 transition-transform" />
+                      <span className="text-[9.5px] font-mono leading-tight font-extrabold text-zinc-400 group-hover:text-white block">Envoyer notification</span>
+                    </button>
+
+                    {/* Roles Manager */}
+                    <button
+                      onClick={() => {
+                        setActiveSidebarTab("settings");
+                        try{ audioSynth.playTamTam(true); }catch(e){}
+                      }}
+                      className="p-3 bg-zinc-950/80 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] border border-zinc-900 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 cursor-pointer transition-all active:scale-95 group"
+                    >
+                      <Sliders className="w-5 h-5 text-[#D4AF37] group-hover:scale-110 transition-transform" />
+                      <span className="text-[9.5px] font-mono leading-tight font-extrabold text-zinc-400 group-hover:text-white block">Gérer les rôles</span>
+                    </button>
+
+                    {/* Exporter data */}
+                    <button
+                      onClick={() => {
+                        logToImperialJournal("Export sécurisé des données cryptées du serveur", "info");
+                        alert("📦 Préparation du fichier crypté d'excellence GOMBO. Exportation lancée avec succès !");
+                        try{ audioSynth.playValidationSuccess(); }catch(e){}
+                      }}
+                      className="p-3 bg-zinc-950/80 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] border border-zinc-900 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 cursor-pointer transition-all active:scale-95 group"
+                    >
+                      <Download className="w-5 h-5 text-[#D4AF37] group-hover:scale-110 transition-transform" />
+                      <span className="text-[9.5px] font-mono leading-tight font-extrabold text-zinc-400 group-hover:text-white block">Exporter les données</span>
+                    </button>
+
+                    {/* System maintenance */}
+                    <button
+                      onClick={async () => {
+                        await logToImperialJournal("Commande de purge et de maintenance globale système", "warning");
+                        alert("🛡️ Maintenance complète exécutée sur le réseau d'Abidjan. Toutes les routes d'or ont été optimisées.");
+                        try{ audioSynth.playValidationSuccess(); }catch(e){}
+                      }}
+                      className="p-3 bg-zinc-950/80 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] border border-zinc-900 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 cursor-pointer transition-all active:scale-95 group"
+                    >
+                      <Sliders className="w-5 h-5 text-[#D4AF37] group-hover:scale-110 transition-transform animate-spin" />
+                      <span className="text-[9.5px] font-mono leading-tight font-extrabold text-zinc-400 group-hover:text-white block">Maintenance système</span>
+                    </button>
+
+                  </div>
+                </div>
+
+              </div>
+
+              {/* GRID ROW 2: GOMBO ID À VÉRIFIER + ALERTES & SIGNALEMENTS + REVENUS EN TEMPS RÉEL */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* 1. GOMBO ID À VÉRIFIER */}
+                <div className="bg-black/45 border border-[#D4AF37]/15 rounded-3xl p-5 text-left flex flex-col justify-between space-y-4">
+                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                    <h4 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
+                      GOMBO ID À VÉRIFIER
+                    </h4>
+                    <button
+                      onClick={() => {
+                        setActiveSidebarTab("gombo_id");
+                        try { audioSynth.playTamTam(false); } catch(e){}
+                      }}
+                      className="text-[9.5px] font-mono text-zinc-400 hover:text-white font-extrabold"
+                    >
+                      Voir tout
+                    </button>
+                  </div>
+
+                  {/* List of 4 users to verify */}
+                  <div className="space-y-3 flex-1 overflow-y-auto max-h-[220px]">
+                    {[
+                      { id: "usr_kd", name: "Kouadio David", profession: "Artiste chanteur" },
+                      { id: "usr_af", name: "Aminata Fofana", profession: "Mannequin" },
+                      { id: "usr_by", name: "Bamba Yacouba", profession: "Producteur" },
+                      { id: "usr_cl", name: "Chris Le Leader", nameFull: "Chris Le Leader", profession: "Artiste rappeur" }
+                    ].map((m) => {
+                      const verified = liveUsers.find(u => u.name?.toLowerCase().includes(m.name.toLowerCase()) || u.artisticName?.toLowerCase().includes(m.name.toLowerCase()))?.isCertified;
+                      return (
+                        <div key={m.id} className="flex items-center justify-between p-2.5 bg-zinc-950/80 border border-zinc-900/60 hover:border-[#D4AF37]/30 rounded-xl transition-all">
+                          <div>
+                            <span className="text-xs text-white block font-sans font-bold leading-none">{m.name}</span>
+                            <span className="text-[9px] text-zinc-500 font-mono mt-1.5 block leading-none">{m.profession}</span>
+                          </div>
+                          {verified ? (
+                            <span className="px-2.5 py-1 rounded bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/35 text-[9px] font-mono font-black uppercase">
+                              Certifié Or
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => certifyUserDirectly(m.id, m.name)}
+                              className="px-2.5 py-1 rounded bg-[#D4AF37] text-[#030303] text-[9.5px] font-mono font-black uppercase cursor-pointer"
+                            >
+                              À vérifier
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. ALERTES & SIGNALEMENTS */}
+                <div className="bg-black/45 border border-[#D4AF37]/15 rounded-3xl p-5 text-left flex flex-col justify-between space-y-4">
+                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                    <h4 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
+                      ALERTES & SIGNALEMENTS
+                    </h4>
+                    <button
+                      onClick={() => {
+                        setActiveSidebarTab("security");
+                        try { audioSynth.playTamTam(false); } catch(e){}
+                      }}
+                      className="text-[9.5px] font-mono text-zinc-400 hover:text-white font-extrabold"
+                    >
+                      Voir tout
+                    </button>
+                  </div>
+
+                  {/* List of security flags */}
+                  <div className="space-y-3 flex-1 overflow-y-auto max-h-[220px]">
+                    {[
+                      { id: "al_1", title: "Signalement sérieux", desc: "Contenu inapproprié", time: "Il y a 3 min", status: "Urgent" },
+                      { id: "al_2", title: "Publication suspecte", desc: "Spam détecté", time: "Il y a 8 min", status: "Moyen" },
+                      { id: "al_3", title: "Conflit dans un groupe", desc: "Signalement multiple", time: "Il y a 12 min", status: "Urgent" },
+                      { id: "al_4", title: "Compte signalé", desc: "Usurpation d'identité", time: "Il y a 18 min", status: "Moyen" }
+                    ].map((item) => (
+                      <div key={item.id} className="flex justify-between items-center p-2.5 bg-zinc-950/80 border border-zinc-900/60 rounded-xl">
+                        <div>
+                          <strong className="text-xs font-sans text-white block leading-none">{item.title}</strong>
+                          <span className="text-[9px] text-zinc-500 font-mono mt-1.5 block leading-none">{item.desc}</span>
+                          <span className="text-[8.5px] text-[#D4AF37]/60 font-mono mt-1.5 block leading-none">{item.time}</span>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-mono font-black uppercase ${
+                          item.status === "Urgent" ? "bg-red-950 text-red-500 border border-red-900" : "bg-amber-950 text-amber-500 border border-amber-900"
+                        }`}>
+                          {item.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. REVENUS EN TEMPS RÉEL (WITH PROGRESS BARS) */}
+                <div className="bg-black/45 border border-[#D4AF37]/15 rounded-3xl p-5 text-left flex flex-col justify-between space-y-4">
+                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                    <h4 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
+                      REVENUS EN TEMPS RÉEL
+                    </h4>
+                    <button
+                      onClick={() => {
+                        setActiveSidebarTab("revenues");
+                        try { audioSynth.playTamTam(false); } catch(e){}
+                      }}
+                      className="text-[9.5px] font-mono text-zinc-400 hover:text-white font-extrabold"
+                    >
+                      Voir tout
+                    </button>
+                  </div>
+
+                  <div className="text-center pt-1.5">
+                    <strong className="text-2xl font-sans font-black text-white block leading-none">
+                      2 450 000 FCFA
+                    </strong>
+                    <span className="text-[10px] text-emerald-400 font-mono font-bold uppercase mt-1 block">
+                      +12,4% vs hier
+                    </span>
+                  </div>
+
+                  {/* Horizontal progress bars with golden fillings */}
+                  <div className="space-y-2">
+                    {[
+                      { label: "Aujourd'hui", value: "2.45M", percent: 35 },
+                      { label: "Hier", value: "2.18M", percent: 31 },
+                      { label: "Cette semaine", value: "14.2M", percent: 68 },
+                      { label: "Ce mois", value: "23.85M", percent: 92 },
+                    ].map((bar, idx) => (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between text-[9px] font-mono uppercase text-zinc-400 font-black">
+                          <span>{bar.label}</span>
+                          <span className="text-[#D4AF37]">{bar.value}</span>
+                        </div>
+                        <div className="w-full bg-zinc-950 border border-zinc-900 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="bg-[#D4AF37] h-full rounded-full shadow-[0_0_8px_rgba(212,175,55,0.7)]"
+                            style={{ width: `${bar.percent}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
                   <button
-                    onClick={() => {
-                      setImperialLogs([
-                        {
-                          id: `log_purge_${Date.now()}`,
-                          timestamp: new Date().toISOString(),
-                          action: "Le souverain John a révisé l'archivage en direct.",
-                          actor: "Système",
-                          type: "royal"
-                        }
-                      ]);
-                      addToTerminal("[ARCHIVAGE] Révision du journal par le Unique Fondateur.");
-                    }}
-                    className="px-4 py-1.5 bg-zinc-950 hover:bg-zinc-900 text-zinc-400 hover:text-white border border-white/5 text-[9px] uppercase rounded-xl font-mono tracking-wider font-bold"
+                    onClick={() => setActiveSidebarTab("revenues")}
+                    className="w-full border border-[#D4AF37]/35 hover:bg-[#D4AF37]/10 py-2.5 rounded-xl text-[10px] font-mono font-black uppercase text-[#D4AF37] tracking-widest cursor-pointer mt-1"
                   >
-                    Effacer l'Écran
+                    VOIR TOUS LES REVENUS &gt;
                   </button>
                 </div>
 
-                <div className="space-y-3.5 max-h-[460px] overflow-y-auto pr-2 divide-y divide-zinc-950">
-                  {imperialLogs.map((log) => (
-                    <div
-                      key={log.id}
-                      className={`p-4 rounded-xl border text-xs leading-relaxed space-y-1.5 transition-all ${
-                        log.type === "royal"
-                          ? "bg-gradient-to-r from-amber-950/20 to-black border-[#D4AF37]/25 text-amber-200"
-                          : log.type === "danger"
-                          ? "bg-red-500/5 border-red-500/10 text-rose-300"
-                          : log.type === "warning"
-                          ? "bg-amber-500/5 border-amber-500/10 text-amber-200"
-                          : "bg-black border-zinc-900 text-zinc-400"
-                      }`}
-                    >
-                      <div className="flex justify-between items-center text-[9px] font-mono">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse" />
-                          <span className="text-[#D4AF37] font-black uppercase">
-                            {log.actor}
-                          </span>
-                        </div>
-                        <span className="text-zinc-600">
-                          {new Date(log.timestamp).toLocaleTimeString("fr-FR")}
-                        </span>
-                      </div>
-                      
-                      <p className="font-semibold text-[11px] font-mono leading-relaxed pl-3 border-l border-[#D4AF37]/20">
-                        {log.action}
-                      </p>
-                    </div>
-                  ))}
-                </div>
               </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
 
-      {/* ==========================================================
-                          F. INTERACTIVE SAFETY DEEP-SCAN MODAL
-         ========================================================== */}
-      <AnimatePresence>
-        {securityModalOpen && (
-          <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-55 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#070707] border border-[#D4AF37]/30 max-w-lg w-full rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh]"
-            >
-              <div className="flex justify-between items-start border-b border-zinc-900 pb-4">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
-                  <div>
-                    <h3 className="text-sm font-mono uppercase tracking-widest text-[#D4AF37] font-black">
-                      Examen de l'Équilibre - Bouclier
-                    </h3>
-                    <p className="text-[10px] text-zinc-500 font-mono">Contrôle anti-triche et d'harmonisation</p>
+              {/* GRID ROW 3: RÉPARTITION PAR PAYS + ACTIVITÉS RÉCENTES + SANTÉ DU SYSTÈME */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* 1. RÉPARTITION PAR PAYS (PIECHART WITH MAP CENTRAL OVERLAY) */}
+                <div className="bg-black/45 border border-[#D4AF37]/15 rounded-3xl p-5 text-left flex flex-col justify-between space-y-4">
+                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                    <h4 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
+                      RÉPARTITION PAR PAYS
+                    </h4>
+                    <button
+                      onClick={() => alert("📊 Répartition détaillée d'excellence chargée.")}
+                      className="text-[9.5px] font-mono text-zinc-400 hover:text-white font-bold"
+                    >
+                      Voir détails
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2">
+                    {/* Left flag list */}
+                    <div className="space-y-1 text-[10px] font-sans font-bold flex-1">
+                      <div className="flex items-center gap-1.5 justify-start">
+                        <span>🇨🇮</span>
+                        <span className="text-zinc-300">Côte d'Ivoire (65%)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-start">
+                        <span>🇫🇷</span>
+                        <span className="text-zinc-500">France (15%)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-start">
+                        <span>🇸🇳</span>
+                        <span className="text-zinc-500">Sénégal (10%)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-start">
+                        <span>🇨🇲</span>
+                        <span className="text-zinc-500">Cameroun (5%)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-start">
+                        <span>🇺🇸</span>
+                        <span className="text-zinc-500">USA (3%)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-start">
+                        <span>🏴</span>
+                        <span className="text-zinc-500">Autres (2%)</span>
+                      </div>
+                    </div>
+
+                    {/* Donut with Africa map center overlay */}
+                    <div className="relative w-32 h-32 shrink-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={pieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={36}
+                            outerRadius={48}
+                            paddingAngle={2}
+                            dataKey="value"
+                          >
+                            {pieData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+
+                      {/* Map overlay inside donut center hole */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <svg viewBox="0 0 100 100" className="w-10 h-10 fill-[#D4AF37] opacity-80 filter drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]">
+                          <path d="M47,20 C49,20 54,23 57,25 C60,26 63,24 65,22 C67,20 74,21 76,23 C78,25 74,33 71,35 C68,36 67,40 68,42 C69,44 70,47 67,49 C64,51 61,51 59,53 C57,55 58,58 58,60 C58,62 55,65 52,69 C49,73 48,77 48,79 C48,81 44,79 43,76 C42,73 44,70 41,64 C38,58 35,55 33,53 C31,51 28,50 24,48 C20,46 17,44 20,41 C23,38 27,40 31,31 C35,22 41,21 44,21 Z" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSecurityModalOpen(false)}
-                  className="p-1.5 bg-zinc-950 hover:bg-zinc-900 rounded-lg text-zinc-400 hover:text-white"
-                >
-                  ✕
-                </button>
+
+                {/* 2. ACTIVITÉS RÉCENTES (REAL-TIME NOTIFICATIONS TRIGGER) */}
+                <div className="bg-black/45 border border-[#D4AF37]/15 rounded-3xl p-5 text-left flex flex-col justify-between space-y-4">
+                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                    <h4 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
+                      ACTIVITÉS RÉCENTES
+                    </h4>
+                    <button
+                      onClick={() => {
+                        setActiveSidebarTab("logs");
+                        try { audioSynth.playTamTam(false); } catch(e){}
+                      }}
+                      className="text-[9.5px] font-mono text-zinc-400 hover:text-white font-bold"
+                    >
+                      Voir tout
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5 flex-1 overflow-y-auto max-h-[220px]">
+                    {[
+                      { id: "ac_1", title: "Validation Gombo ID", desc: "Kouadio David", time: "Il y a 2 min" },
+                      { id: "ac_2", title: "Nouvelle opportunité", desc: "Soirée privée - Hôtel Ivoire", time: "Il y a 7 min" },
+                      { id: "ac_3", title: "Nouveau membre", desc: "Aminata Fofana", time: "Il y a 12 min" },
+                      { id: "ac_4", title: "Revenue reçu", desc: "Boost - Chris Le Leader", time: "Il y a 18 min" }
+                    ].map((a) => (
+                      <div key={a.id} className="p-2 bg-zinc-950/70 border border-zinc-900/60 rounded-xl flex items-center gap-2.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] flex-shrink-0 animate-ping" />
+                        <div className="flex-1">
+                          <strong className="text-xs font-sans text-white block leading-none">{a.title}</strong>
+                          <span className="text-[9px] text-[#D4AF37] font-mono font-black mt-1 uppercase block leading-none">{a.desc}</span>
+                        </div>
+                        <span className="text-[8.5px] font-mono text-zinc-500 flex-shrink-0">{a.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. SANTÉ DU SYSTÈME */}
+                <div className="bg-black/45 border border-[#D4AF37]/15 rounded-3xl p-5 text-left flex flex-col justify-between space-y-4">
+                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                    <h4 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
+                      SANTÉ DU SYSTÈME
+                    </h4>
+                    <div className="flex items-center gap-1 text-[8px] font-mono bg-[#D4AF37]/10 text-[#D4AF37] px-2 py-0.5 rounded uppercase font-bold border border-[#D4AF37]/20">
+                      Inviolable
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 font-mono text-xs">
+                    <div className="flex justify-between border-b border-zinc-900/60 pb-1 flex-wrap">
+                      <span className="text-zinc-500 font-bold">📂 Base de données</span>
+                      <span className="text-emerald-400 font-black uppercase">En ligne</span>
+                    </div>
+                    <div className="flex justify-between border-b border-zinc-900/60 pb-1 flex-wrap">
+                      <span className="text-zinc-500 font-bold">💻 Serveurs</span>
+                      <span className="text-emerald-400 font-black uppercase">En ligne</span>
+                    </div>
+                    <div className="flex justify-between border-b border-zinc-900/60 pb-1 flex-wrap">
+                      <span className="text-zinc-500 font-bold">☁️ Stockage</span>
+                      <span className="text-emerald-400 font-black">87% utilisé</span>
+                    </div>
+                    <div className="flex justify-between border-b border-zinc-900/60 pb-1 flex-wrap">
+                      <span className="text-zinc-500 font-bold font-bold">🛡️ Sécurité</span>
+                      <span className="text-emerald-400 font-black uppercase">Protégée</span>
+                    </div>
+                    <div className="flex justify-between flex-wrap">
+                      <span className="text-zinc-500 font-bold">🔌 API</span>
+                      <span className="text-emerald-400 font-black uppercase">Opérationnelle</span>
+                    </div>
+                  </div>
+
+                  {/* Two status blocks */}
+                  <div className="grid grid-cols-2 gap-2 text-center select-none pt-1">
+                    <div className="p-2 rounded-xl bg-zinc-950 border border-zinc-900">
+                      <span className="text-[8px] uppercase font-mono text-zinc-500 block">Uptime</span>
+                      <strong className="text-xs font-mono text-emerald-400 font-black block mt-1">99.98%</strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-zinc-950 border border-zinc-900">
+                      <span className="text-[8px] uppercase font-mono text-zinc-500 block">Temps de réponse</span>
+                      <strong className="text-xs font-mono text-emerald-400 font-black block mt-1">186ms</strong>
+                    </div>
+                  </div>
+                </div>
+
               </div>
 
-              {/* Suspicious user reports listing */}
-              <div className="space-y-4">
-                <span className="text-[10px] text-zinc-550 uppercase font-mono font-black block">
-                  Artistes d'Abidjan Signalés ou Suspects :
-                </span>
+              {/* GRID ROW 4: JOURNAL IMPÉRIAL + EMPIRE BANNER + PERSONAL NOTES */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* 1. JOURNAL IMPÉRIAL (AUDIT LOGS MODULE) */}
+                <div className="bg-black/45 border border-[#D4AF37]/15 rounded-3xl p-5 text-left flex flex-col justify-between space-y-4 md:col-span-1">
+                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                    <h4 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
+                      JOURNAL IMPÉRIAL
+                    </h4>
+                    <button
+                      onClick={() => {
+                        setActiveSidebarTab("logs");
+                        try { audioSynth.playTamTam(false); } catch(e){}
+                      }}
+                      className="text-[9.5px] font-mono text-zinc-400 hover:text-white font-bold"
+                    >
+                      Voir tout
+                    </button>
+                  </div>
 
-                <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-                  {liveUsers.filter((u) => u.status === "suspect" || u.status === "suspended").length === 0 ? (
-                    <div className="p-6 bg-black border border-zinc-905 rounded-2xl text-center text-xs text-zinc-650 font-mono">
-                      🕊️ Paix sur la Côte d'Ivoire. Aucune infraction ni tension n'est recensée.
+                  <div className="space-y-2.5 flex-1 overflow-y-auto max-h-[170px] font-mono text-[9.5px]">
+                    {[
+                      { action: "Connexion Fondateur", actor: "John Sylvestre H.", time: "11:04", type: "royal" },
+                      { action: "Validation Gombo ID", actor: "Chris Le Leader", time: "10:58", type: "info" },
+                      { action: "Annonce globale envoyée", actor: "Nouvelle fonctionnalité", time: "10:45", type: "info" },
+                      { action: "Rôle modifié", actor: "Admin -> Super Admin", time: "10:30", type: "warning" }
+                    ].map((log, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-1.5 border-b border-zinc-900/40">
+                        <div className="flex flex-col text-left">
+                          <span className={`font-black ${log.type === "royal" ? "text-[#D4AF37]" : "text-white"}`}>{log.action}</span>
+                          <span className="text-zinc-500 text-[8.5px]">{log.actor}</span>
+                        </div>
+                        <span className="text-zinc-400">{log.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. AFRIGOMBO EMPIRE SLOGAN BANNER */}
+                <div className="bg-black/85 border border-[#D4AF37]/30 rounded-3xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden h-[240px] md:h-auto select-none md:col-span-1">
+                  {/* Glowing background rays */}
+                  <div className="absolute inset-0 bg-radial-gradient from-[#D4AF37]/10 via-transparent to-transparent opacity-80 pointer-events-none" />
+                  
+                  <div className="relative z-10 space-y-4 max-w-[240px]">
+                    <div className="w-12 h-12 rounded-full border border-[#D4AF37]/50 bg-black flex items-center justify-center mx-auto shadow-[0_0_15px_rgba(212,175,55,0.3)]">
+                      <Crown className="w-6 h-6 text-[#D4AF37]" />
                     </div>
-                  ) : (
-                    liveUsers
-                      .filter((u) => u.status === "suspect" || u.status === "suspended")
-                      .map((u) => (
-                        <div
-                          key={u.id}
-                          className="p-3.5 bg-black border border-zinc-900 rounded-xl flex justify-between items-center text-xs font-mono"
-                        >
-                          <div className="space-y-0.5">
-                            <span className="text-white block font-bold">{u.artisticName || u.name}</span>
-                            <span className="text-[10px] text-zinc-500 block">{u.email}</span>
-                            <span className={`text-[9px] uppercase font-black ${u.status === "suspended" ? "text-rose-500" : "text-amber-500"}`}>
-                              {u.status === "suspended" ? "Banni de l'orchestre" : "Suspect d'Inconduite"}
-                            </span>
-                          </div>
+                    <div className="space-y-1">
+                      <p className="text-white font-display font-black tracking-wider text-sm leading-tight uppercase">
+                        AFRIGOMBO N'EST PAS UNE PLATEFORME.
+                      </p>
+                      <p className="text-[#D4AF37] font-display font-black tracking-widest text-base uppercase">
+                        C'EST UN EMPIRE.
+                      </p>
+                    </div>
+                    <span className="text-[11px] block text-zinc-500 font-mono italic font-bold">
+                      Le Fondateur
+                    </span>
+                  </div>
+                </div>
 
-                          <div className="flex gap-2">
+                {/* 3. NOTES PERSONNELLES CONTAINER */}
+                <div className="bg-black/45 border border-[#D4AF37]/15 rounded-3xl p-5 text-left flex flex-col justify-between space-y-4 md:col-span-1">
+                  <div className="border-b border-zinc-900 pb-2">
+                    <h4 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
+                      NOTES PERSONNELLES
+                    </h4>
+                  </div>
+
+                  <div className="flex-1 w-full pt-1.5">
+                    <textarea
+                      value={personalNotes}
+                      onChange={(e) => setPersonalNotes(e.target.value)}
+                      placeholder="Ajouter une note de l'empire..."
+                      className="w-full h-[100px] bg-zinc-950 border border-zinc-900/60 rounded-xl p-3 text-xs font-mono text-zinc-100 placeholder:text-zinc-650 focus:outline-none focus:border-[#D4AF37]/40 resize-none"
+                    />
+                  </div>
+
+                  <button
+                    onClick={savePersonalNotes}
+                    className="w-full bg-transparent hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black hover:border-transparent border border-[#D4AF37]/35 py-2.5 rounded-xl text-[10px] font-mono font-black uppercase tracking-widest transition-all cursor-pointer"
+                  >
+                    ENREGISTRER
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* --- THE SUB-TAB VIEWPORT INJECTION LAYER --- */}
+          
+          {/* USER MANAGEMENT TAB VIEW */}
+          {activeSidebarTab === "users" && (
+            <div className="space-y-6 animate-fadeIn text-left">
+              <div className="border-b border-[#D4AF37]/20 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="text-lg font-display font-black text-[#D4AF37] uppercase">GESTION DES MEMBRES</h3>
+                  <p className="text-zinc-500 text-xs mt-1">Supervisez tous les artistes inscrits et appliquez des décrets souverains.</p>
+                </div>
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+                  <input
+                    type="text"
+                    value={localUserSearch}
+                    onChange={(e) => setLocalUserSearch(e.target.value)}
+                    placeholder="Filtrer par nom, email..."
+                    className="w-full bg-zinc-950/80 border border-zinc-900 rounded-xl py-1.5 pl-9 pr-4 text-xs font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]/40"
+                  />
+                </div>
+              </div>
+
+              {/* Members listing table */}
+              <div className="bg-black/60 border border-zinc-900 rounded-2xl overflow-hidden shadow-xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse font-sans">
+                    <thead>
+                      <tr className="border-b border-zinc-800 text-[10px] font-mono uppercase text-zinc-500 font-black">
+                        <th className="p-4">Artiste</th>
+                        <th className="p-4">Commune</th>
+                        <th className="p-4">Statut Gombo ID</th>
+                        <th className="p-4">Actions Souveraines</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-900 text-xs">
+                      {liveUsers
+                        .filter((u) => {
+                          const sq = localUserSearch.toLowerCase().trim();
+                          if (!sq) return true;
+                          return (
+                            (u.name && u.name.toLowerCase().includes(sq)) ||
+                            (u.artisticName && u.artisticName.toLowerCase().includes(sq)) ||
+                            (u.email && u.email.toLowerCase().includes(sq)) ||
+                            (u.commune && u.commune.toLowerCase().includes(sq))
+                          );
+                        })
+                        .map((u) => (
+                        <tr key={u.id} className="hover:bg-zinc-950/40">
+                          <td className="p-4 font-bold text-white">
+                            <div>
+                              <span>{u.artisticName || u.name}</span>
+                              <span className="block text-[10px] text-zinc-500 font-mono italic font-normal mt-0.5">{u.email}</span>
+                            </div>
+                          </td>
+                          <td className="p-4 text-zinc-300 font-mono text-[11px]">{u.commune || "Cocody"}</td>
+                          <td className="p-4">
+                            <span className={`px-2 py-1 rounded text-[9px] font-mono font-black uppercase ${
+                              u.isCertified ? "bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30" : "bg-zinc-900 text-zinc-500"
+                            }`}>
+                              {u.isCertified ? "Certifié GOMBO ID Or" : "Standard"}
+                            </span>
+                          </td>
+                          <td className="p-4 flex gap-2">
+                            {!u.isCertified && (
+                              <button
+                                onClick={() => certifyUserDirectly(u.id, u.name)}
+                                className="px-2.5 py-1 bg-[#D4AF37] text-black text-[9.5px] font-mono font-black uppercase rounded-lg cursor-pointer"
+                              >
+                                Certifier GOMBO ID
+                              </button>
+                            )}
+                            
                             {u.status === "suspended" ? (
                               <button
                                 onClick={async () => {
-                                  const updated = liveUsers.map((usr) =>
-                                    usr.id === u.id ? { ...usr, status: "active" as any } : usr
-                                  );
+                                  const updated = liveUsers.map((usr) => usr.id === u.id ? { ...usr, status: "active" as any } : usr);
                                   setLiveUsers(updated);
                                   setUsers(updated);
                                   if (db) {
                                     await updateDoc(doc(db, "users", u.id), { status: "active" });
                                   }
-                                  await logToImperialJournal(`Réhabilitation de l'artiste banni : ${u.name}`, "info");
-                                  alert(`🕊️ ${u.name} a été réhabilité(e) avec succès !`);
+                                  await logToImperialJournal(`Réhabilitation de l'artiste : ${u.name}`, "info");
+                                  alert(`🕊️ L'artiste ${u.name} a été réhabilité(e) avec succès !`);
+                                  try { audioSynth.playValidationSuccess(); } catch (e) {}
                                 }}
-                                className="py-1 px-3 bg-teal-500/10 hover:bg-[#D4AF37] text-teal-400 hover:text-black font-extrabold rounded-lg text-[9px] uppercase transition-all"
+                                className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500 hover:text-black text-emerald-400 text-[9.5px] font-mono font-black uppercase rounded-lg cursor-pointer"
                               >
                                 Réhabiliter
                               </button>
                             ) : (
                               <button
                                 onClick={async () => {
-                                  const updated = liveUsers.map((usr) =>
-                                    usr.id === u.id ? { ...usr, status: "suspended" as any } : usr
-                                  );
+                                  const updated = liveUsers.map((usr) => usr.id === u.id ? { ...usr, status: "suspended" as any } : usr);
                                   setLiveUsers(updated);
                                   setUsers(updated);
                                   if (db) {
                                     await updateDoc(doc(db, "users", u.id), { status: "suspended" });
                                   }
-                                  await logToImperialJournal(`Bannissement souverain pour inconduite frauduleuse : ${u.name}`, "danger");
-                                  alert(`🛡️ L'artiste ${u.name} a été démis et suspendu pour préserver la paix.`);
+                                  await logToImperialJournal(`Bannissement souverain : ${u.name}`, "danger");
+                                  alert(`🛡️ L'artiste ${u.name} a été suspendu pour préserver la paix.`);
+                                  try { audioSynth.playValidationSuccess(); } catch (e) {}
                                 }}
-                                className="py-1 px-3 bg-red-500/10 hover:bg-rose-600 text-rose-400 hover:text-black font-extrabold rounded-lg text-[9px] uppercase transition-all"
+                                className="px-2.5 py-1 bg-red-500/10 hover:bg-rose-600 hover:text-black text-rose-400 text-[9.5px] font-mono font-black uppercase rounded-lg cursor-pointer"
                               >
-                                Suspendre d'office
+                                Suspendre
                               </button>
                             )}
-                          </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* GOMBO ID TAB VIEW */}
+          {activeSidebarTab === "gombo_id" && (
+            <div className="space-y-6 animate-fadeIn text-left">
+              <div className="border-b border-[#D4AF37]/20 pb-4">
+                <h3 className="text-lg font-display font-black text-[#D4AF37] uppercase">DOSSIERS GOMBO ID</h3>
+                <p className="text-zinc-500 text-xs mt-1">Garantissez l'excellence en validant les passeports numériques d'identité certifiée d’Abidjan.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {liveUsers.filter(u => u.kycStatus === "pending").length === 0 ? (
+                  <div className="bg-zinc-950/60 p-8 border border-zinc-900 rounded-3xl text-center space-y-2 col-span-2">
+                    <CheckCircle className="w-10 h-10 text-emerald-400 mx-auto animate-pulse" />
+                    <strong className="text-white text-sm block font-mono">Dossiers d'excellence à jour</strong>
+                    <p className="text-zinc-500 text-xs">Tous les postulants d'Abidjan ont été validés.</p>
+                  </div>
+                ) : (
+                  liveUsers.filter(u => u.kycStatus === "pending").map((u) => (
+                    <div key={u.id} className="p-5 bg-zinc-950/80 border border-zinc-900 rounded-2xl space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <strong className="text-white text-sm block font-sans font-bold">{u.artisticName || u.name}</strong>
+                          <span className="text-[10px] text-[#D4AF37] font-mono uppercase">{u.commune || "Cocody"} - Artiste</span>
                         </div>
-                      ))
-                  )}
+                        <span className="bg-amber-950 text-amber-500 text-[8px] font-mono font-bold px-2 py-0.5 rounded tracking-widest uppercase">
+                          En Attente
+                        </span>
+                      </div>
+
+                      <div className="bg-black/60 p-3 rounded-lg border border-zinc-900 text-[11px] font-mono text-zinc-400 space-y-1">
+                        <div>Email : {u.email}</div>
+                        <div>Role d'orchestre : Talent Certifié</div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => certifyUserDirectly(u.id, u.name)}
+                          className="flex-1 py-2 bg-[#D4AF37] text-black text-xs font-mono font-black uppercase rounded-xl cursor-pointer"
+                        >
+                          Approuver et Couronner d'Or
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* REVENUES TAB VIEW (COMMISSION SETTINGS & COFFER LEDGER) */}
+          {activeSidebarTab === "revenues" && (
+            <div className="space-y-6 animate-fadeIn text-left">
+              <div className="border-b border-[#D4AF37]/20 pb-4">
+                <h3 className="text-lg font-display font-black text-[#D4AF37] uppercase">FINANCES ET COMMISSIONS</h3>
+                <p className="text-zinc-500 text-xs mt-1">Régulez le prélèvement de caisse souverain dévolu au pilotage d'écosystème d'or.</p>
+              </div>
+
+              {/* Commission slide bar card */}
+              <div className="bg-zinc-950/80 border border-[#D4AF37]/20 p-6 rounded-3xl space-y-6 max-w-xl">
+                <div>
+                  <h4 className="text-sm font-mono uppercase tracking-widest text-[#D4AF37] font-black">
+                    Ajustement de Caisse
+                  </h4>
+                  <p className="text-zinc-500 text-xs mt-1">Régulation instantanée du taux applicable aux contrats et séquestres d'Abidjan.</p>
                 </div>
 
-                <div className="p-4 bg-zinc-950 border border-[#D4AF37]/15 rounded-2xl text-[10px] text-[#D4AF37] leading-relaxed font-mono space-y-1">
-                  <strong className="text-white block">CONTRÔLE INTÉGRE DU SEUILS SANS FAILLE :</strong>
-                  <p>
-                    Toute suspension ou libération souveraine est immédiatement propagée sur Firebase, reconfigurant les autorisations de Gombo ID en l'espace de quelques millisecondes.
-                  </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-300 font-mono text-xs">Taux de commission :</span>
+                  <span className="text-[#D4AF37] font-mono text-xl font-black">{systemCommissionRate}%</span>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const next = Math.max(1, systemCommissionRate - 5);
+                      setSystemCommissionRate(next);
+                      logToImperialJournal(`Taux de commission abaissé à : ${next}%`, "info");
+                    }}
+                    className="flex-1 py-2 rounded-xl bg-zinc-900 text-zinc-300 hover:text-white hover:bg-zinc-800 text-xs font-mono font-bold transition-all"
+                  >
+                    - 5%
+                  </button>
+                  <button
+                    onClick={() => {
+                      const next = Math.min(50, systemCommissionRate + 5);
+                      setSystemCommissionRate(next);
+                      logToImperialJournal(`Taux de commission haussé à : ${next}%`, "warning");
+                    }}
+                    className="flex-1 py-2 rounded-xl bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black hover:border-transparent border border-[#D4AF37]/35 text-xs font-mono font-black transition-all"
+                  >
+                    + 5%
+                  </button>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-zinc-900 text-right">
+              {/* Transactions list */}
+              <div className="bg-black/40 border border-zinc-900 rounded-2xl p-5 space-y-4">
+                <strong className="text-white text-xs block font-mono uppercase tracking-widest text-[#D4AF37]">Régis de transactions réelles</strong>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto font-mono text-xs text-left">
+                  {liveTransactions.map((t, idx) => (
+                    <div key={idx} className="p-2.5 bg-zinc-950/60 border border-zinc-900 rounded-xl flex justify-between items-center">
+                      <div>
+                        <span>{t.description || "N/A"}</span>
+                        <span className="block text-[#D4AF37] text-[10px] mt-0.5 uppercase">{t.userName}</span>
+                      </div>
+                      <strong className="text-emerald-400 text-sm">+{t.amount.toLocaleString()} FCFA</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SECURITY TAB VIEW */}
+          {activeSidebarTab === "security" && (
+            <div className="space-y-6 animate-fadeIn text-left">
+              <div className="border-b border-[#D4AF37]/20 pb-4">
+                <h3 className="text-lg font-display font-black text-[#D4AF37] uppercase">SÉCURITÉ & VEILLE (BOUCLIER SOUVERAIN)</h3>
+                <p className="text-zinc-500 text-xs mt-1">Supervisez l'intégrité constitutionnelle, le pare-feu et les signalements d'abus d'Abidjan.</p>
+              </div>
+
+              {/* Action grid button triggers */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
                 <button
-                  onClick={() => setSecurityModalOpen(false)}
-                  className="py-2.5 px-6 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-mono font-black text-xs uppercase rounded-xl transition-all shadow-md"
+                  onClick={async () => {
+                    setLiveAlerts([]);
+                    setAlerts([]);
+                    await logToImperialJournal("Amnistie d'abus souveraine accordée", "royal");
+                    alert("Sweep complet ! Le registre des alertes critiques d'Abidjan a été lavé.");
+                    try { audioSynth.playValidationSuccess(); } catch(e){}
+                  }}
+                  className="p-5 rounded-2xl bg-gradient-to-r from-red-950/20 to-black border border-red-900/30 hover:border-red-500 hover:bg-black/90 text-left space-y-2 transition-all cursor-pointer group"
                 >
-                  Audits clos ✓
+                  <ShieldCheck className="w-6 h-6 text-red-500 group-hover:scale-110 transition-transform" />
+                  <strong className="text-white text-sm block font-mono">Purger les Alertes de Sécurité</strong>
+                  <p className="text-zinc-500 text-xs">Exécutez une amnistie générale et lavez l'historique d'inconduites.</p>
                 </button>
               </div>
-            </motion.div>
+            </div>
+          )}
+
+          {/* IMPERIAL LOGS TAB */}
+          {activeSidebarTab === "logs" && (
+            <div className="space-y-6 animate-fadeIn text-left">
+              <div className="border-b border-[#D4AF37]/20 pb-4">
+                <h3 className="text-lg font-display font-black text-[#D4AF37] uppercase">JOURNAL IMPÉRIAL Ledger</h3>
+                <p className="text-zinc-500 text-xs mt-1">Consultez en temps réel le grand registre d'audit des ordonnances et délibérations du Trône.</p>
+              </div>
+
+              <div className="bg-black/60 border border-zinc-900 rounded-3xl p-5 space-y-4 max-w-3xl">
+                <strong className="text-[#D4AF37] text-xs font-mono uppercase tracking-widest block">GRAND REGISTRE D'AUDIT SOUVERAIN</strong>
+                <div className="space-y-3 font-mono text-xs max-h-[400px] overflow-y-auto">
+                  {[
+                    { timestamp: new Date().toISOString(), action: "Déploiement du Cabinet du Trône Royal d'Or", type: "royal"},
+                    { timestamp: new Date(Date.now() - 360000).toISOString(), action: "Liaison BDD & monitoring actée", type: "info"},
+                  ].map((log, idx) => (
+                    <div key={idx} className="p-3 bg-zinc-950 border border-zinc-900 rounded-xl flex justify-between items-start gap-3 flex-wrap">
+                      <div className="flex-1">
+                        <span className="text-zinc-500 block text-[10px]">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                        <strong className={`block ${log.type === "royal" ? "text-[#D4AF37]" : "text-white"} mt-1`}>{log.action}</strong>
+                      </div>
+                      <span className="text-[9px] text-[#D4AF37]/65 block mt-1">John. F</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </main>
+
+      {/* --- FLOATING MODAL: ADD SUPER ADMIN --- */}
+      {addAdminModalOpen && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[1000] flex justify-center items-center p-6">
+          <div className="w-full max-w-sm bg-zinc-950 border border-[#D4AF37]/35 rounded-3xl p-6 text-left space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+              <strong className="text-white text-sm font-mono uppercase tracking-widest text-[#D4AF37]">ÉLEVATION D'ADMIN</strong>
+              <button onClick={() => setAddAdminModalOpen(false)} className="text-zinc-550 hover:text-white font-black text-xs font-mono">Fermer</button>
+            </div>
+            
+            <p className="text-xs text-zinc-400">Saisissez l'adresse e-mail de l'utilisateur à nommer au Conseil des Administrateurs.</p>
+            
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-zinc-500 uppercase">Adresse E-mail impériale</label>
+              <input
+                type="email"
+                value={newAdminEmail}
+                onChange={(e) => setNewAdminEmail(e.target.value)}
+                placeholder="Ex : sylvestrehounkpevi777@gmail.com"
+                className="w-full bg-[#030303] border border-zinc-850 rounded-xl p-2.5 text-xs font-mono text-white focus:outline-none focus:border-[#D4AF37]"
+                autoFocus
+              />
+            </div>
+
+            <button
+              onClick={handleAddSuperAdminEmail}
+              className="w-full py-2.5 rounded-xl bg-[#D4AF37] text-[#030303] text-xs font-mono font-black uppercase tracking-wider cursor-pointer"
+            >
+              ÉLEVER LE MEMBRE
+            </button>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
+
+      {/* --- FLOATING MODAL: PROPAGATE ANNOUNCEMENT --- */}
+      {announcementModalOpen && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[1000] flex justify-center items-center p-6">
+          <div className="w-full max-w-md bg-zinc-950 border border-[#D4AF37]/35 rounded-3xl p-6 text-left space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+              <strong className="text-white text-sm font-mono uppercase tracking-widest text-[#D4AF37]">PROMULGUER UN DÉCRET</strong>
+              <button onClick={() => setAnnouncementModalOpen(false)} className="text-zinc-550 hover:text-white font-black text-xs font-mono">Fermer</button>
+            </div>
+
+            <p className="text-xs text-zinc-400">Rédigez le texte de l’ordonnance impérative destiné à être diffusé sur tout le réseau d'Abidjan.</p>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-zinc-500 uppercase">Cible du Décret</label>
+              <select
+                value={announcementTarget}
+                onChange={(e) => setAnnouncementTarget(e.target.value as any)}
+                className="w-full bg-[#030303] border border-zinc-850 rounded-xl p-2.5 text-xs text-white font-mono focus:outline-none"
+              >
+                <option value="all">Tous les Talents d'Abidjan</option>
+                <option value="admins">Membres du Conseil des Admins</option>
+                <option value="certified">Uniquement les Artistes Certifiés GOMBO ID</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-zinc-500 uppercase">Texte Ordonnance</label>
+              <textarea
+                value={announcementText}
+                onChange={(e) => setAnnouncementText(e.target.value)}
+                placeholder="Saisissez le texte sacré..."
+                className="w-full h-24 bg-[#030303] border border-zinc-850 rounded-xl p-3 text-xs font-mono text-white focus:outline-none focus:border-[#D4AF37] resize-none"
+              />
+            </div>
+
+            <button
+              onClick={handlePromulgateAnnouncement}
+              className="w-full py-2.5 rounded-xl bg-[#D4AF37] text-black text-xs font-mono font-black uppercase tracking-wider cursor-pointer"
+            >
+              PROPAGER EN TEMPS RÉEL
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- FLOATING MODAL: SEND GLOBAL PUSH NOTIFICATION --- */}
+      {pushNotificationModalOpen && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[1000] flex justify-center items-center p-6">
+          <div className="w-full max-w-sm bg-zinc-950 border border-[#D4AF37]/35 rounded-3xl p-6 text-left space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+              <strong className="text-white text-sm font-mono uppercase tracking-widest text-[#D4AF37]">TRANSMETTRE UNE NOTIFICATION</strong>
+              <button onClick={() => setPushNotificationModalOpen(false)} className="text-zinc-550 hover:text-white font-black text-xs font-mono">Fermer</button>
+            </div>
+
+            <p className="text-xs text-zinc-400 font-sans">Lancer une notification instantanée d'importance sur toutes les applications d'artiste.</p>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-zinc-500 uppercase">Titre Notif</label>
+              <input
+                type="text"
+                value={notificationTitle}
+                onChange={(e) => setNotificationTitle(e.target.value)}
+                placeholder="Ex : Urgence d'Orchestre !"
+                className="w-full bg-[#030303] border border-zinc-850 rounded-xl p-2.5 text-xs font-mono text-white focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-zinc-500 uppercase font-sans">Message</label>
+              <textarea
+                value={notificationText}
+                onChange={(e) => setNotificationText(e.target.value)}
+                placeholder="Détails du message d'or..."
+                className="w-full h-20 bg-[#030303] border border-zinc-850 rounded-xl p-3 text-xs font-mono text-white focus:outline-none resize-none"
+              />
+            </div>
+
+            <button
+              onClick={handleSendPushNotification}
+              className="w-full py-2.5 rounded-xl bg-[#D4AF37] text-black text-xs font-mono font-black uppercase tracking-wider cursor-pointer font-sans"
+            >
+              TRANSMETTRE LA SOUVERAINETÉ
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
+  );
+}
+
+// Minimal stub components to satisfy fast compiles
+function LayoutDashboardIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect width="7" height="9" x="3" y="3" rx="1" />
+      <rect width="7" height="5" x="14" y="3" rx="1" />
+      <rect width="7" height="9" x="14" y="12" rx="1" />
+      <rect width="7" height="5" x="3" y="16" rx="1" />
+    </svg>
   );
 }
