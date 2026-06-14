@@ -77,7 +77,9 @@ import {
   Sparkles,
   Activity,
   Menu,
-  X
+  X,
+  Home,
+  Megaphone
 } from "lucide-react";
 import {
   AreaChart,
@@ -344,20 +346,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [dynamicSuperAdmins, setDynamicSuperAdmins] = useState<string[]>(["sylvestrehounkpevi777@gmail.com", "jhs.kmj7@gmail.com"]);
 
   const AUTHORIZED_ADMIN_EMAILS = [
-    "admin@gombo.ci",
     "johnsylvesterh@gmail.com",
     "sylvestrehounkpevi777@gmail.com",
     "jhs.kmj7@gmail.com"
   ];
 
-  const userRole = profile?.role || "invité";
   const userEmail = currentUser?.email?.toLowerCase() || "";
-  const isAuthorizedAdmin = !!(currentUser && (
-    AUTHORIZED_ADMIN_EMAILS.includes(userEmail) ||
-    userRole === "admin" ||
-    userRole === "super_admin"
-  ));
-  const isAuthorizedSuperFounder = !!(currentUser && userEmail === "jhs.kmj7@gmail.com");
+  const isAuthorizedAdmin = !!(currentUser && AUTHORIZED_ADMIN_EMAILS.includes(userEmail));
+  const isAuthorizedSuperFounder = !!(currentUser && userEmail === "johnsylvesterh@gmail.com");
 
   // Keep adminEmail synced with actual firebase user email for database operations
   useEffect(() => {
@@ -483,7 +479,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     alertCount: 2
   });
 
-  const [kycActiveTab, setKycActiveTab] = useState<"standard" | "express" | "approved" | "rejected" | "info_required">("standard");
+  const [kycActiveTab, setKycActiveTab] = useState<"standard" | "express" | "approved" | "rejected" | "info_required" | "all">("all");
   const [infoMessages, setInfoMessages] = useState<{ [key: string]: string }>({});
   const [globalSearchTerm, setGlobalSearchTerm] = useState("");
   const [isAnnonceModalOpen, setIsAnnonceModalOpen] = useState(false);
@@ -1654,8 +1650,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     }}
                     className="w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg text-xs font-mono font-semibold uppercase text-[#D4AF37] bg-[#D4AF37]/5 hover:bg-[#D4AF37]/15 transition-all duration-205 border border-[#D4AF37]/25 hover:border-[#D4AF37]"
                   >
-                    <ShieldAlert className="w-4 h-4" />
-                    CENTRE DE COMMANDE
+                    <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
+                    🛡️ Centre d'Administration
                   </button>
                 )}
 
@@ -1685,7 +1681,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </>
             ) : (
               <>
-                <button
+                 <button
+                  id="admin-btn-pilotage"
                   onClick={() => {
                     setActiveMenu("dashboard");
                     setIsSidebarOpen(false);
@@ -1701,6 +1698,41 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </button>
 
                 <button
+                  id="admin-btn-users"
+                  onClick={() => {
+                    setKycActiveTab("all");
+                    setActiveMenu("kyc");
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "kyc" && kycActiveTab === "all"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  👥 Utilisateurs
+                </button>
+
+                <button
+                  id="admin-btn-gombo-id"
+                  onClick={() => {
+                    setKycActiveTab("standard");
+                    setActiveMenu("kyc");
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    activeMenu === "kyc" && kycActiveTab !== "all"
+                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
+                  }`}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  🛡️ GOMBO ID
+                </button>
+
+                <button
+                  id="admin-btn-publications"
                   onClick={() => {
                     setActiveMenu("gombos");
                     setIsSidebarOpen(false);
@@ -1711,41 +1743,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
                   }`}
                 >
-                  <Film className="w-4 h-4" />
-                  Le Tam-Tam Gombo
+                  <Briefcase className="w-4 h-4" />
+                  📢 Publications
                 </button>
 
                 <button
-                  onClick={() => {
-                    setActiveMenu("renforts");
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "renforts"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
-                >
-                  <Flame className="w-4 h-4" />
-                  Renforts Postulés
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveMenu("kyc");
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "kyc"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  Gombo ID (KYC)
-                </button>
-
-                <button
+                  id="admin-btn-signalements"
                   onClick={() => {
                     setActiveMenu("revision");
                     setIsSidebarOpen(false);
@@ -1757,25 +1760,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   }`}
                 >
                   <AlertOctagon className="w-4 h-4" />
-                  File de Révision
+                  🚨 Signalements
                 </button>
 
                 <button
-                  onClick={() => {
-                    setActiveMenu("alertes");
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "alertes"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
-                >
-                  <AlertTriangle className="w-4 h-4" />
-                  Alertes de Communes
-                </button>
-
-                <button
+                  id="admin-btn-revenus"
                   onClick={() => {
                     setActiveMenu("caisse");
                     setIsSidebarOpen(false);
@@ -1786,38 +1775,20 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
                   }`}
                 >
-                  <Landmark className="w-4 h-4" />
-                  La Caisse Gombo
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveMenu("monetisation");
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "monetisation"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
-                >
                   <Coins className="w-4 h-4" />
-                  Monétisation Premium
+                  💰 Revenus
                 </button>
 
                 <button
+                  id="admin-btn-annonces"
                   onClick={() => {
-                    setActiveMenu("analytics");
+                    setIsBroadcastModalOpen(true);
                     setIsSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "analytics"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1 transition-all duration-205"
                 >
-                  <BarChart2 className="w-4 h-4" />
-                  Analytics & Courbes
+                  <Megaphone className="w-4 h-4" />
+                  📣 Annonces
                 </button>
 
                 {adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com" && (
@@ -1834,7 +1805,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     }`}
                   >
                     <Crown className="w-4 h-4 text-[#D4AF37]" />
-                    👑 Entrer dans le Trône
+                    👑 Accéder au Trône du Fondateur
                   </button>
                 )}
 
@@ -4332,30 +4303,42 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                     <div className="flex flex-wrap gap-2">
                       <button
+                        id="kyc-tab-all"
+                        onClick={() => setKycActiveTab("all")}
+                        className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "all" ? "bg-[#D4AF37] text-black font-bold" : "border border-[#D4AF37]/20 text-[#D4AF37]/80 hover:bg-[#D4AF37]/5"}`}
+                      >
+                        👥 Tous ({users.length})
+                      </button>
+                      <button
+                        id="kyc-tab-standard"
                         onClick={() => setKycActiveTab("standard")}
                         className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "standard" ? "bg-[#D4AF37] text-black font-bold" : "border border-[#D4AF37]/20 text-[#D4AF37]/80 hover:bg-[#D4AF37]/5"}`}
                       >
                         Standard ({users.filter(u => u.kycStatus === "pending" && u.kycType !== "express").length})
                       </button>
                       <button
+                        id="kyc-tab-express"
                         onClick={() => setKycActiveTab("express")}
                         className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "express" ? "bg-cyan-500 text-black font-bold shadow-[0_0_8px_rgba(6,182,212,0.4)]" : "border border-cyan-500/20 text-cyan-400/80 hover:bg-cyan-500/5"}`}
                       >
                         ⚡ Express ({users.filter(u => u.kycStatus === "pending" && u.kycType === "express").length})
                       </button>
                       <button
+                        id="kyc-tab-approved"
                         onClick={() => setKycActiveTab("approved")}
                         className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "approved" ? "bg-emerald-500 text-black font-bold" : "border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/5"}`}
                       >
                         Validées ({users.filter(u => u.kycStatus === "approved").length})
                       </button>
                       <button
+                        id="kyc-tab-rejected"
                         onClick={() => setKycActiveTab("rejected")}
                         className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "rejected" ? "bg-red-500 text-white font-bold" : "border border-red-500/20 text-red-400 hover:bg-red-500/5"}`}
                       >
                         Refusées ({users.filter(u => u.kycStatus === "rejected").length})
                       </button>
                       <button
+                        id="kyc-tab-info"
                         onClick={() => setKycActiveTab("info_required")}
                         className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "info_required" ? "bg-amber-500 text-black font-bold" : "border border-amber-500/20 text-amber-400 hover:bg-amber-500/5"}`}
                       >
@@ -5739,75 +5722,83 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                      FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
       {perspective === "user" && (
-        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-[#0B0B0B]/95 sm:bg-[#121214]/95 backdrop-blur-md border-t sm:border border-zinc-800/80 p-3 px-6 sm:px-8 flex justify-between sm:gap-12 items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_30px_rgb(0,0,0,0.8)] w-full sm:w-auto min-w-[320px] max-w-lg mx-auto">
+        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-[#0B0B0B]/95 sm:bg-[#121214]/95 backdrop-blur-md border-t sm:border border-zinc-800/80 p-3 px-4 sm:px-8 flex justify-around sm:justify-between sm:gap-10 items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_30px_rgb(0,0,0,0.8)] w-full sm:w-auto min-w-[320px] max-w-lg mx-auto">
           <button
+            id="user-nav-terrain"
             onClick={() => {
               setActiveMenu("user_terrain");
-              audioSynth.playValidationSuccess();
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none ${
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none flex-1 py-1 ${
               activeMenu === "user_terrain" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Flame className="w-5 h-5" />
-            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Le Terrain</span>
+            <Home className="w-5 h-5" />
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Accueil</span>
           </button>
 
           <button
-            onClick={() => {
-              setActiveMenu("user_vibes");
-              audioSynth.playValidationSuccess();
-            }}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none ${
-              activeMenu === "user_vibes" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <Search className="w-5 h-5" />
-            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Les Vibes</span>
-          </button>
-
-          {/* Central floating golden plus button */}
-          <button
+            id="user-nav-publish"
             onClick={() => {
               requireAuthThen(() => {
                 setActiveMenu("user_publish");
-                audioSynth.playValidationSuccess();
+                try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
-            className="w-11 h-11 -mt-6 rounded-full bg-[#D4AF37] hover:bg-[#B48F17] flex items-center justify-center text-[#0B0B0B] shadow-[0_5px_15px_rgba(212,175,55,0.4)] hover:shadow-[0_8px_25px_rgba(212,175,55,0.55)] transition-all transform hover:scale-110 cursor-pointer border border-[#0B0B0B] active:scale-95"
-            title="Publier sur Le Terrain"
-          >
-            <Plus className="w-6 h-6 stroke-[3.5]" />
-          </button>
-
-          <button
-            onClick={() => {
-              requireAuthThen(() => {
-                setActiveMenu("user_renforts");
-                audioSynth.playValidationSuccess();
-              });
-            }}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none ${
-              activeMenu === "user_renforts" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "user_publish" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Star className="w-5 h-5" />
-            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Renfort</span>
+            <Music className="w-5 h-5" />
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Publier</span>
           </button>
 
           <button
+            id="user-nav-mes-gombos"
             onClick={() => {
               requireAuthThen(() => {
                 setActiveMenu("user_mes_gombos");
-                audioSynth.playValidationSuccess();
+                try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none ${
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none flex-1 py-1 ${
               activeMenu === "user_mes_gombos" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Briefcase className="w-5 h-5" />
             <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Mes Gombos</span>
+          </button>
+
+          <button
+            id="user-nav-gombo-id"
+            onClick={() => {
+              requireAuthThen(() => {
+                setActiveMenu("user_gombo_id");
+                try { audioSynth.playValidationSuccess(); } catch (err) {}
+              });
+            }}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "user_gombo_id" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <ShieldCheck className="w-5 h-5" />
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">GOMBO ID</span>
+          </button>
+
+          <button
+            id="user-nav-heritage"
+            onClick={() => {
+              requireAuthThen(() => {
+                setActiveMenu("user_heritage");
+                try { audioSynth.playValidationSuccess(); } catch (err) {}
+              });
+            }}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "user_heritage" ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            <span className="text-[8px] font-mono font-bold uppercase tracking-wider">Héritage</span>
           </button>
         </div>
       )}
