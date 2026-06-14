@@ -28,6 +28,9 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
   const [isRedirectPending, setIsRedirectPending] = useState(false);
   const [pendingTransferId, setPendingTransferId] = useState("");
 
+  const isTransferMode = typeof window !== "undefined" && window.location.search.includes("transferId");
+  const [transferDone, setTransferDone] = useState(false);
+
   React.useEffect(() => {
     const handleSuccess = async (e: any) => {
       console.log("🌟 [AuthScreen WebView Event] webViewAuthSuccess caught!", e.detail);
@@ -69,12 +72,27 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       localStorage.setItem("gombo_auth", JSON.stringify({ uid: uid, email: userEmail, emailVerified: true }));
       window.dispatchEvent(new Event("gomboAuthChange"));
       
+      if (isTransferMode) {
+        setTransferDone(true);
+        setSuccessMSG("✅ Liaison Google établie ! Synchronisation réussie.");
+        setLoading(false);
+        return;
+      }
+
       setSuccessMSG("✅ Connexion réussie.");
       setTimeout(() => {
         onSuccess();
       }, 900);
     } catch (err: any) {
       console.error("❌ Profile syncing error:", err);
+      
+      if (isTransferMode) {
+        setTransferDone(true);
+        setSuccessMSG("✅ Liaison Google établie ! Synchronisation réussie.");
+        setLoading(false);
+        return;
+      }
+
       setSuccessMSG("✅ Connexion réussie.");
       setTimeout(() => {
         onSuccess();
@@ -83,6 +101,45 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       setLoading(false);
     }
   };
+
+  if (transferDone) {
+    return (
+      <div className="w-full max-w-md mx-auto select-none p-4" id="auth-screen-container">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative w-full bg-[#0E0E10] text-[#E4E4E7] rounded-3xl border border-emerald-500/30 p-8 shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden text-center space-y-6"
+        >
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex justify-center">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/25">
+              <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest font-mono">Liaison Google Réussie 🇨🇮</h3>
+            <p className="text-xs text-gray-300 leading-relaxed max-w-xs mx-auto">
+              Votre session sécurisée est désormais connectée avec succès sur votre application principale <strong>Afrigombo</strong> !
+            </p>
+          </div>
+          <div className="p-3.5 bg-zinc-900/50 border border-zinc-850 rounded-2xl max-w-xs mx-auto">
+            <p className="text-[10px] text-gray-400 leading-relaxed font-mono">
+              Vous pouvez maintenant fermer cet onglet Chrome et reprendre votre navigation sur l'application Afrigombo.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.close()}
+            className="px-6 py-2 bg-[#D4AF37] hover:bg-[#be992c] text-[#0E0E10] font-black text-xs uppercase tracking-wider rounded-xl transition duration-300 cursor-pointer shadow-lg"
+          >
+            Fermer l'onglet 🔒
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   // Google SSO Click Action
   const handleGoogleLogin = async () => {
@@ -144,6 +201,15 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
             {"Le Temple du Gombo :\nVos opportunités musicales certifiées,\nvos cachets sécurisés."}
           </p>
         </div>
+        
+        {isTransferMode && (
+          <div className="p-4 mb-6 bg-amber-500/10 border border-[#D4AF37]/30 rounded-2xl text-left space-y-1 max-w-sm mx-auto">
+            <span className="text-[9px] font-black font-mono text-[#D4AF37] uppercase tracking-widest block">🇨🇮 SÉCURISATION INTÉGRATION</span>
+            <p className="text-[10.5px] text-zinc-300 leading-relaxed">
+              Pour lier ou rétablir votre connexion Google, cliquez sur <strong>"Continuer avec Google"</strong> ci-dessous. La synchronisation avec l'application principale s'exécutera automatiquement.
+            </p>
+          </div>
+        )}
 
         {/* Dynamic Alerts Banner */}
         <AnimatePresence mode="wait">

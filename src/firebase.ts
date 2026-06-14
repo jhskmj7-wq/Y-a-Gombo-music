@@ -97,54 +97,87 @@ const activeTransferListeners = new Set<string>();
 
 export function initiateAuthTransferListener(transferId: string) {
   if (!transferId || activeTransferListeners.has(transferId)) return;
-  
-  if (isFirebaseMock || !auth || !db) {
-    console.warn("⚠️ [WebView Auth Listen] Real Firebase not initialized or in Mock Mode. Skipping cloud auth listener.");
-    return;
-  }
-
-  console.log("🕵️ [WebView Auth Listen] Activating snapshot on temp_auth_transfers for ID:", transferId);
   activeTransferListeners.add(transferId);
   localStorage.setItem("active_google_transfer_id", transferId);
 
-  const docRef = doc(db, "temp_auth_transfers", transferId);
-  const unsubscribe = onSnapshot(docRef, async (snap) => {
-    if (snap.exists()) {
-      const data = snap.data();
-      if (data && data.status === "success" && data.idToken) {
-        console.log("🎉 [WebView Auth Listen] Session successfully detected! Logging in user standard credentials...");
-        
-        // Remove tracking references
+  // 1. Dual-driver: Storage polling backup (works in both Mock and Real Firebase environments on the same domain)
+  const pollInterval = setInterval(() => {
+    try {
+      const saved = localStorage.getItem(`transfer_success_${transferId}`) || localStorage.getItem(`mock_transfer_success_${transferId}`);
+      if (saved) {
+        console.log("🎉 [WebView Auth Listen] Session successfully detected via LocalStorage!");
+        clearInterval(pollInterval);
         activeTransferListeners.delete(transferId);
         localStorage.removeItem("active_google_transfer_id");
-        unsubscribe();
-
-        try {
-          const credential = GoogleAuthProvider.credential(data.idToken, data.accessToken || null);
-          await signInWithCredential(auth, credential);
-          
-          console.log("✅ [WebView Auth Listen] User successfully signed in via Credential!");
-
-          // Clean up temp transfer document for user privacy
-          try {
-            await deleteDoc(docRef);
-          } catch (e) {
-            console.warn("Non-fatal doc cleanup error during recovery:", e);
+        localStorage.removeItem(`transfer_success_${transferId}`);
+        localStorage.removeItem(`mock_transfer_success_${transferId}`);
+        
+        const data = JSON.parse(saved);
+        if (data && data.uid) {
+          if (!isFirebaseMock && auth) {
+            if (data.idToken) {
+              const credential = GoogleAuthProvider.credential(data.idToken, data.accessToken || null);
+              signInWithCredential(auth, credential).then(() => {
+                console.log("✅ Signed in via credentials in webview!");
+                window.dispatchEvent(new Event("gomboAuthChange"));
+              });
+            }
+          } else {
+            const authData = { uid: data.uid, email: data.email, emailVerified: true };
+            localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(authData));
+            window.dispatchEvent(new Event("gomboAuthChange"));
           }
           
-          // Dispatch a global event so the UI can refresh if needed
           window.dispatchEvent(new CustomEvent("webViewAuthSuccess", { 
-            detail: { uid: auth.currentUser?.uid, email: auth.currentUser?.email } 
+            detail: { uid: data.uid, email: data.email } 
           }));
-        } catch (err) {
-          console.error("❌ [WebView Auth Listen] Failed to log in with secure token:", err);
         }
       }
+    } catch (e) {
+      console.warn("Storage poll error:", e);
     }
-  }, (err) => {
-    console.warn("⚠️ [WebView Auth Listen] Snapshot transfer error:", err);
-    activeTransferListeners.delete(transferId);
-  });
+  }, 1000);
+
+  // Cleanup interval after 5 minutes
+  setTimeout(() => {
+    clearInterval(pollInterval);
+  }, 300000);
+
+  // 2. Real Firestore Live Snapshot Listener (if Firebase is active)
+  if (!isFirebaseMock && db && auth) {
+    console.log("🕵️ [WebView Auth Listen] Activating snapshot on temp_auth_transfers for ID:", transferId);
+    const docRef = doc(db, "temp_auth_transfers", transferId);
+    const unsubscribe = onSnapshot(docRef, async (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data && data.status === "success" && data.idToken) {
+          console.log("🎉 [WebView Auth Listen] Session successfully detected via Firestore snap!");
+          clearInterval(pollInterval);
+          activeTransferListeners.delete(transferId);
+          localStorage.removeItem("active_google_transfer_id");
+          unsubscribe();
+
+          try {
+            const credential = GoogleAuthProvider.credential(data.idToken, data.accessToken || null);
+            await signInWithCredential(auth, credential);
+            console.log("✅ [WebView Auth Listen] User successfully signed in via Credential!");
+            try {
+              await deleteDoc(docRef);
+            } catch (e) {
+              console.warn("Non-fatal doc cleanup error during recovery:", e);
+            }
+            window.dispatchEvent(new CustomEvent("webViewAuthSuccess", { 
+              detail: { uid: auth.currentUser?.uid, email: auth.currentUser?.email } 
+            }));
+          } catch (err) {
+            console.error("❌ [WebView Auth Listen] Failed to log in with secure token:", err);
+          }
+        }
+      }
+    }, (err) => {
+      console.warn("⚠️ [WebView Auth Listen] Snapshot transfer error:", err);
+    });
+  }
 }
 
 export function detectAndProcessTransferId(sourceUrl?: string) {
@@ -1102,6 +1135,42 @@ export const gomboAuth = {
         } catch (err) {
           console.warn("⚠️ [Firebase Auth Debug] Non-fatal user profile sync error during Google auth:", err);
         }
+
+        // --- WEBVIEW REDIRECT TRANSFER TRIGGER ---
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const transferId = urlParams.get("transferId");
+          if (transferId) {
+            const credentialResult = GoogleAuthProvider.credentialFromResult(res);
+            const idToken = credentialResult?.idToken || (await res.user.getIdToken());
+            const accessToken = credentialResult?.accessToken || null;
+            
+            // 1. LocalStorage Sync fallback
+            localStorage.setItem(`transfer_success_${transferId}`, JSON.stringify({
+              uid: res.user.uid,
+              email: res.user.email,
+              idToken: idToken,
+              accessToken: accessToken,
+              status: "success"
+            }));
+
+            // 2. Database Sync Write
+            if (db) {
+              await setDoc(doc(db, "temp_auth_transfers", transferId), {
+                idToken: idToken,
+                accessToken: accessToken,
+                status: "success",
+                uid: res.user.uid,
+                email: res.user.email,
+                createdAt: new Date().toISOString()
+              }, { merge: true });
+            }
+            console.log("📝 [Google-Redirect] Successfully synchronized real credentials back to iframe.");
+          }
+        } catch (transErr) {
+          console.error("Non-fatal transfer writing error:", transErr);
+        }
+
         return { uid: res.user.uid, email: res.user.email };
       } catch (e: any) {
         console.error("❌ [Firebase Auth Debug] Google Popup failed:", e);
@@ -1147,6 +1216,20 @@ export const gomboAuth = {
       };
       users.push(matched);
       localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+
+      // --- MOCK WEBVIEW REDIRECT TRANSFER TRIGGER ---
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const transferId = urlParams.get("transferId");
+        if (transferId) {
+          localStorage.setItem(`mock_transfer_success_${transferId}`, JSON.stringify({
+            uid: matched.uid,
+            email: matched.email,
+            status: "success"
+          }));
+          console.log("📝 [Google-Redirect] Local fallback mock status updated.");
+        }
+      } catch (transErr) {}
 
       const authData = { uid: matched.uid, email: matched.email, emailVerified: true };
       localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(authData));

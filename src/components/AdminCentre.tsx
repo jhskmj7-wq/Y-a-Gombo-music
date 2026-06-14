@@ -2012,10 +2012,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       {/* =========================================================================
                                ZONE B : WORKSPACE CENTRAL (MIDDLE)
          ========================================================================= */}
-      <main className="flex-1 bg-[#0B0B0B] flex flex-col overflow-y-auto px-8 py-6">
+      <main className="flex-1 bg-[#0B0B0B] flex flex-col overflow-y-auto px-4 sm:px-8 py-6">
         
         {/* ELITE UPPER STATUS BAR (AFRIGOMBO PREMIUM HEADER) */}
-        <header className="flex justify-between items-center pb-5 border-b border-[#D4AF37]/15 mb-6 shrink-0 gap-3 w-full animate-fadeIn select-none">
+        <header className="flex justify-between items-center pb-5 border-b border-[#D4AF37]/15 mb-6 shrink-0 gap-2 w-full animate-fadeIn select-none">
           {isHeaderSearchOpen ? (
             <div className="flex-1 flex items-center gap-3">
               <div className="flex-1 flex items-center gap-2 bg-black border border-[#D4AF37]/45 rounded-xl px-3 py-2 w-full">
@@ -2042,33 +2042,33 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               <button
                 id="hamburger-trigger"
                 onClick={() => setIsSidebarOpen(true)}
-                className="w-11 h-11 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-zinc-800 hover:border-[#D4AF37]/40 rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
+                className="w-10 h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-zinc-800 hover:border-[#D4AF37]/40 rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
                 title="Ouvrir le menu"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
               </button>
 
               {/* Middle Brand Section */}
-              <div className="flex items-center gap-2.5 select-none shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2.5 select-none shrink-0 min-w-0">
                 {/* Logo AFRIGOMBO */}
-                <div className="w-11 h-11 rounded-full bg-black border border-[#D4AF37] flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.25)] select-none shrink-0">
-                  <Flame className="text-[#D4AF37] w-5 h-5 stroke-[2]" />
+                <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-black border border-[#D4AF37] flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.25)] select-none shrink-0">
+                  <Flame className="text-[#D4AF37] w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2]" />
                 </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-sm font-sans font-black tracking-[0.08em] text-white leading-none uppercase font-display">
+                <div className="flex flex-col text-left min-w-0">
+                  <span className="text-xs sm:text-sm font-sans font-black tracking-[0.08em] text-white leading-none uppercase font-display truncate">
                     AFRIGOMBO
                   </span>
-                  <span className="text-[10px] font-sans font-black tracking-wider text-[#D4AF37] leading-none uppercase mt-1">
+                  <span className="text-[8.5px] sm:text-[10px] font-sans font-black tracking-wider text-[#D4AF37] leading-none uppercase mt-0.5 sm:mt-1 truncate">
                     Y'A GOMBO MUSIC
                   </span>
-                  <span className="text-[8px] font-semibold text-zinc-500 mt-1 flex items-center gap-1 font-mono leading-none uppercase">
+                  <span className="hidden md:flex text-[8px] font-semibold text-zinc-500 mt-1 items-center gap-1 font-mono leading-none uppercase shrink-0">
                     LE TERRAIN D'ACTION 🇨🇮
                   </span>
                 </div>
               </div>
 
               {/* Right Controls Row */}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 {perspective === "admin" && (
                   <button
                     onClick={() => {
@@ -2086,10 +2086,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 <button
                   id="search-btn"
                   onClick={() => setIsHeaderSearchOpen(true)}
-                  className="w-11 h-11 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-800 hover:border-[#D4AF37]/40 rounded-xl transition-all flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
+                  className="w-10 h-10 sm:w-11 sm:h-11 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-850 hover:border-[#D4AF37]/40 rounded-xl transition-all flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
                   title="Recherche"
                 >
-                  <Search className="w-4.5 h-4.5" />
+                  <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 </button>
 
                 {/* Notifications Icon (Bell) */}
@@ -2099,11 +2099,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     setActiveMenu("user_notifications");
                     addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
                   }}
-                  className="w-11 h-11 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-800 hover:border-[#D4AF37]/40 rounded-xl transition-all flex items-center justify-center cursor-pointer relative bg-black/60 shrink-0 select-none"
+                  className="w-10 h-10 sm:w-11 sm:h-11 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-850 hover:border-[#D4AF37]/40 rounded-xl transition-all flex items-center justify-center cursor-pointer relative bg-black/60 shrink-0 select-none"
                   title="Notifications"
                 >
-                  <Bell className="w-4.5 h-4.5" />
-                  <span className="absolute -top-1 -right-1 bg-red-650 text-white font-mono text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-black animate-pulse select-none">
+                  <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                  <span className="absolute -top-1 -right-1 bg-red-650 text-white font-mono text-[7px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black animate-pulse select-none">
                     12
                   </span>
                 </button>
@@ -2111,7 +2111,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 {/* Profile Avatar */}
                 <div 
                   id="profile-avatar"
-                  className="w-11 h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
                   title="Profil Utilisateur" 
                   onClick={() => { 
                     setActiveMenu("user_heritage"); 
@@ -2125,7 +2125,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
                     </span>
                   )}
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0B0B0B]" />
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-500 rounded-full border-2 border-[#0B0B0B]" />
                 </div>
               </div>
             </>

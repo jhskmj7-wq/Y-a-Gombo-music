@@ -5,7 +5,13 @@ import { audioSynth } from "./lib/audio";
 import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
 
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window !== "undefined") {
+      const search = window.location.search;
+      return !search.includes("transferId") && !search.includes("auth_transfer");
+    }
+    return true;
+  });
   const [splashStep, setSplashStep] = useState(0);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("gombo_theme");

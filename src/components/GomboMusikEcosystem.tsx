@@ -1709,10 +1709,16 @@ export default function GomboMusikEcosystem({
                               );
                             })}
                           </div>
-
-                          <div className="flex justify-between text-[8px] font-mono text-gray-500">
-                            <span>{isPlaying ? `00:${Math.floor(playingProgress / 10).toString().padStart(2, "0")}` : "00:00"}</span>
-                            <span>00:{v.duration ? v.duration.toString().padStart(2, "0") : "10"}</span>
+                          
+                          {/* Beautiful Spacious Duration / Minutes Track Info */}
+                          <div className="flex justify-between items-center text-[10px] sm:text-xs font-mono font-bold text-amber-500/90 pt-2 border-t border-zinc-900/40">
+                            <span className="flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                              {isPlaying ? `LECTURE : 00:${Math.floor(playingProgress / 10).toString().padStart(2, "0")}` : "PRÊT À LIRE"}
+                            </span>
+                            <span className="flex items-center gap-1 uppercase tracking-wide">
+                              ⏳ DURÉE : 00:{v.duration ? v.duration.toString().padStart(2, "0") : "10"}
+                            </span>
                           </div>
                         </div>
                       </div>
