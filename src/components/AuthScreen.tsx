@@ -31,6 +31,16 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
   const isTransferMode = typeof window !== "undefined" && window.location.search.includes("transferId");
   const [transferDone, setTransferDone] = useState(false);
 
+  // Auto-redirect to app on transfer success
+  React.useEffect(() => {
+    if (transferDone) {
+      const timer = setTimeout(() => {
+        window.location.href = window.location.origin;
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [transferDone]);
+
   React.useEffect(() => {
     const handleSuccess = async (e: any) => {
       console.log("🌟 [AuthScreen WebView Event] webViewAuthSuccess caught!", e.detail);
@@ -104,38 +114,62 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
   if (transferDone) {
     return (
-      <div className="w-full max-w-md mx-auto select-none p-4" id="auth-screen-container">
+      <div className="w-full max-w-sm mx-auto select-none p-4 animate-fadeIn" id="auth-screen-container">
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative w-full bg-[#0E0E10] text-[#E4E4E7] rounded-3xl border border-emerald-500/30 p-8 shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden text-center space-y-6"
+          className="relative w-full bg-[#0E0E10] text-[#E4E4E7] rounded-3xl border border-emerald-500/35 p-8 shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden text-center space-y-6"
         >
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+          {/* Accent decoration */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          
           <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/25">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/25 relative">
+              {/* Spinner surrounding checked icon */}
+              <span className="absolute inset-0 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
               <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
           </div>
+
           <div className="space-y-2">
-            <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest font-mono">Liaison Google Réussie 🇨🇮</h3>
+            <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest font-mono">Connexion Réussie 🇨🇮</h3>
             <p className="text-xs text-gray-300 leading-relaxed max-w-xs mx-auto">
-              Votre session sécurisée est désormais connectée avec succès sur votre application principale <strong>Afrigombo</strong> !
+              Votre session sécurisée est connectée ! Synchronisation terminée avec l'app principale.
             </p>
           </div>
-          <div className="p-3.5 bg-zinc-900/50 border border-zinc-850 rounded-2xl max-w-xs mx-auto">
-            <p className="text-[10px] text-gray-400 leading-relaxed font-mono">
-              Vous pouvez maintenant fermer cet onglet Chrome et reprendre votre navigation sur l'application Afrigombo.
-            </p>
+
+          <div className="p-4 bg-zinc-900/60 border border-zinc-850 rounded-2xl max-w-xs mx-auto space-y-2">
+            <div className="flex justify-center items-center gap-1.5 text-[10px] text-zinc-400 font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+              <span>Redirection automatique...</span>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => window.close()}
-            className="px-6 py-2 bg-[#D4AF37] hover:bg-[#be992c] text-[#0E0E10] font-black text-xs uppercase tracking-wider rounded-xl transition duration-300 cursor-pointer shadow-lg"
-          >
-            Fermer l'onglet 🔒
-          </button>
+
+          <div className="flex flex-col gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={() => { window.location.href = window.location.origin; }}
+              className="w-full h-12 bg-gradient-to-r from-[#D4AF37] to-[#ffd700] hover:from-[#c29c29] hover:to-[#e6c100] text-[#0E0E10] font-black text-xs uppercase tracking-widest rounded-xl transition duration-300 cursor-pointer shadow-lg active:scale-95 flex items-center justify-center gap-2"
+            >
+              Accéder à l'application 🚀
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  window.close();
+                } catch (e) {
+                  window.location.href = window.location.origin;
+                }
+              }}
+              className="w-full py-2 bg-transparent hover:bg-white/5 text-gray-500 hover:text-white font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
+            >
+              Fermer cet onglet 🔒
+            </button>
+          </div>
         </motion.div>
       </div>
     );
