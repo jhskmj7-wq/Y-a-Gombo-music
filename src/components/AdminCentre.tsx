@@ -17,6 +17,7 @@ import GomboIdUserDashboard from "./GomboIdUserDashboard";
 import GomboMusikEcosystem from "./GomboMusikEcosystem";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
 import FounderThrone from "./FounderThrone";
+import MessagesView from "./MessagesView";
 import {
   AdminMenu,
   User,
@@ -48,6 +49,7 @@ import {
   Plus,
   Tv,
   Users,
+  User as UserIcon,
   Award,
   DollarSign,
   TrendingUp,
@@ -324,7 +326,33 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [activeMenu, setActiveMenu] = useState<any>("user_terrain");
   const [viewingGomboIdDetail, setViewingGomboIdDetail] = useState<boolean>(false);
   const [selectedGomboDetails, setSelectedGomboDetails] = useState<Gombo | null>(null);
+  const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
+  
+  // Custom states for Le Terrain High Fidelity Experience (Home Page)
+  const [currentSlide, setCurrentSlide] = useState<number>(0);
+  const [likedGombos, setLikedGombos] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedLocation, setSelectedLocation] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedDateFilter, setSelectedDateFilter] = useState<string>("all");
+  const [activeFilterDropdown, setActiveFilterDropdown] = useState<"category" | "location" | "type" | "date" | null>(null);
+
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isEventsModalOpen, setIsEventsModalOpen] = useState<boolean>(false);
+  const [isAcademyModalOpen, setIsAcademyModalOpen] = useState<boolean>(false);
+  const [lang, setLang] = useState<"fr" | "nouchi">("fr");
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isSidebarOpen]);
+
   const [isHeaderSearchOpen, setIsHeaderSearchOpen] = useState<boolean>(false);
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
   const [liveAdminTime, setLiveAdminTime] = useState<string>(new Date().toLocaleTimeString("fr-FR"));
@@ -350,6 +378,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [newGomboCommune, setNewGomboCommune] = useState<string>("Cocody");
   const [newPubType, setNewPubType] = useState<"post" | "gombo" | "opportunite" | "annonce" | "casting" | "evenement" | "contenu">("post");
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [postComments, setPostComments] = useState<Record<string, { id: string, content: string, writerName: string }[]>>({});
 
   // Simulated admin email & Super Admin unlocks state
   const [adminEmail, setAdminEmail] = useState<string>("admin@gombo.ci");
@@ -1383,649 +1412,477 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         />
       )}
 
-      {/* =========================================================================
-                              ZONE A : SIDEBAR COLONNE FIXE (SLIDEOUT DRAWER)
-         ========================================================================= */}
-      <aside className={`fixed inset-y-0 left-0 w-72 border-r border-[#D4AF37]/20 bg-[#0B0B0B] flex flex-col justify-between p-6 z-50 transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} shrink-0`}>
-        
-        {/* LOGO & HEADING */}
-        <div>
-          <div className="flex items-center justify-between gap-2 mb-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/35 flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.2)]">
-                <Flame className="text-[#D4AF37] w-5 h-5 animate-pulse" />
+      <aside 
+        className={`fixed inset-y-0 left-0 w-80 bg-[#09090A] border-r border-[#D4AF37]/30 flex flex-col justify-between z-50 transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} shrink-0 h-screen overflow-y-auto pb-8`}
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        {/* SIDEBAR CONTAINER SCROLL */}
+        <div className="flex flex-col min-h-full justify-between">
+          
+          {/* TOP PART */}
+          <div>
+            {/* BRAND HEADER LINE */}
+            <div className="p-5 border-b border-[#D4AF37]/15 bg-black/60 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/50 flex items-center justify-center animate-pulse">
+                  <Flame className="text-[#D4AF37] w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-sans font-black tracking-widest text-[#D4AF37] uppercase">
+                    ═══ AFRIGOMBO ═══
+                  </h2>
+                  <span className="text-[8px] font-mono tracking-widest text-zinc-400 block -mt-0.5">
+                    L'ELITE MUSICALE IVOIRIENNE
+                  </span>
+                </div>
               </div>
-              <div>
-                <h1 className="text-md font-sans font-black uppercase tracking-wider text-white">
-                  Afrigombo
-                </h1>
-                <span className="text-[8px] uppercase font-mono tracking-widest text-[#D4AF37] block -mt-1 font-bold">
-                  Y'A GOMBO MUSIC
-                </span>
-              </div>
+
+              {/* OUTLET CLOSE */}
+              <button
+                onClick={() => setIsSidebarOpen(false)}
+                className="p-1.5 rounded-lg border border-[#D4AF37]/30 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                title="Fermer le menu"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            
-            {/* CLOSE BUTTON */}
-            <button
-              onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 rounded-lg transition-all focus:outline-none flex items-center justify-center border border-[#D4AF37]/25 hover:border-[#D4AF37] cursor-pointer"
-              title="Fermer le menu"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
 
-          {/* USER PROFILE CARD */}
-          {!currentUser ? (
-            <button
-              onClick={() => {
-                setIsSidebarOpen(false);
-                setIsAuthModalOpen(true);
-                try { audioSynth.playKoraSuccess(); } catch (err) {}
-              }}
-              className="w-full mb-5 bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] rounded-2xl p-4 text-center cursor-pointer font-black tracking-wider transition-all duration-200 transform hover:scale-[1.02] shadow-[0_4px_15px_rgba(212,175,55,0.3)] flex flex-col items-center justify-center gap-1.5 border border-transparent"
-            >
-              <Flame className="w-6 h-6 fill-current animate-pulse text-[#0B0B0B]" />
-              <div className="text-xs uppercase font-display font-black leading-tight text-[#0B0B0B]">
-                BIENVENUE DANS Y'A GOMBO MUSIC
-              </div>
-              <div className="text-[10px] uppercase font-mono font-extrabold bg-[#0B0B0B] text-[#D4AF37] px-2.5 py-1 rounded-lg">
-                SE CONNECTER
-              </div>
-            </button>
-          ) : (
-            (() => {
-              const currentArtist = profile ? {
-                id: profile.uid,
-                artisticName: profile.displayName || `${profile.firstName || 'Artiste'} ${profile.lastName || 'Gombo'}`.trim(),
-                commune: profile.commune || 'Cocody',
-                avatarUrl: profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-                isCertified: true,
-              } : (users.find(u => u.id === activeArtistId) || users[0]);
+            {/* LOGGED IN USER CARD */}
+            <div className="p-5">
+              {!currentUser ? (
+                <button
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    setIsAuthModalOpen(true);
+                    try { audioSynth.playKoraSuccess(); } catch (err) {}
+                  }}
+                  className="w-full bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] rounded-xl p-3.5 text-center cursor-pointer font-black tracking-wider transition-all duration-200 shadow-lg flex flex-col items-center justify-center gap-1 border border-transparent"
+                >
+                  <Flame className="w-5 h-5 fill-current text-[#0B0B0B]" />
+                  <div className="text-[10px] uppercase font-bold leading-tight text-[#0B0B0B]">
+                    ACCÈS PRESTIGE ELITE
+                  </div>
+                  <div className="text-[9px] uppercase font-mono font-extrabold bg-[#0B0B0B] text-[#D4AF37] px-2 py-0.5 rounded">
+                    SE CONNECTER
+                  </div>
+                </button>
+              ) : (
+                (() => {
+                  const currentArtist = profile ? {
+                    id: profile.uid,
+                    artisticName: profile.displayName || `${profile.firstName || 'Artiste'} ${profile.lastName || 'Gombo'}`.trim(),
+                    commune: profile.commune || 'Cocody',
+                    avatarUrl: profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+                    isCertified: true,
+                  } : (users.find(u => u.id === activeArtistId) || users[0]);
 
-              return (
-                <div className="mb-5 bg-zinc-900/60 border border-[#D4AF37]/15 rounded-xl p-3.5 space-y-2.5">
-                  <div className="flex items-center gap-3">
-                    {/* Photo ronde */}
-                    <div className="relative shrink-0">
-                      <div className="w-11 h-11 rounded-full border border-[#D4AF37]/45 overflow-hidden bg-[#D4AF37]/10 flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.15)] font-display font-black">
-                        {currentArtist && (currentArtist.avatarUrl || (currentArtist as any).photoURL) ? (
-                          <img 
-                            src={currentArtist.avatarUrl || (currentArtist as any).photoURL} 
-                            alt={currentArtist.artisticName} 
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <Music className="w-5 h-5 text-[#D4AF37]" />
-                        )}
+                  return (
+                    <div className="bg-zinc-950/80 border border-[#D4AF37]/20 rounded-xl p-4 space-y-3 shadow-md">
+                      <div className="flex items-center gap-3">
+                        <div className="relative shrink-0">
+                          <div className="w-11 h-11 rounded-full border border-[#D4AF37]/60 overflow-hidden bg-[#D4AF37]/10 flex items-center justify-center font-display font-black">
+                            {currentArtist && (currentArtist.avatarUrl || (currentArtist as any).photoURL) ? (
+                              <img 
+                                src={currentArtist.avatarUrl || (currentArtist as any).photoURL} 
+                                alt={currentArtist.artisticName} 
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <Music className="w-5 h-5 text-[#D4AF37]" />
+                            )}
+                          </div>
+                          {currentArtist?.isCertified && (
+                            <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border border-black flex items-center justify-center" title="Certifié">
+                              <span className="text-[9px] text-white font-bold">✓</span>
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="min-w-0">
+                          <h3 className="text-xs font-sans font-black text-white leading-tight truncate">
+                            {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
+                          </h3>
+                          <p className="text-[9px] text-[#D4AF37] font-mono uppercase tracking-wide font-bold">
+                            {currentArtist ? currentArtist.commune : "Abidjan"}, CI
+                          </p>
+                          <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase border border-[#D4AF37]/25 font-extrabold">
+                            👑 {lang === "nouchi" ? "Vieux Môgô" : "Artiste Élite"}
+                          </span>
+                        </div>
                       </div>
-                      {currentArtist?.isCertified && (
-                        <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border border-black flex items-center justify-center" title="Certifié">
-                          <span className="text-[8px] text-white font-bold">✓</span>
-                        </span>
+
+                      {/* SIMULATED ACTIVE ARTIST SELECTOR */}
+                      {perspective === "user" && !profile && (
+                        <div className="space-y-1 pt-1 border-t border-[#D4AF37]/10">
+                          <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Profil Simulé :</span>
+                          <select
+                            value={activeArtistId}
+                            onChange={(e) => setActiveArtistId(e.target.value)}
+                            className="w-full bg-black border border-[#D4AF37]/25 rounded px-2 py-1 text-[9.5px] text-white font-mono focus:outline-none cursor-pointer"
+                          >
+                            {users.map(u => (
+                              <option key={u.id} value={u.id} className="bg-black text-white">
+                                {u.artisticName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       )}
                     </div>
-                    
-                    <div className="min-w-0">
-                      <h3 className="text-xs font-sans font-black text-white leading-tight truncate flex items-center gap-1">
-                        {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
-                      </h3>
-                      <p className="text-[9px] text-[#D4AF37] font-mono uppercase tracking-wide font-bold">
-                        {currentArtist ? currentArtist.commune : "Abidjan"}, CI
-                      </p>
-                      <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase border border-[#D4AF37]/20 font-extrabold">
-                        Musicien
-                      </span>
-                    </div>
-                  </div>
+                  );
+                })()
+              )}
+            </div>
 
-                  {/* Simulated Active Artist Selector */}
-                  {perspective === "user" && !profile && (
-                    <div className="space-y-1 pt-2 border-t border-[#D4AF37]/10">
-                      <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Artiste Actif Simulé :</span>
-                      <select
-                        value={activeArtistId}
-                        onChange={(e) => {
-                          setActiveArtistId(e.target.value);
-                        }}
-                        className="w-full bg-black border border-white/10 rounded px-1.5 py-1 text-[10px] text-white font-mono focus:outline-none cursor-pointer"
-                      >
-                        {users.map(u => (
-                          <option key={u.id} value={u.id} className="bg-black text-white">
-                            {u.artisticName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-              );
-            })()
-          )}
-
-          {/* SLOGAN PRESTIGE */}
-          <div className="p-3.5 rounded-lg bg-[#D4AF37]/5 border border-[#D4AF37]/10 mb-4 text-center text-[11px] text-[#D4AF37] italic">
-            "🎼 Ton héritage attire les gombos."
-          </div>
-
-          {/* NAVIGATION LINKS */}
-          <nav className="space-y-1">
-            {perspective === "user" ? (
-              <div className="space-y-4">
-                {/* UPPER MENU */}
-                <div className="space-y-0.5">
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        setActiveMenu("user_mes_gombos");
-                        setIsSidebarOpen(false);
-                      });
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all duration-200 ${
-                      activeMenu === "user_mes_gombos"
-                        ? "bg-[#D4AF37] text-black font-extrabold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                        : "text-white/90 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <span className="text-[#D4AF37] text-sm font-black">+</span>
-                      <span>MES CANDIDATURES</span>
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        setActiveMenu("user_renforts");
-                        setIsSidebarOpen(false);
-                      });
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all duration-200 ${
-                      activeMenu === "user_renforts"
-                        ? "bg-[#D4AF37] text-black font-extrabold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                        : "text-white/90 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <Sparkles className="w-4 h-4 text-yellow-400" />
-                      <span>MES RENFORTS</span>
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        setActiveMenu("user_heritage");
-                        setIsSidebarOpen(false);
-                      });
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all duration-200 ${
-                      activeMenu === "user_heritage" && viewingGomboIdDetail === false
-                        ? "bg-[#D4AF37] text-black font-extrabold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                        : "text-white/90 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <Heart className="w-4 h-4 text-red-400 fill-red-400/20" />
-                      <span>MES FAVORIS</span>
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        setActiveMenu("user_mes_groupes");
-                        setIsSidebarOpen(false);
-                      });
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all duration-200 ${
-                      activeMenu === "user_mes_groupes"
-                        ? "bg-[#D4AF37] text-black font-extrabold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                        : "text-white/90 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <Users className="w-4 h-4 text-blue-400" />
-                      <span>MES GROUPES</span>
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        setActiveMenu("user_heritage");
-                        setIsSidebarOpen(false);
-                      });
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all duration-200 ${
-                      activeMenu === "user_heritage" && viewingGomboIdDetail === true
-                        ? "bg-[#D4AF37] text-black font-extrabold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                        : "text-white/90 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <TrendingUp className="w-4 h-4 text-emerald-450" />
-                      <span>MON HISTORIQUE</span>
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        setActiveMenu("user_notifications");
-                        setIsSidebarOpen(false);
-                      });
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all duration-200 ${
-                      activeMenu === "user_notifications"
-                        ? "bg-[#D4AF37] text-black font-extrabold shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                        : "text-white/90 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <Bell className="w-4 h-4 text-yellow-400" />
-                      <span>MES NOTIFICATIONS</span>
-                    </span>
-                  </button>
-                </div>
-
-                {/* CENTRE DE COMMANDE HIGHLIGHTED PANEL CHAIR */}
-                <button
-                  onClick={() => {
-                    if (isAuthorizedAdmin) {
-                      setPerspective("admin");
-                      setActiveMenu("dashboard");
-                    } else {
-                      setActiveMenu("kyc");
-                    }
-                    setIsSidebarOpen(false);
-                  }}
-                  className="w-full border border-[#D4AF37] rounded-xl px-4 py-2 my-1 text-left text-xs font-sans font-black tracking-wider uppercase text-[#D4AF37] bg-black hover:bg-[#D4AF37]/10 flex items-center gap-3 transition-all cursor-pointer active:scale-95"
-                >
-                  <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-                  CENTRE DE COMMANDE 👑
-                </button>
-
-                {/* DECONNEXION */}
-                {currentUser && (
-                  <button
-                    onClick={async () => {
-                      const confirmLogout = window.confirm("Souhaitez-vous vous déconnecter de votre session d'artiste ?");
-                      if (confirmLogout) {
-                        try {
-                          await logout();
-                          setActiveMenu("user_terrain");
-                          setIsSidebarOpen(false);
-                          try { audioSynth.playValidationSuccess(); } catch (err) {}
-                        } catch (err: any) {
-                          console.error("Error signing out:", err);
-                        }
-                      }
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider text-red-500 hover:text-red-400 hover:bg-red-550/10 transition-all cursor-pointer"
-                  >
-                    <span className="text-sm">🚪</span>
-                    DÉCONNEXION
-                  </button>
-                )}
-
-                {/* SEPARATOR */}
-                <div className="border-t border-zinc-850/60 my-3" />
-
-                {/* LOWER MENU FROM IMAGE */}
-                <div className="space-y-1">
-                  <button
-                    onClick={() => {
-                      setActiveMenu("user_terrain");
-                      setTerrainTab("musicien");
-                      setIsSidebarOpen(false);
-                      try { audioSynth.playTamTam(true); } catch (e) {}
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-bold transition-all ${
-                      activeMenu === "user_terrain" && terrainTab === "musicien"
-                        ? "bg-[#D4AF37]/10 text-[#D4AF37]"
-                        : "text-[#F5F5F5]/80 hover:text-white hover:bg-[#D4AF37]/5"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3 text-white">
-                      <span>🎤</span>
-                      <span>La Base</span>
-                    </span>
-                    <span className="text-[9px] font-mono font-black py-0.5 px-2 bg-yellow-400/15 border border-yellow-400/30 text-yellow-500 rounded-lg shrink-0">DIRECT 🔥</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        setActiveMenu("user_mes_groupes");
-                        setIsSidebarOpen(false);
-                        try { audioSynth.playTamTam(true); } catch (e) {}
-                      });
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-bold transition-all ${
-                      activeMenu === "user_mes_groupes"
-                        ? "bg-[#D4AF37]/10 text-[#D4AF37]"
-                        : "text-[#F5F5F5]/80 hover:text-white hover:bg-[#D4AF37]/5"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3 text-white">
-                      <span>🎼</span>
-                      <span>Coin des Groupes</span>
-                    </span>
-                    <span className="text-[9px] font-mono font-black py-0.5 px-2 bg-yellow-400/15 border border-yellow-400/30 text-yellow-500 rounded-lg shrink-0">VIP ⭐️</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveMenu("user_terrain");
-                      setTerrainTab("contrat");
-                      setIsSidebarOpen(false);
-                      try { audioSynth.playTamTam(true); } catch (e) {}
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-bold transition-all ${
-                      activeMenu === "user_terrain" && terrainTab === "contrat"
-                        ? "bg-[#D4AF37]/10 text-[#D4AF37]"
-                        : "text-[#F5F5F5]/80 hover:text-white hover:bg-[#D4AF37]/5"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3 text-white">
-                      <span>🛒</span>
-                      <span>Marché du Coin</span>
-                    </span>
-                    <span className="text-[9px] font-mono font-black py-0.5 px-2 bg-emerald-400/15 border border-emerald-400/30 text-emerald-400 rounded-lg shrink-0">Direct 👍</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      requireAuthThen(() => {
-                        setActiveMenu("user_gombo_id");
-                        setIsSidebarOpen(false);
-                        try { audioSynth.playTamTam(true); } catch (e) {}
-                      });
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-bold transition-all ${
-                      activeMenu === "user_gombo_id"
-                        ? "bg-[#D4AF37]/10 text-[#D4AF37]"
-                        : "text-[#F5F5F5]/80 hover:text-white hover:bg-[#D4AF37]/5"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3 text-white">
-                      <span>🏆</span>
-                      <span>Talent Certifié</span>
-                    </span>
-                    <span className="text-[9px] font-mono font-black py-0.5 px-2 bg-yellow-400/15 border border-yellow-400/30 text-[#D4AF37] rounded-lg shrink-0">Nouveau Boss</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveMenu("user_ecosystem");
-                      setIsSidebarOpen(false);
-                      try { audioSynth.playValidationSuccess(); } catch (e) {}
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-bold transition-all ${
-                      activeMenu === "user_ecosystem"
-                        ? "bg-[#D4AF37]/10 text-[#D4AF37]"
-                        : "text-[#F5F5F5]/80 hover:text-white hover:bg-[#D4AF37]/5"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3 text-white">
-                      <span>🌟</span>
-                      <span>Écosystème 2.0</span>
-                    </span>
-                    <span className="text-[9px] font-mono font-black py-0.5 px-2 bg-orange-400/15 border border-orange-400/30 text-orange-400 rounded-lg shrink-0">NOUVEAU</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveMenu("user_terrain");
-                      setTerrainTab("contrat");
-                      setIsSidebarOpen(false);
-                      try { audioSynth.playTamTam(true); } catch (e) {}
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-bold transition-all ${
-                      activeMenu === "user_terrain" && terrainTab === "contrat"
-                        ? "bg-[#D4AF37]/10 text-[#D4AF37]"
-                        : "text-[#F5F5F5]/80 hover:text-white hover:bg-[#D4AF37]/5"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3 text-white">
-                      <span>💰</span>
-                      <span>Les Cachets</span>
-                    </span>
-                    <span className="text-[9px] font-mono font-black py-0.5 px-2 bg-emerald-400/15 border border-emerald-400/30 text-emerald-400 rounded-lg shrink-0">Sécurisé</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      alert("📞 Support Elite 24H/7 : contact@afrigombo-elite.ci\nAssistance VIP Gombo d'Abidjan active.");
-                      try { audioSynth.playTamTam(false); } catch (e) {}
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-bold text-[#F5F5F5]/80 hover:text-white hover:bg-[#D4AF37]/5 transition-all"
-                  >
-                    <span className="flex items-center gap-3 text-white">
-                      <span>📞</span>
-                      <span>Support</span>
-                    </span>
-                    <span className="text-[9px] font-mono font-black py-0.5 px-2 bg-yellow-400/15 border border-yellow-400/30 text-[#D4AF37] rounded-lg shrink-0">24H/7</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      alert("ℹ️ À propos d'Afrigombo Elite v2.0 :\nLe premier réseau souverain d'alliance et d'intelligence artistique pour l'Elite Musicale d'Abidjan.");
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-2 text-left rounded-lg text-xs font-sans font-bold text-[#F5F5F5]/80 hover:text-white hover:bg-[#D4AF37]/5 transition-all"
-                  >
-                    <span className="flex items-center gap-3 text-white">
-                      <span>📖</span>
-                      <span>À propos</span>
-                    </span>
-                    <span className="text-[9px] font-mono font-black py-0.5 px-2 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg shrink-0">INFOS</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                 <button
-                  id="admin-btn-pilotage"
-                  onClick={() => {
-                    setActiveMenu("dashboard");
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "dashboard"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Pilotage & Dashboard
-                </button>
-
-                <button
-                  id="admin-btn-users"
-                  onClick={() => {
-                    setKycActiveTab("all");
-                    setActiveMenu("kyc");
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "kyc" && kycActiveTab === "all"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
-                >
-                  <Users className="w-4 h-4" />
-                  👥 Utilisateurs
-                </button>
-
-                <button
-                  id="admin-btn-gombo-id"
-                  onClick={() => {
-                    setKycActiveTab("standard");
-                    setActiveMenu("kyc");
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "kyc" && kycActiveTab !== "all"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  🛡️ GOMBO ID
-                </button>
-
-                <button
-                  id="admin-btn-publications"
-                  onClick={() => {
-                    setActiveMenu("gombos");
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "gombos"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
-                >
-                  <Briefcase className="w-4 h-4" />
-                  📢 Publications
-                </button>
-
-                <button
-                  id="admin-btn-signalements"
-                  onClick={() => {
-                    setActiveMenu("revision");
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "revision"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
-                >
-                  <AlertOctagon className="w-4 h-4" />
-                  🚨 Signalements
-                </button>
-
-                <button
-                  id="admin-btn-revenus"
-                  onClick={() => {
-                    setActiveMenu("caisse");
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                    activeMenu === "caisse"
-                      ? "bg-[#D4AF37] text-[#0B0B0B] font-semibold font-display shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1"
-                  }`}
-                >
-                  <Coins className="w-4 h-4" />
-                  💰 Revenus
-                </button>
-
-                <button
-                  id="admin-btn-annonces"
-                  onClick={() => {
-                    setIsBroadcastModalOpen(true);
-                    setIsSidebarOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-[#F5F5F5]/70 hover:text-[#F5F5F5] hover:bg-[#D4AF37]/5 hover:translate-x-1 transition-all duration-205"
-                >
-                  <Megaphone className="w-4 h-4" />
-                  📣 Annonces
-                </button>
-
-                {adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com" && (
-                  <button
-                    onClick={() => {
-                      setActiveMenu("super_admin");
-                      setIsSidebarOpen(false);
-                      addToTerminal(`[Trône] Le Fondateur Unique accède à son trône royal.`);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 mt-2 rounded-lg text-xs font-black font-mono uppercase tracking-widest transition-all duration-300 border ${
-                      activeMenu === "super_admin"
-                        ? "bg-gradient-to-r from-black via-zinc-950 to-zinc-900 border-[#D4AF37] text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                        : "text-[#D4AF37] bg-black hover:bg-[#D4AF37]/5 border-[#D4AF37]/30 hover:border-[#D4AF37] animate-pulse"
-                    }`}
-                  >
-                    <Crown className="w-4 h-4 text-[#D4AF37]" />
-                    👑 Accéder au Trône du Fondateur
-                  </button>
-                )}
-
+            {/* MAIN NAVIGATION GROUPS */}
+            <nav className="px-4 pb-4 space-y-5">
+              
+              {/* GROUP 1: ESSENTIELS */}
+              <div className="space-y-1">
+                <span className="px-3 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
+                  🌐 {lang === "nouchi" ? "Le Coin Choco" : "Essentiel Gombo"}
+                </span>
+                
+                {/* 🏠 Accueil */}
                 <button
                   onClick={() => {
                     setPerspective("user");
-                    setActiveMenu("user_heritage");
+                    setActiveMenu("user_terrain");
+                    setTerrainTab("all");
+                    setIsSidebarOpen(false);
+                    try { audioSynth.playTamTam(true); } catch (e) {}
+                  }}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all ${
+                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "all"
+                      ? "bg-[#D4AF37] text-black shadow-[0_0_12px_rgba(212,175,55,0.25)]"
+                      : "text-white/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
+                  }`}
+                >
+                  <Home className="w-4 h-4 shrink-0" />
+                  <span>🏠 Accueil</span>
+                </button>
+
+                {/* 🎵 Les Vibes */}
+                <button
+                  onClick={() => {
+                    requireAuthThen(() => {
+                      setPerspective("user");
+                      setActiveMenu("user_vibes");
+                      setIsSidebarOpen(false);
+                      try { audioSynth.playValidationSuccess(); } catch (e) {}
+                    });
+                  }}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all ${
+                    perspective === "user" && activeMenu === "user_vibes"
+                      ? "bg-[#D4AF37] text-black shadow-[0_0_12px_rgba(212,175,55,0.25)]"
+                      : "text-white/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
+                  }`}
+                >
+                  <Radio className="w-4 h-4 shrink-0 animate-pulse" />
+                  <span>🎵 Les Vibes</span>
+                </button>
+
+                {/* 📢 Mes Gombos */}
+                <button
+                  onClick={() => {
+                    requireAuthThen(() => {
+                      setPerspective("user");
+                      setActiveMenu("user_mes_gombos");
+                      setIsSidebarOpen(false);
+                      try { audioSynth.playValidationSuccess(); } catch (e) {}
+                    });
+                  }}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all ${
+                    perspective === "user" && activeMenu === "user_mes_gombos"
+                      ? "bg-[#D4AF37] text-black shadow-[0_0_12px_rgba(212,175,55,0.25)]"
+                      : "text-white/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4 shrink-0" />
+                  <span>📢 Mes Gombos</span>
+                </button>
+
+                {/* 👤 Mon Héritage */}
+                <button
+                  onClick={() => {
+                    requireAuthThen(() => {
+                      setPerspective("user");
+                      setActiveMenu("user_heritage");
+                      setViewingGomboIdDetail(false);
+                      setIsSidebarOpen(false);
+                      try { audioSynth.playValidationSuccess(); } catch (e) {}
+                    });
+                  }}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all ${
+                    perspective === "user" && activeMenu === "user_heritage" && !viewingGomboIdDetail
+                      ? "bg-[#D4AF37] text-black shadow-[0_0_12px_rgba(212,175,55,0.25)]"
+                      : "text-white/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
+                  }`}
+                >
+                  <Users className="w-4 h-4 shrink-0" />
+                  <span>👤 Mon Héritage</span>
+                </button>
+              </div>
+
+              {/* SEPARATOR */}
+              <div className="border-t border-[#D4AF37]/15 my-2" />
+
+              {/* GROUP 2: SECTEURS / METIERS */}
+              <div className="space-y-1">
+                <span className="px-3 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
+                  ⚡ {lang === "nouchi" ? "Les Bons Bails" : "Secteurs & Métiers"}
+                </span>
+
+                {/* 🎤 Showbiz */}
+                <button
+                  onClick={() => {
+                    setPerspective("user");
+                    setActiveMenu("user_terrain");
+                    setTerrainTab("musicien");
+                    setIsSidebarOpen(false);
+                    try { audioSynth.playTamTam(true); } catch (e) {}
+                  }}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-bold transition-all ${
+                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "musicien"
+                      ? "bg-[#D4AF37]/15 text-[#D4AF37] border-l-2 border-[#D4AF37]"
+                      : "text-zinc-350 hover:text-white hover:bg-[#D4AF37]/5"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <span>🎤</span>
+                    <span>Showbiz d'Elite</span>
+                  </span>
+                  <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-yellow-400/10 text-[#D4AF37] rounded font-black border border-[#D4AF37]/20 uppercase">
+                    DIRECT 🔥
+                  </span>
+                </button>
+
+                {/* 💰 Cachets d'Or */}
+                <button
+                  onClick={() => {
+                    setPerspective("user");
+                    setActiveMenu("user_terrain");
+                    setTerrainTab("contrat");
+                    setIsSidebarOpen(false);
+                    try { audioSynth.playTamTam(true); } catch (e) {}
+                  }}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-bold transition-all ${
+                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "contrat"
+                      ? "bg-[#D4AF37]/15 text-[#D4AF37] border-l-2 border-[#D4AF37]"
+                      : "text-zinc-350 hover:text-white hover:bg-[#D4AF37]/5"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <span>💰</span>
+                    <span>{lang === "nouchi" ? "Gros Cacheton" : "Cachets d'Or"}</span>
+                  </span>
+                  <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-emerald-400/10 text-emerald-400 rounded font-black border border-emerald-500/20 uppercase">
+                    SECURED 💎
+                  </span>
+                </button>
+
+                {/* 📅 Événements */}
+                <button
+                  onClick={() => {
+                    setIsEventsModalOpen(true);
+                    setIsSidebarOpen(false);
+                    try { audioSynth.playValidationSuccess(); } catch (e) {}
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-bold text-zinc-350 hover:text-white hover:bg-[#D4AF37]/5 transition-all"
+                >
+                  <span className="flex items-center gap-3">
+                    <span>📅</span>
+                    <span>Événements Live</span>
+                  </span>
+                  <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-pink-500/15 text-pink-400 rounded font-black border border-pink-500/20 uppercase">
+                    VIP ⭐
+                  </span>
+                </button>
+
+                {/* 🏛️ Gombo Academy */}
+                <button
+                  onClick={() => {
+                    setIsAcademyModalOpen(true);
+                    setIsSidebarOpen(false);
+                    try { audioSynth.playValidationSuccess(); } catch (e) {}
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-bold text-zinc-350 hover:text-white hover:bg-[#D4AF37]/5 transition-all"
+                >
+                  <span className="flex items-center gap-3">
+                    <span>🏛️</span>
+                    <span>Gombo Academy</span>
+                  </span>
+                  <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/15 text-[#D4AF37] rounded font-black border border-[#D4AF37]/25 uppercase">
+                    PRO 🎓
+                  </span>
+                </button>
+              </div>
+
+              {/* SEPARATOR */}
+              <div className="border-t border-[#D4AF37]/15 my-2" />
+
+              {/* GROUP 3: PRIVILEGES SOUVERAINS (ADMIN/FOUNDER) */}
+              {(isAuthorizedAdmin || isAuthorizedSuperFounder || currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com") && (
+                <div className="space-y-1">
+                  <span className="px-3 text-[8.5px] font-mono font-black text-rose-500 uppercase tracking-widest block mb-1">
+                    👑 Commandement Royal
+                  </span>
+
+                  {/* 🛡️ Centre de Commandement */}
+                  {(isAuthorizedAdmin || isAuthorizedSuperFounder) && (
+                    <button
+                      onClick={() => {
+                        setPerspective("admin");
+                        setActiveMenu("dashboard");
+                        setIsSidebarOpen(false);
+                        try { audioSynth.playValidationSuccess(); } catch (e) {}
+                      }}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-mono font-black uppercase tracking-wider transition-all ${
+                        perspective === "admin" && activeMenu === "dashboard"
+                          ? "bg-rose-600 text-white shadow-[0_0_12px_rgba(225,29,72,0.3)]"
+                          : "text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-[#D4AF37]/35"
+                      }`}
+                    >
+                      <ShieldCheck className="w-4 h-4 shrink-0 text-[#D4AF37]" />
+                      <span>🛡️ Commandement</span>
+                    </button>
+                  )}
+
+                  {/* 👑 Le Trône */}
+                  {(currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com" ||
+                    currentUser?.email?.toLowerCase() === "jhs.kmj7@gmail.com") && (
+                    <button
+                      onClick={() => {
+                        setPerspective("admin");
+                        setActiveMenu("super_admin");
+                        setIsSidebarOpen(false);
+                        try { audioSynth.playTamTam(true); } catch (e) {}
+                        addToTerminal("[ADMIN] En route vers le Trône Royal.");
+                      }}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-mono font-black uppercase tracking-wider transition-all mt-1.5 ${
+                        perspective === "admin" && activeMenu === "super_admin"
+                          ? "bg-purple-800 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                          : "text-purple-400 hover:text-white hover:bg-purple-500/10 border border-purple-500/35"
+                      }`}
+                    >
+                      <Crown className="w-4 h-4 shrink-0 text-yellow-400 animate-bounce" />
+                      <span>👑 Le Trône</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* SEPARATOR */}
+              <div className="border-t border-[#D4AF37]/15 my-2" />
+
+              {/* GROUP 4: REGLAGES & SYSTEME */}
+              <div className="space-y-1">
+                <span className="px-3 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
+                  ⚙️ {lang === "nouchi" ? "Le Coin Réglo" : "Système & Réglages"}
+                </span>
+
+                {/* Thème Toggle */}
+                <button
+                  onClick={() => {
+                    setDarkMode(!darkMode);
+                    try { audioSynth.playValidationSuccess(); } catch (e) {}
+                    addToTerminal(`[THÈME] Changement d'ambiance visuelle.`);
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-2 text-left rounded-lg text-xs font-bold text-zinc-350 hover:text-white hover:bg-zinc-800 transition-all"
+                >
+                  <span className="flex items-center gap-3">
+                    <span>🌙</span>
+                    <span>{lang === "nouchi" ? "Thème Sombre" : "Contraste Thème"}</span>
+                  </span>
+                  <span className="font-mono text-[9px] uppercase font-bold text-[#D4AF37]">
+                    {darkMode ? "ON 💡" : "OFF 🌑"}
+                  </span>
+                </button>
+
+                {/* Langue Toggle */}
+                <button
+                  onClick={() => {
+                    const nextL = lang === "fr" ? "nouchi" : "fr";
+                    setLang(nextL);
+                    try { audioSynth.playTamTam(true); } catch (e) {}
+                    addToTerminal(`[LANGUE] Passage en mode ${nextL === "nouchi" ? "Nouchi" : "Français"}`);
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-2 text-left rounded-lg text-xs font-bold text-zinc-350 hover:text-white hover:bg-zinc-800 transition-all"
+                >
+                  <span className="flex items-center gap-3">
+                    <span>🌍</span>
+                    <span>Langue</span>
+                  </span>
+                  <span className="font-mono text-[9px] uppercase font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    {lang === "nouchi" ? "Nouchi 🇨🇮" : "Français 🇫🇷"}
+                  </span>
+                </button>
+
+                {/* Quick Diagnostics system trigger */}
+                <button
+                  onClick={() => {
+                    triggerGlobalSystemScan();
                     setIsSidebarOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 mt-4 text-left rounded-lg text-xs font-mono font-bold uppercase text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all duration-205 border border-[#D4AF37]/20 hover:border-[#D4AF37]"
+                  className="w-full flex items-center justify-between px-3.5 py-2 text-left rounded-lg text-xs font-bold text-zinc-350 hover:text-white hover:bg-zinc-800 transition-all"
                 >
-                  <Users className="w-4 h-4" />
-                  Perspective Artiste
+                  <span className="flex items-center gap-3">
+                    <span>⚙️</span>
+                    <span>Scan Intelligent</span>
+                  </span>
+                  <span className="text-[7.5px] font-mono text-cyan-400 uppercase font-bold">READY</span>
                 </button>
 
-                <button
-                  onClick={async () => {
-                    const confirmLogout = window.confirm("Souhaitez-vous vous déconnecter de votre session d'administration ?");
-                    if (confirmLogout) {
-                      try {
-                        await logout();
-                        setPerspective("user");
-                        setActiveArtistId("user_1");
-                        setActiveMenu("user_terrain");
-                        setIsSidebarOpen(false);
-                        try { audioSynth.playValidationSuccess(); } catch (err) {}
-                        addToTerminal("[INFO] Administration fermée. Session déconnectée.");
-                      } catch (err: any) {
-                        console.error("Error signing out admin:", err);
-                        alert("Impossible de se déconnecter.");
+                {/* Déconnexion button if authenticated */}
+                {currentUser && (
+                  <button
+                    onClick={async () => {
+                      const confirmLogout = window.confirm(
+                        lang === "nouchi" 
+                          ? "Vieux môgô, tu veux libérer la session ?" 
+                          : "Souhaitez-vous vous déconnecter de votre session d'artiste ?"
+                      );
+                      if (confirmLogout) {
+                        try {
+                          await logout();
+                          setPerspective("user");
+                          setActiveMenu("user_terrain");
+                          setIsSidebarOpen(false);
+                          try { audioSynth.playValidationSuccess(); } catch (err) {}
+                        } catch (err) {
+                          console.error("Logout err", err);
+                        }
                       }
-                    }
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 mt-2 text-left rounded-lg text-xs font-mono font-bold uppercase text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-205 cursor-pointer"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Déconnexion
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
+                    }}
+                    className="w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-mono font-black uppercase tracking-wider text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer mt-1"
+                  >
+                    <span>🚪</span>
+                    <span>{lang === "nouchi" ? "LIBÉRER SESSION" : "DÉCONNEXION"}</span>
+                  </button>
+                )}
+              </div>
 
-        {/* CONTROLS IN SIDEBAR FOOTER */}
-        <div className="space-y-4">
-          {/* Quick System Action Button */}
-          <button
-            onClick={triggerGlobalSystemScan}
-            disabled={scannerStatus === "scanning"}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-xs font-mono font-semibold"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${scannerStatus === "scanning" ? "animate-spin" : ""}`} />
-            Scan Intelligent Global
-          </button>
-
-          {/* User Signout or Status */}
-          <div className="flex items-center gap-3 pt-4 border-t border-[#D4AF37]/10">
-            <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37] flex items-center justify-center">
-              <span className="font-mono font-bold text-xs text-[#D4AF37]">SA</span>
-            </div>
-            <div>
-              <span className="text-xs font-semibold text-[#F5F5F5] block">Yoro Admin</span>
-              <span className="text-[9px] font-mono uppercase text-[#10B981] flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" />
-                Super Admin
-              </span>
-            </div>
+            </nav>
           </div>
+
+          {/* SIDEBAR FOOTER METRICS */}
+          <div className="p-5 bg-black/40 border-t border-[#D4AF37]/15 text-center space-y-1 font-mono">
+            <p className="text-[8.5px] text-[#D4AF37] font-bold uppercase tracking-widest">
+              AFRIGOMBO ELITE V2.0
+            </p>
+            <p className="text-[7.5px] text-zinc-500">
+              Système Souverain National • Abidjan, CI
+            </p>
+          </div>
+
         </div>
       </aside>
 
       {/* =========================================================================
                                ZONE B : WORKSPACE CENTRAL (MIDDLE)
          ========================================================================= */}
-      <main className="flex-1 bg-[#0B0B0B] flex flex-col overflow-y-auto px-4 sm:px-8 py-6">
+      <main className="flex-1 min-w-0 w-full max-w-full bg-[#0B0B0B] flex flex-col overflow-y-auto overflow-x-hidden px-4 sm:px-8 py-6">
         
         {/* ELITE UPPER STATUS BAR (AFRIGOMBO PREMIUM HEADER) */}
         <header className="flex justify-between items-center pb-5 border-b border-[#D4AF37]/15 mb-6 shrink-0 gap-2 w-full animate-fadeIn select-none">
@@ -3574,7 +3431,46 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                       </button>
                                       
                                       <span className="text-zinc-700">•</span>
-                                      <span>💬 {p.comments} parlers</span>
+                                      <span>💬 {p.comments + (postComments[p.id]?.length || 0)} parlers</span>
+                                    </div>
+
+                                    {/* Real Parler / Comments Section */}
+                                    <div className="space-y-2 pt-2 border-t border-white/5">
+                                      {/* Existing comments */}
+                                      {postComments[p.id]?.map(c => (
+                                        <div key={c.id} className="text-[10.5px] p-2 bg-black rounded border border-white/5 text-left font-sans">
+                                          <strong className="text-[#D4AF37] uppercase text-[9px] font-mono mr-1">{c.writerName} :</strong>
+                                          <span className="text-zinc-300">{c.content}</span>
+                                        </div>
+                                      ))}
+
+                                      {/* Add comment input */}
+                                      <div className="flex gap-2">
+                                        <input
+                                          type="text"
+                                          placeholder="Ajouter un parler d'Académie..."
+                                          onKeyDown={async (e: any) => {
+                                            if (e.key === "Enter" && e.target.value.trim()) {
+                                              const content = e.target.value.trim();
+                                              const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                                              const writerName = currentArtist ? currentArtist.artisticName : "Artiste Élite";
+                                              const newComment = {
+                                                id: `comment_${Date.now()}`,
+                                                content,
+                                                writerName
+                                              };
+                                              setPostComments(prev => ({
+                                                ...prev,
+                                                [p.id]: [...(prev[p.id] || []), newComment]
+                                              }));
+                                              e.target.value = "";
+                                              try { audioSynth.playValidationSuccess(); } catch (err) {}
+                                              addToTerminal(`[PARLER] Parler ajouté par ${writerName} sur le post ${p.id}`);
+                                            }
+                                          }}
+                                          className="flex-1 bg-[#1A1A1D] border border-zinc-800 rounded-xl p-2 px-3 text-[10.5px] text-white focus:outline-none focus:border-[#D4AF37] placeholder:text-zinc-650"
+                                        />
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -4082,6 +3978,16 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <p className="text-xs text-zinc-400 font-mono mt-0.5">
                               {currentArtist.name} • {currentArtist.role === "admin" ? "Sénateur Planificateur / Admin" : "Artiste Musicien"} • {currentArtist.commune}, Abidjan
                             </p>
+                            <button
+                              id="btn-edit-profile-trigger"
+                              onClick={() => {
+                                setActiveMenu("user_edit_profile");
+                                try { audioSynth.playValidationSuccess(); } catch (err) {}
+                              }}
+                              className="mt-2.5 inline-flex items-center gap-1 px-3 py-1 bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black border border-[#D4AF37]/35 hover:border-transparent rounded-lg text-[10px] font-mono font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95"
+                            >
+                              ✍️ Modifier mon profil
+                            </button>
                           </div>
                         </div>
                         <div className="text-right">
@@ -4126,6 +4032,48 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         </div>
                       </div>
                     </div>
+
+                    {/* IMPERIAL SÉNAT & ROYAL THRONE FAST SWITCHBOARD CARD */}
+                    {(isAuthorizedAdmin || isAuthorizedSuperFounder || currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com") && (
+                      <div className="p-6 bg-gradient-to-br from-rose-950/40 via-purple-950/40 to-black border border-purple-500/30 rounded-2xl space-y-4 shadow-xl">
+                        <div className="flex items-center gap-2">
+                          <Crown className="w-5 h-5 text-yellow-400 animate-pulse" />
+                          <h4 className="text-sm font-display font-black text-white uppercase tracking-wider">
+                            Portail de Commandement Impérial GOMBO ELITE
+                          </h4>
+                        </div>
+                        <p className="text-xs text-zinc-300">
+                          En tant que Fondateur ou Administrateur Souverain, vous disposez d'un accès instantané au Saint des Saints de la plateforme pour gouverner, certifier les artistes, et auditer les transactions.
+                        </p>
+                        <div className="flex flex-wrap gap-2.5 pt-1">
+                          <button
+                            onClick={() => {
+                              setPerspective("admin");
+                              setActiveMenu("dashboard");
+                              try { audioSynth.playValidationSuccess(); } catch (err) {}
+                              addToTerminal("[SOUVERAIN] Accès au Cockpit Administrateur.");
+                            }}
+                            className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg active:scale-95"
+                          >
+                            🛡️ Ouvrir le Cockpit Admin
+                          </button>
+
+                          {(currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com" || currentUser?.email?.toLowerCase() === "jhs.kmj7@gmail.com") && (
+                            <button
+                              onClick={() => {
+                                setPerspective("admin");
+                                setActiveMenu("super_admin");
+                                try { audioSynth.playTamTam(true); } catch (err) {}
+                                addToTerminal("[SOUVERAIN] Accès direct au Trône Royal.");
+                              }}
+                              className="px-4 py-2 bg-purple-700 hover:bg-purple-600 text-white text-xs font-mono font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg active:scale-95"
+                            >
+                              👑 S'installer sur le Trône
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Historical Earnings Progression Graph */}
                     <div className="p-6 bg-zinc-950 border border-white/5 rounded-2xl space-y-4">
@@ -4519,11 +4467,40 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 );
               })()}
 
+              {activeMenu === "user_messages" && (() => {
+                const currentActiveUserForChat = currentUser ? { uid: currentUser.uid } : { uid: activeArtistId };
+                const currentProfileForChat = profile || (users.find(u => u.id === activeArtistId) || users[0]);
+                return (
+                  <div className="space-y-6 animate-fadeIn pb-24 text-left">
+                    <MessagesView
+                      currentUser={currentActiveUserForChat}
+                      currentProfile={currentProfileForChat}
+                      openConvoWithUserId={openConvoWithUserId}
+                      setOpenConvoWithUserId={setOpenConvoWithUserId}
+                      onBack={() => {
+                        setActiveMenu("user_terrain");
+                        try { audioSynth.playValidationSuccess(); } catch (err) {}
+                      }}
+                    />
+                  </div>
+                );
+              })()}
+
               {activeMenu === "user_edit_profile" && (() => {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
                 return (
-                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn">
+                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn text-left">
+                    <button
+                      onClick={() => {
+                        setActiveMenu("user_heritage");
+                        try { audioSynth.playValidationSuccess(); } catch (err) {}
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-zinc-950 border border-zinc-800 hover:border-[#D4AF37]/50 text-white rounded-xl text-xs font-mono transition-all cursor-pointer select-none active:scale-95 w-fit"
+                    >
+                      ← Retour à l'Héritage
+                    </button>
+
                     <div className="pb-3 border-b border-white/5">
                       <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
                         ✍ Modifier mon profil d'Académie
@@ -6580,6 +6557,90 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         )}
                       </div>
                     </div>
+
+                    {/* ADDITIONAL PLUS SYSTEMS PANEL */}
+                    <div className="p-6 rounded-2xl bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-[#D4AF37]/25 space-y-6">
+                      <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                        <Settings className="w-5 h-5 text-[#D4AF37]" />
+                        <div>
+                          <h4 className="text-sm font-display font-black text-white uppercase tracking-wider">
+                            Services & Outillage Plus Gombo
+                          </h4>
+                          <p className="text-[10px] text-zinc-400">Actions d'optimisation système de l'empire.</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Action 1: Scan global */}
+                        <div className="p-4 bg-black border border-white/5 rounded-xl space-y-2">
+                          <h5 className="text-xs font-bold text-white font-mono uppercase">Diagnostic Système</h5>
+                          <p className="text-[10px] text-zinc-400">Lance une routine de nettoyage des documents orphelins et vérifie l'intégrité de Firestore.</p>
+                          <button
+                            onClick={triggerGlobalSystemScan}
+                            disabled={scannerStatus === "scanning"}
+                            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-[10px] font-mono font-semibold"
+                          >
+                            <RefreshCw className={`w-3 h-3 ${scannerStatus === "scanning" ? "animate-spin" : ""}`} />
+                            Scan Global
+                          </button>
+                        </div>
+
+                        {/* Action 2: Diffusions bulletins */}
+                        <div className="p-4 bg-black border border-white/5 rounded-xl space-y-2">
+                          <h5 className="text-xs font-bold text-white font-mono uppercase">Mégaphone Citoyen</h5>
+                          <p className="text-[10px] text-zinc-400">Diffusez un flash d'urgence épinglé directement au sommet du Tam-Tam des Artistes.</p>
+                          <button
+                            onClick={() => setIsBroadcastModalOpen(true)}
+                            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-[10px] font-mono font-semibold"
+                          >
+                            <Megaphone className="w-3 h-3" />
+                            📣 Diffuser Bulletin
+                          </button>
+                        </div>
+
+                        {/* Action 3: Switch perspective */}
+                        <div className="p-4 bg-black border border-white/5 rounded-xl space-y-2">
+                          <h5 className="text-xs font-bold text-white font-mono uppercase">Perspective Terrain</h5>
+                          <p className="text-[10px] text-zinc-400">Quittez temporairement le cockpit pour tester l'application en mode artiste.</p>
+                          <button
+                            onClick={() => {
+                              setPerspective("user");
+                              setActiveMenu("user_terrain");
+                              addToTerminal("[INFO] Retour au Terrain d'Action.");
+                            }}
+                            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-[10px] font-mono font-semibold"
+                          >
+                            <Users className="w-3 h-3" />
+                            Mode Artiste
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* LE TRÔNE ROYAL DES SOUVERAINS - EXCLUSIVE VISIBILITY */}
+                      {isAuthorizedSuperFounder && (
+                        <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-950/20 via-black to-purple-950/20 border border-purple-500/35 flex flex-col md:flex-row justify-between items-center gap-4">
+                          <div className="flex items-center gap-3">
+                            <Crown className="w-8 h-8 text-[#D4AF37] animate-bounce shrink-0" />
+                            <div>
+                              <h5 className="text-sm font-display font-black text-white uppercase tracking-wider">Cabinet Royal du Fondateur</h5>
+                              <p className="text-[10.5px] text-zinc-350">
+                                Accès souverain réservé exclusivement à l'empereur originel d'AFRIGOMBO (<strong className="text-yellow-400">Johnsylvesterh@gmail.com</strong>).
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setActiveMenu("super_admin");
+                              try { audioSynth.playTamTam(true); } catch (e) {}
+                              addToTerminal("[DECRET] En route vers le Trône Royal.");
+                            }}
+                            className="px-5 py-2.5 bg-gradient-to-r from-orange-500 via-[#D4AF37] to-purple-600 text-black hover:opacity-90 font-mono font-black text-[10.5px] uppercase tracking-wider rounded-lg shadow-lg hover:shadow-[#D4AF37]/20 transition-all cursor-pointer select-none shrink-0"
+                          >
+                            👑 LE TRÔNE
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })()}
@@ -7285,7 +7346,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               activeMenu === "user_mes_gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Briefcase className="w-5 h-5" />
+            <Megaphone className="w-5 h-5" />
             <span className="text-[9px] font-mono font-black uppercase tracking-wider">Mes Gombos</span>
           </button>
 
@@ -7303,8 +7364,91 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               activeMenu === "user_heritage" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Users className="w-5 h-5" />
+            <UserIcon className="w-5 h-5" />
             <span className="text-[9px] font-mono font-black uppercase tracking-wider">Héritage</span>
+          </button>
+        </div>
+      )}
+
+      {/* =========================================================================
+                                     ADMIN FIXED BOTTOM NAVIGATION BAR
+         ========================================================================= */}
+      {perspective === "admin" && (
+        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-[#090909]/95 sm:bg-[#121214]/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/35 p-2.5 px-4 sm:px-8 flex justify-around sm:justify-between sm:gap-6 items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.2)] w-full sm:w-auto min-w-[320px] max-w-lg mx-auto">
+          {/* 1. COCKPIT */}
+          <button
+            id="admin-nav-cockpit"
+            onClick={() => {
+              setActiveMenu("dashboard");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "dashboard" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Cockpit</span>
+          </button>
+
+          {/* 2. COMPTES */}
+          <button
+            id="admin-nav-comptes"
+            onClick={() => {
+              setKycActiveTab("all");
+              setActiveMenu("kyc");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "kyc" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Comptes</span>
+          </button>
+
+          {/* 3. PUBLICATIONS */}
+          <button
+            id="admin-nav-publications"
+            onClick={() => {
+              setActiveMenu("gombos");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Briefcase className="w-5 h-5" />
+            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Publications</span>
+          </button>
+
+          {/* 4. VÉRIFICATIONS */}
+          <button
+            id="admin-nav-verifications"
+            onClick={() => {
+              setActiveMenu("revision");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "revision" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <ShieldCheck className="w-5 h-5" />
+            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Vérifications</span>
+          </button>
+
+          {/* 5. PLUS */}
+          <button
+            id="admin-nav-plus"
+            onClick={() => {
+              setActiveMenu("caisse");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "caisse" || activeMenu === "super_admin" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Settings className="w-5 h-5" />
+            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Plus</span>
           </button>
         </div>
       )}
@@ -7359,6 +7503,211 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         </div>
       )}
 
+      {/* =========================================================================
+                                     EVENTS MODAL (ÉVÉNEMENTS LIVE)
+         ========================================================================= */}
+      {isEventsModalOpen && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-lg bg-[#09090A] border-2 border-[#D4AF37] p-6 rounded-2xl space-y-4 shadow-2xl relative"
+          >
+            {/* Redesigned safe exit close */}
+            <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-3">
+              <div>
+                <h4 className="text-md font-sans font-black uppercase text-[#D4AF37] flex items-center gap-1">
+                  📅 Événements & Concerts Élite 2026
+                </h4>
+                <p className="text-[9px] font-mono text-zinc-400">
+                  PROGRAMMATION ET CACHETS PRIVÉS SOUVERAINS
+                </p>
+              </div>
+              <button 
+                onClick={() => setIsEventsModalOpen(false)} 
+                className="w-8 h-8 rounded-full border border-[#D4AF37]/35 flex items-center justify-center text-white hover:text-red-500 font-bold hover:bg-[#D4AF37]/10"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-3.5 max-h-[60vh] overflow-y-auto pr-1">
+              {/* Event 1 */}
+              <div className="p-4 rounded-xl bg-black border border-[#D4AF37]/15 hover:border-[#D4AF37]/45 transition-colors space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h5 className="text-xs font-sans font-black text-white uppercase">FEMUA 2026 — Grande Scène</h5>
+                    <p className="text-[9px] text-[#D4AF37] font-mono">📍 Marcory, Abidjan • 12 Juillet 2026</p>
+                  </div>
+                  <span className="text-[8px] font-mono py-0.5 px-2 bg-[#D4AF37]/10 rounded border border-[#D4AF37]/20 text-[#D4AF37] uppercase font-bold">
+                    Tête d'Affiche
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-zinc-400">
+                  Performance en prime-time devant 40 000 spectateurs. Intégration de vibes kora et kpanlogo traditionnels requise.
+                </p>
+                <div className="flex justify-between items-center pt-1 text-[10px]">
+                  <span className="text-zinc-500">Cachet Artiste : <strong className="text-white">Sur devis</strong></span>
+                  <button 
+                    onClick={() => {
+                      alert("Enregistré ! Votre agence d'Héritage a transmis votre dossier de candidature de groupe au BURIDA / FEMUA.");
+                      try { audioSynth.playKoraSuccess(); } catch(e){}
+                    }}
+                    className="px-3 py-1 bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] font-bold rounded uppercase transition-colors"
+                  >
+                    Postuler 🔥
+                  </button>
+                </div>
+              </div>
+
+              {/* Event 2 */}
+              <div className="p-4 rounded-xl bg-black border border-[#D4AF37]/15 hover:border-[#D4AF37]/45 transition-colors space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h5 className="text-xs font-sans font-black text-white uppercase font-display">Abidjan Jazz Premium Live</h5>
+                    <p className="text-[9px] text-[#D4AF37] font-mono">📍 Palais des Congrès, Cocody • 28 Août 2026</p>
+                  </div>
+                  <span className="text-[8px] font-mono py-0.5 px-2 bg-emerald-500/10 rounded border border-emerald-500/20 text-emerald-400 uppercase font-bold">
+                    Cachet Garanti
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-zinc-400">
+                  Soirée VIP de prestige. Idéal pour guitaristes solos, saxophonistes et percussionnistes d'Alliance.
+                </p>
+                <div className="flex justify-between items-center pt-1 text-[10px]">
+                  <span className="text-zinc-500">Cachet : <strong className="text-[#D4AF37]">4 000 000 FCFA</strong></span>
+                  <button 
+                    onClick={() => {
+                      alert("Premium Option validée ! Entretien de cachet planifié au Cabinet Gombo.");
+                      try { audioSynth.playKoraSuccess(); } catch(e){}
+                    }}
+                    className="px-3 py-1 bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] font-bold rounded uppercase transition-colors"
+                  >
+                    Réserver Place 💎
+                  </button>
+                </div>
+              </div>
+
+              {/* Event 3 */}
+              <div className="p-4 rounded-xl bg-black border border-[#D4AF37]/15 hover:border-[#D4AF37]/45 transition-colors space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h5 className="text-xs font-sans font-black text-white uppercase font-display">Nuit du Zouglou Souverain</h5>
+                    <p className="text-[9px] text-[#D4AF37] font-mono">📍 Complexe Sportif, Yopougon • 05 Septembre 2026</p>
+                  </div>
+                  <span className="text-[8px] font-mono py-0.5 px-2 bg-pink-500/10 rounded border border-pink-500/25 text-pink-400 uppercase font-bold">
+                    Zouglou Only
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-zinc-400">
+                  Alliance de 10 groupes d'élite ivoiriens. Ambiance wôyô, tambours traditionnels d'Adjamé et choeurs harmonisés.
+                </p>
+                <div className="flex justify-between items-center pt-1 text-[10px]">
+                  <span className="text-zinc-500">Cachet Garanti : <strong className="text-white">2 500 000 FCFA</strong></span>
+                  <button 
+                    onClick={() => {
+                      alert("Inscrit au Tam-Tam ! Votre groupe est présélectionné pour le live de Yop.");
+                      try { audioSynth.playKoraSuccess(); } catch(e){}
+                    }}
+                    className="px-3 py-1 bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] font-bold rounded uppercase transition-colors"
+                  >
+                    Postuler 🔥
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-[#D4AF37]/10">
+              <button
+                onClick={() => setIsEventsModalOpen(false)}
+                className="px-5 py-2 bg-zinc-900 hover:bg-zinc-850 text-white text-xs font-mono font-bold uppercase rounded-xl transition-all"
+              >
+                Fermer
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* =========================================================================
+                               GOMBO ACADEMY MODAL (MASTERCLASSES)
+         ========================================================================= */}
+      {isAcademyModalOpen && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-lg bg-[#09090A] border-2 border-[#D4AF37] p-6 rounded-2xl space-y-4 shadow-2xl relative"
+          >
+            <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-3">
+              <div>
+                <h4 className="text-md font-sans font-black uppercase text-[#D4AF37] flex items-center gap-1.5">
+                  🏛️ Gombo Academy • Masterclasses
+                </h4>
+                <p className="text-[9px] font-mono text-zinc-400">
+                  ENSEIGNEMENTS PROFESSIONNELS SOUVERAINS POUR MUSICIENS
+                </p>
+              </div>
+              <button 
+                onClick={() => setIsAcademyModalOpen(false)} 
+                className="w-8 h-8 rounded-full border border-[#D4AF37]/35 flex items-center justify-center text-white hover:text-red-500 font-bold hover:bg-[#D4AF37]/10"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+              {/* Class 1 */}
+              <div className="space-y-1.5">
+                <h5 className="text-xs font-bold text-[#D4AF37] uppercase flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
+                  1. Législation BURIDA & Droits d'Héritage
+                </h5>
+                <p className="text-[11px] text-zinc-350 leading-relaxed pl-3.5 border-l border-zinc-800">
+                  Apprenez à déposer vos oeuvres, protéger vos codes de vibes, et déclarer vos gombos d'Abidjan. Le BURIDA sécurise vos revenus d'alliance et d'héritage musical contre toute exploitation injuste.
+                </p>
+              </div>
+
+              {/* Class 2 */}
+              <div className="space-y-1.5">
+                <h5 className="text-xs font-bold text-emerald-400 uppercase flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  2. Maîtriser l'Art de Négocier le Cachet
+                </h5>
+                <p className="text-[11px] text-zinc-350 leading-relaxed pl-3.5 border-l border-zinc-800">
+                  Ne jamais accepter de cachet inférieur à <strong className="text-white">250 000 FCFA</strong> pour des prestations VIP d'Alliance. Utilisez la formule d'Héritage d'Afrigombo : calculez vos frais de transport logistique, vos consommables sonores, et valorisez votre réputation d'artiste certifié.
+                </p>
+              </div>
+
+              {/* Class 3 */}
+              <div className="space-y-1.5">
+                <h5 className="text-xs font-bold text-purple-400 uppercase flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                  3. Session de Souffle Zouglou & Calage Rythmique
+                </h5>
+                <p className="text-[11px] text-zinc-350 leading-relaxed pl-3.5 border-l border-zinc-800">
+                  Technique respiratoire de soutien pour chanter en wôyô pendant de longues performances sans altérer la clarté mélodique. Exercices de cohésion rythmique pour rester en phase avec le Tam-Tam maître.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-between items-center pt-2 border-t border-[#D4AF37]/10">
+              <span className="text-[9px] font-mono text-zinc-500 italic block">
+                "Ce que tu sais préserve l'Héritage."
+              </span>
+              <button
+                onClick={() => {
+                  alert("Félicitations pour votre soif d'enseignement artistique ! Des tuteurs nationaux vous contacteront prochainement.");
+                  setIsAcademyModalOpen(false);
+                }}
+                className="px-4 py-1.5 bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] text-xs font-mono font-black uppercase rounded transition-colors"
+              >
+                S'inscrire à l'Héritage d'Alliance 🎓
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
       {isAuthModalOpen && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
           <div className="w-full max-w-sm relative">

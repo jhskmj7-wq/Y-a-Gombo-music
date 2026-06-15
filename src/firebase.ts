@@ -6,6 +6,7 @@ import {
   signOut as firebaseSignOut, 
   signInWithPopup, 
   signInWithRedirect,
+  getRedirectResult,
   signInWithCredential,
   GoogleAuthProvider, 
   FacebookAuthProvider,
@@ -209,8 +210,103 @@ export function detectAndProcessTransferId(sourceUrl?: string) {
   return false;
 }
 
+async function checkRedirectResult() {
+  if (isFirebaseMock || !auth || !db) return;
+  
+  console.log("Début Google Login (Checking redirect results on boot)");
+  try {
+    const result = await getRedirectResult(auth);
+    console.log("Résultat :", result);
+    console.log("Current User :", auth?.currentUser);
+    
+    if (result && result.user) {
+      const user = result.user;
+      console.log("✅ [CheckRedirectResult] User successfully recovered from redirect! UID:", user.uid);
+      
+      // Auto-create/sync users/{uid}
+      try {
+        const uDoc = await getDoc(doc(db, "users", user.uid));
+        if (!uDoc.exists()) {
+          console.log("💾 [CheckRedirectResult] Creating automated user profile in Firestore...");
+          const names = user.displayName ? user.displayName.split(" ") : ["Artiste", "Showbiz"];
+          const userProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email || "",
+            firstName: names[0],
+            lastName: names.slice(1).join(" ") || "Ivoirien",
+            displayName: user.displayName || "",
+            photoURL: user.photoURL || "",
+            avatarUrl: user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+            phone: user.phoneNumber || "",
+            commune: "Cocody",
+            role: "musicien",
+            provider: "google.com",
+            isProfileComplete: false,
+            balance: 25000,
+            totalRevenue: 25000,
+            totalWithdrawals: 0,
+            gigsCompleted: 0,
+            applicationsSent: 0,
+            acceptanceRate: 100,
+            createdAt: new Date().toISOString(),
+            afriId: "AFRI_" + Math.floor(100000 + Math.random() * 900000),
+            ecosystemApps: {
+              afrigombo: true,
+              afritrust: false,
+              africoach: false
+            }
+          };
+          await setDoc(doc(db, "users", user.uid), userProfile);
+        }
+      } catch (err) {
+        console.warn("⚠️ Non-fatal user profile sync error during redirect handle:", err);
+      }
+
+      // --- WEBVIEW REDIRECT TRANSFER TRIGGER ---
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        let transferId = urlParams.get("transferId") || localStorage.getItem("active_google_transfer_id");
+        if (transferId) {
+          const credentialResult = GoogleAuthProvider.credentialFromResult(result);
+          const idToken = credentialResult?.idToken || (await user.getIdToken());
+          const accessToken = credentialResult?.accessToken || null;
+          
+          localStorage.setItem(`transfer_success_${transferId}`, JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            idToken: idToken,
+            accessToken: accessToken,
+            status: "success"
+          }));
+
+          await setDoc(doc(db, "temp_auth_transfers", transferId), {
+            idToken: idToken,
+            accessToken: accessToken,
+            status: "success",
+            uid: user.uid,
+            email: user.email,
+            createdAt: new Date().toISOString()
+          }, { merge: true });
+          
+          console.log("📝 [Google-Redirect Check] Done synching credentials back to main frame iframe.");
+        }
+      } catch (transErr) {
+        console.error("Non-fatal transfer writing error:", transErr);
+      }
+      
+      // Clean query params so user doesn't stay on redirection state
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  } catch (error: any) {
+    console.error("Erreur Google :", error);
+  }
+}
+
 // Check for active transfer ID recovery on boot
 if (typeof window !== "undefined") {
+  // Check redirect login results on boot
+  checkRedirectResult();
+
   // 1. Process current URL on boot
   detectAndProcessTransferId();
 
@@ -1024,16 +1120,19 @@ export const gomboAuth = {
   },
 
   async loginWithGoogle() {
-    console.log("🚀 [Firebase Auth Debug] Initializing Google Login popup...");
+    console.log("Début Google Login");
     
     // Direct Native Capacitor SSO Integration
     if (isCapacitor()) {
       console.log("📱 [Firebase Auth] Running Native Google Login inside Capacitor wrapper...");
       try {
         const nativeUser = await performNativeGoogleLogin();
+        console.log("Résultat :", nativeUser);
+        console.log("Current User :", auth?.currentUser);
         return nativeUser;
-      } catch (err) {
-        console.warn("⚠️ Native Google Auth Plugin failed or is unconfigured. Checking fallback...", err);
+      } catch (err: any) {
+        console.error("Erreur Google :", err);
+        throw err;
       }
     }
     
@@ -1085,95 +1184,107 @@ export const gomboAuth = {
 
     if (!isFirebaseMock && auth) {
       try {
-        const res = await signInWithPopup(auth, GOOGLE_PROVIDER);
-        console.log("✅ [Firebase Auth Debug] Google Login Success. UID:", res.user.uid, "Email:", res.user.email);
-        
-        // Ensure user profile details are populated in Firestore users/{uid} if missing
+        let res: any = null;
         try {
-          const uDoc = await getDoc(doc(db, "users", res.user.uid));
-          if (!uDoc.exists()) {
-            console.log("💾 [Firebase Auth Debug] Creating automated user profile in Firestore for Google Sign-In...");
-            const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Showbiz"];
-            const year = new Date().getFullYear();
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let random = "";
-            for (let i = 0; i < 4; i++) {
-              random += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            const userProfile: UserProfile = {
-              uid: res.user.uid,
-              email: res.user.email || "",
-              firstName: names[0],
-              lastName: names.slice(1).join(" ") || "Ivoirien",
-              displayName: res.user.displayName || "",
-              photoURL: res.user.photoURL || "",
-              avatarUrl: res.user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-              phone: res.user.phoneNumber || "",
-              commune: "Cocody",
-              role: "musicien", // default
-              provider: "google.com",
-              isProfileComplete: false,
-              balance: 25000,
-              totalRevenue: 25000,
-              totalWithdrawals: 0,
-              gigsCompleted: 0,
-              applicationsSent: 0,
-              acceptanceRate: 100,
-              createdAt: new Date().toISOString(),
-              afriId: generateAfriId(),
-              ecosystemApps: {
-                afrigombo: true,
-                afritrust: false,
-                africoach: false
-              }
-            };
-            await setDoc(doc(db, "users", res.user.uid), userProfile);
-            console.log("✅ [Firebase Auth Debug] Firestore user profile stored successfully.");
-          } else {
-            console.log("📦 [Firebase Auth Debug] User profile already exists in Firestore. Skipping auto-onboarding.");
+          console.log("💡 Attempting signInWithPopup...");
+          res = await signInWithPopup(auth, GOOGLE_PROVIDER);
+          console.log("Résultat :", res);
+          console.log("Current User :", auth.currentUser);
+        } catch (popupErr: any) {
+          console.warn("⚠️ Popup sign-in option blocked or closed. Falling back to signInWithRedirect...", popupErr);
+          // Auto fall-back to Redirect inside standard web if popup fails/is blocked
+          try {
+            await signInWithRedirect(auth, GOOGLE_PROVIDER);
+            // After redirecting, user returns via getRedirectResult check, so stop here
+            return { webViewRedirectPending: true } as any;
+          } catch (redirectErr: any) {
+            console.error("Erreur Google :", redirectErr);
+            throw redirectErr;
           }
-        } catch (err) {
-          console.warn("⚠️ [Firebase Auth Debug] Non-fatal user profile sync error during Google auth:", err);
         }
 
-        // --- WEBVIEW REDIRECT TRANSFER TRIGGER ---
-        try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const transferId = urlParams.get("transferId");
-          if (transferId) {
-            const credentialResult = GoogleAuthProvider.credentialFromResult(res);
-            const idToken = credentialResult?.idToken || (await res.user.getIdToken());
-            const accessToken = credentialResult?.accessToken || null;
-            
-            // 1. LocalStorage Sync fallback
-            localStorage.setItem(`transfer_success_${transferId}`, JSON.stringify({
-              uid: res.user.uid,
-              email: res.user.email,
-              idToken: idToken,
-              accessToken: accessToken,
-              status: "success"
-            }));
+        if (res && res.user) {
+          // Ensure user profile details are populated in Firestore users/{uid} if missing
+          try {
+            const uDoc = await getDoc(doc(db, "users", res.user.uid));
+            if (!uDoc.exists()) {
+              console.log("💾 [Firebase Auth Debug] Creating automated user profile in Firestore for Google Sign-In...");
+              const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Showbiz"];
+              const userProfile: UserProfile = {
+                uid: res.user.uid,
+                email: res.user.email || "",
+                firstName: names[0],
+                lastName: names.slice(1).join(" ") || "Ivoirien",
+                displayName: res.user.displayName || "",
+                photoURL: res.user.photoURL || "",
+                avatarUrl: res.user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+                phone: res.user.phoneNumber || "",
+                commune: "Cocody",
+                role: "musicien", // default
+                provider: "google.com",
+                isProfileComplete: false,
+                balance: 25000,
+                totalRevenue: 25000,
+                totalWithdrawals: 0,
+                gigsCompleted: 0,
+                applicationsSent: 0,
+                acceptanceRate: 100,
+                createdAt: new Date().toISOString(),
+                afriId: generateAfriId(),
+                ecosystemApps: {
+                  afrigombo: true,
+                  afritrust: false,
+                  africoach: false
+                }
+              };
+              await setDoc(doc(db, "users", res.user.uid), userProfile);
+              console.log("✅ [Firebase Auth Debug] Firestore user profile stored successfully.");
+            } else {
+              console.log("📦 [Firebase Auth Debug] User profile already exists in Firestore. Skipping auto-onboarding.");
+            }
+          } catch (err) {
+            console.warn("⚠️ [Firebase Auth Debug] Non-fatal user profile sync error during Google auth:", err);
+          }
 
-            // 2. Database Sync Write
-            if (db) {
-              await setDoc(doc(db, "temp_auth_transfers", transferId), {
-                idToken: idToken,
-                accessToken: accessToken,
-                status: "success",
+          // --- WEBVIEW REDIRECT TRANSFER TRIGGER ---
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const transferId = urlParams.get("transferId");
+            if (transferId) {
+              const credentialResult = GoogleAuthProvider.credentialFromResult(res);
+              const idToken = credentialResult?.idToken || (await res.user.getIdToken());
+              const accessToken = credentialResult?.accessToken || null;
+              
+              // 1. LocalStorage Sync fallback
+              localStorage.setItem(`transfer_success_${transferId}`, JSON.stringify({
                 uid: res.user.uid,
                 email: res.user.email,
-                createdAt: new Date().toISOString()
-              }, { merge: true });
-            }
-            console.log("📝 [Google-Redirect] Successfully synchronized real credentials back to iframe.");
-          }
-        } catch (transErr) {
-          console.error("Non-fatal transfer writing error:", transErr);
-        }
+                idToken: idToken,
+                accessToken: accessToken,
+                status: "success"
+              }));
 
-        return { uid: res.user.uid, email: res.user.email };
+              // 2. Database Sync Write
+              if (db) {
+                await setDoc(doc(db, "temp_auth_transfers", transferId), {
+                  idToken: idToken,
+                  accessToken: accessToken,
+                  status: "success",
+                  uid: res.user.uid,
+                  email: res.user.email,
+                  createdAt: new Date().toISOString()
+                }, { merge: true });
+              }
+              console.log("📝 [Google-Redirect] Successfully synchronized real credentials back to iframe.");
+            }
+          } catch (transErr) {
+            console.error("Non-fatal transfer writing error:", transErr);
+          }
+
+          return { uid: res.user.uid, email: res.user.email };
+        }
       } catch (e: any) {
-        console.error("❌ [Firebase Auth Debug] Google Popup failed:", e);
+        console.error("Erreur Google :", e);
         throw e;
       }
     } else {
@@ -1182,12 +1293,6 @@ export const gomboAuth = {
       const randomId = "goog_" + Math.random().toString(36).substring(2, 9);
       
       const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
-      const year = new Date().getFullYear();
-      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-      let random = "";
-      for (let i = 0; i < 4; i++) {
-        random += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
       let matched = {
         uid: randomId,
         email: randomEmail,
@@ -1234,6 +1339,7 @@ export const gomboAuth = {
       const authData = { uid: matched.uid, email: matched.email, emailVerified: true };
       localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(authData));
       window.dispatchEvent(new Event("gomboAuthChange"));
+      console.log("Résultat Mock :", authData);
       return authData;
     }
   },

@@ -100,7 +100,7 @@ export default function FounderThrone({
   onClose
 }: FounderThroneProps) {
   // Access control
-  const [founders, setFounders] = useState<string[]>(["johnsylvesterh@gmail.com"]);
+  const [founders, setFounders] = useState<string[]>(["johnsylvesterh@gmail.com", "jhs.kmj7@gmail.com"]);
   const [superAdmins, setSuperAdmins] = useState<string[]>([
     "sylvestrehounkpevi777@gmail.com",
     "jhs.kmj7@gmail.com"
@@ -123,7 +123,9 @@ export default function FounderThrone({
     return () => unsub();
   }, []);
 
-  const isAuthorizedFounder = founders.includes(adminEmail?.trim().toLowerCase()) || adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com";
+  const isAuthorizedFounder = founders.includes(adminEmail?.trim().toLowerCase()) || 
+    adminEmail?.trim().toLowerCase() === "johnsylvesterh@gmail.com" || 
+    adminEmail?.trim().toLowerCase() === "jhs.kmj7@gmail.com";
 
   // Real-time synced state arrays
   const [liveUsers, setLiveUsers] = useState<User[]>(initialUsers);
