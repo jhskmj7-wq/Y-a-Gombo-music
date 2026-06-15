@@ -18,6 +18,7 @@ import GomboMusikEcosystem from "./GomboMusikEcosystem";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
 import FounderThrone from "./FounderThrone";
 import MessagesView from "./MessagesView";
+import { UserTerrainLandingPage } from "./UserTerrainLandingPage";
 import {
   AdminMenu,
   User,
@@ -2019,7 +2020,51 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   ---------------------------------------------------- */}
 
               {/* 1. LE TERRAIN - CENTRAL HUB FEED & opportunities GOMBOS */}
-              {activeMenu === "user_terrain" && (() => {
+              {activeMenu === "user_terrain" && (
+                <UserTerrainLandingPage
+                  gombos={gombos}
+                  users={users}
+                  posts={posts}
+                  setPosts={setPosts}
+                  globalSearchTerm={globalSearchTerm}
+                  setGlobalSearchTerm={setGlobalSearchTerm}
+                  universalSearchTerm={universalSearchTerm}
+                  setUniversalSearchTerm={setUniversalSearchTerm}
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  terrainTab={terrainTab}
+                  setTerrainTab={setTerrainTab}
+                  currentSlide={currentSlide}
+                  setCurrentSlide={setCurrentSlide}
+                  likedGombos={likedGombos}
+                  setLikedGombos={setLikedGombos}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  selectedLocation={selectedLocation}
+                  setSelectedLocation={setSelectedLocation}
+                  selectedType={selectedType}
+                  setSelectedType={setSelectedType}
+                  selectedDateFilter={selectedDateFilter}
+                  setSelectedDateFilter={setSelectedDateFilter}
+                  setSelectedGomboDetails={setSelectedGomboDetails}
+                  requireAuthThen={requireAuthThen}
+                  audioSynth={audioSynth}
+                  activeQuickActionModal={activeQuickActionModal}
+                  setActiveQuickActionModal={setActiveQuickActionModal}
+                  verifyGomboIdInput={verifyGomboIdInput}
+                  setVerifyGomboIdInput={setVerifyGomboIdInput}
+                  verifyGomboIdResult={verifyGomboIdResult}
+                  setVerifyGomboIdResult={setVerifyGomboIdResult}
+                  newNoticeTitle={newNoticeTitle}
+                  setNewNoticeTitle={setNewNoticeTitle}
+                  newNoticeCategory={newNoticeCategory}
+                  setNewNoticeCategory={setNewNoticeCategory}
+                  newNoticeBody={newNoticeBody}
+                  setNewNoticeBody={setNewNoticeBody}
+                  addToTerminal={addToTerminal}
+                />
+              )}
+              {false && (() => {
                 const searchStr = globalSearchTerm.toLowerCase();
                 
                 // Filter posts
@@ -3918,122 +3963,457 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 // Main Mon Héritage view
                 return (
-                  <div className="space-y-6 animate-fadeIn pb-24 text-left">
-                    {/* ACCROCHE GOMBO ID SÉCURISÉE (OR AFRICAIN ET NOIR PRESTIGE) */}
-                    <motion.div
-                      whileHover={{ scale: 1.012 }}
-                      whileTap={{ scale: 0.99 }}
-                      onClick={() => {
-                        setViewingGomboIdDetail(true);
-                        try { audioSynth.playValidationSuccess(); } catch (err) {}
-                      }}
-                      className="relative overflow-hidden rounded-3xl bg-[#D4AF37] p-6 text-[#090909] cursor-pointer shadow-[0_10px_30px_rgba(212,175,55,0.25)] border border-[#090909]/20 group select-none"
-                    >
-                      {/* Grid background overlay styling */}
-                      <div className="absolute inset-0 opacity-[0.05] bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none" />
-                      
-                      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[9px] font-mono font-black tracking-widest uppercase text-[#090909]/60">
-                              SÉCURITÉ AFRIGOMBO TRUST
-                            </span>
-                          </div>
-                          <h4 className="text-2xl font-display font-black tracking-wider flex items-center gap-1.5 uppercase">
-                            🛡️ GOMBO ID
-                          </h4>
-                          <p className="text-xs font-semibold text-[#090909]/80 max-w-md">
-                            Faites certifier votre identité artistique. Débloquez les opportunités VIP et les cachets d'or d'Abidjan.
-                          </p>
-                        </div>
-                        
-                        <div className="px-5 py-2.5 bg-[#090909] text-[#D4AF37] rounded-xl text-[10px] font-mono font-black uppercase tracking-wider group-hover:scale-105 transition-all shadow">
-                          {currentArtist.kycStatus === "approved" ? "SOUVERAIN VÉRIFIÉ V" : "DÉBUTER LA CERTIFICATION ⚔️"}
-                        </div>
+                  <div className="space-y-6 animate-fadeIn pb-32 text-left">
+                    {/* CUSTOM HEADER MATCHING THE IMAGE */}
+                    <div className="flex justify-between items-center pb-4 border-b border-zinc-900">
+                      <div>
+                        <h1 className="text-xl font-sans font-black tracking-wider text-white uppercase">
+                          MON HÉRITAGE
+                        </h1>
+                        <p className="text-[10px] xs:text-xs text-zinc-400 mt-0.5 font-sans">
+                          Votre identité, votre carrière, votre impact.
+                        </p>
                       </div>
-                    </motion.div>
+                      <div className="flex items-center gap-2.5">
+                        {/* Notification Bell with Badge */}
+                        <button
+                          onClick={() => {
+                            setActiveMenu("user_notifications");
+                            try { audioSynth.playValidationSuccess(); } catch (e) {}
+                          }}
+                          className="relative flex items-center justify-center w-10 h-10 rounded-full border border-zinc-800/80 bg-zinc-900/90 text-white hover:text-[#D4AF37] transition-all cursor-pointer active:scale-95"
+                        >
+                          <Bell className="w-4 h-4 text-[#D4AF37]" />
+                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#D4AF37] text-black text-[9px] font-black font-mono rounded-full flex items-center justify-center border border-black shadow">
+                            3
+                          </span>
+                        </button>
+                        {/* Settings Cog */}
+                        <button
+                          onClick={() => {
+                            setActiveMenu("user_settings");
+                            try { audioSynth.playValidationSuccess(); } catch (e) {}
+                          }}
+                          className="flex items-center justify-center w-10 h-10 rounded-full border border-zinc-800/80 bg-zinc-900/90 text-white hover:text-[#D4AF37] transition-all cursor-pointer active:scale-95"
+                        >
+                          <Settings className="w-4 h-4 text-[#D4AF37]" />
+                        </button>
+                      </div>
+                    </div>
 
-                    <div className="p-6 rounded-2xl bg-gradient-to-r from-zinc-950 via-[#0B0B0B] to-zinc-900 border border-[#D4AF37]/20 shadow-xl space-y-4">
-                      <div className="flex justify-between items-start flex-wrap gap-4 pb-4 border-b border-white/5">
-                        <div className="flex gap-4 items-center">
-                          {/* Profile Photo */}
-                          <div className="w-16 h-16 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-black flex items-center justify-center font-bold text-xl text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.2)] shrink-0 select-none">
+                    {/* MAIN PROFILE CARD */}
+                    <div className="p-5 rounded-2xl bg-zinc-950/30 border border-zinc-900/60 flex flex-col sm:flex-row items-center sm:items-start gap-4 shadow-xl">
+                      {/* Avatar with Ring & Crown Overlay */}
+                      <div className="relative shrink-0 select-none">
+                        <div className="w-[100px] h-[100px] rounded-full p-0.5 border border-[#D4AF37]/80 bg-zinc-950 flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.15)]">
+                          <div className="w-full h-full rounded-full border border-[#D4AF37]/30 overflow-hidden flex items-center justify-center font-bold text-2xl text-[#D4AF37] bg-zinc-900">
                             {currentArtist.avatarUrl ? (
                               <img src={currentArtist.avatarUrl} alt={currentArtist.artisticName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
-                              currentArtist.artisticName.charAt(0)
+                              (currentArtist.artisticName || "Tom Sylvestre").charAt(0)
                             )}
                           </div>
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-[10px] uppercase font-mono text-[#D4AF37] tracking-widest block font-bold">Temple de l'Héritage Artistique</span>
-                              {currentArtist.kycStatus === "approved" && (
-                                <span className="inline-flex items-center gap-1 text-[8px] bg-emerald-500/10 border border-emerald-500 text-emerald-400 px-1.5 py-0.5 rounded font-black uppercase tracking-wider select-none">
-                                  ✓ Certifié GOMBO ID
-                                </span>
-                              )}
-                            </div>
-                            <h2 className="text-2xl font-display font-black text-white mt-1">{currentArtist.artisticName}</h2>
-                            <p className="text-xs text-zinc-400 font-mono mt-0.5">
-                              {currentArtist.name} • {currentArtist.role === "admin" ? "Sénateur Planificateur / Admin" : "Artiste Musicien"} • {currentArtist.commune}, Abidjan
-                            </p>
-                            <button
-                              id="btn-edit-profile-trigger"
-                              onClick={() => {
-                                setActiveMenu("user_edit_profile");
-                                try { audioSynth.playValidationSuccess(); } catch (err) {}
-                              }}
-                              className="mt-2.5 inline-flex items-center gap-1 px-3 py-1 bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black border border-[#D4AF37]/35 hover:border-transparent rounded-lg text-[10px] font-mono font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95"
-                            >
-                              ✍️ Modifier mon profil
-                            </button>
-                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-[10px] uppercase font-mono text-zinc-500 block">Niveau d'Académie</span>
-                          <strong className="text-2xl font-display font-black text-[#D4AF37] block mt-0.5">Rang {currentArtist.performance.level} / 5</strong>
-                          <span className="text-[9px] text-zinc-400 font-mono bg-white/5 px-2 py-0.5 rounded">Prestige Optimal</span>
+                        {/* Crown Badge */}
+                        <div className="absolute top-0 left-0 -translate-x-1 -translate-y-1 w-6 h-6 bg-[#D4AF37] border-2 border-zinc-950 rounded-full flex items-center justify-center shadow">
+                          <Crown className="w-3.5 h-3.5 text-black" fill="currentColor" />
                         </div>
                       </div>
 
-                      {/* Score widgets */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
-                        <div className="p-4 bg-black border border-white/5 rounded-xl">
-                          <span className="text-[10px] font-mono text-zinc-500 uppercase block">Score de Talent</span>
-                          <strong className="text-xl font-bold text-white block mt-1">{currentArtist.performance.score} / 100</strong>
-                        </div>
-                        <div className="p-4 bg-black border border-white/5 rounded-xl">
-                          <span className="text-[10px] font-mono text-zinc-500 uppercase block">Gombos Honorés</span>
-                          <strong className="text-xl font-bold text-emerald-400 block mt-1">{currentArtist.gombosCompleted} Spectacles</strong>
-                        </div>
-                        <div className="p-4 bg-black border border-white/5 rounded-xl">
-                          <span className="text-[10px] font-mono text-zinc-500 uppercase block">Revenus Cumulés</span>
-                          <strong className="text-l text-white block mt-1 font-mono font-bold text-amber-500">{(currentArtist.revenues || 450000).toLocaleString()} FCFA</strong>
-                        </div>
-                        <div className="p-4 bg-black border border-white/5 rounded-xl">
-                          <span className="text-[10px] font-mono text-zinc-500 uppercase block">Statut Réseau</span>
-                          <div className="flex items-center gap-1.5 mt-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                            <strong className="text-xs text-emerald-400 uppercase font-mono">{currentArtist.status === "active" ? "Actif" : "En attente"}</strong>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Specialty tags */}
-                      <div className="space-y-2 pt-2">
-                        <span className="text-[10px] font-mono text-zinc-500 uppercase block">Spécialités artistiques certifiées :</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {currentArtist.specialties.map(spec => (
-                            <span key={spec} className="px-2.5 py-1 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] font-mono border border-[#D4AF37]/25 font-bold uppercase">
-                              🎤 {spec}
+                      <div className="flex-1 text-center sm:text-left space-y-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 justify-center sm:justify-start">
+                          <h2 className="text-xl font-sans font-black text-white tracking-wide flex items-center justify-center sm:justify-start gap-1.5">
+                            {currentArtist.artisticName || "Tom Sylvestre"}
+                            <span className="inline-flex w-4 h-4 rounded-full bg-[#D4AF37] items-center justify-center text-[10px] text-black font-black select-none shadow-sm font-sans" title="Vérifié">
+                              ✓
                             </span>
-                          ))}
+                          </h2>
+                        </div>
+                        <p className="text-xs text-zinc-500 font-mono mt-0.5">
+                          @{currentArtist.name || "TomSylvestre"}
+                        </p>
+                        
+                        <div className="space-y-1 pt-1 text-xs">
+                          <div className="flex items-center justify-center sm:justify-start gap-1 text-zinc-300">
+                            <span className="text-[#D4AF37]">🎙️</span>
+                            <span className="font-semibold">{currentArtist.specialties?.join(" • ") || "Artiste • Chanteur • Compositeur"}</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-center sm:justify-start gap-1 text-zinc-400">
+                            <span>📍</span>
+                            <span>{currentArtist.commune || "Abidjan, Côte d'Ivoire"} 🇨🇮</span>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 flex justify-center sm:justify-start">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-950/80 border border-[#D4AF37]/50 rounded-full text-[10px] font-mono text-[#D4AF37] font-bold">
+                            <span className="text-[#D4AF37] text-[10px]">✓</span> Artiste Vérifié
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* IMPERIAL SÉNAT & ROYAL THRONE FAST SWITCHBOARD CARD */}
+                    {/* GOMBO ID ROW (African Gold & Premium Black Accent) */}
+                    <div className="rounded-2xl p-5 bg-gradient-to-br from-zinc-950 via-zinc-900/40 to-zinc-910 border border-[#D4AF37]/15">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3.5">
+                          <div className="p-3 bg-zinc-950 border border-[#D4AF37]/20 rounded-2xl flex items-center justify-center text-[#D4AF37] shrink-0">
+                            {/* Shield-Music icon style matching screenshot */}
+                            <div className="relative w-8 h-8 flex items-center justify-center">
+                              <ShieldCheck className="w-8 h-8 text-[#D4AF37]" strokeWidth={1.5} />
+                              <Music className="w-4 h-4 text-[#D4AF37] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-base font-sans font-black text-white tracking-wide uppercase">
+                              GOMBO ID
+                            </h4>
+                            <p className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase">
+                              VOTRE CRÉDIBILITÉ ARTISTIQUE
+                            </p>
+                            <p className="text-xs text-zinc-400 mt-1">
+                              Obtenez votre certification et boostez votre carrière.
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setViewingGomboIdDetail(true);
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className="px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#B48F17] hover:from-[#E4BF47] hover:to-[#C49F27] text-black text-xs font-sans font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg active:scale-95 shrink-0 text-center"
+                        >
+                          OBTENIR MON GOMBO ID →
+                        </button>
+                      </div>
+
+                      {/* KYC : NON VÉRIFIÉ bar */}
+                      <div
+                        onClick={() => {
+                          setViewingGomboIdDetail(true);
+                          try { audioSynth.playValidationSuccess(); } catch (err) {}
+                        }}
+                        className="mt-4 pt-3.5 border-t border-zinc-900 flex items-center justify-between text-xs text-zinc-500 hover:text-zinc-300 transition-all cursor-pointer select-none"
+                      >
+                        <div className="flex items-center gap-2 text-zinc-400 font-mono font-bold text-[10px] tracking-wider uppercase">
+                          <ShieldAlert className="w-4 h-4 text-[#D4AF37]" />
+                          <span>
+                            KYC : <span className="text-[#D4AF37]">{currentArtist.kycStatus === "approved" ? "APPROUVÉ & VÉRIFIÉ" : "NON VÉRIFIÉ"}</span>
+                          </span>
+                        </div>
+                        <span className="text-[#D4AF37] font-black">{`>`}</span>
+                      </div>
+                    </div>
+
+                    {/* THREE COLUMNS STATISTICS ROW */}
+                    <div className="grid grid-cols-3 gap-3">
+                      {/* Abonnés */}
+                      <div className="p-4 rounded-2xl bg-zinc-950/30 border border-zinc-900/60 shadow-lg text-center space-y-1">
+                        <Users className="w-5 h-5 text-[#D4AF37] mx-auto opacity-90" />
+                        <strong className="text-xl font-sans font-black text-white block">
+                          {currentArtist.followersCount || 142}
+                        </strong>
+                        <span className="text-[8px] xs:text-[9px] text-zinc-500 font-mono block uppercase tracking-wider font-bold">
+                          ABONNÉS
+                        </span>
+                      </div>
+
+                      {/* Publications */}
+                      <div className="p-4 rounded-2xl bg-zinc-950/30 border border-zinc-900/60 shadow-lg text-center space-y-1">
+                        <div className="text-xl leading-none italic text-[#D4AF37] font-bold">🎚️</div>
+                        <strong className="text-xl font-sans font-black text-white block">
+                          {currentArtist.postsCount || 12}
+                        </strong>
+                        <span className="text-[8px] xs:text-[9px] text-zinc-500 font-mono block uppercase tracking-wider font-bold">
+                          PUBLICATIONS
+                        </span>
+                      </div>
+
+                      {/* Engagement */}
+                      <div className="p-4 rounded-2xl bg-zinc-950/30 border border-zinc-900/60 shadow-lg text-center space-y-1">
+                        <TrendingUp className="w-5 h-5 text-[#D4AF37] mx-auto opacity-90" />
+                        <strong className="text-xl font-sans font-black text-white block">
+                          {currentArtist.engagementRate || "12.4%"}
+                        </strong>
+                        <span className="text-[8px] xs:text-[9px] text-zinc-500 font-mono block uppercase tracking-wider font-bold">
+                          ENGAGEMENT
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* BIOGRAPHY SECTION CARD */}
+                    <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl flex items-start justify-between gap-4">
+                      <div className="space-y-1.5 flex-1 text-left">
+                        <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block">
+                          BIOGRAPHIE
+                        </span>
+                        <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                          {currentArtist.bio || "Artiste afrobeat passionné. Je transforme les rythmes en héritage. Bienvenue dans mon univers."}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setActiveMenu("user_edit_profile");
+                          try { audioSynth.playValidationSuccess(); } catch (err) {}
+                        }}
+                        className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-[#D4AF37]/50 text-[10px] font-mono font-bold text-zinc-300 uppercase rounded-full flex items-center gap-1 transition-all cursor-pointer active:scale-95 shrink-0"
+                      >
+                        ✏️ MODIFIER
+                      </button>
+                    </div>
+
+                    {/* SECTION: MA CARRIÈRE GOMBO */}
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-sans font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5 pl-1">
+                        <span>☁️</span> MA CARRIÈRE GOMBO
+                      </h3>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {/* item 1: morceaux publiés */}
+                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
+                          <Music className="w-5 h-5 text-[#D4AF37] mx-auto" strokeWidth={1.5} />
+                          <strong className="text-2xl font-sans font-black text-white block mt-1">
+                            {currentArtist.tracksCount || 8}
+                          </strong>
+                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
+                            MORCEAUX <br /> publiés
+                          </span>
+                        </div>
+
+                        {/* item 2: concerts réalisés */}
+                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
+                          <Radio className="w-5 h-5 text-[#D4AF37] mx-auto animate-pulse" strokeWidth={1.5} />
+                          <strong className="text-2xl font-sans font-black text-white block mt-1">
+                            {currentArtist.concertsCount || 5}
+                          </strong>
+                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
+                            CONCERTS <br /> réalisés
+                          </span>
+                        </div>
+
+                        {/* item 3: distinctions reçues */}
+                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
+                          <Award className="w-5 h-5 text-[#D4AF37] mx-auto" strokeWidth={1.5} />
+                          <strong className="text-2xl font-sans font-black text-white block mt-1">
+                            {currentArtist.awardsCount || 3}
+                          </strong>
+                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
+                            DISTINCTIONS <br /> reçues
+                          </span>
+                        </div>
+
+                        {/* item 4: collabos */}
+                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
+                          <div className="text-xl leading-none text-[#D4AF37] font-bold">🤝</div>
+                          <strong className="text-2xl font-sans font-black text-white block mt-1">
+                            {currentArtist.collabsCount || 7}
+                          </strong>
+                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
+                            COLLABOS <br /> réalisées
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SECTION: MONÉTISATION */}
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-sans font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5 pl-1">
+                        <span>🪙</span> MONÉTISATION
+                      </h3>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {/* item 1: Gawa revenue */}
+                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
+                          <div className="text-xl leading-none text-[#D4AF37]">💳</div>
+                          <strong className="text-[15px] font-mono font-black text-white block mt-1">
+                            {(currentArtist.revenues || 123510).toLocaleString("fr-FR")}
+                          </strong>
+                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
+                            GAWA GAGNÉS
+                          </span>
+                        </div>
+
+                        {/* item 2: Boosts achetés */}
+                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
+                          <Zap className="w-5 h-5 text-[#D4AF37] mx-auto animate-bounce duration-1000" strokeWidth={1.5} />
+                          <strong className="text-2xl font-sans font-black text-white block mt-1">
+                            {currentArtist.boostsCount || 4}
+                          </strong>
+                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
+                            BOOSTS ACHETÉS
+                          </span>
+                        </div>
+
+                        {/* item 3: Candidatures premium */}
+                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
+                          <Star className="w-5 h-5 text-[#D4AF37] mx-auto" strokeWidth={1.5} />
+                          <strong className="text-2xl font-sans font-black text-white block mt-1">
+                            {currentArtist.premiumApplicationsCount || 3}
+                          </strong>
+                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
+                            CANDIDATURES <br /> PREMIUM
+                          </span>
+                        </div>
+
+                        {/* item 4: supports received */}
+                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
+                          <Heart className="w-5 h-5 text-[#D4AF37] mx-auto" strokeWidth={1.5} />
+                          <strong className="text-2xl font-sans font-black text-white block mt-1">
+                            {currentArtist.supportsCount || 56}
+                          </strong>
+                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
+                            SOUTIENS <br /> REÇUS
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SECTION: MES DOCUMENTS GOMBO */}
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-sans font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5 pl-1">
+                        <span>📄</span> MES DOCUMENTS GOMBO
+                      </h3>
+
+                      <div
+                        onClick={() => {
+                          setViewingGomboIdDetail(true);
+                          try { audioSynth.playValidationSuccess(); } catch (err) {}
+                        }}
+                        className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl flex items-center justify-between gap-2 shadow-lg cursor-pointer hover:border-[#D4AF37]/35 transition-all select-none"
+                      >
+                        <div className="flex-1 grid grid-cols-3 divide-x divide-zinc-900/60 gap-1 text-center">
+                          {/* doc 1 */}
+                          <div className="px-1 space-y-1">
+                            <div className="text-xl leading-none">🪪</div>
+                            <h5 className="text-[10px] font-sans font-bold text-white block truncate">Pièce d'identité</h5>
+                            <span className="inline-block text-[8px] font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                              Vérifiée
+                            </span>
+                          </div>
+
+                          {/* doc 2 */}
+                          <div className="px-1 space-y-1">
+                            <div className="text-xl leading-none">🛂</div>
+                            <h5 className="text-[10px] font-sans font-bold text-white block truncate">Passeport</h5>
+                            <span className="inline-block text-[8px] font-mono uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                              En attente
+                            </span>
+                          </div>
+
+                          {/* doc 3 */}
+                          <div className="px-1 space-y-1">
+                            <div className="text-xl leading-none">🎓</div>
+                            <h5 className="text-[10px] font-sans font-bold text-white block truncate">Certificat artistique</h5>
+                            <span className="inline-block text-[8px] font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                              Vérifiée
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-[#D4AF37] font-black text-sm px-1 shrink-0">{`>`}</span>
+                      </div>
+                    </div>
+
+                    {/* SECTION: ACTIONS RAPIDES */}
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-sans font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5 pl-1">
+                        <span>⚡</span> ACTIONS RAPIDES
+                      </h3>
+
+                      <div className="grid grid-cols-3 gap-3">
+                        {/* Modifier profil */}
+                        <button
+                          onClick={() => {
+                            setActiveMenu("user_edit_profile");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className="p-4 bg-zinc-950/30 border border-zinc-900/60 hover:border-[#D4AF37]/35 rounded-2xl text-center space-y-2 transition-all cursor-pointer select-none active:scale-95 shadow-lg group"
+                        >
+                          <UserIcon className="w-5 h-5 text-[#D4AF37]/80 group-hover:text-[#D4AF37] mx-auto transition-colors" />
+                          <span className="text-[10px] text-zinc-300 font-mono block leading-tight font-bold">
+                            Modifier profil
+                          </span>
+                        </button>
+
+                        {/* Mes candidatures */}
+                        <button
+                          onClick={() => {
+                            setActiveMenu("user_opportunities");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className="p-4 bg-zinc-950/30 border border-zinc-900/60 hover:border-[#D4AF37]/35 rounded-2xl text-center space-y-2 transition-all cursor-pointer select-none active:scale-95 shadow-lg group"
+                        >
+                          <div className="text-xl leading-none">📄</div>
+                          <span className="text-[10px] text-zinc-300 font-mono block leading-tight font-bold">
+                            Mes candidatures
+                          </span>
+                        </button>
+
+                        {/* Mes favoris */}
+                        <button
+                          onClick={() => {
+                            setActiveMenu("user_mes_gombos");
+                            addToTerminal("[FAVORIS] Chargement de vos favoris artistiques...");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className="p-4 bg-zinc-950/30 border border-zinc-900/60 hover:border-[#D4AF37]/35 rounded-2xl text-center space-y-2 transition-all cursor-pointer select-none active:scale-95 shadow-lg group"
+                        >
+                          <Heart className="w-5 h-5 text-red-500/80 group-hover:text-red-500 mx-auto transition-colors" />
+                          <span className="text-[10px] text-zinc-300 font-mono block leading-tight font-bold">
+                            Mes favoris
+                          </span>
+                        </button>
+
+                        {/* Mes opportunités */}
+                        <button
+                          onClick={() => {
+                            setActiveMenu("user_opportunities");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className="p-4 bg-zinc-950/30 border border-zinc-900/60 hover:border-[#D4AF37]/35 rounded-2xl text-center space-y-2 transition-all cursor-pointer select-none active:scale-95 shadow-lg group"
+                        >
+                          <Briefcase className="w-5 h-5 text-[#D4AF37]/80 group-hover:text-[#D4AF37] mx-auto transition-colors" />
+                          <span className="text-[10px] text-zinc-300 font-mono block leading-tight font-bold">
+                            Mes opportunités
+                          </span>
+                        </button>
+
+                        {/* Paramètres */}
+                        <button
+                          onClick={() => {
+                            setActiveMenu("user_settings");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className="p-4 bg-zinc-950/30 border border-zinc-900/60 hover:border-[#D4AF37]/35 rounded-2xl text-center space-y-2 transition-all cursor-pointer select-none active:scale-95 shadow-lg group"
+                        >
+                          <Settings className="w-5 h-5 text-[#D4AF37]/80 group-hover:text-[#D4AF37] mx-auto transition-colors" />
+                          <span className="text-[10px] text-zinc-300 font-mono block leading-tight font-bold">
+                            Paramètres
+                          </span>
+                        </button>
+
+                        {/* Déconnexion */}
+                        <button
+                          onClick={async () => {
+                            try {
+                              await logout();
+                              try { audioSynth.playTamTam(false); } catch (e) {}
+                              addToTerminal("[DECONNEXION] Session artiste déconnectée.");
+                            } catch (e) {
+                              console.error("Logout error", e);
+                            }
+                          }}
+                          className="p-4 bg-[#ff3b30]/10 border border-[#ff3b30]/30 hover:bg-[#ff3b30]/20 rounded-2xl text-center space-y-2 transition-all cursor-pointer select-none active:scale-95 shadow-lg group"
+                        >
+                          <LogOut className="w-5 h-5 text-red-500 mx-auto" />
+                          <span className="text-[10px] text-red-400 font-mono block leading-tight font-bold">
+                            Déconnexion
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* IMPERIAL SÉNAT & ROYAL THRONE FAST SWITCHBOARD CARD - Preserved for Admins */}
                     {(isAuthorizedAdmin || isAuthorizedSuperFounder || currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com") && (
                       <div className="p-6 bg-gradient-to-br from-rose-950/40 via-purple-950/40 to-black border border-purple-500/30 rounded-2xl space-y-4 shadow-xl">
                         <div className="flex items-center gap-2">
@@ -4043,7 +4423,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           </h4>
                         </div>
                         <p className="text-xs text-zinc-300">
-                          En tant que Fondateur ou Administrateur Souverain, vous disposez d'un accès instantané au Saint des Saints de la plateforme pour gouverner, certifier les artistes, et auditer les transactions.
+                          En tant que Fondateur ou Administrateur Souverain, vous disposez d'un accès au Saint des Saints pour gouverner, certifier les artistes, et auditer les transactions.
                         </p>
                         <div className="flex flex-wrap gap-2.5 pt-1">
                           <button
@@ -4076,7 +4456,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     )}
 
                     {/* Historical Earnings Progression Graph */}
-                    <div className="p-6 bg-zinc-950 border border-white/5 rounded-2xl space-y-4">
+                    <div className="p-6 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl space-y-4">
                       <h3 className="text-xs font-mono uppercase text-[#D4AF37] tracking-wider font-bold">Progression Cumulée des Cachets</h3>
                       <div className="h-48 w-full font-mono text-xs">
                         <ResponsiveContainer width="100%" height="100%">
@@ -7282,10 +7662,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       )}
 
       {/* =========================================================================
-                                     FIXED BOTTOM NAVIGATION BAR
+                                     FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED)
          ========================================================================= */}
       {perspective === "user" && (
-        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-[#090909]/95 sm:bg-[#121214]/95 backdrop-blur-md border-t sm:border border-zinc-900/90 p-2.5 px-4 sm:px-8 flex justify-around sm:justify-between sm:gap-6 items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(0,0,0,0.9)] w-full sm:w-auto min-w-[320px] max-w-lg mx-auto">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-[425px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/70 p-2 px-3 sm:px-4 flex justify-between items-center z-40 rounded-[32px] shadow-[0_15px_35px_rgba(0,0,0,0.95)] select-none">
           {/* 1. ACCUEIL */}
           <button
             id="user-nav-terrain"
@@ -7293,12 +7673,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               setActiveMenu("user_terrain");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
               activeMenu === "user_terrain" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Home className="w-5 h-5" />
-            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Accueil</span>
+            <span className="text-[8px] font-sans font-black uppercase tracking-wider">Accueil</span>
           </button>
 
           {/* 2. VIBES */}
@@ -7310,15 +7690,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
               activeMenu === "user_vibes" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Radio className="w-5 h-5 animate-pulse" />
-            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Vibes</span>
+            <Music className="w-5 h-5" />
+            <span className="text-[8px] font-sans font-black uppercase tracking-wider">Vibes</span>
           </button>
 
-          {/* 3. PUBLIER (CENTRAL BUTTON, LARGER, HIGHLIGHTED) */}
+          {/* 3. PUBLIER (CENTRAL BUTTON, LARGER, NOT INDEPENDENTLY FLOATING/OVERLAPPING OVER BOUNDARY) */}
           <button
             id="user-nav-publish"
             onClick={() => {
@@ -7327,10 +7707,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
-            className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none w-12 h-12 -mt-4 bg-gradient-to-br from-[#D4AF37] to-[#B48F17] hover:from-[#E4BF47] hover:to-[#C49F27] text-[#090909] rounded-full shadow-[0_4px_15px_rgba(212,175,55,0.4)] border border-[#090909]/20 hover:scale-110 active:scale-90 select-none shrink-0"
+            className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-2 select-none shrink-0"
             title="Publier"
           >
-            <Plus className="w-6 h-6 stroke-[3]" />
+            <div className="w-11 h-11 flex items-center justify-center bg-gradient-to-tr from-[#D4AF37] to-[#F1C40F] text-black rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
+              <Plus className="w-5 h-5 stroke-[3.5]" />
+            </div>
+            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-zinc-400 mt-1">Publier</span>
           </button>
 
           {/* 4. MES GOMBOS */}
@@ -7342,12 +7725,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
               activeMenu === "user_mes_gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Megaphone className="w-5 h-5" />
-            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Mes Gombos</span>
+            <span className="text-[8px] font-sans font-black uppercase tracking-wider">Mes Gombos</span>
           </button>
 
           {/* 5. MON HÉRITAGE */}
@@ -7360,12 +7743,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
               activeMenu === "user_heritage" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <UserIcon className="w-5 h-5" />
-            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Héritage</span>
+            <span className="text-[8px] font-sans font-black uppercase tracking-wider">Mon Héritage</span>
           </button>
         </div>
       )}
