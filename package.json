@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && ln -sf $(pwd)/dist /dist || (cd app/applet && vite build && ln -sf $(pwd)/dist /dist)",
+    "build": "vite build && (ln -sf $(pwd)/dist /dist 2>/dev/null || true)",
     "real-dev": "vite",
     "lint": "tsc --noEmit"
   },
