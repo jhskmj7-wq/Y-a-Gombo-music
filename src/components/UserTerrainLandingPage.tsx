@@ -37,6 +37,7 @@ interface UserTerrainLandingPageProps {
   setSelectedDateFilter: (val: string) => void;
   setSelectedGomboDetails: (gombo: Gombo | null) => void;
   requireAuthThen: (fn: () => void) => void;
+  requireGoogleAuthThen?: (fn: () => void) => void;
   audioSynth: any;
   activeQuickActionModal: string | null;
   setActiveQuickActionModal: (val: string | null) => void;
@@ -79,6 +80,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
   setSelectedDateFilter,
   setSelectedGomboDetails,
   requireAuthThen,
+  requireGoogleAuthThen,
   audioSynth,
   activeQuickActionModal,
   setActiveQuickActionModal,
@@ -317,20 +319,20 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
             <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide">Publier</span>
           </div>
 
-          {/* 2. Mes Gombos */}
+          {/* 2. Les Vibes */}
           <div
             onClick={() => {
               requireAuthThen(() => {
-                setActiveMenu("user_mes_gombos");
+                setActiveMenu("user_vibes");
                 try { audioSynth.playValidationSuccess(); } catch (_) {}
               });
             }}
             className="bg-[#0c0c0e] border border-zinc-900 rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-zinc-800 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
           >
             <div className="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center bg-transparent">
-              <Megaphone className="w-5 h-5 text-[#D4AF37]" />
+              <Music className="w-5 h-5 text-[#D4AF37]" />
             </div>
-            <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide leading-none">Gombos</span>
+            <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide leading-none">Les Vibes</span>
           </div>
 
           {/* 3. Messages */}
@@ -349,20 +351,21 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
             <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide">Messages</span>
           </div>
 
-          {/* 4. Gombo ID */}
+          {/* 4. Mon Héritage */}
           <div
             onClick={() => {
-              requireAuthThen(() => {
-                setActiveMenu("user_gombo_id");
+              const checkGate = requireGoogleAuthThen || requireAuthThen;
+              checkGate(() => {
+                setActiveMenu("user_heritage");
                 try { audioSynth.playValidationSuccess(); } catch (_) {}
               });
             }}
             className="bg-[#0c0c0e] border border-zinc-900 rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-zinc-800 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
           >
             <div className="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center bg-transparent">
-              <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
+              <Award className="w-5 h-5 text-[#D4AF37]" />
             </div>
-            <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide">Gombo ID</span>
+            <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide leading-none">Héritage</span>
           </div>
 
           {/* 5. Notifications */}

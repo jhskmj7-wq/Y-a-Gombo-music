@@ -25,7 +25,7 @@ interface MobileMoneyPaymentProps {
   onClose?: () => void;
 }
 
-type Operator = "wave" | "orange";
+type Operator = "wave" | "orange" | "mtn" | "moov";
 type PaymentStep = "configure" | "processing" | "prompt_sent" | "receipt";
 
 export default function MobileMoneyPayment({
@@ -46,6 +46,14 @@ export default function MobileMoneyPayment({
 
   const fee = Math.round(amount * 0.01); // 1.0% System security fee
   const totalAmount = amount + fee;
+
+  const getOperatorLabel = (op: Operator) => {
+    if (op === "wave") return "WAVE";
+    if (op === "orange") return "ORANGE MONEY";
+    if (op === "mtn") return "MTN MONEY";
+    if (op === "moov") return "MOOV MONEY";
+    return (op as string).toUpperCase();
+  };
 
   // Sound triggering safely
   const triggerTickSound = () => {
@@ -191,7 +199,7 @@ export default function MobileMoneyPayment({
                   onClick={() => { setOperator("wave"); triggerTickSound(); }}
                   className={`relative p-3.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 border transition-all cursor-pointer ${
                     operator === "wave" 
-                      ? "bg-[#1B90FF]/10 border-[#1B90FF] text-white" 
+                      ? "bg-[#1B90FF]/15 border-[#1B90FF] text-white animate-fadeIn" 
                       : "bg-zinc-900/40 border-zinc-800 text-zinc-500 hover:text-zinc-300"
                   }`}
                 >
@@ -210,7 +218,7 @@ export default function MobileMoneyPayment({
                   onClick={() => { setOperator("orange"); triggerTickSound(); }}
                   className={`relative p-3.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 border transition-all cursor-pointer ${
                     operator === "orange" 
-                      ? "bg-[#FF6600]/10 border-[#FF6600] text-white" 
+                      ? "bg-[#FF6600]/15 border-[#FF6600] text-white animate-fadeIn" 
                       : "bg-zinc-900/40 border-zinc-800 text-zinc-500 hover:text-zinc-300"
                   }`}
                 >
@@ -220,6 +228,44 @@ export default function MobileMoneyPayment({
                   <span className="text-xs font-bold tracking-wide">ORANGE MONEY</span>
                   {operator === "orange" && (
                     <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#FF6600]" />
+                  )}
+                </button>
+
+                {/* MTN MONEY */}
+                <button
+                  type="button"
+                  onClick={() => { setOperator("mtn"); triggerTickSound(); }}
+                  className={`relative p-3.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                    operator === "mtn" 
+                      ? "bg-[#FFCC00]/15 border-[#FFCC00] text-white animate-fadeIn" 
+                      : "bg-zinc-900/40 border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#FFCC00] flex items-center justify-center text-black text-lg font-black font-sans shadow-lg shadow-[#FFCC00]/20">
+                    🟡
+                  </div>
+                  <span className="text-xs font-bold tracking-wide">MTN MONEY</span>
+                  {operator === "mtn" && (
+                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#FFCC00]" />
+                  )}
+                </button>
+
+                {/* MOOV MONEY */}
+                <button
+                  type="button"
+                  onClick={() => { setOperator("moov"); triggerTickSound(); }}
+                  className={`relative p-3.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                    operator === "moov" 
+                      ? "bg-[#00A859]/15 border-[#00A859] text-white animate-fadeIn" 
+                      : "bg-zinc-900/40 border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#00A859] flex items-center justify-center text-white text-lg font-black font-sans shadow-lg shadow-[#00A859]/20">
+                    🧩
+                  </div>
+                  <span className="text-xs font-bold tracking-wide">MOOV MONEY</span>
+                  {operator === "moov" && (
+                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#00A859]" />
                   )}
                 </button>
               </div>
@@ -277,12 +323,13 @@ export default function MobileMoneyPayment({
             <button
               type="submit"
               className={`w-full py-3 rounded-xl font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all ${
-                operator === "wave"
-                  ? "bg-[#1B90FF] text-white hover:bg-[#1579D9] shadow-lg shadow-[#1B90FF]/15"
-                  : "bg-[#FF6600] text-white hover:bg-[#E05900] shadow-lg shadow-[#FF6600]/15"
+                operator === "wave" ? "bg-[#1B90FF] text-white hover:bg-[#1579D9] shadow-lg shadow-[#1B90FF]/15" :
+                operator === "orange" ? "bg-[#FF6600] text-white hover:bg-[#E05900] shadow-lg shadow-[#FF6600]/15" :
+                operator === "mtn" ? "bg-[#FFCC00] text-black hover:bg-[#E5B500] shadow-lg shadow-[#FFCC00]/15" :
+                "bg-[#00A859] text-white hover:bg-[#008A49] shadow-lg shadow-[#00A859]/15"
               }`}
             >
-              <span>DEPOSER CACHET PAR {operator === "wave" ? "WAVE" : "ORANGE"}</span>
+              <span>DEPOSER CACHET PAR {getOperatorLabel(operator)}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
 
@@ -302,14 +349,24 @@ export default function MobileMoneyPayment({
             exit={{ opacity: 0, scale: 0.95 }}
             className="p-8 text-center flex flex-col items-center justify-center space-y-4"
           >
-            <div className={`p-4 rounded-full ${operator === "wave" ? "bg-[#1B90FF]/10 text-[#1B90FF]" : "bg-[#FF6600]/10 text-[#FF6600]"} animate-pulse`}>
+            <div className={`p-4 rounded-full ${
+              operator === "wave" ? "bg-[#1B90FF]/10 text-[#1B90FF]" :
+              operator === "orange" ? "bg-[#FF6600]/10 text-[#FF6600]" :
+              operator === "mtn" ? "bg-[#FFCC00]/10 text-[#FFCC00]" :
+              "bg-[#00A859]/10 text-[#00A859]"
+            } animate-pulse`}>
               <Loader2 className="w-8 h-8 animate-spin" />
             </div>
             
             <div className="space-y-1">
               <h5 className="font-sans font-bold text-sm text-white">Connexion aux systèmes de paiement...</h5>
               <p className="text-xs text-zinc-500 font-mono uppercase tracking-wider">
-                Initiation du protocole {operator === "wave" ? "Wave CI API" : "Orange Money CI USSD"}
+                Initiation du protocole {
+                  operator === "wave" ? "Wave CI API" :
+                  operator === "orange" ? "Orange Money CI USSD" :
+                  operator === "mtn" ? "MTN MoMo Gateway" :
+                  "Moov Money Flow"
+                }
               </p>
             </div>
 
@@ -337,14 +394,14 @@ export default function MobileMoneyPayment({
               </div>
 
               <h6 className="text-[10px] font-mono tracking-widest text-[#D4AF37] font-bold uppercase mb-1">
-                Notification Push simulée envoyer !
+                Notification Push simulée envoyée !
               </h6>
               
               <p className="text-xs text-zinc-300 font-sans max-w-sm mx-auto leading-relaxed">
-                {operator === "wave" 
-                  ? `Ouvrez votre application Wave sur le téléphone et validez le paiement de ${totalAmount.toLocaleString()} FCFA.`
-                  : `Tapez votre code secret Orange Money suite au prompt USSD reçu directement sur votre mobile pour valider.`
-                }
+                {operator === "wave" && `Ouvrez votre application Wave sur le téléphone et validez le paiement de ${totalAmount.toLocaleString()} FCFA.`}
+                {operator === "orange" && `Tapez votre code secret Orange Money suite au prompt USSD reçu directement sur votre mobile de ${totalAmount.toLocaleString()} FCFA.`}
+                {operator === "mtn" && `Validez la demande de retrait MTN MoMo de ${totalAmount.toLocaleString()} FCFA reçue directement sur votre téléphone avec votre code secret.`}
+                {operator === "moov" && `Faites le code *155# pour approuver l'opération de consignation Moov Money de ${totalAmount.toLocaleString()} FCFA.`}
               </p>
 
               <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-900 rounded-full font-mono text-[10px] text-zinc-500">
@@ -426,7 +483,10 @@ export default function MobileMoneyPayment({
                 <div className="flex justify-between">
                   <span className="text-zinc-400">VIA MOBILE :</span>
                   <strong className="text-zinc-900 font-mono uppercase">
-                    {operator === "wave" ? "🌊 WAVE" : "🍊 ORANGE"} ({phoneNumber})
+                    {operator === "wave" && "🌊 WAVE"}
+                    {operator === "orange" && "🍊 ORANGE MONEY"}
+                    {operator === "mtn" && "🟡 MTN MONEY"}
+                    {operator === "moov" && "🧩 MOOV MONEY"} ({phoneNumber})
                   </strong>
                 </div>
 

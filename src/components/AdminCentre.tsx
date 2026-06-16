@@ -48,6 +48,7 @@ import {
   RefreshCw,
   Search,
   Plus,
+  Lock,
   Tv,
   Users,
   User as UserIcon,
@@ -314,6 +315,24 @@ interface AdminCentreProps {
 export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
   const { currentUser, profile, logout } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
+
+  const requireGoogleAuthThen = (action: () => void) => {
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+      try { audioSynth.playKoraSuccess(); } catch (err) {}
+    } else {
+      const hasGoogle = currentUser.providerData.some(
+        (p) => p.providerId === "google.com" || p.providerId.includes("google")
+      );
+      if (!hasGoogle) {
+        setShowGoogleLoginRequiredModal(true);
+        try { audioSynth.playKoraSuccess(); } catch (err) {}
+      } else {
+        action();
+      }
+    }
+  };
 
   const requireAuthThen = (action: () => void) => {
     if (!currentUser) {
@@ -1619,7 +1638,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 {/* 👤 Mon Héritage */}
                 <button
                   onClick={() => {
-                    requireAuthThen(() => {
+                    requireGoogleAuthThen(() => {
                       setPerspective("user");
                       setActiveMenu("user_heritage");
                       setViewingGomboIdDetail(false);
@@ -1994,8 +2013,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
                   title="Profil Utilisateur" 
                   onClick={() => { 
-                    setActiveMenu("user_heritage"); 
-                    setViewingGomboIdDetail(false); 
+                    requireGoogleAuthThen(() => {
+                      setActiveMenu("user_heritage"); 
+                      setViewingGomboIdDetail(false); 
+                    });
                   }}
                 >
                   {profile?.avatarUrl || currentUser?.photoURL ? (
@@ -2060,6 +2081,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   setSelectedDateFilter={setSelectedDateFilter}
                   setSelectedGomboDetails={setSelectedGomboDetails}
                   requireAuthThen={requireAuthThen}
+                  requireGoogleAuthThen={requireGoogleAuthThen}
                   audioSynth={audioSynth}
                   activeQuickActionModal={activeQuickActionModal}
                   setActiveQuickActionModal={setActiveQuickActionModal}
@@ -3925,6 +3947,61 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {activeMenu === "user_heritage" && (() => {
+                const isGoogleConnected = currentUser && (
+                  currentUser.providerData?.some((p: any) => p.providerId === "google.com" || p.providerId === "google") ||
+                  profile?.provider === "google.com" ||
+                  currentUser.email?.endsWith("@gmail.com")
+                );
+
+                if (!isGoogleConnected) {
+                  return (
+                    <div className="max-w-md mx-auto my-12 p-6.5 bg-[#09090b]/90 border border-red-500/30 rounded-3xl text-center space-y-6 shadow-2xl animate-fadeIn">
+                      <div className="flex justify-center">
+                        <div className="w-16 h-16 rounded-full bg-red-950/20 border border-red-500/35 flex items-center justify-center text-3xl">
+                          🔐
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <h2 className="text-sm font-sans font-black tracking-widest text-red-500 uppercase">
+                          ACCÈS STRICTEMENT RESTREINT
+                        </h2>
+                        <p className="text-xs text-zinc-300 leading-relaxed">
+                          La section <strong className="text-[#D4AF37]">Mon Héritage</strong> (droits BURIDA, certification Gombo ID et historique de prestige d'Abidjan) requiert obligatoirement une authentification via un compte Google officiel.
+                        </p>
+                      </div>
+
+                      <div className="bg-black/60 p-4 rounded-2xl border border-zinc-900 text-center">
+                        <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-wider block mb-1">PROTÉGER VOTRE PATRIMOINE</span>
+                        <p className="text-[11px] text-zinc-500 leading-normal">
+                          Pour éradiquer les usurpateurs et certifier la fiabilité d'AFRIGOMBO, la signature Google est la clé unique d'accès.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <button
+                          onClick={async () => {
+                            try { audioSynth.playKoraNote(392, 0, 0.08, 0.3); } catch(_) {}
+                            setIsAuthModalOpen(true);
+                          }}
+                          className="w-full py-3 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-sans text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg active:scale-95 cursor-pointer"
+                        >
+                          Se Connecter de manière sécurisée via Google 🚀
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            try { audioSynth.playValidationSuccess(); } catch(_) {}
+                            setActiveMenu("user_terrain");
+                          }}
+                          className="w-full py-2.5 bg-transparent border border-zinc-850 hover:bg-zinc-900 text-zinc-400 hover:text-white rounded-xl text-[10px] uppercase tracking-wider font-mono cursor-pointer transition-all active:scale-95"
+                        >
+                          Retourner au Terrain d'Action 🗺️
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste sélectionné.</p>;
 
@@ -5079,23 +5156,17 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         <span>👤 PASSER EN MODE UTILISATEUR (RETOUR TERRAIN)</span>
                       </button>
 
-                      {isAuthorizedSuperFounder ? (
-                        <button
-                          onClick={() => {
-                            setActiveMenu("super_admin");
-                            addToTerminal("[DECRET] En route vers le Trône Royal.");
-                            try { audioSynth.playTamTam(true); } catch (err) {}
-                          }}
-                          className="group p-4 bg-gradient-to-r from-[#11011e] via-[#09010E] to-black hover:from-[#1b0230] border border-purple-500/40 text-white font-display font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.2)] flex items-center justify-center gap-3 cursor-pointer animate-pulse"
-                        >
-                          <Crown className="w-5 h-5 text-amber-400 stroke-[2] animate-bounce" />
-                          <span className="text-amber-400">👑 LE TRÔNE ROYAL DE GOUVERNANCE</span>
-                        </button>
-                      ) : (
-                        <div className="p-4 rounded-2xl bg-black border border-white/5 flex items-center justify-center text-zinc-500 font-mono text-xs">
-                          🔒 Sceau du Fondateur Invisible aux Commandants Classiques
-                        </div>
-                      )}
+                      <button
+                        onClick={() => {
+                          setActiveMenu("super_admin");
+                          addToTerminal("👑 [SOUVERAINETÉ] Accès demandé au Tableau de Bord Super Fondateur.");
+                          try { audioSynth.playTamTam(true); } catch (err) {}
+                        }}
+                        className="group p-4 bg-gradient-to-r from-[#1A1405] via-[#0B0A05] to-black hover:from-[#2A2008] border border-[#D4AF37]/50 text-white font-display font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_0_25px_rgba(212,175,55,0.18)] flex items-center justify-center gap-3 cursor-pointer"
+                      >
+                        <Crown className="w-5 h-5 text-[#D4AF37] stroke-[2] animate-bounce" />
+                        <span className="text-[#D4AF37]">👑 ACCÉDER AU TABLEAU DE BORD SUPER FONDATEUR</span>
+                      </button>
                     </div>
 
                     {/* ACTIONS RAPIDES GRID */}
@@ -7749,7 +7820,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <button
             id="user-nav-heritage"
             onClick={() => {
-              requireAuthThen(() => {
+              requireGoogleAuthThen(() => {
                 setActiveMenu("user_heritage");
                 setViewingGomboIdDetail(false);
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
@@ -8113,6 +8184,50 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               }} 
               onClose={() => setIsAuthModalOpen(false)}
             />
+          </div>
+        </div>
+      )}
+
+      {showGoogleLoginRequiredModal && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-[999] animate-fadeIn text-left">
+          <div className="w-full max-w-sm bg-zinc-950 border border-amber-500/35 rounded-3xl p-6 space-y-5 shadow-2xl shadow-amber-500/5">
+            <div className="w-14 h-14 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-500 mx-auto select-none">
+              <Lock className="w-7 h-7" />
+            </div>
+            
+            <div className="text-center space-y-2">
+              <h3 className="text-white text-base font-sans font-black uppercase tracking-wide">
+                CONNEXION GOOGLE EXIGÉE
+              </h3>
+              <p className="text-zinc-400 text-xs leading-relaxed font-sans">
+                Par mesure de confiance inter-dimensionnelle et pour garantir l'intégrité de votre contrat souverain AfriTrust, l'accès à <strong>"Mon Héritage"</strong> requiert obligatoirement une authentification via un compte Google de confiance.
+              </p>
+            </div>
+
+            <div className="p-3 bg-zinc-900/60 border border-zinc-850 rounded-2xl text-[11px] font-mono text-zinc-550 space-y-1">
+              <div>• Session courante : {currentUser?.email || "Email standard"}</div>
+              <div>• Statut : Lié par email/pass (Exclus)</div>
+            </div>
+
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => setShowGoogleLoginRequiredModal(false)}
+                className="flex-1 py-2.5 rounded-xl bg-zinc-90 w-full hover:bg-zinc-850 text-zinc-300 hover:text-white transition-all text-xs font-mono font-bold border border-zinc-800"
+              >
+                Fermer
+              </button>
+              <button
+                onClick={async () => {
+                  setShowGoogleLoginRequiredModal(false);
+                  try { await logout(); } catch(e){}
+                  setIsAuthModalOpen(true);
+                  try { audioSynth.playTamTam(false); } catch(e){}
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-black transition-all text-xs font-sans font-black uppercase tracking-wider"
+              >
+                S'AUTHENTIFIER ↩
+              </button>
+            </div>
           </div>
         </div>
       )}
