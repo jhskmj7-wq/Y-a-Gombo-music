@@ -181,6 +181,21 @@ export default function FounderThrone({
   }, [setUsers, setGombos, setTransactions, setAlerts]);
 
   // Handle action triggers
+  const logFounderAction = async (action: string, details: any) => {
+    try {
+      if (db) {
+        await addDoc(collection(db, "founder_logs"), {
+          adminEmail,
+          action,
+          details,
+          timestamp: serverTimestamp()
+        });
+      }
+    } catch (e) {
+      console.error("Failed to log founder action:", e);
+    }
+  };
+
   const handleAddSuperAdminEmail = async () => {
     const email = newAdminEmail.trim().toLowerCase();
     if (!email || !email.includes("@")) {
@@ -190,6 +205,7 @@ export default function FounderThrone({
     setNewAdminEmail("");
     setAddAdminModalOpen(false);
     addToTerminal(`👑 [DECRET] Elévation d'admin ordonnée : ${email}`);
+    await logFounderAction("promote_admin", { targetEmail: email });
     try { audioSynth.playValidationSuccess(); } catch (e) {}
     alert(`👑 L'utilisateur ${email} a été élevé au rang de Super Administrateur.`);
   };
@@ -200,6 +216,7 @@ export default function FounderThrone({
       return;
     }
     addToTerminal(`📢 [ANNONCE] Ordonnance propagée avec succès aux artistes.`);
+    await logFounderAction("promulgate_announcement", { text: announcementText, target: announcementTarget });
     setAnnouncementText("");
     setAnnouncementModalOpen(false);
     try { audioSynth.playValidationSuccess(); } catch (e) {}
@@ -212,6 +229,7 @@ export default function FounderThrone({
       return;
     }
     addToTerminal(`🔔 [NOTIF] Notification de souveraineté transmise.`);
+    await logFounderAction("send_push_notification", { title: notificationTitle, text: notificationText });
     setNotificationTitle("");
     setNotificationText("");
     setPushNotificationModalOpen(false);
@@ -226,6 +244,7 @@ export default function FounderThrone({
       setUsers(updated);
       if (db) {
         await updateDoc(doc(db, "users", userId), { isCertified: true, kycStatus: "approved" });
+        await logFounderAction("certify_user", { userId, userName });
       }
       addToTerminal(`[GOMBO ID] Certification directe accordée à ${userName}`);
       try { audioSynth.playValidationSuccess(); } catch (e) {}
@@ -800,28 +819,54 @@ export default function FounderThrone({
               {/* Members verify sections */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 text-left h-fit space-y-4">
-                  <span className="text-[10px] font-mono text-[#D4AF37] uppercase font-black tracking-widest block">DOSSIERS GOMBO ID EN ATTENTE</span>
-                  {liveUsers.filter(u => u.kycStatus === "pending").length === 0 ? (
-                    <div className="p-6 bg-black border border-zinc-900 rounded-2xl text-center space-y-2">
-                      <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto" />
-                      <strong className="text-white text-xs block">Aucun dossier en attente d'excellence</strong>
-                    </div>
-                  ) : (
-                    liveUsers.filter(u => u.kycStatus === "pending").map((u) => (
+                  <span className="text-[10px] font-mono text-[#D4AF37] uppercase font-black tracking-widest block">GESTION DES COMPTES ACTIFS</span>
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                    {liveUsers.filter(u => u.name?.toLowerCase().includes(localUserSearch.toLowerCase()) || u.email?.toLowerCase().includes(localUserSearch.toLowerCase())).slice(0, 50).map((u) => (
                       <div key={u.id} className="p-4 bg-black border border-zinc-900 rounded-2xl space-y-3 flex flex-col justify-between">
                         <div>
-                          <strong className="text-white text-sm block font-sans font-bold">{u.artisticName || u.name}</strong>
+                          <strong className="text-white text-sm block font-sans font-bold flex items-center justify-between">
+                            {u.artisticName || u.name}
+                            {u.status === 'suspended' && <span className="text-[9px] font-mono uppercase bg-red-500/10 text-red-500 px-2 py-0.5 rounded ml-2">Suspendu</span>}
+                          </strong>
                           <span className="text-[10px] text-zinc-500 block leading-none mt-1">{u.email}</span>
                         </div>
-                        <button
-                          onClick={() => certifyUserDirectly(u.id, u.name)}
-                          className="w-full py-2 bg-[#D4AF37] text-black font-mono font-black text-xs uppercase rounded-xl cursor-pointer"
-                        >
-                          Approuver Gombo ID Or
-                        </button>
+                        <div className="flex gap-2">
+                           <button
+                             onClick={async () => {
+                               const suspended = u.status === 'suspended';
+                               const newStatus = suspended ? 'active' : 'suspended';
+                               if (db) await updateDoc(doc(db, "users", u.id), { status: newStatus });
+                               await logFounderAction(suspended ? "unsuspend" : "suspend", { userId: u.id, email: u.email });
+                               try { audioSynth.playValidationSuccess(); } catch (e) {}
+                               alert(suspended ? "Compte réactivé." : "Compte suspendu.");
+                             }}
+                             className={`flex-1 py-2 text-xs font-mono font-black uppercase rounded-xl cursor-pointer transition-colors ${u.status === 'suspended' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`}
+                           >
+                             {u.status === 'suspended' ? 'Réactiver' : 'Suspendre'}
+                           </button>
+                           {u.isAdmin ? (
+                             <button onClick={async () => {
+                                  if (db) await updateDoc(doc(db, "users", u.id), { isAdmin: false });
+                                  await logFounderAction("demote_admin", { userId: u.id, email: u.email });
+                                  try { audioSynth.playValidationSuccess(); } catch (e) {}
+                                  alert("Administrateur rétrogradé avec succès.");
+                               }} className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 transition-colors text-zinc-400 font-mono font-black text-xs uppercase rounded-xl cursor-pointer">
+                               Rétrograder
+                             </button>
+                           ) : (
+                             <button onClick={async () => {
+                                  if (db) await updateDoc(doc(db, "users", u.id), { isAdmin: true });
+                                  await logFounderAction("promote_admin", { userId: u.id, email: u.email });
+                                  try { audioSynth.playValidationSuccess(); } catch (e) {}
+                                  alert("Membre promu administrateur avec succès.");
+                               }} className="flex-1 py-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 transition-colors text-[#D4AF37] font-mono font-black text-xs uppercase rounded-xl cursor-pointer">
+                               Promouvoir
+                             </button>
+                           )}
+                        </div>
                       </div>
-                    ))
-                  )}
+                    ))}
+                  </div>
                 </div>
 
                 <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 text-left space-y-4">

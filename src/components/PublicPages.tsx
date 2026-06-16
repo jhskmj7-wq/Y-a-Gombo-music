@@ -15,28 +15,28 @@ interface PublicPageProps {
 
 export function PrivacyPage({ onBack }: PublicPageProps) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0516] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
       <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
         
         {/* Navigation / Header */}
         <div className="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-[#120E22]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#D4AF37] dark:hover:text-[#F5D76E] bg-white dark:bg-[#111111]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Retour à la scène</span>
           </button>
           
-          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">
-            <Flame className="w-4.5 h-4.5 text-[#7C3AED] fill-current" />
+          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37] ">
+            <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
             <span>GOMBO PROTÉGÉ</span>
           </div>
         </div>
 
         {/* Title Block */}
         <div className="text-center space-y-3">
-          <div className="inline-flex p-3 bg-purple-100 dark:bg-purple-950/30 text-[#7C3AED] dark:text-[#A78BFA] rounded-2xl">
+          <div className="inline-flex p-3 bg-[#D4AF37]/10 dark:bg-[#D4AF37]/10 text-[#D4AF37]  rounded-2xl">
             <Shield className="w-8 h-8" />
           </div>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
@@ -48,11 +48,11 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
         </div>
 
         {/* Core content */}
-        <div className="bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
           
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 1. Collecte des données utilisateur
+              <span className="text-[#D4AF37]">✓</span> 1. Collecte des données utilisateur
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Pour vous donner accès aux gombos d'Abidjan et vous mettre en relation avec les meilleurs maquis, clubs, promoteurs et festivals, <strong>Y’A GOMBO MUSIC</strong> collecte les données strictement nécessaires au bon déroulement de vos prestations scéniques :
@@ -67,7 +67,7 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
 
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 2. Firebase Authentication
+              <span className="text-[#D4AF37]">✓</span> 2. Firebase Authentication
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Nous utilisons le service sécurisé de <strong>Firebase Authentication</strong> (fourni par Google Cloud) pour gérer l'accès à votre compte. 
@@ -78,7 +78,7 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
 
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 3. Stockage des données de profil
+              <span className="text-[#D4AF37]">✓</span> 3. Stockage des données de profil
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Les informations relatives à votre profil showbiz, à vos portefeuilles de rémunérations accumulés et à l'historique de vos candidatures de gombos sont stockées dans une base de données cloud hautement sécurisée <strong>Cloud Firestore</strong> (Firebase).
@@ -88,7 +88,7 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
 
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 4. Sécurité renforcée des données
+              <span className="text-[#D4AF37]">✓</span> 4. Sécurité renforcée des données
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Nous mettons en œuvre des mesures de sécurité optimales au niveau réseau, applicatif et physique pour garantir l'intégrité de vos informations. Les règles de sécurité strictes préviennent tout accès non autorisé à vos données d'annonceur ou de prestataire.
@@ -97,20 +97,20 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
 
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 5. Suppression immédiate du compte
+              <span className="text-[#D4AF37]">✓</span> 5. Suppression immédiate du compte
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Chez Y'A GOMBO MUSIC, vous êtes l'unique propriétaire de vos données de scène. Vous pouvez à tout moment demander, ou exécuter par vous-même, la suppression intégrale de vos informations de notre écosystème :
             </p>
-            <div className="p-4 bg-purple-50/50 dark:bg-purple-950/10 rounded-2xl text-xs space-y-1.5 border border-purple-100/30">
-              <p className="font-bold text-[#7C3AED] dark:text-[#A78BFA]">⚙️ Procédure de suppression autonome :</p>
+            <div className="p-4 bg-[#D4AF37]/5 dark:bg-[#D4AF37]/5 rounded-2xl text-xs space-y-1.5 border border-[#D4AF37]/20">
+              <p className="font-bold text-[#D4AF37] ">⚙️ Procédure de suppression autonome :</p>
               <p>Rendez-vous sur votre espace <strong>Mon Coin</strong>, ouvrez les <strong>Réglages</strong> dans le panneau de contrôle, et cliquez sur <strong>Supprimer mon compte</strong> dans la section Compte. L'ensemble de vos données seront effacées immédiatement.</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 6. Contact support d'Abidjan
+              <span className="text-[#D4AF37]">✓</span> 6. Contact support d'Abidjan
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Pour toute question sur la protection de votre vie privée ou pour exercer vos droits d'accès et d'opposition, vous pouvez joindre à tout moment nos experts showbiz au Plateau :
@@ -120,7 +120,7 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
                 href="mailto:support@gombo.ci"
                 className="flex items-center gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 text-xs font-bold rounded-xl border border-gray-150 dark:border-gray-800 text-gray-700 dark:text-white transition-all"
               >
-                <Mail className="w-4 h-4 text-[#7C3AED]" />
+                <Mail className="w-4 h-4 text-[#D4AF37]" />
                 <span>support@gombo.ci</span>
               </a>
               <a
@@ -144,28 +144,28 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
 
 export function TermsPage({ onBack }: PublicPageProps) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0516] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
       <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
         
         {/* Navigation / Header */}
         <div className="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-[#120E22]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#D4AF37] dark:hover:text-[#F5D76E] bg-white dark:bg-[#111111]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Retour à la scène</span>
           </button>
           
-          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">
-            <Flame className="w-4.5 h-4.5 text-[#7C3AED] fill-current" />
+          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37] ">
+            <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
             <span>TERRAIN SAIN</span>
           </div>
         </div>
 
         {/* Title Block */}
         <div className="text-center space-y-3">
-          <div className="inline-flex p-3 bg-purple-100 dark:bg-purple-950/30 text-[#7C3AED] dark:text-[#A78BFA] rounded-2xl">
+          <div className="inline-flex p-3 bg-[#D4AF37]/10 dark:bg-[#D4AF37]/10 text-[#D4AF37]  rounded-2xl">
             <FileText className="w-8 h-8" />
           </div>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
@@ -177,11 +177,11 @@ export function TermsPage({ onBack }: PublicPageProps) {
         </div>
 
         {/* Core content */}
-        <div className="bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
           
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 1. Conditions d'utilisation
+              <span className="text-[#D4AF37]">✓</span> 1. Conditions d'utilisation
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               En créant un compte ou en naviguant sur l'application <strong>Y’A GOMBO MUSIC</strong>, vous acceptez sans réserve le présent règlement. L'application a pour vocation exclusive de faciliter la mise en relation showbiz, la publication d'annonces de gombos musicaux (prestations), et la gestion sécurisée des cachets d'artistes.
@@ -190,7 +190,7 @@ export function TermsPage({ onBack }: PublicPageProps) {
 
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 2. Responsabilités des utilisateurs
+              <span className="text-[#D4AF37]">✓</span> 2. Responsabilités des utilisateurs
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Chaque utilisateur est personnellement responsable des données qu'il publie, des messages partagés, et des engagements contractuels pris sur la plateforme. 
@@ -200,7 +200,7 @@ export function TermsPage({ onBack }: PublicPageProps) {
 
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 3. Contenu rigoureusement interdit
+              <span className="text-[#D4AF37]">✓</span> 3. Contenu rigoureusement interdit
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Tout contenu sortant du cadre du showbiz et de la musique ivoirienne est strictement prohibé. Notre équipe d'animation effectue des audits réguliers. Sont formellement interdits :
@@ -215,7 +215,7 @@ export function TermsPage({ onBack }: PublicPageProps) {
 
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 4. Réservations musicales & Engagements
+              <span className="text-[#D4AF37]">✓</span> 4. Réservations musicales & Engagements
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Une fois qu'un recruteur accepte officiellement une candidature d'artiste pour un gombo, le contrat est réputé conclu. 
@@ -225,7 +225,7 @@ export function TermsPage({ onBack }: PublicPageProps) {
 
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 5. Transactions de paiement de cachets
+              <span className="text-[#D4AF37]">✓</span> 5. Transactions de paiement de cachets
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Les transferts de fonds s'effectuent par le biais des passerelles sécurisées tierces (Wave, Orange Money). Y’A GOMBO MUSIC propose un système de solde virtuel permettant de consolider ses revenus. 
@@ -235,7 +235,7 @@ export function TermsPage({ onBack }: PublicPageProps) {
 
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> 6. Tolérance zéro face aux comportements abusifs
+              <span className="text-[#D4AF37]">✓</span> 6. Tolérance zéro face aux comportements abusifs
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed text-red-600 dark:text-rose-400 font-bold">
               Y’A GOMBO MUSIC applique une politique de tolérance zéro face aux comportements frauduleux, abusifs ou trompeurs. L'utilisation d'identité d'artistes célèbres usurpés, la création de faux comptes recruteurs, la diffamation publique et le non-paiement répété des artistes mèneront à une suppression immédiate et sans préavis du compte ainsi qu'au blocage de votre adresse IP à Abidjan.
@@ -251,14 +251,14 @@ export function TermsPage({ onBack }: PublicPageProps) {
 
 export function DeleteAccountPage({ onBack }: PublicPageProps) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0516] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
       <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
         
         {/* Navigation / Header */}
         <div className="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-[#120E22]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#D4AF37] dark:hover:text-[#F5D76E] bg-white dark:bg-[#111111]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Quitter</span>
@@ -284,16 +284,16 @@ export function DeleteAccountPage({ onBack }: PublicPageProps) {
         </div>
 
         {/* Action card */}
-        <div className="bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
           
           <div className="space-y-4">
-            <span className="text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest block">Étapes de suppression</span>
+            <span className="text-xs font-black text-[#D4AF37] dark:text-[#F5D76E] uppercase tracking-widest block">Étapes de suppression</span>
             
             <div className="grid gap-4">
               
               {/* Etape 1 */}
               <div className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-100 dark:border-gray-800">
-                <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 flex items-center justify-center font-black shrink-0 text-sm">
+                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] dark:bg-[#D4AF37]/10 dark:text-[#F5D76E] flex items-center justify-center font-black shrink-0 text-sm">
                   1
                 </div>
                 <div className="space-y-1">
@@ -306,7 +306,7 @@ export function DeleteAccountPage({ onBack }: PublicPageProps) {
 
               {/* Etape 2 */}
               <div className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-100 dark:border-gray-800">
-                <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 flex items-center justify-center font-black shrink-0 text-sm">
+                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] dark:bg-[#D4AF37]/10 dark:text-[#F5D76E] flex items-center justify-center font-black shrink-0 text-sm">
                   2
                 </div>
                 <div className="space-y-1">
@@ -319,7 +319,7 @@ export function DeleteAccountPage({ onBack }: PublicPageProps) {
 
               {/* Etape 3 */}
               <div className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-850 rounded-2xl border border-gray-100 dark:border-gray-800">
-                <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 flex items-center justify-center font-black shrink-0 text-sm">
+                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] dark:bg-[#D4AF37]/10 dark:text-[#F5D76E] flex items-center justify-center font-black shrink-0 text-sm">
                   3
                 </div>
                 <div className="space-y-1">
@@ -335,7 +335,7 @@ export function DeleteAccountPage({ onBack }: PublicPageProps) {
 
           {/* Details */}
           <div className="pt-4 border-t border-gray-100 dark:border-gray-800/80 space-y-4">
-            <span className="text-xs font-black text-[#7C3AED] dark:text-[#A78BFA] uppercase tracking-widest block">Quelles données sont supprimées ?</span>
+            <span className="text-xs font-black text-[#D4AF37]  uppercase tracking-widest block">Quelles données sont supprimées ?</span>
             
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               Dès la confirmation de votre suppression de compte, notre gestionnaire d'écosystème exécute les opérations de purge suivantes de manière automatique et irréversible :
@@ -371,12 +371,12 @@ export function DeleteAccountPage({ onBack }: PublicPageProps) {
 
 export function AboutPage({ onBack }: PublicPageProps) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0516] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-[#120E22]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#D4AF37] dark:hover:text-[#F5D76E] bg-white dark:bg-[#111111]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Retour</span>
@@ -400,7 +400,7 @@ export function AboutPage({ onBack }: PublicPageProps) {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase border-b border-gray-50 dark:border-gray-850 pb-2 flex items-center gap-2">
               <span className="text-[#D4AF37]">🇨🇮</span> Notre Mission
@@ -414,7 +414,7 @@ export function AboutPage({ onBack }: PublicPageProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <div className="p-4 bg-purple-500/5 rounded-2xl border border-purple-500/10 space-y-2">
+            <div className="p-4 bg-[#D4AF37]/5 rounded-2xl border border-[#D4AF37]/10 space-y-2">
               <span className="text-lg">⚡</span>
               <h3 className="text-xs font-black uppercase text-gray-900 dark:text-white">Confiance Mutuelle</h3>
               <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">Des profils de prestataires vérifiés, des avis sincères, et un annuaire transparent pour rassurer le showbiz.</p>
@@ -427,7 +427,7 @@ export function AboutPage({ onBack }: PublicPageProps) {
           </div>
 
           <div className="pt-4 border-t border-gray-100 dark:border-gray-850 space-y-3">
-            <h3 className="text-xs font-black uppercase text-[#7C3AED] dark:text-[#A78BFA] tracking-wider">L'Équipe Fondatrice</h3>
+            <h3 className="text-xs font-black uppercase text-[#D4AF37]  tracking-wider">L'Équipe Fondatrice</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
               Basée à Cocody, notre équipe rassemble des développeurs ivoiriens passionnés de musique et des promoteurs d'événements de confiance, résolus à digitaliser la culture ivoirienne de façon vertueuse.
             </p>
@@ -484,25 +484,25 @@ export function SupportPage({ onBack }: PublicPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0516] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-[#120E22]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#D4AF37] dark:hover:text-[#F5D76E] bg-white dark:bg-[#111111]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Retour</span>
           </button>
           
-          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">
-            <Flame className="w-4.5 h-4.5 text-[#7C3AED] fill-current" />
+          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37] ">
+            <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
             <span>SUPPORT EN DIRECT</span>
           </div>
         </div>
 
         <div className="text-center space-y-3">
-          <div className="inline-flex p-3 bg-purple-100 dark:bg-purple-950/30 text-[#7C3AED] dark:text-[#A78BFA] rounded-2xl">
+          <div className="inline-flex p-3 bg-[#D4AF37]/10 dark:bg-[#D4AF37]/10 text-[#D4AF37]  rounded-2xl">
             <HelpCircle className="w-8 h-8 animate-pulse" />
           </div>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
@@ -514,14 +514,14 @@ export function SupportPage({ onBack }: PublicPageProps) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-1 bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 space-y-4">
+          <div className="md:col-span-1 bg-white dark:bg-[#111111] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 space-y-4">
             <h3 className="text-xs font-black uppercase text-gray-900 dark:text-white tracking-wider">Nos Canaux Directs</h3>
             
             <div className="space-y-4 text-xs font-semibold">
               <div className="flex items-start gap-2 pt-1">
                 <span className="text-emerald-505 font-bold shrink-0">🟢 WhatsApp :</span>
                 <div>
-                  <a href="https://wa.me/22507482910" target="_blank" rel="no-referrer" className="text-purple-600 dark:text-purple-400 hover:underline block font-bold">+225 07 48 29 10 20</a>
+                  <a href="https://wa.me/22507482910" target="_blank" rel="no-referrer" className="text-[#D4AF37] dark:text-[#F5D76E] hover:underline block font-bold">+225 07 48 29 10 20</a>
                   <span className="text-[10px] text-gray-400 font-medium">Réponse rapide au maquis</span>
                 </div>
               </div>
@@ -529,14 +529,14 @@ export function SupportPage({ onBack }: PublicPageProps) {
               <div className="flex items-start gap-2 pt-1">
                 <span className="text-blue-500 font-bold shrink-0">✉ Email :</span>
                 <div>
-                  <a href="mailto:support@yagombomusic.ci" className="text-purple-600 dark:text-purple-400 hover:underline block font-bold">support@yagombo.ci</a>
+                  <a href="mailto:support@yagombomusic.ci" className="text-[#D4AF37] dark:text-[#F5D76E] hover:underline block font-bold">support@yagombo.ci</a>
                   <span className="text-[10px] text-gray-400 font-medium">Pour les partenariats importants</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="md:col-span-2 bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm">
+          <div className="md:col-span-2 bg-white dark:bg-[#111111] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm">
             {success ? (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -551,7 +551,7 @@ export function SupportPage({ onBack }: PublicPageProps) {
                 <button
                   type="button"
                   onClick={() => setSuccess(false)}
-                  className="px-4 py-2 bg-purple-100 text-[#7C3AED] text-xs font-bold rounded-xl"
+                  className="px-4 py-2 bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold rounded-xl"
                 >
                   Envoyer un autre message
                 </button>
@@ -606,7 +606,7 @@ export function SupportPage({ onBack }: PublicPageProps) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-[#7C3AED] to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="w-full py-3 bg-gradient-to-r from-[#D4AF37] to-[#B48F17] hover:from-[#B48F17] hover:to-[#9A7A13] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -640,25 +640,25 @@ export function CachetsPage({ onBack }: PublicPageProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0516] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors">
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-800">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#7C3AED] dark:hover:text-[#A78BFA] bg-white dark:bg-[#120E22]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#D4AF37] dark:hover:text-[#F5D76E] bg-white dark:bg-[#111111]/80 border border-gray-150 dark:border-gray-800 rounded-xl transition-all cursor-pointer shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Retour</span>
           </button>
           
-          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">
-            <Flame className="w-4.5 h-4.5 text-[#7C3AED] fill-current" />
+          <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37] ">
+            <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
             <span>TRANSPARENCE DES CACHETS</span>
           </div>
         </div>
 
         <div className="text-center space-y-3">
-          <div className="inline-flex p-3 bg-purple-100 dark:bg-purple-950/30 text-[#7C3AED] dark:text-[#A78BFA] rounded-2xl">
+          <div className="inline-flex p-3 bg-[#D4AF37]/10 dark:bg-[#D4AF37]/10 text-[#D4AF37]  rounded-2xl">
             <DollarSign className="w-8 h-8 animate-pulse text-emerald-500" />
           </div>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
@@ -671,22 +671,22 @@ export function CachetsPage({ onBack }: PublicPageProps) {
 
         {/* Balance Showcase */}
         {profile && (
-          <div className="p-6 bg-gradient-to-r from-purple-950 via-slate-900 to-[#120422] rounded-3xl border border-purple-500/20 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+          <div className="p-6 bg-gradient-to-r from-[#111111] via-zinc-900 to-[#050505] rounded-3xl border border-[#D4AF37]/20 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest block">Votre solde de cachets actif</span>
               <span className="text-2xl font-black font-mono">{(profile.balance || 0).toLocaleString("fr-FR")} FCFA</span>
             </div>
             <div className="space-y-1.5 text-center sm:text-right">
-              <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-full inline-block">Réseau d'épargne d'urgence</span>
+              <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 bg-[#D4AF37]/20 text-[#F5D76E] border border-[#D4AF37]/30 rounded-full inline-block">Réseau d'épargne d'urgence</span>
               <p className="text-[10px] text-gray-450">Retraits disponibles 24h/24 via Wave ou Orange Money.</p>
             </div>
           </div>
         )}
 
-        <div className="bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
           <div className="space-y-4">
             <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
-              <span className="text-[#7C3AED]">✓</span> Fonctionnement de l'Escrow de Y'A GOMBO MUSIC
+              <span className="text-[#D4AF37]">✓</span> Fonctionnement de l'Escrow de Y'A GOMBO MUSIC
             </h2>
             <p className="text-xs text-gray-650 dark:text-gray-300 leading-relaxed">
               Pour assurer l'honnêteté de toutes les parties, Y'A GOMBO MUSIC utilise un système exclusif de tiers-confiance de cachets :

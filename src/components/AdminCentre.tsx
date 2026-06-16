@@ -416,7 +416,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   const userEmail = currentUser?.email?.toLowerCase() || "";
   const isAuthorizedAdmin = !!(currentUser && AUTHORIZED_ADMIN_EMAILS.includes(userEmail));
-  const isAuthorizedSuperFounder = !!(currentUser && (userEmail === "johnsylvesterh@gmail.com" || userEmail === "jhs.kmj7@gmail.com"));
+  const isAuthorizedSuperFounder = !!(currentUser && userEmail === "jhs.kmj7@gmail.com");
 
   // Keep adminEmail synced with actual firebase user email for database operations
   useEffect(() => {
@@ -4502,11 +4502,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       </div>
                     </div>
 
-                    {/* IMPERIAL SÉNAT & ROYAL THRONE FAST SWITCHBOARD CARD - Preserved for Admins */}
-                    {(isAuthorizedAdmin || isAuthorizedSuperFounder || currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com") && (
-                      <div className="p-6 bg-gradient-to-br from-rose-950/40 via-purple-950/40 to-black border border-purple-500/30 rounded-2xl space-y-4 shadow-xl">
+                    {/* IMPERIAL SÉNAT FAST SWITCHBOARD CARD - Preserved for Admins */}
+                    {(isAuthorizedAdmin || isAuthorizedSuperFounder) && (
+                      <div className="p-6 bg-gradient-to-br from-[#0a0a0A] via-[#111111] to-black border border-[#D4AF37]/30 rounded-2xl space-y-4 shadow-xl">
                         <div className="flex items-center gap-2">
-                          <Crown className="w-5 h-5 text-yellow-400 animate-pulse" />
+                          <Crown className="w-5 h-5 text-[#D4AF37] animate-pulse" />
                           <h4 className="text-sm font-display font-black text-white uppercase tracking-wider">
                             Portail de Commandement Impérial GOMBO ELITE
                           </h4>
@@ -4522,24 +4522,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               try { audioSynth.playValidationSuccess(); } catch (err) {}
                               addToTerminal("[SOUVERAIN] Accès au Cockpit Administrateur.");
                             }}
-                            className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg active:scale-95"
+                            className="px-4 py-2 bg-black border border-[#D4AF37]/50 hover:bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-mono font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg active:scale-95"
                           >
                             🛡️ Ouvrir le Cockpit Admin
                           </button>
-
-                          {(currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com" || currentUser?.email?.toLowerCase() === "jhs.kmj7@gmail.com") && (
-                            <button
-                              onClick={() => {
-                                setPerspective("admin");
-                                setActiveMenu("super_admin");
-                                try { audioSynth.playTamTam(true); } catch (err) {}
-                                addToTerminal("[SOUVERAIN] Accès direct au Trône Royal.");
-                              }}
-                              className="px-4 py-2 bg-purple-700 hover:bg-purple-600 text-white text-xs font-mono font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg active:scale-95"
-                            >
-                              👑 S'installer sur le Trône
-                            </button>
-                          )}
                         </div>
                       </div>
                     )}
@@ -5142,7 +5128,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     </div>
 
                     {/* PERSP/THRONE BAR */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex">
                       <button
                         onClick={() => {
                           setPerspective("user");
@@ -5150,57 +5136,86 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           addToTerminal("[COMMANDE] Pilotage déporté sur Perspective Artiste.");
                           try { audioSynth.playValidationSuccess(); } catch (err) {}
                         }}
-                        className="group p-4 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-display font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_4px_15px_rgba(212,175,55,0.2)] flex items-center justify-center gap-3 cursor-pointer"
+                        className="group p-4 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-display font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_4px_15px_rgba(212,175,55,0.2)] flex items-center justify-center gap-3 cursor-pointer w-full"
                       >
                         <Users className="w-5 h-5 text-black stroke-[3]" />
                         <span>👤 PASSER EN MODE UTILISATEUR (RETOUR TERRAIN)</span>
                       </button>
+                    </div>
 
-                      <button
-                        onClick={() => {
-                          setActiveMenu("super_admin");
-                          addToTerminal("👑 [SOUVERAINETÉ] Accès demandé au Tableau de Bord Super Fondateur.");
-                          try { audioSynth.playTamTam(true); } catch (err) {}
-                        }}
-                        className="group p-4 bg-gradient-to-r from-[#1A1405] via-[#0B0A05] to-black hover:from-[#2A2008] border border-[#D4AF37]/50 text-white font-display font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_0_25px_rgba(212,175,55,0.18)] flex items-center justify-center gap-3 cursor-pointer"
-                      >
-                        <Crown className="w-5 h-5 text-[#D4AF37] stroke-[2] animate-bounce" />
-                        <span className="text-[#D4AF37]">👑 ACCÉDER AU TABLEAU DE BORD SUPER FONDATEUR</span>
-                      </button>
+                    {/* KPIs IN REAL-TIME (VUE D'ENSEMBLE) */}
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
+                        <Activity className="w-4 h-4 text-[#D4AF37]" />
+                        Vue d'ensemble
+                      </h3>
+
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/10 shadow-sm flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block font-bold">👤 Utilisateurs inscrits</span>
+                          <strong className="text-2xl font-display font-black text-white block mt-2">{kpiUsersCount}</strong>
+                        </div>
+
+                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/10 shadow-sm flex flex-col justify-between text-left relative overflow-hidden">
+                          <div className="absolute top-0 right-0 p-3">
+                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse block" />
+                          </div>
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-emerald-500 block font-bold">🟢 Actifs aujourd'hui</span>
+                          <strong className="text-2xl font-display font-black text-white block mt-2">{kpiOnlineCount}</strong>
+                        </div>
+
+                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/10 shadow-sm flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block font-bold">📢 Publications</span>
+                          <strong className="text-2xl font-display font-black text-white block mt-2">{kpiPostsCount}</strong>
+                        </div>
+
+                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/10 shadow-sm flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">💰 Revenus (Caisse)</span>
+                          <strong className="text-lg font-mono font-black text-[#D4AF37] block mt-2">{kpiRevenuesSum.toLocaleString()} FCFA</strong>
+                        </div>
+
+                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-red-500/20 shadow-sm flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-red-500 block font-bold">🚨 Signalements</span>
+                          <strong className="text-2xl font-display font-black text-white block mt-2">{kpiAlertsCount}</strong>
+                        </div>
+
+                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-amber-500/20 shadow-sm flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-amber-500 block font-bold">🛡️ Gombo ID en attente</span>
+                          <strong className="text-2xl font-display font-black text-white block mt-2">{kpiPendingKycCount}</strong>
+                        </div>
+                      </div>
                     </div>
 
                     {/* ACTIONS RAPIDES GRID */}
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
-                        <Activity className="w-4 h-4 text-[#D4AF37]" />
-                        Panneau d'Actions Rapides
+                        <Zap className="w-4 h-4 text-[#D4AF37]" />
+                        Actions Rapides
                       </h3>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-9 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                         <button
                           onClick={() => {
-                            setActiveMenu("renforts");
+                            setActiveMenu("revision");
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
                           className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "renforts" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-black hover:bg-[#D4AF37]/5 border-white/5 hover:border-[#D4AF37]/25 text-zinc-300"
+                            activeMenu === "revision" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
                           }`}
                         >
-                          <Users className="w-5 h-5" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">👥 Membres</span>
+                          <MessageSquare className="w-5 h-5 text-white" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Créer Annonce</span>
                         </button>
 
                         <button
                           onClick={() => {
-                            setActiveMenu("gombos");
+                            setIsBroadcastModalOpen(true);
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "gombos" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-black hover:bg-[#D4AF37]/5 border-white/5 hover:border-[#D4AF37]/25 text-zinc-300"
-                          }`}
+                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300`}
                         >
-                          <Briefcase className="w-5 h-5" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">🎤 Gombos</span>
+                          <Send className="w-5 h-5 text-cyan-400" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Notification</span>
                         </button>
 
                         <button
@@ -5209,11 +5224,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
                           className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "kyc" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-black hover:bg-[#D4AF37]/5 border-white/5 hover:border-[#D4AF37]/25 text-zinc-300"
+                            activeMenu === "kyc" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
                           }`}
                         >
-                          <ShieldCheck className="w-5 h-5" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">🛡️ Gombo ID</span>
+                          <ShieldCheck className="w-5 h-5 text-amber-500" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Gombo ID</span>
                         </button>
 
                         <button
@@ -5222,48 +5237,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
                           className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "alertes" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-black hover:bg-[#D4AF37]/5 border-white/5 hover:border-[#D4AF37]/25 text-zinc-300"
+                            activeMenu === "alertes" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
                           }`}
                         >
                           <AlertTriangle className="w-5 h-5 text-red-500 animate-pulse" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">🚨 Alerte</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setActiveMenu("revision");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "revision" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-black hover:bg-[#D4AF37]/5 border-white/5 hover:border-[#D4AF37]/25 text-zinc-300"
-                          }`}
-                        >
-                          <MessageSquare className="w-5 h-5" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">📢 Pubs</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setIsBroadcastModalOpen(true);
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className="p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center bg-black hover:bg-[#D4AF37]/5 border-white/5 hover:border-[#D4AF37]/25 text-zinc-300 gap-2 h-24 cursor-pointer select-none"
-                        >
-                          <Send className="w-5 h-5 text-cyan-400" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">📨 Message</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setActiveMenu("caisse");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "caisse" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-black hover:bg-[#D4AF37]/5 border-white/5 hover:border-[#D4AF37]/25 text-zinc-300"
-                          }`}
-                        >
-                          <Coins className="w-5 h-5 text-amber-500" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">💳 Caisses</span>
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Signalements</span>
                         </button>
 
                         <button
@@ -5272,11 +5250,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
                           className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "analytics" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-black hover:bg-[#D4AF37]/5 border-white/5 hover:border-[#D4AF37]/25 text-zinc-300"
+                            activeMenu === "analytics" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
                           }`}
                         >
                           <BarChart2 className="w-5 h-5 text-emerald-400" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">📈 Stats</span>
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Statistiques</span>
                         </button>
 
                         <button
@@ -5285,91 +5263,85 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
                           className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "monetisation" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-black hover:bg-[#D4AF37]/5 border-white/5 hover:border-[#D4AF37]/25 text-zinc-300"
+                            activeMenu === "monetisation" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
                           }`}
                         >
-                          <Settings className="w-5 h-5" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">⚙️ Configs</span>
+                          <Settings className="w-5 h-5 text-zinc-400" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Configuration</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* KPIs IN REAL-TIME */}
-                    <div className="space-y-3">
-                      <span className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] block">
-                        Indicateurs d'Activité en Direct
-                      </span>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="p-5 rounded-2xl bg-[#09090B] border border-white/5 shadow-md flex flex-col justify-between h-28 text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">👥 UTILISATEURS</span>
-                          <strong className="text-3xl font-display font-black text-white block mt-1">{kpiUsersCount}</strong>
-                          <span className="text-[9px] text-zinc-500 block font-mono">Dossiers civils</span>
-                        </div>
-
-                        <div className="p-5 rounded-2xl bg-[#09090B] border border-white/5 shadow-md flex flex-col justify-between h-28 text-left">
-                          <div className="flex justify-between items-center">
-                            <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] font-bold block">🟢 CONNECTÉS</span>
-                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                          </div>
-                          <strong className="text-3xl font-display font-black text-emerald-400 block mt-1">{kpiOnlineCount}</strong>
-                          <span className="text-[9px] text-[#D4AF37]/60 block font-mono">En temps réel</span>
-                        </div>
-
-                        <div className="p-5 rounded-2xl bg-[#09090B] border border-white/5 shadow-md flex flex-col justify-between h-28 text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">🎤 GOMBOS</span>
-                          <strong className="text-3xl font-display font-black text-white block mt-1">{kpiGombosCount}</strong>
-                          <span className="text-[9px] text-zinc-500 block font-mono">Opportunités actives</span>
-                        </div>
-
-                        <div className="p-5 rounded-2xl bg-[#09090B] border border-white/5 shadow-md flex flex-col justify-between h-28 text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">📢 PUBLICATIONS</span>
-                          <strong className="text-3xl font-display font-black text-white block mt-1">{kpiPostsCount}</strong>
-                          <span className="text-[9px] text-zinc-500 block font-mono">Murmures libres</span>
-                        </div>
-
-                        <div className="p-5 rounded-2xl bg-[#09090B] border border-white/5 shadow-md flex flex-col justify-between h-28 text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">🛡️ KYC DEMANDES</span>
-                          <strong className="text-3xl font-display font-black text-amber-500 block mt-1">{kpiPendingKycCount}</strong>
-                          <span className="text-[9px] text-zinc-500 block font-mono font-bold">À auditer de suite</span>
-                        </div>
-
-                        <div className="p-5 rounded-2xl bg-[#09090B] border border-white/5 shadow-md flex flex-col justify-between h-28 text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">🚨 SIGNALEMENTS</span>
-                          <strong className="text-3xl font-display font-black text-red-500 block mt-1">{kpiAlertsCount}</strong>
-                          <span className="text-[9px] text-zinc-500 block font-mono font-bold">Alerte critique</span>
-                        </div>
-
-                        <div className="p-5 rounded-2xl bg-[#09090B] border border-white/5 shadow-md flex flex-col justify-between h-28 text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">💰 TRESORERIE</span>
-                          <strong className="text-lg font-mono font-black text-emerald-400 block mt-1">{kpiRevenuesSum.toLocaleString()} FCFA</strong>
-                          <span className="text-[9px] text-zinc-500 block font-mono">Caisse accumulée</span>
-                        </div>
-
-                        <div className="p-5 rounded-2xl bg-[#09090B] border border-white/5 shadow-md flex flex-col justify-between h-28 text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">⭐ CERTIFIÉS</span>
-                          <strong className="text-3xl font-display font-black text-[#D4AF37] block mt-1">{kpiApprovedKycCount}</strong>
-                          <span className="text-[9px] text-zinc-500 block font-mono">Membres Gombo ID</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* INTELLIGENT QUEUE (GOMBO ID & SIGNALEMENTS) */}
-                    <div className="space-y-4">
-                      <span className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] block">
-                        File d'Attente de Décisions Stratégique
-                      </span>
+                    {/* INTELLIGENT QUEUE -> ACTIVITE RECENTE */}
+                    <div className="space-y-4 pt-4">
+                      <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5 border-t border-[#D4AF37]/10 pt-6">
+                        <Activity className="w-4 h-4 text-[#D4AF37]" />
+                        Activité Récente
+                      </h3>
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         
+                        {/* Latest registered talents list */}
+                        <div className="p-6 rounded-2xl bg-[#09090C] border border-white/5 space-y-4">
+                          <h4 className="text-xs font-mono font-bold uppercase text-white border-b border-white/5 pb-2.5 flex items-center gap-1.5">
+                            <Users className="w-4 h-4 text-[#D4AF37]" />
+                            Dernières inscriptions
+                          </h4>
+                          <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                            {recentSignups.map(u => (
+                              <div key={u.id} className="p-3 rounded-xl bg-black border border-white/5 flex justify-between items-center text-xs">
+                                <div className="flex gap-2 items-center">
+                                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-[#D4AF37]">
+                                    {u.avatarUrl ? <img src={u.avatarUrl} alt="Av" className="w-full h-full rounded-full object-cover" /> : u.artisticName.charAt(0)}
+                                  </div>
+                                  <div className="truncate">
+                                    <strong className="text-white block font-sans truncate">{u.artisticName}</strong>
+                                    <span className="text-[10px] text-zinc-550 font-mono block truncate">{u.commune}, CI</span>
+                                  </div>
+                                </div>
+                                <span className="text-[9px] font-mono text-[#D4AF37] bg-white/5 px-2 py-0.5 rounded font-black uppercase">
+                                  Nouveau
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Publications */}
+                        <div className="p-6 rounded-2xl bg-[#09090C] border border-white/5 space-y-4">
+                          <h4 className="text-xs font-mono font-bold uppercase text-white border-b border-white/5 pb-2.5 flex items-center gap-1.5">
+                            <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
+                            Dernières publications
+                          </h4>
+
+                          <div className="space-y-3 max-h-80 overflow-y-auto">
+                            {[...posts].slice(0, 4).map(p => (
+                              <div key={p.id} className="p-3.5 bg-black border border-white/5 rounded-xl space-y-2 flex flex-col justify-between">
+                                <div className="space-y-1">
+                                  <div className="flex justify-between items-center text-[10px] font-mono">
+                                    <span className="font-bold text-[#D4AF37]">{p.authorArtisticName}</span>
+                                    <span className="text-zinc-650">{p.timestamp}</span>
+                                  </div>
+                                  <p className="text-xs text-white/80 leading-relaxed font-sans mt-1">"{p.content}"</p>
+                                </div>
+                                
+                                <div className="flex justify-between items-center gap-2 pt-2 border-t border-white/5">
+                                  <span className="text-[9px] font-mono text-zinc-550">
+                                    ❤️ {p.likes}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
                         {/* GOMBO ID QUEUE */}
-                        <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-white/5 space-y-4">
-                          <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                        <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-amber-500/10 space-y-4">
+                          <div className="flex justify-between items-center border-b border-warning/10 pb-3">
                             <span className="text-xs font-mono font-bold uppercase text-white flex items-center gap-1.5">
-                              <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-                              Dossiers GOMBO ID à Vérifier ({pendingIdUsers.length})
+                              <ShieldCheck className="w-4 h-4 text-amber-500" />
+                              Dernières vérifications
                             </span>
-                            <span className="text-[9px] font-mono bg-amber-500/10 text-amber-500 px-2.5 py-0.5 rounded font-black uppercase">ACTION DIRECTE</span>
                           </div>
 
                           <div className="space-y-3 max-h-80 overflow-y-auto">
@@ -5434,13 +5406,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         </div>
 
                         {/* URGENT ALERTS REPORT QUEUE */}
-                        <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/15 space-y-4">
-                          <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                        <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-red-500/10 space-y-4">
+                          <div className="flex justify-between items-center border-b border-red-500/10 pb-3">
                             <span className="text-xs font-mono font-bold uppercase text-white flex items-center gap-1.5">
                               <AlertTriangle className="w-4 h-4 text-red-505 animate-pulse" />
-                              Signalements Urgents ({flaggedPosts.length})
+                              Dernières sanctions (Signalements)
                             </span>
-                            <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-2.5 py-0.5 rounded font-black uppercase">SÉCURITÉ</span>
                           </div>
 
                           <div className="space-y-3 max-h-80 overflow-y-auto">
@@ -5480,146 +5451,23 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       </div>
                     </div>
 
-                    {/* ADDS-ON INTELLIGENT TIERS */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      
-                      {/* Boosted Gombos list */}
-                      <div className="p-6 rounded-2xl bg-[#09090C] border border-white/5 space-y-4">
-                        <h4 className="text-xs font-mono font-bold uppercase text-white border-b border-white/5 pb-2.5 flex items-center gap-1.5">
-                          <Zap className="w-4 h-4 text-cyan-400 animate-bounce" />
-                          Demandes Boostées ({boostedGombos.length})
-                        </h4>
-                        <div className="space-y-3 max-h-60 overflow-y-auto font-mono text-[11px]">
-                          {boostedGombos.length === 0 ? (
-                            <p className="text-zinc-650 text-center py-6 text-[10px]">Aucune promotion active.</p>
-                          ) : (
-                            boostedGombos.map(g => (
-                              <div key={g.id} className="p-3 rounded bg-black border border-white/5 flex justify-between items-center">
-                                <div>
-                                  <span className="text-white block font-bold truncate max-w-[120px]">{g.title}</span>
-                                  <span className="text-amber-500">{g.budget.toLocaleString()} FCFA</span>
-                                </div>
-                                <button
-                                  onClick={() => handleQuickBoostGombo(g.id, false)}
-                                  className="p-1 px-2 rounded bg-cyan-950/10 hover:bg-cyan-500 hover:text-black text-cyan-400 border border-cyan-500/20 text-[9px] uppercase cursor-pointer"
-                                >
-                                  DÉ-BOOSTER
-                                </button>
-                              </div>
-                            ))
-                          )}
-                        </div>
+                    {userEmail === "jhs.kmj7@gmail.com" && (
+                      <div className="pt-8 flex justify-center">
+                        <button
+                          onClick={() => {
+                            setActiveMenu("super_admin");
+                            addToTerminal("👑 [SOUVERAINETÉ] Accès demandé au Tableau de Bord Super Fondateur.");
+                            try { audioSynth.playTamTam(true); } catch (err) {}
+                          }}
+                          className="group p-6 bg-black border border-[#D4AF37]/40 hover:border-[#D4AF37] text-[#D4AF37] font-display font-black text-sm uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-4 cursor-pointer relative overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.15)] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] w-full max-w-lg"
+                        >
+                          <div className="absolute inset-0 bg-[#D4AF37] opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl"></div>
+                          <div className="absolute -inset-1 bg-gradient-to-r from-[#D4AF37]/0 via-[#D4AF37]/20 to-[#D4AF37]/0 rounded-2xl animate-pulse blur-md"></div>
+                          <Crown className="w-6 h-6 text-[#D4AF37] stroke-[2] animate-pulse" />
+                          <span className="relative z-10">ACCÉDER AU TRÔNE DU FONDATEUR</span>
+                        </button>
                       </div>
-
-                      {/* Latest registered talents list */}
-                      <div className="p-6 rounded-2xl bg-[#09090C] border border-white/5 space-y-4 col-span-2">
-                        <h4 className="text-xs font-mono font-bold uppercase text-white border-b border-white/5 pb-2.5 flex items-center gap-1.5">
-                          <Users className="w-4 h-4 text-[#D4AF37]" />
-                          Nouveaux Talents Inscrits (Fil du Temps)
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
-                          {recentSignups.map(u => (
-                            <div key={u.id} className="p-3 rounded bg-black border border-white/5 flex justify-between items-center text-xs">
-                              <div className="flex gap-2 items-center">
-                                <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-[#D4AF37]">
-                                  {u.avatarUrl ? <img src={u.avatarUrl} alt="Av" className="w-full h-full rounded-full object-cover" /> : u.artisticName.charAt(0)}
-                                </div>
-                                <div className="truncate max-w-[120px]">
-                                  <strong className="text-white block font-sans truncate">{u.artisticName}</strong>
-                                  <span className="text-[10px] text-zinc-550 font-mono block truncate">{u.commune}, CI</span>
-                                </div>
-                              </div>
-                              <span className="text-[9px] font-mono text-[#D4AF37] bg-white/5 px-2 py-0.5 rounded font-black uppercase truncate max-w-[90px]">
-                                {u.role === "admin" ? "SÉNATEUR" : "ARTISTE"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                    </div>
-
-                    {/* LIVE PUBLICATIONS WATCH & MODERATOR */}
-                    <div className="p-6 rounded-2xl bg-[#09090C] border border-white/5 space-y-4">
-                      <h4 className="text-xs font-mono font-bold uppercase text-white border-b border-white/5 pb-2.5 flex items-center gap-1.5">
-                        <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
-                        Publications à examiner (Tam-tam en direct)
-                      </h4>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {[...posts].slice(0, 4).map(p => (
-                          <div key={p.id} className="p-3.5 bg-black border border-white/5 rounded-xl space-y-2 flex flex-col justify-between">
-                            <div className="space-y-1">
-                              <div className="flex justify-between items-center text-[10px] font-mono">
-                                <span className="font-bold text-zinc-400">{p.authorArtisticName}</span>
-                                <span className="text-zinc-650">{p.timestamp}</span>
-                              </div>
-                              <p className="text-xs text-white/80 leading-relaxed font-sans mt-1">"{p.content}"</p>
-                            </div>
-                            
-                            <div className="flex justify-between items-center gap-2 pt-2 border-t border-white/5">
-                              <span className="text-[9px] font-mono text-zinc-550">
-                                ❤️ {p.likes} Likes • 💬 {p.comments} Comments
-                              </span>
-                              <div className="flex gap-1.5">
-                                <button
-                                  onClick={async () => {
-                                    setPosts(prev => prev.map(item => item.id === p.id ? { ...item, isFlagged: true } : item));
-                                    await saveToFirestore("posts", p.id, { isFlagged: true });
-                                    addToTerminal(`[MODÉRATION] Post ${p.id} marqué comme suspect.`);
-                                    try { audioSynth.playTamTam(true); } catch (e) {}
-                                  }}
-                                  className="px-2 py-1 bg-amber-500/15 hover:bg-amber-600 text-amber-400 hover:text-black rounded text-[9px] font-mono uppercase font-bold cursor-pointer"
-                                >
-                                  Signaler ⚠️
-                                </button>
-                                <button
-                                  onClick={() => handleQuickDeletePost(p.id)}
-                                  className="px-2 py-1 bg-red-600 hover:bg-red-750 text-white rounded text-[9px] font-mono uppercase font-bold cursor-pointer"
-                                >
-                                  Bannir
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* DOCK OF IMPERIAL ADDR */}
-                    <div className="p-6 rounded-3xl bg-[#09090B] border border-white/5 space-y-4 text-left">
-                      <div className="flex gap-3 justify-between items-center">
-                        <div>
-                          <h4 className="text-xs font-mono font-black uppercase text-zinc-455 font-bold">
-                            ⚙️ Renseigner ou Modifier l'Adresse Impériale
-                          </h4>
-                          <p className="text-[11px] text-[#D4AF37] mt-1">Configurez l'adresse de raccordement pour la correspondance systeme.</p>
-                        </div>
-                        <div>
-                          <button
-                            onClick={() => {
-                              setAdminEmail("johnsylvesterh@gmail.com");
-                              addToTerminal("[SIMULATEUR] Salut au Fondateur John Sylvester ! Trône Suprême déverrouillé.");
-                              try { audioSynth.playValidationSuccess(); } catch (e) {}
-                            }}
-                            className={`px-3 py-1.5 rounded-xl font-mono text-[10px] uppercase font-black border transition-all cursor-pointer ${
-                              adminEmail === "johnsylvesterh@gmail.com"
-                                ? "bg-gradient-to-r from-amber-500 to-yellow-600 text-black border-transparent animate-pulse"
-                                : "bg-black text-amber-500 border-[#D4AF37]/15 hover:border-[#D4AF37]/45"
-                            }`}
-                          >
-                            Fondateur Suprême (John)
-                          </button>
-                        </div>
-                      </div>
-                      <input
-                        type="email"
-                        value={adminEmail}
-                        onChange={(e) => setAdminEmail(e.target.value)}
-                        placeholder="Saisissez une adresse impériale..."
-                        className="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-xs font-mono text-white focus:border-[#D4AF37] focus:outline-none"
-                      />
-                    </div>
+                    )}
                   </div>
                 );
               })()}
@@ -7078,31 +6926,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           </button>
                         </div>
                       </div>
-
-                      {/* LE TRÔNE ROYAL DES SOUVERAINS - EXCLUSIVE VISIBILITY */}
-                      {isAuthorizedSuperFounder && (
-                        <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-950/20 via-black to-purple-950/20 border border-purple-500/35 flex flex-col md:flex-row justify-between items-center gap-4">
-                          <div className="flex items-center gap-3">
-                            <Crown className="w-8 h-8 text-[#D4AF37] animate-bounce shrink-0" />
-                            <div>
-                              <h5 className="text-sm font-display font-black text-white uppercase tracking-wider">Cabinet Royal du Fondateur</h5>
-                              <p className="text-[10.5px] text-zinc-350">
-                                Accès souverain réservé exclusivement à l'empereur originel d'AFRIGOMBO (<strong className="text-yellow-400">Johnsylvesterh@gmail.com</strong>).
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setActiveMenu("super_admin");
-                              try { audioSynth.playTamTam(true); } catch (e) {}
-                              addToTerminal("[DECRET] En route vers le Trône Royal.");
-                            }}
-                            className="px-5 py-2.5 bg-gradient-to-r from-orange-500 via-[#D4AF37] to-purple-600 text-black hover:opacity-90 font-mono font-black text-[10.5px] uppercase tracking-wider rounded-lg shadow-lg hover:shadow-[#D4AF37]/20 transition-all cursor-pointer select-none shrink-0"
-                          >
-                            👑 LE TRÔNE
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 );
