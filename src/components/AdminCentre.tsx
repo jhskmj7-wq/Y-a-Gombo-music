@@ -1408,9 +1408,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const filteredUsers = users.filter(user => {
     const s = globalSearchTerm.toLowerCase();
     return (
-      user.name.toLowerCase().includes(s) ||
-      user.artisticName.toLowerCase().includes(s) ||
-      user.commune.toLowerCase().includes(s)
+      (user.name || "").toLowerCase().includes(s) ||
+      (user.artisticName || "").toLowerCase().includes(s) ||
+      (user.commune || "").toLowerCase().includes(s)
     );
   });
 
@@ -2727,9 +2727,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                       const text = verifyGomboIdInput.toLowerCase().trim();
                                       if (!text) return;
                                       const found = users.find(u => 
-                                        u.id.toLowerCase().includes(text) || 
-                                        u.artisticName.toLowerCase().includes(text) ||
-                                        u.name.toLowerCase().includes(text)
+                                        (u.id || "").toLowerCase().includes(text) || 
+                                        (u.artisticName || "").toLowerCase().includes(text) ||
+                                        (u.name || "").toLowerCase().includes(text)
                                       );
                                       setVerifyGomboIdResult(found || "not_found");
                                       addToTerminal(`[SCANNER] Gombo ID scanner de sécurité interrogé pour: ${verifyGomboIdInput}`);
@@ -3638,9 +3638,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               {activeMenu === "user_vibes" && (() => {
                 const searchStr = globalSearchTerm.toLowerCase();
                 const filteredArtists = users.filter(u => 
-                  u.artisticName.toLowerCase().includes(searchStr) ||
-                  u.commune.toLowerCase().includes(searchStr) ||
-                  (u.specialties && u.specialties.some(s => s.toLowerCase().includes(searchStr)))
+                  (u.artisticName || "").toLowerCase().includes(searchStr) ||
+                  (u.commune || "").toLowerCase().includes(searchStr) ||
+                  (u.specialties && u.specialties.some(s => (s || "").toLowerCase().includes(searchStr)))
                 );
 
                 return (

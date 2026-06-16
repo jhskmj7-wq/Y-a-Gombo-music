@@ -641,10 +641,10 @@ export default function GroupeVIPAnnuaire({
 
   // Filtering Groups
   const filteredGroups = groups.filter((g) => {
-    const matchesSearch = g.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          g.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          g.commune.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          g.ville.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (g.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (g.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (g.commune || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (g.ville || "").toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesType = selectedType === "all" || g.type === selectedType;
     const matchesStyle = selectedStyle === "all" || (g.genres || []).includes(selectedStyle);

@@ -2031,6 +2031,25 @@ export const gomboDB = {
     return newRes;
   },
 
+  async updateReservationStatus(id: string, status: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "reservations", id), { status }, { merge: true });
+        return;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible. Repli sur le Bac à Sable Local pour updateReservationStatus.", error);
+        setIsFirebaseMock(true);
+      }
+    }
+    const reservations: Reservation[] = JSON.parse(localStorage.getItem(LOCAL_RESERVATIONS_KEY) || "[]");
+    const index = reservations.findIndex(r => r.id === id);
+    if (index !== -1) {
+      reservations[index].status = status;
+      localStorage.setItem(LOCAL_RESERVATIONS_KEY, JSON.stringify(reservations));
+    }
+    triggerStorageEvent();
+  },
+
   // FUTURE TRACKING SYSTEM
   async registerWaitingFeature(uid: string, email: string, featureName: string): Promise<void> {
     const id = "wait_" + Math.random().toString(36).substring(2, 10);

@@ -8,6 +8,8 @@ import {
 import { gomboDB, isFirebaseMock } from "../firebase";
 import { UserProfile, Gombo, Application, Reservation, Renfort, RenfortApplication, MusicGroup, ActivityFeedEntry } from "../types";
 import GriotIA from "./GriotIA";
+import MobileMoneyPayment from "./MobileMoneyPayment";
+import { audioSynth } from "../lib/audio";
 
 interface DashboardsProps {
   currentUserProfile: UserProfile;
@@ -71,6 +73,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
   const [myActivities, setMyActivities] = useState<ActivityFeedEntry[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [selectedResForPayment, setSelectedResForPayment] = useState<string | null>(null);
 
   // Load Bento Additional Resources
   const loadBentoExtraResources = async () => {
@@ -1159,9 +1162,15 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                   {myReservations.map((res) => (
                     <div key={res.id} className="bg-white dark:bg-[#141416] p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs">
                       <div className="flex justify-between items-center mb-3">
-                        <span className="text-[9px] uppercase font-black text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-md">
-                          ✓ Accord scellé sur AFRIGOMBO
-                        </span>
+                        {res.status === "paye" ? (
+                          <span className="text-[9px] uppercase font-black text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-md flex items-center gap-1">
+                            <span className="animate-pulse text-yellow-500">●</span> 🔒 Cachet Sécurisé & Scellé
+                          </span>
+                        ) : (
+                          <span className="text-[9px] uppercase font-black text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-md">
+                            ✓ Accord scellé sur AFRIGOMBO
+                          </span>
+                        )}
                         <span className="font-mono text-sm font-black text-emerald-600">
                           {res.amount.toLocaleString()} FCFA
                         </span>
@@ -1180,10 +1189,78 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                           </>
                         )}
                       </div>
-                      <div className="mt-3.5 flex items-center gap-2 text-[10.5px] text-gray-400">
-                        <Info className="w-4 h-4 text-[#D4AF37]" />
-                        <p>Booking enregistré. Veuillez envoyer un Wave ou Orange Money de blocage pour sceller définitivement la prestation.</p>
-                      </div>
+
+                      {/* PAYMENT ACTIONS AND SIMULATOR INLINE WIDGET */}
+                      {currentUserProfile.role === "client" && (
+                        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800/80 space-y-3">
+                          {res.status === "paye" ? (
+                            <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-3.5 text-xs text-emerald-700 dark:text-emerald-400 font-mono flex items-start gap-2.5">
+                              <span className="text-lg">🛡️</span>
+                              <div>
+                                <p className="font-black uppercase tracking-wider">Paiement Dépôt de Garantie Opérationnel</p>
+                                <p className="text-[10px] text-zinc-500 mt-1 leading-normal font-sans">
+                                  Le cachet de {res.amount.toLocaleString()} FCFA est consigné sur AFRIGOMBO. Il sera débloqué et transféré à l'artiste automatiquement à la fin de la prestation musicale.
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {selectedResForPayment === res.id ? (
+                                <div className="mt-3">
+                                  <MobileMoneyPayment
+                                    reservationId={res.id || ""}
+                                    gomboTitle={res.gomboTitle || ""}
+                                    amount={res.amount || 0}
+                                    musicianName={res.musicianName || ""}
+                                    onPaymentSuccess={async () => {
+                                      // Refresh list dynamically
+                                      try {
+                                        const updatedRes = await gomboDB.getReservations();
+                                        const clientReservations = updatedRes.filter(r => r.clientId === currentUserProfile.uid);
+                                        setMyReservations(clientReservations);
+                                      } catch (err) {
+                                        console.warn("Failed refreshing reservations:", err);
+                                      }
+                                    }}
+                                    onClose={() => setSelectedResForPayment(null)}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#FAF9F5] dark:bg-black/10 p-3.5 rounded-2xl border border-gray-100 dark:border-zinc-850">
+                                  <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                    <Info className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+                                    <p className="text-[11px] leading-normal">
+                                      Déposez le cachet de garantie de blocage via <strong>Wave</strong> ou <strong>Orange Money</strong> pour sceller la date.
+                                    </p>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      try { audioSynth.playKoraNote(392, 0, 0.08, 0.3); } catch(_) {}
+                                      setSelectedResForPayment(res.id || null);
+                                    }}
+                                    className="px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-amber-600 hover:from-[#B48F17] hover:to-amber-700 text-black rounded-xl text-xs font-black font-sans tracking-wide transition active:scale-95 shadow-md shrink-0 cursor-pointer w-full sm:w-auto text-center font-mono uppercase"
+                                  >
+                                    SCELLER CACHET (WAVE/ORANGE) 📲
+                                  </button>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Musician view text */}
+                      {currentUserProfile.role !== "client" && (
+                        <div className="mt-3.5 flex items-center gap-2 text-[10.5px] text-gray-400">
+                          <Info className="w-4 h-4 text-[#D4AF37]" />
+                          <p>
+                            {res.status === "paye" 
+                              ? "Félicitations ! Le recruteur a déposé votre cachet en séquestre sécurisé. Préparez vos balances."
+                              : "Booking enregistré. L'employeur doit verser un dépôt de garantie pour sceller définitivement la date."
+                            }
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
