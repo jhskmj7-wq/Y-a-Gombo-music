@@ -1,0 +1,66 @@
+import React, { Component, ErrorInfo, ReactNode } from "react";
+
+interface Props {
+  children?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null
+  };
+
+  public static getDerivedStateFromError(error: Error): State {
+    // Update state so the next render will show the fallback UI.
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("❌ [Critique] AfriGombo Error Catch:", error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 bg-[#030303] text-[#F5F5F5] z-[99999] flex flex-col items-center justify-center p-6 text-center font-sans">
+          {/* Sound waves icon or logo silhouette */}
+          <div className="w-24 h-24 mb-6 border border-[#D4AF37]/30 rounded-full flex items-center justify-center bg-black shadow-[0_0_30px_rgba(212,175,55,0.15)] animate-pulse">
+            <span className="text-[#D4AF37] text-4xl">🪘</span>
+          </div>
+
+          <div className="max-w-md space-y-4">
+            <h1 className="text-xl font-mono uppercase tracking-[0.2em] text-[#D4AF37] font-black">
+              AFRIGOMBO
+            </h1>
+            <div className="w-16 h-[1px] bg-[#D4AF37] mx-auto opacity-55" />
+            <p className="text-sm text-zinc-300 font-bold">
+              Une erreur est survenue. Rafraîchissez la page.
+            </p>
+            
+            {this.state.error && (
+              <div className="text-[10px] font-mono text-zinc-500 bg-zinc-950 border border-zinc-900 rounded-xl p-3 text-left max-h-40 overflow-auto whitespace-pre-wrap">
+                {this.state.error.toString()}
+              </div>
+            )}
+
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-6 py-2 border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black rounded-xl text-xs font-bold font-mono tracking-wider transition uppercase cursor-pointer"
+            >
+              Rafraîchir ⚡
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default ErrorBoundary;

@@ -45,7 +45,11 @@ function App() {
     const t1 = setTimeout(() => setSplashStep(2), 1200);   // Step 2: Draw AFRIGOMBO and Taglines
     const t2 = setTimeout(() => {
       // Small success sound before entering
-      audioSynth.playKoraNote(523.25, 0, 0.12, 0.6); // High pitch d'or
+      try {
+        audioSynth.playKoraNote(523.25, 0, 0.12, 0.6); // High pitch d'or
+      } catch (err) {
+        console.warn("Audio Context startup play blocked or unsupported:", err);
+      }
       setShowSplash(false);
     }, 3200);
 

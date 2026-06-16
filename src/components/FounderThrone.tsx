@@ -119,6 +119,8 @@ export default function FounderThrone({
           setSuperAdmins(data.superAdmins.map((e: string) => e.trim().toLowerCase()));
         }
       }
+    }, (error) => {
+      console.warn("🔐 Access restricted to throne config:", error.message);
     });
     return () => unsub();
   }, []);
@@ -225,6 +227,8 @@ export default function FounderThrone({
         setLiveUsers(list);
         setUsers(list);
       }
+    }, (error) => {
+      console.warn("🔐 Access to users collection restricted or offline:", error.message);
     });
 
     const unsubGombos = onSnapshot(collection(db, "gombos"), (sn) => {
@@ -234,6 +238,8 @@ export default function FounderThrone({
         setLiveGombos(list);
         setGombos(list);
       }
+    }, (error) => {
+      console.warn("🔐 Access to gombos collection restricted or offline:", error.message);
     });
 
     const unsubTransactions = onSnapshot(collection(db, "transactions"), (sn) => {
@@ -243,6 +249,8 @@ export default function FounderThrone({
         setLiveTransactions(list);
         setTransactions(list);
       }
+    }, (error) => {
+      console.warn("🔐 Access to transactions collection restricted or offline:", error.message);
     });
 
     const unsubAlerts = onSnapshot(collection(db, "alerts"), (sn) => {
@@ -250,6 +258,8 @@ export default function FounderThrone({
       sn.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Alerte));
       setLiveAlerts(list);
       setAlerts(list);
+    }, (error) => {
+      console.warn("🔐 Access to alerts collection restricted or offline:", error.message);
     });
 
     return () => {

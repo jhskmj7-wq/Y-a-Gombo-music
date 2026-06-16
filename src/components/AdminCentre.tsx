@@ -427,6 +427,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           }).catch(err => console.warn("Bootstrap config error:", err));
         }
       }
+    }, (error) => {
+      console.warn("🔐 Access restricted or blocked on throne config doc:", error.message);
     });
     return () => unsub();
   }, [adminEmail]);
@@ -635,6 +637,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           });
           setGombos(fetchedGombos);
         }
+      }, (error) => {
+        console.warn("🔐 Gombos sync limited or offline:", error.message);
       });
 
       const qTransactions = collection(db, "transactions");
@@ -648,6 +652,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           fetchedTransactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
           setTransactions(fetchedTransactions);
         }
+      }, (error) => {
+        console.warn("🔐 Transactions sync restricted for current user role:", error.message);
       });
 
       const qReviews = collection(db, "reviews");
@@ -659,6 +665,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           });
           setReviews(fetchedReviews);
         }
+      }, (error) => {
+        console.warn("🔐 Reviews sync limited or offline:", error.message);
       });
 
       const qAlerts = collection(db, "alerts");
@@ -670,6 +678,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           });
           setAlerts(fetchedAlerts);
         }
+      }, (error) => {
+        console.warn("🔐 Alerts sync restricted for current user role:", error.message);
       });
 
       const qPosts = collection(db, "posts");
@@ -682,6 +692,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           fetchedPosts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
           setPosts(fetchedPosts);
         }
+      }, (error) => {
+        console.warn("🔐 Posts sync limited or offline:", error.message);
       });
 
       return () => {
