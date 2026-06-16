@@ -1,55 +1,49 @@
 import React, { useState, useEffect } from "react";
 import {
-  Crown,
+  Home,
   Users,
-  Coins,
-  ShieldCheck,
+  Wallet,
+  BarChart2,
+  Target,
   ShieldAlert,
-  Activity,
-  Award,
-  Fingerprint,
-  Sparkles,
-  ArrowRight,
-  TrendingUp,
-  Heart,
-  Plus,
-  Trash2,
+  Megaphone,
+  Settings,
+  FileText,
+  Wrench,
+  PenTool,
+  Crown,
   Bell,
-  Database,
-  Lock,
-  Compass,
-  Zap,
+  Globe,
+  Check,
+  TrendingUp,
+  ShieldCheck,
+  UserCheck,
   CheckCircle,
+  UserPlus,
+  UserMinus,
+  UserX,
+  Lock,
+  AlertTriangle,
+  Mail,
+  Database,
+  RefreshCcw,
+  Shield,
+  Sparkles,
   Eye,
   EyeOff,
-  AlertTriangle,
-  Play,
-  RotateCcw,
-  Sliders,
-  CheckCircle2,
-  ChevronRight,
-  Search,
-  Settings,
-  Power,
-  UserPlus,
-  Megaphone,
-  Download,
+  Radio,
+  ArrowUpRight,
+  ArrowDownRight,
+  MoreHorizontal,
   Flame,
-  Globe,
-  FileText,
-  Mail,
-  Send,
-  RefreshCw,
-  Clock,
-  Music,
-  Tablet,
-  Check,
-  FolderOpen
+  Server,
+  FolderOpen,
+  Play
 } from "lucide-react";
 import { User, Gombo, Transaction, Alerte, GomboReview } from "../types";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { db } from "../lib/firebase";
-import { collection, onSnapshot, doc, updateDoc, query, setDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { audioSynth } from "../lib/audio";
 import {
   ResponsiveContainer,
@@ -58,6 +52,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid
 } from "recharts";
 
 interface FounderThroneProps {
@@ -90,1207 +85,549 @@ export default function FounderThrone({
   setTransactions,
   alerts: initialAlerts,
   setAlerts,
-  reviews,
-  setReviews,
-  systemCommissionRate,
-  setSystemCommissionRate,
   addToTerminal,
-  saveToFirestore,
-  createTransaction,
   onClose
 }: FounderThroneProps) {
-  // Let everyone in admin role enter directly for testing
-  const isAuthorizedFounder = true;
-
-  // Real-time synced state arrays
-  const [liveUsers, setLiveUsers] = useState<User[]>(initialUsers);
-  const [liveGombos, setLiveGombos] = useState<Gombo[]>(initialGombos);
-  const [liveTransactions, setLiveTransactions] = useState<Transaction[]>(initialTransactions);
-  const [liveAlerts, setLiveAlerts] = useState<Alerte[]>(initialAlerts);
-
-  // Bottom Tab navigation
-  // Options: "accueil" (corresponds to cockpit mockup), "membres", "finances", "projets", "communaute", "plus"
-  const [activeTab, setActiveTab] = useState<"accueil" | "membres" | "finances" | "projets" | "communaute" | "plus">("accueil");
-
-  // Local state controls for modals/interactive details
-  const [addAdminModalOpen, setAddAdminModalOpen] = useState(false);
-  const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [announcementModalOpen, setAnnouncementModalOpen] = useState(false);
-  const [announcementText, setAnnouncementText] = useState("");
-  const [announcementTarget, setAnnouncementTarget] = useState<"all" | "admins" | "certified">("all");
-  const [pushNotificationModalOpen, setPushNotificationModalOpen] = useState(false);
-  const [notificationText, setNotificationText] = useState("");
-  const [notificationTitle, setNotificationTitle] = useState("");
-
-  const [localUserSearch, setLocalUserSearch] = useState("");
-  const [balanceVisible, setBalanceVisible] = useState(true);
   const [currentTime, setCurrentTime] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
+  const [balanceVisible, setBalanceVisible] = useState(true);
+  const [activeMenu, setActiveMenu] = useState("dashboard");
 
-  // Setup clock
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      setCurrentTime(now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }));
+      setCurrentTime(now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+      setCurrentDate(now.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }).replace('.', ''));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Sync databases
-  useEffect(() => {
-    if (!db) return;
-    const unsubUsers = onSnapshot(collection(db, "users"), (sn) => {
-      const list: User[] = [];
-      sn.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as User));
-      if (list.length > 0) {
-        setLiveUsers(list);
-        setUsers(list);
-      }
-    }, (error) => {});
+  const chartData = [
+    { name: "17 Mai", Utilisateurs: 30000, Publications: 20000, Engagement: 50000, Revenus: 10000 },
+    { name: "18 Mai", Utilisateurs: 35000, Publications: 25000, Engagement: 55000, Revenus: 15000 },
+    { name: "19 Mai", Utilisateurs: 45000, Publications: 35000, Engagement: 65000, Revenus: 20000 },
+    { name: "20 Mai", Utilisateurs: 40000, Publications: 30000, Engagement: 60000, Revenus: 18000 },
+    { name: "21 Mai", Utilisateurs: 55000, Publications: 40000, Engagement: 75000, Revenus: 25000 },
+    { name: "22 Mai", Utilisateurs: 50000, Publications: 38000, Engagement: 70000, Revenus: 22000 },
+    { name: "23 Mai", Utilisateurs: 65000, Publications: 45000, Engagement: 85000, Revenus: 30000 },
+  ];
 
-    const unsubGombos = onSnapshot(collection(db, "gombos"), (sn) => {
-      const list: Gombo[] = [];
-      sn.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Gombo));
-      if (list.length > 0) {
-        setLiveGombos(list);
-        setGombos(list);
-      }
-    }, (error) => {});
+  const supremeActions = [
+    { label: "Valider Gombo ID", icon: ShieldCheck },
+    { label: "Approuver Utilisateur", icon: UserCheck },
+    { label: "Approuver Opportunité", icon: CheckCircle },
+    { label: "Ajouter Administrateur", icon: UserPlus },
+    { label: "Révoquer Administrateur", icon: UserMinus },
+    { label: "Suspendre Utilisateur", icon: UserX },
+    { label: "Geler Wallet", icon: Wallet },
+    { label: "Mode Crise", icon: AlertTriangle },
+    { label: "Messages Globaux", icon: Mail },
+    { label: "Notifications Globales", icon: Bell },
+    { label: "Logs Système", icon: FileText },
+    { label: "Modération Globale", icon: ShieldAlert },
+    { label: "Rapports Avancés", icon: BarChart2 },
+    { label: "IA AfriGombo", icon: Sparkles },
+    { label: "Gestion Firebase", icon: Database },
+    { label: "Sauvegardes Système", icon: RefreshCcw },
+    { label: "Paramètres Avancés", icon: Settings },
+    { label: "Audit Sécurité", icon: Shield },
+  ];
 
-    const unsubTransactions = onSnapshot(collection(db, "transactions"), (sn) => {
-      const list: Transaction[] = [];
-      sn.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Transaction));
-      if (list.length > 0) {
-        setLiveTransactions(list);
-        setTransactions(list);
-      }
-    }, (error) => {});
-
-    const unsubAlerts = onSnapshot(collection(db, "alerts"), (sn) => {
-      const list: Alerte[] = [];
-      sn.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Alerte));
-      setLiveAlerts(list);
-      setAlerts(list);
-    }, (error) => {});
-
-    return () => {
-      unsubUsers();
-      unsubGombos();
-      unsubTransactions();
-      unsubAlerts();
-    };
-  }, [setUsers, setGombos, setTransactions, setAlerts]);
-
-  // Handle action triggers
-  const logFounderAction = async (action: string, details: any) => {
-    try {
-      if (db) {
-        await addDoc(collection(db, "founder_logs"), {
-          adminEmail,
-          action,
-          details,
-          timestamp: serverTimestamp()
-        });
-      }
-    } catch (e) {
-      console.error("Failed to log founder action:", e);
-    }
-  };
-
-  const handleAddSuperAdminEmail = async () => {
-    const email = newAdminEmail.trim().toLowerCase();
-    if (!email || !email.includes("@")) {
-      alert("⚠️ L'adresse e-mail saisie est invalide.");
-      return;
-    }
-    setNewAdminEmail("");
-    setAddAdminModalOpen(false);
-    addToTerminal(`👑 [DECRET] Elévation d'admin ordonnée : ${email}`);
-    await logFounderAction("promote_admin", { targetEmail: email });
-    try { audioSynth.playValidationSuccess(); } catch (e) {}
-    alert(`👑 L'utilisateur ${email} a été élevé au rang de Super Administrateur.`);
-  };
-
-  const handlePromulgateAnnouncement = async () => {
-    if (!announcementText.trim()) {
-      alert("⚠️ Saisissez l'annonce avant propagation.");
-      return;
-    }
-    addToTerminal(`📢 [ANNONCE] Ordonnance propagée avec succès aux artistes.`);
-    await logFounderAction("promulgate_announcement", { text: announcementText, target: announcementTarget });
-    setAnnouncementText("");
-    setAnnouncementModalOpen(false);
-    try { audioSynth.playValidationSuccess(); } catch (e) {}
-    alert("📢 L'ordonnance a été propagée sur tout le réseau d'Abidjan !");
-  };
-
-  const handleSendPushNotification = async () => {
-    if (!notificationTitle.trim() || !notificationText.trim()) {
-      alert("⚠️ Remplissez tous les champs.");
-      return;
-    }
-    addToTerminal(`🔔 [NOTIF] Notification de souveraineté transmise.`);
-    await logFounderAction("send_push_notification", { title: notificationTitle, text: notificationText });
-    setNotificationTitle("");
-    setNotificationText("");
-    setPushNotificationModalOpen(false);
-    try { audioSynth.playValidationSuccess(); } catch (e) {}
-    alert("🔔 Notification transmise instantanément !");
-  };
-
-  const certifyUserDirectly = async (userId: string, userName: string) => {
-    try {
-      const updated = liveUsers.map((u) => u.id === userId ? { ...u, isCertified: true, kycStatus: "approved" as any } : u);
-      setLiveUsers(updated);
-      setUsers(updated);
-      if (db) {
-        await updateDoc(doc(db, "users", userId), { isCertified: true, kycStatus: "approved" });
-        await logFounderAction("certify_user", { userId, userName });
-      }
-      addToTerminal(`[GOMBO ID] Certification directe accordée à ${userName}`);
-      try { audioSynth.playValidationSuccess(); } catch (e) {}
-      alert(`🌟 GOMBO ID d'Or attribué avec succès à ${userName}`);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  // Traitement Simulation Recharts Chart data
-  const trafficData = [
-    { name: "12 Mai", value: 300000 },
-    { name: "13 Mai", value: 500000 },
-    { name: "14 Mai", value: 250000 },
-    { name: "15 Mai", value: 750000 },
-    { name: "16 Mai", value: 600000 },
-    { name: "17 Mai", value: 900000 },
-    { name: "18 Mai", value: 1248075 },
+  const systemStatus = [
+    { label: "Firebase", p: "100%", icon: Flame },
+    { label: "Firestore", p: "100%", icon: Database },
+    { label: "Authentification", p: "100%", icon: Lock },
+    { label: "Storage", p: "100%", icon: FolderOpen },
+    { label: "Wallet GAWA", p: "100%", icon: Wallet },
+    { label: "Notifications", p: "100%", icon: Bell },
+    { label: "Serveurs", p: "100%", icon: Server },
+    { label: "Live Streaming", p: "100%", icon: Play },
+    { label: "Sécurité", p: "100%", icon: Shield },
   ];
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-[#050507] text-zinc-100 flex flex-col overflow-hidden font-sans select-none z-50">
+    <div className="fixed inset-0 w-full h-full bg-[#030303] text-zinc-100 flex flex-col md:flex-row overflow-hidden font-sans select-none z-50">
       
-      {/* PHONE STATUS BAR */}
-      <div className="w-full shrink-0 bg-[#050507]/90 backdrop-blur-md flex justify-between items-center px-6 py-2.5 text-zinc-400 text-xs border-b border-zinc-900 z-50">
-        <span className="font-extrabold text-white text-[13px] tracking-wide font-mono">9:41</span>
-        <div className="flex items-center gap-1.5">
-          {/* Signal bars */}
-          <div className="flex items-end gap-0.5 h-3 w-4">
-            <span className="bg-white w-0.5 h-1 rounded-full opacity-80"></span>
-            <span className="bg-white w-0.5 h-1.5 rounded-full opacity-80"></span>
-            <span className="bg-white w-0.5 h-2 rounded-full opacity-80"></span>
-            <span className="bg-[#D4AF37] w-0.5 h-2.5 rounded-full shadow-[0_0_8px_#D4AF37]"></span>
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden md:flex flex-col w-64 bg-black border-r border-[#D4AF37]/20 z-40 overflow-y-auto custom-scrollbar">
+        <div className="p-6 flex flex-col items-center justify-center border-b border-[#D4AF37]/20">
+          <div className="relative">
+             <div className="w-16 h-16 rounded-full border-2 border-[#D4AF37] flex items-center justify-center bg-black mb-3 shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+               <svg className="w-8 h-8 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M10 20v-6h4v6M12 4v4m0 0l-3-3m3 3l3-3M6 10h12M4 14h16" />
+               </svg>
+             </div>
           </div>
-          {/* Wifi Icon */}
-          <svg className="w-3.5 h-3.5 text-white fill-current" viewBox="0 0 24 24">
-            <path d="M12 21a2 2 0 1 1-2-2 2 2 0 0 1 2 2zm0-5a5 5 0 0 0-5 5h-2a7 7 0 0 1 7-7h2a7 7 0 0 1 7 7h-2a5 5 0 0 0-5-5zm0-5a10 10 0 0 0-10 10h-2a12 12 0 0 1 12-12h2a12 12 0 0 1 12 12h-2a10 10 0 0 0-10-10z"/>
-          </svg>
-          {/* Battery outline with gold charge */}
-          <div className="border border-zinc-500 rounded px-0.5 py-0.2 w-6 h-3.5 flex items-center bg-black/45">
-            <div className="bg-[#D4AF37] h-1.5 w-full rounded-2xs"></div>
-          </div>
-        </div>
-      </div>
-
-      {/* TOP HEADER PRESTIGE BAR */}
-      <header className="shrink-0 bg-gradient-to-b from-black to-[#050507] border-b border-[#D4AF37]/15 px-6 py-4 flex justify-between items-center z-45">
-        <div className="flex items-center gap-3">
-          <div 
-            onClick={() => {
-              setActiveTab("accueil");
-              try { audioSynth.playTamTam(true); } catch(e){}
-            }}
-            className="w-10 h-10 rounded-full bg-black border border-[#D4AF37] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.25)] shrink-0 cursor-pointer hover:scale-105 transition-transform"
-          >
-            <Crown className="text-[#D4AF37] w-5 h-5 stroke-[1.5]" />
-          </div>
-          <div className="text-left">
-            <span className="text-zinc-400 text-xs font-mono font-black tracking-widest leading-none block">
-              AfriTrust
-            </span>
-            <span className="text-[#D4AF37] text-[13px] font-sans font-black tracking-wider leading-none mt-1.5 block">
-              ELITE
-            </span>
-          </div>
+          <h1 className="text-sm font-black font-display text-[#D4AF37] tracking-widest uppercase">AFRIGOMBO</h1>
+          <p className="text-[10px] text-white tracking-widest font-sans uppercase mt-1">Y'a Gombo Music</p>
         </div>
 
-        {/* Center Title */}
-        <div className="text-center">
-          <span className="text-[10px] text-[#D4AF37] font-mono uppercase tracking-[0.2em] font-extrabold block">
-            TABLEAU DE BORD
-          </span>
-          <h2 className="text-lg font-sans font-black tracking-tight text-white mt-1 uppercase">
-            SUPER FONDATEUR
-          </h2>
-          <p className="text-[8px] text-[#D4AF37]/80 font-mono tracking-widest leading-none mt-1.5 uppercase">
-            VISION • CONTRÔLE • IMPACT • HÉRITAGE
-          </p>
-        </div>
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          {[
+            { id: "dashboard", label: "TABLEAU DE BORD", icon: Home },
+            { id: "utilisateurs", label: "UTILISATEURS", icon: Users },
+            { id: "finances", label: "FINANCES", icon: Wallet },
+            { id: "statistiques", label: "STATISTIQUES", icon: BarChart2 },
+            { id: "opportunites", label: "OPPORTUNITÉS", icon: Target },
+            { id: "communautes", label: "COMMUNAUTÉS", icon: Users },
+            { id: "moderation", label: "MODÉRATION", icon: ShieldAlert },
+            { id: "annonces", label: "ANNONCES GLOBALES", icon: Megaphone },
+            { id: "parametres", label: "PARAMÈTRES", icon: Settings },
+            { id: "logs", label: "LOGS SYSTÈME", icon: FileText },
+            { id: "outils", label: "OUTILS AVANCÉS", icon: Wrench },
+          ].map(item => {
+            const Icon = item.icon;
+            const isActive = activeMenu === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => { setActiveMenu(item.id); try{ audioSynth.playTamTam(false); }catch(e){} }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider font-mono transition-all ${
+                  isActive ? "bg-[#D4AF37]/10 text-[#D4AF37] border-l-2 border-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5 border-l-2 border-transparent"
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? "text-[#D4AF37]" : "text-zinc-500"}`} />
+                {item.label}
+              </button>
+            )
+          })}
+        </nav>
+      </aside>
 
-        {/* Right Continent Map Overlay + Bell */}
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 border border-zinc-800 rounded-full bg-black/60 flex items-center justify-center text-[#D4AF37] opacity-90 hidden sm:flex pointer-events-none">
-            <Globe className="w-4 h-4" />
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0a0a0c]">
+        
+        {/* TOP HEADER */}
+        <header className="shrink-0 bg-black border-b border-[#D4AF37]/20 px-6 py-4 flex justify-between items-center z-30 shadow-md relative">
+          <div className="flex flex-col text-left">
+            <h2 className="text-xl md:text-2xl font-black text-[#D4AF37] uppercase tracking-wide drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]">PALAIS NUMÉRIQUE SUPRÊME</h2>
+            <p className="text-[10px] md:text-xs text-[#D4AF37] tracking-[0.2em] mt-1 font-mono uppercase">Vision • Influence • Héritage • Gouvernance</p>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="hidden lg:flex items-center gap-2">
+              <Globe className="w-5 h-5 text-[#D4AF37] opacity-60" />
+            </div>
+            <div className="relative">
+              <Bell className="w-5 h-5 text-[#D4AF37]" />
+              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">12</span>
+            </div>
+            <div className="hidden md:flex flex-col items-end text-right border-l border-[#D4AF37]/20 pl-6">
+              <span className="text-[9px] text-zinc-400 font-mono tracking-widest uppercase">Utilisateurs connectés</span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-emerald-400 font-mono text-sm font-black">1,248</span>
+              </div>
+            </div>
+            <div className="hidden lg:flex flex-col items-end border-l border-[#D4AF37]/20 pl-6">
+              <span className="text-white text-lg font-mono font-black">{currentTime}</span>
+              <span className="text-zinc-500 text-[10px] uppercase tracking-widest leading-none mt-1">{currentDate}</span>
+            </div>
           </div>
           
-          <button
-            onClick={() => {
-              setPushNotificationModalOpen(true);
-              try { audioSynth.playTamTam(false); } catch(e){}
-            }}
-            className="relative w-10 h-10 border border-zinc-850 rounded-xl bg-black/40 hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5 transition-all text-zinc-400 hover:text-[#D4AF37] flex items-center justify-center cursor-pointer"
-          >
-            <Bell className="w-4.5 h-4.5" />
-            <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center border border-black animate-pulse shadow-md">
-              12
-            </span>
+          {/* Mobile close button (for returning to admin center if needed) */}
+          <button onClick={onClose} className="absolute right-4 top-2 text-zinc-500 hover:text-white md:hidden">
+            <UserX className="w-6 h-6" />
           </button>
-        </div>
-      </header>
+        </header>
 
-      {/* DASHBOARD CENTRAL VIEWPORT */}
-      <div className="flex-1 overflow-y-auto scrollbar-none pb-12">
-        <AnimatePresence mode="wait">
-          
-          {/* ==================== TAB: ACCUEIL ==================== */}
-          {activeTab === "accueil" && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="px-6 py-6 space-y-6 max-w-6xl mx-auto"
-            >
+        {/* SCROLLABLE MAIN REGION */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 custom-scrollbar">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8 max-w-[1600px] mx-auto">
+            
+            {/* LEFT COLUMN (WIDER) */}
+            <div className="xl:col-span-8 flex flex-col gap-6 lg:gap-8">
+               
+               {/* TOP ROW OF LEFT COL: PROFILE */}
+               <div className="bg-black border border-[#D4AF37]/30 rounded-2xl p-6 lg:p-8 flex flex-col md:flex-row items-center gap-6 lg:gap-8 shadow-[0_0_30px_rgba(212,175,55,0.05)] relative overflow-hidden">
+                 
+                 {/* Avatar */}
+                 <div className="relative shrink-0">
+                   <div className="w-32 h-32 rounded-full border-[3px] border-[#D4AF37] p-1 overflow-hidden shadow-[0_0_20px_rgba(212,175,55,0.2)] bg-zinc-900">
+                     <img 
+                       src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&fit=crop&q=85" 
+                       alt="Sylvestre Hounkpevi" 
+                       className="w-full h-full object-cover rounded-full filter contrast-125"
+                     />
+                   </div>
+                   <div className="absolute -top-1 -right-1 bg-black rounded-full p-1 border border-[#D4AF37]">
+                     <Crown className="w-6 h-6 text-[#D4AF37]" strokeWidth={2.5} />
+                   </div>
+                 </div>
+
+                 {/* Profile Details */}
+                 <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
+                   <h2 className="text-3xl lg:text-4xl font-sans font-black text-white tracking-tight flex items-center justify-center md:justify-start gap-3">
+                     Sylvestre Hounkpevi
+                     <div className="w-6 h-6 rounded bg-[#D4AF37] text-black flex items-center justify-center">
+                       <Check className="w-4 h-4 stroke-[4]" />
+                     </div>
+                   </h2>
+                   <span className="text-[#D4AF37] font-mono font-black text-sm lg:text-base tracking-[0.2em] mt-2 block uppercase">
+                     SUPER FONDATEUR
+                   </span>
+                   <p className="text-zinc-300 text-sm mt-3 flex items-center justify-center md:justify-start gap-2">
+                     Niveau : <span className="text-[#D4AF37] font-black uppercase">LÉGENDE AFRIGOMBO</span>
+                   </p>
+                   
+                   <div className="flex text-[#D4AF37] mt-3 gap-1">
+                     {Array(7).fill(0).map((_, i) => <Star key={i} filled />)}
+                   </div>
+
+                   <div className="w-full max-w-md mt-6 bg-[#0a0a0c] border border-zinc-800 rounded-full h-3 overflow-hidden relative">
+                     <div className="bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-400 h-full rounded-full w-full relative">
+                        <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                     </div>
+                   </div>
+                   <div className="w-full max-w-md flex justify-between items-center mt-2 font-mono text-[11px] font-black text-white">
+                      <button className="flex items-center gap-2 text-[#D4AF37] border border-[#D4AF37]/50 hover:bg-[#D4AF37]/10 px-4 py-2 rounded-lg transition-colors uppercase tracking-wider">
+                         <PenTool className="w-3 h-3" />
+                         Modifier le profil
+                      </button>
+                      <span>NIVEAU MAX <span className="text-[#D4AF37] ml-2">100%</span></span>
+                   </div>
+                 </div>
+               </div>
+
+               {/* GLOBAL STATS GRID */}
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+                 {[
+                   { label: "UTILISATEURS TOTAUX", val: "1,250,459", trend: "+15.8%", icon: Users },
+                   { label: "UTILISATEURS ACTIFS AUJOURD'HUI", val: "245,789", trend: "+18.6%", icon: UserCheck },
+                   { label: "PUBLICATIONS TOTALES", val: "3,456,789", trend: "+21.4%", icon: FileText },
+                   { label: "LIVES EN COURS", val: "342", trend: "+5.2%", icon: Radio },
+                   { label: "SIGNALEMENTS", val: "1,245", trend: "-8.4%", icon: ShieldCheck, trendDown: true },
+                   { label: "REVENUS PLATEFORME", val: "185,750,000", trend: "+12.4%", icon: Wallet },
+                   { label: "PAYS ACTIFS", val: "46", trend: "+3", icon: Globe },
+                   { label: "COMMUNAUTÉS", val: "789", trend: "+11.1%", icon: Users },
+                 ].map((stat, i) => {
+                   const Icon = stat.icon;
+                   return (
+                     <div key={i} className="bg-black border border-[#D4AF37]/20 rounded-xl p-4 lg:p-5 flex flex-col items-center text-center relative hover:border-[#D4AF37]/50 transition-colors group">
+                       <div className="w-10 h-10 rounded-full bg-[#D4AF37]/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                         <Icon className="w-5 h-5 text-[#D4AF37]" />
+                       </div>
+                       <span className="text-[9px] lg:text-[10px] font-mono tracking-widest text-[#D4AF37] uppercase font-black mb-2 opacity-80 h-8 flex items-center justify-center leading-tight">
+                         {stat.label}
+                       </span>
+                       <strong className="text-xl lg:text-2xl font-black text-white">{stat.val}</strong>
+                       <span className={`text-xs font-mono font-bold mt-2 flex items-center gap-1 ${stat.trendDown ? "text-red-500" : "text-emerald-500"}`}>
+                         {stat.trend} {stat.trendDown ? <ArrowDownRight className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
+                       </span>
+                     </div>
+                   );
+                 })}
+               </div>
+
+               {/* PLATFORM ACTIVITY CHART */}
+               <div className="bg-black border border-[#D4AF37]/30 rounded-2xl p-6 relative">
+                 <div className="flex justify-between items-start mb-6">
+                   <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest font-mono">ACTIVITÉ PLATEFORME</h3>
+                   <div className="flex bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+                     {["7 JOURS", "30 JOURS", "90 JOURS", "1 AN"].map((t, i) => (
+                       <button key={i} className={`px-4 py-2 text-[10px] font-mono font-black border-r border-zinc-800 last:border-0 ${i === 0 ? "bg-[#D4AF37]/20 text-[#D4AF37]" : "text-zinc-400 hover:text-white"}`}>
+                         {t}
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+
+                 <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorU" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                        <XAxis dataKey="name" stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${v/1000}k`} />
+                        <Tooltip 
+                           contentStyle={{ backgroundColor: "#000", border: "1px solid #D4AF37", borderRadius: "8px" }} 
+                           itemStyle={{ fontSize: "12px", color: "#fff" }}
+                           labelStyle={{ color: "#D4AF37", marginBottom: "4px" }}
+                        />
+                        <Area type="monotone" dataKey="Utilisateurs" stroke="#D4AF37" strokeWidth={3} fillOpacity={1} fill="url(#colorU)" />
+                        <Area type="monotone" dataKey="Publications" stroke="#10b981" strokeWidth={2} fill="none" />
+                        <Area type="monotone" dataKey="Engagement" stroke="#0ea5e9" strokeWidth={2} fill="none" />
+                        <Area type="monotone" dataKey="Revenus" stroke="#8b5cf6" strokeWidth={2} fill="none" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                 </div>
+                 
+                 <div className="flex flex-wrap justify-center gap-6 mt-4 pt-4 border-t border-zinc-900">
+                    <LegendItem color="bg-[#D4AF37]" label="Utilisateurs" />
+                    <LegendItem color="bg-emerald-500" label="Publications" />
+                    <LegendItem color="bg-sky-500" label="Engagement" />
+                    <LegendItem color="bg-violet-500" label="Revenus" />
+                 </div>
+               </div>
+
+               {/* SUPREME ACTIONS */}
+               <div className="bg-black border border-[#D4AF37]/20 rounded-2xl p-6">
+                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                   {supremeActions.map((act, i) => {
+                     const Icon = act.icon;
+                     const isDanger = ["Suspendre Utilisateur", "Geler Wallet", "Mode Crise"].includes(act.label);
+                     return (
+                       <button key={i} className="flex flex-col items-center justify-center text-center p-3 rounded-xl hover:bg-zinc-900 transition-colors group">
+                          <Icon className={`w-8 h-8 mb-3 ${isDanger ? "text-red-500/80 group-hover:text-red-500" : "text-[#D4AF37]/80 group-hover:text-[#D4AF37]"}`} strokeWidth={1.5} />
+                          <span className="text-[10px] font-sans font-bold text-zinc-400 group-hover:text-white leading-tight">
+                            {act.label}
+                          </span>
+                       </button>
+                     );
+                   })}
+                 </div>
+               </div>
+
+               {/* BOTTOM BANNER */}
+               <div className="mt-4 relative rounded-2xl overflow-hidden border border-[#D4AF37]/40 h-48 md:h-64 flex items-center shadow-[0_0_40px_rgba(212,175,55,0.15)] group">
+                 <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent z-10"></div>
+                 <div className="absolute inset-0 bg-cover bg-center opacity-60" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1540039155732-6761b54cbaca?w=1000&auto=format&fit=crop&q=80')`}}></div>
+                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-90 z-10"></div>
+                 
+                 <div className="relative z-20 p-8 md:p-12 pl-12 flex flex-col justify-center h-full max-w-2xl">
+                    <h2 className="text-4xl md:text-5xl font-black font-sans text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-amber-200 tracking-tight leading-none mb-2">
+                      AFRIGOMBO
+                    </h2>
+                    <p className="text-xl md:text-2xl font-bold text-white uppercase tracking-wider opacity-90">
+                      LE TERRAIN D'ACTION<br/>DE L'AFRIQUE CRÉATIVE.
+                    </p>
+                 </div>
+                 
+                 <div className="absolute right-8 bottom-0 z-20 w-32 h-32 opacity-40">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1" className="w-full h-full">
+                       <path d="M9 18V5l12-2v13" />
+                       <circle cx="6" cy="18" r="3" />
+                       <circle cx="18" cy="16" r="3" />
+                    </svg>
+                 </div>
+               </div>
+
+            </div>
+
+            {/* RIGHT COLUMN (NARROWER) */}
+            <div className="xl:col-span-4 flex flex-col gap-6 lg:gap-8">
               
-              {/* PROFILE CARD & WALLET PANEL */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+              {/* MONETIZATION CARD */}
+              <div className="bg-black border border-[#D4AF37]/40 rounded-2xl p-6 lg:p-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-3xl rounded-full"></div>
+                <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest font-mono mb-6">MONÉTISATION AFRIGOMBO</h3>
                 
-                {/* Sylvestre Profile Area */}
-                <div className="lg:col-span-2 bg-[#09090b] border border-[#D4AF37]/35 rounded-3xl p-5 flex flex-col sm:flex-row items-center gap-5 relative overflow-hidden shadow-[0_4px_30px_rgba(212,175,55,0.04)]">
-                  {/* Avatar wrapper */}
-                  <div className="relative shrink-0">
-                    <div className="w-24 h-24 rounded-full border-4 border-[#D4AF37] p-0.5 overflow-hidden shadow-lg shadow-[#D4AF37]/10 bg-black">
-                      <img 
-                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&fit=crop&q=85" 
-                        alt="Sylvestre Hounkpevi" 
-                        className="w-full h-full object-cover rounded-full"
-                        referrerPolicy="no-referrer"
-                      />
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                       <span className="text-[10px] text-zinc-400 tracking-widest uppercase font-mono">GAWA DISPONIBLES</span>
+                       <div className="w-5 h-5 rounded bg-black border border-zinc-800 flex items-center justify-center cursor-pointer hover:bg-zinc-900" onClick={() => setBalanceVisible(!balanceVisible)}>
+                         {balanceVisible ? <Eye className="w-3 h-3 text-zinc-400" /> : <EyeOff className="w-3 h-3 text-[#D4AF37]" />}
+                       </div>
                     </div>
-                    {/* Small golden camera/crown icon */}
-                    <div className="absolute -bottom-1 -right-1 bg-[#D4AF37] text-black rounded-full p-1.5 shadow-md flex items-center justify-center border border-black cursor-pointer">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-                      </svg>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#D4AF37] text-black flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)] border-2 border-black">
+                        <span className="font-mono font-black text-lg">💰</span>
+                      </div>
+                      <span className="text-3xl font-black text-white tracking-tight">
+                         {balanceVisible ? "12,450,000" : "••••••••"}
+                      </span>
+                      <span className="text-zinc-500 font-mono text-xs font-black self-end mb-1">GAWA</span>
                     </div>
                   </div>
 
-                  {/* Profile texts */}
-                  <div className="flex-1 text-center sm:text-left space-y-2">
-                    <span className="text-[10px] text-[#D4AF37] font-mono uppercase font-black tracking-widest block">
-                      SUPER FONDATEUR
-                    </span>
-                    <div className="flex items-center justify-center sm:justify-start gap-1.5">
-                      <strong className="text-xl font-sans font-black text-white hover:text-[#D4AF37] transition-colors leading-none">
-                        Sylvestre Hounkpevi
-                      </strong>
-                      {/* Gold Check badge */}
-                      <span className="bg-[#D4AF37] text-black rounded-full p-0.5 flex items-center justify-center shadow-[0_0_8px_#D4AF37]">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </span>
-                    </div>
-                    <p className="text-zinc-400 text-xs">Niveau Légende</p>
-                    
-                    {/* Stars and legend tag */}
-                    <div className="flex items-center justify-center sm:justify-start gap-3 pt-1">
-                      <div className="flex text-amber-400 text-sm">
-                        ⭐⭐⭐⭐⭐
-                      </div>
-                      <span className="bg-[#D4AF37]/10 border border-[#D4AF37]/50 text-[#D4AF37] px-2.5 py-0.5 rounded text-[9px] font-mono uppercase font-black tracking-wider leading-none">
-                        LÉGENDE
-                      </span>
-                    </div>
-
-                    {/* Level dynamic bar */}
-                    <div className="space-y-1.5 pt-1 max-w-xs mx-auto sm:mx-0">
-                      <div className="flex justify-between text-[10px] font-mono text-zinc-500 uppercase">
-                        <span>Niveau 100</span>
-                        <span>MAX</span>
-                      </div>
-                      <div className="w-full bg-zinc-950 border border-zinc-850 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-[#D4AF37] h-full rounded-full shadow-[0_0_10px_#D4AF37]" style={{ width: "100%" }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Solde GAWA Card (right) */}
-                <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 flex flex-col justify-between text-left relative overflow-hidden shadow-lg shadow-black/80">
-                  <div className="flex justify-between items-start">
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-900">
                     <div>
-                      <span className="text-[10px] uppercase font-mono text-zinc-500 font-extrabold tracking-wider block">
-                        Solde GAWA
-                      </span>
-                      <strong className="text-2xl font-sans font-black text-white tracking-tight block mt-3 select-all">
-                        {balanceVisible ? "125,680,000" : "••••••••"}
-                      </strong>
-                      <span className="text-[11px] text-zinc-400 font-mono font-bold block mt-1">GAWA</span>
+                      <span className="text-[9px] text-zinc-500 tracking-widest uppercase font-mono block mb-1">REVENUS MENSUELS</span>
+                      <span className="text-lg font-black text-white block">185,750,000</span>
+                      <span className="text-xs font-mono font-black text-emerald-400 flex items-center gap-1"><ArrowUpRight className="w-3 h-3"/> +12.4%</span>
                     </div>
-                    
-                    {/* Hide Button eye */}
-                    <button 
-                      onClick={() => setBalanceVisible(!balanceVisible)}
-                      className="text-zinc-500 hover:text-white transition-colors p-1"
-                    >
-                      {balanceVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    </button>
+                    <div>
+                      <span className="text-[9px] text-zinc-500 tracking-widest uppercase font-mono block mb-1">REVENUS ANNUELS</span>
+                      <span className="text-lg font-black text-white block">1,982,450,000</span>
+                      <span className="text-xs font-mono font-black text-emerald-400 flex items-center gap-1"><ArrowUpRight className="w-3 h-3"/> +28.7%</span>
+                    </div>
                   </div>
 
-                  <button 
-                    onClick={() => {
-                      setActiveTab("finances");
-                      try { audioSynth.playTamTam(true); } catch(e){}
-                    }}
-                    className="w-full py-3 rounded-2xl bg-[#D4AF37] hover:bg-[#B48F17] text-black font-sans font-black text-xs uppercase tracking-wider shadow-[0_4px_15px_rgba(212,175,55,0.35)] transition-all cursor-pointer mt-4"
-                  >
+                  <button className="w-full mt-4 bg-transparent border border-[#D4AF37] hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black py-3 rounded-lg flex items-center justify-center gap-3 font-mono font-black uppercase text-xs tracking-widest transition-all">
+                    <Wallet className="w-4 h-4" />
                     Voir le Wallet
                   </button>
                 </div>
               </div>
 
-              {/* STATS MATRIX KPI GRID (8 CARDS) */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { title: "UTILISATEURS TOTAUX", value: "1,248,075", growth: "+12.5%", color: "border-purple-950/40 hover:border-purple-500/50" },
-                  { title: "CRÉATEURS ACTIFS", value: "125,785", growth: "+8.7%", color: "border-[#D4AF37]/15 hover:border-[#D4AF37]" },
-                  { title: "GAWA EN CIRCULATION", value: "2,450,000,000", growth: "+15.3%", color: "border-amber-950/40 hover:border-amber-400/50" },
-                  { title: "TRANSACTIONS", value: "2,785,450", growth: "+18.6%", color: "border-[#D4AF37]/15 hover:border-yellow-400/50" },
-                  { title: "REVENUS PLATEFORME", value: "325,785,000 GAWA", growth: "+22.4%", color: "border-orange-950/40 hover:border-orange-500/50" },
-                  { title: "PROJETS FINANCÉS", value: "3,478", growth: "+11.2%", color: "border-[#D4AF37]/15 hover:border-amber-500" },
-                  { title: "PAYS ACTIFS", value: "54 / 54", growth: "100%", color: "border-emerald-950/40 hover:border-emerald-500" },
-                  { title: "COMMUNAUTÉS", value: "2,678", growth: "+9.3%", color: "border-[#D4AF37]/15 hover:border-indigo-400" },
-                ].map((stat, idx) => (
-                  <div key={idx} className={`p-4 rounded-2xl bg-[#09090b]/80 border ${stat.color} transition-all duration-300 shadow-sm text-left flex flex-col justify-between h-[115px] group`}>
-                    <span className="text-[9px] font-mono uppercase text-zinc-500 font-extrabold tracking-wider line-clamp-1 block">
-                      {stat.title}
-                    </span>
-                    <strong className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors mt-2 block tracking-tight">
-                      {stat.value}
-                    </strong>
-                    <span className="text-[9.5px] font-mono text-emerald-400 block mt-2 font-black">
-                      {stat.growth}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* TWO COLS: AFRICA REALTIME ACTIVITY MAP + PLATFORM WORK CHARTS */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* Africa map indicator card */}
-                <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 flex flex-col text-left space-y-4">
-                  <div>
-                    <h3 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
-                      CARTE DE L'AFRIQUE – ACTIVITÉ EN TEMPS RÉEL
-                    </h3>
-                    <p className="text-[9.5px] text-zinc-500 mt-1">Supervision de l'Empire AfriTrust Elite par région.</p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-                    {/* Region figures */}
-                    <div className="space-y-3 flex-1 font-sans text-xs w-full">
-                      {[
-                        { label: "Afrique de l'Ouest", value: "512,745", dot: "bg-amber-500" },
-                        { label: "Afrique Centrale", value: "218,574", dot: "bg-cyan-500" },
-                        { label: "Afrique de l'Est", value: "272,856", dot: "bg-orange-500" },
-                        { label: "Afrique Australe", value: "156,327", dot: "bg-purple-500" },
-                        { label: "Afrique du Nord", value: "87,573", dot: "bg-emerald-500" },
-                      ].map((reg, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2 bg-black/40 border border-zinc-900 rounded-xl">
-                          <div className="flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${reg.dot}`} />
-                            <span className="text-zinc-300 font-semibold">{reg.label}</span>
-                          </div>
-                          <div>
-                            <span className="text-white font-mono font-black block">{reg.value}</span>
-                            <span className="text-[9px] text-zinc-500 block leading-none">Utilisateurs</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Africa vector map */}
-                    <div className="w-[190px] h-[210px] flex items-center justify-center relative shrink-0">
-                      <svg viewBox="0 0 240 260" className="w-full h-full drop-shadow-[0_0_15px_rgba(212,175,55,0.15)] opacity-95">
+              {/* AFRICA PLATFORM TIMELINE / MAP */}
+              <div className="bg-black border border-[#D4AF37]/20 rounded-2xl p-6 relative">
+                 <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest font-mono mb-6">AFRIQUE MUSICALE - TEMPS RÉEL</h3>
+                 <div className="flex flex-col items-center gap-6">
+                   <div className="w-full max-w-[200px] h-[200px] relative">
+                      <svg viewBox="0 0 240 260" className="w-full h-full opacity-80 drop-shadow-[0_0_10px_rgba(212,175,55,0.2)]">
                         <path
                           d="M100,20 C120,18,150,22,170,35 C185,45,210,60,220,80 C225,90,218,105,212,115 C205,125,208,135,210,145 C212,155,200,165,190,175 C180,185,175,195,170,210 C165,225,155,235,145,245 C135,255,128,260,128,255 C120,245,115,235,110,225 C105,215,110,205,100,195 C92,185,82,175,75,165 C68,155,60,150,50,145 C40,140,25,135,20,125 C15,115,22,110,30,105 C40,95,50,85,55,75 C60,65,70,55,75,45 C80,35,85,25,100,20 Z"
-                          fill="rgba(212,175,55,0.02)"
+                          fill="none"
                           stroke="#D4AF37"
                           strokeWidth="1.5"
                           strokeDasharray="2, 4"
-                          opacity="0.8"
                         />
-                        <path
-                          d="M100,20 C120,18,150,22,170,35 C185,45,210,60,220,80 C225,90,218,105,212,115 C205,125,208,135,210,145 C212,155,200,165,190,175 C180,185,175,195,170,210 C165,225,155,235,145,245 C135,255,128,260,128,255 C120,245,115,235,110,225 C105,215,110,205,100,195 C92,185,82,175,75,165 C68,155,60,150,50,145 C40,140,25,135,20,125 C15,115,22,110,30,105 C40,95,50,85,55,75 C60,65,70,55,75,45 C80,35,85,25,100,20 Z"
-                          fill="rgba(21.2,17.5,5.5,0.07)"
-                          stroke="#D4AF37"
-                          strokeWidth="1.2"
-                        />
-                        {/* West Africa pulse */}
-                        <circle cx="75" cy="115" r="4" fill="#D4AF37" className="animate-ping" style={{ animationDuration: '3s' }} />
-                        <circle cx="75" cy="115" r="2.5" fill="#FFEAA7" />
-                        
-                        {/* Central Africa pulse */}
-                        <circle cx="115" cy="140" r="3" fill="#D4AF37" />
-                        
-                        {/* East Africa pulse */}
-                        <circle cx="165" cy="150" r="4" fill="#D4AF37" className="animate-pulse" />
-                        
-                        {/* South Africa */}
-                        <circle cx="138" cy="225" r="3.5" fill="#D4AF37" />
-                        
-                        {/* North Africa */}
-                        <circle cx="102" cy="55" r="3" fill="#D4AF37" />
+                         <circle cx="75" cy="115" r="3" fill="#D4AF37" className="animate-pulse" />
+                         <circle cx="115" cy="140" r="3" fill="#10b981" />
+                         <circle cx="165" cy="150" r="3" fill="#0ea5e9" className="animate-pulse" />
+                         <circle cx="138" cy="225" r="3" fill="#8b5cf6" />
+                         <circle cx="102" cy="55" r="3" fill="#ef4444" />
                       </svg>
-                    </div>
-                  </div>
-                </div>
+                   </div>
 
-                {/* Platform Activity Spline Chart */}
-                <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 flex flex-col text-left space-y-4">
-                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
-                    <div>
-                      <h3 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
-                        ACTIVITÉ PLATEFORME
-                      </h3>
-                      <p className="text-[9px] text-zinc-500 mt-1">Évolution des utilisateurs actifs sur le continent.</p>
-                    </div>
-                    
-                    <select className="bg-zinc-950 border border-zinc-850 rounded-xl py-1.5 px-3 text-[10px] font-mono text-[#D4AF37] focus:outline-none focus:border-[#D4AF37]">
-                      <option>7 derniers jours</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-baseline gap-2">
-                      <strong className="text-2xl font-sans font-black text-white">1,248,075</strong>
-                      <span className="text-xs text-emerald-400 font-mono font-extrabold">+12.5%</span>
-                    </div>
-                    <span className="text-[10px] text-zinc-500 uppercase font-mono">Utilisateurs actifs</span>
-                  </div>
-
-                  {/* Glorious Recharts area chart with gold glows */}
-                  <div className="h-[180px] w-full pt-2">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={trafficData}>
-                        <defs>
-                          <linearGradient id="glowGawa" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.45} />
-                            <stop offset="95%" stopColor="#D4AF37" stopOpacity={0.0} />
-                          </linearGradient>
-                        </defs>
-                        <XAxis dataKey="name" stroke="#52525B" fontSize={8.5} />
-                        <YAxis stroke="#52525B" fontSize={8.5} />
-                        <Tooltip contentStyle={{ backgroundColor: "#060608", borderColor: "#D4AF37", fontSize: "10px" }} />
-                        <Area 
-                          type="monotone" 
-                          dataKey="value" 
-                          stroke="#D4AF37" 
-                          strokeWidth={2.5} 
-                          fillOpacity={1} 
-                          fill="url(#glowGawa)" 
-                          dot={{ r: 3, stroke: "#D4AF37", fill: "#FFF", strokeWidth: 1.5 }} 
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
+                   <div className="w-full space-y-4">
+                     {[
+                       { r: "AFRIQUE DE L'OUEST", c: "bg-[#D4AF37]", t1: "512,459", t2: "22,459", t3: "1,245" },
+                       { r: "AFRIQUE CENTRALE", c: "bg-emerald-500", t1: "215,784", t2: "8,754", t3: "542" },
+                       { r: "AFRIQUE DE L'EST", c: "bg-sky-500", t1: "280,145", t2: "12,584", t3: "754" },
+                       { r: "AFRIQUE AUSTRALE", c: "bg-violet-500", t1: "125,458", t2: "5,458", t3: "751" },
+                       { r: "AFRIQUE DU NORD", c: "bg-red-500", t1: "116,613", t2: "4,613", t3: "287" },
+                     ].map((item, i) => (
+                       <div key={i} className="flex flex-col">
+                         <div className="flex items-center gap-2 mb-1">
+                           <div className={`w-2 h-2 rounded-full ${item.c}`}></div>
+                           <span className="text-[10px] font-mono tracking-widest text-zinc-300 uppercase">{item.r}</span>
+                         </div>
+                         <div className="flex gap-4 ml-4">
+                           <div className="flex flex-col">
+                             <span className="text-white text-xs font-black">{item.t1}</span>
+                             <span className="text-[8px] text-zinc-500 font-mono">Utilisateurs</span>
+                           </div>
+                           <div className="flex flex-col">
+                             <span className="text-white text-xs font-black">{item.t2}</span>
+                             <span className="text-[8px] text-zinc-500 font-mono">Publications</span>
+                           </div>
+                           <div className="flex flex-col">
+                             <span className="text-white text-xs font-black">{item.t3}</span>
+                             <span className="text-[8px] text-zinc-500 font-mono">Opportunités</span>
+                           </div>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
               </div>
 
-              {/* ACTIONS RAPIDES ROW (8 SQUARED ICONS GRID) */}
-              <div className="space-y-3 text-left">
-                <span className="text-xs font-mono font-black uppercase tracking-[0.15em] text-[#D4AF37]">
-                  ACTIONS RAPIDES
-                </span>
-                
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
+              {/* CRITICAL ALERTS */}
+              <div className="bg-black border border-[#D4AF37]/20 rounded-2xl p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest font-mono">ALERTES CRITIQUES</h3>
+                  <button className="text-[10px] uppercase font-mono font-black text-zinc-400 hover:text-white border border-zinc-800 rounded px-2 py-1">Voir tout</button>
+                </div>
+
+                <div className="space-y-4">
                   {[
-                    { label: "Valider Créateur", icon: UserPlus, action: () => { setActiveTab("membres"); try { audioSynth.playTamTam(false); } catch(e){} } },
-                    { label: "Approuver Projet", icon: CheckCircle, action: () => { setActiveTab("projets"); try { audioSynth.playTamTam(false); } catch(e){} } },
-                    { label: "Gérer Wallets", icon: Coins, action: () => { setActiveTab("finances"); try { audioSynth.playTamTam(false); } catch(e){} } },
-                    { label: "Modération", icon: ShieldAlert, action: () => { setPushNotificationModalOpen(true); try { audioSynth.playTamTam(false); } catch(e){} } },
-                    { label: "Annonces", icon: Megaphone, action: () => { setAnnouncementModalOpen(true); try { audioSynth.playTamTam(false); } catch(e){} } },
-                    { label: "Rapports", icon: TrendingUp, action: () => { setActiveTab("finances"); try { audioSynth.playTamTam(false); } catch(e){} } },
-                    { label: "Paramètres", icon: Sliders, iconColor: "text-[#D4AF37]", action: () => { setPushNotificationModalOpen(true); try { audioSynth.playTamTam(false); } catch(e){} } },
-                    { label: "Logs Système", icon: Database, action: () => { setActiveTab("plus"); try { audioSynth.playTamTam(false); } catch(e){} } },
-                  ].map((act, idx) => {
-                    const IconComp = act.icon;
+                    { title: "Nouveau signalement critique", desc: "Contenu inapproprié détecté", time: "12:42", icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/10" },
+                    { title: "Transaction importante", desc: "250,000 GAWA transférés", time: "12:35", icon: Wallet, color: "text-[#D4AF37]", bg: "bg-[#D4AF37]/10" },
+                    { title: "Nouvel utilisateur enregistré", desc: "+150 nouveaux utilisateurs aujourd'hui", time: "12:22", icon: UserPlus, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                    { title: "Activité suspecte détectée", desc: "Tentative de connexion inhabituelle", time: "12:10", icon: AlertTriangle, color: "text-red-500", bg: "bg-red-500/10" },
+                    { title: "Pic d'activité", desc: "Augmentation de 35% des publications", time: "11:58", icon: TrendingUp, color: "text-sky-500", bg: "bg-sky-500/10" },
+                  ].map((alert, i) => {
+                    const Icon = alert.icon;
                     return (
-                      <button
-                        key={idx}
-                        onClick={act.action}
-                        className="p-3 bg-[#09090b] hover:bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 cursor-pointer transition-all active:scale-95 group shadow-sm"
-                      >
-                        <div className="w-9 h-9 rounded-xl bg-black border border-zinc-850 flex items-center justify-center group-hover:border-[#D4AF37]/50 transition-colors">
-                          <IconComp className="w-5 h-5 text-[#D4AF37] group-hover:scale-110 transition-transform" />
+                      <div key={i} className="flex gap-4 p-3 bg-[#0a0a0c] border border-zinc-900 rounded-xl hover:border-zinc-700 transition-colors">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${alert.bg}`}>
+                          <Icon className={`w-5 h-5 ${alert.color}`} />
                         </div>
-                        <span className="text-[10px] sm:text-[11px] font-mono leading-tight text-zinc-400 group-hover:text-white font-bold block line-clamp-1">
-                          {act.label}
-                        </span>
-                      </button>
-                    );
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-black text-white truncate">{alert.title}</h4>
+                          <p className="text-[10px] text-zinc-400 truncate mt-0.5">{alert.desc}</p>
+                        </div>
+                        <div className="flex flex-col items-end shrink-0">
+                          <span className="text-[10px] font-mono text-zinc-500">{alert.time}</span>
+                          <div className={`w-1.5 h-1.5 rounded-full mt-2 ${alert.color.replace('text-', 'bg-')}`}></div>
+                        </div>
+                      </div>
+                    )
                   })}
                 </div>
               </div>
 
-              {/* TWO COLS: PROJECTS UNDERWAY + LATEST ALERTS / SYS STATUS */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-                
-                {/* Projects funding in progress */}
-                <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 flex flex-col justify-between text-left space-y-4">
-                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
-                    <h3 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
-                      PROJETS EN COURS DE FINANCEMENT
-                    </h3>
-                    <button 
-                      onClick={() => { setActiveTab("projets"); try { audioSynth.playTamTam(false); } catch(e){} }}
-                      className="text-[10px] font-mono text-zinc-500 hover:text-[#D4AF37] font-bold"
-                    >
-                      Voir tout
-                    </button>
-                  </div>
-
-                  <div className="space-y-4 flex-1">
-                    {[
-                      { title: "Académie de Musique", artist: "KS Bloom", target: "50,000,000 GAWA", progress: 68 },
-                      { title: "Studio d'Enregistrement", artist: "Himra Officiel", target: "80,000,000 GAWA", progress: 45 },
-                      { title: "Centre Culturel Abidjan", artist: "A'salfo Officiel", target: "120,000,000 GAWA", progress: 72 },
-                      { title: "École de Slam Dakar", artist: "Slam Kaira", target: "30,000,000 GAWA", progress: 33 },
-                      { title: "Plateforme Éducation", artist: "Prof. Alpha", target: "60,000,000 GAWA", progress: 81 },
-                    ].map((proj, idx) => (
-                      <div key={idx} className="space-y-1.5 p-2 bg-[#050507] border border-zinc-900 rounded-2xl">
-                        <div className="flex justify-between items-center text-xs">
-                          <div>
-                            <strong className="text-white block font-sans font-bold leading-none">{proj.title}</strong>
-                            <span className="text-[10px] text-zinc-500 mt-1 block leading-none">{proj.artist}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-[#D4AF37] font-mono font-black block">{proj.target}</span>
-                            <span className="text-[9px] text-emerald-400 block font-mono font-bold leading-none mt-1">{proj.progress}%</span>
-                          </div>
-                        </div>
-                        {/* Progress slider bar */}
-                        <div className="w-full bg-[#121214] h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-[#D4AF37] h-full rounded-full" style={{ width: `${proj.progress}%` }}></div>
-                        </div>
+              {/* SYSTEM STATUS GRID */}
+              <div className="bg-black border border-[#D4AF37]/20 rounded-2xl p-6">
+                 <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest font-mono mb-6">ÉTAT DU SYSTÈME</h3>
+                 
+                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-6">
+                    {systemStatus.map((sys, i) => {
+                      const SysIcon = sys.icon;
+                      return (
+                      <div key={i} className="bg-[#0a0a0c] border border-zinc-800 rounded-xl p-3 flex flex-col items-center text-center">
+                         <div className="w-6 h-6 mb-2">
+                           <SysIcon className="w-5 h-5 text-[#D4AF37] mx-auto opacity-70" />
+                         </div>
+                         <span className="text-[8px] font-bold text-zinc-300 uppercase leading-tight line-clamp-1 h-5 flex items-center">{sys.label}</span>
+                         <div className="flex items-center gap-1 mt-1">
+                           <CheckCircle className="w-2.5 h-2.5 text-emerald-500" />
+                           <span className="text-[7px] text-emerald-500">Opérationnel</span>
+                         </div>
+                         <span className="text-xs font-mono font-black text-emerald-400 mt-1">{sys.p}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    )})}
+                 </div>
 
-                {/* Right widgets: alerts + system status */}
-                <div className="flex flex-col gap-6">
-                  
-                  {/* Latest Alerts */}
-                  <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 flex flex-col justify-between text-left space-y-4">
-                    <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
-                      <h3 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
-                        DERNIÈRES ALERTES
-                      </h3>
-                      <button 
-                        onClick={() => alert("🚨 Tout est marqué comme lu.")}
-                        className="text-[10px] font-mono text-zinc-500 hover:text-[#D4AF37] font-bold"
-                      >
-                        Tout marquer lu
-                      </button>
-                    </div>
-
-                    <div className="space-y-3 flex-1">
-                      {[
-                        { text: "Nouveau projet soumis : Académie de Danse", time: "Il y a 5 min" },
-                        { text: "Versement important : 10,000,000 GAWA", time: "Il y a 18 min" },
-                        { text: "Nouveau créateur certifié : Inspire Afrika", time: "Il y a 25 min" },
-                        { text: "Signalement de contenu en attente", time: "Il y a 43 min" },
-                        { text: "Transaction suspecte détectée", time: "Il y a 1 h" },
-                      ].map((al, idx) => (
-                        <div key={idx} className="flex justify-between items-center p-2.5 bg-black/40 border border-zinc-900 rounded-xl text-xs gap-3">
-                          <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-ping shrink-0" />
-                            <span className="text-zinc-300 font-medium line-clamp-1">{al.text}</span>
-                          </div>
-                          <span className="text-[10.5px] font-mono text-zinc-500 shrink-0 select-none">{al.time}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* System Status lights */}
-                  <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 text-left space-y-4">
-                    <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
-                      <h3 className="text-xs font-mono font-black tracking-widest text-[#D4AF37] uppercase">
-                        STATUT SYSTÈME
-                      </h3>
-                      <div className="flex items-center gap-1 bg-emerald-900/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                        <span className="text-[10px] text-emerald-400 font-mono font-black">100%</span>
-                        <Check className="w-2.5 h-2.5 text-emerald-400 stroke-[3]" />
-                      </div>
-                    </div>
-
-                    <span className="text-zinc-400 font-sans font-bold text-xs block">
-                      Tous les systèmes opérationnels
-                    </span>
-
-                    {/* Operational light lights */}
-                    <div className="grid grid-cols-5 gap-2 pt-2 text-center select-none font-sans">
-                      {[
-                        { label: "Serveurs" },
-                        { label: "Base de données" },
-                        { label: "Wallet GAWA" },
-                        { label: "Live Streaming" },
-                        { label: "Sécurité" },
-                      ].map((stat, idx) => (
-                        <div key={idx} className="p-2 bg-black border border-zinc-900 rounded-xl space-y-2 flex flex-col items-center">
-                          <span className="text-[8.5px] sm:text-[9.5px] font-bold text-zinc-500 uppercase leading-tight line-clamp-1 block">
-                            {stat.label}
-                          </span>
-                          <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981] flex items-center justify-center border border-black animate-pulse">
-                            <Check className="w-2 h-2 text-white stroke-[3.5]" />
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
+                 <div className="p-4 border border-[#D4AF37]/50 bg-[#D4AF37]/5 rounded-xl flex items-center justify-between">
+                   <div className="flex flex-col">
+                     <span className="text-[10px] font-mono tracking-widest uppercase text-zinc-400">SYSTÈME GLOBAL</span>
+                     <span className="text-2xl font-black text-white mt-1">99.9%</span>
+                   </div>
+                   <div className="relative w-14 h-14">
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="none" className="text-zinc-800" />
+                        <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="none" strokeDasharray="150" strokeDashoffset="0" className="text-[#D4AF37]" strokeLinecap="round" />
+                      </svg>
+                   </div>
+                 </div>
               </div>
 
-              {/* MAJESTIC LOWER RIBBON HERO FOOTER */}
-              <div className="relative overflow-hidden rounded-3xl border border-[#D4AF37]/50 bg-gradient-to-r from-black to-[#0d0901] p-5 flex flex-col md:flex-row items-center justify-between gap-4 select-none shadow-[0_0_20px_rgba(212,175,55,0.06)]">
-                {/* Backdrop Map contour image */}
-                <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-30 bg-cover bg-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80')` }} />
-                
-                <div className="flex items-center gap-4 relative z-10 text-left">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-950 to-black border-2 border-[#D4AF37] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.3)] shrink-0">
-                    <StarsLaurel />
-                  </div>
-                  <div>
-                    <span className="text-[#D4AF37] text-[10px] font-mono tracking-[0.25em] font-extrabold block">
-                      AFRITRUST ELITE :
-                    </span>
-                    <strong className="text-white text-base font-sans font-black tracking-tight uppercase block mt-1">
-                      L'AFRIQUE UNIE, L'AVENIR BÂTI ENSEMBLE !
-                    </strong>
-                  </div>
-                </div>
-
-                <div className="relative z-10 w-28 h-10 border border-[#D4AF37]/35 rounded-xl bg-black/75 flex items-center justify-center font-mono text-[9px] text-[#D4AF37]/80 uppercase tracking-widest font-black shrink-0">
-                  EST. 2026
-                </div>
-              </div>
-
-            </motion.div>
-          )}
-
-          {/* ==================== TAB: MEMBRES ==================== */}
-          {activeTab === "membres" && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="px-6 py-6 max-w-5xl mx-auto space-y-6"
-            >
-              <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 border-b border-zinc-900 pb-4">
-                <div className="text-left">
-                  <h3 className="text-lg font-sans font-black text-[#D4AF37] uppercase">Gestion Des Membres Légendes</h3>
-                  <p className="text-zinc-500 text-xs">Supervision en direct de vos administrateurs et des dossiers d'excellence.</p>
-                </div>
-                <div className="relative text-left">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                  <input
-                    type="text"
-                    value={localUserSearch}
-                    onChange={(e) => setLocalUserSearch(e.target.value)}
-                    placeholder="Filtrer par nom ou email..."
-                    className="w-full bg-[#09090b] border border-zinc-850 rounded-xl pl-9 pr-4 py-2 text-xs font-mono text-white focus:outline-none focus:border-[#D4AF37]"
-                  />
-                </div>
-              </div>
-
-              {/* Members verify sections */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 text-left h-fit space-y-4">
-                  <span className="text-[10px] font-mono text-[#D4AF37] uppercase font-black tracking-widest block">GESTION DES COMPTES ACTIFS</span>
-                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                    {liveUsers.filter(u => u.name?.toLowerCase().includes(localUserSearch.toLowerCase()) || u.email?.toLowerCase().includes(localUserSearch.toLowerCase())).slice(0, 50).map((u) => (
-                      <div key={u.id} className="p-4 bg-black border border-zinc-900 rounded-2xl space-y-3 flex flex-col justify-between">
-                        <div>
-                          <strong className="text-white text-sm block font-sans font-bold flex items-center justify-between">
-                            {u.artisticName || u.name}
-                            {u.status === 'suspended' && <span className="text-[9px] font-mono uppercase bg-red-500/10 text-red-500 px-2 py-0.5 rounded ml-2">Suspendu</span>}
-                          </strong>
-                          <span className="text-[10px] text-zinc-500 block leading-none mt-1">{u.email}</span>
-                        </div>
-                        <div className="flex gap-2">
-                           <button
-                             onClick={async () => {
-                               const suspended = u.status === 'suspended';
-                               const newStatus = suspended ? 'active' : 'suspended';
-                               if (db) await updateDoc(doc(db, "users", u.id), { status: newStatus });
-                               await logFounderAction(suspended ? "unsuspend" : "suspend", { userId: u.id, email: u.email });
-                               try { audioSynth.playValidationSuccess(); } catch (e) {}
-                               alert(suspended ? "Compte réactivé." : "Compte suspendu.");
-                             }}
-                             className={`flex-1 py-2 text-xs font-mono font-black uppercase rounded-xl cursor-pointer transition-colors ${u.status === 'suspended' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`}
-                           >
-                             {u.status === 'suspended' ? 'Réactiver' : 'Suspendre'}
-                           </button>
-                           {u.isAdmin ? (
-                             <button onClick={async () => {
-                                  if (db) await updateDoc(doc(db, "users", u.id), { isAdmin: false });
-                                  await logFounderAction("demote_admin", { userId: u.id, email: u.email });
-                                  try { audioSynth.playValidationSuccess(); } catch (e) {}
-                                  alert("Administrateur rétrogradé avec succès.");
-                               }} className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 transition-colors text-zinc-400 font-mono font-black text-xs uppercase rounded-xl cursor-pointer">
-                               Rétrograder
-                             </button>
-                           ) : (
-                             <button onClick={async () => {
-                                  if (db) await updateDoc(doc(db, "users", u.id), { isAdmin: true });
-                                  await logFounderAction("promote_admin", { userId: u.id, email: u.email });
-                                  try { audioSynth.playValidationSuccess(); } catch (e) {}
-                                  alert("Membre promu administrateur avec succès.");
-                               }} className="flex-1 py-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 transition-colors text-[#D4AF37] font-mono font-black text-xs uppercase rounded-xl cursor-pointer">
-                               Promouvoir
-                             </button>
-                           )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 text-left space-y-4">
-                  <div className="flex justify-between items-center pb-2">
-                    <span className="text-[10px] font-mono text-[#D4AF37] uppercase font-black tracking-widest block">ADMINISTRATEURS ACTIONS</span>
-                    <button 
-                      onClick={() => setAddAdminModalOpen(true)}
-                      className="px-3 py-1 bg-zinc-900 hover:bg-[#D4AF37]/10 text-xs font-sans text-white border border-zinc-800 rounded-lg"
-                    >
-                      Nommer Admin +
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                    {liveUsers.filter(u => u.isAdmin).map((u) => (
-                      <div key={u.id} className="flex justify-between items-center p-2.5 bg-black/45 border border-zinc-900 rounded-xl">
-                        <div>
-                          <span className="text-xs text-white block font-sans font-bold">{u.name || u.email}</span>
-                          <span className="text-[10px] text-[#D4AF37] font-mono mt-0.5 block">ADMIN DE L'EMPIRE</span>
-                        </div>
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[#10B981] font-mono text-[9px] uppercase font-bold">ACTIF</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* ==================== TAB: FINANCES ==================== */}
-          {activeTab === "finances" && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="px-6 py-6 max-w-4xl mx-auto space-y-6 text-left"
-            >
-              <div className="text-left border-b border-zinc-900 pb-4">
-                <h3 className="text-lg font-sans font-black text-[#D4AF37] uppercase">Trésor & Commissions Impériales</h3>
-                <p className="text-zinc-500 text-xs">Mise au point des taux de prélèvements régionaux d’Abidjan.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                {/* Adjust caisse Commission Card */}
-                <div className="bg-[#09090b] border border-[#D4AF37]/35 rounded-3xl p-5 flex flex-col justify-between h-fit space-y-5 col-span-1">
-                  <div>
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-[#D4AF37] font-black block">Ajustement Caisse</span>
-                    <p className="text-zinc-500 text-[11px] mt-1 line-clamp-2">Contrôle instantané des commissions de séquestre.</p>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-zinc-400 font-mono text-xs">Taux de commission :</span>
-                    <span className="text-[#D4AF37] font-mono text-xl font-black">{systemCommissionRate}%</span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        const next = Math.max(1, systemCommissionRate - 1);
-                        setSystemCommissionRate(next);
-                        try{ audioSynth.playTamTam(false); } catch(e){}
-                      }}
-                      className="flex-1 py-2 rounded-xl bg-zinc-900 text-zinc-300 hover:text-white hover:bg-zinc-800 text-xs font-mono font-bold transition-all border border-zinc-800"
-                    >
-                      - 1%
-                    </button>
-                    <button
-                      onClick={() => {
-                        const next = Math.min(30, systemCommissionRate + 1);
-                        setSystemCommissionRate(next);
-                        try{ audioSynth.playTamTam(false); } catch(e){}
-                      }}
-                      className="flex-1 py-2 rounded-xl bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black hover:border-transparent border border-[#D4AF37]/45 text-xs font-mono font-black transition-all"
-                    >
-                      + 1%
-                    </button>
-                  </div>
-                </div>
-
-                {/* Ledger transactions listing real-time */}
-                <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 space-y-4 col-span-2">
-                  <span className="text-[10px] font-mono text-[#D4AF37] uppercase font-black tracking-widest block">GRAND LIVRE DES TRANSACTIONS</span>
-                  <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-                    {liveTransactions.length === 0 ? (
-                      <div className="p-4 bg-black border border-zinc-900 rounded-xl text-center text-zinc-500 text-xs">Auncune transaction enregistrée</div>
-                    ) : (
-                      liveTransactions.map((t, idx) => (
-                        <div key={idx} className="p-3 bg-black border border-zinc-900 rounded-xl flex justify-between items-center text-xs">
-                          <div>
-                            <span className="text-white block font-sans font-semibold leading-none">{t.description || "Séquestre Gombo"}</span>
-                            <span className="text-[10px] text-[#D4AF37] font-mono mt-1 block uppercase leading-none">{t.userName}</span>
-                          </div>
-                          <strong className="text-emerald-400 font-mono text-sm">+{t.amount.toLocaleString()} FCFA</strong>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-              </div>
-            </motion.div>
-          )}
-
-          {/* ==================== TAB: PROJETS ==================== */}
-          {activeTab === "projets" && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="px-6 py-6 max-w-4xl mx-auto space-y-6 text-left"
-            >
-              <div className="text-left border-b border-zinc-900 pb-4">
-                <h3 className="text-lg font-sans font-black text-[#D4AF37] uppercase">Opportunités & Musiques Certifiées</h3>
-                <p className="text-zinc-500 text-xs">Censurez ou validez les opportunités publiées sur les cabarets d'Abidjan.</p>
-              </div>
-
-              <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 space-y-4">
-                <span className="text-[10px] font-mono text-[#D4AF37] uppercase font-black tracking-widest block">GOMBOS ACTIFS DU RÉSEAU</span>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {liveGombos.map((g) => (
-                    <div key={g.id} className="p-4 bg-black border border-zinc-900 rounded-2xl flex flex-col justify-between space-y-3">
-                      <div>
-                        <div className="flex justify-between items-start">
-                          <strong className="text-white font-sans text-sm block leading-none">{g.title}</strong>
-                          <span className="text-[10px] text-[#D4AF37] font-mono font-bold">{g.budget.toLocaleString()} FCFA</span>
-                        </div>
-                        <p className="text-zinc-500 text-xs mt-1.5 line-clamp-2">{g.description}</p>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[11px] font-mono border-t border-zinc-900 pt-2 text-zinc-400">
-                        <span>Lieu : {g.location || "Plateau"}</span>
-                        <span className="text-emerald-400 font-bold">{g.applicantsCount || 0} prétendant(s)</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* ==================== TAB: COMMUNAUTE ==================== */}
-          {activeTab === "communaute" && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="px-6 py-6 max-w-3xl mx-auto space-y-6 text-left"
-            >
-              <div className="text-left border-b border-zinc-900 pb-4">
-                <h3 className="text-lg font-sans font-black text-[#D4AF37] uppercase">Comités & Groupes d’Elite</h3>
-                <p className="text-zinc-500 text-xs">Supervision des cercles de cabaret et assemblées musicales d’Abidjan.</p>
-              </div>
-
-              <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 space-y-4">
-                <span className="text-[10px] font-mono text-[#D4AF37] uppercase font-black tracking-widest block">ASSEMBLÉES ACTIVES</span>
-                
-                <div className="space-y-3">
-                  {[
-                    { label: "Cercle d'Or des Pianistes de Cocody", members: "128 membres", desc: "Regroupement des pianistes virtuoses pour les cabarets de prestige." },
-                    { label: "Syndicat d’Elite des Bassistes de Marcory", members: "95 membres", desc: "Réseau et partage d'opportunités de haut cachet hebdomadaires." },
-                    { label: "Ligue Ivoire des Chanteurs de Cabaret", members: "254 membres", desc: "Authentiques leaders vocaux de Côte d'Ivoire certifiés." },
-                  ].map((com, idx) => (
-                    <div key={idx} className="p-4 bg-black border border-zinc-900 rounded-2xl flex flex-col justify-between text-xs space-y-2">
-                      <div className="flex justify-between items-center">
-                        <strong className="text-white text-sm font-sans font-bold leading-none">{com.label}</strong>
-                        <span className="text-[10px] text-[#D4AF37] font-mono">{com.members}</span>
-                      </div>
-                      <p className="text-zinc-500 text-xs leading-relaxed">{com.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* ==================== TAB: PLUS ==================== */}
-          {activeTab === "plus" && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="px-6 py-6 max-w-xl mx-auto space-y-6 text-left"
-            >
-              <div className="text-left border-b border-zinc-900 pb-4">
-                <h3 className="text-lg font-sans font-black text-[#D4AF37] uppercase">Configuration & Clés Souveraines</h3>
-                <p className="text-zinc-500 text-xs">Paramétrages secrets de l’incubateur AfriTrust Elite.</p>
-              </div>
-
-              <div className="bg-[#09090b] border border-zinc-850 rounded-3xl p-5 text-left space-y-4">
-                <span className="text-[10px] font-mono text-[#D4AF37] uppercase font-black tracking-widest block">FONCTIONNALITÉS COMPACTES</span>
-                
-                <div className="space-y-3">
-                  
-                  {/* Nominate Admin action trigger */}
-                  <button
-                    onClick={() => setAddAdminModalOpen(true)}
-                    className="w-full p-4 bg-black hover:bg-zinc-950/80 border border-zinc-850 rounded-2xl flex items-center justify-between text-left cursor-pointer transition-colors"
-                  >
-                    <div>
-                      <strong className="text-white text-sm block font-sans font-bold leading-none">Nommer un Administrateur</strong>
-                      <span className="text-zinc-500 text-[10px] mt-1.5 block">Elevez de nouveaux protecteurs pour le temple.</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
-                  </button>
-
-                  {/* Decreet propagate */}
-                  <button
-                    onClick={() => setAnnouncementModalOpen(true)}
-                    className="w-full p-4 bg-black hover:bg-zinc-950/80 border border-zinc-850 rounded-2xl flex items-center justify-between text-left cursor-pointer transition-colors"
-                  >
-                    <div>
-                      <strong className="text-white text-sm block font-sans font-bold leading-none">Propager un Décret Impérial</strong>
-                      <span className="text-zinc-500 text-[10px] mt-1.5 block">Diffusez des ordonnances immédiates sur tout le réseau d'Abidjan.</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
-                  </button>
-
-                  {/* Send notification */}
-                  <button
-                    onClick={() => setPushNotificationModalOpen(true)}
-                    className="w-full p-4 bg-black hover:bg-zinc-950/80 border border-zinc-850 rounded-2xl flex items-center justify-between text-left cursor-pointer transition-colors"
-                  >
-                    <div>
-                      <strong className="text-white text-sm block font-sans font-bold leading-none">Transmettre une Notification</strong>
-                      <span className="text-zinc-500 text-[10px] mt-1.5 block font-sans">Envoyez des messages Flash d'élite en un instant.</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
-                  </button>
-
-                  <div className="w-full h-[1px] bg-zinc-900 my-2" />
-
-                  {/* Quitter */}
-                  <button
-                    onClick={() => {
-                      try { audioSynth.playTamTam(false); } catch(e){}
-                      onClose();
-                    }}
-                    className="w-full p-4 bg-red-950/10 hover:bg-red-950/30 border border-red-500/20 text-red-500 rounded-2xl flex items-center justify-between text-left cursor-pointer transition-colors font-sans font-bold text-sm"
-                  >
-                    <div>
-                      <strong>Quitter le Cabinet Secret</strong>
-                      <span className="text-zinc-500 text-[10px] mt-1 block">Retourner au Centre de Commande AfriGombo de l'Administration.</span>
-                    </div>
-                    <Power className="w-4 h-4" />
-                  </button>
-
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-        </AnimatePresence>
-      </div>
-
-      {/* FIXED PREMIUM BOTTOM NAVIGATION DOCK (EXACT AS IMAGE) */}
-      <nav className="fixed bottom-0 inset-x-0 bg-black/95 backdrop-blur-md border-t border-[#D4AF37]/30 h-16 flex justify-around items-center z-50 px-4 pb-1">
-        {[
-          { id: "accueil", label: "Accueil", icon: Crown },
-          { id: "membres", label: "Utilisateurs", icon: Users },
-          { id: "finances", label: "Finances", icon: Coins },
-          { id: "projets", label: "Projets", icon: FolderOpen },
-          { id: "communaute", label: "Communauté", icon: Users },
-          { id: "plus", label: "Plus", icon: Sliders },
-        ].map((it) => {
-          const IconComp = it.icon;
-          const isSel = activeTab === it.id;
-          return (
-            <button
-              key={it.id}
-              onClick={() => {
-                setActiveTab(it.id as any);
-                try { audioSynth.playTamTam(false); } catch(e){}
-              }}
-              className={`flex flex-col items-center justify-center p-1 cursor-pointer transition-all ${
-                isSel ? "text-[#D4AF37] scale-105" : "text-zinc-550 hover:text-zinc-300"
-              }`}
-            >
-              <div className={`p-1 rounded-full ${isSel ? "bg-[#D4AF37]/15" : "bg-transparent"} transition-all`}>
-                <IconComp className="w-5.5 h-5.5" />
-              </div>
-              <span className="text-[10px] mt-0.5 font-bold tracking-tight">{it.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* --- ALL PREMIUM OVERLAY MODALS --- */}
-      
-      {/* 1. Nominate Admin Modal */}
-      {addAdminModalOpen && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[1000] flex justify-center items-center p-6 animate-fadeIn">
-          <div className="w-full max-w-sm bg-zinc-950 border border-[#D4AF37]/45 rounded-3xl p-6 text-left space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
-              <strong className="text-white text-sm font-mono uppercase tracking-widest text-[#D4AF37]">ÉLEVATION D'ADMINISTRATEUR</strong>
-              <button onClick={() => setAddAdminModalOpen(false)} className="text-zinc-550 hover:text-white font-mono text-xs">Fermer</button>
             </div>
-            
-            <p className="text-xs text-zinc-400">Saisissez l'adresse e-mail de l'intervenant à élever au Conseil Impérial.</p>
-            
-            <div className="space-y-1">
-              <label className="text-[10px] font-mono text-zinc-500 uppercase">Adresse E-mail</label>
-              <input
-                type="email"
-                value={newAdminEmail}
-                onChange={(e) => setNewAdminEmail(e.target.value)}
-                placeholder="Ex : sylvestrehounkpevi777@gmail.com"
-                className="w-full bg-[#030305] border border-zinc-850 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
-                autoFocus
-              />
-            </div>
-
-            <button
-              onClick={handleAddSuperAdminEmail}
-              className="w-full py-2.5 rounded-xl bg-[#D4AF37] text-black text-xs font-mono font-black uppercase tracking-wider cursor-pointer"
-            >
-              Élever au conseil d'or
-            </button>
           </div>
-        </div>
-      )}
+        </main>
 
-      {/* 2. Propagate Decreet Announcement Modal */}
-      {announcementModalOpen && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[1000] flex justify-center items-center p-6 animate-fadeIn">
-          <div className="w-full max-w-md bg-zinc-950 border border-[#D4AF37]/45 rounded-3xl p-6 text-left space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
-              <strong className="text-white text-sm font-mono uppercase tracking-widest text-[#D4AF37]">PROPAGER UN DÉCRET CANAL</strong>
-              <button onClick={() => setAnnouncementModalOpen(false)} className="text-zinc-550 hover:text-white font-mono text-xs">Fermer</button>
-            </div>
-            
-            <p className="text-xs text-zinc-400">Rédigez le texte du décret souverain qui sera diffusé sur tout le réseau d'Abidjan.</p>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-mono text-zinc-500 uppercase">Cible réglementaire</label>
-              <select
-                value={announcementTarget}
-                onChange={(e) => setAnnouncementTarget(e.target.value as any)}
-                className="w-full bg-[#030305] border border-zinc-850 rounded-xl p-2.5 text-xs text-white font-mono focus:outline-none"
+        {/* MOBILE BOTTOM NAVIGATION */}
+        <nav className="md:hidden bg-black border-t border-zinc-900 pb-safe pt-2 px-4 flex justify-between items-center shrink-0">
+          {[
+            { id: "dashboard", label: "Accueil", icon: Home },
+            { id: "utilisateurs", label: "Utilisateurs", icon: Users },
+            { id: "finances", label: "Finances", icon: Wallet },
+            { id: "statistiques", label: "Statistiques", icon: BarChart2 },
+            { id: "communautes", label: "Communautés", icon: Globe },
+            { id: "plus", label: "Plus", icon: MoreHorizontal },
+          ].map(item => {
+            const Icon = item.icon;
+            const isActive = activeMenu === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveMenu(item.id)}
+                className={`flex flex-col items-center justify-center p-2 gap-1 ${isActive ? "text-[#D4AF37]" : "text-zinc-500 hover:text-zinc-300"}`}
               >
-                <option value="all">Tous les Cabarets d'Abidjan (Public)</option>
-                <option value="admins">CONSEIL DES ADMINISTRATEURS (Privé)</option>
-                <option value="certified">Talents Certifiés Gombo ID d'Or uniquement</option>
-              </select>
-            </div>
+                <Icon className={`w-5 h-5 ${isActive ? "fill-current" : ""}`} />
+                <span className="text-[9px] font-mono font-bold leading-none">{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-mono text-zinc-500 uppercase">Texte Ordonnance</label>
-              <textarea
-                value={announcementText}
-                onChange={(e) => setAnnouncementText(e.target.value)}
-                placeholder="Ex : Par délibération souveraine, tous les cachets d'orchestre de Cocody sont exonérés de commission ce weekend !"
-                className="w-full h-24 bg-[#030305] border border-zinc-850 rounded-xl p-3 text-xs font-mono text-white focus:outline-none focus:border-[#D4AF37] resize-none"
-              />
-            </div>
-
-            <button
-              onClick={handlePromulgateAnnouncement}
-              className="w-full py-2.5 rounded-xl bg-[#D4AF37] text-black text-xs font-mono font-black uppercase tracking-wider cursor-pointer"
-            >
-              PROPAGER LE DÉCRET
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 3. Send Push Notification Modal */}
-      {pushNotificationModalOpen && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[1000] flex justify-center items-center p-6 animate-fadeIn">
-          <div className="w-full max-w-sm bg-zinc-950 border border-[#D4AF37]/45 rounded-3xl p-6 text-left space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
-              <strong className="text-white text-sm font-mono uppercase tracking-widest text-[#D4AF37]">TRANSMETTRE UNE NOTIFICATION</strong>
-              <button onClick={() => setPushNotificationModalOpen(false)} className="text-zinc-550 hover:text-white font-mono text-xs">Fermer</button>
-            </div>
-
-            <p className="text-xs text-zinc-400">Envoyez une alerte Flash royale d'importance critique d'Abidjan.</p>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-mono text-zinc-500 uppercase font-sans">Titre Alerte</label>
-              <input
-                type="text"
-                value={notificationTitle}
-                onChange={(e) => setNotificationTitle(e.target.value)}
-                placeholder="Ex : Alerte Sécurité Écosystème d'Or"
-                className="w-full bg-[#030305] border border-zinc-850 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
-                autoFocus
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-mono text-zinc-500 uppercase">Message</label>
-              <textarea
-                value={notificationText}
-                onChange={(e) => setNotificationText(e.target.value)}
-                placeholder="Tapez votre message secret..."
-                className="w-full h-20 bg-[#030305] border border-zinc-850 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#D4AF37] resize-none"
-              />
-            </div>
-
-            <button
-              onClick={handleSendPushNotification}
-              className="w-full py-2.5 rounded-xl bg-[#D4AF37] text-black text-xs font-mono font-black uppercase tracking-wider cursor-pointer"
-            >
-              Envoyer maintenant
-            </button>
-          </div>
-        </div>
-      )}
-
+      </div>
     </div>
   );
 }
 
-// Laurel Wreath custom gold vector shape
-function StarsLaurel() {
+function Star({ filled }: { filled?: boolean }) {
   return (
-    <svg viewBox="0 0 100 100" className="w-9 h-9 fill-[#D4AF37] opacity-95">
-      <path d="M50,15 L54,27 L66,27 L56,34 L60,46 L50,38 L40,46 L44,34 L34,27 L46,27 Z" />
-      <path d="M22,50 C22,34 34,22 50,22 C53,22 55,23 57,24 C54,26 52,29 50,32 C40,32 32,40 32,50 C32,60 40,68 50,68 C52,71 54,74 57,76 C55,77 53,78 50,78 C34,78 22,66 22,50 Z" />
-      <path d="M78,50 C78,34 66,22 50,22 C47,22 45,23 43,24 C46,26 48,29 50,32 C60,32 68,40 68,50 C68,60 60,68 50,68 C48,71 46,74 43,76 C45,77 47,78 50,78 C66,78 78,66 78,50 Z" />
+    <svg viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
+  );
+}
+
+function LegendItem({ color, label }: { color: string, label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`w-3 h-[2px] ${color}`}></span>
+      <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest">{label}</span>
+    </div>
   );
 }
