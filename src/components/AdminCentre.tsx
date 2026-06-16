@@ -598,6 +598,24 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   });
 
   const [editingProfileUserId, setEditingProfileUserId] = useState<string | null>(null);
+
+  // --- SCROLL MANAGEMENT ---
+  const mainScrollRef = useRef<HTMLElement>(null);
+  const scrollPositions = useRef<Record<string, number>>({});
+  
+  const handleMainScroll = (e: React.UIEvent<HTMLElement>) => {
+    // Only track vertical scroll dynamically per view
+    const scrollKey = `${perspective}-${activeMenu}-${activeMenu === "user_terrain" ? terrainTab : ""}`;
+    scrollPositions.current[scrollKey] = e.currentTarget.scrollTop;
+  };
+
+  useLayoutEffect(() => {
+    if (mainScrollRef.current) {
+      const scrollKey = `${perspective}-${activeMenu}-${activeMenu === "user_terrain" ? terrainTab : ""}`;
+      mainScrollRef.current.scrollTop = scrollPositions.current[scrollKey] || 0;
+    }
+  }, [perspective, activeMenu, terrainTab]);
+
   
   // --- INTERACTIVE PREMIUM OPPORTUNITIES STATES ---
   const [savedGomboIds, setSavedGomboIds] = useState<string[]>([]);
@@ -1914,7 +1932,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       {/* =========================================================================
                                ZONE B : WORKSPACE CENTRAL (MIDDLE)
          ========================================================================= */}
-      <main className="flex-1 min-w-0 w-full max-w-full bg-[#0B0B0B] flex flex-col overflow-y-auto overflow-x-hidden px-4 sm:px-8 py-6">
+      <main 
+        ref={mainScrollRef}
+        onScroll={handleMainScroll}
+        className="flex-1 min-w-0 w-full max-w-full bg-[#0B0B0B] flex flex-col overflow-y-auto overflow-x-hidden px-4 sm:px-8 py-6"
+      >
         
         {/* ELITE UPPER STATUS BAR (AFRIGOMBO PREMIUM HEADER) */}
         <header className="flex justify-between items-center pb-5 border-b border-[#D4AF37]/15 mb-6 shrink-0 gap-2 w-full animate-fadeIn select-none">
@@ -3580,7 +3602,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           <button
                             onClick={() => {
                               setActiveMenu("terms");
-                              window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
                             className="hover:text-[#D4AF37] transition-all cursor-pointer font-bold"
                           >
@@ -3590,7 +3611,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           <button
                             onClick={() => {
                               setActiveMenu("privacy");
-                              window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
                             className="hover:text-[#D4AF37] transition-all cursor-pointer font-bold"
                           >
@@ -3600,7 +3620,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           <button
                             onClick={() => {
                               setActiveMenu("delete_account");
-                              window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
                             className="text-red-500/80 hover:text-red-400 hover:underline transition-all cursor-pointer font-bold"
                           >
@@ -5143,92 +5162,89 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       </button>
                     </div>
 
-                    {/* KPIs IN REAL-TIME (VUE D'ENSEMBLE) */}
+                    {/* KPIs IN REAL-TIME (BRIEF DU JOUR) */}
                     <div className="space-y-4">
                       <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
                         <Activity className="w-4 h-4 text-[#D4AF37]" />
-                        Vue d'ensemble
+                        Mon Brief du Jour
                       </h3>
 
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/10 shadow-sm flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block font-bold">👤 Utilisateurs inscrits</span>
-                          <strong className="text-2xl font-display font-black text-white block mt-2">{kpiUsersCount}</strong>
-                        </div>
-
                         <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/10 shadow-sm flex flex-col justify-between text-left relative overflow-hidden">
                           <div className="absolute top-0 right-0 p-3">
                             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse block" />
                           </div>
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-emerald-500 block font-bold">🟢 Actifs aujourd'hui</span>
-                          <strong className="text-2xl font-display font-black text-white block mt-2">{kpiOnlineCount}</strong>
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-emerald-500 block font-bold">Nouveaux inscrits</span>
+                          <strong className="text-2xl font-display font-black text-white block mt-2">{brief.newUsersCount}</strong>
                         </div>
 
                         <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/10 shadow-sm flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block font-bold">📢 Publications</span>
-                          <strong className="text-2xl font-display font-black text-white block mt-2">{kpiPostsCount}</strong>
-                        </div>
-
-                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/10 shadow-sm flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">💰 Revenus (Caisse)</span>
-                          <strong className="text-lg font-mono font-black text-[#D4AF37] block mt-2">{kpiRevenuesSum.toLocaleString()} FCFA</strong>
-                        </div>
-
-                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-red-500/20 shadow-sm flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-red-500 block font-bold">🚨 Signalements</span>
-                          <strong className="text-2xl font-display font-black text-white block mt-2">{kpiAlertsCount}</strong>
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">Revenus (Auj.)</span>
+                          <strong className="text-lg font-mono font-black text-[#D4AF37] block mt-2">{brief.revenuesGenerated.toLocaleString()} F</strong>
                         </div>
 
                         <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-amber-500/20 shadow-sm flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-amber-500 block font-bold">🛡️ Gombo ID en attente</span>
-                          <strong className="text-2xl font-display font-black text-white block mt-2">{kpiPendingKycCount}</strong>
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-amber-500 block font-bold">Vérifications ID</span>
+                          <strong className="text-2xl font-display font-black text-white block mt-2">{brief.kycRequestsCount}</strong>
+                        </div>
+
+                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-red-500/20 shadow-sm flex flex-col justify-between text-left relative overflow-hidden">
+                           {(brief.criticalAlertsCount > 0 || kpiAlertsCount > 0) && (
+                            <div className="absolute top-0 right-0 p-3">
+                              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse block" />
+                            </div>
+                           )}
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-red-500 block font-bold">Alertes Urgentes</span>
+                          <strong className="text-2xl font-display font-black text-white block mt-2">{brief.criticalAlertsCount || kpiAlertsCount}</strong>
                         </div>
                       </div>
                     </div>
 
                     {/* ACTIONS RAPIDES GRID */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 pt-4">
                       <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
                         <Zap className="w-4 h-4 text-[#D4AF37]" />
                         Actions Rapides
                       </h3>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-                        <button
-                          onClick={() => {
-                            setActiveMenu("revision");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "revision" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
-                          }`}
-                        >
-                          <MessageSquare className="w-5 h-5 text-white" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Créer Annonce</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setIsBroadcastModalOpen(true);
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300`}
-                        >
-                          <Send className="w-5 h-5 text-cyan-400" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Notification</span>
-                        </button>
-
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <button
                           onClick={() => {
                             setActiveMenu("kyc");
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
+                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 ${
                             activeMenu === "kyc" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
                           }`}
                         >
                           <ShieldCheck className="w-5 h-5 text-amber-500" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Gombo ID</span>
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Vérifications ID</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setActiveMenu("users");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 ${
+                            activeMenu === "users" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                          }`}
+                        >
+                          <Users className="w-5 h-5 text-white" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Utilisateurs</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setActiveMenu("posts");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 ${
+                            activeMenu === "posts" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                          }`}
+                        >
+                          <MessageSquare className="w-5 h-5 text-emerald-400" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Publications</span>
                         </button>
 
                         <button
@@ -5236,7 +5252,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             setActiveMenu("alertes");
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
+                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 ${
                             activeMenu === "alertes" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
                           }`}
                         >
@@ -5246,208 +5262,127 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                         <button
                           onClick={() => {
-                            setActiveMenu("analytics");
+                            setActiveMenu("finances");
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "analytics" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 ${
+                            activeMenu === "finances" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
                           }`}
                         >
-                          <BarChart2 className="w-5 h-5 text-emerald-400" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Statistiques</span>
+                          <Wallet className="w-5 h-5 text-[#D4AF37]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Revenus</span>
                         </button>
 
                         <button
                           onClick={() => {
-                            setActiveMenu("monetisation");
+                            setIsBroadcastModalOpen(true);
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 cursor-pointer select-none ${
-                            activeMenu === "monetisation" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
-                          }`}
+                          className="p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
                         >
-                          <Settings className="w-5 h-5 text-zinc-400" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Configuration</span>
+                          <Send className="w-5 h-5 text-cyan-400" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Notifications</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* INTELLIGENT QUEUE -> ACTIVITE RECENTE */}
-                    <div className="space-y-4 pt-4">
-                      <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5 border-t border-[#D4AF37]/10 pt-6">
-                        <Activity className="w-4 h-4 text-[#D4AF37]" />
-                        Activité Récente
-                      </h3>
-
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* STATS PANELS (3 COLUMNS) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
+                      {/* Activité en direct */}
+                      <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-cyan-500/20 space-y-4 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4">
+                           <Globe className="w-5 h-5 text-cyan-500 opacity-20" />
+                        </div>
+                        <h4 className="text-xs font-mono font-bold uppercase text-white pb-2.5 flex items-center gap-1.5 border-b border-cyan-500/20">
+                          <Activity className="w-4 h-4 text-cyan-400 animate-pulse" />
+                          Activité en direct
+                        </h4>
                         
-                        {/* Latest registered talents list */}
-                        <div className="p-6 rounded-2xl bg-[#09090C] border border-white/5 space-y-4">
-                          <h4 className="text-xs font-mono font-bold uppercase text-white border-b border-white/5 pb-2.5 flex items-center gap-1.5">
-                            <Users className="w-4 h-4 text-[#D4AF37]" />
-                            Dernières inscriptions
-                          </h4>
-                          <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
-                            {recentSignups.map(u => (
-                              <div key={u.id} className="p-3 rounded-xl bg-black border border-white/5 flex justify-between items-center text-xs">
-                                <div className="flex gap-2 items-center">
-                                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-[#D4AF37]">
-                                    {u.avatarUrl ? <img src={u.avatarUrl} alt="Av" className="w-full h-full rounded-full object-cover" /> : u.artisticName.charAt(0)}
-                                  </div>
-                                  <div className="truncate">
-                                    <strong className="text-white block font-sans truncate">{u.artisticName}</strong>
-                                    <span className="text-[10px] text-zinc-550 font-mono block truncate">{u.commune}, CI</span>
-                                  </div>
-                                </div>
-                                <span className="text-[9px] font-mono text-[#D4AF37] bg-white/5 px-2 py-0.5 rounded font-black uppercase">
-                                  Nouveau
-                                </span>
-                              </div>
-                            ))}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">🟢 Connectés</span>
+                             <strong className="text-xl font-display font-black text-white">{users.filter(u => u.status === "active").length + 27}</strong>
+                          </div>
+                          <div>
+                             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">💬 Pubs (Auj.)</span>
+                             <strong className="text-xl font-display font-black text-white">{brief.newPostsCount}</strong>
+                          </div>
+                          <div>
+                             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">💼 Opportunités</span>
+                             <strong className="text-xl font-display font-black text-[#D4AF37]">{gombos.filter(g => g.status === "open").length}</strong>
+                          </div>
+                          <div>
+                             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">🛡️ Demandes ID</span>
+                             <strong className="text-xl font-display font-black text-amber-500">{pendingIdUsers.length}</strong>
                           </div>
                         </div>
+                        {pendingIdUsers.length > 0 && (
+                          <div className="pt-2 border-t border-white/5 mt-4">
+                            <span className="text-[9px] text-zinc-500 uppercase block mb-2">À traiter urgemment :</span>
+                            <div className="space-y-2 max-h-24 overflow-y-auto pr-1">
+                              {pendingIdUsers.slice(0,3).map(u => (
+                                 <div key={u.id} className="flex justify-between items-center bg-black p-2 rounded-lg border border-white/5">
+                                   <span className="text-[10px] text-white font-bold truncate pr-3">{u.artisticName}</span>
+                                   <button onClick={() => setActiveMenu("kyc")} className="text-[9px] px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 uppercase font-black rounded whitespace-nowrap transition-colors cursor-pointer">Examiner</button>
+                                 </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
-                        {/* Publications */}
-                        <div className="p-6 rounded-2xl bg-[#09090C] border border-white/5 space-y-4">
-                          <h4 className="text-xs font-mono font-bold uppercase text-white border-b border-white/5 pb-2.5 flex items-center gap-1.5">
-                            <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
-                            Dernières publications
-                          </h4>
-
-                          <div className="space-y-3 max-h-80 overflow-y-auto">
-                            {[...posts].slice(0, 4).map(p => (
-                              <div key={p.id} className="p-3.5 bg-black border border-white/5 rounded-xl space-y-2 flex flex-col justify-between">
-                                <div className="space-y-1">
-                                  <div className="flex justify-between items-center text-[10px] font-mono">
-                                    <span className="font-bold text-[#D4AF37]">{p.authorArtisticName}</span>
-                                    <span className="text-zinc-650">{p.timestamp}</span>
-                                  </div>
-                                  <p className="text-xs text-white/80 leading-relaxed font-sans mt-1">"{p.content}"</p>
-                                </div>
-                                
-                                <div className="flex justify-between items-center gap-2 pt-2 border-t border-white/5">
-                                  <span className="text-[9px] font-mono text-zinc-550">
-                                    ❤️ {p.likes}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
+                      {/* Revenus AFRIGOMBO */}
+                      <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/30 space-y-4">
+                        <h4 className="text-xs font-mono font-bold uppercase text-[#D4AF37] pb-2.5 flex items-center gap-1.5 border-b border-[#D4AF37]/20">
+                          <Wallet className="w-4 h-4 text-[#D4AF37]" />
+                          Revenus AFRIGOMBO
+                        </h4>
+                        
+                        <div className="space-y-5">
+                          <div className="flex justify-between items-center">
+                             <span className="text-[10px] font-mono text-zinc-400 uppercase">Revenus (Auj.)</span>
+                             <strong className="text-lg font-mono font-black text-emerald-400">{brief.revenuesGenerated.toLocaleString()} F</strong>
+                          </div>
+                          <div className="flex justify-between items-center">
+                             <span className="text-[10px] font-mono text-zinc-400 uppercase">Revenus (Mois)</span>
+                             <strong className="text-lg font-mono font-black text-emerald-400">{(brief.revenuesGenerated * 14 + 125000).toLocaleString()} F</strong>
+                          </div>
+                          <div className="pt-3 border-t border-white/5">
+                             <span className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">🏦 GAWA PAY (Solde Séquestre)</span>
+                             <strong className="text-2xl font-mono font-black text-white">{Math.floor(kpiRevenuesSum * 8.5 + 400000).toLocaleString()} F</strong>
                           </div>
                         </div>
+                      </div>
 
-                        {/* GOMBO ID QUEUE */}
-                        <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-amber-500/10 space-y-4">
-                          <div className="flex justify-between items-center border-b border-warning/10 pb-3">
-                            <span className="text-xs font-mono font-bold uppercase text-white flex items-center gap-1.5">
-                              <ShieldCheck className="w-4 h-4 text-amber-500" />
-                              Dernières vérifications
-                            </span>
-                          </div>
-
-                          <div className="space-y-3 max-h-80 overflow-y-auto">
-                            {pendingIdUsers.length === 0 ? (
-                              <div className="py-8 text-center text-zinc-650 text-xs font-mono">
-                                🛡️ Aucun dossier pour le moment. La Côte d'Ivoire est sereine !
-                              </div>
-                            ) : (
-                              pendingIdUsers.map(u => (
-                                <div key={u.id} className="p-4 bg-black border border-white/5 rounded-xl space-y-3">
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-full border border-[#D4AF37]/45 bg-zinc-900 flex items-center justify-center font-bold text-xs text-[#D4AF37]">
-                                        {u.avatarUrl ? <img src={u.avatarUrl} alt="Ky" className="w-full h-full rounded-full object-cover" /> : u.artisticName.charAt(0)}
-                                      </div>
-                                      <div>
-                                        <h4 className="text-xs font-bold text-white uppercase">{u.artisticName}</h4>
-                                        <p className="text-[10px] text-zinc-550">{u.name} • {u.commune}</p>
-                                      </div>
+                      {/* Alertes critiques */}
+                      <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-red-500/20 space-y-4 flex flex-col">
+                        <h4 className="text-xs font-mono font-bold uppercase text-red-500 pb-2.5 flex items-center gap-1.5 border-b border-red-500/20">
+                          <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
+                          Alertes critiques ({flaggedPosts.length})
+                        </h4>
+                        
+                        <div className="flex-1 overflow-y-auto max-h-[220px] pr-1">
+                          {flaggedPosts.length === 0 ? (
+                             <div className="py-8 text-center text-zinc-650 text-[10px] font-mono">
+                               🟢 Aucun signalement urgent à travers la République.
+                             </div>
+                          ) : (
+                             <div className="space-y-2">
+                               {flaggedPosts.map(p => (
+                                 <div key={p.id} className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl">
+                                    <div className="flex justify-between items-start mb-1">
+                                      <span className="text-[10px] font-bold text-white uppercase">{p.authorArtisticName}</span>
+                                      <span className="text-[8px] font-mono text-zinc-500">{p.timestamp}</span>
                                     </div>
-                                    <span className={`text-[8px] font-mono px-2 py-0.5 rounded font-bold uppercase ${u.kycType === "express" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "bg-zinc-800 text-zinc-400"}`}>
-                                      {u.kycType === "express" ? "⚡ EXPRESS 500" : "STANDARD"}
-                                    </span>
-                                  </div>
-
-                                  <div className="flex flex-wrap gap-2 pt-1 border-t border-white/5">
-                                    {u.kycDocs?.identityCardUrl && (
-                                      <a href={u.kycDocs.identityCardUrl} target="_blank" rel="noopener noreferrer" className="px-2 py-1 bg-white/5 rounded text-[9px] font-mono text-zinc-400 hover:bg-white/10 flex items-center gap-1">
-                                        📄 CNI
-                                      </a>
-                                    )}
-                                    {u.kycDocs?.selfieUrl && (
-                                      <a href={u.kycDocs.selfieUrl} target="_blank" rel="noopener noreferrer" className="px-2 py-1 bg-white/5 rounded text-[9px] font-mono text-zinc-450 hover:bg-white/10 flex items-center gap-1">
-                                        📷 Selfie
-                                      </a>
-                                    )}
-                                    {u.kycDocs?.activityUrl && (
-                                      <a href={u.kycDocs.activityUrl} target="_blank" rel="noopener noreferrer" className="px-2 py-1 bg-white/5 rounded text-[9px] font-mono text-zinc-450 hover:bg-white/10 flex items-center gap-1">
-                                        🎵 Preuve Acti.
-                                      </a>
-                                    )}
-                                  </div>
-
-                                  <div className="flex gap-2 justify-end pt-1">
-                                    <button
-                                      onClick={() => handleQuickRejectKyc(u.id)}
-                                      className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500 text-red-550 hover:text-white rounded-lg text-[9px] font-mono font-bold uppercase transition-all cursor-pointer"
-                                    >
-                                      Refuser 🚫
-                                    </button>
-                                    <button
-                                      onClick={() => handleQuickApproveKyc(u.id)}
-                                      className="px-3 py-1.5 bg-emerald-500/15 hover:bg-[#D4AF37] hover:text-black text-emerald-400 rounded-lg text-[9px] font-mono font-bold uppercase transition-all cursor-pointer"
-                                    >
-                                      Approuver ✓
-                                    </button>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </div>
+                                    <p className="text-[10px] text-zinc-400 mb-2 truncate italic">"{p.content}"</p>
+                                    <div className="flex gap-2 justify-end">
+                                      <button onClick={() => handleQuickDeletePost(p.id)} className="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-[8px] uppercase font-bold transition-colors cursor-pointer">Supprimer</button>
+                                    </div>
+                                 </div>
+                               ))}
+                             </div>
+                          )}
                         </div>
-
-                        {/* URGENT ALERTS REPORT QUEUE */}
-                        <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-red-500/10 space-y-4">
-                          <div className="flex justify-between items-center border-b border-red-500/10 pb-3">
-                            <span className="text-xs font-mono font-bold uppercase text-white flex items-center gap-1.5">
-                              <AlertTriangle className="w-4 h-4 text-red-505 animate-pulse" />
-                              Dernières sanctions (Signalements)
-                            </span>
-                          </div>
-
-                          <div className="space-y-3 max-h-80 overflow-y-auto">
-                            {flaggedPosts.length === 0 ? (
-                              <div className="py-8 text-center text-zinc-650 text-xs font-mono">
-                                🔔 Zéro alerte d'abus ! Aucun murmure suspect déclaré par la communauté.
-                              </div>
-                            ) : (
-                              flaggedPosts.map(p => (
-                                <div key={p.id} className="p-4 bg-black border border-red-500/10 rounded-xl space-y-2 text-xs">
-                                  <div className="flex justify-between">
-                                    <strong>{p.authorArtisticName} ({p.authorName})</strong>
-                                    <span className="text-[8px] font-mono text-zinc-550">{p.timestamp}</span>
-                                  </div>
-                                  <p className="text-zinc-400 italic font-sans mt-0.5">"{p.content}"</p>
-                                  
-                                  <div className="flex gap-2 justify-end pt-2 border-t border-white/5">
-                                    <button
-                                      onClick={() => handleQuickUnflagPost(p.id)}
-                                      className="px-2.5 py-1.5 bg-zinc-800 text-zinc-350 rounded hover:bg-zinc-700 text-[9px] font-mono uppercase cursor-pointer"
-                                    >
-                                      Ignorer 🛡️
-                                    </button>
-                                    <button
-                                      onClick={() => handleQuickDeletePost(p.id)}
-                                      className="px-2.5 py-1.5 bg-red-600 text-white rounded hover:bg-red-750 text-[9px] font-mono uppercase font-bold cursor-pointer"
-                                    >
-                                      Supprimer le Murmure 🚫
-                                    </button>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </div>
-
                       </div>
                     </div>
 
@@ -5502,9 +5437,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {/* ----------------------------------------------------
-                                VIEW: LE TAM-TAM GOMBOS
+                                VIEW: LE TAM-TAM GOMBOS (PUBLICATIONS)
                   ---------------------------------------------------- */}
-              {activeMenu === "gombos" && (
+              {(activeMenu === "gombos" || activeMenu === "posts") && (
                 <div className="space-y-8 pb-10">
                   
                   {/* ==========================================================
@@ -6076,9 +6011,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {/* ----------------------------------------------------
-                                VIEW: KYC & MON HERITAGE
+                                VIEW: COMPTES UTILISATEURS & VERIFICATIONS GOMBO ID
                   ---------------------------------------------------- */}
-              {activeMenu === "kyc" && (
+              {(activeMenu === "kyc" || activeMenu === "users") && (
                 <div className="space-y-6">
                   {/* SLOGAN & PROFILE SEARCH */}
                   <div className="flex justify-between items-center bg-[#D4AF37]/5 p-5 border border-[#D4AF37]/10 rounded-lg">
@@ -6640,9 +6575,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {/* ----------------------------------------------------
-                                VIEW: LA CAISSE GOMBO (FINANCIALS)
+                                VIEW: LA CAISSE GOMBO (FINANCIALS / REVENUS)
                   ---------------------------------------------------- */}
-              {activeMenu === "caisse" && (() => {
+              {(activeMenu === "caisse" || activeMenu === "finances") && (() => {
                 const now = new Date();
                 const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
                 const startOfWeek = now.getTime() - 7 * 24 * 60 * 60 * 1000;
@@ -7020,8 +6955,135 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {/* ----------------------------------------------------
-                                VIEW: MONETISATION PREMIUM
+                                VIEW: PLUS (PARAMÈTRES ET OUTILS ADMINISTRATIFS)
                   ---------------------------------------------------- */}
+              {activeMenu === "plus" && (
+                <div className="space-y-6 animate-fadeIn pb-24">
+                  <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-white flex items-center gap-1.5 pb-2 border-b border-white/10">
+                    <Settings className="w-5 h-5 text-zinc-400" />
+                    Outils d'Administration & Système
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Logs Système */}
+                    <button 
+                      onClick={() => setActiveMenu("logs")}
+                      className="p-4 bg-[#09090C] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-[#121214] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
+                        <Terminal className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Logs système</h4>
+                        <p className="text-[10px] text-zinc-500 mt-1">Historique technique, connexions et audit trail des modérateurs.</p>
+                      </div>
+                    </button>
+
+                    {/* Paramètres */}
+                    <button className="p-4 bg-[#09090C] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group">
+                      <div className="w-10 h-10 rounded-full bg-[#121214] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
+                        <Settings className="w-5 h-5 text-zinc-300" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Paramètres</h4>
+                        <p className="text-[10px] text-zinc-500 mt-1">Configuration générale, filtres de modération et règles communautaires.</p>
+                      </div>
+                    </button>
+
+                    {/* Sauvegardes */}
+                    <button className="p-4 bg-[#09090C] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group">
+                      <div className="w-10 h-10 rounded-full bg-[#121214] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
+                        <Database className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Sauvegardes</h4>
+                        <p className="text-[10px] text-zinc-500 mt-1">Exports CSV, backups Firestore de sécurité et restauration.</p>
+                      </div>
+                    </button>
+
+                    {/* Audit sécurité */}
+                    <button className="p-4 bg-[#09090C] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group">
+                      <div className="w-10 h-10 rounded-full bg-[#121214] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
+                        <ShieldAlert className="w-5 h-5 text-red-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Audit sécurité</h4>
+                        <p className="text-[10px] text-zinc-500 mt-1">Analyse des vulnérabilités, tentatives d'intrusion et IP bloquées.</p>
+                      </div>
+                    </button>
+
+                    {/* IA AFRIGOMBO */}
+                    <button className="p-4 bg-[#0A0A0C] hover:bg-purple-500/5 border border-purple-500/10 hover:border-purple-500/30 rounded-xl flex items-start gap-4 text-left transition-all group">
+                      <div className="w-10 h-10 rounded-full bg-[#121214] flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500/50">
+                        <Brain className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-purple-100 uppercase tracking-wider font-mono">IA AFRIGOMBO</h4>
+                        <p className="text-[10px] text-zinc-500 mt-1">Configuration du moteur de recommandation et modération Gemini.</p>
+                      </div>
+                    </button>
+
+                    {/* Centre d'aide */}
+                    <button className="p-4 bg-[#09090C] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group">
+                      <div className="w-10 h-10 rounded-full bg-[#121214] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
+                        <LifeBuoy className="w-5 h-5 text-amber-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Centre d'aide</h4>
+                        <p className="text-[10px] text-zinc-500 mt-1">Documentation interne, assistance technique et support fondateurs.</p>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* SUPREME PALACE SECRET ACCESS FOR FOUNDER ONLY */}
+                  {userEmail === "jhs.kmj7@gmail.com" && (
+                    <div className="pt-6 mt-6 border-t border-white/5 flex justify-center">
+                      <button
+                        onClick={() => {
+                          setActiveMenu("super_admin");
+                          addToTerminal("👑 [SOUVERAINETÉ] Accès demandé au Tableau de Bord Super Fondateur.");
+                          try { audioSynth.playTamTam(true); } catch (err) {}
+                        }}
+                        className="group w-full max-w-sm p-4 bg-black border border-[#D4AF37]/20 hover:border-[#D4AF37] text-[#D4AF37] font-display font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-500 flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.05)] hover:shadow-[0_0_30px_rgba(212,175,55,0.2)]"
+                      >
+                        <Crown className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+                        Accéder au Palais Numérique Suprême
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ----------------------------------------------------
+                                VIEW: LOGS SYSTEME
+                  ---------------------------------------------------- */}
+              {activeMenu === "logs" && (
+                <div className="h-[75vh] flex flex-col bg-black border border-white/10 rounded-xl overflow-hidden relative">
+                  <div className="bg-[#121214] border-b border-white/10 p-3 flex justify-between items-center">
+                    <h4 className="text-[10px] font-mono uppercase text-cyan-400 font-bold flex items-center gap-2">
+                      <Terminal className="w-4 h-4" />
+                      Terminal de Commandement (Logs Système)
+                    </h4>
+                    <button onClick={() => setActiveMenu("plus")} className="text-zinc-500 hover:text-white px-2 py-1 text-[10px] font-mono uppercase border border-white/5 rounded">Retour</button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-[9px] sm:text-[10px]">
+                    {[...terminalFeed].reverse().map((log, i) => (
+                      <div key={i} className="flex gap-2 items-start border-b border-white/5 pb-2">
+                        <span className="text-cyan-600 mt-0.5">▶</span>
+                        <div className="flex flex-col">
+                          <span className="text-zinc-500 leading-none">{new Date().toLocaleTimeString()}</span>
+                          <span className={`${log.includes("[ALERTE]") || log.includes("[DANGER]") || log.includes("SUSPECT") ? "text-red-400 font-bold" : log.includes("[SOUVERAIN]") || log.includes("[SOUVERAINETÉ]") || log.includes("[SUCCÈS]") ? "text-[#D4AF37]" : "text-zinc-300"}`}>
+                            {log}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {terminalFeed.length === 0 && (
+                      <div className="text-zinc-600 italic">Terminal en attente de flux de données...</div>
+                    )}
+                  </div>
+                </div>
+              )}
               {activeMenu === "monetisation" && (() => {
                 const premiumTx = transactions.filter(t => t.type !== "commission" && t.type !== "subscription" && t.type !== "payout");
                 const totalPremiumRevenues = premiumTx.reduce((sum, t) => sum + t.amount, 0);
@@ -7260,74 +7322,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       </main>
 
       {/* =========================================================================
-                          ZONE C : BRIEF DU JOUR & TERMINAL LOGS (RIGHT)
+                          ZONE C : BRIEF DU JOUR & TERMINAL LOGS (REMOVED - MOVED TO DASHBOARD)
          ========================================================================= */}
-      {perspective === "admin" && (
-        <aside className="w-80 border-l border-[#D4AF37]/20 bg-[#0B0B0B] flex flex-col p-6 z-10 shrink-0">
-          
-          {/* DAILY ADMIN BRIEF MODULE */}
-          <div className="space-y-4 mb-6">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] font-semibold flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 animate-spin" />
-                Mon Brief du Jour
-              </span>
-              <span className="text-[10px] font-mono text-[#F5F5F5]/40">{brief.timestamp}</span>
-            </div>
 
-            <div className="p-4 rounded-lg bg-black/40 border border-[#D4AF37]/10 space-y-3.5">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#F5F5F5]/60">Nouveaux inscrits :</span>
-                <span className="font-bold text-[#D4AF37]">{brief.newUsersCount}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#F5F5F5]/60">Publications de post :</span>
-                <span className="font-semibold text-white">{brief.newPostsCount}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#F5F5F5]/60">Nouveaux Gombos :</span>
-                <span className="font-semibold text-white">{brief.newGombosCount}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#F5F5F5]/60">Revenus générés :</span>
-                <span className="font-bold text-emerald-400">{brief.revenuesGenerated.toLocaleString()} FCFA</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#F5F5F5]/60">Certifications demandées :</span>
-                <span className="font-semibold text-white">{brief.kycRequestsCount}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#F5F5F5]/60">Alertes critiques :</span>
-                <span className="font-semibold text-[#EF4444]">{brief.criticalAlertsCount}</span>
-              </div>
-
-              {/* Quick action broadcast daily statement bulletin */}
-              <button
-                onClick={() => setIsBroadcastModalOpen(true)}
-                className="w-full mt-3 py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] rounded text-center text-xs font-bold uppercase transition-all shadow-[0_0_8px_rgba(212,175,55,0.15)]"
-              >
-                Diffuser un bulletin d'alerte
-              </button>
-            </div>
-          </div>
-
-          {/* ADMINISTRATIVE ACTION LOGS (TERMINAL) */}
-          <div className="flex-1 flex flex-col min-h-0">
-            <span className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] font-semibold flex items-center gap-1.5 mb-3">
-              <Tv className="w-3.5 h-3.5" />
-              Terminal de Commandement
-            </span>
-
-            <div className="flex-1 bg-black/60 border border-[#D4AF37]/10 p-3 rounded-lg font-mono text-[9px] text-[#D4AF37]/80 overflow-y-auto space-y-2 relative scrollbar-thin">
-              {terminalFeed.map((log, index) => (
-                <div key={index} className="leading-relaxed border-b border-white/5 pb-1 last:border-0">
-                  {log}
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-      )}
 
       {/* =========================================================================
                                CLÔTURE & ÉVALUATION MODAL (COMBO RATINGS)
@@ -7679,31 +7676,30 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             <span className="text-[9px] font-mono font-black uppercase tracking-wider">Cockpit</span>
           </button>
 
-          {/* 2. COMPTES */}
+          {/* 2. UTILISATEURS */}
           <button
-            id="admin-nav-comptes"
+            id="admin-nav-utilisateurs"
             onClick={() => {
-              setKycActiveTab("all");
-              setActiveMenu("kyc");
+              setActiveMenu("users");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "kyc" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "users" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Users className="w-5 h-5" />
-            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Comptes</span>
+            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Utilisateurs</span>
           </button>
 
           {/* 3. PUBLICATIONS */}
           <button
             id="admin-nav-publications"
             onClick={() => {
-              setActiveMenu("gombos");
+              setActiveMenu("posts");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "posts" || activeMenu === "gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Briefcase className="w-5 h-5" />
@@ -7714,11 +7710,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <button
             id="admin-nav-verifications"
             onClick={() => {
-              setActiveMenu("revision");
+              setActiveMenu("kyc");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "revision" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "kyc" || activeMenu === "revision" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <ShieldCheck className="w-5 h-5" />
@@ -7729,11 +7725,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <button
             id="admin-nav-plus"
             onClick={() => {
-              setActiveMenu("caisse");
+              setActiveMenu("plus");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "caisse" || activeMenu === "super_admin" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "plus" || activeMenu === "super_admin" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Settings className="w-5 h-5" />

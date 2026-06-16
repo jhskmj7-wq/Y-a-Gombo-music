@@ -62,7 +62,7 @@ function App() {
   }, [darkMode]);
 
   return (
-    <div className={`min-h-screen font-sans antialiased overflow-x-hidden transition-colors duration-300 ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#1F2937]"}`}>
+    <div className={`h-screen overflow-hidden font-sans antialiased transition-colors duration-300 ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#1F2937]"}`}>
       
       {/* 1. PREMIUM SPLASH SCREEN */}
       <AnimatePresence>
