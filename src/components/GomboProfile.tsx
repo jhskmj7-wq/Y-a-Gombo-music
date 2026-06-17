@@ -404,7 +404,7 @@ export default function GomboProfile({
 
   // Keep scroll independent
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+    // Scroll intentionally removed to prevent interfering with AdminCentre's custom scroll tracking
   }, [panelView]);
 
   // Keep local states synchronized with external props changes

@@ -36,7 +36,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
   }, [initialTab]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+    // Scroll intentionally removed to prevent interfering with AdminCentre's custom scroll tracking
   }, [activeTab]);
   
   const [mockMode, setMockMode] = useState(isFirebaseMock);

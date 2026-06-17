@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import {
   collection,
   onSnapshot,
@@ -85,7 +85,13 @@ import {
   X,
   Home,
   Megaphone,
-  MoreVertical
+  MoreVertical,
+  Wallet,
+  Globe,
+  Terminal,
+  Database,
+  Brain,
+  LifeBuoy
 } from "lucide-react";
 import {
   AreaChart,
@@ -7568,7 +7574,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                      FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED)
          ========================================================================= */}
       {perspective === "user" && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-[425px] bg-[#09090b]/95 backdrop-blur-xl border border-zinc-800/70 p-2 px-3 sm:px-4 flex justify-between items-center z-40 rounded-[32px] shadow-[0_15px_35px_rgba(0,0,0,0.95)] select-none">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-[425px] bg-[#050505]/95 backdrop-blur-xl border border-[#D4AF37]/30 p-2 px-3 sm:px-4 flex justify-between items-center z-40 rounded-[32px] shadow-[0_15px_35px_rgba(0,0,0,0.8)] select-none">
           {/* 1. ACCUEIL */}
           <button
             id="user-nav-terrain"
@@ -7581,7 +7587,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             }`}
           >
             <Home className="w-5 h-5" />
-            <span className="text-[8px] font-sans font-black uppercase tracking-wider">Accueil</span>
+            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Accueil</span>
           </button>
 
           {/* 2. VIBES */}
@@ -7598,7 +7604,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             }`}
           >
             <Music className="w-5 h-5" />
-            <span className="text-[8px] font-sans font-black uppercase tracking-wider">Vibes</span>
+            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Vibes</span>
           </button>
 
           {/* 3. PUBLIER (CENTRAL BUTTON, LARGER, NOT INDEPENDENTLY FLOATING/OVERLAPPING OVER BOUNDARY) */}
@@ -7613,10 +7619,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-2 select-none shrink-0"
             title="Publier"
           >
-            <div className="w-11 h-11 flex items-center justify-center bg-gradient-to-tr from-[#D4AF37] to-[#F1C40F] text-black rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
+            <div className="w-11 h-11 flex items-center justify-center bg-gradient-to-tr from-[#D4AF37] to-[#F1C40F] text-[#050505] rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
               <Plus className="w-5 h-5 stroke-[3.5]" />
             </div>
-            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-zinc-400 mt-1">Publier</span>
+            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-[#F5F5F5] mt-1">Publier</span>
           </button>
 
           {/* 4. MES GOMBOS */}
@@ -7633,7 +7639,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             }`}
           >
             <Megaphone className="w-5 h-5" />
-            <span className="text-[8px] font-sans font-black uppercase tracking-wider">Mes Gombos</span>
+            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Mes Gombos</span>
           </button>
 
           {/* 5. MON HÉRITAGE */}
@@ -7651,7 +7657,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             }`}
           >
             <UserIcon className="w-5 h-5" />
-            <span className="text-[8px] font-sans font-black uppercase tracking-wider">Mon Héritage</span>
+            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Mon Héritage</span>
           </button>
         </div>
       )}

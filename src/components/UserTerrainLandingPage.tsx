@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { 
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
-  RefreshCw, Heart, X, Award, Users, Music
+  RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy
 } from "lucide-react";
 import { Gombo, User, Post } from "../types";
 
@@ -237,8 +237,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
           1. BARRE DE RECHERCHE UNIVERSELLE
          ========================================== */}
       <div className="relative">
-        <div className="flex items-center gap-3 bg-[#0d0d0f] border border-zinc-900 rounded-3xl p-3 px-4 shadow-[0_4px_22px_rgba(0,0,0,0.45)]">
-          <Search className="w-5 h-5 text-zinc-400 shrink-0" />
+        <div className="flex items-center gap-3 bg-[#050505] border border-[#D4AF37]/30 rounded-3xl p-3 px-4 shadow-[0_2px_15px_rgba(212,175,55,0.05)] focus-within:border-[#D4AF37]/80 transition-all">
+          <Search className="w-5 h-5 text-[#D4AF37] shrink-0" />
           <input
             type="text"
             value={globalSearchTerm}
@@ -250,7 +250,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
               }
             }}
             placeholder="Rechercher une opportunité, artiste, événement..."
-            className="w-full bg-transparent text-sm text-zinc-150 placeholder-zinc-500 focus:outline-none font-sans"
+            className="w-full bg-transparent text-[#F5F5F5] font-bold text-sm placeholder-zinc-500 focus:outline-none font-sans"
           />
           <button
             onClick={() => {
@@ -261,7 +261,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
               setGlobalSearchTerm("");
               try { audioSynth.playTamTam(false); } catch (_) {}
             }}
-            className="text-zinc-500 hover:text-[#D4AF37] transition p-1"
+            className="text-[#D4AF37] hover:text-[#F1C40F] transition p-1"
             title="Réinitialiser"
           >
             <Sliders className="w-5 h-5" />
@@ -270,7 +270,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
 
         {/* Dynamic Inline Search Results Dropdown Overlay */}
         {globalSearchTerm.trim().length > 0 && (
-          <div className="absolute top-14 left-0 right-0 bg-[#0c0c0e] border border-zinc-850 rounded-2xl p-4 z-50 max-h-72 overflow-y-auto space-y-2.5 shadow-2xl">
+          <div className="absolute top-14 left-0 right-0 bg-[#050505] border border-[#D4AF37]/30 rounded-2xl p-4 z-50 max-h-72 overflow-y-auto space-y-2.5 shadow-2xl">
             <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 font-bold">
               <span>SANS FILTRE (TEMPS RÉEL)</span>
               <button onClick={() => setGlobalSearchTerm("")} className="text-[#D4AF37] font-black uppercase">Fermer</button>
@@ -296,46 +296,30 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
       </div>
 
       {/* ==========================================
-          2. ACTIONS RAPIDES (STYLE HORIZONTAL PILLS)
+          2. ACTIONS RAPIDES (STYLE PREMIUM AFRIGOMBO)
          ========================================== */}
       <div className="space-y-3">
         <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
           ACTIONS RAPIDES
         </h3>
-        <div className="flex overflow-x-auto gap-3.5 pb-2 scrollbar-none items-center w-full select-none">
-          {/* 1. Publier */}
+        <div className="flex flex-wrap sm:flex-nowrap sm:overflow-x-auto gap-3.5 pb-2 scrollbar-none items-center w-full select-none">
+          {/* 1. Scanner Gombo ID */}
           <div
             onClick={() => {
               requireAuthThen(() => {
-                setActiveMenu("user_publish");
+                setActiveQuickActionModal("verify_gombo_id");
                 try { audioSynth.playValidationSuccess(); } catch (_) {}
               });
             }}
-            className="bg-[#0c0c0e] border border-zinc-900 rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-zinc-800 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
+            className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
           >
-            <div className="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center bg-transparent">
-              <Plus className="w-5 h-5 text-[#D4AF37]" />
+            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
+              <QrCode className="w-5 h-5 text-[#D4AF37]" />
             </div>
-            <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide">Publier</span>
+            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Scanner</span>
           </div>
 
-          {/* 2. Les Vibes */}
-          <div
-            onClick={() => {
-              requireAuthThen(() => {
-                setActiveMenu("user_vibes");
-                try { audioSynth.playValidationSuccess(); } catch (_) {}
-              });
-            }}
-            className="bg-[#0c0c0e] border border-zinc-900 rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-zinc-800 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
-          >
-            <div className="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center bg-transparent">
-              <Music className="w-5 h-5 text-[#D4AF37]" />
-            </div>
-            <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide leading-none">Les Vibes</span>
-          </div>
-
-          {/* 3. Messages */}
+          {/* 2. Messages */}
           <div
             onClick={() => {
               requireAuthThen(() => {
@@ -343,56 +327,64 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
                 try { audioSynth.playValidationSuccess(); } catch (_) {}
               });
             }}
-            className="bg-[#0c0c0e] border border-zinc-900 rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-zinc-800 transition-all w-[76px] shrink-0 cursor-pointer relative active:scale-95"
+            className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
           >
-            <div className="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center bg-transparent">
+            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
               <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
             </div>
-            <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide">Messages</span>
+            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Messages</span>
           </div>
 
-          {/* 4. Mon Héritage */}
-          <div
-            onClick={() => {
-              const checkGate = requireGoogleAuthThen || requireAuthThen;
-              checkGate(() => {
-                setActiveMenu("user_heritage");
-                try { audioSynth.playValidationSuccess(); } catch (_) {}
-              });
-            }}
-            className="bg-[#0c0c0e] border border-zinc-900 rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-zinc-800 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
-          >
-            <div className="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center bg-transparent">
-              <Award className="w-5 h-5 text-[#D4AF37]" />
-            </div>
-            <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide leading-none">Héritage</span>
-          </div>
-
-          {/* 5. Notifications */}
+          {/* 3. Inviter un proche */}
           <div
             onClick={() => {
               requireAuthThen(() => {
-                setActiveMenu("user_notifications");
+                if (navigator.share) {
+                  navigator.share({
+                    title: "Rejoins l'élite sur AFRIGOMBO",
+                    url: "https://afrigombo.com",
+                  }).catch(() => {});
+                } else {
+                  alert("Inviter un proche: copiez https://afrigombo.com !");
+                }
                 try { audioSynth.playValidationSuccess(); } catch (_) {}
               });
             }}
-            className="bg-[#0c0c0e] border border-zinc-900 rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-zinc-800 transition-all w-[76px] shrink-0 cursor-pointer relative active:scale-95"
+            className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
           >
-            <div className="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center bg-transparent">
-              <Bell className="w-5 h-5 text-[#D4AF37]" />
+            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
+              <Users className="w-5 h-5 text-[#D4AF37]" />
             </div>
-            <span className="text-[9.5px] text-zinc-400 font-bold tracking-wide">Notifs</span>
+            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Inviter</span>
           </div>
+
+          {/* 4. Centre d'aide */}
+          <div
+            onClick={() => {
+              requireAuthThen(() => {
+                alert("Le Centre d'Aide est en cours de développement. Merci de votre patience.");
+                try { audioSynth.playValidationSuccess(); } catch (_) {}
+              });
+            }}
+            className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
+          >
+            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
+              <LifeBuoy className="w-5 h-5 text-[#D4AF37]" />
+            </div>
+            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Aide</span>
+          </div>
+          
+          {/* "Voir plus" could be added if needed, but restricting to 4 primary actions looks super clean and premium */}
         </div>
       </div>
 
       {/* ==========================================
-          3. FILTRES RAPIDES (ADAPTIVE DROPDOWNS)
+          3. FILTRES RAPIDES ET RECHERCHE AVANCÉE
          ========================================== */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
-            FILTRES RAPIDES
+            RECHERCHE & FILTRES
           </h3>
           <button
             onClick={() => {
@@ -403,15 +395,15 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
               setGlobalSearchTerm("");
               try { audioSynth.playTamTam(false); } catch (_) {}
             }}
-            className="text-[10.5px] text-zinc-400 hover:text-white transition-all flex items-center gap-1.5 focus:outline-none"
+            className="text-[10.5px] text-[#D4AF37] hover:text-[#F1C40F] font-bold transition-all flex items-center gap-1.5 focus:outline-none"
           >
             <span>Réinitialiser</span>
-            <RefreshCw className="w-3.5 h-3.5 text-zinc-400" />
+            <RefreshCw className="w-3.5 h-3.5 opacity-80" />
           </button>
         </div>
 
         {/* 4 Core dropdown selects */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* Category */}
           <div className="relative">
             <select
@@ -420,7 +412,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
                 setSelectedCategory(e.target.value);
                 try { audioSynth.playTamTam(true); } catch (_) {}
               }}
-              className="w-full bg-[#0c0c0e] border border-zinc-900 hover:border-zinc-800 text-[10.5px] text-zinc-300 rounded-xl p-2.5 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center"
+              className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
             >
               <option value="all">Catégorie</option>
               <option value="zouglou">Zouglou</option>
@@ -439,9 +431,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
                 setSelectedLocation(e.target.value);
                 try { audioSynth.playTamTam(true); } catch (_) {}
               }}
-              className="w-full bg-[#0c0c0e] border border-zinc-900 hover:border-zinc-800 text-[10.5px] text-zinc-300 rounded-xl p-2.5 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center"
+              className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
             >
-              <option value="all">Localisation</option>
+              <option value="all">Domaine</option>
               {IVORIAN_COMMUNES.map(commune => (
                 <option key={commune} value={commune}>{commune}</option>
               ))}
@@ -456,7 +448,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
                 setSelectedType(e.target.value);
                 try { audioSynth.playTamTam(true); } catch (_) {}
               }}
-              className="w-full bg-[#0c0c0e] border border-zinc-900 hover:border-zinc-800 text-[10.5px] text-zinc-300 rounded-xl p-2.5 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center"
+              className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
             >
               <option value="all">Type</option>
               <option value="concert">Concert</option>
@@ -473,7 +465,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
                 setSelectedDateFilter(e.target.value);
                 try { audioSynth.playTamTam(true); } catch (_) {}
               }}
-              className="w-full bg-[#0c0c0e] border border-zinc-900 hover:border-zinc-800 text-[10.5px] text-zinc-300 rounded-xl p-2.5 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center"
+              className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
             >
               <option value="all">Date</option>
               <option value="mai 2025">Mai 2025</option>
@@ -561,7 +553,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
                     DÉTAILS
                   </button>
                   {currentSlideData.isNew && (
-                    <span className="text-[8px] font-bold bg-[#09090b] border border-emerald-500/25 text-emerald-400 px-2 py-1 rounded uppercase tracking-wider font-mono">
+                    <span className="text-[8px] font-bold bg-[#050505] border border-emerald-500/25 text-emerald-400 px-2 py-1 rounded uppercase tracking-wider font-mono">
                       NOUVEAU
                     </span>
                   )}
@@ -611,17 +603,17 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
         {/* List representation matches physical drawing on photo */}
         <div className="space-y-3.5">
           {allRecentItems.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-[#0c0c0e] border border-zinc-900 text-zinc-500 text-xs font-mono">
+            <div className="p-8 text-center rounded-2xl bg-[#050505] border border-[#D4AF37]/20 text-[#D4AF37]/60 text-xs font-mono shadow-[0_2px_15px_rgba(212,175,55,0.03)]">
               Aucune opportunité récente pour vos filtres sélectionnés.
             </div>
           ) : (
             allRecentItems.map((item) => (
               <div
                 key={item.id}
-                className="flex bg-[#0c0c0e] border border-zinc-900/90 hover:border-zinc-800 rounded-2xl p-3 items-center gap-3 transition-colors shadow-sm relative group"
+                className="flex bg-[#050505] border border-[#D4AF37]/20 hover:border-[#D4AF37]/60 rounded-2xl p-3 items-center gap-3 transition-colors shadow-[0_2px_15px_rgba(212,175,55,0.05)] cursor-pointer relative group"
               >
                 {/* Left Thumbnail with Gold G logo overlay */}
-                <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-[#050505] border border-[#D4AF37]/30 flex items-center justify-center">
                   <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                   <div className="absolute bottom-1 left-1 w-4.5 h-4.5 bg-[#D4AF37]/95 border border-black rounded-full flex items-center justify-center shadow">
                     <span className="text-[7.5px] font-black text-black">G</span>
@@ -712,7 +704,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
          ========================================================================= */}
       {activeQuickActionModal && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#0E0E10] border border-[#D4AF37]/35 rounded-3xl p-6 sm:p-8 w-full max-w-md my-8 relative overflow-hidden select-none shadow-[0_15px_50px_rgba(0,0,0,0.95)]">
+          <div className="bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-6 sm:p-8 w-full max-w-md my-8 relative overflow-hidden select-none shadow-[0_15px_50px_rgba(0,0,0,0.95)]">
             
             <button
               onClick={() => {
