@@ -73,6 +73,10 @@ import {
   MessageSquare,
   Calendar,
   Send,
+  UserPlus,
+  FileText,
+  UserX,
+  Eye,
   Sun,
   Moon,
   Sliders,
@@ -368,17 +372,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [isAcademyModalOpen, setIsAcademyModalOpen] = useState<boolean>(false);
   const [lang, setLang] = useState<"fr" | "nouchi">("fr");
 
-  useEffect(() => {
-    if (isSidebarOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isSidebarOpen]);
-
   const [isHeaderSearchOpen, setIsHeaderSearchOpen] = useState<boolean>(false);
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
   const [liveAdminTime, setLiveAdminTime] = useState<string>(new Date().toLocaleTimeString("fr-FR"));
@@ -605,24 +598,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   const [editingProfileUserId, setEditingProfileUserId] = useState<string | null>(null);
 
-  // --- SCROLL MANAGEMENT ---
-  const mainScrollRef = useRef<HTMLElement>(null);
-  const scrollPositions = useRef<Record<string, number>>({});
-  
-  const handleMainScroll = (e: React.UIEvent<HTMLElement>) => {
-    // Only track vertical scroll dynamically per view
-    const scrollKey = `${perspective}-${activeMenu}-${activeMenu === "user_terrain" ? terrainTab : ""}`;
-    scrollPositions.current[scrollKey] = e.currentTarget.scrollTop;
-  };
-
-  useLayoutEffect(() => {
-    if (mainScrollRef.current) {
-      const scrollKey = `${perspective}-${activeMenu}-${activeMenu === "user_terrain" ? terrainTab : ""}`;
-      mainScrollRef.current.scrollTop = scrollPositions.current[scrollKey] || 0;
-    }
-  }, [perspective, activeMenu, terrainTab]);
-
-  
   // --- INTERACTIVE PREMIUM OPPORTUNITIES STATES ---
   const [savedGomboIds, setSavedGomboIds] = useState<string[]>([]);
   const [honoredGomboIds, setHonoredGomboIds] = useState<string[]>([]);
@@ -930,7 +905,26 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     try {
       setAutoSaveActive(true);
       const docRef = doc(db, collectionName, docId);
-      await setDoc(docRef, data, { merge: true });
+      
+      // Deep clone and clean up data to avoid cyclic object or custom class errors
+      let safeData = data;
+      try {
+        const getCircularReplacer = () => {
+          const seen = new WeakSet();
+          return (key: string, value: any) => {
+            if (typeof value === "object" && value !== null) {
+              if (seen.has(value)) return;
+              seen.add(value);
+            }
+            return value;
+          };
+        };
+        safeData = JSON.parse(JSON.stringify(data, getCircularReplacer()));
+      } catch (err) {
+        console.error("Error sanitizing data for Firestore:", err);
+      }
+
+      await setDoc(docRef, safeData, { merge: true });
       addToTerminal(`[SYNC] Sauvegarde réussie sur Firestore pour ${collectionName}/${docId}`);
       setTimeout(() => setAutoSaveActive(false), 800);
     } catch (e) {
@@ -1939,13 +1933,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                ZONE B : WORKSPACE CENTRAL (MIDDLE)
          ========================================================================= */}
       <main 
-        ref={mainScrollRef}
-        onScroll={handleMainScroll}
-        className="flex-1 min-w-0 w-full max-w-full bg-[#0B0B0B] flex flex-col overflow-y-auto overflow-x-hidden px-4 sm:px-8 py-6"
+        className="flex-1 min-w-0 w-full max-w-full bg-[#0B0B0B] flex flex-col overflow-hidden"
       >
         
         {/* ELITE UPPER STATUS BAR (AFRIGOMBO PREMIUM HEADER) */}
-        <header className="flex justify-between items-center pb-5 border-b border-[#D4AF37]/15 mb-6 shrink-0 gap-2 w-full animate-fadeIn select-none">
+        <header className="flex justify-between items-center px-4 sm:px-8 pt-6 pb-5 border-b border-[#D4AF37]/15 shrink-0 gap-2 w-full animate-fadeIn select-none">
           {isHeaderSearchOpen ? (
             <div className="flex-1 flex items-center gap-3">
               <div className="flex-1 flex items-center gap-2 bg-black border border-[#D4AF37]/45 rounded-xl px-3 py-2 w-full">
@@ -2062,7 +2054,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         </header>
 
         {/* WORKSPACE VIEWS */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeMenu}
@@ -2070,7 +2062,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="space-y-6"
+              className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-12 pt-6"
             >
               
               {/* ----------------------------------------------------
@@ -5106,138 +5098,98 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 return (
                   <div className="space-y-8 pb-24 animate-fadeIn text-left">
-                    {/* 1. ENTÊTE DE COMMANDE PREMIUM */}
-                    <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-zinc-950 via-[#0D0D0F] to-zinc-950 border border-[#D4AF37]/35 shadow-[0_0_35px_rgba(212,175,55,0.06)]">
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div className="flex items-center gap-4">
-                          <div className="relative shrink-0 select-none font-display">
-                            <div className="w-14 h-14 rounded-full border-2 border-[#D4AF37] bg-black overflow-hidden flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.2)]">
-                              {currentUser?.photoURL ? (
-                                <img src={currentUser.photoURL} alt="Admin" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                              ) : (
-                                <span className="text-[#D4AF37] font-display font-black text-xl uppercase">A</span>
-                              )}
-                            </div>
-                            <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0D0D0F] animate-pulse" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[9px] font-mono tracking-widest text-[#D4AF37] font-extrabold uppercase">
-                                AFRITRUST CONTROL PANEL
-                              </span>
-                              <span className="inline-flex items-center gap-1 text-[8px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded font-black uppercase tracking-wider select-none animate-pulse">
-                                ● SYNCHRONISÉ EN DIRECT
-                              </span>
-                            </div>
-                            <h2 className="text-2xl sm:text-3xl font-display font-black tracking-tight text-white mt-1 uppercase">
-                              CENTRE DE COMMANDE AFRIGOMBO
-                            </h2>
-                            <p className="text-xs text-zinc-400 flex items-center gap-2 font-sans mt-1">
-                              <span>Sénateur : <strong className="text-white font-mono">{userEmail || "admin@afrigombo.ci"}</strong></span>
-                              <span className="text-zinc-650">•</span>
-                              <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-500 font-mono text-[9px] uppercase font-bold">
-                                {isAuthorizedSuperFounder ? "👑 Fondateur de l'Empire" : "🛡️ Super Commandeur"}
-                              </span>
-                            </p>
-                          </div>
+                    {/* 1. ENTÊTE OPÉRATIONNELLE */}
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-b border-white/5 pb-6">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                          <span className="text-[10px] font-mono tracking-widest text-[#D4AF37] font-bold uppercase">
+                            Centre Opérationnel
+                          </span>
                         </div>
-
-                        <div className="p-4 rounded-2xl bg-black border border-white/5 text-right shrink-0 min-w-[170px] select-none">
-                          <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Heure de la République :</span>
-                          <strong className="text-lg font-mono font-black text-[#D4AF37] tracking-wider block mt-0.5">
-                            {liveAdminTime}
-                          </strong>
-                          <span className="text-[8px] text-[#D4AF37]/60 block font-mono">Babi-Zone (GMT)</span>
-                        </div>
+                        <h2 className="text-2xl font-display font-black tracking-tight text-[#F5F5F5] mt-1 uppercase">
+                          Administration Quotidienne
+                        </h2>
+                        <p className="text-[11px] text-[#D4AF37]/70 font-mono mt-1">
+                          Sénateur : {userEmail || "admin"}
+                        </p>
+                      </div>
+                      
+                      <div className="text-right">
+                        <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Heure Système (GMT)</span>
+                        <strong className="text-xl font-mono font-black text-[#F5F5F5] tracking-wider block mt-0.5">
+                          {liveAdminTime}
+                        </strong>
                       </div>
                     </div>
 
-                    {/* PERSP/THRONE BAR */}
-                    <div className="flex">
-                      <button
-                        onClick={() => {
-                          setPerspective("user");
-                          setActiveMenu("user_terrain");
-                          addToTerminal("[COMMANDE] Pilotage déporté sur Perspective Artiste.");
-                          try { audioSynth.playValidationSuccess(); } catch (err) {}
-                        }}
-                        className="group p-4 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-display font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_4px_15px_rgba(212,175,55,0.2)] flex items-center justify-center gap-3 cursor-pointer w-full"
-                      >
-                        <Users className="w-5 h-5 text-black stroke-[3]" />
-                        <span>👤 PASSER EN MODE UTILISATEUR (RETOUR TERRAIN)</span>
-                      </button>
-                    </div>
-
-                    {/* KPIs IN REAL-TIME (BRIEF DU JOUR) */}
+                    {/* 1. CARTE RÉSUMÉ DU JOUR */}
                     <div className="space-y-4">
                       <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
                         <Activity className="w-4 h-4 text-[#D4AF37]" />
-                        Mon Brief du Jour
+                        Résumé du Jour
                       </h3>
 
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/10 shadow-sm flex flex-col justify-between text-left relative overflow-hidden">
-                          <div className="absolute top-0 right-0 p-3">
-                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse block" />
-                          </div>
+                        <div className="p-5 rounded-2xl bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_15px_rgba(212,175,55,0.02)] flex flex-col justify-between text-left relative overflow-hidden transition-all">
                           <span className="text-[9px] font-mono uppercase tracking-widest text-emerald-500 block font-bold">Nouveaux inscrits</span>
                           <strong className="text-2xl font-display font-black text-white block mt-2">{brief.newUsersCount}</strong>
                         </div>
 
-                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/10 shadow-sm flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">Revenus (Auj.)</span>
-                          <strong className="text-lg font-mono font-black text-[#D4AF37] block mt-2">{brief.revenuesGenerated.toLocaleString()} F</strong>
-                        </div>
-
-                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-amber-500/20 shadow-sm flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-amber-500 block font-bold">Vérifications ID</span>
+                        <div className="p-5 rounded-2xl bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_15px_rgba(212,175,55,0.02)] flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">Nouveaux Gombos ID</span>
                           <strong className="text-2xl font-display font-black text-white block mt-2">{brief.kycRequestsCount}</strong>
                         </div>
 
-                        <div className="p-5 rounded-2xl bg-[#0A0A0C] border border-red-500/20 shadow-sm flex flex-col justify-between text-left relative overflow-hidden">
+                        <div className="p-5 rounded-2xl bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_15px_rgba(212,175,55,0.02)] flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">Revenus du jour</span>
+                          <strong className="text-lg font-mono font-black text-[#D4AF37] block mt-2">{brief.revenuesGenerated.toLocaleString()} F</strong>
+                        </div>
+
+                        <div className="p-5 rounded-2xl bg-[#050505] border border-red-500/20 shadow-[0_2px_15px_rgba(239,68,68,0.05)] flex flex-col justify-between text-left relative overflow-hidden">
                            {(brief.criticalAlertsCount > 0 || kpiAlertsCount > 0) && (
                             <div className="absolute top-0 right-0 p-3">
                               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse block" />
                             </div>
                            )}
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-red-500 block font-bold">Alertes Urgentes</span>
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-red-500 block font-bold">Alertes ouvertes</span>
                           <strong className="text-2xl font-display font-black text-white block mt-2">{brief.criticalAlertsCount || kpiAlertsCount}</strong>
                         </div>
                       </div>
                     </div>
 
-                    {/* ACTIONS RAPIDES GRID */}
+                    {/* 2. ACTIONS ADMINISTRATEUR */}
                     <div className="space-y-4 pt-4">
                       <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
                         <Zap className="w-4 h-4 text-[#D4AF37]" />
-                        Actions Rapides
+                        Actions Administrateur
                       </h3>
 
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <button
                           onClick={() => {
-                            setActiveMenu("kyc");
+                            setActiveMenu("users");
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 ${
-                            activeMenu === "kyc" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
+                            activeMenu === "users" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#050505] hover:bg-[#D4AF37]/5 border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-[#F5F5F5]"
                           }`}
                         >
-                          <ShieldCheck className="w-5 h-5 text-amber-500" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Vérifications ID</span>
+                          <Users className="w-5 h-5 text-[#D4AF37]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Vérifier profils</span>
                         </button>
 
                         <button
                           onClick={() => {
-                            setActiveMenu("users");
+                            setActiveMenu("kyc");
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 ${
-                            activeMenu === "users" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
+                            activeMenu === "kyc" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#050505] hover:bg-[#D4AF37]/5 border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-[#F5F5F5]"
                           }`}
                         >
-                          <Users className="w-5 h-5 text-white" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Utilisateurs</span>
+                          <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Vérifier Gombo ID</span>
                         </button>
 
                         <button
@@ -5245,38 +5197,25 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             setActiveMenu("posts");
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 ${
-                            activeMenu === "posts" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
+                            activeMenu === "posts" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#050505] hover:bg-[#D4AF37]/5 border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-[#F5F5F5]"
                           }`}
                         >
-                          <MessageSquare className="w-5 h-5 text-emerald-400" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Publications</span>
+                          <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Modérer contenus</span>
                         </button>
 
                         <button
-                          onClick={() => {
+                           onClick={() => {
                             setActiveMenu("alertes");
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 ${
-                            activeMenu === "alertes" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
+                            activeMenu === "alertes" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#050505] hover:bg-red-500/5 border-[#D4AF37]/20 hover:border-red-500/40 text-[#F5F5F5]"
                           }`}
                         >
-                          <AlertTriangle className="w-5 h-5 text-red-500 animate-pulse" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Signalements</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setActiveMenu("finances");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 ${
-                            activeMenu === "finances" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
-                          }`}
-                        >
-                          <Wallet className="w-5 h-5 text-[#D4AF37]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Revenus</span>
+                          <AlertTriangle className="w-5 h-5 text-red-400" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Gérer signalements</span>
                         </button>
 
                         <button
@@ -5284,134 +5223,146 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             setIsBroadcastModalOpen(true);
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className="p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 h-24 bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#050505] hover:bg-[#D4AF37]/5 border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-[#F5F5F5]"
                         >
-                          <Send className="w-5 h-5 text-cyan-400" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider block leading-none">Notifications</span>
+                          <Megaphone className="w-5 h-5 text-[#D4AF37]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Diffuser annonce</span>
+                        </button>
+
+                        <button
+                           onClick={() => {
+                             setActiveMenu("alertes");
+                           }}
+                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#050505] hover:bg-[#D4AF37]/5 border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-[#F5F5F5]"
+                        >
+                          <Send className="w-5 h-5 text-[#D4AF37]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Envoyer notification</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* STATS PANELS (3 COLUMNS) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
-                      {/* Activité en direct */}
-                      <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-cyan-500/20 space-y-4 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4">
-                           <Globe className="w-5 h-5 text-cyan-500 opacity-20" />
+                    {/* 3. & 4. PANNEAUX DE CONTRÔLE (RÉCENTE / SÉCURITÉ) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+                      {/* 3. Activité Récente */}
+                      <div className="p-6 rounded-2xl bg-[#050505] border border-[#D4AF37]/20 space-y-4">
+                        <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                           <Activity className="w-4 h-4 text-[#D4AF37]" />
+                           <h4 className="text-xs font-mono font-black text-[#F5F5F5] uppercase tracking-wider">
+                             Activité Récente
+                           </h4>
                         </div>
-                        <h4 className="text-xs font-mono font-bold uppercase text-white pb-2.5 flex items-center gap-1.5 border-b border-cyan-500/20">
-                          <Activity className="w-4 h-4 text-cyan-400 animate-pulse" />
-                          Activité en direct
-                        </h4>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">🟢 Connectés</span>
-                             <strong className="text-xl font-display font-black text-white">{users.filter(u => u.status === "active").length + 27}</strong>
-                          </div>
-                          <div>
-                             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">💬 Pubs (Auj.)</span>
-                             <strong className="text-xl font-display font-black text-white">{brief.newPostsCount}</strong>
-                          </div>
-                          <div>
-                             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">💼 Opportunités</span>
-                             <strong className="text-xl font-display font-black text-[#D4AF37]">{gombos.filter(g => g.status === "open").length}</strong>
-                          </div>
-                          <div>
-                             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">🛡️ Demandes ID</span>
-                             <strong className="text-xl font-display font-black text-amber-500">{pendingIdUsers.length}</strong>
-                          </div>
-                        </div>
-                        {pendingIdUsers.length > 0 && (
-                          <div className="pt-2 border-t border-white/5 mt-4">
-                            <span className="text-[9px] text-zinc-500 uppercase block mb-2">À traiter urgemment :</span>
-                            <div className="space-y-2 max-h-24 overflow-y-auto pr-1">
-                              {pendingIdUsers.slice(0,3).map(u => (
-                                 <div key={u.id} className="flex justify-between items-center bg-black p-2 rounded-lg border border-white/5">
-                                   <span className="text-[10px] text-white font-bold truncate pr-3">{u.artisticName}</span>
-                                   <button onClick={() => setActiveMenu("kyc")} className="text-[9px] px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 uppercase font-black rounded whitespace-nowrap transition-colors cursor-pointer">Examiner</button>
-                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                        <ul className="space-y-4 max-h-60 overflow-y-auto px-1 scrollbar-thin">
+                          {recentSignups.slice(0, 4).map((u, i) => (
+                            <li key={`u-${i}`} className="flex justify-between items-center bg-[#010101] border border-white/5 p-3 rounded-lg hover:border-[#D4AF37]/20 transition-colors">
+                              <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+                                <UserPlus className="w-3 h-3 text-emerald-400" />
+                                {u.nom || "Nouvel Utilisateur"}
+                              </span>
+                              <span className="text-[9px] font-mono text-zinc-500 uppercase">inscription</span>
+                            </li>
+                          ))}
+                          {transactions.slice(0, 3).map((tx, i) => (
+                            <li key={`tx-${i}`} className="flex justify-between items-center bg-[#010101] border border-white/5 p-3 rounded-lg hover:border-[#D4AF37]/20 transition-colors">
+                              <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+                                <Wallet className="w-3 h-3 text-[#D4AF37]" />
+                                {tx.description}
+                              </span>
+                              <span className="text-[9px] font-mono text-zinc-500 uppercase">paiement</span>
+                            </li>
+                          ))}
+                          {posts.slice(0, 3).map((p, i) => (
+                            <li key={`p-${i}`} className="flex justify-between items-center bg-[#010101] border border-white/5 p-3 rounded-lg hover:border-[#D4AF37]/20 transition-colors">
+                               <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2 truncate pr-2 max-w-[200px]">
+                                <FileText className="w-3 h-3 text-cyan-400" />
+                                {p.title || "Nouvelle opportunité"}
+                              </span>
+                              <span className="text-[9px] font-mono text-zinc-500 uppercase shrink-0">publication</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
 
-                      {/* Revenus AFRIGOMBO */}
-                      <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-[#D4AF37]/30 space-y-4">
-                        <h4 className="text-xs font-mono font-bold uppercase text-[#D4AF37] pb-2.5 flex items-center gap-1.5 border-b border-[#D4AF37]/20">
-                          <Wallet className="w-4 h-4 text-[#D4AF37]" />
-                          Revenus AFRIGOMBO
-                        </h4>
-                        
-                        <div className="space-y-5">
-                          <div className="flex justify-between items-center">
-                             <span className="text-[10px] font-mono text-zinc-400 uppercase">Revenus (Auj.)</span>
-                             <strong className="text-lg font-mono font-black text-emerald-400">{brief.revenuesGenerated.toLocaleString()} F</strong>
-                          </div>
-                          <div className="flex justify-between items-center">
-                             <span className="text-[10px] font-mono text-zinc-400 uppercase">Revenus (Mois)</span>
-                             <strong className="text-lg font-mono font-black text-emerald-400">{(brief.revenuesGenerated * 14 + 125000).toLocaleString()} F</strong>
-                          </div>
-                          <div className="pt-3 border-t border-white/5">
-                             <span className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">🏦 GAWA PAY (Solde Séquestre)</span>
-                             <strong className="text-2xl font-mono font-black text-white">{Math.floor(kpiRevenuesSum * 8.5 + 400000).toLocaleString()} F</strong>
-                          </div>
+                      {/* 4. Sécurité */}
+                      <div className="p-6 rounded-2xl bg-[#050505] border border-red-500/10 space-y-4">
+                         <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                           <ShieldAlert className="w-4 h-4 text-red-500" />
+                           <h4 className="text-xs font-mono font-black text-[#F5F5F5] uppercase tracking-wider">
+                             Interface de Sécurité
+                           </h4>
                         </div>
-                      </div>
-
-                      {/* Alertes critiques */}
-                      <div className="p-6 rounded-2xl bg-[#0A0A0C] border border-red-500/20 space-y-4 flex flex-col">
-                        <h4 className="text-xs font-mono font-bold uppercase text-red-500 pb-2.5 flex items-center gap-1.5 border-b border-red-500/20">
-                          <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
-                          Alertes critiques ({flaggedPosts.length})
-                        </h4>
+                        <ul className="space-y-3">
+                          <li className="flex justify-between items-center bg-[#010101] p-3 rounded-lg border border-red-500/10">
+                            <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+                              <AlertTriangle className="w-3 h-3 text-red-500" />
+                              Alertes Actives
+                            </span>
+                            <span className="text-xs font-mono font-black text-red-500">{brief.criticalAlertsCount || kpiAlertsCount}</span>
+                          </li>
+                          <li className="flex justify-between items-center bg-[#010101] p-3 rounded-lg border border-white/5">
+                            <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+                              <UserX className="w-3 h-3 text-zinc-500" />
+                              Comptes Suspendus
+                            </span>
+                            <span className="text-xs font-mono font-black text-zinc-400">
+                              {users.filter(u => u.isSuspended).length}
+                            </span>
+                          </li>
+                          <li className="flex justify-between items-center bg-[#010101] p-3 rounded-lg border border-amber-500/10">
+                            <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+                              <Eye className="w-3 h-3 text-amber-500" />
+                              Activité Suspecte
+                            </span>
+                            <span className="text-xs font-mono font-black text-amber-500">
+                              {flaggedPosts.length}
+                            </span>
+                          </li>
+                        </ul>
                         
-                        <div className="flex-1 overflow-y-auto max-h-[220px] pr-1">
-                          {flaggedPosts.length === 0 ? (
-                             <div className="py-8 text-center text-zinc-650 text-[10px] font-mono">
-                               🟢 Aucun signalement urgent à travers la République.
-                             </div>
-                          ) : (
-                             <div className="space-y-2">
-                               {flaggedPosts.map(p => (
-                                 <div key={p.id} className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl">
-                                    <div className="flex justify-between items-start mb-1">
-                                      <span className="text-[10px] font-bold text-white uppercase">{p.authorArtisticName}</span>
-                                      <span className="text-[8px] font-mono text-zinc-500">{p.timestamp}</span>
-                                    </div>
-                                    <p className="text-[10px] text-zinc-400 mb-2 truncate italic">"{p.content}"</p>
-                                    <div className="flex gap-2 justify-end">
-                                      <button onClick={() => handleQuickDeletePost(p.id)} className="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-[8px] uppercase font-bold transition-colors cursor-pointer">Supprimer</button>
-                                    </div>
-                                 </div>
-                               ))}
-                             </div>
-                          )}
-                        </div>
+                        <button
+                          onClick={triggerGlobalSystemScan}
+                          disabled={scannerStatus === "scanning"}
+                          className="w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#010101] border border-white/10 hover:border-[#D4AF37]/50 hover:text-[#D4AF37] transition-all text-[10px] font-mono font-semibold"
+                        >
+                          <RefreshCw className={`w-3 h-3 ${scannerStatus === "scanning" ? "animate-spin" : ""}`} />
+                          Scan de Sécurité Global
+                        </button>
                       </div>
                     </div>
 
-                    {userEmail === "jhs.kmj7@gmail.com" && (
-                      <div className="pt-8 flex justify-center">
+                    {/* 5. ACCÈS SUPER FONDATEUR */}
+                    {isAuthorizedSuperFounder && (
+                      <div className="mt-12 p-8 rounded-3xl bg-gradient-to-r from-[#030303] via-[#0D0D15] to-[#030303] border border-[#D4AF37]/40 shadow-[0_10px_40px_rgba(212,175,55,0.1)] text-center space-y-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 transform rotate-12 opacity-5 pointer-events-none">
+                           <Crown className="w-64 h-64 text-[#D4AF37]" />
+                        </div>
+                        
+                        <div className="relative z-10 space-y-2">
+                          <h4 className="text-sm font-display font-black text-[#D4AF37] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+                            <Crown className="w-5 h-5" />
+                            Gouvernance Suprême
+                          </h4>
+                          <p className="text-[11px] text-zinc-400 font-mono">
+                            Zone réservée exclusivement au Fondateur de l'Empire AfriGombo.
+                          </p>
+                        </div>
+
                         <button
                           onClick={() => {
                             setActiveMenu("super_admin");
-                            addToTerminal("👑 [SOUVERAINETÉ] Accès demandé au Tableau de Bord Super Fondateur.");
+                            addToTerminal("👑 [SOUVERAINETÉ] Accès accordé au Palais Numérique.");
                             try { audioSynth.playTamTam(true); } catch (err) {}
                           }}
-                          className="group p-6 bg-black border border-[#D4AF37]/40 hover:border-[#D4AF37] text-[#D4AF37] font-display font-black text-sm uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-4 cursor-pointer relative overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.15)] hover:shadow-[0_0_60px_rgba(212,175,55,0.3)] w-full max-w-lg"
+                          className="relative z-10 group px-8 py-4 bg-black border border-[#D4AF37] hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-display font-black text-sm uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-4 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_40px_rgba(212,175,55,0.4)] mx-auto w-full md:w-auto"
                         >
-                          <div className="absolute inset-0 bg-[#D4AF37] opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl"></div>
-                          <div className="absolute -inset-1 bg-gradient-to-r from-[#D4AF37]/0 via-[#D4AF37]/20 to-[#D4AF37]/0 rounded-2xl animate-pulse blur-md"></div>
-                          <Crown className="w-6 h-6 text-[#D4AF37] stroke-[2] animate-pulse" />
-                          <span className="relative z-10">ACCÉDER AU TRÔNE DU FONDATEUR</span>
+                          <Crown className="w-5 h-5" />
+                          <span>Accéder au Palais Fondateur</span>
                         </button>
                       </div>
                     )}
                   </div>
                 );
-              })()}
+              })()
+}
 
               {/* ----------------------------------------------------
                                 VIEW: CABINET SUPRÊME PRIVÉ (LE TRÔNE DU FONDATEUR)

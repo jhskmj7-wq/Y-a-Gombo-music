@@ -1,0 +1,57 @@
+    const scrollKey = `${perspective}-${activeMenu}-${activeMenu === "user_terrain" ? terrainTab : ""}`;
+      const scrollKey = `${perspective}-${activeMenu}-${activeMenu === "user_terrain" ? terrainTab : ""}`;
+    if (activeMenu === "dashboard") {
+      if (activeMenu === "super_admin") {
+        if (activeMenu === "super_admin") {
+      if (activeMenu === "super_admin" && !isAuthorizedSuperFounder) {
+                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "all"
+                    perspective === "user" && activeMenu === "user_vibes"
+                    perspective === "user" && activeMenu === "user_mes_gombos"
+                    perspective === "user" && activeMenu === "user_heritage" && !viewingGomboIdDetail
+                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "musicien"
+                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "contrat"
+                        perspective === "admin" && activeMenu === "dashboard"
+                        perspective === "admin" && activeMenu === "super_admin"
+              {activeMenu === "user_terrain" && (
+              {activeMenu === "user_ecosystem" && (() => {
+              {activeMenu === "user_vibes" && (() => {
+              {activeMenu === "user_publish" && (() => {
+              {activeMenu === "privacy" && (
+              {activeMenu === "terms" && (
+              {activeMenu === "delete_account" && (
+              {activeMenu === "user_heritage" && (() => {
+              {activeMenu === "user_gombo_id" && (() => {
+              {activeMenu === "user_mes_gombos" && (() => {
+              {activeMenu === "user_mes_groupes" && (() => {
+              {activeMenu === "user_renforts" && (() => {
+              {activeMenu === "user_opportunities" && (() => {
+              {activeMenu === "user_settings" && (() => {
+              {activeMenu === "user_notifications" && (() => {
+              {activeMenu === "user_messages" && (() => {
+              {activeMenu === "user_edit_profile" && (() => {
+              {activeMenu === "dashboard" && (() => {
+                            activeMenu === "kyc" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                            activeMenu === "users" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                            activeMenu === "posts" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                            activeMenu === "alertes" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+                            activeMenu === "finances" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+              {activeMenu === "super_admin" && (
+              {(activeMenu === "gombos" || activeMenu === "posts") && (
+              {activeMenu === "renforts" && (
+              {(activeMenu === "kyc" || activeMenu === "users") && (
+              {activeMenu === "revision" && (
+              {activeMenu === "alertes" && (
+              {(activeMenu === "caisse" || activeMenu === "finances") && (() => {
+              {activeMenu === "analytics" && (
+              {activeMenu === "plus" && (
+              {activeMenu === "logs" && (
+              {activeMenu === "monetisation" && (() => {
+              activeMenu === "user_terrain" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "user_vibes" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "user_mes_gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "user_heritage" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "dashboard" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "users" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "posts" || activeMenu === "gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "kyc" || activeMenu === "revision" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "plus" || activeMenu === "super_admin" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"

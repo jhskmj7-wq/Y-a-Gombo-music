@@ -1,0 +1,57 @@
+614:    const scrollKey = `${perspective}-${activeMenu}-${activeMenu === "user_terrain" ? terrainTab : ""}`;
+620:      const scrollKey = `${perspective}-${activeMenu}-${activeMenu === "user_terrain" ? terrainTab : ""}`;
+757:    if (activeMenu === "dashboard") {
+817:      if (activeMenu === "super_admin") {
+840:        if (activeMenu === "super_admin") {
+868:      if (activeMenu === "super_admin" && !isAuthorizedSuperFounder) {
+1613:                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "all"
+1633:                    perspective === "user" && activeMenu === "user_vibes"
+1653:                    perspective === "user" && activeMenu === "user_mes_gombos"
+1674:                    perspective === "user" && activeMenu === "user_heritage" && !viewingGomboIdDetail
+1703:                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "musicien"
+1727:                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "contrat"
+1798:                        perspective === "admin" && activeMenu === "dashboard"
+1820:                        perspective === "admin" && activeMenu === "super_admin"
+2084:              {activeMenu === "user_terrain" && (
+3652:              {activeMenu === "user_ecosystem" && (() => {
+3685:              {activeMenu === "user_vibes" && (() => {
+3773:              {activeMenu === "user_publish" && (() => {
+3954:              {activeMenu === "privacy" && (
+3961:              {activeMenu === "terms" && (
+3968:              {activeMenu === "delete_account" && (
+3974:              {activeMenu === "user_heritage" && (() => {
+4583:              {activeMenu === "user_gombo_id" && (() => {
+4618:              {activeMenu === "user_mes_gombos" && (() => {
+4677:              {activeMenu === "user_mes_groupes" && (() => {
+4727:              {activeMenu === "user_renforts" && (() => {
+4799:              {activeMenu === "user_opportunities" && (() => {
+4846:              {activeMenu === "user_settings" && (() => {
+4910:              {activeMenu === "user_notifications" && (() => {
+4950:              {activeMenu === "user_messages" && (() => {
+4969:              {activeMenu === "user_edit_profile" && (() => {
+5054:              {activeMenu === "dashboard" && (() => {
+5223:                            activeMenu === "kyc" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+5236:                            activeMenu === "users" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+5249:                            activeMenu === "posts" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+5262:                            activeMenu === "alertes" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+5275:                            activeMenu === "finances" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#09090C] hover:bg-[#D4AF37]/5 border-[#D4AF37]/10 hover:border-[#D4AF37]/25 text-zinc-300"
+5419:              {activeMenu === "super_admin" && (
+5448:              {(activeMenu === "gombos" || activeMenu === "posts") && (
+5962:              {activeMenu === "renforts" && (
+6022:              {(activeMenu === "kyc" || activeMenu === "users") && (
+6498:              {activeMenu === "revision" && (
+6552:              {activeMenu === "alertes" && (
+6586:              {(activeMenu === "caisse" || activeMenu === "finances") && (() => {
+6878:              {activeMenu === "analytics" && (
+6966:              {activeMenu === "plus" && (
+7066:              {activeMenu === "logs" && (
+7093:              {activeMenu === "monetisation" && (() => {
+7586:              activeMenu === "user_terrain" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+7603:              activeMenu === "user_vibes" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+7638:              activeMenu === "user_mes_gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+7656:              activeMenu === "user_heritage" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+7678:              activeMenu === "dashboard" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+7693:              activeMenu === "users" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+7708:              activeMenu === "posts" || activeMenu === "gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+7723:              activeMenu === "kyc" || activeMenu === "revision" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+7738:              activeMenu === "plus" || activeMenu === "super_admin" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"

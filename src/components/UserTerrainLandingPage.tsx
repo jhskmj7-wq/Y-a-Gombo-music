@@ -303,50 +303,27 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
           ACTIONS RAPIDES
         </h3>
         <div className="flex flex-wrap sm:flex-nowrap sm:overflow-x-auto gap-3.5 pb-2 scrollbar-none items-center w-full select-none">
-          {/* 1. Scanner Gombo ID */}
+          {/* 1. Demander un Renfort */}
           <div
             onClick={() => {
               requireAuthThen(() => {
-                setActiveQuickActionModal("verify_gombo_id");
+                setActiveMenu("user_renforts");
                 try { audioSynth.playValidationSuccess(); } catch (_) {}
               });
             }}
             className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
           >
             <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
-              <QrCode className="w-5 h-5 text-[#D4AF37]" />
+              <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
             </div>
-            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Scanner</span>
+            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Renfort</span>
           </div>
 
-          {/* 2. Messages */}
+          {/* 2. Annuaire Élite */}
           <div
             onClick={() => {
               requireAuthThen(() => {
-                setActiveMenu("user_messages");
-                try { audioSynth.playValidationSuccess(); } catch (_) {}
-              });
-            }}
-            className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
-          >
-            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
-              <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
-            </div>
-            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Messages</span>
-          </div>
-
-          {/* 3. Inviter un proche */}
-          <div
-            onClick={() => {
-              requireAuthThen(() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: "Rejoins l'élite sur AFRIGOMBO",
-                    url: "https://afrigombo.com",
-                  }).catch(() => {});
-                } else {
-                  alert("Inviter un proche: copiez https://afrigombo.com !");
-                }
+                setActiveMenu("user_ecosystem");
                 try { audioSynth.playValidationSuccess(); } catch (_) {}
               });
             }}
@@ -355,26 +332,39 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
             <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
               <Users className="w-5 h-5 text-[#D4AF37]" />
             </div>
-            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Inviter</span>
+            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Annuaire</span>
           </div>
 
-          {/* 4. Centre d'aide */}
+          {/* 3. Événements Live */}
+          <div
+            onClick={() => {
+              alert("Billetterie & Événements en cours d'activation !");
+              try { audioSynth.playValidationSuccess(); } catch (_) {}
+            }}
+            className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
+          >
+            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
+              <Megaphone className="w-5 h-5 text-[#D4AF37]" />
+            </div>
+            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Événement</span>
+          </div>
+
+          {/* 4. Booster Profil */}
           <div
             onClick={() => {
               requireAuthThen(() => {
-                alert("Le Centre d'Aide est en cours de développement. Merci de votre patience.");
+                setActiveMenu("user_monetisation");
                 try { audioSynth.playValidationSuccess(); } catch (_) {}
               });
             }}
             className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
           >
             <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
-              <LifeBuoy className="w-5 h-5 text-[#D4AF37]" />
+              <Award className="w-5 h-5 text-[#D4AF37]" />
             </div>
-            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Aide</span>
+            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Booster</span>
           </div>
           
-          {/* "Voir plus" could be added if needed, but restricting to 4 primary actions looks super clean and premium */}
         </div>
       </div>
 
