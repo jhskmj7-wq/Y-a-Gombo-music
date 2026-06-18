@@ -10,7 +10,8 @@ import {
   query,
   limit
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../lib/firebase";
 import { useAuth } from "../AuthContext";
 import AuthScreen from "./AuthScreen";
 import GomboIdUserDashboard from "./GomboIdUserDashboard";
@@ -1773,53 +1774,29 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               <div className="border-t border-[#D4AF37]/15 my-2" />
 
               {/* GROUP 3: PRIVILEGES SOUVERAINS (ADMIN/FOUNDER) */}
-              {(isAuthorizedAdmin || isAuthorizedSuperFounder || currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com") && (
+              {(isAuthorizedAdmin || isAuthorizedSuperFounder || currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com" || currentUser?.email?.toLowerCase() === "jhs.kmj7@gmail.com") && (
                 <div className="space-y-1">
                   <span className="px-3 text-[8.5px] font-mono font-black text-rose-500 uppercase tracking-widest block mb-1">
                     👑 Commandement Royal
                   </span>
 
                   {/* 🛡️ Centre de Commandement */}
-                  {(isAuthorizedAdmin || isAuthorizedSuperFounder) && (
-                    <button
-                      onClick={() => {
-                        setPerspective("admin");
-                        setActiveMenu("dashboard");
-                        setIsSidebarOpen(false);
-                        try { audioSynth.playValidationSuccess(); } catch (e) {}
-                      }}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-mono font-black uppercase tracking-wider transition-all ${
-                        perspective === "admin" && activeMenu === "dashboard"
-                          ? "bg-rose-600 text-white shadow-[0_0_12px_rgba(225,29,72,0.3)]"
-                          : "text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-[#D4AF37]/35"
-                      }`}
-                    >
-                      <ShieldCheck className="w-4 h-4 shrink-0 text-[#D4AF37]" />
-                      <span>🛡️ Commandement</span>
-                    </button>
-                  )}
-
-                  {/* 👑 Le Trône */}
-                  {(currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com" ||
-                    currentUser?.email?.toLowerCase() === "jhs.kmj7@gmail.com") && (
-                    <button
-                      onClick={() => {
-                        setPerspective("admin");
-                        setActiveMenu("super_admin");
-                        setIsSidebarOpen(false);
-                        try { audioSynth.playTamTam(true); } catch (e) {}
-                        addToTerminal("[ADMIN] En route vers le Trône Royal.");
-                      }}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-mono font-black uppercase tracking-wider transition-all mt-1.5 ${
-                        perspective === "admin" && activeMenu === "super_admin"
-                          ? "bg-purple-800 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
-                          : "text-purple-400 hover:text-white hover:bg-purple-500/10 border border-purple-500/35"
-                      }`}
-                    >
-                      <Crown className="w-4 h-4 shrink-0 text-yellow-400 animate-bounce" />
-                      <span>👑 Le Trône</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      setPerspective("admin");
+                      setActiveMenu("dashboard");
+                      setIsSidebarOpen(false);
+                      try { audioSynth.playValidationSuccess(); } catch (e) {}
+                    }}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-mono font-black uppercase tracking-wider transition-all ${
+                      perspective === "admin" && activeMenu === "dashboard"
+                        ? "bg-rose-600 text-white shadow-[0_0_12px_rgba(225,29,72,0.3)]"
+                        : "text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-[#D4AF37]/35"
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4 shrink-0 text-[#D4AF37]" />
+                    <span>🛡️ CENTRE DE COMMANDEMENT</span>
+                  </button>
                 </div>
               )}
 
@@ -2058,10 +2035,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <AnimatePresence mode="wait">
             <motion.div
               key={activeMenu}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0, x: 20, filter: "drop-shadow(0 0 20px rgba(212,175,55,0.4))" }}
+              animate={{ opacity: 1, x: 0, filter: "drop-shadow(0 0 0px rgba(212,175,55,0))" }}
+              exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
               className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-12 pt-6"
             >
               
@@ -4980,6 +4957,46 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       <p className="text-xs text-zinc-400">Mettez à jour vos spécialités et coordonnées d'excellence.</p>
                     </div>
 
+                    <div className="flex flex-col sm:flex-row items-center gap-6">
+                      <div className="relative w-24 h-24 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-black flex-shrink-0 shadow-[0_0_15px_rgba(212,175,55,0.3)]">
+                        {currentArtist.avatarUrl ? (
+                          <img src={currentArtist.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-3xl font-black text-[#D4AF37]">
+                            {(currentArtist.artisticName || "U").charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2 text-center sm:text-left">
+                        <label className="cursor-pointer px-4 py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-black text-[10px] font-sans font-black tracking-widest uppercase rounded-lg transition-all shadow-lg active:scale-95 inline-block">
+                          Mettre à jour la photo
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              try {
+                                addToTerminal(`[UPLOAD] Téléchargement de la nouvelle photo...`);
+                                const storageRef = ref(storage, `users/${currentArtist.id}/avatar`);
+                                await uploadBytes(storageRef, file);
+                                const avatarUrl = await getDownloadURL(storageRef);
+                                const photoUpdatedAt = new Date().toISOString();
+                                setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, avatarUrl, photoUpdatedAt } : u));
+                                await saveToFirestore("users", currentArtist.id, { avatarUrl, photoUpdatedAt });
+                                addToTerminal(`[PROFIL] Photo mise à jour avec succès.`);
+                                try { audioSynth.playValidationSuccess(); } catch(err){}
+                              } catch (err: any) {
+                                addToTerminal(`[ERREUR UPLOAD] ${err.message}`);
+                              }
+                            }}
+                          />
+                        </label>
+                        <p className="text-[9px] text-zinc-500 font-mono">Format autorisé: JPG, PNG, GIF. Max 5MB.</p>
+                      </div>
+                    </div>
+
                     <div className="space-y-4 max-w-lg">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
@@ -5115,11 +5132,25 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         </p>
                       </div>
                       
-                      <div className="text-right">
-                        <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Heure Système (GMT)</span>
-                        <strong className="text-xl font-mono font-black text-[#F5F5F5] tracking-wider block mt-0.5">
-                          {liveAdminTime}
-                        </strong>
+                      <div className="text-right flex flex-col items-end gap-3">
+                        <div>
+                          <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Heure Système (GMT)</span>
+                          <strong className="text-xl font-mono font-black text-[#F5F5F5] tracking-wider block mt-0.5">
+                            {liveAdminTime}
+                          </strong>
+                        </div>
+                        {userEmail === "jhs.kmj7@gmail.com" && (
+                          <button
+                            onClick={() => {
+                              setActiveMenu("super_admin");
+                              try { audioSynth.playTamTam(true); } catch(e){}
+                            }}
+                            className="bg-purple-900/40 hover:bg-purple-800 border border-purple-500/50 text-white px-4 py-2 flex items-center gap-2 rounded-lg transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+                          >
+                            <Crown className="w-4 h-4 text-yellow-400" />
+                            <span className="text-[10px] font-mono font-black uppercase tracking-wider text-yellow-400">Accéder au Palais Numérique Suprême</span>
+                          </button>
+                        )}
                       </div>
                     </div>
 

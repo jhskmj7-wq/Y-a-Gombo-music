@@ -93,7 +93,13 @@ export default function FounderThrone({
   ];
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-[#030303] text-zinc-100 flex flex-col overflow-hidden font-sans select-none z-[150]">
+    <motion.div 
+      initial={{ opacity: 0, filter: "brightness(0) drop-shadow(0 0 50px rgba(212,175,55,0.8))" }}
+      animate={{ opacity: 1, filter: "brightness(1) drop-shadow(0 0 0px rgba(212,175,55,0))" }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="fixed inset-0 w-full h-full bg-[#030303] text-zinc-100 flex flex-col overflow-hidden font-sans select-none z-[150]"
+    >
       
       <div className="flex-1 flex flex-col xl:flex-row min-h-0 overflow-hidden">
         {/* DESKTOP SIDEBAR */}
@@ -646,7 +652,7 @@ export default function FounderThrone({
           })}
         </div>
       </footer>
-    </div>
+    </motion.div>
   );
 }
 

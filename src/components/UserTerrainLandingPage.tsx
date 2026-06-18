@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { 
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
-  RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy
+  RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy,
+  PenTool, UserCheck, MessageCircle, History, Headphones, HelpCircle
 } from "lucide-react";
 import { Gombo, User, Post } from "../types";
 
@@ -302,69 +303,33 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
         <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
           ACTIONS RAPIDES
         </h3>
-        <div className="flex flex-wrap sm:flex-nowrap sm:overflow-x-auto gap-3.5 pb-2 scrollbar-none items-center w-full select-none">
-          {/* 1. Demander un Renfort */}
-          <div
-            onClick={() => {
-              requireAuthThen(() => {
-                setActiveMenu("user_renforts");
-                try { audioSynth.playValidationSuccess(); } catch (_) {}
-              });
-            }}
-            className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
-          >
-            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
-              <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
-            </div>
-            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Renfort</span>
-          </div>
-
-          {/* 2. Annuaire Élite */}
-          <div
-            onClick={() => {
-              requireAuthThen(() => {
-                setActiveMenu("user_ecosystem");
-                try { audioSynth.playValidationSuccess(); } catch (_) {}
-              });
-            }}
-            className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
-          >
-            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
-              <Users className="w-5 h-5 text-[#D4AF37]" />
-            </div>
-            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Annuaire</span>
-          </div>
-
-          {/* 3. Événements Live */}
-          <div
-            onClick={() => {
-              alert("Billetterie & Événements en cours d'activation !");
-              try { audioSynth.playValidationSuccess(); } catch (_) {}
-            }}
-            className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
-          >
-            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
-              <Megaphone className="w-5 h-5 text-[#D4AF37]" />
-            </div>
-            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Événement</span>
-          </div>
-
-          {/* 4. Booster Profil */}
-          <div
-            onClick={() => {
-              requireAuthThen(() => {
-                setActiveMenu("user_monetisation");
-                try { audioSynth.playValidationSuccess(); } catch (_) {}
-              });
-            }}
-            className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 transition-all w-[76px] shrink-0 cursor-pointer active:scale-95"
-          >
-            <div className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent">
-              <Award className="w-5 h-5 text-[#D4AF37]" />
-            </div>
-            <span className="text-[9.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none">Booster</span>
-          </div>
-          
+        <div className="flex flex-nowrap overflow-x-auto gap-3.5 pb-3 scrollbar-none items-center w-full select-none custom-scrollbar">
+          {[
+            { id: "scan", label: "Scanner Gombo ID", icon: QrCode, action: () => alert("Scanner Gombo ID") },
+            { id: "publier", label: "Publier Opportunité", icon: PenTool, action: () => setActiveMenu("user_publish") },
+            { id: "verifier", label: "Vérifier Profil", icon: UserCheck, action: () => setActiveMenu("user_heritage") },
+            { id: "messages", label: "Messages", icon: MessageCircle, action: () => alert("Messages en cours d'activation") },
+            { id: "favoris", label: "Favoris", icon: Heart, action: () => alert("Favoris") },
+            { id: "historique", label: "Historique", icon: History, action: () => alert("Historique") },
+            { id: "assistance", label: "Assistance", icon: Headphones, action: () => alert("Assistance") },
+            { id: "faq", label: "Centre d'Aide", icon: HelpCircle, action: () => alert("Centre d'Aide") }
+          ].map(action => {
+            const Icon = action.icon;
+            return (
+              <div
+                key={action.id}
+                onClick={action.action}
+                className="bg-[#050505] border border-[#D4AF37]/25 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-2.5 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37] transition-all w-[86px] h-[90px] shrink-0 cursor-pointer active:scale-95"
+              >
+                <div className="w-9 h-9 rounded-full border border-[#D4AF37]/25 flex items-center justify-center bg-transparent shrink-0">
+                  <Icon className="w-4 h-4 text-[#D4AF37]" />
+                </div>
+                <span className="text-[8.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-tight line-clamp-2 px-1">
+                  {action.label}
+                </span>
+              </div>
+            )
+          })}
         </div>
       </div>
 
