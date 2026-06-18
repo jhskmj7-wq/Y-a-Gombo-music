@@ -303,28 +303,24 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
         <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
           ACTIONS RAPIDES
         </h3>
-        <div className="flex flex-nowrap overflow-x-auto gap-3.5 pb-3 scrollbar-none items-center w-full select-none custom-scrollbar">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full select-none">
           {[
-            { id: "scan", label: "Scanner Gombo ID", icon: QrCode, action: () => alert("Scanner Gombo ID") },
-            { id: "publier", label: "Publier Opportunité", icon: PenTool, action: () => setActiveMenu("user_publish") },
-            { id: "verifier", label: "Vérifier Profil", icon: UserCheck, action: () => setActiveMenu("user_heritage") },
             { id: "messages", label: "Messages", icon: MessageCircle, action: () => alert("Messages en cours d'activation") },
             { id: "favoris", label: "Favoris", icon: Heart, action: () => alert("Favoris") },
             { id: "historique", label: "Historique", icon: History, action: () => alert("Historique") },
             { id: "assistance", label: "Assistance", icon: Headphones, action: () => alert("Assistance") },
-            { id: "faq", label: "Centre d'Aide", icon: HelpCircle, action: () => alert("Centre d'Aide") }
+            { id: "notifications", label: "Notifications", icon: Bell, action: () => alert("Notifications") },
+            { id: "scanner", label: "Scanner", icon: QrCode, action: () => alert("Scanner Gombo ID") }
           ].map(action => {
             const Icon = action.icon;
             return (
               <div
                 key={action.id}
                 onClick={action.action}
-                className="bg-[#050505] border border-[#D4AF37]/25 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl p-2.5 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37] transition-all w-[86px] h-[90px] shrink-0 cursor-pointer active:scale-95"
+                className="bg-[#050505] border border-[#D4AF37]/25 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl h-[96px] w-full flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 group transition-all cursor-pointer active:scale-95"
               >
-                <div className="w-9 h-9 rounded-full border border-[#D4AF37]/25 flex items-center justify-center bg-transparent shrink-0">
-                  <Icon className="w-4 h-4 text-[#D4AF37]" />
-                </div>
-                <span className="text-[8.5px] text-[#F5F5F5] font-bold tracking-wide text-center leading-tight line-clamp-2 px-1">
+                <Icon className="w-6 h-6 text-[#D4AF37] group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                <span className="text-[13px] text-[#F5F5F5] font-bold tracking-wide text-center leading-tight line-clamp-1 px-2">
                   {action.label}
                 </span>
               </div>
