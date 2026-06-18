@@ -157,22 +157,22 @@ export default function FounderThrone({
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-[#D4AF37]/5 blur-[100px] pointer-events-none"></div>
 
         {/* TOP HEADER */}
-        <header className="shrink-0 bg-black/50 border-b border-[#D4AF37]/20 px-6 2xl:px-10 py-5 flex justify-between items-center z-30">
-          <div className="flex items-center gap-6">
-             <div className="xl:hidden w-10 h-10 rounded-full border border-[#D4AF37] flex items-center justify-center bg-black shadow-[0_0_15px_rgba(212,175,55,0.4)]">
-                 <Globe className="w-5 h-5 text-[#D4AF37]" />
+        <header className="shrink-0 bg-black/50 border-b border-[#D4AF37]/20 px-4 sm:px-6 2xl:px-10 py-4 sm:py-5 flex justify-between items-center z-30">
+          <div className="flex items-center gap-3 sm:gap-6 pr-12">
+             <div className="xl:hidden shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#D4AF37] flex items-center justify-center bg-black shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+                 <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4AF37]" />
              </div>
              <div className="flex flex-col text-left">
-               <h2 className="text-xl 2xl:text-3xl font-black font-display text-[#D4AF37] uppercase tracking-widest drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">
+               <h2 className="text-sm sm:text-xl 2xl:text-3xl font-black font-display text-[#D4AF37] uppercase tracking-widest drop-shadow-[0_0_15px_rgba(212,175,55,0.5)] leading-tight">
                  PALAIS NUMÉRIQUE SUPRÊME
                </h2>
-               <p className="text-[10px] 2xl:text-xs text-[#D4AF37] tracking-[0.3em] 2xl:tracking-[0.4em] mt-1.5 font-mono uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#D4AF37] to-amber-200">
+               <p className="text-[7.5px] sm:text-[10px] 2xl:text-xs text-[#D4AF37] tracking-[0.1em] sm:tracking-[0.3em] mt-1 font-mono uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#D4AF37] to-amber-200 line-clamp-1">
                  Vision • Influence • Héritage • Gouvernance
                </p>
              </div>
           </div>
 
-          <div className="flex items-center gap-8">
+          <div className="hidden xl:flex items-center gap-8">
             <div className="hidden lg:flex items-center opacity-80 filter drop-shadow-[0_0_12px_rgba(212,175,55,0.3)]">
               <svg viewBox="0 0 240 260" className="w-16 h-16 2xl:w-20 2xl:h-20">
                  <path d="M100,20 C120,18,150,22,170,35 C185,45,210,60,220,80 C225,90,218,105,212,115 C205,125,208,135,210,145 C212,155,200,165,190,175 C180,185,175,195,170,210 C165,225,155,235,145,245 C135,255,128,260,128,255 C120,245,115,235,110,225 C105,215,110,205,100,195 C92,185,82,175,75,165 C68,155,60,150,50,145 C40,140,25,135,20,125 C15,115,22,110,30,105 C40,95,50,85,55,75 C60,65,70,55,75,45 C80,35,85,25,100,20 Z" fill="none" stroke="#D4AF37" strokeWidth="2.5" strokeDasharray="3, 5" className="animate-[spin_60s_linear_infinite]" />
@@ -202,18 +202,18 @@ export default function FounderThrone({
             </div>
           </div>
           
-          <button onClick={onClose} className="absolute right-6 top-6 text-zinc-500 hover:text-white xl:hidden border border-zinc-700 hover:border-white rounded p-2 transition-colors">
-            <UserX className="w-5 h-5" />
+          <button onClick={onClose} className="absolute right-4 top-4 sm:right-6 sm:top-6 text-zinc-500 hover:text-white xl:hidden border border-zinc-700 hover:border-white rounded p-1.5 sm:p-2 transition-colors">
+            <UserX className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </header>
 
         {/* LOCKED MAIN REGION (SCALES DOWN ON SMALLER WINDOWS) */}
-        <main className="flex-1 w-full flex bg-transparent p-4 pb-0 items-center justify-center relative overflow-hidden">
+        <main className="flex-1 w-full flex bg-transparent p-4 pb-0 items-start justify-center relative overflow-y-auto custom-scrollbar">
           
-          <div className="w-full h-full xl:max-w-[1500px] 2xl:max-w-[1800px] mx-auto flex flex-col xl:flex-row gap-5 pb-4">
+          <div className="w-full xl:max-w-[1500px] 2xl:max-w-[1800px] mx-auto flex flex-col xl:flex-row gap-5 pb-20">
             
             {/* LEFT COLUMN (WIDER) */}
-            <div className="flex flex-col gap-5 w-full xl:w-[60%] 2xl:w-[65%] min-h-0 h-full">
+            <div className="flex flex-col gap-5 w-full xl:w-[60%] 2xl:w-[65%] min-h-0">
                
                {/* TOP ROW OF LEFT COL: PROFILE */}
                <div className="bg-black/80 backdrop-blur-md border border-[#D4AF37]/30 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center gap-8 shadow-[0_8px_40px_rgba(0,0,0,0.8)] relative overflow-hidden border-t-2 border-t-[#D4AF37]/60 shrink-0">
@@ -266,7 +266,7 @@ export default function FounderThrone({
                </div>
 
                {/* GLOBAL STATS GRID */}
-               <div className="grid grid-cols-4 gap-3 sm:gap-4 shrink-0">
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 shrink-0">
                  {[
                    { label: "UTILISATEURS TOTAUX", val: "1,250,459", trend: "+15.8%", icon: Users },
                    { label: "UTILISATEURS ACTIFS AUJOURD'HUI", val: "245,789", trend: "+18.6%", icon: UserCheck },
@@ -346,15 +346,15 @@ export default function FounderThrone({
 
                    {/* SUPREME ACTIONS */}
                    <div className="w-full bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-4 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col justify-center">
-                     <div className="grid grid-cols-6 gap-2">
+                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                        {supremeActions.map((act, i) => {
                          const Icon = act.icon;
                          const isDanger = ["Suspendre Utilisateur", "Geler Wallet", "Mode Crise"].includes(act.label);
                          return (
                            <button key={i} className="flex flex-col items-center justify-center text-center p-2 2xl:p-3 rounded-xl hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all group aspect-square xl:aspect-auto h-full">
                               <Icon className={`w-5 h-5 2xl:w-6 2xl:h-6 mb-2 ${isDanger ? "text-red-500/80 group-hover:text-red-500 group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "text-[#D4AF37]/80 group-hover:text-[#D4AF37] group-hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]"}`} strokeWidth={1.5} />
-                              <span className="text-[7px] 2xl:text-[9px] font-sans font-bold text-zinc-400 group-hover:text-white leading-tight uppercase tracking-wider hidden xl:block">
-                                {act.label.split(' ')[0]}<br className="hidden xl:block"/>{act.label.split(' ')[1] || ''}
+                              <span className="text-[9px] font-sans font-bold text-zinc-400 group-hover:text-white leading-tight uppercase tracking-wider block">
+                                {act.label.split(' ')[0]}<br />{act.label.split(' ')[1] || ''}
                               </span>
                            </button>
                          );
@@ -390,7 +390,7 @@ export default function FounderThrone({
             </div>
 
             {/* RIGHT COLUMN (NARROWER) */}
-            <div className="flex flex-col gap-5 w-full xl:w-[40%] 2xl:w-[35%] min-h-0 h-full">
+            <div className="flex flex-col gap-5 w-full xl:w-[40%] 2xl:w-[35%] min-h-0">
               
               {/* MONETIZATION CARD */}
               <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
@@ -440,7 +440,7 @@ export default function FounderThrone({
               </div>
 
               {/* AFRICA PLATFORM TIMELINE / MAP */}
-              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 relative flex-1 flex flex-col min-h-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] hidden sm:flex h-full">
+              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 relative flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                  <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-4 shrink-0 drop-shadow-[0_0_5px_rgba(212,175,55,0.3)]">AFRIQUE MUSICALE - TEMPS RÉEL</h3>
                  <div className="flex flex-col 2xl:flex-row items-center gap-6 2xl:gap-8 flex-1 min-h-0 overflow-y-auto custom-scrollbar w-full p-2">
                    
@@ -533,10 +533,10 @@ export default function FounderThrone({
               </div>
 
               {/* SYSTEM STATUS GRID */}
-              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 shrink-0 hidden sm:block shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto">
+              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto">
                  <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-4 drop-shadow-[0_0_5px_rgba(212,175,55,0.3)]">ÉTAT DU SYSTÈME</h3>
                  
-                 <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 mb-5">
+                 <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-3 mb-5">
                     {systemStatus.slice(0, 5).map((sys, i) => {
                       const SysIcon = sys.icon;
                       return (
@@ -554,8 +554,8 @@ export default function FounderThrone({
                     )})}
                  </div>
 
-                 <div className="flex gap-3">
-                   <div className="grid grid-cols-3 gap-3 flex-1">
+                 <div className="flex flex-col sm:flex-row gap-3">
+                   <div className="grid grid-cols-2 xs:grid-cols-3 gap-3 flex-1">
                      {systemStatus.slice(5, 8).map((sys, i) => {
                         const SysIcon = sys.icon;
                         return (
@@ -573,8 +573,8 @@ export default function FounderThrone({
                      )})}
                    </div>
                    
-                   <div className="bg-zinc-950/80 border border-[#D4AF37]/50 rounded-xl flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-[inset_0_0_20px_rgba(212,175,55,0.1)]">
-                      <div className="absolute top-2 w-full text-center">
+                   <div className="bg-zinc-950/80 border border-[#D4AF37]/50 rounded-xl flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-[inset_0_0_20px_rgba(212,175,55,0.1)] py-4 sm:py-0">
+                      <div className="sm:absolute sm:top-2 w-full text-center">
                         <span className="text-[8px] font-sans font-bold uppercase tracking-[0.2em] text-zinc-300">SYSTÈME GLOBAL</span>
                       </div>
                       <div className="relative w-16 h-16 mt-2">
@@ -591,7 +591,7 @@ export default function FounderThrone({
               </div>
 
               {/* IA AFRIGOMBO DEDICATED CARD */}
-              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/30 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto relative overflow-hidden group hidden sm:block">
+              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/30 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto relative overflow-hidden group">
                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 blur-2xl rounded-full pointer-events-none group-hover:bg-[#D4AF37]/20 transition-all"></div>
                  <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-3 drop-shadow-[0_0_5px_rgba(212,175,55,0.3)] flex items-center gap-2">
                    <Sparkles className="w-4 h-4 text-[#D4AF37]" /> IA AFRIGOMBO
@@ -620,8 +620,8 @@ export default function FounderThrone({
       </div>
       </div>
 
-      {/* BOTTOM NAVIGATION */}
-      <footer className="shrink-0 h-16 sm:h-20 bg-black/90 backdrop-blur-xl border-t border-[#D4AF37]/30 flex z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.8)] relative overflow-hidden">
+      {/* BOTTOM NAVIGATION (MOBILE ONLY) */}
+      <footer className="shrink-0 h-16 sm:h-20 bg-black/90 backdrop-blur-xl border-t border-[#D4AF37]/30 flex z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.8)] relative overflow-hidden xl:hidden">
         <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent blur-sm"></div>
         <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-10 flex justify-between items-center h-full">
           {[

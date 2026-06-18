@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
@@ -15,8 +15,8 @@ const firebaseConfig = {
 // Initialize Firebase App
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize services simply to avoid conflicting long-polling configurations
-const db = getFirestore(app);
+// Initialize services with long-polling to prevent connection errors in some environments
+const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 const auth = getAuth(app);
 const storage = getStorage(app);
 
