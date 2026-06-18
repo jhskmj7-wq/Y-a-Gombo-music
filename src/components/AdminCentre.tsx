@@ -5361,8 +5361,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     )}
                   </div>
                 );
-              })()
-}
+              })()}
 
               {/* ----------------------------------------------------
                                 VIEW: CABINET SUPRÊME PRIVÉ (LE TRÔNE DU FONDATEUR)
