@@ -93,10 +93,11 @@ export default function FounderThrone({
   ];
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-[#030303] text-zinc-100 flex flex-col xl:flex-row overflow-hidden font-sans select-none z-[150]">
+    <div className="fixed inset-0 w-full h-full bg-[#030303] text-zinc-100 flex flex-col overflow-hidden font-sans select-none z-[150]">
       
-      {/* DESKTOP SIDEBAR */}
-      <aside className="hidden xl:flex flex-col w-20 2xl:w-[280px] bg-black border-r border-[#D4AF37]/20 z-40 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
+      <div className="flex-1 flex flex-col xl:flex-row min-h-0 overflow-hidden">
+        {/* DESKTOP SIDEBAR */}
+        <aside className="hidden xl:flex flex-col w-20 2xl:w-[280px] bg-black border-r border-[#D4AF37]/20 z-40 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
         <div className="p-4 2xl:p-8 flex flex-col items-center justify-center shrink-0">
           <div className="w-12 h-12 2xl:w-20 2xl:h-20 rounded-full border border-[#D4AF37] flex items-center justify-center bg-black mb-2 2xl:mb-4 shadow-[0_0_15px_rgba(212,175,55,0.4)] relative">
              <div className="absolute inset-0 border border-[#D4AF37] rounded-full scale-110 opacity-30"></div>
@@ -288,11 +289,11 @@ export default function FounderThrone({
                  })}
                </div>
 
-               {/* PLATFORM ACTIVITY CHART AND ACTIONS SIDE-BY-SIDE ON LARGE SCREENS */}
-               <div className="flex flex-col 2xl:flex-row gap-4 flex-1 min-h-0">
+               {/* PLATFORM ACTIVITY CHART AND ACTIONS STACKED */}
+               <div className="flex flex-col gap-5 flex-1 min-h-0">
                    
                    {/* PLATFORM ACTIVITY CHART */}
-                   <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/30 rounded-2xl p-5 flex flex-col flex-1 min-h-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] h-full">
+                   <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/30 rounded-2xl p-5 flex flex-col flex-1 min-h-[220px] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                      <div className="flex justify-between items-start mb-4 shrink-0">
                        <h3 className="text-xs sm:text-sm font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans">ACTIVITÉ PLATEFORME</h3>
                        <div className="flex bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden shadow-inner">
@@ -338,16 +339,16 @@ export default function FounderThrone({
                    </div>
 
                    {/* SUPREME ACTIONS */}
-                   <div className="2xl:w-[280px] bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-4 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-y-auto custom-scrollbar flex flex-col justify-between">
-                     <div className="grid grid-cols-6 2xl:grid-cols-3 gap-2">
+                   <div className="w-full bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-4 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col justify-center">
+                     <div className="grid grid-cols-6 gap-2">
                        {supremeActions.map((act, i) => {
                          const Icon = act.icon;
                          const isDanger = ["Suspendre Utilisateur", "Geler Wallet", "Mode Crise"].includes(act.label);
                          return (
-                           <button key={i} className="flex flex-col items-center justify-center text-center p-2 2xl:p-3 rounded-xl hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all group aspect-square 2xl:aspect-auto">
+                           <button key={i} className="flex flex-col items-center justify-center text-center p-2 2xl:p-3 rounded-xl hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all group aspect-square xl:aspect-auto h-full">
                               <Icon className={`w-5 h-5 2xl:w-6 2xl:h-6 mb-2 ${isDanger ? "text-red-500/80 group-hover:text-red-500 group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "text-[#D4AF37]/80 group-hover:text-[#D4AF37] group-hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]"}`} strokeWidth={1.5} />
-                              <span className="text-[8px] 2xl:text-[9px] font-sans font-bold text-zinc-400 group-hover:text-white leading-tight uppercase tracking-wider hidden 2xl:block">
-                                {act.label.split(' ')[0]}<br className="hidden 2xl:block"/>{act.label.split(' ')[1] || ''}
+                              <span className="text-[7px] 2xl:text-[9px] font-sans font-bold text-zinc-400 group-hover:text-white leading-tight uppercase tracking-wider hidden xl:block">
+                                {act.label.split(' ')[0]}<br className="hidden xl:block"/>{act.label.split(' ')[1] || ''}
                               </span>
                            </button>
                          );
@@ -526,7 +527,7 @@ export default function FounderThrone({
               </div>
 
               {/* SYSTEM STATUS GRID */}
-              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 shrink-0 hidden sm:block shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 shrink-0 hidden sm:block shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto">
                  <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-4 drop-shadow-[0_0_5px_rgba(212,175,55,0.3)]">ÉTAT DU SYSTÈME</h3>
                  
                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 mb-5">
@@ -583,10 +584,68 @@ export default function FounderThrone({
                  </div>
               </div>
 
+              {/* IA AFRIGOMBO DEDICATED CARD */}
+              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/30 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto relative overflow-hidden group hidden sm:block">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 blur-2xl rounded-full pointer-events-none group-hover:bg-[#D4AF37]/20 transition-all"></div>
+                 <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-3 drop-shadow-[0_0_5px_rgba(212,175,55,0.3)] flex items-center gap-2">
+                   <Sparkles className="w-4 h-4 text-[#D4AF37]" /> IA AFRIGOMBO
+                 </h3>
+                 
+                 <div className="grid grid-cols-2 gap-2 mb-3 relative z-10">
+                   {["Détection anomalies", "Aide modération", "Résumés auto", "Recommandations", "Décisions", "Alerte préventive"].map((func, i) => (
+                     <div key={i} className="flex items-center gap-1.5 bg-black/40 border border-[#D4AF37]/20 rounded-md p-1.5 hover:border-[#D4AF37]/50 transition-colors">
+                       <CheckCircle className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
+                       <span className="text-[8px] font-mono font-bold text-zinc-300 uppercase leading-none tracking-widest truncate">{func}</span>
+                     </div>
+                   ))}
+                 </div>
+                 
+                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2.5 flex items-center justify-center gap-2 relative z-10">
+                   <ShieldAlert className="w-4 h-4 text-red-500 shrink-0" />
+                   <span className="text-[9px] font-mono font-black text-red-500 uppercase tracking-widest leading-none drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                     Validation humaine obligatoire
+                   </span>
+                 </div>
+              </div>
+
             </div>
           </div>
         </main>
       </div>
+      </div>
+
+      {/* BOTTOM NAVIGATION */}
+      <footer className="shrink-0 h-16 sm:h-20 bg-black/90 backdrop-blur-xl border-t border-[#D4AF37]/30 flex z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.8)] relative overflow-hidden">
+        <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent blur-sm"></div>
+        <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-10 flex justify-between items-center h-full">
+          {[
+            { id: "dashboard", label: "Accueil", icon: Home },
+            { id: "utilisateurs", label: "Utilisateurs", icon: Users },
+            { id: "finances", label: "Finances", icon: Wallet },
+            { id: "statistiques", label: "Statistiques", icon: BarChart2 },
+            { id: "communautes", label: "Communautés", icon: Globe },
+            { id: "plus", label: "Plus", icon: MoreHorizontal },
+          ].map((item, i) => {
+            const Icon = item.icon;
+            const isActive = activeMenu === item.id || (item.id === "dashboard" && activeMenu !== "utilisateurs" && activeMenu !== "finances" && activeMenu !== "statistiques" && activeMenu !== "communautes" && activeMenu !== "plus" && i === 0);
+            return (
+               <button
+                 key={item.id}
+                 onClick={() => { setActiveMenu(item.id); try{ audioSynth.playTamTam(false); }catch(e){} }}
+                 className={`flex flex-col items-center justify-center relative w-16 sm:w-24 group transition-colors flex-1`}
+               >
+                 <Icon className={`w-5 h-5 sm:w-6 sm:h-6 mb-1 transition-all ${isActive ? "text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.8)] -translate-y-1" : "text-zinc-500 group-hover:text-zinc-300 group-hover:-translate-y-0.5"}`} strokeWidth={isActive ? 2.5 : 1.5} />
+                 <span className={`text-[9px] sm:text-[10px] font-mono tracking-widest uppercase transition-all ${isActive ? "text-[#D4AF37] font-black" : "text-zinc-500 font-bold group-hover:text-zinc-300"}`}>
+                   {item.label}
+                 </span>
+                 {isActive && (
+                   <span className="absolute -bottom-2 sm:-bottom-3 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-[#D4AF37] rounded-full shadow-[0_0_8px_rgba(212,175,55,1)]"></span>
+                 )}
+               </button>
+            )
+          })}
+        </div>
+      </footer>
     </div>
   );
 }
