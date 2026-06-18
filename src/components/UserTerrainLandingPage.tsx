@@ -303,28 +303,30 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
         <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
           ACTIONS RAPIDES
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full select-none">
+        <div className="grid grid-cols-4 gap-2 w-full select-none">
           {[
-            { id: "messages", label: "Messages", icon: MessageCircle, action: () => alert("Messages en cours d'activation") },
-            { id: "favoris", label: "Favoris", icon: Heart, action: () => alert("Favoris") },
-            { id: "historique", label: "Historique", icon: History, action: () => alert("Historique") },
-            { id: "assistance", label: "Assistance", icon: Headphones, action: () => alert("Assistance") },
-            { id: "notifications", label: "Notifications", icon: Bell, action: () => alert("Notifications") },
-            { id: "scanner", label: "Scanner", icon: QrCode, action: () => alert("Scanner Gombo ID") }
+            { id: "renfort", label: "Renfort", icon: ShieldCheck, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "publier", label: "Publier", icon: PenTool, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "verifier", label: "Vérifier", icon: UserCheck, action: () => requireAuthThen(() => { setActiveMenu("user_heritage"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "messages", label: "Messages", icon: MessageCircle, action: () => requireAuthThen(() => { alert("Messagerie en cours d'activation."); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "annuaire", label: "Annuaire", icon: Users, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "booster", label: "Booster", icon: Award, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "evenement", label: "Événements", icon: Megaphone, action: () => requireAuthThen(() => { alert("Billetterie en cours d'activation !"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "scanner", label: "Scanner", icon: QrCode, action: () => requireAuthThen(() => { alert("Scanner Gombo ID actif !"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) }
           ].map(action => {
             const Icon = action.icon;
             return (
               <div
                 key={action.id}
                 onClick={action.action}
-                className="bg-[#050505] border border-[#D4AF37]/25 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-2xl h-[96px] w-full flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/60 group transition-all cursor-pointer active:scale-95"
+                className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-xl p-1.5 flex flex-col items-center justify-center gap-1.5 hover:border-[#D4AF37]/60 transition-all cursor-pointer active:scale-95"
               >
-                <Icon className="w-6 h-6 text-[#D4AF37] group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-                <span className="text-[13px] text-[#F5F5F5] font-bold tracking-wide text-center leading-tight line-clamp-1 px-2">
-                  {action.label}
-                </span>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent shrink-0">
+                  <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D4AF37]" strokeWidth={1.5} />
+                </div>
+                <span className="text-[7.5px] sm:text-[9px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none truncate w-full px-0.5">{action.label}</span>
               </div>
-            )
+            );
           })}
         </div>
       </div>

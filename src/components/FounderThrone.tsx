@@ -157,7 +157,7 @@ export default function FounderThrone({
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-[#D4AF37]/5 blur-[100px] pointer-events-none"></div>
 
         {/* TOP HEADER */}
-        <header className="shrink-0 bg-black/50 border-b border-[#D4AF37]/20 px-4 sm:px-6 2xl:px-10 py-4 sm:py-5 flex justify-between items-center z-30">
+        <header className="shrink-0 bg-black/50 border-b border-[#D4AF37]/20 px-4 sm:px-6 2xl:px-10 py-4 sm:py-5 flex justify-between items-center z-30 relative">
           <div className="flex items-center gap-3 sm:gap-6 pr-12">
              <div className="xl:hidden shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#D4AF37] flex items-center justify-center bg-black shadow-[0_0_15px_rgba(212,175,55,0.4)]">
                  <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4AF37]" />
@@ -202,8 +202,12 @@ export default function FounderThrone({
             </div>
           </div>
           
-          <button onClick={onClose} className="absolute right-4 top-4 sm:right-6 sm:top-6 text-zinc-500 hover:text-white xl:hidden border border-zinc-700 hover:border-white rounded p-1.5 sm:p-2 transition-colors">
+          <button 
+            onClick={onClose} 
+            className="absolute right-4 top-4 sm:right-6 sm:top-1/2 sm:-translate-y-1/2 bg-black/50 border border-red-500/50 hover:bg-red-500/10 text-red-500 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 transition-all cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.2)] active:scale-95 z-50"
+          >
             <UserX className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:block text-[9px] font-black uppercase tracking-wider">Retour</span>
           </button>
         </header>
 

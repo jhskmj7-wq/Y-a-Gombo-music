@@ -1228,7 +1228,7 @@ export default function CertificationHub({
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold text-zinc-500 uppercase block">🎸 Spécialités Musicales :</span>
                         <div className="flex flex-wrap gap-1">
-                          {req.specialties.map((s, idx) => (
+                          {(req.specialties || []).map((s, idx) => (
                             <span key={idx} className="bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300 px-2 py-0.5 rounded text-[10px] font-bold">
                               {s}
                             </span>

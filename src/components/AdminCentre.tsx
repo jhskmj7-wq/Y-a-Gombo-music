@@ -1362,12 +1362,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const startEditingProfile = (user: User) => {
     setEditingProfileUserId(user.id);
     setProfileForm({
-      artisticName: user.performance.artisticName || user.artisticName,
-      commune: user.performance.commune || user.commune,
-      specialties: user.performance.specialties || user.specialties,
-      groups: user.performance.groups || user.groups,
-      level: user.performance.level || 1,
-      score: user.performance.score || 0
+      artisticName: user.performance?.artisticName || user.artisticName,
+      commune: user.performance?.commune || user.commune,
+      specialties: user.performance?.specialties || user.specialties,
+      groups: user.performance?.groups || user.groups,
+      level: user.performance?.level || 1,
+      score: user.performance?.score || 0
     });
   };
 
@@ -1383,7 +1383,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           specialties: profileForm.specialties || user.specialties,
           groups: profileForm.groups || user.groups,
           performance: {
-            ...user.performance,
+            ...user.performance||{},
             artisticName: profileForm.artisticName || user.artisticName,
             commune: profileForm.commune || user.commune,
             specialties: profileForm.specialties || user.specialties,
@@ -5035,7 +5035,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Spécialités Nationales (Séparées par virgule) :</label>
                         <input
                           type="text"
-                          defaultValue={currentArtist.specialties.join(", ")}
+                          defaultValue={(currentArtist.specialties || []).join(", ")}
                           onBlur={async (e) => {
                             const specialties = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
                             setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, specialties } : u));
@@ -6404,7 +6404,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <div>
                               <span className="text-[10px] font-mono uppercase text-[#F5F5F5]/50 block">Spécialités de l'artiste</span>
                               <div className="flex flex-wrap gap-1.5 mt-1.5">
-                                {user.specialties.map((spec, idx) => (
+                                {(user.specialties || []).map((spec, idx) => (
                                   <span key={idx} className="bg-[#D4AF37]/10 text-[#D4AF37] px-2 py-0.5 rounded text-[10px] font-mono">
                                     {spec}
                                   </span>
@@ -6418,13 +6418,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                   <Award className="w-3.5 h-3.5 text-[#D4AF37]" />
                                   Niveau de Profil
                                 </span>
-                                <span className="font-bold text-[#D4AF37]">Niv. {user.performance.level} (Score: {user.performance.score}/100)</span>
+                                <span className="font-bold text-[#D4AF37]">Niv. {user.performance?.level || 1} (Score: {user.performance?.score || 0}/100)</span>
                               </div>
                               {/* Glowing horizontal premium gold progress bar */}
                               <div className="w-full bg-[#D4AF37]/10 rounded-full h-2 overflow-hidden border border-[#D4AF37]/10">
                                 <div
                                   className="bg-gradient-to-r from-[#D4AF37] to-[#B48F17] h-full shadow-[0_0_8px_rgba(212,175,55,0.8)]"
-                                  style={{ width: `${user.performance.score}%` }}
+                                  style={{ width: `${user.performance?.score || 0}%` }}
                                 />
                               </div>
                             </div>
