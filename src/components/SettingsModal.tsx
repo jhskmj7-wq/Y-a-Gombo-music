@@ -5,6 +5,9 @@ import {
   User, Lock, Trash2, Laptop, Smartphone, Eye,
   Globe, FileText, Star, LogOut
 } from "lucide-react";
+import { useLanguage, Language } from "../LanguageContext";
+import { useAuth } from "../AuthContext";
+import { gomboDB } from "../firebase";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -28,7 +31,10 @@ export default function SettingsModal({
   if (!isOpen) return null;
 
   // Navigation / Tabs State
-  const [activeTab, setActiveTab] = useState<"compte" | "application" | "confidentialite" | "univers" | "support" | "legal">("compte");
+  const [activeTab, setActiveTab] = useState<"compte" | "application" | "confidentialite" | "univers" | "support" | "legal" | "langue">("compte");
+  const { t, language: currentLang, setLanguage } = useLanguage();
+  const { profile } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
 
   // Localized preferences stored in LocalStorage
   const [region, setRegion] = useState(() => localStorage.getItem("gombo_pref_region") || "Abidjan (Cocody)");
@@ -87,7 +93,7 @@ export default function SettingsModal({
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Persist settings to LocalStorage
     localStorage.setItem("gombo_pref_region", region);
     localStorage.setItem("gombo_pref_payment", paymentMethod);
@@ -103,8 +109,28 @@ export default function SettingsModal({
     // Account
     localStorage.setItem("gombo_pref_newsletter", receiveNewsletter.toString());
 
+    setIsSaving(true);
+    // Real persistence if profile exists
+    if (profile?.uid) {
+      try {
+        await gomboDB.updateUserProfile(profile.uid, {
+          commune: region,
+          ville: region.split(" ")[0], // Simple extraction
+          preferences: {
+            themeMode: themeMode,
+            audioVolume: audioVolume,
+            publicProfile: publicProfile,
+            showContactDetails: showContactDetails
+          }
+        });
+      } catch (err) {
+        console.warn("Could not persist settings to cloud, strictly local for now:", err);
+      }
+    }
+
     // Trigger success feedback
     setSaveSuccess(true);
+    setIsSaving(false);
     setTimeout(() => {
       setSaveSuccess(false);
       onClose();
@@ -162,14 +188,14 @@ export default function SettingsModal({
           <div className="absolute inset-0 bg-white dark:bg-[#111113] z-50 p-6 flex flex-col h-full animate-fadeIn font-sans">
             <div className="flex justify-between items-center pb-4 border-b border-gray-150 dark:border-gray-800 shrink-0">
               <h3 className="text-sm font-black uppercase text-gray-900 dark:text-white flex items-center gap-2">
-                <span>{activeLegalPage === "privacy" ? "📋 Politique de Confidentialité — AFRIGOMBO" : "⚖️ Conditions d'Utilisation — Escrow"}</span>
+                <span>{activeLegalPage === "privacy" ? `📋 ${t('confidentialite')} — AFRIGOMBO` : `⚖️ ${t('cgu')} — Escrow`}</span>
               </h3>
               <button 
                 type="button" 
                 onClick={() => setActiveLegalPage("none")}
                 className="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-750 rounded-xl text-xs font-black cursor-pointer transition-colors"
               >
-                Fermer
+                {t('annuler')}
               </button>
             </div>
             
@@ -214,8 +240,8 @@ export default function SettingsModal({
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Réglages Système</h2>
-              <p className="text-[11px] text-gray-400 dark:text-gray-500">Personnalisez votre expérience Y’A GOMBO MUSIC</p>
+              <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">{t('settings_title')}</h2>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500">{t('settings_subtitle')}</p>
             </div>
           </div>
           <button 
@@ -232,16 +258,16 @@ export default function SettingsModal({
           {/* Navigation Sidebar (Vertical on Desktop, Horizontal on Mobile) */}
           <div className="w-full md:w-56 bg-gray-50/50 dark:bg-gray-950/20 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800 flex flex-row md:flex-col p-2.5 gap-1.5 overflow-x-auto md:overflow-x-visible shrink-0 scrollbar-none">
             {[
-              { id: "compte", label: "Mon profil", icon: User },
-              { id: "afri_id", label: "Mon Afri ID", icon: Star },
-              { id: "notifications", label: "Notifications", icon: Bell },
-              { id: "securite", label: "Sécurité", icon: Shield },
-              { id: "langue", label: "Langue", icon: Globe },
-              { id: "application", label: "Thème", icon: Moon },
-              { id: "confidentialite", label: "Confidentialité", icon: Lock },
-              { id: "legal", label: "CGU", icon: FileText },
-              { id: "support", label: "Centre aide", icon: HelpCircle },
-              { id: "logout", label: "Déconnexion", icon: LogOut, isDanger: true }
+              { id: "compte", label: t('mon_profil'), icon: User },
+              { id: "afri_id", label: t('mon_afri_id'), icon: Star },
+              { id: "notifications", label: t('notifications'), icon: Bell },
+              { id: "securite", label: t('securite'), icon: Shield },
+              { id: "langue", label: t('langue'), icon: Globe },
+              { id: "application", label: t('theme'), icon: Moon },
+              { id: "confidentialite", label: t('confidentialite'), icon: Lock },
+              { id: "legal", label: t('cgu'), icon: FileText },
+              { id: "support", label: t('centre_aide'), icon: HelpCircle },
+              { id: "logout", label: t('deconnexion'), icon: LogOut, isDanger: true }
             ].map((tab) => {
               const TabIcon = tab.icon;
               const isSelected = activeTab === tab.id;
@@ -312,32 +338,48 @@ export default function SettingsModal({
                   <p className="text-[11px] text-gray-400 dark:text-gray-500">Choisissez l'interface qui correspond à votre vibe artistique.</p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2.5">
-                  {[
-                    { id: "dark-gold", label: "Noir & Or", icon: Moon, desc: "Ambiance Cabaret" },
-                    { id: "light-gold", label: "Blanc & Or", icon: Sun, desc: "Énergie pure" },
-                    { id: "night-navy", label: "Bleu Nuit", icon: Shield, desc: "Deep Ocean VIP" }
-                  ].map((theme) => {
-                    const isSelected = themeMode === theme.id;
-                    const ThemeIcon = theme.icon;
-                    return (
-                      <button
-                        key={theme.id}
-                        type="button"
-                        onClick={() => setThemeMode(theme.id as any)}
-                        className={`flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl border text-center transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-orange-500/5 border-orange-500 text-orange-600 dark:text-orange-400 font-extrabold"
-                            : "bg-gray-50/50 dark:bg-gray-900/20 border-gray-150 dark:border-gray-800 text-gray-400 hover:text-gray-800 dark:hover:text-white"
-                        }`}
-                      >
-                        <ThemeIcon className="w-5 h-5 text-orange-500" />
-                        <span className="text-xs">{theme.label}</span>
-                        <span className="text-[9px] text-gray-400 dark:text-gray-500 font-normal">{theme.desc}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="grid grid-cols-3 gap-2.5">
+                {[
+                  { id: "dark-gold", label: "Noir & Or", icon: Moon, desc: "Ambiance Cabaret" },
+                  { id: "light-gold", label: "Blanc & Or", icon: Sun, desc: "Énergie pure" },
+                  { id: "night-navy", label: "Bleu Nuit", icon: Shield, desc: "Deep Ocean VIP" }
+                ].map((theme) => {
+                  const isSelected = themeMode === theme.id;
+                  const ThemeIcon = theme.icon;
+                  return (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      onClick={() => {
+                        setThemeMode(theme.id as any);
+                        if (theme.id === "light-gold") setDarkMode(false);
+                        else setDarkMode(true);
+                        try {
+                          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                          const osc = ctx.createOscillator();
+                          const gain = ctx.createGain();
+                          osc.connect(gain);
+                          gain.connect(ctx.destination);
+                          osc.frequency.setValueAtTime(880, ctx.currentTime);
+                          gain.gain.setValueAtTime(0.02, ctx.currentTime);
+                          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+                          osc.start();
+                          osc.stop(ctx.currentTime + 0.1);
+                        } catch (e) {}
+                      }}
+                      className={`flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl border text-center transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-orange-500/5 border-orange-500 text-orange-600 dark:text-orange-400 font-extrabold ring-1 ring-orange-500/20 shadow-sm"
+                          : "bg-gray-50/50 dark:bg-gray-950/20 border-gray-150 dark:border-gray-800 text-gray-400 hover:text-gray-800 dark:hover:text-white"
+                      }`}
+                    >
+                      <ThemeIcon className="w-5 h-5 text-orange-500" />
+                      <span className="text-[11px] font-bold">{theme.label}</span>
+                      <span className="text-[9px] text-gray-400 dark:text-gray-500 font-normal">{theme.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
               </div>
 
               <div className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/10 space-y-3.5">
@@ -428,6 +470,47 @@ export default function SettingsModal({
                       </label>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2.5 LANGUE TAB */}
+            {activeTab === "langue" && (
+              <div className="space-y-6 animate-fadeIn">
+                <div>
+                  <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
+                    <Globe className="w-4 h-4 text-[#D4AF37]" />
+                    {t('choisir_langue')}
+                  </h3>
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500">{t('langue_desc')}</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { id: "fr", label: t('langue_fr'), desc: "Français Standard" },
+                    { id: "en", label: t('langue_en'), desc: "English Language" },
+                    { id: "nouchi", label: t('langue_nouchi'), desc: "Côte d'Ivoire (Appolo/Bété)" }
+                  ].map((lang) => {
+                    const isSelected = currentLang === lang.id;
+                    return (
+                      <button
+                        key={lang.id}
+                        type="button"
+                        onClick={() => setLanguage(lang.id as Language)}
+                        className={`flex flex-col items-center justify-center p-5 rounded-2xl border transition-all cursor-pointer ${
+                          isSelected 
+                            ? "bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400" 
+                            : "bg-gray-50/50 dark:bg-gray-900/20 border-gray-150 dark:border-gray-800 text-gray-400 hover:text-gray-800 dark:hover:text-white"
+                        }`}
+                      >
+                        <span className="text-sm font-black uppercase mb-0.5">{lang.label}</span>
+                        <span className="text-[9px] font-medium opacity-60 italic">{lang.desc}</span>
+                        {isSelected && (
+                          <div className="mt-2 w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -705,26 +788,31 @@ export default function SettingsModal({
               onClick={onClose}
               className="px-4 py-2 text-xs font-bold text-gray-550 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850/50 transition-all cursor-pointer"
             >
-              Annuler
+              {t('annuler')}
             </button>
             
             <button
               onClick={handleSave}
-              disabled={saveSuccess}
+              disabled={saveSuccess || isSaving}
               className={`px-5 py-2 text-xs font-black uppercase tracking-wider text-white rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
                 saveSuccess 
                   ? "bg-emerald-500 hover:bg-emerald-500" 
-                  : "bg-[#FF7A00] hover:bg-[#E06C00]"
+                  : isSaving ? "bg-zinc-700" : "bg-[#FF7A00] hover:bg-[#E06C00]"
               }`}
             >
               {saveSuccess ? (
                 <>
                   <Check className="w-3.5 h-3.5" />
-                  Enregistré !
+                  {t('enregistrer')} !
+                </>
+              ) : isSaving ? (
+                <>
+                   <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                   <span>Sauvegarde...</span>
                 </>
               ) : (
                 <>
-                  <span>Enregistrer</span>
+                  <span>{t('enregistrer')}</span>
                 </>
               )}
             </button>

@@ -14,6 +14,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
 import { useAuth } from "../AuthContext";
+import { useLanguage } from "../LanguageContext";
 import AuthScreen from "./AuthScreen";
 import CompleteProfile from "./CompleteProfile";
 import GomboIdUserDashboard from "./GomboIdUserDashboard";
@@ -403,7 +404,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isEventsModalOpen, setIsEventsModalOpen] = useState<boolean>(false);
   const [isAcademyModalOpen, setIsAcademyModalOpen] = useState<boolean>(false);
-  const [lang, setLang] = useState<"fr" | "nouchi">("fr");
+  const { t, language: lang, setLanguage } = useLanguage();
 
   const [isHeaderSearchOpen, setIsHeaderSearchOpen] = useState<boolean>(false);
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
@@ -495,7 +496,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     return () => unsub();
   }, [adminEmail]);
   const [isSuperWelcomeOpen, setIsSuperWelcomeOpen] = useState<boolean>(false);
-  const [themeMode, setThemeMode] = useState<"dark-gold" | "light-gold" | "night-navy">("dark-gold");
+  const [themeMode, setThemeMode] = useState<"dark-gold" | "light-gold" | "night-navy">(() => {
+    return (localStorage.getItem("gombo_theme_mode") as any) || "dark-gold";
+  });
 
   // Custom Reviews & Gombo completeness state
   const [reviews, setReviews] = useState<GomboReview[]>(INITIAL_REVIEWS);
@@ -1580,7 +1583,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   }
 
   return (
-    <div className="flex h-screen bg-[#0B0B0B] text-[#F5F5F5] font-sans antialiased overflow-hidden">
+    <div className={`flex h-screen ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#111]"} font-sans antialiased overflow-hidden uppercase-none`}>
       
       {/* BACKDROP AND SLIDING SIDEBAR WITH ANIMATIONS */}
       <AnimatePresence>
@@ -1696,7 +1699,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                   {currentArtist ? currentArtist.commune : "Abidjan"}, CI
                                 </p>
                                 <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase border border-[#D4AF37]/25 font-extrabold">
-                                  👑 {lang === "nouchi" ? "Vieux Môgô" : "Artiste Élite"}
+                                  👑 {lang === "nouchi" ? "Vieux Môgô" : (lang === "en" ? "Elite Artist" : "Artiste Élite")}
                                 </span>
                               </div>
                             </div>
@@ -1780,7 +1783,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           {/* SECTION: Outils rapides */}
                           <div className="space-y-1">
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
-                              ⚡ Outils rapides
+                              ⚡ {t('recherche')}
                             </span>
                             {renderMenuItem("menu_events", "Événements", "📅", () => {
                               setIsEventsModalOpen(true);
@@ -1828,37 +1831,37 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-400 uppercase tracking-widest block mb-1">
                               👑 Centre personnel
                             </span>
-                            {renderMenuItem("menu_inventory", "✔ NAVIGATION", "🗺️", () => {
+                            {renderMenuItem("menu_inventory", t('terrain'), "🗺️", () => {
                               setPerspective("user");
                               setActiveMenu("user_terrain");
                               setIsSidebarOpen(false);
-                            })}
-                            {renderMenuItem("menu_heritage", "✔ MON HÉRITAGE", "👑", () => {
+                            }, false)}
+                            {renderMenuItem("menu_heritage", t('heritage'), "👑", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_edit_profile");
                                 setIsSidebarOpen(false);
                               });
-                            })}
-                            {renderMenuItem("menu_comms", "✔ COMMENTAIRES", "💬", () => {
+                            }, false)}
+                            {renderMenuItem("menu_comms", t('commentaires'), "💬", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_notifications"); // or a specific comments view if exists
                                 setIsSidebarOpen(false);
                               });
-                            })}
-                            {renderMenuItem("menu_pubs", "✔ PUBLICATIONS", "📝", () => {
+                            }, false)}
+                            {renderMenuItem("menu_pubs", t('publications'), "📝", () => {
                               setPerspective("user");
                               setActiveMenu("user_terrain"); // showing personal posts
                               setIsSidebarOpen(false);
-                            })}
-                            {renderMenuItem("menu_msgs", "✔ MESSAGES", "📩", () => {
+                            }, false)}
+                            {renderMenuItem("menu_msgs", t('messages'), "📩", () => {
                                requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_messages");
                                 setIsSidebarOpen(false);
                                });
-                            })}
+                            }, false)}
                             {renderMenuItem("menu_confidentiality", "Confidentialité", "🔒", () => {
                               setPerspective("user");
                               setActiveMenu("privacy");
@@ -1873,14 +1876,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false)}
-                            {renderMenuItem("menu_lang", "Langue", "🌐", () => {
-                              const nextL = lang === "fr" ? "nouchi" : "fr";
-                              setLang(nextL);
+                            {renderMenuItem("menu_lang", t('langue'), "🌐", () => {
+                              const nextL = lang === "fr" ? "nouchi" : (lang === "nouchi" ? "en" : "fr");
+                              setLanguage(nextL);
                               try { audioSynth.playTamTam(true); } catch (e) {}
-                              addToTerminal(`[LANGUE] Passage en mode ${nextL === "nouchi" ? "Nouchi" : "Français"}`);
+                              addToTerminal(`[LANGUE] Passage en mode ${nextL === "nouchi" ? "Nouchi" : (nextL === "en" ? "English" : "Français")}`);
                             }, false, (
                               <span className="font-mono text-[8px] uppercase font-bold text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20 scale-90">
-                                {lang === "nouchi" ? "Nouchi 🇨🇮" : "Français 🇫🇷"}
+                                {lang === "nouchi" ? "Nouchi 🇨🇮" : (lang === "en" ? "English 🇺🇸" : "Français 🇫🇷")}
                               </span>
                             ))}
                           </div>
@@ -2028,18 +2031,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     className="hidden lg:flex items-center gap-1 px-3 py-1.5 text-[11px] font-mono font-bold uppercase text-[#D4AF37] hover:text-black hover:bg-[#D4AF37] border border-[#D4AF37]/30 rounded-lg transition-all cursor-pointer"
                   >
                     ← Retour
-                  </button>
-                )}
-
-                {/* Search trigger icon box */}
-                {activeMenu !== "user_notifications" && (
-                  <button
-                    id="search-btn"
-                    onClick={() => setIsHeaderSearchOpen(true)}
-                    className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-850 hover:border-[#D4AF37]/40 rounded-xl transition-all flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
-                    title="Recherche"
-                  >
-                    <Search className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
                   </button>
                 )}
 
@@ -4751,8 +4742,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     themeMode={themeMode}
                     setThemeMode={(t) => {
                       setThemeMode(t);
-                      if (t === "light-gold") setDarkMode(false);
-                      else setDarkMode(true);
+                      localStorage.setItem("gombo_theme_mode", t);
+                      if (t === "light-gold") {
+                        setDarkMode(false);
+                      } else {
+                        setDarkMode(true);
+                      }
                     }}
                   />
                 );

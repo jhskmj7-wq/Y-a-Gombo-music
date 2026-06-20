@@ -85,7 +85,8 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
   const [collaborations, setCollaborations] = useState<string[]>([]);
 
   // STEP 5 STATES
-  const gdPhoto = currentUserProfile.photoURL || currentUserProfile.avatarUrl || PRESET_AVATARS[0];
+  const initialGdPhoto = currentUserProfile.photoURL || currentUserProfile.avatarUrl || PRESET_AVATARS[0];
+  const [gdPhoto, setGdPhoto] = useState(initialGdPhoto);
   const [avatarUrl, setAvatarUrl] = useState(gdPhoto);
 
   const [loading, setLoading] = useState(false);
@@ -164,17 +165,39 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
     setCameraActive(false);
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = async () => {
     if (!videoRef.current) return;
     try {
       const canvas = document.createElement("canvas");
-      canvas.width = 300;
-      canvas.height = 300;
+      canvas.width = 400; // Better quality for "reality"
+      canvas.height = 400;
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0, 300, 300);
-        const dataUrl = canvas.toDataURL("image/jpeg");
+        // Mirror horizontally back for the capture
+        ctx.translate(400, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(videoRef.current, 0, 0, 400, 400);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
         setAvatarUrl(dataUrl);
+
+        // REAL-TIME FIREBASE UPLOAD
+        if (storage) {
+          setUploading(true);
+          try {
+            const resp = await fetch(dataUrl);
+            const blob = await resp.blob();
+            const photoRef = ref(storage, `users/${currentUserProfile.uid}/profile_capture_${Date.now()}.jpg`);
+            await uploadBytes(photoRef, blob);
+            const downloadURL = await getDownloadURL(photoRef);
+            setAvatarUrl(downloadURL);
+            setGdPhoto(downloadURL);
+          } catch (stErr) {
+            console.error("Storage upload error", stErr);
+          } finally {
+            setUploading(false);
+          }
+        }
+
         stopCamera();
         try { audioSynth.playKoraNote(500, 0, 0.1, 0.3); } catch (_) {}
       }
@@ -1041,7 +1064,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                           onClick={capturePhoto}
                           className="px-3 py-1.5 bg-emerald-500 text-black font-black text-[10px] rounded-lg tracking-wider hover:bg-emerald-400 uppercase cursor-pointer"
                         >
-                          Capturer 📸
+                          Enregistrer 📸
                         </button>
                         <button
                           type="button"
@@ -1068,7 +1091,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                           className="px-3.5 py-2 bg-zinc-950 border border-zinc-900 text-zinc-300 hover:text-white font-bold text-[9.5px] rounded-xl hover:bg-zinc-900 uppercase flex items-center gap-1 cursor-pointer border-zinc-900"
                         >
                           <Camera className="w-3.5 h-3.5 text-[#D4AF37]" />
-                          <span>Enregistrer</span>
+                          <span>Caméra</span>
                         </button>
 
                         <label className="px-3.5 py-2 bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/20 font-bold text-[9.5px] rounded-xl uppercase flex items-center gap-1 cursor-pointer">

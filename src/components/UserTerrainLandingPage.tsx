@@ -5,6 +5,7 @@ import {
   RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy,
   PenTool, UserCheck, MessageCircle, History, Headphones, HelpCircle
 } from "lucide-react";
+import { useLanguage } from "../LanguageContext";
 import { Gombo, User, Post } from "../types";
 
 const IVORIAN_COMMUNES = [
@@ -100,6 +101,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   addToTerminal,
   onValidateFilters
 }) => {
+  const { t } = useLanguage();
   const searchStr = globalSearchTerm.toLowerCase();
 
   // Internal local states for filters (only applied when clicking Valider)
@@ -366,12 +368,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           >
             {[
               { id: "renfort", label: "Renfort", icon: ShieldCheck, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "publier", label: "Publier", icon: PenTool, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "publier", label: t('publier'), icon: PenTool, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "verifier", label: "Vérifier", icon: UserCheck, isSoon: true, action: () => {} },
-              { id: "messages", label: "Messages", icon: MessageCircle, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "annuaire", label: "Annuaire", icon: Users, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "booster", label: "Booster", icon: Award, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "evenement", label: "Événements", icon: Megaphone, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "messages", label: t('messages_tab'), icon: MessageCircle, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "annuaire", label: t('annuaire'), icon: Users, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "booster", label: t('booster_tab'), icon: Award, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "evenement", label: t('evenement'), icon: Megaphone, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "scanner", label: "Scanner", icon: QrCode, isSoon: true, action: () => {} }
             ].map(action => {
               const Icon = action.icon;
@@ -439,7 +441,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             className="flex-1 flex justify-between items-center text-left focus:outline-none cursor-pointer hover:opacity-90 select-none mr-3"
           >
             <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase flex items-center gap-1.5">
-              <span>🔎 RECHERCHE & FILTRES</span>
+              <span>🔎 {t('recherche_filtres')}</span>
             </h3>
             <span className="text-[11px] font-mono font-black text-[#D4AF37] bg-zinc-950/80 border border-[#D4AF37]/20 w-6 h-6 rounded-lg flex items-center justify-center transition-all">
               {isFiltersOpen ? "▲" : "▼"}
@@ -570,7 +572,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               }}
               className="w-full bg-[#D4AF37] hover:bg-[#F3C43F] text-black font-black text-[10px] tracking-widest py-3 px-4 rounded-xl transition-all cursor-pointer select-none active:scale-95 shadow-md flex items-center justify-center uppercase"
             >
-              Valider les filtres d'or ⚡
+              {t('valider_filtres')}
             </button>
           </div>
         </div>
@@ -582,7 +584,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-center">
           <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
-            OPPORTUNITÉS À LA UNE
+            {t('opportunites_une')}
           </h3>
           <button
             onClick={() => {
@@ -592,7 +594,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             }}
             className="text-xs text-[#D4AF37] font-bold"
           >
-            Voir tout
+            {t('voir_tout')}
           </button>
         </div>
 
@@ -687,7 +689,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-center">
           <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
-            OPPORTUNITÉS RÉCENTES
+            {t('recents')}
           </h3>
           <button
             onClick={() => {
