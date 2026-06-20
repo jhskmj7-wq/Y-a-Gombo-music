@@ -32,6 +32,13 @@ export interface UserPerformance {
 export interface User {
   id?: string;
   uid?: string;
+  afriId?: string;
+  ecosystemApps?: {
+    afrigombo?: boolean;
+    afritrust?: boolean;
+    africoach?: boolean;
+    [key: string]: boolean | undefined;
+  };
   name?: string;
   email?: string;
   artisticName?: string;

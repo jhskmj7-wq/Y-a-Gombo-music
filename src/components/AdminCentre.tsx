@@ -19,7 +19,11 @@ import GomboMusikEcosystem from "./GomboMusikEcosystem";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
 import FounderThrone from "./FounderThrone";
 import MessagesView from "./MessagesView";
+import NotificationCenter from "./NotificationCenter";
+import ComingSoon from "./ComingSoon";
 import { UserTerrainLandingPage } from "./UserTerrainLandingPage";
+import SettingsModal from "./SettingsModal";
+import { gomboDB } from "../firebase";
 import {
   AdminMenu,
   User,
@@ -355,6 +359,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   };
 
   const [activeMenu, setActiveMenu] = useState<any>("user_terrain");
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [activeMenu]);
   const [viewingGomboIdDetail, setViewingGomboIdDetail] = useState<boolean>(false);
   const [selectedGomboDetails, setSelectedGomboDetails] = useState<Gombo | null>(null);
   const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
@@ -387,6 +397,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [activeArtistId, setActiveArtistId] = useState<string>("user_3");
   const [localSaved, setLocalSaved] = useState<boolean>(true);
   const [autoSaveActive, setAutoSaveActive] = useState<boolean>(false);
+
+  const [realNotifications, setRealNotifications] = useState<any[]>([]);
+  useEffect(() => {
+    if (currentUser?.uid) {
+      const unsubscribe = gomboDB.listenToNotifications(currentUser.uid, setRealNotifications);
+      return () => unsubscribe();
+    }
+  }, [currentUser?.uid]);
 
   // Le Terrain, Vibes, and dynamic publishing interactions states
   const [terrainTab, setTerrainTab] = useState<"all" | "musicien" | "contrat">("all");
@@ -1999,9 +2017,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   title="Notifications"
                 >
                   <Bell className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
-                  <span className="absolute -top-0.5 -right-0.5 bg-red-650 text-white font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black animate-pulse select-none">
-                    12
-                  </span>
+                  {realNotifications.filter(n => !n.read).length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-red-650 text-white font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black animate-pulse select-none">
+                      {realNotifications.filter(n => !n.read).length}
+                    </span>
+                  )}
                 </button>
 
                 {/* Profile Avatar */}
@@ -4067,9 +4087,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           className="relative flex items-center justify-center w-10 h-10 rounded-full border border-zinc-800/80 bg-zinc-900/90 text-white hover:text-[#D4AF37] transition-all cursor-pointer active:scale-95"
                         >
                           <Bell className="w-4 h-4 text-[#D4AF37]" />
-                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#D4AF37] text-black text-[9px] font-black font-mono rounded-full flex items-center justify-center border border-black shadow">
-                            3
-                          </span>
+                          {realNotifications.filter(n => !n.read).length > 0 && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#D4AF37] text-black text-[9px] font-black font-mono rounded-full flex items-center justify-center border border-black shadow">
+                              {realNotifications.filter(n => !n.read).length}
+                            </span>
+                          )}
                         </button>
                         {/* Settings Cog */}
                         <button
@@ -4133,6 +4155,46 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <span className="text-[#D4AF37] text-[10px]">✓</span> Artiste Vérifié
                           </div>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* AFRI ID ROW */}
+                    <div className="rounded-2xl p-5 bg-gradient-to-br from-purple-900/10 via-zinc-900/40 to-zinc-900/10 border border-purple-500/20 mb-4">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3.5">
+                          <div className="p-3 bg-zinc-950 border border-purple-500/30 rounded-2xl flex items-center justify-center shrink-0">
+                            <div className="relative w-8 h-8 flex items-center justify-center bg-black rounded-lg">
+                               <span className="font-serif font-bold text-xl text-transparent bg-clip-text bg-gradient-to-br from-purple-400 to-[#D4AF37]">A</span>
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-base font-sans font-black text-white tracking-wide uppercase flex items-center gap-2">
+                              AFRI ID
+                              {currentArtist.afriId && <span className="bg-purple-500/20 text-purple-300 text-[10px] px-2 py-0.5 rounded font-mono font-bold tracking-widest">{currentArtist.afriId}</span>}
+                            </h4>
+                            <p className="text-[10px] font-mono font-bold tracking-widest text-purple-400 uppercase">
+                              IDENTITÉ UNIVERSELLE
+                            </p>
+                            <p className="text-xs text-zinc-400 mt-1">
+                              Sésame unique pour Afrigombo, AfriWallet et AfriLivraison.
+                            </p>
+                          </div>
+                        </div>
+
+                        {!currentArtist.afriId && (
+                          <div className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-900 text-white text-xs font-sans font-black uppercase tracking-wider rounded-xl shadow-lg opacity-80 cursor-not-allowed text-center shrink-0">
+                            GÉNÉRATION EN COURS...
+                          </div>
+                        )}
+                        {currentArtist.afriId && (
+                          <div className="flex flex-col items-end gap-1.5 shrink-0">
+                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Applications connectées :</span>
+                            <div className="flex gap-2">
+                              {currentArtist.ecosystemApps?.afrigombo && <span className="text-[10px] px-2 py-1 bg-zinc-950 border border-[#D4AF37]/30 text-[#D4AF37] rounded-md font-black italic tracking-widest">AFRIGOMBO</span>}
+                              {currentArtist.ecosystemApps?.afriwallet && <span className="text-[10px] px-2 py-1 bg-zinc-950 border border-blue-500/30 text-blue-400 rounded-md font-black italic tracking-widest">AFRIWALLET</span>}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -4816,63 +4878,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
                 return (
-                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn">
-                    <div className="pb-3 border-b border-white/5">
-                      <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
-                        ⚙ Paramètres du Compte d'Académie
-                      </h3>
-                      <p className="text-xs text-zinc-400">Configurez la sensibilité de votre terminal aux Tambours d'Abidjan.</p>
-                    </div>
-
-                    <div className="space-y-4 max-w-lg">
-                      <div className="p-4 bg-black border border-[#D4AF37]/15 rounded-xl flex justify-between items-center">
-                        <div>
-                          <strong className="text-xs text-[#D4AF37] block">☑ Sons AFRIGOMBO</strong>
-                          <span className="text-[10px] text-zinc-400">Activer les percussions de Tam-Tam, les arpèges de Kora et les alertes de succès auditives.</span>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={sonsEnabled}
-                          onChange={(e) => {
-                            const val = e.target.checked;
-                            setSonsEnabled(val);
-                            localStorage.setItem("afrigombo_sounds", val ? "true" : "false");
-                            try {
-                              if (val) {
-                                audioSynth.playValidationSuccess();
-                              }
-                            } catch (err) {}
-                          }}
-                          className="w-4 h-4 cursor-pointer accent-[#D4AF37]"
-                        />
-                      </div>
-
-                      <div className="p-4 bg-black border border-white/5 rounded-xl flex justify-between items-center">
-                        <div>
-                          <strong className="text-xs text-white block">Vibration Sonique des Tambours</strong>
-                          <span className="text-[10px] text-zinc-500">Sensibilité haptique aux notifications du Trône.</span>
-                        </div>
-                        <input type="checkbox" defaultChecked className="w-4 h-4 cursor-pointer accent-[#D4AF37]" />
-                      </div>
-
-                      <div className="p-4 bg-black border border-white/5 rounded-xl flex justify-between items-center">
-                        <div>
-                          <strong className="text-xs text-white block">Visibilité Publique d'Hérédité</strong>
-                          <span className="text-[10px] text-zinc-500">Permet aux organisateurs d'orchestres de Plateau de vous démarcher en direct.</span>
-                        </div>
-                        <input type="checkbox" defaultChecked className="w-4 h-4 cursor-pointer accent-[#D4AF37]" />
-                      </div>
-
-                      <div className="p-4 bg-black border border-white/5 rounded-xl space-y-2">
-                        <strong className="text-xs text-white block">Fréquence de synchronisation locale</strong>
-                        <div className="grid grid-cols-3 gap-2">
-                          <button className="py-2.5 bg-[#D4AF37] text-black text-[10px] font-mono font-bold rounded uppercase">Instantané</button>
-                          <button className="py-2.5 bg-zinc-900 text-zinc-400 text-[10px] font-mono font-bold rounded uppercase hover:text-white">Lente</button>
-                          <button className="py-2.5 bg-zinc-900 text-zinc-400 text-[10px] font-mono font-bold rounded uppercase hover:text-white">Économique</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <SettingsModal 
+                    isOpen={true} 
+                    onClose={() => setActiveMenu("user_terrain")}
+                    darkMode={true}
+                    setDarkMode={() => {}}
+                    themeMode="dark-gold"
+                    setThemeMode={() => {}}
+                  />
                 );
               })()}
 
@@ -4880,38 +4893,16 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
                 return (
-                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn">
-                    <div className="pb-3 border-b border-white/5 flex justify-between items-center">
-                      <div>
-                        <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
-                          📢 Tambours (Notifications Réseau)
-                        </h3>
-                        <p className="text-xs text-zinc-400">Écoutez les vibrations de l'Académie émise par l'administration.</p>
-                      </div>
-                      <div className="relative w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/35 text-[#D4AF37] animate-ping" />
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="p-4 bg-black border border-amber-500/20 rounded-xl space-y-2">
-                        <div className="flex justify-between items-center text-[10px] font-mono font-bold">
-                          <span className="text-[#D4AF37]">👑 DECRET SUBLIME DE FONDATION</span>
-                          <span className="text-zinc-500">Aujourd'hui, 09:12</span>
-                        </div>
-                        <p className="text-xs text-zinc-300 font-semibold leading-relaxed">
-                          "Félicitations aux artistes d'Abidjan ! La commission par défaut est à présent de 10% pour accroître le cachet conservé par les guitaristes Zouglou."
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-black border border-white/5 rounded-xl space-y-2">
-                        <div className="flex justify-between items-center text-[10px] font-mono">
-                          <span className="text-zinc-500">⚖️ Administration Gombo ID</span>
-                          <span className="text-zinc-500">Hier</span>
-                        </div>
-                        <p className="text-xs text-zinc-400">
-                          Votre dossier de certification standard est classé prioritaire suite à la vérification d'excellence.
-                        </p>
-                      </div>
-                    </div>
+                  <div className="space-y-6 animate-fadeIn pb-24 text-left">
+                    <NotificationCenter 
+                      currentUserProfile={currentArtist} 
+                      notifications={realNotifications}
+                      onRefreshProfile={() => {}}
+                      onNavigateHome={() => {
+                        setActiveMenu("user_terrain");
+                        try { audioSynth.playValidationSuccess(); } catch (err) {}
+                      }}
+                    />
                   </div>
                 );
               })()}
@@ -4934,6 +4925,19 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   </div>
                 );
               })()}
+
+              <div className="pb-24">
+                {activeMenu === "user_events" && (
+                  <div className="animate-fadeIn">
+                    <ComingSoon featureId="evenements" onBack={() => setActiveMenu("user_terrain")} />
+                  </div>
+                )}
+                {activeMenu === "user_scanner" && (
+                  <div className="animate-fadeIn">
+                    <ComingSoon featureId="scanner" onBack={() => setActiveMenu("user_terrain")} />
+                  </div>
+                )}
+              </div>
 
               {activeMenu === "user_edit_profile" && (() => {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
@@ -4985,6 +4989,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 const photoUpdatedAt = new Date().toISOString();
                                 setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, avatarUrl, photoUpdatedAt } : u));
                                 await saveToFirestore("users", currentArtist.id, { avatarUrl, photoUpdatedAt });
+                                
+                                // Sync universally via gomboDB
+                                await gomboDB.updateUserProfile(currentArtist.id, { avatarUrl, photoURL: avatarUrl });
+                                
                                 addToTerminal(`[PROFIL] Photo mise à jour avec succès.`);
                                 try { audioSynth.playValidationSuccess(); } catch(err){}
                               } catch (err: any) {
@@ -5417,8 +5425,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   createTransaction={createTransaction}
                   onClose={() => {
                     window.history.pushState({}, "", "/");
-                    setActiveMenu("dashboard");
-                    addToTerminal(`[INFO] Cabinet du Trône fermé.`);
+                    setPerspective("user");
+                    setActiveMenu("user_terrain");
+                    addToTerminal(`[INFO] Cabinet du Trône fermé. Retour au Terrain.`);
                   }}
                 />
               )}

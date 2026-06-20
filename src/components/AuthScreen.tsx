@@ -15,7 +15,7 @@ interface AuthScreenProps {
   onClose?: () => void;
 }
 
-export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
+function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
   const { loginWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
   
@@ -23,6 +23,56 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
   const [errorMSG, setErrorMSG] = useState("");
   const [successMSG, setSuccessMSG] = useState("");
   const [activeErrorCode, setActiveErrorCode] = useState("");
+  const [showAfriIdModal, setShowAfriIdModal] = useState(false);
+
+  const [enteredAfriId, setEnteredAfriId] = useState("");
+  const [afriIdError, setAfriIdError] = useState("");
+  const [afriIdLoading, setAfriIdLoading] = useState(false);
+  const [foundAfriUser, setFoundAfriUser] = useState<any>(null);
+
+  const handleAfriIdLogin = () => {
+     setShowAfriIdModal(true);
+  };
+
+  const validateAfriId = async () => {
+    const formattedId = enteredAfriId.trim().toUpperCase();
+    const regex = /^AFRI-[A-Z0-9]{6,8}$/;
+    
+    if (!regex.test(formattedId)) {
+        setAfriIdError("Format AFRI ID invalide");
+        if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        return;
+    }
+    
+    setAfriIdError("");
+    setAfriIdLoading(true);
+    
+    try {
+        const { collection, query, where, getDocs } = await import("firebase/firestore");
+        const { db } = await import("../lib/firebase");
+        
+        if (db) {
+           const q = query(collection(db, "afri_ids"), where("afriId", "==", formattedId));
+           const snap = await getDocs(q);
+           if (!snap.empty) {
+               setFoundAfriUser(snap.docs[0].data());
+           } else {
+               setAfriIdError("Afri ID introuvable");
+               if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate([50, 50, 50]);
+           }
+        } else {
+           if (formattedId === "AFRI-MOCK001") {
+               setFoundAfriUser({ afriId: formattedId, displayName: "Artiste Test", email: "test@gombo.ci", uid: "mock1" });
+           } else {
+               setAfriIdError("Afri ID introuvable (Mode Test)");
+           }
+        }
+    } catch(err) {
+        setAfriIdError("Erreur lors de la vérification");
+    } finally {
+        setAfriIdLoading(false);
+    }
+  };
 
   // WebView redirection states
   const [isRedirectPending, setIsRedirectPending] = useState(false);
@@ -197,6 +247,102 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
     }
   };
 
+  if (showAfriIdModal) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4">
+        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 max-w-sm w-full mx-auto flex flex-col items-center text-center shadow-[0_0_40px_rgba(212,175,55,0.05)] relative overflow-hidden animate-fadeIn">
+          {/* Ambient Inner Glow */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 blur-3xl rounded-full pointer-events-none"></div>
+
+          <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center border border-[#D4AF37] shrink-0 shadow-[0_0_15px_rgba(212,175,55,0.2)] z-10 mb-6">
+             <span className="font-serif font-black text-4xl text-[#D4AF37]">A</span>
+          </div>
+
+          <h2 className="text-[#D4AF37] font-black text-xl mb-1 tracking-widest uppercase">AFRI ID</h2>
+          
+          {!foundAfriUser ? (
+            <div className="w-full mt-4 flex flex-col gap-4 z-10">
+              <p className="text-zinc-400 text-xs font-mono mb-2">CONNEXION SÉCURISÉE</p>
+              
+              <div className="space-y-1 relative">
+                <input
+                  type="text"
+                  maxLength={13}
+                  placeholder="AFRI-XXXXXX"
+                  value={enteredAfriId}
+                  onChange={(e) => {
+                    setEnteredAfriId(e.target.value.toUpperCase());
+                    if (afriIdError) setAfriIdError("");
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && validateAfriId()}
+                  disabled={afriIdLoading}
+                  className={`w-full bg-[#111] border ${afriIdError ? 'border-red-500 animate-[pulse_0.5s_ease-in-out_2]' : 'border-[#D4AF37]/25'} text-white placeholder-zinc-600 rounded-xl px-4 py-3 text-center font-mono font-bold uppercase tracking-widest outline-none focus:border-[#D4AF37]/60 transition-colors z-10`}
+                />
+                
+                {afriIdError && (
+                  <p className="text-[10px] text-red-500 font-bold mt-1 font-mono uppercase tracking-wider">{afriIdError}</p>
+                )}
+              </div>
+
+              <div className="flex gap-2.5 mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                      setShowAfriIdModal(false);
+                      setEnteredAfriId("");
+                      setAfriIdError("");
+                      setFoundAfriUser(null);
+                  }}
+                  className="w-1/3 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors text-xs font-mono font-bold border border-zinc-800"
+                >
+                  <X className="w-5 h-5 mx-auto" />
+                </button>
+                <button
+                  type="button"
+                  onClick={validateAfriId}
+                  disabled={afriIdLoading || enteredAfriId.length < 10}
+                  className="flex-1 py-3 rounded-xl bg-[#D4AF37] hover:bg-[#b5952f] text-black transition-all text-xs font-sans font-black uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {afriIdLoading ? "Vérification..." : "Vérifier"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full mt-2 flex flex-col gap-4 z-10 animate-fadeIn">
+              <div className="p-4 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl text-left space-y-3">
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full bg-black border border-[#D4AF37]/50 overflow-hidden shrink-0">
+                      <img src={foundAfriUser.avatarUrl || foundAfriUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(foundAfriUser.displayName || 'A')}&background=050505&color=D4AF37`} alt="Avatar" className="w-full h-full object-cover" />
+                   </div>
+                   <div className="min-w-0">
+                     <p className="text-[10px] text-[#D4AF37] font-mono font-bold tracking-widest uppercase">Afri ID Détecté</p>
+                     <p className="text-white font-bold text-sm truncate">{foundAfriUser.displayName}</p>
+                   </div>
+                 </div>
+                 
+                 <div className="space-y-1 bg-black/40 p-2 rounded-lg border border-white/5">
+                   <p className="text-[10px] text-zinc-500 font-mono">Email associé:</p>
+                   <p className="text-xs text-zinc-300 truncate">{foundAfriUser.email}</p>
+                 </div>
+              </div>
+              
+              <button
+                type="button"
+                onClick={() => {
+                   setShowAfriIdModal(false);
+                   handleGoogleLogin();
+                }}
+                className="w-full py-3 bg-[#D4AF37] hover:bg-[#b5952f] text-black rounded-xl transition-all font-black text-xs uppercase tracking-widest"
+              >
+                 Continuer avec Google Auth
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full select-none" id="auth-screen-container">
       <motion.div 
@@ -317,32 +463,63 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
             </div>
           ) : (
             <div className="space-y-4">
+              {/* AFRI ID Button */}
+              <button
+                type="button"
+                onClick={handleAfriIdLogin}
+                disabled={loading}
+                className="w-full h-14 relative flex items-center justify-center gap-3 bg-gradient-to-r from-[#D4AF37] to-[#ffd700] hover:from-[#c29c29] hover:to-[#e6c100] text-black rounded-2xl transition-all duration-300 font-black text-xs uppercase tracking-widest active:scale-[0.98] cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.3)] border border-[#D4AF37]/30 overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#fff]/20 blur-2xl rounded-full pointer-events-none"></div>
+                <div className="w-6 h-6 rounded-lg bg-black flex items-center justify-center border border-[#D4AF37] shrink-0 shadow-[0_0_10px_rgba(212,175,55,0.5)] z-10">
+                   <span className="font-serif font-bold text-lg text-[#D4AF37]">A</span>
+                </div>
+                <span className="z-10">{loading ? "Vérification..." : "Continuer avec AFRI ID"}</span>
+              </button>
+
+              <div className="flex items-center gap-3 mb-2 mt-2">
+                <div className="h-[1px] bg-zinc-800 flex-1"></div>
+                <span className="text-[9px] font-mono font-bold text-zinc-500">OU AUTRES MÉTHODES</span>
+                <div className="h-[1px] bg-zinc-800 flex-1"></div>
+              </div>
+
               {/* Google Button */}
               <button
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={loading}
-                className="w-full h-14 flex items-center justify-center gap-3 bg-gradient-to-r from-[#D4AF37] to-[#ffd700] hover:from-[#c29c29] hover:to-[#e6c100] text-[#0E0E10] rounded-2xl transition-all duration-300 font-black text-xs uppercase tracking-widest active:scale-[0.98] cursor-pointer shadow-lg"
+                className="w-full h-14 flex items-center justify-center gap-3 bg-[#050505] hover:bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-white rounded-2xl transition-all duration-300 font-bold text-xs uppercase tracking-widest active:scale-[0.98] cursor-pointer"
               >
                 <svg className="w-5.5 h-5.5 shrink-0" viewBox="0 0 24 24">
                   <path
-                    fill="#0E0E10"
+                    fill="currentColor"
                     d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.529-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.1C18.28 1.844 15.485 1 12.24 1 6.05 1 1.042 6.01 1.042 12.185S6.05 23.37 12.24 23.37c6.46 0 10.755-4.54 10.755-10.95 0-.735-.08-1.3-.175-1.833h-10.58z"
                   />
                 </svg>
-                <span>{loading ? "Vérification..." : "✅ Continuer avec Google"}</span>
+                <span>{loading ? "Vérification..." : "Continuer avec Google"}</span>
+              </button>
+
+              {/* Email/Telephone Button */}
+              <button
+                type="button"
+                className="w-full h-14 flex items-center justify-center gap-3 bg-[#050505] hover:bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-white rounded-2xl font-bold text-xs uppercase tracking-widest cursor-pointer active:scale-[0.98] transition-all duration-300"
+              >
+                <svg className="w-5.5 h-5.5 fill-current shrink-0" viewBox="0 0 24 24">
+                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                <span>Continuer avec Email ou Tél</span>
               </button>
 
               {/* Facebook Button (Visible but disabled with comment "Bientôt disponible.") */}
               <button
                 type="button"
                 disabled={true}
-                className="w-full h-14 flex items-center justify-center gap-3 bg-slate-900/30 border border-slate-800/60 text-slate-500 rounded-2xl font-bold text-xs uppercase tracking-widest cursor-not-allowed opacity-60"
+                className="w-full h-14 flex items-center justify-center gap-3 bg-[#050505] border border-slate-800/60 text-slate-600 rounded-2xl font-bold text-xs uppercase tracking-widest cursor-not-allowed opacity-60"
               >
                 <svg className="w-5.5 h-5.5 fill-current opacity-40 shrink-0" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
-                <span>⏳ Continuer avec Facebook (Bientôt disponible)</span>
+                <span>Facebook (Bientôt disponible)</span>
               </button>
             </div>
           )}
@@ -355,3 +532,5 @@ export default function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
     </div>
   );
 }
+
+export default React.memo(AuthScreen);

@@ -1,8 +1,22 @@
-import React, { useState, useEffect } from "react";
-import AdminCentre from "./components/AdminCentre.tsx";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { audioSynth } from "./lib/audio";
 import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
+
+// Lazy load the main Application Layer
+const AdminCentre = lazy(() => import("./components/AdminCentre.tsx"));
+
+const AppContent = React.memo(function AppContent({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (d: boolean) => void }) {
+  return (
+    <Suspense fallback={
+       <div className="flex h-screen items-center justify-center bg-[#050505]">
+          <div className="w-16 h-16 rounded-full border-t-2 border-[#D4AF37] animate-spin"></div>
+       </div>
+    }>
+      <AdminCentre darkMode={darkMode} setDarkMode={setDarkMode} />
+    </Suspense>
+  );
+});
 
 function App() {
   const [showSplash, setShowSplash] = useState(() => {
@@ -189,7 +203,7 @@ function App() {
       </AnimatePresence>
 
       {/* 2. MAIN APPLICATION LAYER */}
-      <AdminCentre darkMode={darkMode} setDarkMode={setDarkMode} />
+      <AppContent darkMode={darkMode} setDarkMode={setDarkMode} />
     </div>
   );
 }

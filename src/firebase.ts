@@ -496,6 +496,35 @@ export async function ensureAfriIdAndSync(profile: UserProfile): Promise<UserPro
       if (!isFirebaseMock && db) {
         const userRef = doc(db, "users", profile.uid);
         await setDoc(userRef, updated, { merge: true });
+
+        // Global Afri ID Record
+        if (updated.afriId) {
+          const afriUserRef = doc(db, "afri_ids", updated.afriId);
+          await setDoc(afriUserRef, {
+            afriId: updated.afriId,
+            uid: updated.uid,
+            trustId: updated.gomboId || updated.gomboIdNumber || "",
+            nom: updated.displayName || updated.firstName || "",
+            email: updated.email || "",
+            telephone: updated.phone || "",
+            avatar: updated.photoURL || updated.avatarUrl || "",
+            couverture: updated.coverUrl || "",
+            role: updated.role || "user",
+            applications: {
+              afriTrust: updated.ecosystemApps?.afritrust || false,
+              afriLivraison: false,
+              afriMarket: false,
+              afriAcademy: false,
+              afrigombo: true,
+              afriWallet: false
+            },
+            abonnement: {
+              niveau: "STANDARD"
+            },
+            createdAt: updated.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+        }
       } else {
         // Mock fallback update
         const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
@@ -503,6 +532,35 @@ export async function ensureAfriIdAndSync(profile: UserProfile): Promise<UserPro
         if (idx >= 0) {
           users[idx] = { ...users[idx], ...updated };
           localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+        }
+
+        if (updated.afriId) {
+          const afriUsers = JSON.parse(localStorage.getItem("afri_ids") || "{}");
+          afriUsers[updated.afriId] = {
+            afriId: updated.afriId,
+            uid: updated.uid,
+            trustId: updated.gomboId || updated.gomboIdNumber || "",
+            nom: updated.displayName || updated.firstName || "",
+            email: updated.email || "",
+            telephone: updated.phone || "",
+            avatar: updated.photoURL || updated.avatarUrl || "",
+            couverture: updated.coverUrl || "",
+            role: updated.role || "user",
+            applications: {
+              afriTrust: updated.ecosystemApps?.afritrust || false,
+              afriLivraison: false,
+              afriMarket: false,
+              afriAcademy: false,
+              afrigombo: true,
+              afriWallet: false
+            },
+            abonnement: {
+              niveau: "STANDARD"
+            },
+            createdAt: updated.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          localStorage.setItem("afri_ids", JSON.stringify(afriUsers));
         }
       }
     } catch (err) {
@@ -1625,6 +1683,32 @@ export const gomboDB = {
     if (!isFirebaseMock && db) {
       try {
         await setDoc(doc(db, "users", uid), profile, { merge: true });
+        
+        // --- AFRI ID Global Sync ---
+        let afriId = profile.afriId;
+        if (!afriId) {
+          const docSnap = await getDoc(doc(db, "users", uid));
+          if (docSnap.exists()) afriId = docSnap.data().afriId;
+        }
+        
+        if (afriId) {
+          const afriUpdates: any = {};
+          if (profile.displayName !== undefined || profile.firstName !== undefined || profile.lastName !== undefined) {
+             afriUpdates.nom = profile.displayName || profile.firstName;
+          }
+          if (profile.photoURL !== undefined || profile.avatarUrl !== undefined) {
+             afriUpdates.avatar = profile.photoURL || profile.avatarUrl;
+          }
+          if (profile.email !== undefined) afriUpdates.email = profile.email;
+          if (profile.phone !== undefined) afriUpdates.telephone = profile.phone;
+          if (profile.coverUrl !== undefined) afriUpdates.couverture = profile.coverUrl;
+          if (profile.role !== undefined) afriUpdates.role = profile.role;
+          
+          if (Object.keys(afriUpdates).length > 0) {
+            afriUpdates.updatedAt = new Date().toISOString();
+            await setDoc(doc(db, "afri_ids", afriId), afriUpdates, { merge: true });
+          }
+        }
         return;
       } catch (error: any) {
         console.warn("⚠️ Mode Firestore inaccessible or rule block for updateUserProfile. Error details:", error);
@@ -1638,12 +1722,36 @@ export const gomboDB = {
     }
     const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
     const index = users.findIndex(u => u.uid === uid);
+    let afriIdLocal = profile.afriId;
     if (index !== -1) {
       users[index] = { ...users[index], ...profile } as UserProfile;
+      if (!afriIdLocal) afriIdLocal = users[index].afriId;
     } else {
       users.push({ uid, ...profile } as UserProfile);
     }
     localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+
+    if (afriIdLocal) {
+      const afriUsers = JSON.parse(localStorage.getItem("afri_ids") || "{}");
+      if (afriUsers[afriIdLocal]) {
+          const afriUpdates: any = {};
+          if (profile.displayName !== undefined || profile.firstName !== undefined || profile.lastName !== undefined) {
+             afriUpdates.nom = profile.displayName || profile.firstName;
+          }
+          if (profile.photoURL !== undefined || profile.avatarUrl !== undefined) {
+             afriUpdates.avatar = profile.photoURL || profile.avatarUrl;
+          }
+          if (profile.email !== undefined) afriUpdates.email = profile.email;
+          if (profile.phone !== undefined) afriUpdates.telephone = profile.phone;
+          if (profile.coverUrl !== undefined) afriUpdates.couverture = profile.coverUrl;
+          if (profile.role !== undefined) afriUpdates.role = profile.role;
+          
+          afriUpdates.updatedAt = new Date().toISOString();
+          afriUsers[afriIdLocal] = { ...afriUsers[afriIdLocal], ...afriUpdates };
+          localStorage.setItem("afri_ids", JSON.stringify(afriUsers));
+      }
+    }
+
     triggerStorageEvent();
     window.dispatchEvent(new Event("gomboUserProfileChange"));
   },

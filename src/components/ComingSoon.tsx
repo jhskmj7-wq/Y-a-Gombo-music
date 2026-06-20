@@ -4,7 +4,7 @@ import { Bell, Stars, Sparkles, Check, ChevronLeft } from "lucide-react";
 import { gomboDB, gomboAuth } from "../firebase";
 
 interface ComingSoonProps {
-  featureId: "academie" | "groupe" | "marche" | "certification";
+  featureId: "academie" | "groupe" | "marche" | "certification" | "messages" | "evenements" | "scanner";
   onBack: () => void;
 }
 
@@ -40,6 +40,30 @@ const FEATURE_INFOS = {
     incentive: "Les artistes certifiés reçoivent en moyenne 3 fois plus de propositions !",
     color: "from-[#7C3AED] to-indigo-600",
     bgPattern: "bg-grid-purple"
+  },
+  messages: {
+    title: "Messagerie Intra-Réseau",
+    badge: "Discussions & Échanges",
+    description: "La messagerie interne permet de discuter directement avec d'autres artistes de la base, de négocier vos cachets ou de proposer des Alliances pour de la production musicale.",
+    incentive: "Discutez de manière souveraine !",
+    color: "from-[#D4AF37] to-amber-600",
+    bgPattern: "bg-grid-amber"
+  },
+  evenements: {
+    title: "Billetterie & Événements",
+    badge: "Concerts Live",
+    description: "L'agenda ultime pour promouvoir vos spectacles et concerts live. Créez des billetteries via Mobile Money.",
+    incentive: "Gérez vos participations en un clic !",
+    color: "from-[#D4AF37] to-amber-600",
+    bgPattern: "bg-grid-amber"
+  },
+  scanner: {
+    title: "Scanner Gombo ID",
+    badge: "Vérification Instantanée",
+    description: "Contrôlez les identités de l'écosystème Gombo avec le scanner universel de QR",
+    incentive: "Vérification inviolable et sécurisée ! ",
+    color: "from-[#111111] to-purple-600",
+    bgPattern: "bg-grid-violet"
   }
 };
 

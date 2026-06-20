@@ -55,7 +55,7 @@ interface UserTerrainLandingPageProps {
   addToTerminal: (msg: string) => void;
 }
 
-export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
+export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = React.memo(({
   gombos,
   users,
   posts,
@@ -303,28 +303,28 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
         <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
           ACTIONS RAPIDES
         </h3>
-        <div className="grid grid-cols-4 gap-2 w-full select-none">
+        <div className="grid grid-cols-4 gap-1.5 w-full select-none">
           {[
             { id: "renfort", label: "Renfort", icon: ShieldCheck, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
             { id: "publier", label: "Publier", icon: PenTool, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
             { id: "verifier", label: "Vérifier", icon: UserCheck, action: () => requireAuthThen(() => { setActiveMenu("user_heritage"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "messages", label: "Messages", icon: MessageCircle, action: () => requireAuthThen(() => { alert("Messagerie en cours d'activation."); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "messages", label: "Messages", icon: MessageCircle, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
             { id: "annuaire", label: "Annuaire", icon: Users, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
             { id: "booster", label: "Booster", icon: Award, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "evenement", label: "Événements", icon: Megaphone, action: () => requireAuthThen(() => { alert("Billetterie en cours d'activation !"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "scanner", label: "Scanner", icon: QrCode, action: () => requireAuthThen(() => { alert("Scanner Gombo ID actif !"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) }
+            { id: "evenement", label: "Événements", icon: Megaphone, action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "scanner", label: "Scanner", icon: QrCode, action: () => requireAuthThen(() => { setActiveMenu("user_scanner"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) }
           ].map(action => {
             const Icon = action.icon;
             return (
               <div
                 key={action.id}
                 onClick={action.action}
-                className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-xl p-1.5 flex flex-col items-center justify-center gap-1.5 hover:border-[#D4AF37]/60 transition-all cursor-pointer active:scale-95"
+                className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-lg p-1.5 flex flex-col items-center justify-center gap-1 hover:border-[#D4AF37]/60 transition-all cursor-pointer active:scale-95"
               >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent shrink-0">
-                  <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D4AF37]" strokeWidth={1.5} />
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent shrink-0">
+                  <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]" strokeWidth={1.5} />
                 </div>
-                <span className="text-[7.5px] sm:text-[9px] text-[#F5F5F5] font-bold tracking-wide text-center leading-none truncate w-full px-0.5">{action.label}</span>
+                <span className="text-[6.5px] sm:text-[7.5px] text-[#F5F5F5] font-bold tracking-wider text-center leading-none truncate w-full px-0.5">{action.label}</span>
               </div>
             );
           })}
@@ -735,7 +735,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
                             <button
                               onClick={() => {
                                 addToTerminal(`[MESSAGE] Alliance initiée avec ${u.artisticName}`);
-                                alert(`✉️ Alliance Afrigombo : Message d'invitation directe transmis pour ${u.artisticName}.`);
+                                setActiveMenu("user_messages");
                                 try { audioSynth.playValidationSuccess(); } catch(_) {}
                               }}
                               className="flex-1 py-1 px-2 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/25 text-[9px] font-mono font-bold uppercase rounded-lg"
@@ -876,9 +876,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
                         addToTerminal(`[DIFFUSION] Publication réussie sur le Terrain : ${newNoticeTitle}`);
                         setActiveQuickActionModal(null);
                         try { audioSynth.playTamTam(true); } catch (_) {}
-                        alert("🔥 Tam-tam propagé avec succès à toute la Côte d'Ivoire !");
                       } else {
-                        alert("Veuillez remplir l'annonce souveraine.");
+                        addToTerminal("[ERREUR] Veuillez remplir l'annonce souveraine.");
                       }
                     }}
                     className="w-full py-2.5 bg-[#D4AF37] text-black font-black text-xs rounded-xl hover:opacity-90 transition uppercase font-sans tracking-widest mt-1"
@@ -895,4 +894,4 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = ({
 
     </div>
   );
-};
+});

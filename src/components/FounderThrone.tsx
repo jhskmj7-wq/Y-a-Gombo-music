@@ -207,7 +207,7 @@ export default function FounderThrone({
             className="absolute right-4 top-4 sm:right-6 sm:top-1/2 sm:-translate-y-1/2 bg-black/50 border border-red-500/50 hover:bg-red-500/10 text-red-500 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 transition-all cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.2)] active:scale-95 z-50"
           >
             <UserX className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:block text-[9px] font-black uppercase tracking-wider">Retour</span>
+            <span className="hidden sm:block text-[9px] font-black uppercase tracking-wider">Retour Utilisateur</span>
           </button>
         </header>
 

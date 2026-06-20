@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { 
   X, Sun, Moon, Wallet, Bell, MapPin, 
   Check, Volume2, Shield, Info, HelpCircle,
-  User, Lock, Trash2, Laptop, Smartphone, Eye
+  User, Lock, Trash2, Laptop, Smartphone, Eye,
+  Globe, FileText, Star, LogOut
 } from "lucide-react";
 
 interface SettingsModalProps {
@@ -27,7 +28,7 @@ export default function SettingsModal({
   if (!isOpen) return null;
 
   // Navigation / Tabs State
-  const [activeTab, setActiveTab] = useState<"apparence" | "notifications" | "securite" | "confidentialite" | "compte" | "apropos">("apparence");
+  const [activeTab, setActiveTab] = useState<"compte" | "application" | "confidentialite" | "univers" | "support" | "legal">("compte");
 
   // Localized preferences stored in LocalStorage
   const [region, setRegion] = useState(() => localStorage.getItem("gombo_pref_region") || "Abidjan (Cocody)");
@@ -231,15 +232,50 @@ export default function SettingsModal({
           {/* Navigation Sidebar (Vertical on Desktop, Horizontal on Mobile) */}
           <div className="w-full md:w-56 bg-gray-50/50 dark:bg-gray-950/20 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800 flex flex-row md:flex-col p-2.5 gap-1.5 overflow-x-auto md:overflow-x-visible shrink-0 scrollbar-none">
             {[
-              { id: "apparence", label: "Apparence", icon: Sun },
+              { id: "compte", label: "Mon profil", icon: User },
+              { id: "afri_id", label: "Mon Afri ID", icon: Star },
               { id: "notifications", label: "Notifications", icon: Bell },
               { id: "securite", label: "Sécurité", icon: Shield },
+              { id: "langue", label: "Langue", icon: Globe },
+              { id: "application", label: "Thème", icon: Moon },
               { id: "confidentialite", label: "Confidentialité", icon: Lock },
-              { id: "compte", label: "Mon Compte", icon: User },
-              { id: "apropos", label: "À propos", icon: Info }
+              { id: "legal", label: "CGU", icon: FileText },
+              { id: "support", label: "Centre aide", icon: HelpCircle },
+              { id: "logout", label: "Déconnexion", icon: LogOut, isDanger: true }
             ].map((tab) => {
               const TabIcon = tab.icon;
               const isSelected = activeTab === tab.id;
+              if (tab.id === "logout") {
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => {
+                        setShowDeleteConfirm(false);
+                        if (onLogout) onLogout();
+                    }}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer md:w-full select-none text-red-500 hover:bg-red-500/10 md:mt-auto"
+                  >
+                    <TabIcon className="w-4 h-4 shrink-0" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              }
+              if (tab.id === "cgu" || tab.id === "confidentialite") {
+                 return (
+                   <button
+                     key={tab.id}
+                     type="button"
+                     onClick={() => {
+                        setActiveLegalPage(tab.id === "confidentialite" ? "privacy" : "terms");
+                     }}
+                     className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer md:w-full select-none text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-gray-900/40"
+                   >
+                     <TabIcon className="w-4 h-4 shrink-0" />
+                     <span>{tab.label}</span>
+                   </button>
+                 );
+              }
               return (
                 <button
                   key={tab.id}
@@ -264,13 +300,15 @@ export default function SettingsModal({
           {/* Sub-Contents Panels Area (Scrollable) */}
           <div className="flex-1 p-6 overflow-y-auto space-y-6">
             
-            {/* 1. APPARENCE TAB */}
-            {activeTab === "apparence" && (
-              <div className="space-y-5 animate-fadeIn">
-                <div>
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
-                    🎨 Thème visuel
-                  </h3>
+            {/* 1. APPLICATION TAB */}
+            {activeTab === "application" && (
+              <div className="space-y-8 animate-fadeIn">
+                {/* Apparence */}
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
+                      🎨 Thème visuel
+                    </h3>
                   <p className="text-[11px] text-gray-400 dark:text-gray-500">Choisissez l'interface qui correspond à votre vibe artistique.</p>
                 </div>
 
@@ -300,8 +338,9 @@ export default function SettingsModal({
                     );
                   })}
                 </div>
+              </div>
 
-                <div className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/10 space-y-3.5">
+              <div className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/10 space-y-3.5">
                   <h4 className="text-xs font-black text-gray-800 dark:text-gray-300 uppercase">Ajustement Régional</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div className="space-y-1">
@@ -335,25 +374,14 @@ export default function SettingsModal({
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* 2. NOTIFICATIONS TAB */}
-            {activeTab === "notifications" && (
-              <div className="space-y-5 animate-fadeIn">
-                <div>
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
-                    🔊 Volume & Alertes Audio
-                  </h3>
-                  <p className="text-[11px] text-gray-400 dark:text-gray-500">Contrôlez les retours interactifs de l'application.</p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/10 space-y-2">
+                <div className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/10 space-y-3.5 mt-8">
+                  <h4 className="text-xs font-black text-gray-800 dark:text-gray-300 uppercase">Volume & Alertes Audio</h4>
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-gray-400">
                       <span className="flex items-center gap-1.5">
                         <Volume2 className="w-4 h-4 text-orange-500" />
-                        Volume des effets sonores
+                        Volume des effets
                       </span>
                       <span className="font-mono text-xs text-orange-500 font-extrabold">{audioVolume}%</span>
                     </div>
@@ -367,44 +395,38 @@ export default function SettingsModal({
                       onTouchEnd={playDemoBeep}
                       className="w-full accent-orange-500 cursor-pointer"
                     />
-                  </div>
 
-                  <div className="space-y-3 pt-1">
-                    <label className="flex items-center justify-between cursor-pointer group">
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-bold text-gray-800 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
-                          🚨 Flash Gombos Urgents
-                        </span>
-                        <p className="text-[10px] text-gray-400 dark:text-gray-500">
-                          Sons prioritaires dès qu'une offre urgente est émise à Abidjan.
-                        </p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={enableSoundAlerts}
-                        onChange={(e) => setEnableSoundAlerts(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative"></div>
-                    </label>
+                    <div className="space-y-3 pt-1">
+                      <label className="flex items-center justify-between cursor-pointer group">
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-bold text-gray-800 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
+                            🚨 Flash Gombos Urgents
+                          </span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={enableSoundAlerts}
+                          onChange={(e) => setEnableSoundAlerts(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative"></div>
+                      </label>
 
-                    <label className="flex items-center justify-between cursor-pointer group">
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-bold text-gray-800 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
-                          🛎️ Clics interactifs
-                        </span>
-                        <p className="text-[10px] text-gray-400 dark:text-gray-500">
-                          Effets audio brefs lors de la validation des candidatures.
-                        </p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={enableUiSounds}
-                        onChange={(e) => setEnableUiSounds(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative"></div>
-                    </label>
+                      <label className="flex items-center justify-between cursor-pointer group">
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-bold text-gray-800 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
+                            🛎️ Clics interactifs
+                          </span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={enableUiSounds}
+                          onChange={(e) => setEnableUiSounds(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative"></div>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -460,13 +482,15 @@ export default function SettingsModal({
               </div>
             )}
 
-            {/* 3.5 SÉCURITÉ TAB */}
-            {activeTab === "securite" && (
-              <div className="space-y-5 animate-fadeIn">
-                <div>
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
-                    🛡️ Sécurité du Compte
-                  </h3>
+            {/* 4. COMPTE TAB (Merged from Sécurité & Compte) */}
+            {activeTab === "compte" && (
+              <div className="space-y-8 animate-fadeIn">
+                {/* Sécurité */}
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
+                      🛡️ Sécurité du Compte
+                    </h3>
                   <p className="text-[11px] text-gray-400 dark:text-gray-500">Gérez vos options de sécurité de session et mot de passe.</p>
                 </div>
 
@@ -537,16 +561,14 @@ export default function SettingsModal({
                     Mettre à jour mon mot de passe
                   </button>
                 </form>
-              </div>
-            )}
+                </div>
 
-            {/* 4. COMPTE TAB */}
-            {activeTab === "compte" && (
-              <div className="space-y-5 animate-fadeIn">
-                <div>
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
-                    👤 Données de Compte
-                  </h3>
+                {/* Données de Compte */}
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
+                      👤 Données de Compte
+                    </h3>
                   <p className="text-[11px] text-gray-400 dark:text-gray-500">Détails d'authentification et de sécurité.</p>
                 </div>
 
@@ -612,10 +634,11 @@ export default function SettingsModal({
                   )}
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
             {/* 5. À PROPOS TAB */}
-            {activeTab === "apropos" && (
+            {activeTab === "support" && (
               <div className="space-y-4 animate-fadeIn">
                 <div className="text-center py-6 bg-gradient-to-tr from-amber-500/5 to-orange-500/5 border border-dashed border-gray-150 dark:border-gray-800/80 rounded-2xl">
                   <span className="text-3xl">🇨🇮</span>
