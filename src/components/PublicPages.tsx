@@ -124,7 +124,7 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
                 <span>support@gombo.ci</span>
               </a>
               <a
-                href="https://wa.me/2250102030405?text=Salut%20l%27equipe%20Gombo%20!%20J%27ai%20une%20question%20concerant%20mes%20donnees%20personnelles."
+                href="https://wa.me/2250503222712?text=Bonjour%20AFRIGOMBO,%20j'ai%20besoin%20d'assistance."
                 target="_blank"
                 rel="no-referrer"
                 className="flex items-center gap-2 px-4 py-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 text-xs font-bold rounded-xl border border-emerald-100/30 text-emerald-600 dark:text-emerald-400 transition-all"

@@ -2846,6 +2846,68 @@ export const gomboDB = {
     return newActivity;
   },
 
+  async logUserActivity(userId: string, type: string, details: string): Promise<any> {
+    const id = "log_" + Math.random().toString(36).substring(2, 10);
+    const newLog = {
+      id,
+      userId,
+      type, // "Connexion" | "Publication" | "Commentaires" | "Likes" | "Messages" | "Collaborations" | "Opportunités" | "Modifications profil"
+      details,
+      timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "activity_logs", id), newLog);
+        return newLog;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible or rule block for logUserActivity.", error);
+      }
+    }
+
+    const logs = JSON.parse(localStorage.getItem("gombo_user_activity_logs") || "[]");
+    logs.unshift(newLog);
+    localStorage.setItem("gombo_user_activity_logs", JSON.stringify(logs));
+    window.dispatchEvent(new CustomEvent("gomboUserLogsChange", { detail: logs }));
+    return newLog;
+  },
+
+  listenUserActivities(userId: string, callback: (logs: any[]) => void): () => void {
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "activity_logs"), where("userId", "==", userId));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list = snapshot.docs.map(d => d.data());
+          list.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt));
+          callback(list.slice(0, 100));
+        }, (error) => {
+          console.error("⚠️ Firestore User Logs Error:", error);
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.warn("⚠️ Mode Firestore inaccessible copy for listenUserActivities. Fallback local.", error);
+      }
+    }
+
+    const triggerLocal = () => {
+      const all = JSON.parse(localStorage.getItem("gombo_user_activity_logs") || "[]");
+      const filtered = all.filter((l: any) => l.userId === userId);
+      filtered.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt));
+      callback(filtered);
+    };
+
+    window.addEventListener("storage", triggerLocal);
+    window.addEventListener("gomboUserLogsChange", triggerLocal as EventListener);
+    
+    triggerLocal();
+
+    return () => {
+      window.removeEventListener("storage", triggerLocal);
+      window.removeEventListener("gomboUserLogsChange", triggerLocal as EventListener);
+    };
+  },
+
   listenToActivityFeed(callback: (activities: ActivityFeedEntry[]) => void): () => void {
     if (!isFirebaseMock && db) {
       try {

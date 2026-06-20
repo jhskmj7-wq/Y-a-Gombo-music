@@ -108,6 +108,10 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const [localType, setLocalType] = useState(selectedType);
   const [localDate, setLocalDate] = useState(selectedDateFilter);
 
+  // Collapsible regions states
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
   // Sync with outside state (e.g. when resetting from parent)
   useEffect(() => {
     setLocalCategory(selectedCategory);
@@ -325,36 +329,76 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       {/* ==========================================
           2. ACTIONS RAPIDES (STYLE PREMIUM AFRIGOMBO)
          ========================================== */}
-      <div className="space-y-3">
-        <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
-          ACTIONS RAPIDES
-        </h3>
-        <motion.div
-          variants={{
-            hidden: { opacity: 0 },
-            show: {
-              opacity: 1,
-              transition: {
-                staggerChildren: 0.05
-              }
-            }
+      <div className="space-y-3 bg-[#111113]/30 border border-zinc-900 rounded-2xl p-3.5">
+        <button
+          onClick={() => {
+            setIsQuickActionsOpen(!isQuickActionsOpen);
+            try { audioSynth?.playTamTam?.(false); } catch(_) {}
           }}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-4 gap-1.5 w-full select-none"
+          className="w-full flex justify-between items-center text-left focus:outline-none cursor-pointer hover:opacity-90 select-none"
         >
-          {[
-            { id: "renfort", label: "Renfort", icon: ShieldCheck, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "publier", label: "Publier", icon: PenTool, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "verifier", label: "Vérifier", icon: UserCheck, isSoon: true, action: () => {} },
-            { id: "messages", label: "Messages", icon: MessageCircle, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "annuaire", label: "Annuaire", icon: Users, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "booster", label: "Booster", icon: Award, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "evenement", label: "Événements", icon: Megaphone, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "scanner", label: "Scanner", icon: QrCode, isSoon: true, action: () => {} }
-          ].map(action => {
-            const Icon = action.icon;
-            if (action.isSoon) {
+          <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase flex items-center gap-1.5">
+            <span>⚡ ACTIONS RAPIDES</span>
+          </h3>
+          <span className="text-[11px] font-mono font-black text-[#D4AF37] bg-zinc-950/80 border border-[#D4AF37]/20 w-6 h-6 rounded-lg flex items-center justify-center transition-all">
+            {isQuickActionsOpen ? "▲" : "▼"}
+          </span>
+        </button>
+
+        <div
+          className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${
+            isQuickActionsOpen ? "max-h-[500px] opacity-100 mt-2.5" : "max-h-0 opacity-0 pointer-events-none"
+          }`}
+        >
+          <motion.div
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.05
+                }
+              }
+            }}
+            initial="hidden"
+            animate={isQuickActionsOpen ? "show" : "hidden"}
+            className="grid grid-cols-4 gap-1.5 w-full select-none"
+          >
+            {[
+              { id: "renfort", label: "Renfort", icon: ShieldCheck, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "publier", label: "Publier", icon: PenTool, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "verifier", label: "Vérifier", icon: UserCheck, isSoon: true, action: () => {} },
+              { id: "messages", label: "Messages", icon: MessageCircle, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "annuaire", label: "Annuaire", icon: Users, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "booster", label: "Booster", icon: Award, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "evenement", label: "Événements", icon: Megaphone, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "scanner", label: "Scanner", icon: QrCode, isSoon: true, action: () => {} }
+            ].map(action => {
+              const Icon = action.icon;
+              if (action.isSoon) {
+                return (
+                  <motion.div
+                    key={action.id}
+                    variants={{
+                      hidden: { opacity: 0, y: 15, scale: 0.95 },
+                      show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
+                    }}
+                    className="bg-[#050505] border border-[#D4AF37]/10 opacity-50 rounded-lg p-1.5 flex flex-col items-center justify-center gap-1 cursor-not-allowed relative group"
+                    title="Bientôt disponible"
+                  >
+                    {/* SOON Badge */}
+                    <span className="absolute top-0.5 right-0.5 text-[5.5px] font-bold bg-[#D4AF37] text-black px-1 rounded uppercase tracking-wider scale-95 origin-top-right">
+                      SOON
+                    </span>
+                    
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#D4AF37]/10 flex items-center justify-center bg-transparent shrink-0">
+                      <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]/40" strokeWidth={1.5} />
+                    </div>
+                    <span className="text-[6.5px] sm:text-[7.5px] text-[#F5F5F5]/60 font-bold tracking-wider text-center leading-none truncate w-full px-0.5">{action.label}</span>
+                  </motion.div>
+                );
+              }
+              
               return (
                 <motion.div
                   key={action.id}
@@ -362,56 +406,46 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     hidden: { opacity: 0, y: 15, scale: 0.95 },
                     show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
                   }}
-                  className="bg-[#050505] border border-[#D4AF37]/10 opacity-50 rounded-lg p-1.5 flex flex-col items-center justify-center gap-1 cursor-not-allowed relative group"
-                  title="Bientôt disponible"
+                  whileHover={{
+                    scale: 1.03,
+                    borderColor: "rgba(212,175,55,0.7)",
+                    boxShadow: "0 0 10px rgba(212,175,55,0.2)"
+                  }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={action.action}
+                  className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-lg p-1.5 flex flex-col items-center justify-center gap-1 hover:bg-[#D4AF37]/5 transition-all cursor-pointer"
                 >
-                  {/* SOON Badge */}
-                  <span className="absolute top-0.5 right-0.5 text-[5.5px] font-bold bg-[#D4AF37] text-black px-1 rounded uppercase tracking-wider scale-95 origin-top-right">
-                    SOON
-                  </span>
-                  
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#D4AF37]/10 flex items-center justify-center bg-transparent shrink-0">
-                    <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]/40" strokeWidth={1.5} />
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent shrink-0">
+                    <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]" strokeWidth={1.5} />
                   </div>
-                  <span className="text-[6.5px] sm:text-[7.5px] text-[#F5F5F5]/60 font-bold tracking-wider text-center leading-none truncate w-full px-0.5">{action.label}</span>
+                  <span className="text-[6.5px] sm:text-[7.5px] text-[#F5F5F5] font-bold tracking-wider text-center leading-none truncate w-full px-0.5">{action.label}</span>
                 </motion.div>
               );
-            }
-            
-            return (
-              <motion.div
-                key={action.id}
-                variants={{
-                  hidden: { opacity: 0, y: 15, scale: 0.95 },
-                  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
-                }}
-                whileHover={{
-                  scale: 1.03,
-                  borderColor: "rgba(212,175,55,0.7)",
-                  boxShadow: "0 0 10px rgba(212,175,55,0.2)"
-                }}
-                whileTap={{ scale: 0.96 }}
-                onClick={action.action}
-                className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-lg p-1.5 flex flex-col items-center justify-center gap-1 hover:bg-[#D4AF37]/5 transition-all cursor-pointer"
-              >
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent shrink-0">
-                  <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]" strokeWidth={1.5} />
-                </div>
-                <span className="text-[6.5px] sm:text-[7.5px] text-[#F5F5F5] font-bold tracking-wider text-center leading-none truncate w-full px-0.5">{action.label}</span>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+            })}
+          </motion.div>
+        </div>
       </div>
 
       {/* ==========================================
           3. FILTRES RAPIDES ET RECHERCHE AVANCÉE
          ========================================== */}
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
-            RECHERCHE & FILTRES
-          </h3>
+      <div className="space-y-3 bg-[#111113]/30 border border-zinc-900 rounded-2xl p-3.5">
+        <div className="flex justify-between items-center bg-transparent">
+          <button
+            onClick={() => {
+              setIsFiltersOpen(!isFiltersOpen);
+              try { audioSynth?.playTamTam?.(false); } catch(_) {}
+            }}
+            className="flex-1 flex justify-between items-center text-left focus:outline-none cursor-pointer hover:opacity-90 select-none mr-3"
+          >
+            <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase flex items-center gap-1.5">
+              <span>🔎 RECHERCHE & FILTRES</span>
+            </h3>
+            <span className="text-[11px] font-mono font-black text-[#D4AF37] bg-zinc-950/80 border border-[#D4AF37]/20 w-6 h-6 rounded-lg flex items-center justify-center transition-all">
+              {isFiltersOpen ? "▲" : "▼"}
+            </span>
+          </button>
+
           <button
             onClick={() => {
               setLocalCategory("all");
@@ -428,110 +462,118 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               }
               try { audioSynth.playTamTam(false); } catch (_) {}
             }}
-            className="text-[10.5px] text-[#D4AF37] hover:text-[#F1C40F] font-bold transition-all flex items-center gap-1.5 focus:outline-none"
+            className="text-[9.5px] text-[#D4AF37]/80 hover:text-[#D4AF37] font-bold transition-all flex items-center gap-1 focus:outline-none shrink-0"
           >
-            <span>Réinitialiser</span>
-            <RefreshCw className="w-3.5 h-3.5 opacity-80" />
+            <span>Reset</span>
+            <RefreshCw className="w-3 h-3 opacity-85" />
           </button>
         </div>
 
-        {/* 4 Core dropdown selects */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {/* Category */}
-          <div className="relative">
-            <select
-              value={localCategory}
-              onChange={(e) => {
-                setLocalCategory(e.target.value);
-                try { audioSynth.playTamTam(true); } catch (_) {}
-              }}
-              className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
-            >
-              <option value="all">Catégorie</option>
-              <option value="zouglou">Zouglou</option>
-              <option value="coupé-décalé">Coupé-Décalé</option>
-              <option value="rap">Rap / Pop</option>
-              <option value="traditionnel">Traditionnel</option>
-              <option value="jazz">Jazz / Blues</option>
-            </select>
-          </div>
+        <div
+          className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${
+            isFiltersOpen ? "max-h-[500px] opacity-100 mt-2.5" : "max-h-0 opacity-0 pointer-events-none"
+          }`}
+        >
+          <div className="space-y-3 pt-1">
+            {/* 4 Core dropdown selects */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+              {/* Category */}
+              <div className="relative">
+                <select
+                  value={localCategory}
+                  onChange={(e) => {
+                    setLocalCategory(e.target.value);
+                    try { audioSynth.playTamTam(true); } catch (_) {}
+                  }}
+                  className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
+                >
+                  <option value="all">Catégorie</option>
+                  <option value="zouglou">Zouglou</option>
+                  <option value="coupé-décalé">Coupé-Décalé</option>
+                  <option value="rap">Rap / Pop</option>
+                  <option value="traditionnel">Traditionnel</option>
+                  <option value="jazz">Jazz / Blues</option>
+                </select>
+              </div>
 
-          {/* Localisation */}
-          <div className="relative">
-            <select
-              value={localLocation}
-              onChange={(e) => {
-                setLocalLocation(e.target.value);
-                try { audioSynth.playTamTam(true); } catch (_) {}
-              }}
-              className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
-            >
-              <option value="all">Domaine</option>
-              {IVORIAN_COMMUNES.map(commune => (
-                <option key={commune} value={commune}>{commune}</option>
-              ))}
-            </select>
-          </div>
+              {/* Localisation */}
+              <div className="relative">
+                <select
+                  value={localLocation}
+                  onChange={(e) => {
+                    setLocalLocation(e.target.value);
+                    try { audioSynth.playTamTam(true); } catch (_) {}
+                  }}
+                  className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
+                >
+                  <option value="all">Commune</option>
+                  {IVORIAN_COMMUNES.map(commune => (
+                    <option key={commune} value={commune}>{commune}</option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Type */}
-          <div className="relative">
-            <select
-              value={localType}
-              onChange={(e) => {
-                setLocalType(e.target.value);
-                try { audioSynth.playTamTam(true); } catch (_) {}
-              }}
-              className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
-            >
-              <option value="all">Type</option>
-              <option value="concert">Concert</option>
-              <option value="studio">Studio</option>
-              <option value="clip">Clip Vidéo</option>
-            </select>
-          </div>
+              {/* Type */}
+              <div className="relative">
+                <select
+                  value={localType}
+                  onChange={(e) => {
+                    setLocalType(e.target.value);
+                    try { audioSynth.playTamTam(true); } catch (_) {}
+                  }}
+                  className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
+                >
+                  <option value="all">Type</option>
+                  <option value="concert">Concert</option>
+                  <option value="studio">Studio</option>
+                  <option value="clip">Clip Vidéo</option>
+                </select>
+              </div>
 
-          {/* Date */}
-          <div className="relative">
-            <select
-              value={localDate}
-              onChange={(e) => {
-                setLocalDate(e.target.value);
-                try { audioSynth.playTamTam(true); } catch (_) {}
+              {/* Date */}
+              <div className="relative">
+                <select
+                  value={localDate}
+                  onChange={(e) => {
+                    setLocalDate(e.target.value);
+                    try { audioSynth.playTamTam(true); } catch (_) {}
+                  }}
+                  className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
+                >
+                  <option value="all">Date</option>
+                  <option value="mai 2025">Mai 2025</option>
+                  <option value="juin 2026">Juin 2026</option>
+                </select>
+              </div>
+            </div>
+
+            {/* VALIDER Button */}
+            <button
+              onClick={() => {
+                setSelectedCategory(localCategory);
+                setSelectedLocation(localLocation);
+                setSelectedType(localType);
+                setSelectedDateFilter(localDate);
+                if (onValidateFilters) {
+                  onValidateFilters(localCategory, localLocation, localType, localDate);
+                }
+                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                
+                // Scroll to top of both window and container
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                const scrollContainers = document.querySelectorAll(".overflow-y-auto, .h-full, body");
+                scrollContainers.forEach(container => {
+                  try {
+                    container.scrollTo({ top: 0, behavior: "smooth" });
+                  } catch (_) {}
+                });
               }}
-              className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
+              className="w-full bg-[#D4AF37] hover:bg-[#F3C43F] text-black font-black text-[10px] tracking-widest py-3 px-4 rounded-xl transition-all cursor-pointer select-none active:scale-95 shadow-md flex items-center justify-center uppercase"
             >
-              <option value="all">Date</option>
-              <option value="mai 2025">Mai 2025</option>
-              <option value="juin 2026">Juin 2026</option>
-            </select>
+              Valider les filtres d'or ⚡
+            </button>
           </div>
         </div>
-
-        {/* VALIDER Button */}
-        <button
-          onClick={() => {
-            setSelectedCategory(localCategory);
-            setSelectedLocation(localLocation);
-            setSelectedType(localType);
-            setSelectedDateFilter(localDate);
-            if (onValidateFilters) {
-              onValidateFilters(localCategory, localLocation, localType, localDate);
-            }
-            try { audioSynth.playValidationSuccess(); } catch (_) {}
-            
-            // Scroll to top of both window and container
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            const scrollContainers = document.querySelectorAll(".overflow-y-auto, .h-full, body");
-            scrollContainers.forEach(container => {
-              try {
-                container.scrollTo({ top: 0, behavior: "smooth" });
-              } catch (_) {}
-            });
-          }}
-          className="w-full bg-[#D4AF37] hover:bg-[#F3C43F] text-black font-black text-[10px] tracking-widest py-3 px-4 rounded-xl transition-all cursor-pointer select-none active:scale-95 shadow-md flex items-center justify-center uppercase"
-        >
-          Valider les filtres
-        </button>
       </div>
 
       {/* ==========================================

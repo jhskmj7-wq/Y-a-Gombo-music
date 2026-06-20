@@ -119,20 +119,28 @@ export interface Post {
 
 export interface Gombo {
   id?: string;
-  clientId?: string; // From blueprint
-  clientName?: string; // From blueprint
+  clientId?: string;
+  clientName?: string;
   title?: string;
   description?: string;
   budget?: number; // in FCFA
   commissionRate?: number; // e.g. 0.10 for 10%
   location?: string; // Commune (e.g. Cocody, Yopougon, Marcory)
-  commune?: string; // For backward compatibility / TamTamWidget
+  commune?: string;
   organizerId?: string;
   organizerName?: string;
   organizerAvatar?: string;
   timestamp?: string;
+  
+  // New fields for structure reinforcement
+  roleWanted?: string;
+  phone?: string;
+  phoneVisible?: boolean;
+  boostLevel?: "NONE" | "BRONZE" | "ARGENT" | "OR";
+  applicantIds?: string[];
+  
   applicantsCount?: number;
-  musiciansCount?: number; // From blueprint
+  musiciansCount?: number; 
   status?: "open" | "filled" | "completed" | "publie" | "reserve" | "termine";
   isBoosted?: boolean;
   eventType?: string;

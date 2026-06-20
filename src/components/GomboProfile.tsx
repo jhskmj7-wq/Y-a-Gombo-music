@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  User, Phone, MapPin, Music, Award, Wallet, Send, FileText, Check, 
+  User, Phone, MapPin, Music, Award, Wallet, Send, FileText, Check, Users, Clipboard, 
   Sparkles, ShieldCheck, Heart, CreditCard, Star, Radio, LogOut,
   Settings, ArrowUpRight, TrendingUp, HelpCircle, Bell, Eye, EyeOff,
   Moon, Sun, Globe, Smartphone, Shield, Lock, Trash2, Calendar,
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { UserProfile, PaymentProvider } from "../types";
 import { gomboDB, gomboAuth } from "../firebase";
+import { audioSynth } from "../lib/audio";
 import { ProfileCompletionScore } from "./ProfileCompletionScore";
 import { MediaGalleryManager } from "./MediaGalleryManager";
 import { GomboProfileMainView } from "./GomboProfileMainView";
@@ -390,8 +391,8 @@ export default function GomboProfile({
     }
   };
 
-  // Settings screen State Sub-Tabs: "compte" | "pref" | "secu" | "confi"
-  const [settingsTab, setSettingsTab] = useState<"compte" | "pref" | "secu" | "confi">("compte");
+  // Settings screen State Sub-Tabs
+  const [settingsTab, setSettingsTab] = useState<string>("musical");
   const [newEmail, setNewEmail] = useState(currentUserProfile.email || "");
   const [newPhone, setNewPhone] = useState(currentUserProfile.phone || "");
   const [newPassword, setNewPassword] = useState("");
@@ -401,6 +402,48 @@ export default function GomboProfile({
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [language, setLanguage] = useState("fr");
   const [phoneVisibility, setPhoneVisibility] = useState("public");
+
+  // Music settings local states
+  const [sPrenom, setSPrenom] = useState("");
+  const [sNom, setSNom] = useState("");
+  const [sNomArtistique, setSNomArtistique] = useState("");
+  const [sTelephone, setSTelephone] = useState("");
+  const [sCountry, setSCountry] = useState("Côte d'Ivoire");
+  const [sCity, setSCity] = useState("Abidjan");
+  const [sBio, setSBio] = useState("");
+  const [sMainRole, setSMainRole] = useState("Artiste");
+  const [sSecondaryRoles, setSSecondaryRoles] = useState<string[]>([]);
+  const [sGenres, setSGenres] = useState<string[]>([]);
+  const [sCollaborations, setSCollaborations] = useState<string[]>([]);
+  const [audioVolume, setAudioVolume] = useState<number>(80);
+  const [userLogs, setUserLogs] = useState<any[]>([]);
+
+  // Synchronize when currentUserProfile updates
+  useEffect(() => {
+    if (currentUserProfile) {
+      setSPrenom(currentUserProfile.prenom || currentUserProfile.firstName || "");
+      setSNom(currentUserProfile.nom || currentUserProfile.lastName || "");
+      setSNomArtistique(currentUserProfile.nomArtistique || currentUserProfile.artisticName || currentUserProfile.displayName || "");
+      setSTelephone(currentUserProfile.telephone || currentUserProfile.phone || "");
+      setSCountry(currentUserProfile.country || "Côte d'Ivoire");
+      setSCity(currentUserProfile.city || currentUserProfile.ville || currentUserProfile.commune || "Abidjan");
+      setSBio(currentUserProfile.bio || "");
+      setSMainRole(currentUserProfile.mainRole || currentUserProfile.role || "Artiste");
+      setSSecondaryRoles(currentUserProfile.secondaryRoles || []);
+      setSGenres(currentUserProfile.genres || []);
+      setSCollaborations(currentUserProfile.collaborations || []);
+    }
+  }, [currentUserProfile?.uid, currentUserProfile]);
+
+  // Real-time listen of user-specific logs from Firestore
+  useEffect(() => {
+    if (panelView === "settings" && settingsTab === "historique" && currentUserProfile?.uid) {
+      const unsubscribe = gomboDB.listenUserActivities(currentUserProfile.uid, (logs) => {
+        setUserLogs(logs);
+      });
+      return () => unsubscribe();
+    }
+  }, [panelView, settingsTab, currentUserProfile?.uid]);
 
   // Keep scroll independent
   useEffect(() => {
@@ -626,27 +669,58 @@ export default function GomboProfile({
     setSettingsStatusMsg("");
 
     try {
-      if (settingsTab === "compte") {
-        await gomboDB.updateUserProfile(currentUserProfile.uid, {
-          email: newEmail,
-          phone: newPhone
-        });
-        setSettingsStatusMsg("Informations de compte mises à jour !");
-      } else if (settingsTab === "pref") {
-        setSettingsStatusMsg("Vos préférences de notifications et langues ont été configurées.");
-      } else if (settingsTab === "confi") {
+      if (settingsTab === "musical") {
+        const updates = {
+          prenom: sPrenom.trim(),
+          nom: sNom.trim(),
+          nomArtistique: sNomArtistique.trim() || `${sPrenom} ${sNom}`,
+          telephone: sTelephone.trim(),
+          country: sCountry.trim(),
+          city: sCity.trim(),
+          bio: sBio.trim(),
+          mainRole: sMainRole,
+          secondaryRoles: sSecondaryRoles,
+          // Legacy alignment for safety
+          firstName: sPrenom.trim(),
+          lastName: sNom.trim(),
+          displayName: sNomArtistique.trim() || `${sPrenom} ${sNom}`,
+          artisticName: sNomArtistique.trim() || `${sPrenom} ${sNom}`,
+          phone: sTelephone.trim(),
+          commune: sCity.trim(),
+          ville: sCity.trim(),
+          role: sMainRole,
+          specialties: [sMainRole, ...sSecondaryRoles]
+        };
+        await gomboDB.updateUserProfile(currentUserProfile.uid, updates);
+        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", "Mise à jour des coordonnées et rôles du profil musical.");
+        setSettingsStatusMsg("🟢 Profil musical mis à jour avec succès !");
+      } else if (settingsTab === "styles") {
+        await gomboDB.updateUserProfile(currentUserProfile.uid, { genres: sGenres });
+        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", `Mise à jour des styles musicaux préférés : ${sGenres.join(', ')}.`);
+        setSettingsStatusMsg("🟢 Genres et styles musicaux enregistrés.");
+      } else if (settingsTab === "collaborations") {
+        await gomboDB.updateUserProfile(currentUserProfile.uid, { collaborations: sCollaborations });
+        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", `Mise à jour des préférences de collaborations : ${sCollaborations.join(', ')}.`);
+        setSettingsStatusMsg("🟢 Préférences de collaborations enregistrées.");
+      } else if (settingsTab === "notifications") {
+        setSettingsStatusMsg("🟢 Préférences de notifications SMS Showbiz enregistrées.");
+        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", "Préférence d'alerte notifications showbiz configurée.");
+      } else if (settingsTab === "langue") {
+        setSettingsStatusMsg(`🟢 Langue de navigation modifiée : [${language === 'fr' ? 'Français' : 'Anglais'}].`);
+        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", `Langue modifiée en : ${language === 'fr' ? 'Français' : 'Anglais'}.`);
+      } else if (settingsTab === "audio") {
+        setSettingsStatusMsg(`🟢 Volume de sortie réglé à ${audioVolume}%.`);
+        try { audioSynth.playTamTam(true); } catch (_) {}
+      } else if (settingsTab === "confidentialite") {
+        await gomboDB.updateUserProfile(currentUserProfile.uid, { phoneVisibility });
+        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", `Confidentialité ajustée sur option : ${phoneVisibility}.`);
         setSettingsStatusMsg(`La visibilité de vos coordonnées est désormais restreinte : [${phoneVisibility}].`);
       } else {
-        if (newPassword) {
-          setSettingsStatusMsg("Votre mot de passe a bien été mis à jour dans votre session sécurisée.");
-          setNewPassword("");
-        } else {
-          setSettingsStatusMsg("Sécurité auditée avec succès.");
-        }
+        setSettingsStatusMsg("Sécurité auditée avec succès.");
       }
       onRefreshProfile();
     } catch (err: any) {
-      setSettingsStatusMsg("Erreur de mise à jour.");
+      setSettingsStatusMsg("⚠️ Erreur lors de la mise à jour.");
     }
   };
 
@@ -1862,10 +1936,16 @@ export default function GomboProfile({
             {/* Setting side tabs */}
             <div className="md:col-span-1 flex md:flex-col gap-2 overflow-x-auto whitespace-nowrap">
               {[
-                { id: "compte", label: "👨‍💻 Compte", icon: User },
-                { id: "pref", label: "📱 Préférences", icon: Bell },
-                { id: "secu", label: "🛡️ Sécurité", icon: Shield },
-                { id: "confi", label: "🔒 Confidentialité", icon: Lock }
+                { id: "musical", label: "🎤 Mon profil musical", icon: User },
+                { id: "styles", label: "🎵 Mes styles", icon: Music },
+                { id: "collaborations", label: "🤝 Collaborations", icon: Users },
+                { id: "notifications", label: "🔔 Notifications", icon: Bell },
+                { id: "langue", label: "🌐 Langue", icon: Globe },
+                { id: "audio", label: "🎚 Préférences audio", icon: Radio },
+                { id: "confidentialite", label: "🔒 Confidentialité", icon: Lock },
+                { id: "historique", label: "📊 Mon activité", icon: Clipboard },
+                { id: "support", label: "💬 Support AFRIGOMBO", icon: HelpCircle },
+                { id: "logout", label: "🚪 Déconnexion", icon: LogOut }
               ].map((subTab) => (
                 <button
                   key={subTab.id}
@@ -1891,42 +1971,36 @@ export default function GomboProfile({
               )}
 
               <form onSubmit={handleSettingsUpdate} className="space-y-4 font-sans">
-                {settingsTab === "compte" && (
+                {settingsTab === "musical" && (
                   <div className="space-y-4">
-                    <span className="text-xs font-black text-gray-400 uppercase tracking-widest block">Paramètres du compte</span>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-650 dark:text-gray-400 mb-1">Changer Adresse Email</label>
-                      <input
-                        type="email"
-                        value={newEmail}
-                        onChange={(e) => setNewEmail(e.target.value)}
-                        className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold dark:text-white"
-                      />
+                    <span className="text-xs font-black text-amber-500 uppercase tracking-widest block">🎤 Mon Profil Musical</span>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                         <label className="block text-[10px] font-bold text-gray-500 mb-1">Prénom</label>
+                         <input type="text" value={sPrenom} onChange={(e) => setSPrenom(e.target.value)} className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-xs" />
+                        </div>
+                        <div>
+                         <label className="block text-[10px] font-bold text-gray-500 mb-1">Nom</label>
+                         <input type="text" value={sNom} onChange={(e) => setSNom(e.target.value)} className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-xs" />
+                        </div>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-650 dark:text-gray-400 mb-1">Changer Téléphone</label>
-                      <input
-                        type="text"
-                        value={newPhone}
-                        onChange={(e) => setNewPhone(e.target.value)}
-                        className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold dark:text-white"
-                      />
-                    </div>
-
-                    <div className="pt-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
-                      <span className="text-xs font-black text-rose-500 uppercase tracking-widest block">Zone de Danger ⚠️</span>
-                      <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed font-semibold">
-                        La suppression de votre compte effacera de manière irréversible votre profil d'artiste showbiz, vos coordonnées mobile money pour les gombos, vos candidatures et vos médias de la base Firebase de Y'A GOMBO MUSIC.
-                      </p>
-                      <button
-                        type="button"
-                        id="btn-delete-account-settings"
-                        onClick={handleDeleteOwnAccount}
-                        className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/40 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all"
-                      >
-                        Supprimer mon compte
-                      </button>
-                    </div>
+                    <label className="block text-[10px] font-bold text-gray-500 mb-1">Nom Artistique</label>
+                    <input type="text" value={sNomArtistique} onChange={(e) => setSNomArtistique(e.target.value)} className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-xs" />
+                  </div>
+                )}
+                {settingsTab === "historique" && (
+                  <div className="space-y-3">
+                    <span className="text-xs font-black text-amber-500 uppercase tracking-widest block">📊 Mon Activité Réelle</span>
+                    {userLogs.map((log) => (
+                      <div key={log.id} className="p-3 bg-zinc-950 border border-zinc-900 rounded-xl flex gap-3 text-xs">
+                         <div className="text-lg">⚡</div>
+                         <div>
+                            <p className="font-bold text-zinc-100">{log.type}</p>
+                            <p className="text-zinc-500">{log.details}</p>
+                            <p className="text-[10px] text-zinc-600">{new Date(log.timestamp).toLocaleString()}</p>
+                         </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -2053,7 +2127,7 @@ export default function GomboProfile({
           </p>
           <div className="pt-2">
             <a
-              href="https://wa.me/2250102030405?text=Salut%20l%27equipe%20Gombo%20!%20J%27ai%20besoin%20d%27assistance%20avec%20mon%20compte."
+              href="https://wa.me/2250503222712?text=Bonjour%20AFRIGOMBO,%20j'ai%20besoin%20d'assistance."
               target="_blank"
               rel="no-referrer"
               className="inline-flex px-6 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-extrabold rounded-xl uppercase tracking-wider gap-2 shadow-md"
@@ -2061,7 +2135,7 @@ export default function GomboProfile({
               💬 Parler à un Admin sur WhatsApp
             </a>
           </div>
-          <p className="text-[10px] text-gray-400">Y'A GOMBO MUSIC Assistance - +225 01 02 03 04 05</p>
+          <p className="text-[10px] text-gray-400 font-mono">Assistance AFRIGOMBO : +225 05 03 22 27 12</p>
 
           <div className="pt-4">
             <button

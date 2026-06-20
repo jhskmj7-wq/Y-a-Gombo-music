@@ -430,6 +430,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [newGomboCommune, setNewGomboCommune] = useState<string>("Cocody");
   const [newPubType, setNewPubType] = useState<"post" | "gombo" | "opportunite" | "annonce" | "casting" | "evenement" | "contenu">("post");
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [savedPosts, setSavedPosts] = useState<string[]>([]);
   const [postComments, setPostComments] = useState<Record<string, { id: string, content: string, writerName: string }[]>>({});
 
   // Simulated admin email & Super Admin unlocks state
@@ -517,7 +518,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       isFlagged: true,
       flagReason: "Vente de matériel contrefait",
       timestamp: "2026-06-10T04:20:00Z",
-      aiModerated: true
+      aiModerated: true,
+      category: "Recherche",
+      tags: ["#studio", "#micro"],
+      shares: 0,
+      views: 12
     },
     {
       id: "post_2",
@@ -528,7 +533,44 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       likes: 124,
       comments: 18,
       isFlagged: false,
-      timestamp: "2026-06-09T22:15:00Z"
+      timestamp: "2026-06-19T22:15:00Z",
+      mediaUrl: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80",
+      category: "Événement",
+      tags: ["#afrobeats", "#concert", "#abidjan"],
+      shares: 14,
+      views: 685
+    },
+    {
+      id: "post_3",
+      userId: "user_2",
+      authorName: "Mireille Gbado",
+      authorArtisticName: "Kady de Yopougon",
+      content: "Recherche d'urgence un arrangeur de talent (Beatmaker) spécialisé Zouglou pour finaliser mon prochain EP au studio de Yopougon. Projetez vos forces !",
+      likes: 37,
+      comments: 4,
+      isFlagged: false,
+      timestamp: "2026-06-19T14:24:00Z",
+      mediaUrl: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&auto=format&fit=crop&q=80",
+      category: "Collaboration",
+      tags: ["#zouglou", "#studio", "#beatmaker"],
+      shares: 5,
+      views: 247
+    },
+    {
+      id: "post_4",
+      userId: "user_1",
+      authorName: "Ariel Loua",
+      authorArtisticName: "Ariel Sheney G",
+      content: "Nouveau pack de beats Afro-fusion gratuit disponible pour les artistes de l'Académie ! Écrivez-moi directement pour recevoir le lien d'écoute haute qualité.",
+      likes: 92,
+      comments: 11,
+      isFlagged: false,
+      timestamp: "2026-06-19T08:10:00Z",
+      mediaUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80",
+      category: "Opportunité",
+      tags: ["#afrobeats", "#instrumental", "#souverainete"],
+      shares: 19,
+      views: 412
     }
   ]);
   const [renforts, setRenforts] = useState<Renfort[]>([
@@ -3451,56 +3493,158 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <div className="space-y-4">
                               {filteredFeedPosts.map(p => {
                                 const isLiked = likedPosts.includes(p.id);
+                                const authorUser = users.find(u => u.id === p.userId);
+                                const authorCommune = authorUser?.commune || "Plateau";
+                                const formattedDate = p.timestamp ? new Date(p.timestamp).toLocaleDateString("fr-FR", {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric'
+                                }) : "Live";
+                                const formattedTime = p.timestamp ? new Date(p.timestamp).toLocaleTimeString("fr-FR", {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                }) : "Aujourd'hui";
+
+                                // Determine category badge styling
+                                let categoryColor = "border-amber-500/30 text-[#D4AF37] bg-amber-500/5";
+                                if (p.category === "Événement") {
+                                  categoryColor = "border-emerald-500/30 text-emerald-400 bg-emerald-500/5";
+                                } else if (p.category === "Recherche") {
+                                  categoryColor = "border-rose-500/30 text-rose-400 bg-rose-500/5";
+                                } else if (p.category === "Collaboration") {
+                                  categoryColor = "border-cyan-500/30 text-cyan-400 bg-cyan-500/5";
+                                } else if (p.category === "Opportunité") {
+                                  categoryColor = "border-indigo-500/30 text-indigo-400 bg-indigo-505/5";
+                                }
+
                                 return (
-                                  <div key={p.id} className="bg-[#121214] border border-zinc-800 rounded-2xl p-4.5 space-y-3">
+                                  <div key={p.id} className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-4.5 space-y-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:border-zinc-700/60 transition-all duration-300">
+                                    {/* HEADER: User info + location + time */}
                                     <div className="flex justify-between items-start gap-2">
-                                      <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-full bg-zinc-800 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] font-black text-xs font-mono">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-zinc-950 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] font-black text-xs font-mono shadow-inner shrink-0 relative">
                                           {p.authorArtisticName?.charAt(0)}
+                                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#121214]" />
                                         </div>
                                         <div>
-                                          <h5 className="text-[11px] font-sans font-black text-white uppercase">
-                                            {p.authorArtisticName}
-                                          </h5>
-                                          <span className="text-[8px] font-mono text-zinc-500 block">
-                                            {p.authorName} • CI
+                                          <div className="flex items-center gap-2">
+                                            <h5 className="text-[12px] font-sans font-black text-white uppercase tracking-wide leading-tight">
+                                              {p.authorArtisticName}
+                                            </h5>
+                                            <span className="text-[7.5px] px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono font-bold leading-none shrink-0">
+                                              PRO
+                                            </span>
+                                          </div>
+                                          <span className="text-[9px] font-mono text-zinc-500 block leading-tight mt-0.5">
+                                            {p.authorName} • {authorUser?.email || "artiste@afrigombo.ci"}
                                           </span>
                                         </div>
                                       </div>
                                       
-                                      <span className="text-[7px] font-mono text-zinc-500">
-                                        {p.timestamp ? new Date(p.timestamp).toLocaleDateString() : "Live"}
-                                      </span>
+                                      <div className="text-right flex flex-col items-end shrink-0">
+                                        <span className="text-[9px] font-mono font-bold text-[#D4AF37] flex items-center gap-1">
+                                          📍 {authorCommune}
+                                        </span>
+                                        <span className="text-[7.5px] font-mono text-zinc-500 mt-0.5">
+                                          {formattedDate} à {formattedTime}
+                                        </span>
+                                      </div>
                                     </div>
 
-                                    <p className="text-[11px] font-sans text-zinc-300 leading-normal bg-zinc-950 p-2.5 rounded-lg border border-white/5">
+                                    {/* POST MEDIA IMAGE (IF PRESENT) */}
+                                    {p.mediaUrl && (
+                                      <div className="relative rounded-xl overflow-hidden border border-zinc-800/60 bg-zinc-950 aspect-[16/9] group">
+                                        <img
+                                          src={p.mediaUrl}
+                                          alt="Illustration"
+                                          referrerPolicy="no-referrer"
+                                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        />
+                                        <span className="absolute bottom-2 right-2 text-[8px] bg-black/80 backdrop-blur-md text-[#D4AF37] font-bold border border-[#D4AF37]/20 px-2 py-0.5 rounded-md font-mono tracking-wider uppercase">
+                                          ÉCHO PREMIUM
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* DESCRIPTION */}
+                                    <p className="text-[11.5px] font-sans text-zinc-200 leading-relaxed bg-zinc-950/60 p-3 rounded-xl border border-white/[0.03]">
                                       {p.content}
                                     </p>
 
                                     {p.isFlagged && (
-                                      <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-2 text-[8px] font-mono text-red-400 uppercase">
-                                        ⚠️ SIGNALÉ : {p.flagReason || "Contenu révisé"}
+                                      <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-2.5 text-[8.5px] font-mono text-red-400 uppercase tracking-widest flex items-center gap-1.5">
+                                        <span>⚠️ INTERVENTION AI</span> • <span className="text-zinc-500">{p.flagReason || "Contenu révisé"}</span>
                                       </div>
                                     )}
 
-                                    <div className="flex items-center gap-3 pt-1 text-[10px] font-mono text-zinc-400">
-                                      <button
-                                        onClick={() => {
-                                          if (isLiked) {
-                                            setLikedPosts(prev => prev.filter(id => id !== p.id));
-                                          } else {
-                                            setLikedPosts(prev => [...prev, p.id]);
-                                            audioSynth.playValidationSuccess();
-                                          }
-                                        }}
-                                        className={`flex items-center gap-1 transition-colors hover:text-red-400 cursor-pointer ${isLiked ? "text-red-500 font-bold" : ""}`}
-                                      >
-                                        <Heart className={`w-3.5 h-3.5 ${isLiked ? "fill-current" : ""}`} /> 
-                                        <span>{p.likes + (isLiked ? 1 : 0)} vibration</span>
-                                      </button>
+                                    {/* CATEGORY & HASHTAGS ROW */}
+                                    <div className="flex flex-wrap items-center justify-between gap-2.5">
+                                      {/* Category Badge */}
+                                      <span className={`text-[8.5px] font-mono font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${categoryColor}`}>
+                                        {p.category || "Général"}
+                                      </span>
+
+                                      {/* Hashtags */}
+                                      {p.tags && p.tags.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                          {p.tags.map(tag => (
+                                            <span key={tag} className="text-[9.5px] font-mono text-[#D4AF37]/70 font-semibold hover:text-[#D4AF37] transition-all cursor-pointer">
+                                              {tag}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* STATS INTERACTIVES & ACTION BUTTONS */}
+                                    <div className="flex items-center justify-between pt-3 border-t border-white/[0.04] text-[10.5px] font-mono text-zinc-450">
+                                      <div className="flex items-center gap-4 text-zinc-400">
+                                        {/* Likes / Vibrations Count */}
+                                        <button
+                                          onClick={() => {
+                                            if (isLiked) {
+                                              setLikedPosts(prev => prev.filter(id => id !== p.id));
+                                            } else {
+                                              setLikedPosts(prev => [...prev, p.id]);
+                                              audioSynth.playValidationSuccess();
+                                            }
+                                          }}
+                                          className={`flex items-center gap-1.5 transition-colors hover:text-red-400 cursor-pointer ${isLiked ? "text-red-500 font-bold" : ""}`}
+                                        >
+                                          <Heart className={`w-3.5 h-3.5 ${isLiked ? "fill-current text-red-500" : ""}`} /> 
+                                          <span>{p.likes + (isLiked ? 1 : 0)} vibrations</span>
+                                        </button>
+
+                                        {/* Views Count */}
+                                        <div className="flex items-center gap-1.5 text-zinc-500">
+                                          <Eye className="w-3.5 h-3.5" />
+                                          <span>{p.views || 45} vues</span>
+                                        </div>
+
+                                        {/* Shares Count */}
+                                        <div className="flex items-center gap-1.5 text-zinc-500">
+                                          <Share2 className="w-3.5 h-3.5" />
+                                          <span>{p.shares || 8} partages</span>
+                                        </div>
+                                      </div>
                                       
-                                      <span className="text-zinc-700">•</span>
-                                      <span>💬 {p.comments + (postComments[p.id]?.length || 0)} parlers</span>
+                                      {/* Golden Action Buttons */}
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={() => {
+                                            try {
+                                              navigator.clipboard.writeText(`${window.location.origin}/echo/${p.id}`);
+                                              addToTerminal(`[LIEN COPIÉ] Lien vers l'écho de ${p.authorArtisticName} copié.`);
+                                              audioSynth.playValidationSuccess();
+                                            } catch (_) {
+                                              addToTerminal(`[EXPÉDITION] Écho de ${p.authorArtisticName} prêt à l'envoi.`);
+                                            }
+                                          }}
+                                          className="text-[9.5px] px-2.5 py-1.5 rounded-lg font-bold border border-[#D4AF37]/30 hover:border-[#D4AF37]/80 hover:bg-[#D4AF37]/5 text-[#D4AF37] transition-all cursor-pointer flex items-center gap-1"
+                                        >
+                                          <span>Partager</span>
+                                        </button>
+                                      </div>
                                     </div>
 
                                     {/* Real Parler / Comments Section */}

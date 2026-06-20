@@ -128,6 +128,13 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
       await gomboDB.updateUserProfile(uid, updatedProfileData);
       
+      // Log connection activity
+      try {
+        await gomboDB.logUserActivity(uid, "Connexion", "Connexion à AFRIGOMBO réussie.");
+      } catch (logErr) {
+        console.warn("Could not log login activity:", logErr);
+      }
+      
       // Save local reference for session persistence
       localStorage.setItem("gombo_auth", JSON.stringify({ uid: uid, email: userEmail, emailVerified: true }));
       window.dispatchEvent(new Event("gomboAuthChange"));
