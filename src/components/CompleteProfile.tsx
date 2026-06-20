@@ -115,6 +115,11 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
     }
   }, [currentUserProfile]);
 
+  // Scroll to top on step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [activeStep]);
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 300, height: 300, facingMode: "user" } });
@@ -367,11 +372,11 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto px-4 py-8 select-none" id="onboarding-completion-root">
+    <div className="w-full h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden touch-pan-y [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [-webkit-overflow-scrolling:touch] max-w-xl mx-auto px-4 py-8 select-none" id="onboarding-completion-root">
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-[#050505] border border-[#D4AF37]/25 rounded-[2rem] p-6 md:p-8 shadow-[0_0_50px_rgba(212,175,55,0.05)] relative overflow-hidden text-left"
+        className="bg-[#050505] border border-[#D4AF37]/25 rounded-[2rem] p-6 md:p-8 shadow-[0_0_50px_rgba(212,175,55,0.05)] relative text-left flex flex-col min-h-max pb-[140px]"
       >
         {/* Animated Gold Aura Background */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />

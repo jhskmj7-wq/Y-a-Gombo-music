@@ -30,7 +30,9 @@ import {
   updateDoc,
   serverTimestamp,
   getDocFromServer,
-  onSnapshot
+  onSnapshot,
+  arrayUnion,
+  increment
 } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
 import { isCapacitor, performNativeGoogleLogin, performNativeFacebookLogin } from "./lib/capacitor-adapter";
@@ -2871,6 +2873,65 @@ export const gomboDB = {
     localStorage.setItem("gombo_user_activity_logs", JSON.stringify(logs));
     window.dispatchEvent(new CustomEvent("gomboUserLogsChange", { detail: logs }));
     return newLog;
+  },
+
+  async publishOpportunity(opportunity: Omit<Gombo, "id" | "timestamp">): Promise<Gombo> {
+    const id = "opp_" + Math.random().toString(36).substring(2, 10);
+    const newOpportunity: Gombo = {
+      ...opportunity,
+      id,
+      status: "open",
+      boostLevel: "NONE",
+      applicantsCount: 0,
+      applicantIds: [],
+      timestamp: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "opportunities", id), newOpportunity);
+      } catch (error) {
+        console.error("Firestore publishOpportunity error", error);
+      }
+    }
+    return newOpportunity;
+  },
+
+  async applyToOpportunity(opportunityId: string, applicantUid: string, message: string): Promise<any> {
+    const applicationId = "app_" + Math.random().toString(36).substring(2, 6);
+    const newApplication = {
+      id: applicationId,
+      opportunityId,
+      applicantUid,
+      message,
+      createdAt: new Date().toISOString()
+    };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "applications", applicationId), newApplication);
+        await updateDoc(doc(db, "opportunities", opportunityId), {
+           applicantIds: arrayUnion(applicantUid),
+           applicantsCount: increment(1)
+        });
+        return newApplication;
+      } catch(error) {
+        console.error("Firestore applyToOpportunity error", error);
+      }
+    }
+    return newApplication;
+  },
+
+  async boostOpportunity(opportunityId: string, level: "BRONZE" | "ARGENT" | "OR"): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await updateDoc(doc(db, "opportunities", opportunityId), {
+          boostLevel: level,
+          isBoosted: true
+        });
+      } catch (error) {
+        console.error("Firestore boostOpportunity error", error);
+      }
+    }
   },
 
   listenUserActivities(userId: string, callback: (logs: any[]) => void): () => void {

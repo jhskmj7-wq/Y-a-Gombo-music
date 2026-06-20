@@ -40,6 +40,7 @@ import {
 } from "../types";
 import { audioSynth } from "../lib/audio";
 import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
+import { useDynamicPlaceholder } from "../hooks/useDynamicPlaceholder";
 import {
   motion,
   AnimatePresence
@@ -333,6 +334,13 @@ interface AdminCentreProps {
 }
 
 export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
+  const dynamicPlaceholder = useDynamicPlaceholder([
+    "Rechercher un artiste...",
+    "Trouver une collaboration...",
+    "Découvrir une opportunité...",
+    "Chercher un beatmaker...",
+    "Trouver un studio..."
+  ]);
   const { currentUser, profile, logout, refreshProfile } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
@@ -1817,7 +1825,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-400 uppercase tracking-widest block mb-1">
                               👑 Centre personnel
                             </span>
-                            {renderMenuItem("menu_edit_profile", "Modifier profil", "✏", () => {
+                            {renderMenuItem("menu_edit_profile", "Mon Héritage", "✏", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_edit_profile");
@@ -1825,7 +1833,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false)}
-                            {renderMenuItem("menu_notifications", "Notifications", "🔔", () => {
+                            {renderMenuItem("menu_notifications", "Tambours", "🔔", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_notifications");
@@ -1928,17 +1936,18 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         <header className="flex justify-between items-center px-4 sm:px-8 pt-6 pb-5 border-b border-[#D4AF37]/15 shrink-0 gap-2 w-full animate-fadeIn select-none">
           {isHeaderSearchOpen ? (
             <div className="flex-1 flex items-center gap-3">
-              <div className="flex-1 flex items-center gap-2 bg-black border border-[#D4AF37]/45 rounded-xl px-3 py-2 w-full">
-                <Search className="w-4 h-4 text-[#D4AF37]" />
-                <input
-                  type="text"
-                  placeholder="Rechercher artiste, gombo, concert..."
-                  value={globalSearchTerm}
-                  onChange={(e) => setGlobalSearchTerm(e.target.value)}
-                  className="bg-transparent text-xs text-white focus:outline-none w-full font-mono placeholder:text-zinc-650"
-                  autoFocus
-                />
-              </div>
+                {/* UPDATED SEARCH BAR */}
+                <div className="flex-1 flex items-center gap-2 bg-black border border-[#D4AF37]/45 rounded-xl px-3 py-2 w-full">
+                  <Search className="w-4 h-4 text-[#D4AF37]" />
+                  <input
+                    type="text"
+                    placeholder={dynamicPlaceholder}
+                    value={globalSearchTerm}
+                    onChange={(e) => setGlobalSearchTerm(e.target.value)}
+                    className="bg-transparent text-xs text-white focus:outline-none w-full font-mono placeholder:text-zinc-650"
+                    autoFocus
+                  />
+                </div>
               <button
                 onClick={() => setIsHeaderSearchOpen(false)}
                 className="px-3.5 py-2 text-xs font-mono font-bold uppercase text-zinc-400 hover:text-white bg-zinc-900 border border-white/5 rounded-xl cursor-pointer"
