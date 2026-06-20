@@ -11,7 +11,7 @@
         "firstName": { "type": "string", "description": "User first name" },
         "lastName": { "type": "string", "description": "User last name" },
         "email": { "type": "string", "description": "User email address" },
-        "role": { "type": "string", "enum": ["client", "musicien", "admin"], "description": "User role" },
+        "role": { "type": "string", "enum": ["client", "musicien", "admin", "Artiste", "Producteur", "Beatmaker", "Manager", "Promoteur", "Organisateur événement", "Studio", "Média", "Passionné musique", "Autre"], "description": "User role" },
         "photoURL": { "type": "string", "description": "Optional profile photo URL" },
         "avatarUrl": { "type": "string", "description": "Optional profile photo URL alias" },
         "bio": { "type": "string", "description": "Optional user biography" },
@@ -376,9 +376,65 @@
         "status": { "type": "string" }
       },
       "required": ["id", "reportedBy", "contentId", "contentType", "reason", "status", "createdAt"]
+    },
+    "AfriId": {
+      "title": "AfriID Credentials",
+      "description": "Internal database for the upcoming AfriID authentication architecture",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "customUsername": { "type": "string" },
+        "pin": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "uid", "email"]
+    },
+    "AfriSession": {
+      "title": "AfriID Active Session",
+      "description": "Upcoming secure sessions tracked for active AfriIDs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "token": { "type": "string" },
+        "deviceName": { "type": "string" },
+        "ipAddress": { "type": "string" },
+        "expiresAt": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "uid", "token"]
+    },
+    "LinkedApp": {
+      "title": "Linked Third-Party App",
+      "description": "Afrigombo Ecosystem registered linked applications catalog",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "appId": { "type": "string" },
+        "permissions": { "type": "array" },
+        "authorisedAt": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "uid", "appId"]
     }
   },
   "firestore": {
+    "/afri_ids/{id}": {
+      "schema": "AfriId",
+      "description": "AfriID security registry database"
+    },
+    "/afri_sessions/{id}": {
+      "schema": "AfriSession",
+      "description": "AfriID active active sessions"
+    },
+    "/linked_apps/{id}": {
+      "schema": "LinkedApp",
+      "description": "Linked applications index"
+    },
     "/music_groups/{groupId}": {
       "schema": "MusicGroup",
       "description": "Côte d'Ivoire Music Group profiles catalog"

@@ -1,28 +1,39 @@
 import { db, isFirebaseMock } from "../firebase";
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { 
+  doc, 
+  getDoc, 
+  getDocs, 
+  setDoc, 
+  updateDoc, 
+  collection, 
+  query, 
+  where, 
+  serverTimestamp,
+  addDoc
+} from "firebase/firestore";
 import { UserProfile } from "../types";
 
 export interface AfriIdentity {
   afriId: string;
   uid: string;
-  trustId?: string; // or gomboId
-  nom: string;
   email: string;
   telephone: string;
+  displayName: string;
   avatar: string;
-  couverture: string;
+  coverPhoto: string;
+  bio: string;
   role: string;
+  status: "ACTIVE" | "SUSPENDED" | "INACTIVE";
+  subscription: {
+    level: "FREE" | "PREMIUM" | "VIP";
+  };
   applications: {
+    afriGombo: boolean;
     afriTrust: boolean;
-    afriLivraison: boolean;
+    afriWallet: boolean;
     afriMarket: boolean;
     afriAcademy: boolean;
-    afrigombo: boolean;
-    afriWallet: boolean;
-    [key: string]: boolean;
-  };
-  abonnement: {
-    niveau: string;
+    afriLivraison: boolean;
   };
   createdAt: any;
   updatedAt: any;
@@ -44,41 +55,162 @@ export class AfriIdentityService {
   }
 
   /**
-   * getAfriId: Retrieves the Afri ID for a given uid, generating one if not present.
+   * getAfriId: Retrieves the Afri ID for a given uid, generating a secure permanent unique registration if not present.
+   * Performs validation to avoid duplicates on UID, email or telephone.
    */
-  static async getAfriId(uid: string, profile?: Partial<UserProfile>): Promise<string> {
-    if (isFirebaseMock || !db) {
-       let afriIds = JSON.parse(localStorage.getItem("afri_ids_map") || "{}");
-       if (afriIds[uid]) return afriIds[uid];
-       const newId = this.generateAfriId();
-       afriIds[uid] = newId;
-       localStorage.setItem("afri_ids_map", JSON.stringify(afriIds));
-       return newId;
-    }
+  static async getAfriId(uid: string, profile?: Partial<UserProfile> & { phone?: string; bio?: string }): Promise<string> {
+    const emailStr = profile?.email || "";
+    const phoneStr = profile?.phone || profile?.whatsapp || "";
 
-    try {
-        const userDoc = await getDoc(doc(db, "users", uid));
-        let afriId = "";
-        
-        if (userDoc.exists()) {
-            afriId = userDoc.data().afriId;
-        } else if (profile?.afriId) {
-            afriId = profile.afriId;
+    if (!isFirebaseMock && db) {
+      try {
+        // 1. Find if already registered under this uid
+        const qUid = query(collection(db, COLLECTION_NAME), where("uid", "==", uid));
+        const snapUid = await getDocs(qUid);
+        if (!snapUid.empty) {
+          const firstDoc = snapUid.docs[0].data() as AfriIdentity;
+          return firstDoc.afriId;
         }
 
-        if (!afriId) {
-            afriId = this.generateAfriId();
-            await setDoc(doc(db, "users", uid), { afriId }, { merge: true });
+        // 2. Double check if email already exists
+        if (emailStr) {
+          const qEmail = query(collection(db, COLLECTION_NAME), where("email", "==", emailStr));
+          const snapEmail = await getDocs(qEmail);
+          if (!snapEmail.empty) {
+            const matched = snapEmail.docs[0].data() as AfriIdentity;
+            // Link existing Afri ID to this UID if not set
+            if (!matched.uid) {
+              await updateDoc(doc(db, COLLECTION_NAME, matched.afriId), { uid });
+            }
+            return matched.afriId;
+          }
         }
-        return afriId;
-    } catch (e) {
-        console.warn("⚠️ getAfriId failed", e);
-        return this.generateAfriId();
+
+        // 3. Double check if phone already exists
+        if (phoneStr) {
+          const qPhone = query(collection(db, COLLECTION_NAME), where("telephone", "==", phoneStr));
+          const snapPhone = await getDocs(qPhone);
+          if (!snapPhone.empty) {
+            const matched = snapPhone.docs[0].data() as AfriIdentity;
+            if (!matched.uid) {
+              await updateDoc(doc(db, COLLECTION_NAME, matched.afriId), { uid });
+            }
+            return matched.afriId;
+          }
+        }
+
+        // Create new identity document
+        const newAfriId = this.generateAfriId();
+        const identity: AfriIdentity = {
+          afriId: newAfriId,
+          uid,
+          email: emailStr,
+          telephone: phoneStr,
+          displayName: profile?.artisticName || profile?.name || "Talent Souverain",
+          avatar: profile?.avatarUrl || "",
+          coverPhoto: "",
+          bio: profile?.bio || "Artiste d'Abidjan",
+          role: "USER",
+          status: "ACTIVE",
+          subscription: {
+            level: "FREE"
+          },
+          applications: {
+            afriGombo: true,
+            afriTrust: false,
+            afriWallet: false,
+            afriMarket: false,
+            afriAcademy: false,
+            afriLivraison: false
+          },
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+
+        await setDoc(doc(db, COLLECTION_NAME, newAfriId), identity);
+        await setDoc(doc(db, "users", uid), { afriId: newAfriId }, { merge: true });
+
+        // Security Log
+        await addDoc(collection(db, "security_logs"), {
+          type: "CREATION_AFRIID",
+          afriId: newAfriId,
+          uid,
+          details: `Création automatique de l'identité souveraine pour ${emailStr}`,
+          timestamp: new Date().toISOString()
+        });
+
+        return newAfriId;
+      } catch (e: any) {
+        console.warn("⚠️ Firestore Afri ID generation error, fallback local:", e.message);
+      }
     }
+
+    // Local Storage Fallback
+    const localData = JSON.parse(localStorage.getItem(COLLECTION_NAME) || "{}");
+    const existing = Object.values(localData).find(
+      (item: any) => item.uid === uid || (item.email && item.email === emailStr) || (item.telephone && item.telephone === phoneStr)
+    ) as AfriIdentity | undefined;
+
+    if (existing) {
+      if (!existing.uid) {
+        existing.uid = uid;
+        localData[existing.afriId] = existing;
+        localStorage.setItem(COLLECTION_NAME, JSON.stringify(localData));
+      }
+      return existing.afriId;
+    }
+
+    const newAfriId = this.generateAfriId();
+    const mockIdentity: AfriIdentity = {
+      afriId: newAfriId,
+      uid,
+      email: emailStr,
+      telephone: phoneStr,
+      displayName: profile?.artisticName || profile?.name || "Talent Souverain",
+      avatar: profile?.avatarUrl || "",
+      coverPhoto: "",
+      bio: profile?.bio || "Artiste d'Abidjan",
+      role: "USER",
+      status: "ACTIVE",
+      subscription: {
+        level: "FREE"
+      },
+      applications: {
+        afriGombo: true,
+        afriTrust: false,
+        afriWallet: false,
+        afriMarket: false,
+        afriAcademy: false,
+        afriLivraison: false
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    localData[newAfriId] = mockIdentity;
+    localStorage.setItem(COLLECTION_NAME, JSON.stringify(localData));
+
+    // Simple Map storage
+    let afriIds = JSON.parse(localStorage.getItem("afri_ids_map") || "{}");
+    afriIds[uid] = newAfriId;
+    localStorage.setItem("afri_ids_map", JSON.stringify(afriIds));
+
+    // Security Log Local
+    const secLogs = JSON.parse(localStorage.getItem("security_logs") || "[]");
+    secLogs.push({
+      type: "CREATION_AFRIID",
+      afriId: newAfriId,
+      uid,
+      details: `Création locale de l'identité souveraine pour ${emailStr}`,
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem("security_logs", JSON.stringify(secLogs));
+
+    return newAfriId;
   }
 
   /**
-   * getAfriUser: Retrieves the full universal Afri identity
+   * getAfriUser: Retrieves the full universal Afri identity by id
    */
   static async getAfriUser(afriId: string): Promise<AfriIdentity | null> {
     if (isFirebaseMock || !db) {
@@ -98,19 +230,91 @@ export class AfriIdentityService {
   }
 
   /**
-   * syncAfriProfile: Creates or fully overwrites the universal profile based on local app changes
+   * verifyAfriId: checks if an afriId exists and is active
+   */
+  static async verifyAfriId(afriId: string): Promise<boolean> {
+    const user = await this.getAfriUser(afriId);
+    return !!(user && user.status === "ACTIVE");
+  }
+
+  /**
+   * loginWithAfriId: Checks Firestore, registers a session and security event log.
+   */
+  static async loginWithAfriId(afriId: string): Promise<AfriIdentity | null> {
+    const identity = await this.getAfriUser(afriId);
+    if (!identity || identity.status !== "ACTIVE") {
+      return null;
+    }
+
+    // Capture safety log
+    await this.createAfriSession(identity.uid, afriId, "Abidjan (Port de Confiance)");
+
+    return identity;
+  }
+
+  /**
+   * createAfriSession: Registers an active connection context in afri_sessions and security_logs
+   */
+  static async createAfriSession(uid: string, afriId: string, location?: string): Promise<string> {
+    const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const sessionObj = {
+      id: sessionId,
+      uid,
+      afriId,
+      location: location || "Abidjan, CI",
+      device: typeof navigator !== "undefined" ? navigator.userAgent : "Client Web",
+      active: true,
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "afri_sessions", sessionId), sessionObj);
+        await addDoc(collection(db, "security_logs"), {
+          type: "CONNEXION_SESSION",
+          afriId,
+          uid,
+          details: `Connexion réussie sur AfriID ${afriId}`,
+          timestamp: new Date().toISOString()
+        });
+        return sessionId;
+      } catch (_) {}
+    }
+
+    const localSessions = JSON.parse(localStorage.getItem("afri_sessions") || "[]");
+    localSessions.push(sessionObj);
+    localStorage.setItem("afri_sessions", JSON.stringify(localSessions));
+
+    const secLogs = JSON.parse(localStorage.getItem("security_logs") || "[]");
+    secLogs.push({
+      type: "CONNEXION_SESSION",
+      afriId,
+      uid,
+      details: `Connexion locale pour AfriID ${afriId}`,
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem("security_logs", JSON.stringify(secLogs));
+
+    return sessionId;
+  }
+
+  /**
+   * syncAfriProfile: Overwrites/merges the universal profile based on local changes
    */
   static async syncAfriProfile(afriId: string, profileData: Partial<AfriIdentity>): Promise<void> {
     try {
         const dataToSave = {
             ...profileData,
-            updatedAt: !isFirebaseMock ? serverTimestamp() : new Date().toISOString()
+            updatedAt: !isFirebaseMock && db ? serverTimestamp() : new Date().toISOString()
         };
 
         if (isFirebaseMock || !db) {
             const localData = JSON.parse(localStorage.getItem(COLLECTION_NAME) || "{}");
             localData[afriId] = { ...(localData[afriId] || {}), ...dataToSave };
             localStorage.setItem(COLLECTION_NAME, JSON.stringify(localData));
+            
+            // Dispatch live window update event to synchronise between apps in real time
+            window.dispatchEvent(new Event("afriIdSyncChange"));
             return;
         }
 
@@ -121,10 +325,10 @@ export class AfriIdentityService {
   }
 
   /**
-   * linkApplication: Allows enabling access/flag for a specific Afri ecosystem app
+   * linkApplication: Allows enabling access flag for a specific Afri ecosystem app
    */
-  static async linkApplication(afriId: string, appName: string): Promise<void> {
-      try {
+  static async linkApplication(afriId: string, appName: keyof AfriIdentity["applications"]): Promise<void> {
+       try {
           if (isFirebaseMock || !db) {
               const localData = JSON.parse(localStorage.getItem(COLLECTION_NAME) || "{}");
               if (localData[afriId]) {
@@ -150,18 +354,10 @@ export class AfriIdentityService {
   }
 
   /**
-   * verifyAfriIdentity: Can be used to run security checks on the identity payload
-   */
-  static async verifyAfriIdentity(afriId: string, uid: string): Promise<boolean> {
-     const identity = await this.getAfriUser(afriId);
-     if (!identity) return false;
-     return identity.uid === uid; // simple verification token logic placeholder
-  }
-
-  /**
    * updateAfriProfile: Helper for partial patch
    */
   static async updateAfriProfile(afriId: string, updates: Partial<AfriIdentity>): Promise<void> {
-     await this.syncAfriProfile(afriId, updates);
+      await this.syncAfriProfile(afriId, updates);
   }
 }
+

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { motion } from "motion/react";
 import { 
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
   RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy,
@@ -53,6 +54,7 @@ interface UserTerrainLandingPageProps {
   newNoticeBody: string;
   setNewNoticeBody: (val: string) => void;
   addToTerminal: (msg: string) => void;
+  onValidateFilters?: (cat: string, loc: string, typeVal: string, dateVal: string) => void;
 }
 
 export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = React.memo(({
@@ -95,9 +97,33 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   setNewNoticeCategory,
   newNoticeBody,
   setNewNoticeBody,
-  addToTerminal
+  addToTerminal,
+  onValidateFilters
 }) => {
   const searchStr = globalSearchTerm.toLowerCase();
+
+  // Internal local states for filters (only applied when clicking Valider)
+  const [localCategory, setLocalCategory] = useState(selectedCategory);
+  const [localLocation, setLocalLocation] = useState(selectedLocation);
+  const [localType, setLocalType] = useState(selectedType);
+  const [localDate, setLocalDate] = useState(selectedDateFilter);
+
+  // Sync with outside state (e.g. when resetting from parent)
+  useEffect(() => {
+    setLocalCategory(selectedCategory);
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    setLocalLocation(selectedLocation);
+  }, [selectedLocation]);
+
+  useEffect(() => {
+    setLocalType(selectedType);
+  }, [selectedType]);
+
+  useEffect(() => {
+    setLocalDate(selectedDateFilter);
+  }, [selectedDateFilter]);
 
   // Filter Gombos based on selections
   const GombosToRender = gombos.filter(g => {
@@ -303,32 +329,79 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
           ACTIONS RAPIDES
         </h3>
-        <div className="grid grid-cols-4 gap-1.5 w-full select-none">
+        <motion.div
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.05
+              }
+            }
+          }}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-4 gap-1.5 w-full select-none"
+        >
           {[
-            { id: "renfort", label: "Renfort", icon: ShieldCheck, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "publier", label: "Publier", icon: PenTool, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "verifier", label: "Vérifier", icon: UserCheck, action: () => requireAuthThen(() => { setActiveMenu("user_heritage"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "messages", label: "Messages", icon: MessageCircle, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "annuaire", label: "Annuaire", icon: Users, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "booster", label: "Booster", icon: Award, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "evenement", label: "Événements", icon: Megaphone, action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-            { id: "scanner", label: "Scanner", icon: QrCode, action: () => requireAuthThen(() => { setActiveMenu("user_scanner"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) }
+            { id: "renfort", label: "Renfort", icon: ShieldCheck, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "publier", label: "Publier", icon: PenTool, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "verifier", label: "Vérifier", icon: UserCheck, isSoon: true, action: () => {} },
+            { id: "messages", label: "Messages", icon: MessageCircle, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "annuaire", label: "Annuaire", icon: Users, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "booster", label: "Booster", icon: Award, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "evenement", label: "Événements", icon: Megaphone, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+            { id: "scanner", label: "Scanner", icon: QrCode, isSoon: true, action: () => {} }
           ].map(action => {
             const Icon = action.icon;
+            if (action.isSoon) {
+              return (
+                <motion.div
+                  key={action.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 15, scale: 0.95 },
+                    show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
+                  }}
+                  className="bg-[#050505] border border-[#D4AF37]/10 opacity-50 rounded-lg p-1.5 flex flex-col items-center justify-center gap-1 cursor-not-allowed relative group"
+                  title="Bientôt disponible"
+                >
+                  {/* SOON Badge */}
+                  <span className="absolute top-0.5 right-0.5 text-[5.5px] font-bold bg-[#D4AF37] text-black px-1 rounded uppercase tracking-wider scale-95 origin-top-right">
+                    SOON
+                  </span>
+                  
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#D4AF37]/10 flex items-center justify-center bg-transparent shrink-0">
+                    <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]/40" strokeWidth={1.5} />
+                  </div>
+                  <span className="text-[6.5px] sm:text-[7.5px] text-[#F5F5F5]/60 font-bold tracking-wider text-center leading-none truncate w-full px-0.5">{action.label}</span>
+                </motion.div>
+              );
+            }
+            
             return (
-              <div
+              <motion.div
                 key={action.id}
+                variants={{
+                  hidden: { opacity: 0, y: 15, scale: 0.95 },
+                  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
+                }}
+                whileHover={{
+                  scale: 1.03,
+                  borderColor: "rgba(212,175,55,0.7)",
+                  boxShadow: "0 0 10px rgba(212,175,55,0.2)"
+                }}
+                whileTap={{ scale: 0.96 }}
                 onClick={action.action}
-                className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-lg p-1.5 flex flex-col items-center justify-center gap-1 hover:border-[#D4AF37]/60 transition-all cursor-pointer active:scale-95"
+                className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-lg p-1.5 flex flex-col items-center justify-center gap-1 hover:bg-[#D4AF37]/5 transition-all cursor-pointer"
               >
                 <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent shrink-0">
                   <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]" strokeWidth={1.5} />
                 </div>
                 <span className="text-[6.5px] sm:text-[7.5px] text-[#F5F5F5] font-bold tracking-wider text-center leading-none truncate w-full px-0.5">{action.label}</span>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
 
       {/* ==========================================
@@ -341,11 +414,18 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </h3>
           <button
             onClick={() => {
+              setLocalCategory("all");
+              setLocalLocation("all");
+              setLocalType("all");
+              setLocalDate("all");
               setSelectedCategory("all");
               setSelectedLocation("all");
               setSelectedType("all");
               setSelectedDateFilter("all");
               setGlobalSearchTerm("");
+              if (onValidateFilters) {
+                onValidateFilters("all", "all", "all", "all");
+              }
               try { audioSynth.playTamTam(false); } catch (_) {}
             }}
             className="text-[10.5px] text-[#D4AF37] hover:text-[#F1C40F] font-bold transition-all flex items-center gap-1.5 focus:outline-none"
@@ -360,9 +440,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           {/* Category */}
           <div className="relative">
             <select
-              value={selectedCategory}
+              value={localCategory}
               onChange={(e) => {
-                setSelectedCategory(e.target.value);
+                setLocalCategory(e.target.value);
                 try { audioSynth.playTamTam(true); } catch (_) {}
               }}
               className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
@@ -379,9 +459,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           {/* Localisation */}
           <div className="relative">
             <select
-              value={selectedLocation}
+              value={localLocation}
               onChange={(e) => {
-                setSelectedLocation(e.target.value);
+                setLocalLocation(e.target.value);
                 try { audioSynth.playTamTam(true); } catch (_) {}
               }}
               className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
@@ -396,9 +476,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           {/* Type */}
           <div className="relative">
             <select
-              value={selectedType}
+              value={localType}
               onChange={(e) => {
-                setSelectedType(e.target.value);
+                setLocalType(e.target.value);
                 try { audioSynth.playTamTam(true); } catch (_) {}
               }}
               className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
@@ -413,9 +493,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           {/* Date */}
           <div className="relative">
             <select
-              value={selectedDateFilter}
+              value={localDate}
               onChange={(e) => {
-                setSelectedDateFilter(e.target.value);
+                setLocalDate(e.target.value);
                 try { audioSynth.playTamTam(true); } catch (_) {}
               }}
               className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] hover:border-[#D4AF37]/50 text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
@@ -426,6 +506,32 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             </select>
           </div>
         </div>
+
+        {/* VALIDER Button */}
+        <button
+          onClick={() => {
+            setSelectedCategory(localCategory);
+            setSelectedLocation(localLocation);
+            setSelectedType(localType);
+            setSelectedDateFilter(localDate);
+            if (onValidateFilters) {
+              onValidateFilters(localCategory, localLocation, localType, localDate);
+            }
+            try { audioSynth.playValidationSuccess(); } catch (_) {}
+            
+            // Scroll to top of both window and container
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            const scrollContainers = document.querySelectorAll(".overflow-y-auto, .h-full, body");
+            scrollContainers.forEach(container => {
+              try {
+                container.scrollTo({ top: 0, behavior: "smooth" });
+              } catch (_) {}
+            });
+          }}
+          className="w-full bg-[#D4AF37] hover:bg-[#F3C43F] text-black font-black text-[10px] tracking-widest py-3 px-4 rounded-xl transition-all cursor-pointer select-none active:scale-95 shadow-md flex items-center justify-center uppercase"
+        >
+          Valider les filtres
+        </button>
       </div>
 
       {/* ==========================================
@@ -561,8 +667,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             </div>
           ) : (
             allRecentItems.map((item) => (
-              <div
+              <motion.div
                 key={item.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-20px" }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
                 className="flex bg-[#050505] border border-[#D4AF37]/20 hover:border-[#D4AF37]/60 rounded-2xl p-3 items-center gap-3 transition-colors shadow-[0_2px_15px_rgba(212,175,55,0.05)] cursor-pointer relative group"
               >
                 {/* Left Thumbnail with Gold G logo overlay */}
@@ -632,7 +742,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))
           )}
         </div>

@@ -8,12 +8,14 @@ import {
   addDoc,
   updateDoc,
   query,
-  limit
+  limit,
+  where
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
 import { useAuth } from "../AuthContext";
 import AuthScreen from "./AuthScreen";
+import CompleteProfile from "./CompleteProfile";
 import GomboIdUserDashboard from "./GomboIdUserDashboard";
 import GomboMusikEcosystem from "./GomboMusikEcosystem";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
@@ -37,6 +39,7 @@ import {
   UserPerformance
 } from "../types";
 import { audioSynth } from "../lib/audio";
+import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
 import {
   motion,
   AnimatePresence
@@ -74,6 +77,8 @@ import {
   Star,
   Crown,
   Heart,
+  Share2,
+  MessageCircle,
   Bookmark,
   MessageSquare,
   Calendar,
@@ -328,7 +333,7 @@ interface AdminCentreProps {
 }
 
 export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
-  const { currentUser, profile, logout } = useAuth();
+  const { currentUser, profile, logout, refreshProfile } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
 
@@ -372,6 +377,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   // Custom states for Le Terrain High Fidelity Experience (Home Page)
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [likedGombos, setLikedGombos] = useState<string[]>([]);
+  const [gomboComments, setGomboComments] = useState<Record<string, { author: string; text: string; date: string }[]>>({
+    gombo_1: [
+      { author: "Zouglou Premier", text: "Opportunité incroyable pour la culture ivoirienne !", date: "Il y a 2h" },
+      { author: "Diva Shana", text: "Le Plateau va vibrer le 15 juin !", date: "Il y a 1h" }
+    ],
+    gombo_2: [
+      { author: "Serge K.", text: "Le budget est à la hauteur de l'évènement.", date: "Il y a 5h" }
+    ]
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -1080,6 +1094,34 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     });
   };
 
+  const applyGombosFilters = async (cat: string, loc: string, typeVal: string, dateVal: string) => {
+    if (!db) return;
+    try {
+      let q = collection(db, "gombos");
+      let constraints: any[] = [];
+      if (cat !== "all") {
+        constraints.push(where("category", "==", cat));
+      }
+      if (loc !== "all") {
+        constraints.push(where("location", "==", loc));
+      }
+      if (typeVal !== "all") {
+        constraints.push(where("type", "==", typeVal));
+      }
+      const finalQ = constraints.length > 0 ? query(q, ...constraints) : q;
+      const snap = await getDocs(finalQ);
+      const results: any[] = [];
+      snap.forEach((docSnap) => {
+        results.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      if (results.length > 0 || constraints.length > 0) {
+        setGombos(results);
+      }
+    } catch (err: any) {
+      console.warn("🔐 Dynamic query index required or error, using local fallback filters:", err.message);
+    }
+  };
+
   const handleCompleteGombo = async () => {
     if (!completingGombo) return;
     try {
@@ -1469,6 +1511,20 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       (user.commune || "").toLowerCase().includes(s)
     );
   });
+
+  if (currentUser && profile && profile.isProfileComplete === false) {
+    return (
+      <div className="w-full min-h-screen bg-[#0B0B0B] flex items-center justify-center py-6 overflow-y-auto px-4 font-sans select-none">
+        <CompleteProfile 
+          currentUserProfile={profile} 
+          onComplete={async () => {
+            addToTerminal("[🛡️ ONBOARDING] Complétion du contrat souverain AfriID réussie !");
+            await refreshProfile();
+          }} 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-[#0B0B0B] text-[#F5F5F5] font-sans antialiased overflow-hidden">
@@ -1968,9 +2024,24 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               {/* Middle Brand Section */}
               <div className="flex-1 flex items-center gap-1 text-left min-w-0 select-none shrink-0">
                 {/* Logo AFRIGOMBO */}
-                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-black border border-[#D4AF37] flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.25)] select-none shrink-0 mr-1">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.05, 1],
+                    boxShadow: [
+                      "0 0 12px rgba(212,175,55,0.25)",
+                      "0 0 22px rgba(212,175,55,0.6)",
+                      "0 0 12px rgba(212,175,55,0.25)"
+                    ]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-black border border-[#D4AF37] flex items-center justify-center select-none shrink-0 mr-1 cursor-pointer"
+                >
                   <Flame className="text-[#D4AF37] w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2]" />
-                </div>
+                </motion.div>
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-black tracking-[0.08em] text-white leading-none uppercase font-display truncate">
                     AFRIGOMBO
@@ -2018,9 +2089,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 >
                   <Bell className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
                   {realNotifications.filter(n => !n.read).length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-red-650 text-white font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black animate-pulse select-none">
+                    <motion.span
+                      key={realNotifications.filter(n => !n.read).length}
+                      initial={{ scale: 1 }}
+                      animate={{ scale: [1, 1.3, 1] }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute -top-0.5 -right-0.5 bg-red-650 text-white font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black select-none"
+                    >
                       {realNotifications.filter(n => !n.read).length}
-                    </span>
+                    </motion.span>
                   )}
                 </button>
 
@@ -2055,10 +2132,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <AnimatePresence mode="wait">
             <motion.div
               key={activeMenu}
-              initial={{ opacity: 0, x: 20, filter: "drop-shadow(0 0 20px rgba(212,175,55,0.4))" }}
-              animate={{ opacity: 1, x: 0, filter: "drop-shadow(0 0 0px rgba(212,175,55,0))" }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
               className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-12 pt-6"
             >
               
@@ -2113,6 +2190,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   newNoticeBody={newNoticeBody}
                   setNewNoticeBody={setNewNoticeBody}
                   addToTerminal={addToTerminal}
+                  onValidateFilters={applyGombosFilters}
                 />
               )}
               {false && (() => {
@@ -3681,13 +3759,16 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 return (
                   <div className="space-y-6 animate-fadeIn pb-24">
-                    <div className="p-5 rounded-2xl bg-[#121214] border border-[#D4AF37]/15">
-                      <h3 className="text-md font-sans font-black text-white uppercase tracking-wide">
-                        🔍 Les Vibes : Moteur de Recherche d'Alliances
-                      </h3>
-                      <p className="text-xs text-zinc-400 mt-1">
-                        Découvrez d'autres virtuoses à Abidjan, explorez leurs spécialités et scellez des partenariats artistiques prestigieux.
-                      </p>
+                    <div className="p-5 rounded-2xl bg-[#121214] border border-[#D4AF37]/15 relative overflow-hidden">
+                      <div className="relative z-10">
+                        <h3 className="text-md font-sans font-black text-white uppercase tracking-wide">
+                          🔍 Les Vibes : Moteur de Recherche d'Alliances
+                        </h3>
+                        <p className="text-xs text-zinc-400 mt-1">
+                          Découvrez d'autres virtuoses à Abidjan, explorez leurs spécialités et scellez des partenariats artistiques prestigieux.
+                        </p>
+                      </div>
+                      <AfrigomboVibeWaves />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -4088,9 +4169,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         >
                           <Bell className="w-4 h-4 text-[#D4AF37]" />
                           {realNotifications.filter(n => !n.read).length > 0 && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#D4AF37] text-black text-[9px] font-black font-mono rounded-full flex items-center justify-center border border-black shadow">
+                            <motion.span
+                              key={realNotifications.filter(n => !n.read).length}
+                              initial={{ scale: 1 }}
+                              animate={{ scale: [1, 1.3, 1] }}
+                              transition={{ duration: 0.3 }}
+                              className="absolute -top-1 -right-1 w-4 h-4 bg-[#D4AF37] text-black text-[9px] font-black font-mono rounded-full flex items-center justify-center border border-black shadow"
+                            >
                               {realNotifications.filter(n => !n.read).length}
-                            </span>
+                            </motion.span>
                           )}
                         </button>
                         {/* Settings Cog */}
@@ -8054,7 +8141,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="w-full max-w-lg bg-[#0F0F11] border border-[#D4AF37]/35 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
+              className="w-full max-w-lg bg-[#0F0F11] border border-[#D4AF37]/35 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
             >
               {/* Header Image backdrop */}
               <div className="h-44 w-full relative bg-zinc-950 shrink-0">
@@ -8090,7 +8177,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </div>
 
               {/* Body Content */}
-              <div className="p-6 sm:p-8 space-y-6 overflow-y-auto max-h-[60vh]">
+              <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 flex-wrap text-zinc-500 font-mono text-[10px]">
                     <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded font-bold uppercase select-none">
@@ -8117,23 +8204,171 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   <p>{selectedGomboDetails.description}</p>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-white/5 pt-4 text-[11px] font-mono text-zinc-500 gap-4 flex-wrap">
-                  <div>
-                    <span className="block text-[8px] text-zinc-650 uppercase font-bold">ORGANISATEUR :</span>
-                    <span className="text-zinc-300 font-bold">{selectedGomboDetails.organizerName}</span>
+                {/* INTERACTIVE ACTIONS BAR */}
+                <div className="flex items-center justify-between border-t border-b border-zinc-900/60 py-3 text-zinc-400">
+                  <button
+                    onClick={() => {
+                      const isLiked = likedGombos.includes(selectedGomboDetails.id);
+                      setLikedGombos(prev =>
+                        isLiked ? prev.filter(id => id !== selectedGomboDetails.id) : [...prev, selectedGomboDetails.id]
+                      );
+                      try { audioSynth.playTamTam(true); } catch (_) {}
+                    }}
+                    className="flex items-center gap-1.5 hover:text-[#D4AF37] transition text-xs font-bold"
+                  >
+                    <Heart className={`w-4 h-4 ${likedGombos.includes(selectedGomboDetails.id) ? "fill-[#D4AF37] text-[#D4AF37]" : ""}`} />
+                    <span>{likedGombos.includes(selectedGomboDetails.id) ? "Aimé" : "Aimer"}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      try {
+                        navigator.clipboard.writeText(`AFRIGOMBO - ${selectedGomboDetails.title} (Cachet: ${selectedGomboDetails.budget} FCFA)`);
+                        addToTerminal(`[INFO] Informations copiées dans le presse-papiers.`);
+                        audioSynth.playValidationSuccess();
+                      } catch (_) {}
+                    }}
+                    className="flex items-center gap-1.5 hover:text-[#D4AF37] transition text-xs font-bold"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>Partager</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (!currentUser) {
+                        addToTerminal("[ALERTE] Veuillez vous connecter pour envoyer un message.");
+                        return;
+                      }
+                      setSelectedGomboDetails(null);
+                      setOpenConvoWithUserId(selectedGomboDetails.organizerId || "admin");
+                      setActiveMenu("user_messages");
+                      try { audioSynth.playValidationSuccess(); } catch (_) {}
+                    }}
+                    className="flex items-center gap-1.5 hover:text-[#D4AF37] transition text-xs font-bold"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>Contacter</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      addToTerminal(`[SIGNALEMENT] Alerte transmise avec succès pour examen de "${selectedGomboDetails.title}".`);
+                      try { audioSynth.playTamTam(false); } catch (_) {}
+                    }}
+                    className="flex items-center gap-1.5 hover:text-red-500 transition text-xs font-bold"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Signaler</span>
+                  </button>
+                </div>
+
+                {/* AUTHOR PROFILE ROW */}
+                <div className="flex items-center justify-between border-b border-zinc-900/60 pb-4 text-[11px] font-mono text-zinc-500 gap-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full border border-[#D4AF37]/35 flex items-center justify-center bg-zinc-950 font-bold text-[#D4AF37] text-[10px] uppercase">
+                      {selectedGomboDetails.organizerName?.charAt(0) || "O"}
+                    </div>
+                    <div>
+                      <span className="block text-[8px] text-zinc-650 uppercase font-bold leading-none">ORGANISATEUR :</span>
+                      <span className="text-zinc-300 font-bold mt-0.5 block">{selectedGomboDetails.organizerName}</span>
+                    </div>
                   </div>
                   <div>
-                    <span className="block text-[8px] text-zinc-650 uppercase font-bold">CANDIDATS :</span>
-                    <span className="text-[#D4AF37] font-bold">{selectedGomboDetails.applicantsCount + (hasApplied ? 1 : 0)} postulants</span>
+                    <span className="block text-[8px] text-zinc-650 uppercase font-bold text-right leading-none">CANDIDATS :</span>
+                    <span className="text-[#D4AF37] font-bold mt-0.5 block text-right">{selectedGomboDetails.applicantsCount + (hasApplied ? 1 : 0)} postulants</span>
+                  </div>
+                </div>
+
+                {/* DISCUSSIONS AND REAL-TIME COMMENTS */}
+                <div className="space-y-4 pt-2">
+                  <span className="text-[10px] font-mono uppercase text-zinc-500 block font-bold">ESPACE DISCUSSIONS :</span>
+                  
+                  {/* Comments list scroll */}
+                  <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                    {(() => {
+                      const commentsList = gomboComments[selectedGomboDetails.id] || [];
+                      if (commentsList.length === 0) {
+                        return (
+                          <p className="text-zinc-650 text-[10px] font-mono italic">
+                            Aucune discussion pour le moment. Exprimez-vous ci-dessous !
+                          </p>
+                        );
+                      }
+                      return commentsList.map((c, i) => (
+                        <div key={i} className="bg-black/40 border border-zinc-900/60 rounded-2xl p-3 flex gap-2.5 w-full text-left">
+                          <div className="w-7 h-7 rounded-xl bg-zinc-900/70 border border-[#D4AF37]/20 flex items-center justify-center shrink-0">
+                            <span className="text-[9px] font-bold text-[#D4AF37] uppercase">{c.author.substring(0, 2)}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-baseline gap-1">
+                              <span className="text-[11px] font-black text-white leading-none truncate">{c.author}</span>
+                              <span className="text-[8px] text-zinc-650 font-mono leading-none">{c.date}</span>
+                            </div>
+                            <p className="text-[11px] text-zinc-300 mt-1 font-sans break-words leading-relaxed">{c.text}</p>
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+
+                  {/* Comment Input */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Tapez votre question ou message d'artiste..."
+                      id="combo-comment-input-real"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const val = (e.target as HTMLInputElement).value.trim();
+                          if (!val) return;
+                          
+                          const id = selectedGomboDetails.id;
+                          const author = profile?.artisticName || currentUser?.displayName || "Artiste Anonyme";
+                          const newC = { author, text: val, date: "À l'instant" };
+                          
+                          setGomboComments(prev => ({
+                            ...prev,
+                            [id]: [...(prev[id] || []), newC]
+                          }));
+                          
+                          (e.target as HTMLInputElement).value = "";
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        }
+                      }}
+                      className="flex-1 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 focus:bg-black rounded-2xl px-4 py-3 text-xs text-white placeholder-zinc-700 focus:outline-none"
+                    />
+                    <button
+                      onClick={() => {
+                        const inputEl = document.getElementById("combo-comment-input-real") as HTMLInputElement;
+                        const val = inputEl?.value?.trim();
+                        if (!val) return;
+                        
+                        const id = selectedGomboDetails.id;
+                        const author = profile?.artisticName || currentUser?.displayName || "Artiste Anonyme";
+                        const newC = { author, text: val, date: "À l'instant" };
+                        
+                        setGomboComments(prev => ({
+                          ...prev,
+                          [id]: [...(prev[id] || []), newC]
+                        }));
+                        
+                        if (inputEl) inputEl.value = "";
+                        try { audioSynth.playValidationSuccess(); } catch (_) {}
+                      }}
+                      className="bg-[#D4AF37] hover:bg-[#F3C43F] text-black font-black text-[9px] uppercase tracking-widest px-4 rounded-2xl transition-all active:scale-95"
+                    >
+                      Envoyer
+                    </button>
                   </div>
                 </div>
               </div>
 
               {/* Action Footer */}
-              <div className="p-6 bg-black/40 border-t border-white/5 shrink-0 flex gap-3">
+              <div className="p-6 bg-[#0E0E10] border-t border-zinc-900 shrink-0 flex gap-3">
                 <button
                   onClick={() => setSelectedGomboDetails(null)}
-                  className="flex-1 py-3 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/20 text-white text-xs font-mono font-black uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer"
+                  className="flex-1 py-3.5 rounded-2xl bg-zinc-950 border border-zinc-900 hover:border-zinc-800 text-white text-xs font-mono font-black uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer"
                 >
                   Fermer
                 </button>
@@ -8142,12 +8377,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   onClick={() => {
                     if (hasApplied) return;
                     setAppliedGombos(prev => [...prev, selectedGomboDetails.id]);
-                    addToTerminal(`[🎼 CONTRAT] Dossier de souveraineté transmis pour : ${selectedGomboDetails.title}`);
+                    addToTerminal(`[🎼 CONTRAT] Candidature enregistrée ! Dossier de souveraineté transmis pour : ${selectedGomboDetails.title}`);
                     try { audioSynth.playValidationSuccess(); } catch (err) {}
                   }}
-                  className={`flex-[2] py-3 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center ${
+                  className={`flex-[2] py-3.5 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center ${
                     hasApplied
-                      ? "bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 cursor-not-allowed"
+                      ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 cursor-not-allowed"
                       : "bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] shadow-[0_4px_15px_rgba(212,175,55,0.25)]"
                   }`}
                 >

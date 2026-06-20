@@ -39,7 +39,7 @@ service cloud.firestore {
     function isValidUser(data) {
       return data.uid is string && data.uid.size() <= 128 &&
              data.email is string && data.email.size() <= 200 &&
-             data.role in ['client', 'musicien', 'admin'] &&
+             data.role in ['client', 'musicien', 'admin', 'Artiste', 'Producteur', 'Beatmaker', 'Manager', 'Promoteur', 'Organisateur événement', 'Studio', 'Média', 'Passionné musique', 'Autre'] &&
              data.createdAt is string && data.createdAt.size() <= 50 &&
              (!('id' in data) || (data.id is string && data.id.size() <= 128)) &&
              (!('name' in data) || (data.name is string && data.name.size() <= 200)) &&
@@ -350,6 +350,35 @@ service cloud.firestore {
              (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
     }
 
+    function isValidAfriId(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.uid is string && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() <= 200 &&
+             (!('customUsername' in data) || (data.customUsername is string && data.customUsername.size() <= 150)) &&
+             (!('pin' in data) || (data.pin is string && data.pin.size() <= 100)) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    function isValidAfriSession(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.uid is string && data.uid.size() <= 128 &&
+             data.token is string && data.token.size() <= 2000 &&
+             (!('deviceName' in data) || (data.deviceName is string && data.deviceName.size() <= 200)) &&
+             (!('ipAddress' in data) || (data.ipAddress is string && data.ipAddress.size() <= 100)) &&
+             (!('expiresAt' in data) || (data.expiresAt is string && data.expiresAt.size() <= 50)) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
+    }
+
+    function isValidLinkedApp(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.uid is string && data.uid.size() <= 128 &&
+             data.appId is string && data.appId.size() <= 128 &&
+             (!('permissions' in data) || (data.permissions is list && data.permissions.size() <= 100)) &&
+             (!('authorisedAt' in data) || (data.authorisedAt is string && data.authorisedAt.size() <= 50)) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
+    }
+
 
     // --- 1. USERS COLLECTION RULES ---
     match /users/{userId} {
@@ -597,6 +626,19 @@ service cloud.firestore {
       allow write: if isSignedIn() && (
         request.auth.token.email == 'johnsylvesterh@gmail.com' && request.auth.token.email_verified == true
       );
+    }
+
+    // --- 21. AFRIID ARCHITECTURE PREPARATION ---
+    match /afri_ids/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /afri_sessions/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /linked_apps/{id} {
+      allow read, write: if isAdmin();
     }
 
   }

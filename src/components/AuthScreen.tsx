@@ -308,8 +308,8 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
               </div>
             </div>
           ) : (
-            <div className="w-full mt-2 flex flex-col gap-4 z-10 animate-fadeIn">
-              <div className="p-4 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl text-left space-y-3">
+            <div className="w-full mt-2 flex flex-col gap-4.5 z-10 animate-fadeIn">
+              <div className="p-4 bg-[#D4AF37]/15 border border-[#D4AF37]/45 rounded-2xl text-left space-y-3">
                  <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-full bg-black border border-[#D4AF37]/50 overflow-hidden shrink-0">
                       <img src={foundAfriUser.avatarUrl || foundAfriUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(foundAfriUser.displayName || 'A')}&background=050505&color=D4AF37`} alt="Avatar" className="w-full h-full object-cover" />
@@ -320,22 +320,73 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                    </div>
                  </div>
                  
-                 <div className="space-y-1 bg-black/40 p-2 rounded-lg border border-white/5">
-                   <p className="text-[10px] text-zinc-500 font-mono">Email associé:</p>
-                   <p className="text-xs text-zinc-300 truncate">{foundAfriUser.email}</p>
+                 <div className="space-y-1 bg-black/40 p-2.5 rounded-xl border border-white/5">
+                   <p className="text-[9px] text-zinc-500 font-mono uppercase tracking-wider">Email associé:</p>
+                   <p className="text-xs text-zinc-300 truncate font-mono">{foundAfriUser.email}</p>
                  </div>
               </div>
               
-              <button
-                type="button"
-                onClick={() => {
-                   setShowAfriIdModal(false);
-                   handleGoogleLogin();
-                }}
-                className="w-full py-3 bg-[#D4AF37] hover:bg-[#b5952f] text-black rounded-xl transition-all font-black text-xs uppercase tracking-widest"
-              >
-                 Continuer avec Google Auth
-              </button>
+              <div className="flex flex-col gap-2.5">
+                {/* Instant Login with Afri ID profile */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setAfriIdLoading(true);
+                    try {
+                      const resUid = foundAfriUser.uid || `afri_${foundAfriUser.afriId.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+                      const resEmail = foundAfriUser.email || `${foundAfriUser.afriId.toLowerCase()}@afri-id.ci`;
+                      const resName = foundAfriUser.displayName || `Artiste ${foundAfriUser.afriId}`;
+                      
+                      const { gomboDB } = await import("../firebase");
+                      const updatedProfileData: any = {
+                        uid: resUid,
+                        email: resEmail,
+                        firstName: foundAfriUser.firstName || "Artiste",
+                        lastName: foundAfriUser.lastName || "Souverain",
+                        displayName: resName,
+                        artisticName: resName,
+                        provider: "afri_id",
+                        isProfileComplete: true,
+                        avatarUrl: foundAfriUser.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(resName)}&background=050505&color=D4AF37`,
+                        photoURL: foundAfriUser.avatarUrl || "",
+                        lastLoginAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                      };
+                      
+                      await gomboDB.updateUserProfile(resUid, updatedProfileData);
+                      
+                      localStorage.setItem("gombo_auth", JSON.stringify({ uid: resUid, email: resEmail, emailVerified: true }));
+                      window.dispatchEvent(new Event("gomboAuthChange"));
+                      
+                      setSuccessMSG("✅ Connexion Afri ID réussie !");
+                      setShowAfriIdModal(false);
+                      setTimeout(() => {
+                        onSuccess();
+                      }, 900);
+                    } catch (err) {
+                      setAfriIdError("La connexion directe a échoué");
+                    } finally {
+                      setAfriIdLoading(false);
+                    }
+                  }}
+                  disabled={afriIdLoading}
+                  className="w-full py-3.5 bg-[#D4AF37] hover:bg-[#F3C43F] text-black rounded-xl transition-all font-black text-xs uppercase tracking-widest active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(212,175,55,0.25)]"
+                >
+                  {afriIdLoading ? "Connexion..." : "Se connecter maintenant 🚀"}
+                </button>
+
+                {/* Continue with Google linkage */}
+                <button
+                  type="button"
+                  onClick={() => {
+                     setShowAfriIdModal(false);
+                     handleGoogleLogin();
+                  }}
+                  className="w-full py-3 bg-[#050505] hover:bg-[#D4AF37]/10 text-white border border-[#D4AF37]/25 rounded-xl transition-all font-bold text-xs uppercase tracking-wider active:scale-95 cursor-pointer"
+                >
+                   Continuer avec Google Auth
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -463,32 +514,12 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* AFRI ID Button */}
-              <button
-                type="button"
-                onClick={handleAfriIdLogin}
-                disabled={loading}
-                className="w-full h-14 relative flex items-center justify-center gap-3 bg-gradient-to-r from-[#D4AF37] to-[#ffd700] hover:from-[#c29c29] hover:to-[#e6c100] text-black rounded-2xl transition-all duration-300 font-black text-xs uppercase tracking-widest active:scale-[0.98] cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.3)] border border-[#D4AF37]/30 overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#fff]/20 blur-2xl rounded-full pointer-events-none"></div>
-                <div className="w-6 h-6 rounded-lg bg-black flex items-center justify-center border border-[#D4AF37] shrink-0 shadow-[0_0_10px_rgba(212,175,55,0.5)] z-10">
-                   <span className="font-serif font-bold text-lg text-[#D4AF37]">A</span>
-                </div>
-                <span className="z-10">{loading ? "Vérification..." : "Continuer avec AFRI ID"}</span>
-              </button>
-
-              <div className="flex items-center gap-3 mb-2 mt-2">
-                <div className="h-[1px] bg-zinc-800 flex-1"></div>
-                <span className="text-[9px] font-mono font-bold text-zinc-500">OU AUTRES MÉTHODES</span>
-                <div className="h-[1px] bg-zinc-800 flex-1"></div>
-              </div>
-
-              {/* Google Button */}
+              {/* Google Button - Unique Active Auth Method */}
               <button
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={loading}
-                className="w-full h-14 flex items-center justify-center gap-3 bg-[#050505] hover:bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-white rounded-2xl transition-all duration-300 font-bold text-xs uppercase tracking-widest active:scale-[0.98] cursor-pointer"
+                className="w-full h-14 flex items-center justify-center gap-3 bg-[#D4AF37] hover:bg-[#b5921f] text-black rounded-2xl transition-all duration-300 font-bold text-xs uppercase tracking-widest active:scale-[0.98] cursor-pointer shadow-[0_4px_20px_rgba(212,175,55,0.2)] border border-[#D4AF37]/30"
               >
                 <svg className="w-5.5 h-5.5 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -499,27 +530,19 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                 <span>{loading ? "Vérification..." : "Continuer avec Google"}</span>
               </button>
 
-              {/* Email/Telephone Button */}
-              <button
-                type="button"
-                className="w-full h-14 flex items-center justify-center gap-3 bg-[#050505] hover:bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-white rounded-2xl font-bold text-xs uppercase tracking-widest cursor-pointer active:scale-[0.98] transition-all duration-300"
-              >
-                <svg className="w-5.5 h-5.5 fill-current shrink-0" viewBox="0 0 24 24">
-                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                </svg>
-                <span>Continuer avec Email ou Tél</span>
-              </button>
-
-              {/* Facebook Button (Visible but disabled with comment "Bientôt disponible.") */}
+              {/* AfriID Button - Retained but disabled for the future beta launch */}
               <button
                 type="button"
                 disabled={true}
-                className="w-full h-14 flex items-center justify-center gap-3 bg-[#050505] border border-slate-800/60 text-slate-600 rounded-2xl font-bold text-xs uppercase tracking-widest cursor-not-allowed opacity-60"
+                className="w-full h-14 relative flex items-center justify-center gap-3 bg-[#121214]/60 border border-zinc-800/80 text-zinc-500 rounded-2xl font-bold text-xs uppercase tracking-widest opacity-50 cursor-not-allowed"
               >
-                <svg className="w-5.5 h-5.5 fill-current opacity-40 shrink-0" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                <span>Facebook (Bientôt disponible)</span>
+                <div className="w-5 h-5 rounded bg-zinc-800 flex items-center justify-center border border-zinc-700 shrink-0">
+                  <span className="font-serif font-bold text-sm text-zinc-500">A</span>
+                </div>
+                <span>Continuer avec AfriID</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider bg-zinc-800 text-[#D4AF37] border border-[#D4AF37]/20 rounded font-mono">
+                  Bientôt disponible
+                </span>
               </button>
             </div>
           )}
