@@ -261,7 +261,7 @@ export default function SettingsModal({
                   </button>
                 );
               }
-              if (tab.id === "cgu" || tab.id === "confidentialite") {
+              if (tab.id === "legal" || tab.id === "confidentialite") {
                  return (
                    <button
                      key={tab.id}

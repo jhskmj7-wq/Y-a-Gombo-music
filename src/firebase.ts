@@ -63,6 +63,7 @@ export function setIsFirebaseMock(val: boolean) {
 }
 
 import { app, auth, db, storage } from "./lib/firebase";
+export { app, auth, db, storage };
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 const GOOGLE_PROVIDER = new GoogleAuthProvider();
