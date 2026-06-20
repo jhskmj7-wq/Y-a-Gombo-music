@@ -75,6 +75,14 @@ export default function GomboProfile({
   // Real-time synchronization of current user posts (Mes publications)
   const [myPosts, setMyPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [syncedProfile, setSyncedProfile] = useState<UserProfile>(currentUserProfile);
+
+  useEffect(() => {
+    const unsub = gomboDB.listenUserProfile(currentUserProfile.uid || "", (profile) => {
+        if (profile) setSyncedProfile(profile);
+    });
+    return () => unsub();
+  }, [currentUserProfile?.uid]);
 
   // Editing mode state
   const [editingPost, setEditingPost] = useState<any | null>(null);
@@ -85,12 +93,12 @@ export default function GomboProfile({
   useEffect(() => {
     setLoadingPosts(true);
     const unsubscribe = gomboDB.listenSocialPosts((allPosts) => {
-      const filtered = allPosts.filter(p => p.authorId === currentUserProfile.uid || p.userId === currentUserProfile.uid);
+      const filtered = allPosts.filter(p => p.authorId === syncedProfile.uid || p.userId === syncedProfile.uid);
       setMyPosts(filtered);
       setLoadingPosts(false);
     });
     return () => unsubscribe();
-  }, [currentUserProfile?.uid]);
+  }, [syncedProfile?.uid]);
 
   const handleStartEditPost = (post: any) => {
     setEditingPost(post);

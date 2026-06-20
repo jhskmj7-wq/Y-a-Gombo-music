@@ -438,6 +438,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [newGomboCommune, setNewGomboCommune] = useState<string>("Cocody");
   const [newPubType, setNewPubType] = useState<"post" | "gombo" | "opportunite" | "annonce" | "casting" | "evenement" | "contenu">("post");
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [memberQuery, setMemberQuery] = useState<string>("");
+  const [communeFilter, setCommuneFilter] = useState<string>("all");
   const [savedPosts, setSavedPosts] = useState<string[]>([]);
   const [postComments, setPostComments] = useState<Record<string, { id: string, content: string, writerName: string }[]>>({});
 
@@ -493,6 +495,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     return () => unsub();
   }, [adminEmail]);
   const [isSuperWelcomeOpen, setIsSuperWelcomeOpen] = useState<boolean>(false);
+  const [themeMode, setThemeMode] = useState<"dark-gold" | "light-gold" | "night-navy">("dark-gold");
 
   // Custom Reviews & Gombo completeness state
   const [reviews, setReviews] = useState<GomboReview[]>(INITIAL_REVIEWS);
@@ -1825,22 +1828,37 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-400 uppercase tracking-widest block mb-1">
                               👑 Centre personnel
                             </span>
-                            {renderMenuItem("menu_edit_profile", "Mon Héritage", "✏", () => {
+                            {renderMenuItem("menu_inventory", "✔ NAVIGATION", "🗺️", () => {
+                              setPerspective("user");
+                              setActiveMenu("user_terrain");
+                              setIsSidebarOpen(false);
+                            })}
+                            {renderMenuItem("menu_heritage", "✔ MON HÉRITAGE", "👑", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_edit_profile");
                                 setIsSidebarOpen(false);
-                                try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
-                            }, false)}
-                            {renderMenuItem("menu_notifications", "Tambours", "🔔", () => {
+                            })}
+                            {renderMenuItem("menu_comms", "✔ COMMENTAIRES", "💬", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
-                                setActiveMenu("user_notifications");
+                                setActiveMenu("user_notifications"); // or a specific comments view if exists
                                 setIsSidebarOpen(false);
-                                try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
-                            }, false)}
+                            })}
+                            {renderMenuItem("menu_pubs", "✔ PUBLICATIONS", "📝", () => {
+                              setPerspective("user");
+                              setActiveMenu("user_terrain"); // showing personal posts
+                              setIsSidebarOpen(false);
+                            })}
+                            {renderMenuItem("menu_msgs", "✔ MESSAGES", "📩", () => {
+                               requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_messages");
+                                setIsSidebarOpen(false);
+                               });
+                            })}
                             {renderMenuItem("menu_confidentiality", "Confidentialité", "🔒", () => {
                               setPerspective("user");
                               setActiveMenu("privacy");
@@ -2014,14 +2032,16 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 )}
 
                 {/* Search trigger icon box */}
-                <button
-                  id="search-btn"
-                  onClick={() => setIsHeaderSearchOpen(true)}
-                  className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-850 hover:border-[#D4AF37]/40 rounded-xl transition-all flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
-                  title="Recherche"
-                >
-                  <Search className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
-                </button>
+                {activeMenu !== "user_notifications" && (
+                  <button
+                    id="search-btn"
+                    onClick={() => setIsHeaderSearchOpen(true)}
+                    className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-850 hover:border-[#D4AF37]/40 rounded-xl transition-all flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
+                    title="Recherche"
+                  >
+                    <Search className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
+                  </button>
+                )}
 
                 {/* Notifications Icon (Bell) */}
                 <button
@@ -2290,203 +2310,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         6. RECHERCHE UNIVERSELLE & 5. ACTIONS RAPIDES
                        ========================================== */}
                     <div className="space-y-6 select-none max-w-full">
-                      {/* BARRE DE RECHERCHE UNIVERSELLE */}
-                      <div className="relative">
-                        <div className="flex items-center gap-3 bg-black border border-[#D4AF37]/25 focus-within:border-[#D4AF37] hover:border-[#D4AF37]/50 rounded-2xl p-3 px-4 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                          <Search className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <input
-                              type="text"
-                              value={universalSearchTerm}
-                              onChange={(e) => {
-                                setUniversalSearchTerm(e.target.value);
-                                if (e.target.value.length > 0) {
-                                  try { audioSynth.playTamTam(true); } catch (_) {}
-                                }
-                              }}
-                              placeholder="Recherche globale (membres, publications, cachets, signalements)..."
-                              className="w-full bg-transparent text-xs text-white placeholder-zinc-500 focus:outline-none font-mono"
-                            />
-                          </div>
-                          {universalSearchTerm && (
-                            <button
-                              onClick={() => {
-                                setUniversalSearchTerm("");
-                                try { audioSynth.playTamTam(false); } catch (_) {}
-                              }}
-                              className="text-[9px] font-mono font-black uppercase text-zinc-500 hover:text-[#D4AF37] px-2 py-0.5 bg-zinc-900 border border-white/5 rounded-lg transition"
-                            >
-                              Effacer
-                            </button>
-                          )}
-                        </div>
-
-                        {/* INSTANT MULTI-ENTITY RESULTS DROPDOWN */}
-                        {universalSearchTerm.trim().length > 0 && (() => {
-                          const queryText = universalSearchTerm.toLowerCase();
-                          
-                          // 1. Filter Users / Members
-                          const matchedUsers = users.filter(u => 
-                            u.name?.toLowerCase().includes(queryText) || 
-                            u.artisticName?.toLowerCase().includes(queryText) || 
-                            u.commune?.toLowerCase().includes(queryText) || 
-                            u.instruments?.some(inst => inst.toLowerCase().includes(queryText))
-                          );
-
-                          // 2. Filter Social posts
-                          const matchedPosts = posts.filter(p => 
-                            p.content?.toLowerCase().includes(queryText) || 
-                            p.authorArtisticName?.toLowerCase().includes(queryText)
-                          );
-
-                          // 3. Filter Gombos / Opportunities
-                          const matchedGombos = gombos.filter(g => 
-                            g.title?.toLowerCase().includes(queryText) || 
-                            g.description?.toLowerCase().includes(queryText) || 
-                            g.location?.toLowerCase().includes(queryText) ||
-                            g.budget?.toString().includes(queryText)
-                          );
-
-                          // 4. Filter Signalements
-                          const matchedAlerts = alerts.filter(a => 
-                            a.id?.toLowerCase().includes(queryText) || 
-                            a.userName?.toLowerCase().includes(queryText) || 
-                            a.reason?.toLowerCase().includes(queryText) ||
-                            a.status?.toLowerCase().includes(queryText)
-                          );
-
-                          const totalMatches = matchedUsers.length + matchedPosts.length + matchedGombos.length + matchedAlerts.length;
-
-                          return (
-                            <div className="absolute top-14 left-0 right-0 bg-[#0E0E10] border border-[#D4AF37]/35 rounded-2xl overflow-hidden z-30 shadow-[0_15px_40px_rgba(0,0,0,0.95)] max-h-[420px] overflow-y-auto animate-fadeIn select-none p-4 divide-y divide-zinc-900 space-y-4">
-                              <div className="pb-2 flex justify-between items-center text-[10px] font-mono font-black text-zinc-500">
-                                <span>RÉSULTATS DE RECHERCHE ({totalMatches})</span>
-                                <span className="text-[#D4AF37]">TEMPS RÉEL (FIREBASE)</span>
-                              </div>
-
-                              {totalMatches === 0 ? (
-                                <div className="text-center py-6 text-xs text-zinc-500 font-mono">
-                                  ❌ Aucun résultat pour "{universalSearchTerm}"
-                                </div>
-                              ) : null}
-
-                              {/* CATEGORY: MEMBERS */}
-                              {matchedUsers.length > 0 && (
-                                <div className="pt-3 space-y-2">
-                                  <div className="text-[9px] font-mono font-black tracking-widest text-[#D4AF37] uppercase">👥 MEMBRES ({matchedUsers.length})</div>
-                                  <div className="space-y-1.5">
-                                    {matchedUsers.map(u => (
-                                      <div key={u.id} className="p-2.5 bg-black border border-white/5 rounded-xl flex items-center justify-between text-left">
-                                        <div className="min-w-0">
-                                          <div className="flex items-center gap-1.5">
-                                            <span className="text-xs text-white font-bold block truncate">{u.artisticName}</span>
-                                            {u.kycStatus === "approved" && (
-                                              <span className="text-[7.5px] bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] font-mono px-1 rounded block">GOMBO ID</span>
-                                            )}
-                                          </div>
-                                          <span className="text-[9px] font-mono text-zinc-500 block">{u.commune} | {u.instruments?.join(", ") || "Artiste Zouglou"}</span>
-                                        </div>
-                                        <button
-                                          onClick={() => {
-                                            setSelectedSearchMember(u);
-                                            setActiveQuickActionModal("search_member");
-                                            setUniversalSearchTerm("");
-                                            try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                          }}
-                                          className="px-2.5 py-1 bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black text-[9px] font-mono font-black rounded uppercase transition"
-                                        >
-                                          Sélectionner
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* CATEGORY: GOMBOS */}
-                              {matchedGombos.length > 0 && (
-                                <div className="pt-3 space-y-2">
-                                  <div className="text-[9px] font-mono font-black tracking-widest text-emerald-400 uppercase">💰 LES CACHETS ({matchedGombos.length})</div>
-                                  <div className="space-y-1.5">
-                                    {matchedGombos.map(g => (
-                                      <div key={g.id} className="p-2.5 bg-black border border-white/5 rounded-xl flex items-center justify-between text-left">
-                                        <div className="min-w-0">
-                                          <span className="text-xs text-white font-bold block truncate">{g.title}</span>
-                                          <span className="text-[9px] font-mono text-[#D4AF37] block font-black">{g.budget?.toLocaleString("fr-FR")} FCFA • {g.location}</span>
-                                        </div>
-                                        <button
-                                          onClick={() => {
-                                            setTerrainTab("contrat");
-                                            setUniversalSearchTerm("");
-                                            try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                          }}
-                                          className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] font-mono font-black rounded uppercase hover:bg-emerald-500 hover:text-black transition"
-                                        >
-                                          Détails
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* CATEGORY: POSTS */}
-                              {matchedPosts.length > 0 && (
-                                <div className="pt-3 space-y-2">
-                                  <div className="text-[9px] font-mono font-black tracking-widest text-cyan-400 uppercase">📢 NOTICES & ÉCHOS ({matchedPosts.length})</div>
-                                  <div className="space-y-1.5">
-                                    {matchedPosts.map(p => (
-                                      <div key={p.id} className="p-2.5 bg-black border border-white/5 rounded-xl flex items-center justify-between text-left">
-                                        <div className="min-w-0 pr-2">
-                                          <span className="text-[9px] font-mono text-zinc-500 block font-bold leading-none mb-1">PAR {p.authorArtisticName?.toUpperCase()}</span>
-                                          <p className="text-xs text-zinc-300 truncate leading-relaxed max-w-xs">{p.content}</p>
-                                        </div>
-                                        <button
-                                          onClick={() => {
-                                            setTerrainTab("musicien");
-                                            setUniversalSearchTerm("");
-                                            try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                          }}
-                                          className="px-2.5 py-1 bg-cyan-500/10 text-cyan-400 text-[9px] font-mono font-black rounded uppercase hover:bg-cyan-500 hover:text-black transition"
-                                        >
-                                          Lire
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* CATEGORY: ALERTS */}
-                              {matchedAlerts.length > 0 && (
-                                <div className="pt-3 space-y-2">
-                                  <div className="text-[9px] font-mono font-black tracking-widest text-red-500 uppercase font-bold">🚨 SIGNALEMENTS DU TRÔNE ({matchedAlerts.length})</div>
-                                  <div className="space-y-1.5">
-                                    {matchedAlerts.map(a => (
-                                      <div key={a.id} className="p-2.5 bg-black border border-white/5 rounded-xl flex items-center justify-between text-left">
-                                        <div className="min-w-0">
-                                          <span className="text-xs text-zinc-300 font-bold block truncate">{a.userName}</span>
-                                          <span className="text-[9px] font-mono text-red-400 block truncate">{a.reason} [{a.status}]</span>
-                                        </div>
-                                        <button
-                                          onClick={() => {
-                                            setActiveQuickActionModal("signalements");
-                                            setUniversalSearchTerm("");
-                                            try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                          }}
-                                          className="px-2.5 py-1 bg-red-500/10 text-red-400 text-[9px] font-mono font-bold rounded uppercase hover:bg-red-500 hover:text-black transition"
-                                        >
-                                          Résoudre
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </div>
+                      {/* BARRE DE RECHERCHE UNIVERSELLE REMOVED AS REQUESTED */}
 
                       {/* SECTION ACTIONS RAPIDES */}
                       <div className="bg-gradient-to-b from-zinc-950 to-black border border-[#D4AF37]/20 hover:border-[#D4AF37]/35 rounded-3xl p-5 sm:p-7 shadow-[0_10px_35px_rgba(0,0,0,0.85)] relative overflow-hidden transition-all">
@@ -2659,13 +2483,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           </button>
                         </div>
                       </div>
-                    </div>
-
-                    {/* INTERACTIVE FULLY-FUNCTIONAL OVERLAYS */}
-                    {activeQuickActionModal && (
+                    {!!activeQuickActionModal && (
                       <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto w-full max-w-full">
                         <div className="bg-[#0E0E10] border border-[#D4AF37]/35 rounded-3xl p-6 sm:p-8 w-full max-w-md my-8 relative overflow-hidden select-none shadow-[0_15px_50px_rgba(0,0,0,0.95)]">
-                          {/* Top-Right Close Button */}
                           <button
                             onClick={() => {
                               setActiveQuickActionModal(null);
@@ -2675,95 +2495,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           >
                             <X className="w-4 h-4" />
                           </button>
-
-                          {/* MODAL 1: RECHERCHER UN MEMBRE */}
-                          {activeQuickActionModal === "search_member" && (() => {
-                            const [memberQuery, setMemberQuery] = useState("");
-                            const [communeFilter, setCommuneFilter] = useState("all");
-                            const matchedMembers = users.filter(usr => {
-                              const matchText = (usr.artisticName || usr.name || "").toLowerCase().includes(memberQuery.toLowerCase());
-                              const matchCommune = communeFilter === "all" || usr.commune === communeFilter;
-                              return matchText && matchCommune;
-                            });
-
-                            return (
-                              <div className="space-y-4 text-left">
-                                <div className="space-y-1">
-                                  <h3 className="text-sm font-display font-black text-white uppercase tracking-widest flex items-center gap-2">
-                                    <span>👥</span> RETROUVER UN TALENT CERTIFIÉ
-                                  </h3>
-                                  <p className="text-[11px] text-zinc-400">Naviguez parmi les instrumentistes, choristes, de Côte d'Ivoire.</p>
-                                </div>
-
-                                <div className="space-y-2 pt-1">
-                                  <div className="flex gap-2">
-                                    <input
-                                      type="text"
-                                      placeholder="Saisir un nom d'artiste..."
-                                      value={memberQuery}
-                                      onChange={(e) => setMemberQuery(e.target.value)}
-                                      className="flex-1 bg-black border border-zinc-800 focus:border-[#D4AF37] text-xs text-white p-2.5 rounded-xl font-mono focus:outline-none"
-                                    />
-                                    <select
-                                      value={communeFilter}
-                                      onChange={(e) => setCommuneFilter(e.target.value)}
-                                      className="bg-black border border-zinc-800 text-[10px] text-[#D4AF37] px-2 rounded-xl focus:outline-none font-bold"
-                                    >
-                                      <option value="all">Filtre Commune</option>
-                                      {IVORIAN_COMMUNES.map(c => (
-                                        <option key={c} value={c}>{c}</option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                </div>
-
-                                {/* MEMBERS LIST CONTAINER */}
-                                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                                  {matchedMembers.length === 0 ? (
-                                    <div className="text-center py-6 text-xs text-zinc-650 font-mono">
-                                      Aucun artiste matché pour le moment.
-                                    </div>
-                                  ) : (
-                                    matchedMembers.map(usr => (
-                                      <div key={usr.id} className="p-3 bg-black border border-zinc-900 rounded-xl space-y-2 hover:border-[#D4AF37]/20 transition">
-                                        <div className="flex justify-between items-start">
-                                          <div>
-                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                              <strong className="text-xs text-white uppercase block leading-none font-bold">{usr.artisticName}</strong>
-                                              {usr.kycStatus === "approved" && (
-                                                <span className="text-[6.5px] font-mono bg-[#D4AF37]/10 border border-[#D4AF37]/25 text-[#D4AF37] px-1 rounded uppercase tracking-wide">COMPTE SÉCURISÉ</span>
-                                              )}
-                                            </div>
-                                            <span className="text-[9px] font-mono text-zinc-550 block mt-1">{usr.commune} • {usr.instruments?.join(", ") || "Zouglou"}</span>
-                                          </div>
-                                          <div className="text-[8px] font-mono font-black py-0.5 px-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg">DISPONIBLE</div>
-                                        </div>
-                                        <div className="flex gap-2 pt-1">
-                                          <a
-                                            href={`tel:${usr.phone || "0700000000"}`}
-                                            onClick={() => { try { audioSynth.playValidationSuccess(); } catch(_) {} }}
-                                            className="flex-1 py-1 px-2.5 bg-zinc-900 hover:bg-[#D4AF37]/15 border border-white/5 hover:border-[#D4AF37]/35 text-zinc-300 hover:text-[#D4AF37] text-[9px] font-mono font-bold uppercase rounded-lg flex items-center justify-center gap-1.5 transition"
-                                          >
-                                            <span>📞</span> TELEPHONE
-                                          </a>
-                                          <button
-                                            onClick={() => {
-                                              addToTerminal(`[MESSAGERIE] Connexion établie pour envoyer un message à ${usr.artisticName}`);
-                                              alert(`✉️ Afrigombo Liaison : Envoyez un message ou contrat instantané d'or à ${usr.artisticName} !`);
-                                              try { audioSynth.playValidationSuccess(); } catch(_) {}
-                                            }}
-                                            className="flex-1 py-1 px-2.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black text-[9px] font-mono font-black uppercase rounded-lg flex items-center justify-center gap-1.5 transition border border-[#D4AF37]/20"
-                                          >
-                                            <span>✉</span> S'ALLIER
-                                          </button>
-                                        </div>
-                                      </div>
-                                    ))
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })()}
 
                           {/* MODAL 2: VÉRIFIER GOMBO ID */}
                           {activeQuickActionModal === "verify_gombo_id" && (
@@ -3224,6 +2955,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         </div>
                       </div>
                     )}
+                  </div>
 
                     {/* CARTE HÉRO PRINCIPALE PREMIUM */}
                     <div className="relative overflow-hidden rounded-3xl bg-zinc-950 border border-[#D4AF37]/25 p-5 sm:p-7 shadow-xl h-[280px] sm:h-auto flex flex-col justify-between">
@@ -5010,16 +4742,18 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               })()}
 
               {activeMenu === "user_settings" && (() => {
-                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
-                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
                 return (
                   <SettingsModal 
                     isOpen={true} 
                     onClose={() => setActiveMenu("user_terrain")}
-                    darkMode={true}
-                    setDarkMode={() => {}}
-                    themeMode="dark-gold"
-                    setThemeMode={() => {}}
+                    darkMode={darkMode}
+                    setDarkMode={setDarkMode}
+                    themeMode={themeMode}
+                    setThemeMode={(t) => {
+                      setThemeMode(t);
+                      if (t === "light-gold") setDarkMode(false);
+                      else setDarkMode(true);
+                    }}
                   />
                 );
               })()}

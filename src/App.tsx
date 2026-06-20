@@ -29,31 +29,32 @@ function App() {
   const [splashStep, setSplashStep] = useState(0);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("gombo_theme");
-    return saved !== "light"; // Default is dark/prestige mode
+    return saved === "dark"; // Default is light mode
   });
 
   // Load theme and run splash sequence
   useEffect(() => {
-    localStorage.setItem("gombo_theme", darkMode ? "dark" : "light");
     const root = window.document.documentElement;
     if (darkMode) {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
     }
+  }, [darkMode]);
 
-    // Trigger initial sub-percussion sounds if option is enabled
-    // Sounds trigger discretely when interaction happens or via system callback
-    const startupSoundTimer = setTimeout(() => {
-      try {
-        audioSynth.playTamTam(false);
-        setTimeout(() => {
-          audioSynth.playTamTam(true);
-          audioSynth.playKoraNote(440, 0, 0.1, 0.5); // Warm guitar note
-        }, 350);
-      } catch (e) {}
-    }, 400);
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem("gombo_theme", newDarkMode ? "dark" : "light");
+    const root = window.document.documentElement;
+    if (newDarkMode) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  };
 
+  useEffect(() => {
     // Splash steps timing
     const t0 = setTimeout(() => setSplashStep(1), 100);    // Step 1: Draw silhouette & gold notes
     const t1 = setTimeout(() => setSplashStep(2), 1200);   // Step 2: Draw AFRIGOMBO and Taglines
@@ -68,12 +69,22 @@ function App() {
     }, 3200);
 
     return () => {
-      clearTimeout(startupSoundTimer);
       clearTimeout(t0);
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [darkMode]);
+  }, []);
+
+  const setDarkModeWrapped = (val: boolean) => {
+    localStorage.setItem("gombo_theme", val ? "dark" : "light");
+    const root = window.document.documentElement;
+    if (val) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    setDarkMode(val);
+  };
 
   return (
     <div className={`h-screen overflow-hidden font-sans antialiased transition-colors duration-300 ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#1F2937]"}`}>
@@ -203,7 +214,7 @@ function App() {
       </AnimatePresence>
 
       {/* 2. MAIN APPLICATION LAYER */}
-      <AppContent darkMode={darkMode} setDarkMode={setDarkMode} />
+      <AppContent darkMode={darkMode} setDarkMode={setDarkModeWrapped} />
     </div>
   );
 }

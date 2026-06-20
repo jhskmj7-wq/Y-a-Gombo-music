@@ -93,11 +93,11 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             <div className="flex flex-col gap-1.5 sm:items-start">
               <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
                 <h2 className="text-2xl font-black tracking-tight text-gray-950 dark:text-white uppercase font-sans">
-                  {currentUserProfile.firstName} {currentUserProfile.lastName}
+                  {currentUserProfile.prenom || currentUserProfile.firstName} {currentUserProfile.nom || currentUserProfile.lastName}
                 </h2>
-                {currentUserProfile.artistName && (
+                {(currentUserProfile.nomArtistique || currentUserProfile.artistName || currentUserProfile.artisticName) && (
                   <span className="text-sm font-black text-[#D4AF37] block">
-                    ({currentUserProfile.artistName})
+                    ({currentUserProfile.nomArtistique || currentUserProfile.artistName || currentUserProfile.artisticName})
                   </span>
                 )}
                 {/* Activity Streak */}
@@ -191,17 +191,17 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             <div className="mt-4 pt-3.5 border-t border-gray-100 dark:border-gray-800/80 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
               <div className="flex items-center gap-2">
                 <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Ville:</span>
-                <span className="text-gray-800 dark:text-gray-200 font-bold">{currentUserProfile.ville || "Abidjan"}</span>
+                <span className="text-gray-800 dark:text-gray-200 font-bold">{currentUserProfile.location?.city || currentUserProfile.ville || currentUserProfile.city || "Abidjan"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Commune:</span>
-                <span className="text-gray-800 dark:text-gray-200 font-bold">{currentUserProfile.commune || "Cocody"}</span>
+                <span className="text-gray-800 dark:text-gray-200 font-bold">{currentUserProfile.location?.district || currentUserProfile.commune || "Cocody"}</span>
               </div>
               <div className="flex items-center gap-2 sm:col-span-2">
                 <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Quartier / Adresse:</span>
                 <span className="text-gray-800 dark:text-gray-200 font-bold truncate flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                  {currentUserProfile.quartier || "Quartier non renseigné (à configurer)"}
+                  {currentUserProfile.location?.district || currentUserProfile.quartier || "Quartier non renseigné (à configurer)"}
                 </span>
               </div>
             </div>
@@ -257,8 +257,8 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             Spécialités de Scène & Free Inputs
           </h3>
           <div className="flex flex-wrap gap-2">
-            {currentUserProfile.specialties && currentUserProfile.specialties.length > 0 ? (
-              currentUserProfile.specialties.map((spec, idx) => (
+            {(currentUserProfile.mainRole || (currentUserProfile.specialties && currentUserProfile.specialties.length > 0)) ? (
+              [currentUserProfile.mainRole, ...(currentUserProfile.specialties || [])].filter(Boolean).map((spec, idx) => (
                 <span 
                   key={idx}
                   className="px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl text-xs font-extrabold shadow-2xs"
@@ -279,8 +279,8 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             Styles & Courants Musicaux
           </h3>
           <div className="flex flex-wrap gap-2">
-            {currentUserProfile.musicGenres && currentUserProfile.musicGenres.length > 0 ? (
-              currentUserProfile.musicGenres.map((gen, idx) => (
+            {(currentUserProfile.genres && currentUserProfile.genres.length > 0) || (currentUserProfile.musicGenres && currentUserProfile.musicGenres.length > 0) ? (
+              [...(currentUserProfile.genres || []), ...(currentUserProfile.musicGenres || [])].map((gen, idx) => (
                 <span 
                   key={idx}
                   className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-extrabold shadow-2xs"

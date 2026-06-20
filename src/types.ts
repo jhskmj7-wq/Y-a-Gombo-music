@@ -19,6 +19,12 @@ export type AdminMenu =
 export type UserRole = "client" | "musicien" | "admin" | string;
 export type PaymentProvider = "orange" | "moov" | "wave" | string;
 
+export interface UserLocation {
+  country?: string;
+  city?: string;
+  district?: string;
+}
+
 export interface UserPerformance {
   level?: number;
   score?: number; // 0 - 100
@@ -42,6 +48,7 @@ export interface User {
   name?: string;
   email?: string;
   artisticName?: string;
+  location?: UserLocation;
   commune?: string;
   avatarUrl?: string;
   photoURL?: string; // Support photoURL alias

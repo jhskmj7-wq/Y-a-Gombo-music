@@ -24,6 +24,99 @@ class AudioSynthesizer {
     return localStorage.getItem("afrigombo_sounds") !== "false";
   }
 
+  private ambientTimer: any = null;
+
+  public startAmbientLoop() {
+    if (!this.isSoundEnabled()) return;
+    this.init();
+    if (!this.ctx) return;
+    if (this.ambientTimer) return; // Already running
+
+    const playCycle = () => {
+      if (!this.ctx) return;
+      try {
+        // Pentatonic scale for ambient harmony
+        const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; // C4, D4, E4, G4, A4, C5
+        
+        // 1. Play a soft "Piano" note
+        const freq = scale[Math.floor(Math.random() * scale.length)];
+        this.playSoftPiano(freq, 0.05, 3.0);
+
+        // 2. Play a "Sax/Wind" texture occasionally
+        if (Math.random() > 0.7) {
+          const windFreq = scale[Math.floor(Math.random() * scale.length)] / 2;
+          this.playSoftWind(windFreq, 0.03, 4.0);
+        }
+
+        // Schedule next note
+        const nextTime = 1500 + Math.random() * 3000;
+        this.ambientTimer = setTimeout(playCycle, nextTime);
+      } catch (e) {
+        console.warn("Ambient loop error", e);
+      }
+    };
+
+    playCycle();
+  }
+
+  public stopAmbientLoop() {
+    if (this.ambientTimer) {
+      clearTimeout(this.ambientTimer);
+      this.ambientTimer = null;
+    }
+  }
+
+  private playSoftPiano(freq: number, volume: number, duration: number) {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1000, this.ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + duration);
+
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + duration);
+  }
+
+  private playSoftWind(freq: number, volume: number, duration: number) {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    // Vibrato
+    osc.frequency.setTargetAtTime(freq + 2, this.ctx.currentTime + 0.5, 0.5);
+
+    filter.type = "lowpass";
+    filter.frequency.value = 800;
+
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 1.5);
+    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + duration);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + duration);
+  }
+
   /**
    * Synthesize a discrete, deep wooden African Tam-Tam golpe
    * Uses low-mid frequencies with exponential fast pitch sweep for authentic feel

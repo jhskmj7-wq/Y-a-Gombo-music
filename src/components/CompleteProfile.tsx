@@ -65,8 +65,14 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
   const [dateNaissance, setDateNaissance] = useState("");
   const [country, setCountry] = useState("Côte d'Ivoire");
   const [city, setCity] = useState("Abidjan");
+  const [district, setDistrict] = useState(""); // New field: Quartier
   const [telephone, setTelephone] = useState("");
   const [bio, setBio] = useState("");
+  
+  // Manual "Other" values
+  const [otherCity, setOtherCity] = useState("");
+  const [otherMainRole, setOtherMainRole] = useState("");
+  const [otherGenre, setOtherGenre] = useState("");
 
   // STEP 2 STATES
   const [mainRole, setMainRole] = useState("Artiste");
@@ -91,6 +97,20 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Initialize fields if they exist in user profile
+  useEffect(() => {
+    // Start ambient music loop on mount
+    try {
+      audioSynth.startAmbientLoop();
+    } catch (_) {}
+
+    return () => {
+      // Stop ambient music loop on unmount
+      try {
+        audioSynth.stopAmbientLoop();
+      } catch (_) {}
+    };
+  }, []);
+
   useEffect(() => {
     if (currentUserProfile) {
       if (currentUserProfile.prenom) setPrenom(currentUserProfile.prenom);
@@ -263,32 +283,41 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
     setLoading(true);
     setErrorMSG("");
 
+    const finalMainRole = mainRole === "Autre" ? otherMainRole : mainRole;
+    const finalGenres = genres.map(g => g === "Autre" ? otherGenre : g).filter(g => g.trim() !== "");
+    const finalCity = city === "" || !CIV_CITIES.includes(city) ? otherCity : city;
+
     const updates: Partial<UserProfile> = {
-      // Direct fields requested in section 8
+      // New structure requested
       prenom: prenom.trim(),
       nom: nom.trim(),
       nomArtistique: nomArtistique.trim() || `${prenom.trim()} ${nom.trim()}`,
       photoURL: avatarUrl,
       telephone: telephone.trim(),
-      country: country.trim(),
-      city: city.trim(),
+      location: {
+        country: country.trim(),
+        city: finalCity.trim(),
+        district: district.trim()
+      },
       bio: bio.trim(),
-      mainRole: mainRole,
+      mainRole: finalMainRole,
       secondaryRoles: secondaryRoles,
-      genres: genres,
+      genres: finalGenres,
       collaborations: collaborations,
       
-      // Legacy UI support fields for perfect compatibility
+      // Compatibility fields
       firstName: prenom.trim(),
       lastName: nom.trim(),
       displayName: nomArtistique.trim() || `${prenom.trim()} ${nom.trim()}`,
       artisticName: nomArtistique.trim() || `${prenom.trim()} ${nom.trim()}`,
       phone: telephone.trim(),
-      commune: city.trim(),
-      ville: city.trim(),
+      commune: district.trim() || finalCity.trim(),
+      ville: finalCity.trim(),
+      country: country.trim(),
+      city: finalCity.trim(),
       avatarUrl: avatarUrl,
-      role: mainRole,
-      specialties: [mainRole, ...secondaryRoles],
+      role: finalMainRole,
+      specialties: [finalMainRole, ...secondaryRoles],
 
       isProfileComplete: true,
       updatedAt: new Date().toISOString()
@@ -372,11 +401,11 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
   };
 
   return (
-    <div className="w-full h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden touch-pan-y [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [-webkit-overflow-scrolling:touch] max-w-xl mx-auto px-4 py-8 select-none" id="onboarding-completion-root">
+    <div className="w-full h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden touch-pan-y [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [-webkit-overflow-scrolling:touch] max-w-xl mx-auto px-4 py-8 select-none box-border" id="onboarding-completion-root" style={{ wordBreak: 'break-word' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-[#050505] border border-[#D4AF37]/25 rounded-[2rem] p-6 md:p-8 shadow-[0_0_50px_rgba(212,175,55,0.05)] relative text-left flex flex-col min-h-max pb-[140px]"
+        className="bg-[#050505] border border-[#D4AF37]/25 rounded-[2rem] p-6 md:p-8 shadow-[0_0_50px_rgba(212,175,55,0.05)] relative text-left flex flex-col min-h-max pb-[140px] w-full max-w-full"
       >
         {/* Animated Gold Aura Background */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
@@ -559,7 +588,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                 <div>
                   <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
                     <MapPin className="w-3 h-3 text-[#D4AF37]" />
-                    <span>Ville d'Habitation *</span>
+                    <span>Ville / Commune *</span>
                   </label>
                   <select
                     value={CIV_CITIES.includes(city) ? city : "Autre"}
@@ -574,16 +603,44 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
-                  {!CIV_CITIES.includes(city) && (
-                    <input
-                      type="text"
-                      placeholder="Saisissez votre commune/ville..."
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white placeholder-zinc-700 font-bold focus:outline-none mt-1"
-                    />
-                  )}
+                  
+                  <AnimatePresence>
+                    {(city === "" || !CIV_CITIES.includes(city)) && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: "auto", marginTop: 4 }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="overflow-hidden"
+                      >
+                        <input
+                          type="text"
+                          placeholder="✏ Entrez votre ville manuellement..."
+                          value={otherCity}
+                          onChange={(e) => {
+                            setOtherCity(e.target.value);
+                            setCity(e.target.value);
+                          }}
+                          className="w-full px-4 py-3 bg-zinc-900/50 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-xs text-white placeholder-zinc-600 font-bold focus:outline-none"
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-[#D4AF37]" />
+                  <span>Quartier / District (Facultatif)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Riviera Palmeraie, Marcory Zone 4..."
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white placeholder-zinc-700 font-bold focus:outline-none"
+                />
               </div>
 
               <div>
@@ -687,6 +744,26 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     </button>
                   ))}
                 </div>
+
+                <AnimatePresence>
+                  {mainRole === "Autre" && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, height: 0 }}
+                      animate={{ opacity: 1, scale: 1, height: "auto" }}
+                      exit={{ opacity: 0, scale: 0.95, height: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden mt-2"
+                    >
+                      <input
+                        type="text"
+                        placeholder="✏ Entrez votre rôle (ex: Ingénieur son, Manager...)"
+                        value={otherMainRole}
+                        onChange={(e) => setOtherMainRole(e.target.value)}
+                        className="w-full px-4 py-3 bg-zinc-900/50 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-xs text-white placeholder-zinc-600 font-bold focus:outline-none"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* SECONDARY ROLES: Multi choice select */}
@@ -790,6 +867,26 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     );
                   })}
                 </div>
+
+                <AnimatePresence>
+                  {genres.includes("Autre") && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: "auto" }}
+                      exit={{ opacity: 0, y: -10, height: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden mt-2"
+                    >
+                      <input
+                        type="text"
+                        placeholder="✏ Entrez votre style (ex: Afro-fusion, Drill...)"
+                        value={otherGenre}
+                        onChange={(e) => setOtherGenre(e.target.value)}
+                        className="w-full px-4 py-3 bg-zinc-900/50 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-xs text-white placeholder-zinc-600 font-bold focus:outline-none"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <div className="flex gap-4 pt-4">
@@ -971,7 +1068,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                           className="px-3.5 py-2 bg-zinc-950 border border-zinc-900 text-zinc-300 hover:text-white font-bold text-[9.5px] rounded-xl hover:bg-zinc-900 uppercase flex items-center gap-1 cursor-pointer border-zinc-900"
                         >
                           <Camera className="w-3.5 h-3.5 text-[#D4AF37]" />
-                          <span>Prendre selfie</span>
+                          <span>Enregistrer</span>
                         </button>
 
                         <label className="px-3.5 py-2 bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/20 font-bold text-[9.5px] rounded-xl uppercase flex items-center gap-1 cursor-pointer">
@@ -1017,10 +1114,10 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                 <p className="font-sans font-black text-[#D4AF37] uppercase tracking-wider mb-1">Résumé de signature :</p>
                 <p>👤 <strong>Nom Showbiz :</strong> {nomArtistique || `${prenom} ${nom}`}</p>
                 <p>📞 <strong>Téléphone certifié :</strong> {telephone}</p>
-                <p>📍 <strong>Localité d'action :</strong> {city}, {country}</p>
-                <p>👑 <strong>Rôle principal :</strong> {mainRole}</p>
+                <p>📍 <strong>Localité d'action :</strong> {district ? `${district}, ` : ""}{city === "" || !CIV_CITIES.includes(city) ? otherCity : city}, {country}</p>
+                <p>👑 <strong>Rôle principal :</strong> {mainRole === "Autre" ? otherMainRole : mainRole}</p>
                 <p>🎧 <strong>Rôles secondaires :</strong> {secondaryRoles.length > 0 ? secondaryRoles.join(", ") : "Aucun"}</p>
-                <p>🎵 <strong>Styles :</strong> {genres.join(", ")}</p>
+                <p>🎵 <strong>Styles :</strong> {genres.map(g => g === "Autre" ? otherGenre : g).join(", ")}</p>
                 <p>🤝 <strong>Je recherche :</strong> {collaborations.join(", ")}</p>
               </div>
 
