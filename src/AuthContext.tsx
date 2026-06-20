@@ -15,6 +15,20 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
 }
 
+// --- UTILS ---
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (key: string, value: any) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) return;
+      seen.add(value);
+    }
+    return value;
+  };
+};
+
+const safeStringify = (obj: any) => JSON.stringify(obj, getCircularReplacer());
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -129,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             createdAt: new Date().toISOString()
           };
           console.log("💾 [AuthContext] Built default initial profile:", initialProfile);
-          localStorage.setItem("gombo_active_profile", JSON.stringify(initialProfile));
+          localStorage.setItem("gombo_active_profile", safeStringify(initialProfile));
         }
 
         // Make the profile active and stop the loading spinner instantly
@@ -172,7 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Sync backend updates to local state
             if (uProfile) {
               setProfile(uProfile);
-              localStorage.setItem("gombo_active_profile", JSON.stringify(uProfile));
+              localStorage.setItem("gombo_active_profile", safeStringify(uProfile));
             }
           } catch (syncErr) {
             console.warn("⚠️ Background profile sync got non-fatal error:", syncErr);
@@ -184,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (updatedProfile) {
               console.log("⚡ [AuthContext Live Sync] Profile updated live from Firestore:", updatedProfile);
               setProfile(updatedProfile);
-              localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile));
+              localStorage.setItem("gombo_active_profile", safeStringify(updatedProfile));
             }
           });
         };

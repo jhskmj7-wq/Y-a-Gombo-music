@@ -59,9 +59,10 @@ function App() {
     const t0 = setTimeout(() => setSplashStep(1), 100);    // Step 1: Draw silhouette & gold notes
     const t1 = setTimeout(() => setSplashStep(2), 1200);   // Step 2: Draw AFRIGOMBO and Taglines
     const t2 = setTimeout(() => {
-      // Small success sound before entering
+      // Small success sound and start ambient atmosphere before entering
       try {
         audioSynth.playKoraNote(523.25, 0, 0.12, 0.6); // High pitch d'or
+        audioSynth.startAmbientLoop();
       } catch (err) {
         console.warn("Audio Context startup play blocked or unsupported:", err);
       }

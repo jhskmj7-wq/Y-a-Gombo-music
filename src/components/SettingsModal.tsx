@@ -8,6 +8,7 @@ import {
 import { useLanguage, Language } from "../LanguageContext";
 import { useAuth } from "../AuthContext";
 import { gomboDB } from "../firebase";
+import { audioSynth } from "../lib/audio";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ export default function SettingsModal({
   const [audioVolume, setAudioVolume] = useState(() => parseInt(localStorage.getItem("gombo_pref_volume") || "80"));
   const [enableSoundAlerts, setEnableSoundAlerts] = useState(() => localStorage.getItem("gombo_pref_alerts") !== "false");
   const [enableUiSounds, setEnableUiSounds] = useState(() => localStorage.getItem("gombo_pref_ui_sounds") !== "false");
+  const [enableAmbientMusic, setEnableAmbientMusic] = useState(() => localStorage.getItem("gombo_pref_ambient_music") !== "false");
 
   // Privacy states
   const [publicProfile, setPublicProfile] = useState(() => localStorage.getItem("gombo_pref_public_profile") !== "false");
@@ -101,6 +103,7 @@ export default function SettingsModal({
     localStorage.setItem("gombo_pref_volume", audioVolume.toString());
     localStorage.setItem("gombo_pref_alerts", enableSoundAlerts.toString());
     localStorage.setItem("gombo_pref_ui_sounds", enableUiSounds.toString());
+    localStorage.setItem("gombo_pref_ambient_music", enableAmbientMusic.toString());
     
     // Privacy
     localStorage.setItem("gombo_pref_public_profile", publicProfile.toString());
@@ -108,6 +111,13 @@ export default function SettingsModal({
     
     // Account
     localStorage.setItem("gombo_pref_newsletter", receiveNewsletter.toString());
+
+    // Update ambient loop immediately
+    if (enableAmbientMusic) {
+      audioSynth.startAmbientLoop();
+    } else {
+      audioSynth.stopAmbientLoop();
+    }
 
     setIsSaving(true);
     // Real persistence if profile exists
@@ -467,6 +477,21 @@ export default function SettingsModal({
                           className="sr-only peer"
                         />
                         <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative"></div>
+                      </label>
+
+                      <label className="flex items-center justify-between cursor-pointer group">
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-bold text-gray-800 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
+                            🎷 Atmosphère Musicale (Live)
+                          </span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={enableAmbientMusic}
+                          onChange={(e) => setEnableAmbientMusic(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative"></div>
                       </label>
                     </div>
                   </div>

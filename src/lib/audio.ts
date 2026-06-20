@@ -21,38 +21,104 @@ class AudioSynthesizer {
   }
 
   private isSoundEnabled(): boolean {
-    return localStorage.getItem("afrigombo_sounds") !== "false";
+    return localStorage.getItem("gombo_pref_ui_sounds") !== "false";
+  }
+
+  private isAmbientEnabled(): boolean {
+    return localStorage.getItem("gombo_pref_ambient_music") !== "false";
+  }
+
+  private getVolume(): number {
+    const vol = parseInt(localStorage.getItem("gombo_pref_volume") || "70");
+    return vol / 100;
   }
 
   private ambientTimer: any = null;
+  private atmosphereState: "idle" | "playing" = "idle";
+  private wasPlayingBeforeHide: boolean = false;
+  private beatCounter: number = 0;
+  private isListenerSetup: boolean = false;
+
+  private setupVisibilityListener() {
+    if (typeof document === "undefined" || this.isListenerSetup) return;
+    this.isListenerSetup = true;
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        if (this.atmosphereState === "playing") {
+          this.stopAmbientLoop();
+          this.wasPlayingBeforeHide = true;
+        }
+      } else {
+        if (this.wasPlayingBeforeHide) {
+          this.startAmbientLoop();
+          this.wasPlayingBeforeHide = false;
+        }
+      }
+    });
+  }
 
   public startAmbientLoop() {
-    if (!this.isSoundEnabled()) return;
+    if (!this.isAmbientEnabled()) return;
     this.init();
     if (!this.ctx) return;
-    if (this.ambientTimer) return; // Already running
+    if (this.atmosphereState === "playing") return;
+    
+    this.setupVisibilityListener();
+    this.atmosphereState = "playing";
+    this.beatCounter = 0;
 
     const playCycle = () => {
-      if (!this.ctx) return;
-      try {
-        // Pentatonic scale for ambient harmony
-        const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; // C4, D4, E4, G4, A4, C5
-        
-        // 1. Play a soft "Piano" note
-        const freq = scale[Math.floor(Math.random() * scale.length)];
-        this.playSoftPiano(freq, 0.05, 3.0);
+      if (!this.ctx || this.atmosphereState !== "playing") return;
+      if (!this.isAmbientEnabled()) {
+        this.stopAmbientLoop();
+        return;
+      }
 
-        // 2. Play a "Sax/Wind" texture occasionally
-        if (Math.random() > 0.7) {
-          const windFreq = scale[Math.floor(Math.random() * scale.length)] / 2;
-          this.playSoftWind(windFreq, 0.03, 4.0);
+      try {
+        // Pentatonic Scale (Eb Minor Pentatonic for a Jazzy/Soulful vibe)
+        const scale = [155.56, 185.00, 207.65, 233.08, 277.18, 311.13]; 
+        const masterVol = this.getVolume();
+        
+        // 1. DYNAMIC RHYTHM (8th Note Resolution for more "Life")
+        this.playDanceableBeat(this.beatCounter, masterVol);
+
+        // 2. RHYTHMIC PIANO COMPING
+        if (this.beatCounter % 8 === 0 || (this.beatCounter % 8 === 3 && Math.random() > 0.5)) {
+          // Play a rhythmic chord (Comping style)
+          const velocities = [0.1, 0.08, 0.07];
+          [0, 2, 4].forEach((offset, i) => {
+            const freq = scale[offset] * 2;
+            this.playAmbientPiano(freq, velocities[i] * masterVol, 1.5);
+          });
+        } else if (this.beatCounter % 2 !== 0 && Math.random() > 0.8) {
+          // Occasional melodic stabs
+          const freq = scale[Math.floor(Math.random() * scale.length)] * 2;
+          this.playAmbientPiano(freq, 0.05 * masterVol, 0.8);
         }
 
-        // Schedule next note
-        const nextTime = 1500 + Math.random() * 3000;
+        // 3. EXPRESSIVE SAXOPHONE (Soulful phrasings)
+        // Only solo occasionally to keep it "alive" without being cluttered
+        if (this.beatCounter % 16 === 4 || (this.beatCounter % 8 === 6 && Math.random() > 0.7)) {
+          const saxIdx = Math.floor(Math.random() * scale.length);
+          const octave = Math.random() > 0.5 ? 2 : 1;
+          const saxFreq = scale[saxIdx] * octave;
+          this.playSaxophone(saxFreq, 0.08 * masterVol, 2.0);
+        }
+
+        // 4. WALKING BASSLINE
+        if (this.beatCounter % 2 === 0) {
+          const bassPattern = [0, 2, 3, 2];
+          const bassFreq = scale[bassPattern[(this.beatCounter / 2) % bassPattern.length]] / 2;
+          this.playAmbientPad(bassFreq, 0.1 * masterVol, 0.4);
+        }
+
+        this.beatCounter++;
+        
+        // Higher resolution: 250ms = 120 BPM (8th notes)
+        const nextTime = 250; 
         this.ambientTimer = setTimeout(playCycle, nextTime);
       } catch (e) {
-        console.warn("Ambient loop error", e);
+        console.warn("Atmosphere generation error", e);
       }
     };
 
@@ -60,38 +126,95 @@ class AudioSynthesizer {
   }
 
   public stopAmbientLoop() {
+    this.atmosphereState = "idle";
     if (this.ambientTimer) {
       clearTimeout(this.ambientTimer);
       this.ambientTimer = null;
     }
   }
 
-  private playSoftPiano(freq: number, volume: number, duration: number) {
+  private playAmbientPiano(freq: number, volume: number, duration: number) {
     if (!this.ctx) return;
     const osc = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
 
     osc.type = "triangle";
+    osc2.type = "sine";
     osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    osc2.frequency.setValueAtTime(freq * 2.001, this.ctx.currentTime); 
 
     filter.type = "lowpass";
-    filter.frequency.setValueAtTime(1000, this.ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + duration);
+    filter.frequency.setValueAtTime(1500, this.ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + duration);
 
     gain.gain.setValueAtTime(0, this.ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 0.1);
+    gain.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 0.05);
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
 
     osc.connect(filter);
+    osc2.connect(filter);
     filter.connect(gain);
     gain.connect(this.ctx.destination);
 
     osc.start();
+    osc2.start();
     osc.stop(this.ctx.currentTime + duration);
+    osc2.stop(this.ctx.currentTime + duration);
   }
 
-  private playSoftWind(freq: number, volume: number, duration: number) {
+  private playSaxophone(freq: number, volume: number, duration: number) {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const noise = this.ctx.createBufferSource();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    const lfo = this.ctx.createOscillator();
+    const lfoGain = this.ctx.createGain();
+
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+    // Warmth & Breath
+    const bufferSize = this.ctx.sampleRate * 2;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    noise.buffer = buffer;
+    noise.loop = true;
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.value = 0.005;
+
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1000, this.ctx.currentTime);
+    filter.Q.value = 8;
+
+    lfo.type = "sine";
+    lfo.frequency.value = 4.8;
+    lfoGain.gain.value = 4;
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 1.5);
+    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + duration);
+
+    osc.connect(filter);
+    noise.connect(noiseGain);
+    noiseGain.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    lfo.start();
+    osc.start();
+    noise.start();
+    osc.stop(this.ctx.currentTime + duration);
+    lfo.stop(this.ctx.currentTime + duration);
+    noise.stop(this.ctx.currentTime + duration);
+  }
+
+  private playAmbientPad(freq: number, volume: number, duration: number) {
     if (!this.ctx) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -99,14 +222,12 @@ class AudioSynthesizer {
 
     osc.type = "sine";
     osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-    // Vibrato
-    osc.frequency.setTargetAtTime(freq + 2, this.ctx.currentTime + 0.5, 0.5);
-
+    
     filter.type = "lowpass";
-    filter.frequency.value = 800;
+    filter.frequency.value = 300;
 
     gain.gain.setValueAtTime(0, this.ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 1.5);
+    gain.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 3.0);
     gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + duration);
 
     osc.connect(filter);
@@ -117,23 +238,87 @@ class AudioSynthesizer {
     osc.stop(this.ctx.currentTime + duration);
   }
 
-  /**
-   * Synthesize a discrete, deep wooden African Tam-Tam golpe
-   * Uses low-mid frequencies with exponential fast pitch sweep for authentic feel
-   */
+  private playDanceableBeat(tick: number, masterVol: number) {
+    if (!this.ctx) return;
+
+    // 1. KICK (On the 1 and 3 - relative to 4/4 time in 8th notes)
+    if (tick % 4 === 0) {
+      const kickOsc = this.ctx.createOscillator();
+      const kickGain = this.ctx.createGain();
+      kickOsc.frequency.setValueAtTime(65, this.ctx.currentTime);
+      kickOsc.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+      kickGain.gain.setValueAtTime(0.12 * masterVol, this.ctx.currentTime);
+      kickGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+      kickOsc.connect(kickGain);
+      kickGain.connect(this.ctx.destination);
+      kickOsc.start();
+      kickOsc.stop(this.ctx.currentTime + 0.15);
+    }
+
+    // 2. SNARE / RIM (On the 2 and 4)
+    if (tick % 8 === 4) {
+      const snareOsc = this.ctx.createOscillator();
+      const snareGain = this.ctx.createGain();
+      snareOsc.type = "triangle";
+      snareOsc.frequency.setValueAtTime(180, this.ctx.currentTime);
+      snareGain.gain.setValueAtTime(0.08 * masterVol, this.ctx.currentTime);
+      snareGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+      snareOsc.connect(snareGain);
+      snareGain.connect(this.ctx.destination);
+      snareOsc.start();
+      snareOsc.stop(this.ctx.currentTime + 0.1);
+    }
+
+    // 3. RIMSHOT / WOODBLOCK (Syncopated "Jazz" hits)
+    if ((tick % 8 === 3 && Math.random() > 0.4) || tick % 8 === 7) {
+      const rimOsc = this.ctx.createOscillator();
+      const rimGain = this.ctx.createGain();
+      rimOsc.type = "sine";
+      rimOsc.frequency.setValueAtTime(1200, this.ctx.currentTime);
+      rimOsc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.05);
+      rimGain.gain.setValueAtTime(0.03 * masterVol, this.ctx.currentTime);
+      rimGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+      rimOsc.connect(rimGain);
+      rimGain.connect(this.ctx.destination);
+      rimOsc.start();
+      rimOsc.stop(this.ctx.currentTime + 0.05);
+    }
+
+    // 4. HI-HAT (Steady heartbeat with slight swing feel)
+    const hihatVol = tick % 2 === 0 ? 0.02 : 0.01;
+    const bufferSize = this.ctx.sampleRate * 0.04;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = "highpass";
+    filter.frequency.value = 10000;
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(hihatVol * masterVol, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+    
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    noise.start();
+  }
+
   public playTamTam(isHigh = false) {
     if (!this.isSoundEnabled()) return;
     try {
       this.init();
       if (!this.ctx) return;
 
+      const masterVol = this.getVolume();
       const osc = this.ctx.createOscillator();
       const gainNode = this.ctx.createGain();
 
       osc.connect(gainNode);
       gainNode.connect(this.ctx.destination);
 
-      // Pitch sweep settings
       const startFreq = isHigh ? 350 : 180;
       const endFreq = isHigh ? 120 : 65;
       const duration = isHigh ? 0.15 : 0.25;
@@ -142,23 +327,21 @@ class AudioSynthesizer {
       osc.frequency.setValueAtTime(startFreq, this.ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(endFreq, this.ctx.currentTime + duration);
 
-      // Exponential gain decay (the golpe hit feeling)
-      gainNode.gain.setValueAtTime(0.4, this.ctx.currentTime);
+      gainNode.gain.setValueAtTime(0.4 * masterVol, this.ctx.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
 
       osc.start();
       osc.stop(this.ctx.currentTime + duration);
 
-      // Brief high-mid punchy noise accent if deep drum
       if (!isHigh) {
-        this.playDrumAcc();
+        this.playDrumAcc(masterVol);
       }
     } catch (e) {
       console.warn("Tam-Tam play exception", e);
     }
   }
 
-  private playDrumAcc() {
+  private playDrumAcc(masterVol: number) {
     if (!this.ctx) return;
     try {
       const noiseBuffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.03, this.ctx.sampleRate);
@@ -174,7 +357,7 @@ class AudioSynthesizer {
       filter.frequency.value = 800;
 
       const noiseGain = this.ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+      noiseGain.gain.setValueAtTime(0.08 * masterVol, this.ctx.currentTime);
       noiseGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
 
       whiteNoise.connect(filter);
@@ -185,10 +368,6 @@ class AudioSynthesizer {
     } catch (e) {}
   }
 
-  /**
-   * Synthesize a single clear glass-like string pluck represent of historical Kora harp.
-   * Utilizes triangle waveform with fast envelope, high pass filter, and slight delay
-   */
   public playKoraNote(freq: number, delayMs = 0, volume = 0.25, duration = 0.6) {
     if (!this.isSoundEnabled()) return;
     setTimeout(() => {
@@ -196,6 +375,7 @@ class AudioSynthesizer {
         this.init();
         if (!this.ctx) return;
 
+        const masterVol = this.getVolume();
         const osc1 = this.ctx.createOscillator();
         const osc2 = this.ctx.createOscillator();
         const gainNode = this.ctx.createGain();
@@ -206,18 +386,16 @@ class AudioSynthesizer {
         filter.connect(gainNode);
         gainNode.connect(this.ctx.destination);
 
-        // Standard string pluck spectrum combining Triangle & Sine
         osc1.type = "triangle";
         osc1.frequency.setValueAtTime(freq, this.ctx.currentTime);
 
         osc2.type = "sine";
-        osc2.frequency.setValueAtTime(freq * 2, this.ctx.currentTime); // Second harmonic feedback
+        osc2.frequency.setValueAtTime(freq * 2, this.ctx.currentTime);
 
         filter.type = "highpass";
         filter.frequency.value = 150;
 
-        // Pluck envelope: zero attack, rapid decay
-        gainNode.gain.setValueAtTime(volume, this.ctx.currentTime);
+        gainNode.gain.setValueAtTime(volume * masterVol, this.ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
 
         osc1.start();

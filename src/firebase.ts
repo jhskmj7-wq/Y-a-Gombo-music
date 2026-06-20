@@ -534,7 +534,7 @@ export async function ensureAfriIdAndSync(profile: UserProfile): Promise<UserPro
         const idx = users.findIndex(u => u.uid === profile.uid);
         if (idx >= 0) {
           users[idx] = { ...users[idx], ...updated };
-          localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+          localStorage.setItem(LOCAL_USERS_KEY, safeStringify(users));
         }
 
         if (updated.afriId) {
@@ -563,7 +563,7 @@ export async function ensureAfriIdAndSync(profile: UserProfile): Promise<UserPro
             createdAt: updated.createdAt || new Date().toISOString(),
             updatedAt: new Date().toISOString()
           };
-          localStorage.setItem("afri_ids", JSON.stringify(afriUsers));
+          localStorage.setItem("afri_ids", safeStringify(afriUsers));
         }
       }
     } catch (err) {
@@ -1645,6 +1645,20 @@ export const gomboAuth = {
 // ==========================================
 // --- Unified GomboDB Storage Layer ---
 // ==========================================
+// --- UTILS ---
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (key: string, value: any) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) return;
+      seen.add(value);
+    }
+    return value;
+  };
+};
+
+const safeStringify = (obj: any) => JSON.stringify(obj, getCircularReplacer());
+
 export const gomboDB = {
   // PENDING SIGN-UP TRACKER
   getPendingSignUpProfile(): UserProfile | null {
@@ -1732,7 +1746,7 @@ export const gomboDB = {
     } else {
       users.push({ uid, ...profile } as UserProfile);
     }
-    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+    localStorage.setItem(LOCAL_USERS_KEY, safeStringify(users));
 
     if (afriIdLocal) {
       const afriUsers = JSON.parse(localStorage.getItem("afri_ids") || "{}");
@@ -1751,7 +1765,7 @@ export const gomboDB = {
           
           afriUpdates.updatedAt = new Date().toISOString();
           afriUsers[afriIdLocal] = { ...afriUsers[afriIdLocal], ...afriUpdates };
-          localStorage.setItem("afri_ids", JSON.stringify(afriUsers));
+          localStorage.setItem("afri_ids", safeStringify(afriUsers));
       }
     }
 
@@ -2278,7 +2292,7 @@ export const gomboDB = {
           createdAt: new Date(Date.now() - 3600000 * 12).toISOString()
         }
       ];
-      localStorage.setItem("gombo_social_posts", JSON.stringify(initialPosts));
+      localStorage.setItem("gombo_social_posts", safeStringify(initialPosts));
     }
     return JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
   },
@@ -2842,7 +2856,7 @@ export const gomboDB = {
 
     const activities: ActivityFeedEntry[] = JSON.parse(localStorage.getItem(LOCAL_ACTIVITY_FEED_KEY) || "[]");
     activities.unshift(newActivity);
-    localStorage.setItem(LOCAL_ACTIVITY_FEED_KEY, JSON.stringify(activities));
+    localStorage.setItem(LOCAL_ACTIVITY_FEED_KEY, safeStringify(activities));
     triggerStorageEvent();
     window.dispatchEvent(new CustomEvent("gomboActivityChange", { detail: activities }));
     return newActivity;

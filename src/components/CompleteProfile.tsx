@@ -103,13 +103,6 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
     try {
       audioSynth.startAmbientLoop();
     } catch (_) {}
-
-    return () => {
-      // Stop ambient music loop on unmount
-      try {
-        audioSynth.stopAmbientLoop();
-      } catch (_) {}
-    };
   }, []);
 
   useEffect(() => {
