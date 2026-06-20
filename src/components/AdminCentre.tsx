@@ -1529,456 +1529,351 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   return (
     <div className="flex h-screen bg-[#0B0B0B] text-[#F5F5F5] font-sans antialiased overflow-hidden">
       
-      {/* BACKDROP FOR SLIDING SIDEBAR */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 transition-opacity duration-300 cursor-pointer pointer-events-auto"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      {/* BACKDROP AND SLIDING SIDEBAR WITH ANIMATIONS */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <>
+            {/* Backdrop with elegant fade */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 cursor-pointer pointer-events-auto"
+              onClick={() => setIsSidebarOpen(false)}
+            />
 
-      <aside 
-        className={`fixed inset-y-0 left-0 w-80 bg-[#09090A] border-r border-[#D4AF37]/30 flex flex-col justify-between z-50 transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} shrink-0 h-screen overflow-y-auto pb-8`}
-        style={{ WebkitOverflowScrolling: "touch" }}
-      >
-        {/* SIDEBAR CONTAINER SCROLL */}
-        <div className="flex flex-col min-h-full justify-between">
-          
-          {/* TOP PART */}
-          <div>
-            {/* BRAND HEADER LINE */}
-            <div className="p-5 border-b border-[#D4AF37]/15 bg-black/60 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/50 flex items-center justify-center animate-pulse">
-                  <Flame className="text-[#D4AF37] w-4.5 h-4.5" />
-                </div>
+            {/* Sliding Sidebar of sovereign tools */}
+            <motion.aside 
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="fixed inset-y-0 left-0 w-80 bg-[#09090A] border-r border-[#D4AF37]/30 flex flex-col justify-between z-50 shrink-0 h-screen overflow-y-auto pb-8"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              {/* SIDEBAR CONTAINER SCROLL */}
+              <div className="flex flex-col min-h-full justify-between">
+                
+                {/* TOP PART */}
                 <div>
-                  <h2 className="text-sm font-sans font-black tracking-widest text-[#D4AF37] uppercase">
-                    ═══ AFRIGOMBO ═══
-                  </h2>
-                  <span className="text-[8px] font-mono tracking-widest text-zinc-400 block -mt-0.5">
-                    L'ELITE MUSICALE IVOIRIENNE
-                  </span>
-                </div>
-              </div>
+                  {/* BRAND HEADER LINE */}
+                  <div className="p-5 border-b border-[#D4AF37]/15 bg-black/60 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/50 flex items-center justify-center animate-pulse">
+                        <Flame className="text-[#D4AF37] w-4.5 h-4.5" />
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-sans font-black tracking-widest text-[#D4AF37] uppercase">
+                          ═══ AFRIGOMBO ═══
+                        </h2>
+                        <span className="text-[8px] font-mono tracking-widest text-zinc-400 block -mt-0.5">
+                          L'ELITE MUSICALE IVOIRIENNE
+                        </span>
+                      </div>
+                    </div>
 
-              {/* OUTLET CLOSE */}
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="p-1.5 rounded-lg border border-[#D4AF37]/30 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
-                title="Fermer le menu"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* LOGGED IN USER CARD */}
-            <div className="p-5">
-              {!currentUser ? (
-                <button
-                  onClick={() => {
-                    setIsSidebarOpen(false);
-                    setIsAuthModalOpen(true);
-                    try { audioSynth.playKoraSuccess(); } catch (err) {}
-                  }}
-                  className="w-full bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] rounded-xl p-3.5 text-center cursor-pointer font-black tracking-wider transition-all duration-200 shadow-lg flex flex-col items-center justify-center gap-1 border border-transparent"
-                >
-                  <Flame className="w-5 h-5 fill-current text-[#0B0B0B]" />
-                  <div className="text-[10px] uppercase font-bold leading-tight text-[#0B0B0B]">
-                    ACCÈS PRESTIGE ELITE
+                    {/* OUTLET CLOSE */}
+                    <button
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="p-1.5 rounded-lg border border-[#D4AF37]/35 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                      title="Fermer le menu"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                  <div className="text-[9px] uppercase font-mono font-extrabold bg-[#0B0B0B] text-[#D4AF37] px-2 py-0.5 rounded">
-                    SE CONNECTER
-                  </div>
-                </button>
-              ) : (
-                (() => {
-                  const currentArtist = profile ? {
-                    id: profile.uid,
-                    artisticName: profile.displayName || `${profile.firstName || 'Artiste'} ${profile.lastName || 'Gombo'}`.trim(),
-                    commune: profile.commune || 'Cocody',
-                    avatarUrl: profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-                    isCertified: true,
-                  } : (users.find(u => u.id === activeArtistId) || users[0]);
 
-                  return (
-                    <div className="bg-zinc-950/80 border border-[#D4AF37]/20 rounded-xl p-4 space-y-3 shadow-md">
-                      <div className="flex items-center gap-3">
-                        <div className="relative shrink-0">
-                          <div className="w-11 h-11 rounded-full border border-[#D4AF37]/60 overflow-hidden bg-[#D4AF37]/10 flex items-center justify-center font-display font-black">
-                            {currentArtist && (currentArtist.avatarUrl || (currentArtist as any).photoURL) ? (
-                              <img 
-                                src={currentArtist.avatarUrl || (currentArtist as any).photoURL} 
-                                alt={currentArtist.artisticName} 
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                              />
-                            ) : (
-                              <Music className="w-5 h-5 text-[#D4AF37]" />
+                  {/* LOGGED IN USER CARD */}
+                  <div className="p-5">
+                    {!currentUser ? (
+                      <button
+                        onClick={() => {
+                          setIsSidebarOpen(false);
+                          setIsAuthModalOpen(true);
+                          try { audioSynth.playKoraSuccess(); } catch (err) {}
+                        }}
+                        className="w-full bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] rounded-xl p-3.5 text-center cursor-pointer font-black tracking-wider transition-all duration-200 shadow-lg flex flex-col items-center justify-center gap-1 border border-transparent"
+                      >
+                        <Flame className="w-5 h-5 fill-current text-[#0B0B0B]" />
+                        <div className="text-[10px] uppercase font-bold leading-tight text-[#0B0B0B]">
+                          ACCÈS PRESTIGE ELITE
+                        </div>
+                        <div className="text-[9px] uppercase font-mono font-extrabold bg-[#0B0B0B] text-[#D4AF37] px-2 py-0.5 rounded">
+                          SE CONNECTER
+                        </div>
+                      </button>
+                    ) : (
+                      (() => {
+                        const currentArtist = profile ? {
+                          id: profile.uid,
+                          artisticName: profile.displayName || `${profile.firstName || 'Artiste'} ${profile.lastName || 'Gombo'}`.trim(),
+                          commune: profile.commune || 'Cocody',
+                          avatarUrl: profile.avatarUrl || profile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+                          isCertified: true,
+                        } : (users.find(u => u.id === activeArtistId) || users[0]);
+
+                        return (
+                          <div className="bg-zinc-950/80 border border-[#D4AF37]/20 rounded-xl p-4 space-y-3 shadow-md">
+                            <div className="flex items-center gap-3">
+                              <div className="relative shrink-0">
+                                <div className="w-11 h-11 rounded-full border border-[#D4AF37]/60 overflow-hidden bg-[#D4AF37]/10 flex items-center justify-center font-display font-black">
+                                  {currentArtist && (currentArtist.avatarUrl || (currentArtist as any).photoURL) ? (
+                                    <img 
+                                      src={currentArtist.avatarUrl || (currentArtist as any).photoURL} 
+                                      alt={currentArtist.artisticName} 
+                                      className="w-full h-full object-cover"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                  ) : (
+                                    <Music className="w-5 h-5 text-[#D4AF37]" />
+                                  )}
+                                </div>
+                                {currentArtist?.isCertified && (
+                                  <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border border-black flex items-center justify-center" title="Certifié">
+                                    <span className="text-[9px] text-white font-bold">✓</span>
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="min-w-0">
+                                <h3 className="text-xs font-sans font-black text-white leading-tight truncate">
+                                  {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
+                                </h3>
+                                <p className="text-[9px] text-[#D4AF37] font-mono uppercase tracking-wide font-bold">
+                                  {currentArtist ? currentArtist.commune : "Abidjan"}, CI
+                                </p>
+                                <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase border border-[#D4AF37]/25 font-extrabold">
+                                  👑 {lang === "nouchi" ? "Vieux Môgô" : "Artiste Élite"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* SIMULATED ACTIVE ARTIST SELECTOR */}
+                            {perspective === "user" && !profile && (
+                              <div className="space-y-1 pt-1 border-t border-[#D4AF37]/10">
+                                <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Profil Simulé :</span>
+                                <select
+                                  value={activeArtistId}
+                                  onChange={(e) => setActiveArtistId(e.target.value)}
+                                  className="w-full bg-black border border-[#D4AF37]/25 rounded px-2 py-1 text-[9.5px] text-white font-mono focus:outline-none cursor-pointer"
+                                >
+                                  {users.map(u => (
+                                    <option key={u.id} value={u.id} className="bg-black text-white">
+                                      {u.artisticName}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             )}
                           </div>
-                          {currentArtist?.isCertified && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border border-black flex items-center justify-center" title="Certifié">
-                              <span className="text-[9px] text-white font-bold">✓</span>
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="min-w-0">
-                          <h3 className="text-xs font-sans font-black text-white leading-tight truncate">
-                            {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
-                          </h3>
-                          <p className="text-[9px] text-[#D4AF37] font-mono uppercase tracking-wide font-bold">
-                            {currentArtist ? currentArtist.commune : "Abidjan"}, CI
-                          </p>
-                          <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase border border-[#D4AF37]/25 font-extrabold">
-                            👑 {lang === "nouchi" ? "Vieux Môgô" : "Artiste Élite"}
-                          </span>
-                        </div>
-                      </div>
+                        );
+                      })()
+                    )}
+                  </div>
 
-                      {/* SIMULATED ACTIVE ARTIST SELECTOR */}
-                      {perspective === "user" && !profile && (
-                        <div className="space-y-1 pt-1 border-t border-[#D4AF37]/10">
-                          <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Profil Simulé :</span>
-                          <select
-                            value={activeArtistId}
-                            onChange={(e) => setActiveArtistId(e.target.value)}
-                            className="w-full bg-black border border-[#D4AF37]/25 rounded px-2 py-1 text-[9.5px] text-white font-mono focus:outline-none cursor-pointer"
+                  {/* MAIN NAVIGATION GROUPS */}
+                  <nav className="px-4 pb-4 space-y-5">
+                    {(() => {
+                      let globalItemIndex = 0;
+
+                      const renderMenuItem = (
+                        key: string, 
+                        label: string, 
+                        icon: string, 
+                        actionOnSelect: () => void, 
+                        isInactive: boolean,
+                        customBadge?: React.ReactNode
+                      ) => {
+                        const currentIndex = globalItemIndex++;
+                        return (
+                          <motion.button
+                            key={key}
+                            initial={{ opacity: 0, x: -15 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: currentIndex * 0.03, duration: 0.2 }}
+                            type="button"
+                            onClick={() => {
+                              if (isInactive) {
+                                try { audioSynth.playTamTam(false); } catch (_) {}
+                                alert(`👑 Ce service "${label}" sera disponible lors du lancement de la version bêta publique AFRIGOMBO Elite !`);
+                              } else {
+                                actionOnSelect();
+                              }
+                            }}
+                            className={`w-full flex items-center justify-between px-3.5 py-2 text-left rounded-xl text-xs font-sans font-bold transition-all ${
+                              isInactive 
+                                ? "text-zinc-600 hover:text-zinc-400 bg-transparent cursor-pointer"
+                                : "text-zinc-300 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 cursor-pointer"
+                            }`}
                           >
-                            {users.map(u => (
-                              <option key={u.id} value={u.id} className="bg-black text-white">
-                                {u.artisticName}
-                              </option>
+                            <span className="flex items-center gap-3">
+                              <span className="text-sm shrink-0">{icon}</span>
+                              <span className={isInactive ? "opacity-75" : ""}>{label}</span>
+                            </span>
+                            {customBadge ? customBadge : (
+                              isInactive ? (
+                                <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-zinc-900 border border-zinc-800 text-[#D4AF37]/75 rounded uppercase font-black tracking-tighter">
+                                  Bientôt dispo
+                                </span>
+                              ) : null
+                            )}
+                          </motion.button>
+                        );
+                      };
+
+                      return (
+                        <div className="space-y-4">
+                          
+                          {/* SECTION: Outils rapides */}
+                          <div className="space-y-1">
+                            <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
+                              ⚡ Outils rapides
+                            </span>
+                            {renderMenuItem("menu_events", "Événements", "📅", () => {
+                              setIsEventsModalOpen(true);
+                              setIsSidebarOpen(false);
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/10 uppercase font-black">LIVE</span>)}
+                            {renderMenuItem("menu_favorites", "Favoris", "⭐", () => {}, true)}
+                            {renderMenuItem("menu_history", "Historique", "🕓", () => {}, true)}
+                            {renderMenuItem("menu_near_opports", "Opportunités proches", "📍", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_opportunities");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/10 uppercase font-black">DISPO</span>)}
+                            {renderMenuItem("menu_trends", "Tendances", "🏆", () => {}, true)}
+                            {renderMenuItem("menu_invites", "Invitations", "🎟", () => {}, true)}
+                          </div>
+
+                          {/* SEPARATOR */}
+                          <div className="border-t border-zinc-900 my-1" />
+
+                          {/* SECTION: Univers AFRI */}
+                          <div className="space-y-1">
+                            <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
+                              🌍 Univers AFRI
+                            </span>
+                            {renderMenuItem("menu_afri_id", "Afri ID", "🆔", () => {}, true)}
+                            {renderMenuItem("menu_wallet", "Wallet", "💳", () => {}, true)}
+                            {renderMenuItem("menu_afri_academy", "Afri Academy", "🎓", () => {
+                              setIsAcademyModalOpen(true);
+                              setIsSidebarOpen(false);
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-purple-500/10 text-purple-400 rounded border border-purple-500/10 uppercase font-black">PRO</span>)}
+                            {renderMenuItem("menu_delivery", "Afri Livraison", "🚚", () => {}, true)}
+                            {renderMenuItem("menu_market", "Afri Market", "🛒", () => {}, true)}
+                          </div>
+
+                          {/* SEPARATOR */}
+                          <div className="border-t border-zinc-900 my-1" />
+
+                          {/* SECTION: Centre personnel */}
+                          <div className="space-y-1">
+                            <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-400 uppercase tracking-widest block mb-1">
+                              👑 Centre personnel
+                            </span>
+                            {renderMenuItem("menu_edit_profile", "Modifier profil", "✏", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_edit_profile");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_notifications", "Notifications", "🔔", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_notifications");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_confidentiality", "Confidentialité", "🔒", () => {
+                              setPerspective("user");
+                              setActiveMenu("privacy");
+                              setIsSidebarOpen(false);
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false)}
+                            {renderMenuItem("menu_settings", "Paramètres", "⚙", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_settings");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_lang", "Langue", "🌐", () => {
+                              const nextL = lang === "fr" ? "nouchi" : "fr";
+                              setLang(nextL);
+                              try { audioSynth.playTamTam(true); } catch (e) {}
+                              addToTerminal(`[LANGUE] Passage en mode ${nextL === "nouchi" ? "Nouchi" : "Français"}`);
+                            }, false, (
+                              <span className="font-mono text-[8px] uppercase font-bold text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20 scale-90">
+                                {lang === "nouchi" ? "Nouchi 🇨🇮" : "Français 🇫🇷"}
+                              </span>
                             ))}
-                          </select>
+                          </div>
+
+                          {/* SEPARATOR */}
+                          <div className="border-t border-zinc-900 my-1" />
+
+                          {/* SECTION: Système */}
+                          <div className="space-y-1">
+                            <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
+                              🛠 Système
+                            </span>
+                            {renderMenuItem("menu_downloads", "Téléchargements", "📥", () => {}, true)}
+                            {renderMenuItem("menu_backups", "Sauvegardes", "💾", () => {}, true)}
+                            {renderMenuItem("menu_statistics", "Statistiques", "📊", () => {}, true)}
+                            
+                            {currentUser && renderMenuItem("menu_logout", "Déconnexion", "🚪", async () => {
+                              const confirmLogout = window.confirm(
+                                lang === "nouchi" 
+                                  ? "Vieux môgô, tu veux libérer la session ?" 
+                                  : "Souhaitez-vous vous déconnecter de votre session d'artiste ?"
+                              );
+                              if (confirmLogout) {
+                                try {
+                                  await logout();
+                                  setPerspective("user");
+                                  setActiveMenu("user_terrain");
+                                  setIsSidebarOpen(false);
+                                  try { audioSynth.playValidationSuccess(); } catch (err) {}
+                                } catch (err) {
+                                  console.error("Logout err", err);
+                                }
+                              }
+                            }, false, (
+                              <span className="text-[7.5px] font-mono py-0.5 px-1 bg-red-950/40 text-red-400 rounded border border-red-900/30 font-black scale-90">
+                                QUITTER
+                              </span>
+                            ))}
+                          </div>
+
                         </div>
-                      )}
-                    </div>
-                  );
-                })()
-              )}
-            </div>
-
-            {/* MAIN NAVIGATION GROUPS */}
-            <nav className="px-4 pb-4 space-y-5">
-              
-              {/* GROUP 1: ESSENTIELS */}
-              <div className="space-y-1">
-                <span className="px-3 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
-                  🌐 {lang === "nouchi" ? "Le Coin Choco" : "Essentiel Gombo"}
-                </span>
-                
-                {/* 🏠 Accueil */}
-                <button
-                  onClick={() => {
-                    setPerspective("user");
-                    setActiveMenu("user_terrain");
-                    setTerrainTab("all");
-                    setIsSidebarOpen(false);
-                    try { audioSynth.playTamTam(true); } catch (e) {}
-                  }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all ${
-                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "all"
-                      ? "bg-[#D4AF37] text-black shadow-[0_0_12px_rgba(212,175,55,0.25)]"
-                      : "text-white/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
-                  }`}
-                >
-                  <Home className="w-4 h-4 shrink-0" />
-                  <span>🏠 Accueil</span>
-                </button>
-
-                {/* 🎵 Les Vibes */}
-                <button
-                  onClick={() => {
-                    requireAuthThen(() => {
-                      setPerspective("user");
-                      setActiveMenu("user_vibes");
-                      setIsSidebarOpen(false);
-                      try { audioSynth.playValidationSuccess(); } catch (e) {}
-                    });
-                  }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all ${
-                    perspective === "user" && activeMenu === "user_vibes"
-                      ? "bg-[#D4AF37] text-black shadow-[0_0_12px_rgba(212,175,55,0.25)]"
-                      : "text-white/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
-                  }`}
-                >
-                  <Radio className="w-4 h-4 shrink-0 animate-pulse" />
-                  <span>🎵 Les Vibes</span>
-                </button>
-
-                {/* 📢 Mes Gombos */}
-                <button
-                  onClick={() => {
-                    requireAuthThen(() => {
-                      setPerspective("user");
-                      setActiveMenu("user_mes_gombos");
-                      setIsSidebarOpen(false);
-                      try { audioSynth.playValidationSuccess(); } catch (e) {}
-                    });
-                  }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all ${
-                    perspective === "user" && activeMenu === "user_mes_gombos"
-                      ? "bg-[#D4AF37] text-black shadow-[0_0_12px_rgba(212,175,55,0.25)]"
-                      : "text-white/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
-                  }`}
-                >
-                  <Briefcase className="w-4 h-4 shrink-0" />
-                  <span>📢 Mes Gombos</span>
-                </button>
-
-                {/* 👤 Mon Héritage */}
-                <button
-                  onClick={() => {
-                    requireGoogleAuthThen(() => {
-                      setPerspective("user");
-                      setActiveMenu("user_heritage");
-                      setViewingGomboIdDetail(false);
-                      setIsSidebarOpen(false);
-                      try { audioSynth.playValidationSuccess(); } catch (e) {}
-                    });
-                  }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-black uppercase tracking-wider transition-all ${
-                    perspective === "user" && activeMenu === "user_heritage" && !viewingGomboIdDetail
-                      ? "bg-[#D4AF37] text-black shadow-[0_0_12px_rgba(212,175,55,0.25)]"
-                      : "text-white/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
-                  }`}
-                >
-                  <Users className="w-4 h-4 shrink-0" />
-                  <span>👤 Mon Héritage</span>
-                </button>
-              </div>
-
-              {/* SEPARATOR */}
-              <div className="border-t border-[#D4AF37]/15 my-2" />
-
-              {/* GROUP 2: SECTEURS / METIERS */}
-              <div className="space-y-1">
-                <span className="px-3 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
-                  ⚡ {lang === "nouchi" ? "Les Bons Bails" : "Secteurs & Métiers"}
-                </span>
-
-                {/* 🎤 Showbiz */}
-                <button
-                  onClick={() => {
-                    setPerspective("user");
-                    setActiveMenu("user_terrain");
-                    setTerrainTab("musicien");
-                    setIsSidebarOpen(false);
-                    try { audioSynth.playTamTam(true); } catch (e) {}
-                  }}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-bold transition-all ${
-                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "musicien"
-                      ? "bg-[#D4AF37]/15 text-[#D4AF37] border-l-2 border-[#D4AF37]"
-                      : "text-zinc-350 hover:text-white hover:bg-[#D4AF37]/5"
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <span>🎤</span>
-                    <span>Showbiz d'Elite</span>
-                  </span>
-                  <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-yellow-400/10 text-[#D4AF37] rounded font-black border border-[#D4AF37]/20 uppercase">
-                    DIRECT 🔥
-                  </span>
-                </button>
-
-                {/* 💰 Cachets d'Or */}
-                <button
-                  onClick={() => {
-                    setPerspective("user");
-                    setActiveMenu("user_terrain");
-                    setTerrainTab("contrat");
-                    setIsSidebarOpen(false);
-                    try { audioSynth.playTamTam(true); } catch (e) {}
-                  }}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-bold transition-all ${
-                    perspective === "user" && activeMenu === "user_terrain" && terrainTab === "contrat"
-                      ? "bg-[#D4AF37]/15 text-[#D4AF37] border-l-2 border-[#D4AF37]"
-                      : "text-zinc-350 hover:text-white hover:bg-[#D4AF37]/5"
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <span>💰</span>
-                    <span>{lang === "nouchi" ? "Gros Cacheton" : "Cachets d'Or"}</span>
-                  </span>
-                  <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-emerald-400/10 text-emerald-400 rounded font-black border border-emerald-500/20 uppercase">
-                    SECURED 💎
-                  </span>
-                </button>
-
-                {/* 📅 Événements */}
-                <button
-                  onClick={() => {
-                    setIsEventsModalOpen(true);
-                    setIsSidebarOpen(false);
-                    try { audioSynth.playValidationSuccess(); } catch (e) {}
-                  }}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-bold text-zinc-350 hover:text-white hover:bg-[#D4AF37]/5 transition-all"
-                >
-                  <span className="flex items-center gap-3">
-                    <span>📅</span>
-                    <span>Événements Live</span>
-                  </span>
-                  <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-pink-500/15 text-pink-400 rounded font-black border border-pink-500/20 uppercase">
-                    VIP ⭐
-                  </span>
-                </button>
-
-                {/* 🏛️ Gombo Academy */}
-                <button
-                  onClick={() => {
-                    setIsAcademyModalOpen(true);
-                    setIsSidebarOpen(false);
-                    try { audioSynth.playValidationSuccess(); } catch (e) {}
-                  }}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 text-left rounded-lg text-xs font-sans font-bold text-zinc-350 hover:text-white hover:bg-[#D4AF37]/5 transition-all"
-                >
-                  <span className="flex items-center gap-3">
-                    <span>🏛️</span>
-                    <span>Gombo Academy</span>
-                  </span>
-                  <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/15 text-[#D4AF37] rounded font-black border border-[#D4AF37]/25 uppercase">
-                    PRO 🎓
-                  </span>
-                </button>
-              </div>
-
-              {/* SEPARATOR */}
-              <div className="border-t border-[#D4AF37]/15 my-2" />
-
-              {/* GROUP 3: PRIVILEGES SOUVERAINS (ADMIN/FOUNDER) */}
-              {(isAuthorizedAdmin || isAuthorizedSuperFounder || currentUser?.email?.toLowerCase() === "johnsylvesterh@gmail.com" || currentUser?.email?.toLowerCase() === "jhs.kmj7@gmail.com") && (
-                <div className="space-y-1">
-                  <span className="px-3 text-[8.5px] font-mono font-black text-rose-500 uppercase tracking-widest block mb-1">
-                    👑 Commandement Royal
-                  </span>
-
-                  {/* 🛡️ Centre de Commandement */}
-                  <button
-                    onClick={() => {
-                      setPerspective("admin");
-                      setActiveMenu("dashboard");
-                      setIsSidebarOpen(false);
-                      try { audioSynth.playValidationSuccess(); } catch (e) {}
-                    }}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-mono font-black uppercase tracking-wider transition-all ${
-                      perspective === "admin" && activeMenu === "dashboard"
-                        ? "bg-rose-600 text-white shadow-[0_0_12px_rgba(225,29,72,0.3)]"
-                        : "text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-[#D4AF37]/35"
-                    }`}
-                  >
-                    <ShieldCheck className="w-4 h-4 shrink-0 text-[#D4AF37]" />
-                    <span>🛡️ CENTRE DE COMMANDEMENT</span>
-                  </button>
-                </div>
-              )}
-
-              {/* SEPARATOR */}
-              <div className="border-t border-[#D4AF37]/15 my-2" />
-
-              {/* GROUP 4: REGLAGES & SYSTEME */}
-              <div className="space-y-1">
-                <span className="px-3 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
-                  ⚙️ {lang === "nouchi" ? "Le Coin Réglo" : "Système & Réglages"}
-                </span>
-
-                {/* Thème Toggle */}
-                <button
-                  onClick={() => {
-                    setDarkMode(!darkMode);
-                    try { audioSynth.playValidationSuccess(); } catch (e) {}
-                    addToTerminal(`[THÈME] Changement d'ambiance visuelle.`);
-                  }}
-                  className="w-full flex items-center justify-between px-3.5 py-2 text-left rounded-lg text-xs font-bold text-zinc-350 hover:text-white hover:bg-zinc-800 transition-all"
-                >
-                  <span className="flex items-center gap-3">
-                    <span>🌙</span>
-                    <span>{lang === "nouchi" ? "Thème Sombre" : "Contraste Thème"}</span>
-                  </span>
-                  <span className="font-mono text-[9px] uppercase font-bold text-[#D4AF37]">
-                    {darkMode ? "ON 💡" : "OFF 🌑"}
-                  </span>
-                </button>
-
-                {/* Langue Toggle */}
-                <button
-                  onClick={() => {
-                    const nextL = lang === "fr" ? "nouchi" : "fr";
-                    setLang(nextL);
-                    try { audioSynth.playTamTam(true); } catch (e) {}
-                    addToTerminal(`[LANGUE] Passage en mode ${nextL === "nouchi" ? "Nouchi" : "Français"}`);
-                  }}
-                  className="w-full flex items-center justify-between px-3.5 py-2 text-left rounded-lg text-xs font-bold text-zinc-350 hover:text-white hover:bg-zinc-800 transition-all"
-                >
-                  <span className="flex items-center gap-3">
-                    <span>🌍</span>
-                    <span>Langue</span>
-                  </span>
-                  <span className="font-mono text-[9px] uppercase font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                    {lang === "nouchi" ? "Nouchi 🇨🇮" : "Français 🇫🇷"}
-                  </span>
-                </button>
-
-                {/* Quick Diagnostics system trigger */}
-                <button
-                  onClick={() => {
-                    triggerGlobalSystemScan();
-                    setIsSidebarOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-3.5 py-2 text-left rounded-lg text-xs font-bold text-zinc-350 hover:text-white hover:bg-zinc-800 transition-all"
-                >
-                  <span className="flex items-center gap-3">
-                    <span>⚙️</span>
-                    <span>Scan Intelligent</span>
-                  </span>
-                  <span className="text-[7.5px] font-mono text-cyan-400 uppercase font-bold">READY</span>
-                </button>
-
-                {/* Déconnexion button if authenticated */}
-                {currentUser && (
-                  <button
-                    onClick={async () => {
-                      const confirmLogout = window.confirm(
-                        lang === "nouchi" 
-                          ? "Vieux môgô, tu veux libérer la session ?" 
-                          : "Souhaitez-vous vous déconnecter de votre session d'artiste ?"
                       );
-                      if (confirmLogout) {
-                        try {
-                          await logout();
-                          setPerspective("user");
-                          setActiveMenu("user_terrain");
-                          setIsSidebarOpen(false);
-                          try { audioSynth.playValidationSuccess(); } catch (err) {}
-                        } catch (err) {
-                          console.error("Logout err", err);
-                        }
-                      }
-                    }}
-                    className="w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-lg text-xs font-mono font-black uppercase tracking-wider text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer mt-1"
-                  >
-                    <span>🚪</span>
-                    <span>{lang === "nouchi" ? "LIBÉRER SESSION" : "DÉCONNEXION"}</span>
-                  </button>
-                )}
+                    })()}
+                  </nav>
+                </div>
+
+                {/* SIDEBAR FOOTER METRICS */}
+                <div className="p-5 bg-black/40 border-t border-[#D4AF37]/15 text-center space-y-1 font-mono">
+                  <p className="text-[8.5px] text-[#D4AF37] font-bold uppercase tracking-widest">
+                    AFRIGOMBO ELITE V2.0
+                  </p>
+                  <p className="text-[7.5px] text-zinc-500">
+                    Système Souverain National • Abidjan, CI
+                  </p>
+                </div>
+
               </div>
-
-            </nav>
-          </div>
-
-          {/* SIDEBAR FOOTER METRICS */}
-          <div className="p-5 bg-black/40 border-t border-[#D4AF37]/15 text-center space-y-1 font-mono">
-            <p className="text-[8.5px] text-[#D4AF37] font-bold uppercase tracking-widest">
-              AFRIGOMBO ELITE V2.0
-            </p>
-            <p className="text-[7.5px] text-zinc-500">
-              Système Souverain National • Abidjan, CI
-            </p>
-          </div>
-
-        </div>
-      </aside>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* =========================================================================
                                ZONE B : WORKSPACE CENTRAL (MIDDLE)
@@ -7651,7 +7546,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                      FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED)
          ========================================================================= */}
       {perspective === "user" && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-[425px] bg-[#050505]/95 backdrop-blur-xl border border-[#D4AF37]/30 p-2 px-3 sm:px-4 flex justify-between items-center z-40 rounded-[32px] shadow-[0_15px_35px_rgba(0,0,0,0.8)] select-none">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[425px] h-[72px] bg-[#050505]/95 backdrop-blur-xl border border-[#D4AF37]/22 p-1 px-3 sm:px-4 flex justify-between items-center z-40 rounded-[28px] shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none">
           {/* 1. ACCUEIL */}
           <button
             id="user-nav-terrain"
@@ -7659,12 +7554,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               setActiveMenu("user_terrain");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_terrain" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "user_terrain" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Home className="w-5 h-5" />
-            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Accueil</span>
+            <Home className="w-4.5 h-4.5" />
+            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Accueil</span>
           </button>
 
           {/* 2. VIBES */}
@@ -7676,12 +7571,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_vibes" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "user_vibes" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Music className="w-5 h-5" />
-            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Vibes</span>
+            <Music className="w-4.5 h-4.5" />
+            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Vibes</span>
           </button>
 
           {/* 3. PUBLIER (CENTRAL BUTTON, LARGER, NOT INDEPENDENTLY FLOATING/OVERLAPPING OVER BOUNDARY) */}
@@ -7699,7 +7594,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             <div className="w-11 h-11 flex items-center justify-center bg-gradient-to-tr from-[#D4AF37] to-[#F1C40F] text-[#050505] rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
               <Plus className="w-5 h-5 stroke-[3.5]" />
             </div>
-            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-[#F5F5F5] mt-1">Publier</span>
+            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5] mt-0.5">Publier</span>
           </button>
 
           {/* 4. MES GOMBOS */}
@@ -7711,12 +7606,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_mes_gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "user_mes_gombos" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Megaphone className="w-5 h-5" />
-            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Mes Gombos</span>
+            <Megaphone className="w-4.5 h-4.5" />
+            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Mes Gombos</span>
           </button>
 
           {/* 5. MON HÉRITAGE */}
@@ -7729,12 +7624,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_heritage" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "user_heritage" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <UserIcon className="w-5 h-5" />
-            <span className="text-[8px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Mon Héritage</span>
+            <UserIcon className="w-4.5 h-4.5" />
+            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Mon Héritage</span>
           </button>
         </div>
       )}

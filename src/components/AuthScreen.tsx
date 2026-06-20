@@ -534,13 +534,32 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
               <button
                 type="button"
                 disabled={true}
-                className="w-full h-14 relative flex items-center justify-center gap-3 bg-[#121214]/60 border border-zinc-800/80 text-zinc-500 rounded-2xl font-bold text-xs uppercase tracking-widest opacity-50 cursor-not-allowed"
+                className="w-full h-16 relative flex flex-col items-center justify-center bg-[#121214]/60 border border-zinc-800/80 text-zinc-400 rounded-2xl font-bold uppercase cursor-not-allowed opacity-[0.55] transition-all"
               >
-                <div className="w-5 h-5 rounded bg-zinc-800 flex items-center justify-center border border-zinc-700 shrink-0">
-                  <span className="font-serif font-bold text-sm text-zinc-500">A</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded bg-zinc-800 flex items-center justify-center border border-zinc-700 shrink-0">
+                    <span className="font-serif font-bold text-xs text-zinc-400">A</span>
+                  </div>
+                  <span className="text-xs tracking-widest font-black text-zinc-300">Continuer avec AfriID</span>
                 </div>
-                <span>Continuer avec AfriID</span>
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider bg-zinc-800 text-[#D4AF37] border border-[#D4AF37]/20 rounded font-mono">
+                <span className="text-[7.5px] font-black uppercase text-[#D4AF37] tracking-widest mt-0.5 font-mono">
+                  Bientôt disponible
+                </span>
+              </button>
+
+              {/* Facebook Button - Retained but disabled with 'Bientôt disponible' */}
+              <button
+                type="button"
+                disabled={true}
+                className="w-full h-16 relative flex flex-col items-center justify-center bg-[#121214]/60 border border-zinc-800/80 text-zinc-400 rounded-2xl font-bold uppercase cursor-not-allowed opacity-[0.55] transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 fill-current shrink-0 text-zinc-400" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  <span className="text-xs tracking-widest font-black text-zinc-300">Continuer avec Facebook</span>
+                </div>
+                <span className="text-[7.5px] font-black uppercase text-[#D4AF37] tracking-widest mt-0.5 font-mono">
                   Bientôt disponible
                 </span>
               </button>
