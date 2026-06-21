@@ -99,6 +99,20 @@ export const isWebView = (): boolean => {
 // Shared active listeners map to prevent duplicate readers
 const activeTransferListeners = new Set<string>();
 
+// --- UTILS ---
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (key: string, value: any) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) return;
+      seen.add(value);
+    }
+    return value;
+  };
+};
+
+const safeStringify = (obj: any) => JSON.stringify(obj, getCircularReplacer());
+
 export function initiateAuthTransferListener(transferId: string) {
   if (!transferId || activeTransferListeners.has(transferId)) return;
   activeTransferListeners.add(transferId);
@@ -1598,11 +1612,11 @@ export const gomboAuth = {
               createdAt: new Date().toISOString()
             };
             users.push(matched);
-            localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+            localStorage.setItem(LOCAL_USERS_KEY, safeStringify(users));
           }
 
           const authData = { uid: matched.uid, email: matched.email, emailVerified: true };
-          localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(authData));
+          localStorage.setItem(LOCAL_AUTH_KEY, safeStringify(authData));
           window.dispatchEvent(new Event("gomboAuthChange"));
           return {
             user: {
@@ -1645,19 +1659,6 @@ export const gomboAuth = {
 // ==========================================
 // --- Unified GomboDB Storage Layer ---
 // ==========================================
-// --- UTILS ---
-const getCircularReplacer = () => {
-  const seen = new WeakSet();
-  return (key: string, value: any) => {
-    if (typeof value === "object" && value !== null) {
-      if (seen.has(value)) return;
-      seen.add(value);
-    }
-    return value;
-  };
-};
-
-const safeStringify = (obj: any) => JSON.stringify(obj, getCircularReplacer());
 
 export const gomboDB = {
   // PENDING SIGN-UP TRACKER

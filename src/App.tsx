@@ -5,7 +5,7 @@ import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
 import { BackgroundMusic } from "./components/BackgroundMusic";
 
 // Lazy load the main Application Layer
-const AdminCentre = lazy(() => import("./components/AdminCentre.tsx"));
+const AdminCentre = lazy(() => import("./components/AdminCentre"));
 
 const AppContent = React.memo(function AppContent({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (d: boolean) => void }) {
   return (

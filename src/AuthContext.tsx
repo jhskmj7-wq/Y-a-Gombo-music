@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("🔍 [AuthContext] Firestore response for user profile:", uProfile);
         setProfile(uProfile);
         if (uProfile) {
-          localStorage.setItem("gombo_active_profile", JSON.stringify(uProfile));
+          localStorage.setItem("gombo_active_profile", safeStringify(uProfile));
         }
       } catch (err) {
         console.error("❌ [AuthContext] Error retrieving user profile:", err);
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (firebaseUser) {
         console.log("🔥 [AuthContext] User detected! UID:", firebaseUser.uid, "Email:", firebaseUser.email);
-        localStorage.setItem("gombo_auth", JSON.stringify({
+        localStorage.setItem("gombo_auth", safeStringify({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           emailVerified: firebaseUser.emailVerified

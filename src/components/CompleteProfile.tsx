@@ -288,6 +288,23 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
     try { audioSynth.playTamTam(false); } catch (_) {}
   };
 
+  const handleSkipProfile = async () => {
+    try {
+      setLoading(true);
+      await gomboDB.updateUserProfile(currentUserProfile.uid, {
+        isProfileComplete: true,
+        skippedProfile: true, // Internal flag if needed
+        updatedAt: new Date().toISOString()
+      });
+      onComplete();
+    } catch (err) {
+      console.error("Error skipping profile:", err);
+      setErrorMSG("Une erreur est survenue lors de l'accès au terrain.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmitProfile = async () => {
     setLoading(true);
     setErrorMSG("");
@@ -493,7 +510,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="w-full max-w-xs h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] hover:from-[#c29c29] hover:to-[#e69d00] text-[#050505] font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-2 shadow-[0_5px_20px_rgba(212,175,55,0.25)] mt-4"
+                className="w-full h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] hover:from-[#c29c29] hover:to-[#e69d00] text-[#050505] font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-2 shadow-[0_5px_20px_rgba(212,175,55,0.25)]"
               >
                 <span>Commencer</span>
                 <ArrowRight className="w-4 h-4" />
@@ -685,22 +702,33 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                 </p>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col gap-3 pt-4">
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Retour</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 shadow-lg"
+                  >
+                    <span>Continuer</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                
                 <button
                   type="button"
-                  onClick={handlePrevStep}
-                  className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                  onClick={handleSkipProfile}
+                  disabled={loading}
+                  className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Retour</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 shadow-lg"
-                >
-                  <span>Continuer</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>Compléter plus tard & Commencer l'aventure</span>
                 </button>
               </div>
             </motion.div>
@@ -804,22 +832,33 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col gap-3 pt-4">
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Retour</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 shadow-lg"
+                  >
+                    <span>Continuer</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                
                 <button
                   type="button"
-                  onClick={handlePrevStep}
-                  className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                  onClick={handleSkipProfile}
+                  disabled={loading}
+                  className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Retour</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 shadow-lg"
-                >
-                  <span>Continuer</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>Compléter plus tard & Commencer l'aventure</span>
                 </button>
               </div>
             </motion.div>
@@ -898,22 +937,33 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                 </AnimatePresence>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col gap-3 pt-4">
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Retour</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 shadow-lg"
+                  >
+                    <span>Continuer</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  onClick={handlePrevStep}
-                  className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                  onClick={handleSkipProfile}
+                  disabled={loading}
+                  className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Retour</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 shadow-lg"
-                >
-                  <span>Continuer</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>Compléter plus tard & Commencer l'aventure</span>
                 </button>
               </div>
             </motion.div>
@@ -972,22 +1022,33 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col gap-3 pt-4">
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Retour</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 shadow-lg"
+                  >
+                    <span>Continuer</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  onClick={handlePrevStep}
-                  className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                  onClick={handleSkipProfile}
+                  disabled={loading}
+                  className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Retour</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 shadow-lg"
-                >
-                  <span>Continuer</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>Compléter plus tard & Commencer l'aventure</span>
                 </button>
               </div>
             </motion.div>
@@ -1130,32 +1191,43 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                 <p>🤝 <strong>Je recherche :</strong> {collaborations.join(", ")}</p>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col gap-3 pt-4">
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Retour</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSubmitProfile}
+                    disabled={loading || uploading}
+                    className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] disabled:from-zinc-800 disabled:to-zinc-8D0 disabled:text-zinc-500 text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent animate-spin" />
+                        <span>Enregistrement...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Enregistrer & Commencer 🚀</span>
+                        <Check className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  onClick={handlePrevStep}
-                  className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                  onClick={handleSkipProfile}
+                  disabled={loading}
+                  className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Retour</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSubmitProfile}
-                  disabled={loading || uploading}
-                  className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] disabled:from-zinc-800 disabled:to-zinc-8D0 disabled:text-zinc-500 text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent animate-spin" />
-                      <span>Enregistrement...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Valider & Valider 🚀</span>
-                      <Check className="w-4 h-4" />
-                    </>
-                  )}
+                  <span>Compléter plus tard & Commencer l'aventure</span>
                 </button>
               </div>
             </motion.div>

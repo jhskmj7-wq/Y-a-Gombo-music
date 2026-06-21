@@ -2073,7 +2073,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 )}
 
                 {/* Notifications Icon (Bell) */}
-                {activeMenu !== "user_edit_profile" && (
+                {currentUser && profile?.isProfileComplete && activeMenu !== "user_edit_profile" && (
                   <button
                     id="bell-btn"
                     onClick={() => {
@@ -2090,7 +2090,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         initial={{ scale: 1 }}
                         animate={{ scale: [1, 1.3, 1] }}
                         transition={{ duration: 0.3 }}
-                        className="absolute -top-0.5 -right-0.5 bg-red-650 text-white font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black select-none"
+                        className="absolute -top-0.5 -right-0.5 bg-[#D4AF37] text-black font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black select-none"
                       >
                         {realNotifications.filter(n => !n.read).length}
                       </motion.span>

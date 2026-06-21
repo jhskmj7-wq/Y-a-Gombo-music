@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { AuthProvider } from "./AuthContext.tsx";
-import { LanguageProvider } from "./LanguageContext.tsx";
-import ErrorBoundary from "./components/ErrorBoundary.tsx";
-import App from "./App.tsx";
+import { AuthProvider } from "./AuthContext";
+import { LanguageProvider } from "./LanguageContext";
+import ErrorBoundary from "./components/ErrorBoundary";
+import App from "./App";
 import "./index.css";
 
 // 8. Console traces representing boot sequence

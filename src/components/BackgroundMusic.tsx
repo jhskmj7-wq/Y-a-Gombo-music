@@ -5,40 +5,61 @@ import { usePerformance } from '../services/performanceService';
 
 // Tableau de la playlist d'ambiance Afrigombo (Saxophone, Piano, Kora, Afro-Jazz Instrumental)
 const PLAYLIST = [
-  {
+    {
     id: 1,
-    title: "Vibe Harmonie (Saxophone & Piano Acoustique)",
-    artist: "Afrigombo Melodies",
-    url: "https://assets.mixkit.co/music/preview/mixkit-african-spirit-140.mp3",
-    category: "Calme"
-  },
-  {
-    id: 4,
-    title: "Sahel Sunset (Ambient Kora Meditation)",
-    artist: "Mixkit Traditional",
-    url: "https://assets.mixkit.co/music/preview/mixkit-tribal-rhythm-263.mp3",
-    category: "Calme"
+    title: "Lagos Night Chill",
+    artist: "Eko Groove",
+    url: "https://assets.mixkit.co/music/preview/mixkit-slow-trail-1217.mp3",
+    category: "Lounge"
   },
   {
     id: 2,
+    title: "Mbombela (Classic African Jazz & Drums)",
+    artist: "The African Jazz Pioneers",
+    url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/The_African_Jazz_Pioneers/African_Jazz_Pioneers/The_African_Jazz_Pioneers_-_01_-_Mbombela.mp3",
+    category: "Rythmé"
+  },
+  {
+    id: 3,
     title: "Prestige d'Afrique (Kora & Piano Akoustik)",
     artist: "Afrigombo Souverain",
     url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Ketsa/The_Lost_Files/Ketsa_-_04_-_Soul_Searching.mp3",
     category: "Lounge"
   },
   {
+    id: 4,
+    title: "Rêve d'Ivoire (Harpe & Vent)",
+    artist: "Symphonie d'Abidjan",
+    url: "https://assets.mixkit.co/music/preview/mixkit-ethereal-dream-1250.mp3",
+    category: "Calme"
+  },
+  {
     id: 5,
+    title: "Rythmes de la Terre (Percussions)",
+    artist: "Tam-Tam Legend",
+    url: "https://assets.mixkit.co/music/preview/mixkit-african-safari-loop-267.mp3",
+    category: "Rythmé"
+  },
+  {
+    id: 6,
+    title: "Sahel Sunset (Ambient Kora Meditation)",
+    artist: "Mixkit Traditional",
+    url: "https://assets.mixkit.co/music/preview/mixkit-tribal-rhythm-263.mp3",
+    category: "Calme"
+  },
+  {
+    id: 7,
     title: "Soweto Wind Harmony (Piano Duo)",
     artist: "Traditional Free Archive",
     url: "https://assets.mixkit.co/music/preview/mixkit-serene-view-1216.mp3",
     category: "Lounge"
   },
   {
-    id: 3,
-    title: "Mbombela (Classic African Jazz & Drums)",
-    artist: "The African Jazz Pioneers",
-    url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/The_African_Jazz_Pioneers/African_Jazz_Pioneers/The_African_Jazz_Pioneers_-_01_-_Mbombela.mp3",
-    category: "Rythmé"
+    id: 8,
+    title: "Vibe Harmonie (Saxophone & Piano Acoustique)",
+    artist: "Afrigombo Melodies",
+    url: "https://assets.mixkit.co/music/preview/mixkit-african-spirit-140.mp3",
+    category: "Calme"
   }
 ];
 
