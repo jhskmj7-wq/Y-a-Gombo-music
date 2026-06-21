@@ -1167,10 +1167,10 @@ export const gomboAuth = {
         createdAt: new Date().toISOString()
       };
       users.push(userProfile);
-      localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+      localStorage.setItem(LOCAL_USERS_KEY, safeStringify(users));
 
       const authData = { uid: newUid, email, emailVerified: true };
-      localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(authData));
+      localStorage.setItem(LOCAL_AUTH_KEY, safeStringify(authData));
       window.dispatchEvent(new Event("gomboAuthChange"));
       return authData;
     }
@@ -1865,7 +1865,7 @@ export const gomboDB = {
     }
     let users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
     users = users.filter(u => u.uid !== uid);
-    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+    localStorage.setItem(LOCAL_USERS_KEY, safeStringify(users));
     triggerStorageEvent();
   },
 

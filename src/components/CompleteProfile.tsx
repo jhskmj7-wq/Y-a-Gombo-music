@@ -728,7 +728,8 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   disabled={loading}
                   className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <span>Compléter plus tard & Commencer l'aventure</span>
+                  <ArrowRight className="w-4 h-4" />
+                  <span>MODIFIER MON PROFIL PLUS TARD & ACCÉDER À L'APPLICATION</span>
                 </button>
               </div>
             </motion.div>
@@ -856,9 +857,10 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   type="button"
                   onClick={handleSkipProfile}
                   disabled={loading}
-                  className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full h-12 bg-amber-500/10 border border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-black font-black text-[11px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
                 >
-                  <span>Compléter plus tard & Commencer l'aventure</span>
+                  <ArrowRight className="w-4 h-4" />
+                  <span>MODIFIER MON PROFIL PLUS TARD & ACCÉDER À L'APPLICATION</span>
                 </button>
               </div>
             </motion.div>
@@ -961,9 +963,10 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   type="button"
                   onClick={handleSkipProfile}
                   disabled={loading}
-                  className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full h-12 bg-amber-500/10 border border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-black font-black text-[11px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
                 >
-                  <span>Compléter plus tard & Commencer l'aventure</span>
+                  <ArrowRight className="w-4 h-4" />
+                  <span>MODIFIER MON PROFIL PLUS TARD & ACCÉDER À L'APPLICATION</span>
                 </button>
               </div>
             </motion.div>
@@ -1046,9 +1049,10 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   type="button"
                   onClick={handleSkipProfile}
                   disabled={loading}
-                  className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full h-12 bg-amber-500/10 border border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-black font-black text-[11px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
                 >
-                  <span>Compléter plus tard & Commencer l'aventure</span>
+                  <ArrowRight className="w-4 h-4" />
+                  <span>MODIFIER MON PROFIL PLUS TARD & ACCÉDER À L'APPLICATION</span>
                 </button>
               </div>
             </motion.div>
@@ -1205,7 +1209,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     type="button"
                     onClick={handleSubmitProfile}
                     disabled={loading || uploading}
-                    className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] disabled:from-zinc-800 disabled:to-zinc-8D0 disabled:text-zinc-500 text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                    className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] disabled:from-zinc-800 disabled:to-zinc-900 disabled:text-zinc-500 text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
                   >
                     {loading ? (
                       <>
@@ -1214,7 +1218,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                       </>
                     ) : (
                       <>
-                        <span>Enregistrer & Commencer 🚀</span>
+                        <span>Modifier & Accéder à l'application 🚀</span>
                         <Check className="w-4 h-4" />
                       </>
                     )}
@@ -1225,9 +1229,10 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   type="button"
                   onClick={handleSkipProfile}
                   disabled={loading}
-                  className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full h-12 bg-amber-500/10 border border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-black font-black text-[11px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
                 >
-                  <span>Compléter plus tard & Commencer l'aventure</span>
+                  <ArrowRight className="w-4 h-4" />
+                  <span>MODIFIER MON PROFIL PLUS TARD & ACCÉDER À L'APPLICATION</span>
                 </button>
               </div>
             </motion.div>
