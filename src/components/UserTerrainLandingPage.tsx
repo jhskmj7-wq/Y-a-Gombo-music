@@ -149,10 +149,15 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         audioElement.pause();
       }
       setPlayingTrackId(null);
+      // Resume background music if wanted, but simpler to just leave it paused or user toggles it
     } else {
       if (audioElement) {
         audioElement.pause();
       }
+      
+      // PAUSE BACKGROUND AMBIENT MUSIC TO AVOID DISORGANIZATION
+      window.dispatchEvent(new CustomEvent('gombo_music_toggle', { detail: { play: false } }));
+
       const audio = new Audio(track.url);
       audio.loop = true;
       audio.play().catch(() => {});

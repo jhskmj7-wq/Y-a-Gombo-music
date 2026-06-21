@@ -388,25 +388,25 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
     <div className="space-y-6 text-left">
       {/* Overview Greeting Header Bar */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="bg-gradient-to-r from-[#D4A017] to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="bg-black border border-[#D4AF37]/50 rounded-3xl p-6 sm:p-8 text-white shadow-[0_0_40px_rgba(212,175,55,0.15)] relative overflow-hidden"
       >
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path d="M0,50 Q25,70 50,50 T100,50 L100,100 L0,100 Z" fill="white" />
+            <path d="M0,50 Q25,70 50,50 T100,50 L100,100 L0,100 Z" fill="#D4AF37" />
           </svg>
         </div>
 
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 bg-amber-900/50 rounded-full text-xs font-bold uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 bg-[#D4AF37]/20 border border-[#D4AF37]/40 rounded-full text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
                 Espace {currentUserProfile.role === "admin" ? "Administrateur" : currentUserProfile.role === "client" ? "Club / Boss" : "Artiste"}
               </span>
               {mockMode && (
-                <span className="px-2.5 py-0.5 bg-yellow-400 text-black text-[10px] font-extrabold uppercase rounded-full">
+                <span className="px-2.5 py-0.5 bg-[#D4AF37] text-black text-[10px] font-extrabold uppercase rounded-full">
                   Mode Démo
                 </span>
               )}
@@ -414,14 +414,14 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             <h1 className="text-3xl font-black mt-2">
               Akwaba, {currentUserProfile.firstName} {currentUserProfile.lastName} !
             </h1>
-            <p className="text-orange-100 text-xs mt-1">
+            <p className="text-zinc-400 text-xs mt-1">
               Pilotez tous vos contrats musicaux, vos bookings directs et vos renforts en un coup d'œil.
             </p>
           </div>
           <div className="flex gap-4 items-center">
             <div className="text-right">
-              <p className="text-[10px] text-orange-100 uppercase font-bold tracking-widest">Solde des contrats</p>
-              <p className="text-2xl font-black font-mono">
+              <p className="text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest">Solde des contrats</p>
+              <p className="text-2xl font-black font-mono text-white">
                 {myReservations.reduce((sum, r) => sum + r.amount, 0).toLocaleString()} FCFA
               </p>
             </div>

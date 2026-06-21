@@ -18,6 +18,7 @@ import { useLanguage } from "../LanguageContext";
 import AuthScreen from "./AuthScreen";
 import CompleteProfile from "./CompleteProfile";
 import GomboIdUserDashboard from "./GomboIdUserDashboard";
+import GomboProfile from "./GomboProfile";
 import GomboMusikEcosystem from "./GomboMusikEcosystem";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
 import FounderThrone from "./FounderThrone";
@@ -1806,7 +1807,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               setActiveMenu("user_reels");
                               setIsSidebarOpen(false);
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-orange-500/10 text-orange-400 rounded border border-orange-500/10 uppercase font-black" style={{ contentVisibility: 'auto' }}>NEW</span>)}
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/10 uppercase font-black" style={{ contentVisibility: 'auto' }}>NEW</span>)}
                             {renderMenuItem("menu_favorites", "Favoris", "⭐", () => {}, true)}
                             {renderMenuItem("menu_history", "Historique", "🕓", () => {}, true)}
                             {renderMenuItem("menu_near_opports", "Opportunités proches", "📍", () => {
@@ -2024,7 +2025,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   }}
                   className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-black border border-[#D4AF37] overflow-hidden flex items-center justify-center select-none shrink-0 mr-1 cursor-pointer"
                 >
-                  <img src="/logo.png" alt="Afrigombo Logo" className="w-full h-full object-cover" />
+                  <img src="/src/assets/images/afrigombo_logo_music_1782049101038.jpg" alt="Afrigombo Logo" className="w-full h-full object-cover" />
                 </motion.div>
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-black tracking-[0.08em] text-white leading-none uppercase font-display truncate">
@@ -2078,7 +2079,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     setActiveMenu("user_notifications");
                     addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
                   }}
-                  className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-zinc-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-zinc-850 hover:border-[#D4AF37]/40 rounded-xl transition-all flex items-center justify-center cursor-pointer relative bg-black/60 shrink-0 select-none"
+                  className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)]"
                   title="Notifications"
                 >
                   <Bell className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
@@ -2246,9 +2247,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 return (
                   <div className="space-y-6 pb-24 text-left animate-fadeIn">
-                    <div className="bg-gradient-to-r from-orange-600/30 via-zinc-900/60 to-black p-6 rounded-3xl border border-orange-550/20 shadow-2xl relative overflow-hidden">
+                    <div className="bg-gradient-to-r from-zinc-900 via-zinc-950 to-black p-6 rounded-3xl border border-[#D4AF37]/30 shadow-2xl relative overflow-hidden">
                       <div className="absolute right-0 top-0 bottom-0 w-[30%] opacity-25 flex items-center justify-center">
-                        <Video className="w-40 h-40 text-orange-500 animate-pulse" />
+                        <Video className="w-40 h-40 text-[#D4AF37] animate-pulse" />
                       </div>
                       <div className="relative z-10 max-w-xl">
                         <span className="text-[9px] font-mono tracking-widest text-[#D4AF37] font-black uppercase bg-[#D4AF37]/10 px-2.5 py-1 rounded-full border border-[#D4AF37]/20">
@@ -2277,7 +2278,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           onClick={() => setSelectedReelFilter(tab.id)}
                           className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider border cursor-pointer transition-all duration-200 ${
                             selectedReelFilter === tab.id
-                              ? "bg-orange-550 text-white border-orange-500 shadow-md shadow-orange-500/10 scale-102"
+                              ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md shadow-[#D4AF37]/10 scale-102"
                               : "bg-zinc-950/45 text-zinc-400 border-zinc-800/80 hover:text-white hover:border-zinc-700"
                           }`}
                         >
@@ -2306,7 +2307,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 />
                               ) : (
                                 <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 to-zinc-900 flex flex-col items-center justify-center p-3 text-center">
-                                  <Video className="w-10 h-10 text-orange-550/80 mb-2 group-hover:animate-bounce" />
+                                  <Video className="w-10 h-10 text-[#D4AF37]/80 mb-2 group-hover:animate-bounce" />
                                   <span className="text-[9px] font-mono font-black tracking-widest text-[#D4AF37] uppercase">SESSION NATIVE</span>
                                 </div>
                               )}
@@ -2319,7 +2320,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                     setReelsVideoUrl(reel.url);
                                   }
                                 }}
-                                className="absolute p-3 rounded-full bg-orange-600 hover:bg-orange-500 text-white shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer z-10"
+                                className="absolute p-3 rounded-full bg-[#D4AF37] hover:bg-[#B48F17] text-black shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer z-10"
                               >
                                 <Play size={18} className="fill-current text-white" />
                               </button>
@@ -2328,7 +2329,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             {/* Details */}
                             <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                               <div className="space-y-1">
-                                <h4 className="text-xs sm:text-xs font-black text-white hover:text-orange-400 transition-colors uppercase leading-tight line-clamp-1">
+                                <h4 className="text-xs sm:text-xs font-black text-white hover:text-[#D4AF37] transition-colors uppercase leading-tight line-clamp-1">
                                   {reel.title}
                                 </h4>
                                 <p className="text-[10px] text-zinc-500 line-clamp-2 leading-relaxed font-sans">
@@ -2575,7 +2576,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             }}
                             className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 group-hover:border-orange-500 transition">
+                            <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
                               <span className="text-xs">🛡️</span>
                             </div>
                             <div className="min-w-0">
@@ -5041,131 +5042,34 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 )}
               </div>
 
-              {activeMenu === "user_edit_profile" && (() => {
-                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
-                if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
-                return (
-                  <div className="p-6 rounded-2xl bg-zinc-950 border border-white/5 space-y-6 animate-fadeIn text-left">
-                    <button
-                      onClick={() => {
-                        setActiveMenu("user_heritage");
-                        try { audioSynth.playValidationSuccess(); } catch (err) {}
+              {activeMenu === "user_edit_profile" && (
+                <div className="animate-fadeIn pb-24 text-left">
+                  {profile ? (
+                    <GomboProfile 
+                      currentUserProfile={profile} 
+                      onRefreshProfile={refreshProfile}
+                      onNavigateView={(view) => {
+                        if (view === "dashboard") {
+                          setActiveMenu("user_terrain");
+                        } else if (view === "heritage" || view === "main") {
+                          setActiveMenu("user_heritage");
+                        }
                       }}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-zinc-950 border border-zinc-800 hover:border-[#D4AF37]/50 text-white rounded-xl text-xs font-mono transition-all cursor-pointer select-none active:scale-95 w-fit"
-                    >
-                      ← Retour à l'Héritage
-                    </button>
-
-                    <div className="pb-3 border-b border-white/5">
-                      <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
-                        ✍ Modifier mon profil d'Académie
-                      </h3>
-                      <p className="text-xs text-zinc-400">Mettez à jour vos spécialités et coordonnées d'excellence.</p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center gap-6">
-                      <div className="relative w-24 h-24 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-black flex-shrink-0 shadow-[0_0_15px_rgba(212,175,55,0.3)]">
-                        {currentArtist.avatarUrl ? (
-                          <img src={currentArtist.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-3xl font-black text-[#D4AF37]">
-                            {(currentArtist.artisticName || "U").charAt(0)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="space-y-2 text-center sm:text-left">
-                        <label className="cursor-pointer px-4 py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-black text-[10px] font-sans font-black tracking-widest uppercase rounded-lg transition-all shadow-lg active:scale-95 inline-block">
-                          Mettre à jour la photo
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              try {
-                                addToTerminal(`[UPLOAD] Téléchargement de la nouvelle photo...`);
-                                const storageRef = ref(storage, `users/${currentArtist.id}/avatar`);
-                                await uploadBytes(storageRef, file);
-                                const avatarUrl = await getDownloadURL(storageRef);
-                                const photoUpdatedAt = new Date().toISOString();
-                                setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, avatarUrl, photoUpdatedAt } : u));
-                                await saveToFirestore("users", currentArtist.id, { avatarUrl, photoUpdatedAt });
-                                
-                                // Sync universally via gomboDB
-                                await gomboDB.updateUserProfile(currentArtist.id, { avatarUrl, photoURL: avatarUrl });
-                                
-                                addToTerminal(`[PROFIL] Photo mise à jour avec succès.`);
-                                try { audioSynth.playValidationSuccess(); } catch(err){}
-                              } catch (err: any) {
-                                addToTerminal(`[ERREUR UPLOAD] ${err.message}`);
-                              }
-                            }}
-                          />
-                        </label>
-                        <p className="text-[9px] text-zinc-500 font-mono">Format autorisé: JPG, PNG, GIF. Max 5MB.</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 max-w-lg">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Nom Artistique :</label>
-                          <input
-                            type="text"
-                            defaultValue={currentArtist.artisticName}
-                            onBlur={async (e) => {
-                              const artisticName = e.target.value;
-                              setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, artisticName } : u));
-                              await saveToFirestore("users", currentArtist.id, { artisticName });
-                              addToTerminal(`[PROFIL] Nom artistique mis à jour pour ${artisticName}`);
-                            }}
-                            className="w-full bg-black border border-white/10 rounded-xl p-2 text-xs focus:outline-none focus:border-[#D4AF37]"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Commune principale :</label>
-                          <select
-                            defaultValue={currentArtist.commune}
-                            onChange={async (e) => {
-                              const commune = e.target.value;
-                              setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, commune } : u));
-                              await saveToFirestore("users", currentArtist.id, { commune });
-                              addToTerminal(`[PROFIL] Commune mise à jour : ${commune}`);
-                            }}
-                            className="w-full bg-black border border-white/10 rounded-xl p-2 text-xs focus:outline-none focus:border-[#D4AF37]"
-                          >
-                            {IVORIAN_COMMUNES.map(c => <option key={c}>{c}</option>)}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Spécialités Nationales (Séparées par virgule) :</label>
-                        <input
-                          type="text"
-                          defaultValue={(currentArtist.specialties || []).join(", ")}
-                          onBlur={async (e) => {
-                            const specialties = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
-                            setUsers(prev => prev.map(u => u.id === currentArtist.id ? { ...u, specialties } : u));
-                            await saveToFirestore("users", currentArtist.id, { specialties });
-                            addToTerminal(`[PROFIL] Spécialités mises à jour : ${specialties.join(", ")}`);
-                          }}
-                          className="w-full bg-black border border-white/10 rounded-xl p-2 text-xs focus:outline-none focus:border-[#D4AF37]"
-                        />
-                      </div>
-
-                      <button
-                        onClick={() => alert("🏆 Modifications de profil enregistrées en temps réel sur Firestore !")}
-                        className="w-full py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-black text-xs font-mono font-black uppercase rounded-lg transition-all"
+                      initialPanelView="edit"
+                    />
+                  ) : (
+                    <div className="p-12 text-center space-y-4">
+                      <p className="text-zinc-500 font-mono">Profil non chargé. Veuillez patienter...</p>
+                      <button 
+                        onClick={() => setActiveMenu("user_heritage")}
+                        className="px-6 py-2 bg-[#D4AF37] text-black font-black uppercase rounded-xl"
                       >
-                        Enregistrer modifications
+                        Retour
                       </button>
                     </div>
-                  </div>
-                );
-              })()}
+                  )}
+                </div>
+              )}
 
               {/* ----------------------------------------------------
                                 VIEW: DASHBOARD & SCAN (CENTRE DE COMMANDE)
@@ -5273,23 +5177,23 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       </h3>
 
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Utilisateurs totaux</span>
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">Utilisateurs totaux</span>
                           <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiUsersCount}</strong>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left relative">
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left relative">
                           <span className="w-2 h-2 bg-emerald-500 rounded-full absolute top-4 right-4 animate-pulse"></span>
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Utilisateurs actifs</span>
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">Utilisateurs actifs</span>
                           <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiOnlineCount}</strong>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Publications</span>
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">Publications</span>
                           <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiPostsCount}</strong>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left relative">
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left relative">
                           {(kpiAlertsCount > 0) && (
                             <span className="w-2 h-2 bg-red-500 rounded-full absolute top-4 right-4 animate-pulse"></span>
                           )}
@@ -5497,12 +5401,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               {flaggedPosts.length}
                             </span>
                           </li>
-                          <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-orange-500 transition-all">
+                          <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-[#D4AF37] transition-all">
                             <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
-                              <Zap className="w-3 h-3 text-orange-500 group-hover:scale-110 transition-transform" />
+                              <Zap className="w-3 h-3 text-[#D4AF37] group-hover:scale-110 transition-transform" />
                               Erreurs système
                             </span>
-                            <span className="text-xs font-mono font-black text-orange-500">
+                            <span className="text-xs font-mono font-black text-[#D4AF37]">
                               {alerts.filter((a: any) => a.type === 'system_error').length}
                             </span>
                           </li>
@@ -7310,7 +7214,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Badge VIP, profil propulsé et publications épinglées.</p>
                         </div>
                         <div className="p-4 rounded bg-black/40 border border-[#D4AF37]/10">
-                          <span className="font-bold text-orange-400 block text-xs">🔥 Boost Gombo</span>
+                          <span className="font-bold text-[#D4AF37] block text-xs">🔥 Boost Gombo</span>
                           <span className="font-mono text-xs font-bold text-white block mt-1">500 - 2k FCFA</span>
                           <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Bannière de distinction En vedette sur les tam-tams.</p>
                         </div>
@@ -7552,7 +7456,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             <div className="space-y-1.5">
               <div className="flex justify-between text-[10px] font-mono text-white/40">
                 <span>Synchronisation des pouvoirs suprêmes</span>
-                <span className="text-orange-500 font-bold">100%</span>
+                <span className="text-[#D4AF37] font-bold">100%</span>
               </div>
               <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
                 <motion.div

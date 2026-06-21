@@ -67,6 +67,32 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         onNavigateView={onNavigateView}
       />
 
+      {/* TRUST & VERIFICATION BANNER - AFRITRUST */}
+      {!(currentUserProfile.isCertified === true || currentUserProfile.kycStatus === "approved") && (
+            <div className="flex bg-[#D4AF37]/5 dark:bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-3xl p-5 flex flex-col sm:flex-row items-center gap-4 justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/30">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-gray-950 dark:text-white uppercase font-sans">
+                  Obtenez le badge bleu GOMBO ID 💠
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-sans">
+                  Gagnez la confiance des clients et débloquez des gombos de prestige.
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setPanelView("edit")}
+              className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all whitespace-nowrap"
+            >
+              Vérifier mon identité
+            </button>
+          </div>
+      )}
+
       {/* HEADER PROFIL - SECTION IDENTITÉ */}
       <div id="section-identity" className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col md:flex-row items-center gap-6 justify-between">
         <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
@@ -80,12 +106,14 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               />
             </div>
             
-            <div className="absolute -top-1 -right-1 p-1 bg-blue-500 text-white rounded-full border-2 border-white dark:border-[#121214]">
-              <ShieldCheck className="w-4 h-4 text-white fill-current" />
-            </div>
+            {(currentUserProfile.isCertified === true || currentUserProfile.kycStatus === "approved") && (
+              <div className="absolute -top-1 -right-1 p-1 bg-blue-500 text-white rounded-full border-2 border-white dark:border-[#121214]">
+                <ShieldCheck className="w-4 h-4 text-white fill-current" />
+              </div>
+            )}
 
             <div className={`absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-white dark:border-[#121214] ${
-              availabilityStatus === "disponible" ? "bg-emerald-500" : availabilityStatus === "occupe" ? "bg-amber-500" : "bg-red-500"
+              availabilityStatus === "disponible" ? "bg-emerald-500" : availabilityStatus === "occupe" ? "bg-[#D4AF37]" : "bg-red-500"
             }`} />
           </div>
 
@@ -172,7 +200,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 <span>UID: {currentUserProfile.uid.slice(0, 8)}...</span>
                 <button 
                   onClick={handleCopyUid} 
-                  className="hover:text-orange-500 transition-colors p-0.5 cursor-pointer"
+                  className="hover:text-[#D4AF37] transition-colors p-0.5 cursor-pointer"
                   title="Copier UID"
                 >
                   <Copy className="w-3 h-3" />
@@ -200,7 +228,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               <div className="flex items-center gap-2 sm:col-span-2">
                 <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Quartier / Adresse:</span>
                 <span className="text-gray-800 dark:text-gray-200 font-bold truncate flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                  <MapPin className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                   {(currentUserProfile.location?.district || currentUserProfile.quartier || "Quartier non renseigné (à configurer)").trim().normalize("NFC")}
                 </span>
               </div>
@@ -253,7 +281,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         {/* Activités & Spécialités */}
         <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
           <h3 className="text-xs font-black uppercase text-gray-400 tracking-widest flex items-center gap-1.5">
-            <Award className="w-4 h-4 text-orange-500" />
+            <Award className="w-4 h-4 text-[#D4AF37]" />
             Spécialités de Scène & Free Inputs
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -261,7 +289,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               [currentUserProfile.mainRole, ...(currentUserProfile.specialties || [])].filter(Boolean).map((spec, idx) => (
                 <span 
                   key={idx}
-                  className="px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl text-xs font-extrabold shadow-2xs"
+                  className="px-3 py-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] rounded-xl text-xs font-extrabold shadow-2xs"
                 >
                   🎸 {spec}
                 </span>

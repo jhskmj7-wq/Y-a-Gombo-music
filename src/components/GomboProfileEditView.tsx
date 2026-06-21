@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { User, Check, Plus, Search, ChevronDown, Camera, Upload } from "lucide-react";
+import { User, Check, Plus, Search, ChevronDown, Camera, Upload, Shield } from "lucide-react";
 
 interface GomboProfileEditViewProps {
   firstName: string;
@@ -55,6 +55,10 @@ interface GomboProfileEditViewProps {
   startCamera: () => void;
   handleFileUpload: (file: File) => void;
   autoSaveStatus?: "idle" | "saving" | "saved" | "error";
+  kycStatus?: "pending" | "approved" | "rejected" | "none" | "info_required";
+  onIdentityUpload: (file: File) => void;
+  verifyingIdentity: boolean;
+  kycProgress: number;
 }
 
 const COMMUNES = [
@@ -102,7 +106,11 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
   uploading, uploadProgress,
   capturePhoto, stopCamera, startCamera,
   handleFileUpload,
-  autoSaveStatus = "idle"
+  autoSaveStatus = "idle",
+  kycStatus = "none",
+  onIdentityUpload,
+  verifyingIdentity,
+  kycProgress
 }) => {
   const [communeSearch, setCommuneSearch] = useState("");
   const [showCommuneDropdown, setShowCommuneDropdown] = useState(false);
@@ -122,7 +130,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
       <div className="flex items-center justify-between mb-2">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
           <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase flex items-center gap-2">
-            <User className="w-5.5 h-5.5 text-orange-500" />
+            <User className="w-5.5 h-5.5 text-[#D4AF37]" />
             Modifier mon Profil PRO
           </h3>
           {autoSaveStatus === "saving" && (
@@ -483,7 +491,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                       setFreeSpecialty("");
                     }
                   }}
-                  className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-[10px] font-black uppercase cursor-pointer shrink-0"
+                  className="px-3 py-1.5 bg-[#D4AF37] text-black font-black uppercase cursor-pointer shrink-0 rounded-lg text-[10px]"
                 >
                   Ajouter
                 </button>
@@ -536,7 +544,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                       setFreeGenre("");
                     }
                   }}
-                  className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase cursor-pointer shrink-0"
+                  className="px-3 py-1.5 bg-[#D4AF37] text-black font-black uppercase cursor-pointer shrink-0 rounded-lg text-[10px]"
                 >
                   Ajouter
                 </button>
@@ -611,6 +619,74 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm font-semibold text-black dark:text-white"
               />
             </div>
+          </div>
+        </div>
+
+        {/* 6. SECTION VÉRIFICATION D'IDENTITÉ (AFRITRUST) */}
+        <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-[10px] tracking-widest uppercase font-black text-gray-400 block">Section 6. Sécurité & Vérification (AFRITRUST)</span>
+              <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase flex items-center gap-2">
+                <Check className="w-4 h-4 text-[#D4AF37]" />
+                Obtenir le badge de confiance
+              </h4>
+            </div>
+            {kycStatus === "approved" && (
+              <span className="px-3 py-1 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5" />
+                Vérifié
+              </span>
+            )}
+            {kycStatus === "pending" && (
+              <span className="px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-[10px] font-black uppercase animate-pulse">
+                En attente ⏳
+              </span>
+            )}
+          </div>
+
+          <div className="p-4 bg-gray-50/50 dark:bg-gray-850/40 border border-gray-100 dark:border-gray-800 rounded-2xl">
+            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+              Pour obtenir le <b>badge bleu Africid/Afritrust</b> et accroître votre crédibilité auprès des clients nationaux et internationaux, veuillez télécharger une photo lisible de votre <b>CNI, Passeport ou Attestation d’Identité</b>.
+            </p>
+
+            {verifyingIdentity ? (
+              <div className="space-y-3 py-4">
+                <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${kycProgress}%` }}
+                    className="h-full bg-[#D4AF37]" 
+                  />
+                </div>
+                <p className="text-[10px] font-black text-[#D4AF37] uppercase text-center animate-pulse">Envoi du document en cours... {kycProgress}%</p>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-3">
+                <label className="flex-1 px-4 py-3 bg-white dark:bg-[#1A1A1F] border border-dashed border-gray-300 dark:border-gray-700 hover:border-orange-500 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-xs font-black text-gray-500 hover:text-orange-500">
+                  <Upload className="w-4 h-4" />
+                  Télécharger ma pièce d'identité
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) onIdentityUpload(file);
+                    }}
+                  />
+                </label>
+                
+                <button
+                  type="button"
+                  onClick={() => startCamera()} 
+                  className="px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-750 dark:text-gray-300 hover:bg-gray-200 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Camera className="w-4 h-4" />
+                  Prendre une photo
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

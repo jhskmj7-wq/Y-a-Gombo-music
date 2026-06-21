@@ -9,41 +9,46 @@ const PLAYLIST = [
     id: 1,
     title: "Vibe Harmonie (Saxophone & Piano Acoustique)",
     artist: "Afrigombo Melodies",
-    url: "https://assets.mixkit.co/music/preview/mixkit-african-spirit-140.mp3"
-  },
-  {
-    id: 2,
-    title: "Prestige d'Afrique (Kora & Piano Akoustik)",
-    artist: "Afrigombo Souverain",
-    url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Ketsa/The_Lost_Files/Ketsa_-_04_-_Soul_Searching.mp3"
-  },
-  {
-    id: 3,
-    title: "Mbombela (Classic African Jazz & Drums)",
-    artist: "The African Jazz Pioneers",
-    url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/The_African_Jazz_Pioneers/African_Jazz_Pioneers/The_African_Jazz_Pioneers_-_01_-_Mbombela.mp3"
+    url: "https://assets.mixkit.co/music/preview/mixkit-african-spirit-140.mp3",
+    category: "Calme"
   },
   {
     id: 4,
     title: "Sahel Sunset (Ambient Kora Meditation)",
     artist: "Mixkit Traditional",
-    url: "https://assets.mixkit.co/music/preview/mixkit-tribal-rhythm-263.mp3"
+    url: "https://assets.mixkit.co/music/preview/mixkit-tribal-rhythm-263.mp3",
+    category: "Calme"
+  },
+  {
+    id: 2,
+    title: "Prestige d'Afrique (Kora & Piano Akoustik)",
+    artist: "Afrigombo Souverain",
+    url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Ketsa/The_Lost_Files/Ketsa_-_04_-_Soul_Searching.mp3",
+    category: "Lounge"
   },
   {
     id: 5,
     title: "Soweto Wind Harmony (Piano Duo)",
     artist: "Traditional Free Archive",
-    url: "https://assets.mixkit.co/music/preview/mixkit-serene-view-1216.mp3"
+    url: "https://assets.mixkit.co/music/preview/mixkit-serene-view-1216.mp3",
+    category: "Lounge"
+  },
+  {
+    id: 3,
+    title: "Mbombela (Classic African Jazz & Drums)",
+    artist: "The African Jazz Pioneers",
+    url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/The_African_Jazz_Pioneers/African_Jazz_Pioneers/The_African_Jazz_Pioneers_-_01_-_Mbombela.mp3",
+    category: "Rythmé"
   }
 ];
 
 export const BackgroundMusic: React.FC = () => {
   const { areSoundsReduced } = usePerformance();
-  const [isPlaying, setIsPlaying] = useState(() => localStorage.getItem("gombo_pref_ambient_music") !== "false");
+  const [isPlaying, setIsPlaying] = useState(false); // Default to false for better organization/control
   const [currentIndex, setCurrentIndex] = useState(() => {
-    // Start with a random index for natural initial shuffle!
     return Math.floor(Math.random() * PLAYLIST.length);
   });
+  const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
   const [isShuffle, setIsShuffle] = useState(() => localStorage.getItem("gombo_pref_shuffle") === "true");
   const [isLoopList, setIsLoopList] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
@@ -382,14 +387,31 @@ export const BackgroundMusic: React.FC = () => {
             </div>
 
             {/* Tracklist selection */}
-            <div className="space-y-1 max-h-[140px] overflow-y-auto pr-1 select-none">
-              {PLAYLIST.map((track, idx) => {
-                const isActive = idx === currentIndex;
+            <div className="flex flex-wrap gap-1.5 mb-3 border-b border-zinc-900 pb-3">
+              {["Tous", "Calme", "Lounge", "Rythmé"].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-2 py-1 rounded-md text-[8.5px] font-black uppercase transition-all border ${
+                    selectedCategory === cat 
+                      ? "bg-[#D4AF37] text-black border-[#D4AF37]" 
+                      : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:text-white"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-1 max-h-[160px] overflow-y-auto pr-1 select-none">
+              {PLAYLIST.filter(t => selectedCategory === "Tous" || t.category === selectedCategory).map((track, idx) => {
+                const globalIdx = PLAYLIST.findIndex(p => p.id === track.id);
+                const isActive = globalIdx === currentIndex;
                 return (
                   <div
                     key={track.id}
                     onClick={() => {
-                      setCurrentIndex(idx);
+                      setCurrentIndex(globalIdx);
                       setIsPlaying(true);
                     }}
                     className={`p-2 rounded-xl cursor-pointer transition-all flex items-center justify-between text-left group ${
@@ -399,7 +421,10 @@ export const BackgroundMusic: React.FC = () => {
                     }`}
                   >
                     <div className="flex flex-col min-w-0 flex-1 pr-2">
-                      <span className="text-[10.5px] font-extrabold truncate leading-tight">{track.title}</span>
+                       <div className="flex items-center gap-1.5">
+                        <span className="text-[10.5px] font-extrabold truncate leading-tight">{track.title}</span>
+                        <span className="text-[7.5px] font-mono text-[#D4AF37] opacity-60">[{track.category}]</span>
+                       </div>
                       <span className="text-[8px] font-mono text-zinc-500 mt-0.5">{track.artist}</span>
                     </div>
                     {isActive && isPlaying ? (

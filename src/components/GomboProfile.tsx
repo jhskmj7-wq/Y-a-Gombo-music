@@ -20,9 +20,10 @@ interface GomboProfileProps {
   currentUserProfile: UserProfile;
   onRefreshProfile: () => void;
   onNavigateView: (view: string, initialTab?: any) => void;
-  onLogout: () => void;
-  darkMode: boolean;
-  setDarkMode: (val: boolean) => void;
+  onLogout?: () => void;
+  darkMode?: boolean;
+  setDarkMode?: (val: boolean) => void;
+  initialPanelView?: "main" | "edit" | "settings" | "support";
 }
 
 const ABIDJAN_COMMUNES = [
@@ -67,15 +68,49 @@ export default function GomboProfile({
   onNavigateView,
   onLogout,
   darkMode,
-  setDarkMode
+  setDarkMode,
+  initialPanelView = "main"
 }: GomboProfileProps) {
   // Current Panel view: "main" | "edit" | "settings" | "support"
-  const [panelView, setPanelView] = useState<"main" | "edit" | "settings" | "support">("main");
+  const [panelView, setPanelView] = useState<"main" | "edit" | "settings" | "support">(initialPanelView);
+
+  // States for KYC/Identity validation
+  // (Removed redundant declarations as they exist below)
 
   // Real-time synchronization of current user posts (Mes publications)
   const [myPosts, setMyPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [syncedProfile, setSyncedProfile] = useState<UserProfile>(currentUserProfile);
+
+  // Sync state with currentUserProfile whenever it changes from parent or internal updates
+  useEffect(() => {
+    if (!currentUserProfile) return;
+    
+    // Update synced profile
+    setSyncedProfile(currentUserProfile);
+    
+    // Sync individual field states to ensure real-time UI accuracy
+    setFirstName(currentUserProfile.firstName || "");
+    setLastName(currentUserProfile.lastName || "");
+    setArtistName(currentUserProfile.artistName || "");
+    setGender(currentUserProfile.gender || "Homme");
+    setBirthDate(currentUserProfile.birthDate || "");
+    setPhone(currentUserProfile.phone || "");
+    setWhatsapp(currentUserProfile.whatsapp || "");
+    setCommune(currentUserProfile.commune || "Cocody");
+    setBio(currentUserProfile.bio || "");
+    setAvatarUrl(currentUserProfile.avatarUrl || currentUserProfile.photoURL || AVATARS[0]);
+    setSpecialties(currentUserProfile.specialties || (currentUserProfile.specialty ? [currentUserProfile.specialty] : []));
+    setMusicGenres(currentUserProfile.musicGenres || (currentUserProfile.musicGenre ? [currentUserProfile.musicGenre] : []));
+    setExperience(currentUserProfile.experience || "Intermédiaire");
+    setAvailabilities(currentUserProfile.availabilities || (currentUserProfile.isAvailableNow ? ["Disponible immédiatement"] : []));
+    setWaveNumber(currentUserProfile.waveNumber || currentUserProfile.paymentNumber || "");
+    setOrangeMoneyNumber(currentUserProfile.orangeMoneyNumber || "");
+    setVille(currentUserProfile.ville || "Abidjan");
+    setQuartier(currentUserProfile.quartier || "");
+    setAccountRole(currentUserProfile.role || "musicien");
+    setMediaGallery(currentUserProfile.mediaGallery || []);
+  }, [currentUserProfile]);
 
   useEffect(() => {
     const unsub = gomboDB.listenUserProfile(currentUserProfile.uid || "", (profile) => {
@@ -217,6 +252,46 @@ export default function GomboProfile({
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaUploading, setMediaUploading] = useState(false);
   const [mediaUploadProgress, setMediaUploadProgress] = useState(0);
+
+  // Identity Verification (KYC) states
+  const [verifyingIdentity, setVerifyingIdentity] = useState(false);
+  const [kycProgress, setKycProgress] = useState(0);
+
+  const handleIdentityVerifyUpload = async (file: File) => {
+    setVerifyingIdentity(true);
+    setKycProgress(0);
+    try {
+      const path = `kyc/${currentUserProfile.uid}/${Date.now()}_identity_${file.name}`;
+      const downloadUrl = await gomboDB.uploadFile(path, file, (progress) => {
+        setKycProgress(Math.round(progress));
+      });
+      
+      await gomboDB.updateUserProfile(currentUserProfile.uid, {
+        kycStatus: "pending",
+        kycDocUrl: downloadUrl,
+        kycDocs: {
+          ...currentUserProfile.kycDocs,
+          identityCardUrl: downloadUrl
+        },
+        kycSubmittedDate: new Date().toISOString()
+      });
+      
+      audioSynth.playValidationSuccess();
+      onRefreshProfile();
+    } catch (err) {
+      console.error("KYC upload error:", err);
+      alert("Erreur lors de l'envoi du document.");
+    } finally {
+      setVerifyingIdentity(false);
+    }
+  };
+
+  const startCameraForKYC = async () => {
+    // We can reuse the existing camera logic but flag it for KYC
+    // For simplicity, we'll just use a dedicated handler if needed or reuse capturePhoto
+    // Let's just use handleFileUpload for simplicity since it's already there
+    startCamera();
+  };
 
   // Stats dynamically calculated in real-time
   const [dynamicGroupsCount, setDynamicGroupsCount] = useState(0);
@@ -659,10 +734,21 @@ export default function GomboProfile({
     try {
       await gomboDB.updateUserProfile(currentUserProfile.uid, updates);
       setEditSuccess(true);
+      
+      // Real-time notification that profile was updated
+      window.dispatchEvent(new Event("gomboUserProfileChange"));
+      
+      // Small success sound or kora note
+      try { audioSynth.playKoraSuccess(); } catch(e) {}
+      
+      // Immediately refresh profile locally
+      onRefreshProfile();
+      
+      // Navigate to main dashboard to "enter" the application in real-time as requested
       setTimeout(() => {
-        onRefreshProfile();
         setPanelView("main");
-      }, 1000);
+        onNavigateView("dashboard");
+      }, 1200);
     } catch (err: any) {
       console.error(err);
       setEditError("Une erreur est survenue lors de la sauvegarde.");
@@ -883,6 +969,10 @@ export default function GomboProfile({
           stopCamera={stopCamera}
           startCamera={startCamera}
           handleFileUpload={handleFileUpload}
+          onIdentityUpload={handleIdentityVerifyUpload}
+          verifyingIdentity={verifyingIdentity}
+          kycProgress={kycProgress}
+          kycStatus={currentUserProfile.kycStatus}
         />
       </div>
     );
@@ -1307,9 +1397,9 @@ export default function GomboProfile({
               </div>
 
               {/* User rating out of 5 stars */}
-              <div className="p-4 bg-orange-50/20 dark:bg-orange-950/5 border border-orange-100 dark:border-orange-900/30 rounded-2xl flex items-center justify-between">
+              <div className="p-4 bg-[#D4AF37]/5 dark:bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl flex items-center justify-between">
                 <div>
-                  <span className="text-[9px] font-black text-orange-600 dark:text-[#D4AF37] uppercase tracking-wider block">Note de Showbiz</span>
+                  <span className="text-[9px] font-black text-[#D4AF37] uppercase tracking-wider block">Note de Showbiz</span>
                   <span className="text-xs font-bold text-gray-500 dark:text-gray-450 mt-1 block">Évaluations régulières sur Abidjan</span>
                 </div>
                 <div className="flex flex-col items-end">
@@ -1332,7 +1422,7 @@ export default function GomboProfile({
             <span className="text-[10px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-widest block">📝 Mes Publications ({myPosts.length})</span>
             {loadingPosts ? (
               <div className="flex justify-center p-6 bg-white dark:bg-[#121214] rounded-3xl border border-gray-150 dark:border-gray-800">
-                <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : myPosts.length === 0 ? (
               <div className="p-6 bg-white dark:bg-[#121214] rounded-3xl border border-dashed border-gray-150 dark:border-gray-850/60 text-center">
@@ -1928,7 +2018,7 @@ export default function GomboProfile({
         >
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white uppercase flex items-center gap-2">
-              <Settings className="w-5.5 h-5.5 text-orange-500" />
+              <Settings className="w-5.5 h-5.5 text-[#D4AF37]" />
               Paramètres Globaux
             </h3>
             <button 
