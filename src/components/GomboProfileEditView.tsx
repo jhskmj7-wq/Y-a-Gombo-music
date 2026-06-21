@@ -691,20 +691,33 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
         </div>
 
         {/* Actions row */}
-        <div className="flex gap-2 justify-end">
+        <div className="flex flex-col sm:flex-row gap-2 justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              if (onCancel) onCancel();
+              // If we are in "setup" mode, we might want to navigate to dashboard
+              // This is handled by the parent GomboProfile through onCancel
+            }}
+            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-750 dark:text-gray-300 font-bold rounded-xl text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            Compléter plus tard
+          </button>
+          
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-750 dark:text-gray-300 font-bold rounded-xl text-sm cursor-pointer"
+            className="px-6 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold rounded-xl text-sm cursor-pointer transition-all"
           >
             Annuler
           </button>
+          
           <button
             type="submit"
             disabled={editLoading}
             className="px-8 py-3 bg-[#D4AF37] hover:bg-orange-600 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer text-sm font-sans"
           >
-            {editLoading ? "Sauvegarde en cours..." : "Enregistrer les modifications"}
+            {editLoading ? "Sauvegarde en cours..." : "Enregistrer et Entrer"}
           </button>
         </div>
       </form>

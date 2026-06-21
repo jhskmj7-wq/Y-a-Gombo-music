@@ -958,7 +958,13 @@ export default function GomboProfile({
           editSuccess={editSuccess}
           onSubmit={handleEditProfileSubmit}
           autoSaveStatus={autoSaveStatus}
-          onCancel={() => setPanelView("main")}
+          onCancel={() => {
+            setPanelView("main");
+            // If in setup mode (initialPanelView === 'edit'), allow entering the app immediately
+            if (initialPanelView === "edit") {
+              onNavigateView("dashboard");
+            }
+          }}
           avatarUrl={avatarUrl}
           setAvatarUrl={setAvatarUrl}
           cameraActive={cameraActive}

@@ -2073,28 +2073,30 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 )}
 
                 {/* Notifications Icon (Bell) */}
-                <button
-                  id="bell-btn"
-                  onClick={() => {
-                    setActiveMenu("user_notifications");
-                    addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
-                  }}
-                  className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)]"
-                  title="Notifications"
-                >
-                  <Bell className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
-                  {realNotifications.filter(n => !n.read).length > 0 && (
-                    <motion.span
-                      key={realNotifications.filter(n => !n.read).length}
-                      initial={{ scale: 1 }}
-                      animate={{ scale: [1, 1.3, 1] }}
-                      transition={{ duration: 0.3 }}
-                      className="absolute -top-0.5 -right-0.5 bg-red-650 text-white font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black select-none"
-                    >
-                      {realNotifications.filter(n => !n.read).length}
-                    </motion.span>
-                  )}
-                </button>
+                {activeMenu !== "user_edit_profile" && (
+                  <button
+                    id="bell-btn"
+                    onClick={() => {
+                      setActiveMenu("user_notifications");
+                      addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
+                    }}
+                    className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+                    title="Notifications"
+                  >
+                    <Bell className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
+                    {realNotifications.filter(n => !n.read).length > 0 && (
+                      <motion.span
+                        key={realNotifications.filter(n => !n.read).length}
+                        initial={{ scale: 1 }}
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute -top-0.5 -right-0.5 bg-red-650 text-white font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black select-none"
+                      >
+                        {realNotifications.filter(n => !n.read).length}
+                      </motion.span>
+                    )}
+                  </button>
+                )}
 
                 {/* Profile Avatar */}
                 <div 

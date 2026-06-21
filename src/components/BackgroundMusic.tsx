@@ -49,6 +49,16 @@ export const BackgroundMusic: React.FC = () => {
     return Math.floor(Math.random() * PLAYLIST.length);
   });
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
+  
+  // Auto-switch track if current one is not in new category
+  useEffect(() => {
+    if (selectedCategory === "Tous") return;
+    const currentIsInCategory = PLAYLIST[currentIndex].category === selectedCategory;
+    if (!currentIsInCategory) {
+      handleNextTrack(true);
+    }
+  }, [selectedCategory]);
+
   const [isShuffle, setIsShuffle] = useState(() => localStorage.getItem("gombo_pref_shuffle") === "true");
   const [isLoopList, setIsLoopList] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
@@ -241,23 +251,51 @@ export const BackgroundMusic: React.FC = () => {
   };
 
   const switchTrackNext = () => {
-    if (isShuffle) {
-      // Pick random different track
-      let nextIdx = currentIndex;
-      if (PLAYLIST.length > 1) {
-        while (nextIdx === currentIndex) {
-          nextIdx = Math.floor(Math.random() * PLAYLIST.length);
-        }
-      }
-      setCurrentIndex(nextIdx);
-    } else {
+    const availableTracks = PLAYLIST.filter(t => selectedCategory === "Tous" || t.category === selectedCategory);
+    
+    if (availableTracks.length === 0) {
       setCurrentIndex((prev) => (prev + 1) % PLAYLIST.length);
+      transitionRef.current = false;
+      triggerNotification();
+      return;
     }
+
+    let nextGlobalIdx = 0;
+    if (isShuffle) {
+      if (availableTracks.length > 1) {
+        const currentInAvailableIdx = availableTracks.findIndex(t => t.id === currentTrack.id);
+        let nextIdxInAvailable = Math.floor(Math.random() * availableTracks.length);
+        while (nextIdxInAvailable === currentInAvailableIdx) {
+          nextIdxInAvailable = Math.floor(Math.random() * availableTracks.length);
+        }
+        nextGlobalIdx = PLAYLIST.findIndex(t => t.id === availableTracks[nextIdxInAvailable].id);
+      } else {
+        nextGlobalIdx = PLAYLIST.findIndex(t => t.id === availableTracks[0].id);
+      }
+    } else {
+      const currentInAvailableIdx = availableTracks.findIndex(t => t.id === currentTrack.id);
+      const nextIdxInAvailable = (currentInAvailableIdx + 1) % availableTracks.length;
+      nextGlobalIdx = PLAYLIST.findIndex(t => t.id === availableTracks[nextIdxInAvailable].id);
+    }
+
+    setCurrentIndex(nextGlobalIdx);
+    transitionRef.current = false;
     triggerNotification();
   };
 
   const handlePrevTrack = () => {
-    setCurrentIndex((prev) => (prev - 1 + PLAYLIST.length) % PLAYLIST.length);
+    const availableTracks = PLAYLIST.filter(t => selectedCategory === "Tous" || t.category === selectedCategory);
+    if (availableTracks.length === 0) {
+      setCurrentIndex((prev) => (prev - 1 + PLAYLIST.length) % PLAYLIST.length);
+      triggerNotification();
+      return;
+    }
+
+    const currentInAvailableIdx = availableTracks.findIndex(t => t.id === currentTrack.id);
+    const prevIdxInAvailable = (currentInAvailableIdx - 1 + availableTracks.length) % availableTracks.length;
+    const prevGlobalIdx = PLAYLIST.findIndex(t => t.id === availableTracks[prevIdxInAvailable].id);
+    
+    setCurrentIndex(prevGlobalIdx);
     triggerNotification();
   };
 
