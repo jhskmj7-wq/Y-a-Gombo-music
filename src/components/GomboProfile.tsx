@@ -135,10 +135,20 @@ export default function GomboProfile({
     return () => unsubscribe();
   }, [syncedProfile?.uid]);
 
-  const handleStartEditPost = (post: any) => {
-    setEditingPost(post);
-    setEditPostTitle(post.title || "");
-    setEditPostCaption(post.caption || post.description || "");
+  const handleSkipUpdate = async () => {
+    try {
+      await gomboDB.updateUserProfile(currentUserProfile.uid, {
+        isProfileComplete: false,
+        profileSkipped: true,
+        updatedAt: new Date().toISOString()
+      });
+      onRefreshProfile();
+      onNavigateView("dashboard");
+    } catch (err) {
+      console.error("Error setting skip property:", err);
+      // Fallback
+      onNavigateView("dashboard");
+    }
   };
 
   const handleSavePostEdit = async () => {
@@ -965,6 +975,7 @@ export default function GomboProfile({
               onNavigateView("dashboard");
             }
           }}
+          onSkip={handleSkipUpdate}
           avatarUrl={avatarUrl}
           setAvatarUrl={setAvatarUrl}
           cameraActive={cameraActive}

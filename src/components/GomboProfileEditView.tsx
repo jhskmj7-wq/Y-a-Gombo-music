@@ -54,6 +54,7 @@ interface GomboProfileEditViewProps {
   stopCamera: () => void;
   startCamera: () => void;
   handleFileUpload: (file: File) => void;
+  onSkip?: () => void;
   autoSaveStatus?: "idle" | "saving" | "saved" | "error";
   kycStatus?: "pending" | "approved" | "rejected" | "none" | "info_required";
   onIdentityUpload: (file: File) => void;
@@ -106,6 +107,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
   uploading, uploadProgress,
   capturePhoto, stopCamera, startCamera,
   handleFileUpload,
+  onSkip,
   autoSaveStatus = "idle",
   kycStatus = "none",
   onIdentityUpload,
@@ -695,9 +697,8 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           <button
             type="button"
             onClick={() => {
-              if (onCancel) onCancel();
-              // If we are in "setup" mode, we might want to navigate to dashboard
-              // This is handled by the parent GomboProfile through onCancel
+              if (onSkip) onSkip();
+              else if (onCancel) onCancel();
             }}
             className="px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-750 dark:text-gray-300 font-bold rounded-xl text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
           >

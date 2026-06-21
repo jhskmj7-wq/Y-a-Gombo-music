@@ -1605,11 +1605,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           currentUserProfile={profile} 
           onComplete={async () => {
             addToTerminal("[🛡️ ONBOARDING] Complétion du contrat souverain AfriID réussie !");
-            // Force state update immediately for immediate UI response
-            if (profile) {
-              setProfile({ ...profile, isProfileComplete: true });
-            }
+            // Hard bypass for access
+            setProfile({ ...profile!, isProfileComplete: true });
             await refreshProfile();
+            // Force state reload
+            window.location.reload(); 
           }} 
         />
       </div>
@@ -1834,14 +1834,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
                               🌍 Univers AFRI
                             </span>
-                            {renderMenuItem("menu_afri_id", "Afri ID", "🆔", () => {}, true)}
+                            {renderMenuItem("menu_afri_id", "Afri ID", "🆔", () => {
+                              addToTerminal("🌍 AFRI ID : Identité centrale en préparation...");
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-blue-500/10 text-blue-400 rounded border border-blue-500/10 uppercase font-black">EN PRÉPARATION</span>)}
                             {renderMenuItem("menu_wallet", "Wallet", "💳", () => {}, true)}
                             {renderMenuItem("menu_afri_academy", "Afri Academy", "🎓", () => {
                               setIsAcademyModalOpen(true);
                               setIsSidebarOpen(false);
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-purple-500/10 text-purple-400 rounded border border-purple-500/10 uppercase font-black">PRO</span>)}
-                            {renderMenuItem("menu_delivery", "Afri Livraison", "🚚", () => {}, true)}
+                            {renderMenuItem("menu_afritrust", "Afri Trust", "🛡️", () => {
+                              addToTerminal("🛡️ AFRITRUST : Certification & Confiance en développement...");
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-green-500/10 text-green-400 rounded border border-green-500/10 uppercase font-black">DÉVELOPPEMENT</span>)}
+                            {renderMenuItem("menu_afrilivraison", "Afri Livraison", "🚚", () => {
+                              addToTerminal("🚚 AFRILIVRAISON : Logistique intelligente en développement...");
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-orange-500/10 text-orange-400 rounded border border-orange-500/10 uppercase font-black">DÉVELOPPEMENT</span>)}
                             {renderMenuItem("menu_market", "Afri Market", "🛒", () => {}, true)}
                           </div>
 
