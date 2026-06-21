@@ -786,7 +786,7 @@ export default function SettingsModal({
                   <h4 className="text-xs font-black text-gray-800 dark:text-gray-300 uppercase">Paramètres de Connexion</h4>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-400">Double Facteur (Simulé)</span>
-                    <span className="px-2 py-0.5 bg-[#FF7A00]/15 text-[#FF7A00] font-bold rounded text-[10px] uppercase">
+                    <span className="px-2 py-0.5 bg-[#D4AF37]/15 text-[#D4AF37] font-bold rounded text-[10px] uppercase">
                       Actif en simulation
                     </span>
                   </div>
@@ -844,7 +844,7 @@ export default function SettingsModal({
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm mt-2"
+                    className="w-full py-2.5 bg-[#D4AF37] hover:bg-[#E06C00] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm mt-2"
                   >
                     Mettre à jour mon mot de passe
                   </button>
@@ -951,7 +951,7 @@ export default function SettingsModal({
                     <button 
                       type="button" 
                       onClick={() => setActiveLegalPage("privacy")} 
-                      className="text-[#FF7A00] hover:underline cursor-pointer uppercase tracking-wider"
+                      className="text-[#D4AF37] hover:underline cursor-pointer uppercase tracking-wider"
                     >
                       Politique de Confidentialité 📋
                     </button>
@@ -959,7 +959,7 @@ export default function SettingsModal({
                     <button 
                       type="button" 
                       onClick={() => setActiveLegalPage("terms")} 
-                      className="text-[#FF7A00] hover:underline cursor-pointer uppercase tracking-wider"
+                      className="text-[#D4AF37] hover:underline cursor-pointer uppercase tracking-wider"
                     >
                       Conditions d'Utilisation ⚖️
                     </button>
@@ -1002,7 +1002,7 @@ export default function SettingsModal({
               className={`px-5 py-2 text-xs font-black uppercase tracking-wider text-white rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
                 saveSuccess 
                   ? "bg-emerald-500 hover:bg-emerald-500" 
-                  : isSaving ? "bg-zinc-700" : "bg-[#FF7A00] hover:bg-[#E06C00]"
+                  : isSaving ? "bg-zinc-700" : "bg-[#D4AF37] hover:bg-[#E06C00]"
               }`}
             >
               {saveSuccess ? (

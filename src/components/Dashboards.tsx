@@ -387,7 +387,12 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
   return (
     <div className="space-y-6 text-left">
       {/* Overview Greeting Header Bar */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="bg-gradient-to-r from-[#D4A017] to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden"
+      >
         <div className="absolute inset-0 opacity-15 pointer-events-none">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path d="M0,50 Q25,70 50,50 T100,50 L100,100 L0,100 Z" fill="white" />
@@ -397,7 +402,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 bg-orange-700/50 rounded-full text-xs font-bold uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 bg-amber-900/50 rounded-full text-xs font-bold uppercase tracking-wider">
                 Espace {currentUserProfile.role === "admin" ? "Administrateur" : currentUserProfile.role === "client" ? "Club / Boss" : "Artiste"}
               </span>
               {mockMode && (
@@ -422,7 +427,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* SECTION VI: RECOMMANDATIONS PERSONNALISÉES */}
       <div className="bg-[#121212] border border-[#D4AF37]/25 rounded-3xl p-5 shadow-sm text-left relative overflow-hidden">
@@ -447,7 +452,12 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Column 1: Gombos/Opportunités */}
-          <div className="bg-[#0B0B0B] border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+            className="bg-[#0B0B0B] border border-gray-800 rounded-2xl p-4 flex flex-col justify-between"
+          >
             <div>
               <p className="text-xs font-black text-amber-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                 <span>🎯</span> Opportunités par style & zone
@@ -489,10 +499,15 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Column 2: Renforts Proches */}
-          <div className="bg-[#0B0B0B] border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            className="bg-[#0B0B0B] border border-gray-800 rounded-2xl p-4 flex flex-col justify-between"
+          >
             <div>
               <p className="text-xs font-black text-cyan-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                 <span>⚡</span> Renforts proches détectés
@@ -531,10 +546,15 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Column 3: Groupes & Orchestres VIP */}
-          <div className="bg-[#0B0B0B] border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+            className="bg-[#0B0B0B] border border-gray-800 rounded-2xl p-4 flex flex-col justify-between"
+          >
             <div>
               <p className="text-xs font-black text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                 <span>🎼</span> Groupes pour vos spécialités
@@ -574,7 +594,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -619,7 +639,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
             }`}
           >
             <div className="flex justify-between items-start w-full">
-              <span className="p-2 bg-orange-500/10 text-[#FF7A00] rounded-lg">
+              <span className="p-2 bg-orange-500/10 text-[#D4AF37] rounded-lg">
                 <Flame className="w-5 h-5" />
               </span>
               <span className="text-2xl font-black font-mono tracking-tight text-gray-900 dark:text-white">

@@ -437,7 +437,7 @@ export default function AnnuaireTalents({
               <ArrowLeft className="w-4 h-4" />
               <span>Retour à l'annuaire</span>
             </button>
-            <div className="text-[10px] uppercase font-black tracking-widest text-[#FF7A00] bg-orange-50 dark:bg-orange-950/20 px-2.5 py-1 rounded-md">
+            <div className="text-[10px] uppercase font-black tracking-widest text-[#D4AF37] bg-orange-50 dark:bg-orange-950/20 px-2.5 py-1 rounded-md">
               PROFIL PUBLIC PREMIUM
             </div>
           </div>
@@ -453,7 +453,7 @@ export default function AnnuaireTalents({
               
               {/* Profile image with availability dot */}
               <div className="relative">
-                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-[#FF7A00] bg-gray-50">
+                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-[#D4AF37] bg-gray-50">
                   <img 
                     src={selectedTalent.avatarUrl || selectedTalent.photoURL || AVATARS[Math.floor(Math.random() * AVATARS.length)]} 
                     alt="Talent Photo" 
@@ -483,7 +483,7 @@ export default function AnnuaireTalents({
                     {selectedTalent.firstName} {selectedTalent.lastName}
                   </h1>
                   {selectedTalent.artistName && (
-                    <span className="text-sm font-extrabold text-[#FF7A00] bg-[#FF7A00]/5 px-2 py-0.5 rounded-md">
+                    <span className="text-sm font-extrabold text-[#D4AF37] bg-[#D4AF37]/5 px-2 py-0.5 rounded-md">
                       {selectedTalent.artistName}
                     </span>
                   )}
@@ -597,8 +597,8 @@ export default function AnnuaireTalents({
                 </div>
                 <div className="text-[9px] uppercase font-bold text-gray-400">Candidatures</div>
               </div>
-              <div className="text-center p-3 bg-[#FF7A00]/5 rounded-xl border border-[#FF7A00]/10">
-                <div className="text-base sm:text-lg font-black text-[#FF7A00]">
+              <div className="text-center p-3 bg-[#D4AF37]/5 rounded-xl border border-[#D4AF37]/10">
+                <div className="text-base sm:text-lg font-black text-[#D4AF37]">
                   {viewsCount[selectedTalent.uid] || 32}
                 </div>
                 <div className="text-[9px] uppercase font-black text-gray-400">Vues Profil</div>
@@ -668,7 +668,7 @@ export default function AnnuaireTalents({
           
           {/* Header block with elegant display typography */}
           <div className="text-center space-y-2 max-w-xl mx-auto">
-            <span className="text-[10px] font-black uppercase text-[#FF7A00] bg-orange-50 dark:bg-[#FF7A00]/10 border border-[#FF7A00]/25 px-2.5 py-1 rounded-full tracking-widest inline-block">
+            <span className="text-[10px] font-black uppercase text-[#D4AF37] bg-orange-50 dark:bg-[#D4AF37]/10 border border-[#D4AF37]/25 px-2.5 py-1 rounded-full tracking-widest inline-block">
               🇨🇮 ANNURAIRE OFFICIEL DU SHOWBIZ
             </span>
             <h1 className="text-3xl font-black text-gray-950 dark:text-white uppercase tracking-tight">
@@ -788,7 +788,7 @@ export default function AnnuaireTalents({
                           <img 
                             src={talent.avatarUrl || talent.photoURL || AVATARS[0]} 
                             alt={talent.firstName} 
-                            className="w-16 h-16 rounded-2xl object-cover border-2 border-[#FF7A00]" 
+                            className="w-16 h-16 rounded-2xl object-cover border-2 border-[#D4AF37]" 
                           />
                           <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-[#1a1a22] ${
                             status === "disponible" ? "bg-emerald-500" : status === "occupe" ? "bg-amber-500" : "bg-red-500"
@@ -822,7 +822,7 @@ export default function AnnuaireTalents({
 
                       {/* Footer interactive card indicators */}
                       <div className="flex items-center justify-between pt-3 border-t border-gray-50 dark:border-gray-800/60 text-xs">
-                        <span className="text-[10px] font-black text-[#FF7A00] flex items-center gap-1 uppercase tracking-wider">
+                        <span className="text-[10px] font-black text-[#D4AF37] flex items-center gap-1 uppercase tracking-wider">
                           <Eye className="w-3.5 h-3.5" />
                           <span>{viewCount} Vues</span>
                         </span>

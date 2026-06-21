@@ -439,7 +439,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           }}
           className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer relative ${
             currentSection === "reels"
-              ? "bg-[#FF7A00] text-white shadow-md scale-[1.02]"
+              ? "bg-[#D4A017] text-black shadow-md scale-[1.02]"
               : "text-zinc-400 hover:text-white hover:bg-zinc-900/40"
           }`}
         >
@@ -452,7 +452,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         {currentSection === "home" ? (
           <>
             <span>Faites glisser vers la droite</span>
-            <span className="text-[#FF7A00] animate-pulse">➔</span>
+            <span className="text-[#D4AF37] animate-pulse">➔</span>
             <span>pour les réels</span>
           </>
         ) : (
@@ -795,8 +795,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       ) : (
         <div className="space-y-6 animate-fadeIn pb-12 select-none text-left">
           {/* Header Banner */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-[#FF7A00]/10 via-[#FF7A00]/5 to-transparent border border-[#FF7A00]/25 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF7A00]/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-[#D4AF37]/10 via-[#D4AF37]/5 to-transparent border border-[#D4AF37]/25 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
             <h2 className="text-sm font-sans font-black uppercase tracking-wider text-white">
               📱 L'ÉCHO DU SHOWBIZ & RÉELS
             </h2>
@@ -822,7 +822,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 }}
                 className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase transition shrink-0 flex items-center gap-1 cursor-pointer border ${
                   reelsFilter === pill.id
-                    ? "bg-[#FF7A00] text-white border-[#FF7A00] shadow-sm scale-105"
+                    ? "bg-[#D4AF37] text-white border-[#D4AF37] shadow-sm scale-105"
                     : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
                 }`}
               >
@@ -1127,7 +1127,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   key={mur.id}
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-3 shadow-md border-l-4 border-l-[#FF7A00]"
+                  className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-3 shadow-md border-l-4 border-l-[#D4AF37]"
                 >
                   <div className="flex items-center gap-2">
                     <img src={mur.avatar} alt="Avatar" className="w-7 h-7 rounded-full object-cover border border-zinc-800" />
@@ -1146,7 +1146,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                         const matchedUser = users.find(u => u.uid === mur.uid);
                         if (matchedUser) setSelectedExploreArtist(matchedUser);
                       }}
-                      className="text-[#FF7A00] hover:underline cursor-pointer font-bold uppercase"
+                      className="text-[#D4AF37] hover:underline cursor-pointer font-bold uppercase"
                     >
                       Explorer l'univers ➔
                     </button>

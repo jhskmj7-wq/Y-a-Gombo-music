@@ -959,7 +959,7 @@ export default function GomboProfile({
                           onNavigateView("complete_profile");
                         }
                       }}
-                      className="px-4 py-2 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-bold rounded-xl text-xs uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer text-center"
+                      className="px-4 py-2 bg-[#D4AF37] hover:bg-[#E06C00] text-white font-bold rounded-xl text-xs uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer text-center"
                     >
                       🚀 Compléter mon profil
                     </button>
@@ -969,7 +969,7 @@ export default function GomboProfile({
                 {/* Progress Track */}
                 <div className="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden flex">
                   <div 
-                    className="h-full bg-gradient-to-r from-[#FF7A00] to-amber-500 transition-all duration-500" 
+                    className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-500 transition-all duration-500" 
                     style={{ width: `${score}%` }}
                   />
                 </div>
@@ -977,7 +977,7 @@ export default function GomboProfile({
                 {/* Missing tasks to gamify engagement */}
                 {score < 100 && (
                   <div className="space-y-2.5 pt-1 animate-fadeIn">
-                    <span className="text-[10px] uppercase font-black text-[#FF7A00] dark:text-orange-400 tracking-widest block font-mono">🎯 Boostez votre visibilité en ajoutant :</span>
+                    <span className="text-[10px] uppercase font-black text-[#D4AF37] dark:text-orange-400 tracking-widest block font-mono">🎯 Boostez votre visibilité en ajoutant :</span>
                     <div className="flex flex-wrap gap-2">
                       {missing.map((it, idx) => (
                         <button
@@ -1008,7 +1008,7 @@ export default function GomboProfile({
             <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
               {/* Profile image with availability toggle badge and verified status */}
               <div className="relative">
-                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#FF7A00] bg-gray-100">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#D4AF37] bg-gray-100">
                   <img src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || AVATARS[0]} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
                 {/* Verified Badge */}
@@ -1029,12 +1029,12 @@ export default function GomboProfile({
                     {currentUserProfile.firstName} {currentUserProfile.lastName}
                   </h2>
                   {currentUserProfile.artistName && (
-                    <span className="text-sm font-bold text-orange-600 dark:text-[#FF7A00] block">
+                    <span className="text-sm font-bold text-orange-600 dark:text-[#D4AF37] block">
                       ({currentUserProfile.artistName})
                     </span>
                   )}
                   {/* Verified badge labeled */}
-                  <span className="text-[9px] font-black tracking-widest text-[#FF7A00] dark:text-yellow-400 uppercase bg-orange-50 dark:bg-yellow-950/20 px-2 py-0.5 rounded-md flex items-center gap-1">
+                  <span className="text-[9px] font-black tracking-widest text-[#D4AF37] dark:text-yellow-400 uppercase bg-orange-50 dark:bg-yellow-950/20 px-2 py-0.5 rounded-md flex items-center gap-1">
                     🌟 VÉRIFIÉ
                   </span>
 
@@ -1097,7 +1097,7 @@ export default function GomboProfile({
                     {currentUserProfile.commune || "Abidjan"}
                   </span>
                   {(currentUserProfile.role === "musicien" || (currentUserProfile.role as string) === "groupe") && (
-                    <span className="flex items-center gap-1 bg-orange-500/10 text-[#FF7A00] rounded-sm px-1 text-[11px]">
+                    <span className="flex items-center gap-1 bg-orange-500/10 text-[#D4AF37] rounded-sm px-1 text-[11px]">
                       🎸 {currentUserProfile.specialties?.join(', ') || currentUserProfile.specialty || "Artiste"}
                     </span>
                   )}
@@ -1136,7 +1136,7 @@ export default function GomboProfile({
                   </div>
                   <div className="flex items-center gap-2 sm:col-span-2">
                     <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Solde Cachets:</span>
-                    <span className="font-extrabold text-[#FF7A00]">{(currentUserProfile.balance ?? 25000).toLocaleString()} FCFA</span>
+                    <span className="font-extrabold text-[#D4AF37]">{(currentUserProfile.balance ?? 25000).toLocaleString()} FCFA</span>
                   </div>
                 </div>
               </div>
@@ -1215,11 +1215,11 @@ export default function GomboProfile({
               <div className="flex justify-between items-start">
                 <div>
                   <span className="text-[10px] uppercase font-black text-gray-400 tracking-widest block">💳 Mon Solde de Réserve</span>
-                  <h3 className="text-3xl font-black text-[#FF7A00] tracking-tight mt-1.5">
+                  <h3 className="text-3xl font-black text-[#D4AF37] tracking-tight mt-1.5">
                     {balance.toLocaleString()} <span className="text-base text-white/80">FCFA</span>
                   </h3>
                 </div>
-                <div className="bg-orange-500/10 p-2.5 rounded-2xl text-[#FF7A00] border border-orange-500/20">
+                <div className="bg-orange-500/10 p-2.5 rounded-2xl text-[#D4AF37] border border-orange-500/20">
                   <Wallet className="w-6 h-6 stroke-[2.5px]" />
                 </div>
               </div>
@@ -1258,7 +1258,7 @@ export default function GomboProfile({
                       placeholder="Montant FCFA"
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#FF7A00]"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
                     />
                   </div>
                   
@@ -1275,7 +1275,7 @@ export default function GomboProfile({
                   <button
                     type="submit"
                     disabled={withdrawLoading}
-                    className="px-4 bg-[#FF7A00] hover:bg-orange-600 font-extrabold text-xs text-white rounded-xl shadow-md transition-colors active:scale-97 flex items-center justify-center"
+                    className="px-4 bg-[#D4AF37] hover:bg-orange-600 font-extrabold text-xs text-white rounded-xl shadow-md transition-colors active:scale-97 flex items-center justify-center"
                   >
                     {withdrawLoading ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1301,7 +1301,7 @@ export default function GomboProfile({
                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight block mt-1">Candidatures</span>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-2xl font-bold">
-                  <span className="text-2xl font-black text-[#FF7A00] block">{acceptanceRate}%</span>
+                  <span className="text-2xl font-black text-[#D4AF37] block">{acceptanceRate}%</span>
                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight block mt-1">Acceptation</span>
                 </div>
               </div>
@@ -1309,7 +1309,7 @@ export default function GomboProfile({
               {/* User rating out of 5 stars */}
               <div className="p-4 bg-orange-50/20 dark:bg-orange-950/5 border border-orange-100 dark:border-orange-900/30 rounded-2xl flex items-center justify-between">
                 <div>
-                  <span className="text-[9px] font-black text-orange-600 dark:text-[#FF7A00] uppercase tracking-wider block">Note de Showbiz</span>
+                  <span className="text-[9px] font-black text-orange-600 dark:text-[#D4AF37] uppercase tracking-wider block">Note de Showbiz</span>
                   <span className="text-xs font-bold text-gray-500 dark:text-gray-450 mt-1 block">Évaluations régulières sur Abidjan</span>
                 </div>
                 <div className="flex flex-col items-end">
@@ -1347,7 +1347,7 @@ export default function GomboProfile({
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`text-[9px] uppercase font-black px-1.5 py-0.5 rounded ${
                           post.type === "gombo" 
-                            ? "bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-[#FF7A00]" 
+                            ? "bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-[#D4AF37]" 
                             : post.type === "demo"
                             ? "bg-purple-50 text-purple-600 dark:bg-purple-950/20 dark:text-purple-400"
                             : "bg-teal-50 text-teal-600 dark:bg-teal-950/20 dark:text-teal-400"
@@ -1411,7 +1411,7 @@ export default function GomboProfile({
                         type="text"
                         value={editPostTitle}
                         onChange={(e) => setEditPostTitle(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50/60 dark:bg-gray-805/40 border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white"
+                        className="w-full px-4 py-3 bg-gray-50/60 dark:bg-gray-805/40 border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white"
                       />
                     </div>
                     <div>
@@ -1420,7 +1420,7 @@ export default function GomboProfile({
                         rows={4}
                         value={editPostCaption}
                         onChange={(e) => setEditPostCaption(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50/60 dark:bg-gray-805/40 border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white"
+                        className="w-full px-4 py-3 bg-gray-50/60 dark:bg-gray-805/40 border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white"
                       />
                     </div>
                   </div>
@@ -1436,7 +1436,7 @@ export default function GomboProfile({
                       type="button"
                       onClick={handleSavePostEdit}
                       disabled={savingPostEdit}
-                      className="px-5 py-2 bg-[#FF7A00] text-white font-extrabold text-xs uppercase rounded-lg flex items-center gap-1.5 shadow-sm cursor-pointer"
+                      className="px-5 py-2 bg-[#D4AF37] text-white font-extrabold text-xs uppercase rounded-lg flex items-center gap-1.5 shadow-sm cursor-pointer"
                     >
                       {savingPostEdit ? (
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1526,7 +1526,7 @@ export default function GomboProfile({
                     Photo de Profil (Avatar)
                   </label>
                   {uploading && (
-                    <span className="text-[10px] font-black tracking-wider text-[#FF7A00] uppercase animate-pulse">
+                    <span className="text-[10px] font-black tracking-wider text-[#D4AF37] uppercase animate-pulse">
                       Chargement de la photo... {uploadProgress}%
                     </span>
                   )}
@@ -1534,7 +1534,7 @@ export default function GomboProfile({
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   {/* Current Preview or Camera active viewport */}
-                  <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#FF7A00] bg-gray-100 dark:bg-gray-800 flex-shrink-0 flex items-center justify-center shadow-inner">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#D4AF37] bg-gray-100 dark:bg-gray-800 flex-shrink-0 flex items-center justify-center shadow-inner">
                     {cameraActive ? (
                       <video
                         id="webcam-preview"
@@ -1586,7 +1586,7 @@ export default function GomboProfile({
                         <button
                           type="button"
                           onClick={startCamera}
-                          className="px-3.5 py-2 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                          className="px-3.5 py-2 bg-[#D4AF37] hover:bg-[#E06C00] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                         >
                           <Camera className="w-3.5 h-3.5" />
                           Prendre une photo
@@ -1609,7 +1609,7 @@ export default function GomboProfile({
                         type="button"
                         onClick={() => setAvatarUrl(url)}
                         className={`relative w-9 h-9 rounded-full overflow-hidden border-2 transition-all ${
-                          avatarUrl === url ? "border-[#FF7A00] scale-105" : "border-transparent"
+                          avatarUrl === url ? "border-[#D4AF37] scale-105" : "border-transparent"
                         }`}
                       >
                         <img src={url} alt="" className="w-full h-full object-cover" />
@@ -1632,7 +1632,7 @@ export default function GomboProfile({
                     required
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white text-black"
                   />
                 </div>
 
@@ -1643,7 +1643,7 @@ export default function GomboProfile({
                     required
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white text-black"
                   />
                 </div>
 
@@ -1653,7 +1653,7 @@ export default function GomboProfile({
                     type="text"
                     value={artistName}
                     onChange={(e) => setArtistName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white text-black"
                   />
                 </div>
 
@@ -1662,7 +1662,7 @@ export default function GomboProfile({
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white text-black"
                   >
                     <option value="Homme">Homme</option>
                     <option value="Femme">Femme</option>
@@ -1687,7 +1687,7 @@ export default function GomboProfile({
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black font-mono font-bold"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white text-black font-mono font-bold"
                   />
                 </div>
 
@@ -1701,7 +1701,7 @@ export default function GomboProfile({
                     placeholder="e.g. 0505050607"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black font-mono"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white text-black font-mono"
                   />
                 </div>
 
@@ -1740,12 +1740,12 @@ export default function GomboProfile({
                               setShowCommuneDropdown(false);
                               setCommuneSearch("");
                             }}
-                            className={`w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-[#FF7A00]/5 transition-all flex items-center justify-between ${
-                              commune === com ? "text-[#FF7A00] bg-orange-500/5" : "text-gray-700 dark:text-gray-300"
+                            className={`w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-[#D4AF37]/5 transition-all flex items-center justify-between ${
+                              commune === com ? "text-[#D4AF37] bg-orange-500/5" : "text-gray-700 dark:text-gray-300"
                             }`}
                           >
                             <span>📍 {com}</span>
-                            {commune === com && <Check className="w-3.5 h-3.5 text-[#FF7A00]" />}
+                            {commune === com && <Check className="w-3.5 h-3.5 text-[#D4AF37]" />}
                           </button>
                         ))}
                       </div>
@@ -1761,7 +1761,7 @@ export default function GomboProfile({
                   value={bio}
                   rows={2}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#FF7A00] dark:text-white text-black"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white text-black"
                 />
               </div>
             </div>
@@ -1770,7 +1770,7 @@ export default function GomboProfile({
               <div className="bg-white dark:bg-[#121214] p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-5">
                 <div>
                   <span className="text-sm font-black text-gray-500 uppercase tracking-widest block mb-1">🎸 Spécialités Musicales (Sélection Multiple)</span>
-                  <span className="text-[10px] text-[#FF7A00] font-bold uppercase tracking-wider block">☑ Sélectionnez une ou plusieurs spécialités :</span>
+                  <span className="text-[10px] text-[#D4AF37] font-bold uppercase tracking-wider block">☑ Sélectionnez une ou plusieurs spécialités :</span>
                 </div>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto pt-1 pr-1 border border-gray-50 dark:border-gray-850 p-2 rounded-xl">
@@ -1789,7 +1789,7 @@ export default function GomboProfile({
                         }}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold text-left border flex items-center justify-between gap-1 transition-all ${
                           selected
-                            ? "bg-[#FF7A00] border-[#FF7A00] text-white"
+                            ? "bg-[#D4AF37] border-[#D4AF37] text-white"
                             : "bg-gray-50 dark:bg-[#18181b] border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-350"
                         }`}
                       >
@@ -1802,7 +1802,7 @@ export default function GomboProfile({
 
                 <div>
                   <span className="text-sm font-black text-gray-500 uppercase tracking-widest block mb-1">🎶 Genres Musicaux (Sélection Multiple)</span>
-                  <span className="text-[10px] text-[#FF7A00] font-bold uppercase tracking-wider block">☑ Sélectionnez un ou plusieurs genres :</span>
+                  <span className="text-[10px] text-[#D4AF37] font-bold uppercase tracking-wider block">☑ Sélectionnez un ou plusieurs genres :</span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto pt-1 pr-1 border border-gray-50 dark:border-gray-850 p-2 rounded-xl">
@@ -1863,7 +1863,7 @@ export default function GomboProfile({
                                   setAvailabilities([...availabilities, av]);
                                 }
                               }}
-                              className="accent-orange-500 text-[#FF7A00]"
+                              className="accent-orange-500 text-[#D4AF37]"
                             />
                             <span>{av}</span>
                           </label>
@@ -1910,7 +1910,7 @@ export default function GomboProfile({
               <button
                 type="submit"
                 disabled={editLoading}
-                className="px-8 py-3 bg-[#FF7A00] hover:bg-orange-600 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center gap-1.5"
+                className="px-8 py-3 bg-[#D4AF37] hover:bg-orange-600 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center gap-1.5"
               >
                 {editLoading ? "Sauvegarde..." : "Enregistrer les modifications"}
               </button>
@@ -2126,7 +2126,7 @@ export default function GomboProfile({
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 p-6 rounded-3xl shadow-sm text-center space-y-4"
         >
-          <div className="inline-flex p-3 bg-orange-100 dark:bg-orange-950 text-[#FF7A00] rounded-full">
+          <div className="inline-flex p-3 bg-orange-100 dark:bg-orange-950 text-[#D4AF37] rounded-full">
             <HelpCircle className="w-10 h-10" />
           </div>
           <h3 className="text-xl font-bold uppercase text-gray-900 dark:text-white">SUPPORT ASSISTANCE GOMBO</h3>

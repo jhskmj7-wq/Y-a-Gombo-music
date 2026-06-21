@@ -528,7 +528,7 @@ export default function MessagesView({
                     <button 
                       type="submit"
                       disabled={isSending || !inputText.trim()}
-                      className="w-11 h-11 shrink-0 bg-[#FF7A00] hover:bg-[#E06C00] text-white rounded-xl flex items-center justify-center transition disabled:opacity-50 cursor-pointer shadow-md"
+                      className="w-11 h-11 shrink-0 bg-[#D4AF37] hover:bg-[#E06C00] text-white rounded-xl flex items-center justify-center transition disabled:opacity-50 cursor-pointer shadow-md"
                       title="Envoyer le message"
                     >
                       <Send className="w-4 h-4 fill-current rotate-0" />

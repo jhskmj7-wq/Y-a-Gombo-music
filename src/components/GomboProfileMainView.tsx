@@ -72,7 +72,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
           {/* Avatar frame */}
           <div className="relative">
-            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#FF7A00] bg-gray-100 dark:bg-gray-800">
+            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#D4AF37] bg-gray-100 dark:bg-gray-800">
               <img 
                 src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || AVATARS[0]} 
                 alt="Avatar" 
@@ -361,7 +361,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           </div>
 
           <div className="p-4 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl text-center">
-            <span className="text-2xl font-black text-[#FF7A00] font-mono block">{dynamicGroupsCount}</span>
+            <span className="text-2xl font-black text-[#D4AF37] font-mono block">{dynamicGroupsCount}</span>
             <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Groupes VIP</span>
           </div>
 

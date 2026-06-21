@@ -537,7 +537,7 @@ export default function CertificationHub({
           {currentUserProfile && (
             <div id="score-meter" className="bg-white/5 backdrop-blur-md p-5 rounded-2xl border border-white/10 w-full md:w-auto flex flex-col items-center justify-center space-y-3">
               <div className="text-center">
-                <div className="text-[10px] uppercase font-black tracking-widest text-[#FF7A00]">Score de Profil</div>
+                <div className="text-[10px] uppercase font-black tracking-widest text-[#D4AF37]">Score de Profil</div>
                 <div className="text-xs text-zinc-400">Complétion Artistique</div>
               </div>
               <div className="relative flex items-center justify-center w-24 h-24">
@@ -549,7 +549,7 @@ export default function CertificationHub({
                     r="32" 
                     stroke="currentColor" 
                     strokeWidth="6" 
-                    className="text-[#FF7A00] fill-none"
+                    className="text-[#D4AF37] fill-none"
                     strokeDasharray={2 * Math.PI * 32}
                     strokeDashoffset={2 * Math.PI * 32 * (1 - score / 100)} 
                     strokeLinecap="round"

@@ -172,7 +172,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                 Photo de Profil (Avatar)
               </label>
               {uploading && (
-                <span className="text-[10px] font-black tracking-wider text-[#FF7A00] uppercase animate-pulse">
+                <span className="text-[10px] font-black tracking-wider text-[#D4AF37] uppercase animate-pulse">
                   Chargement de la photo... {uploadProgress}%
                 </span>
               )}
@@ -180,7 +180,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
               {/* Current Preview or Camera active viewport */}
-              <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#FF7A00] bg-gray-100 dark:bg-gray-800 flex-shrink-0 flex items-center justify-center shadow-inner">
+              <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#D4AF37] bg-gray-100 dark:bg-gray-800 flex-shrink-0 flex items-center justify-center shadow-inner">
                 {cameraActive ? (
                   <video
                     id="webcam-preview"
@@ -232,7 +232,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     <button
                       type="button"
                       onClick={startCamera}
-                      className="px-3.5 py-2 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      className="px-3.5 py-2 bg-[#D4AF37] hover:bg-[#E06C00] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Camera className="w-3.5 h-3.5" />
                       Prendre une photo
@@ -387,7 +387,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                         }}
                         className={`w-full text-left p-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                           commune === c 
-                            ? "bg-orange-500/10 text-[#FF7A00]" 
+                            ? "bg-orange-500/10 text-[#D4AF37]" 
                             : "hover:bg-gray-50 text-gray-700 dark:text-gray-300"
                         }`}
                       >
@@ -455,7 +455,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                       }}
                       className={`px-3 py-1.5 rounded-xl text-[11px] font-bold text-left border flex items-center justify-between gap-1 transition-all ${
                         selected
-                          ? "bg-[#FF7A00] border-[#FF7A00] text-white"
+                          ? "bg-[#D4AF37] border-[#D4AF37] text-white"
                           : "bg-gray-50 dark:bg-[#18181b] border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-350"
                       }`}
                     >
@@ -576,7 +576,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                               setAvailabilities([...availabilities, day]);
                             }
                           }}
-                          className="accent-orange-500 text-[#FF7A00]"
+                          className="accent-orange-500 text-[#D4AF37]"
                         />
                         <span>{day}</span>
                       </label>
@@ -626,7 +626,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           <button
             type="submit"
             disabled={editLoading}
-            className="px-8 py-3 bg-[#FF7A00] hover:bg-orange-600 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer text-sm font-sans"
+            className="px-8 py-3 bg-[#D4AF37] hover:bg-orange-600 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer text-sm font-sans"
           >
             {editLoading ? "Sauvegarde en cours..." : "Enregistrer les modifications"}
           </button>

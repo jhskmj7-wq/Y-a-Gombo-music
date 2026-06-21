@@ -380,7 +380,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                   setShowForm(!showForm);
                 }
               }}
-              className="px-6 py-3 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-extrabold rounded-xl transition-all active:scale-97 flex items-center justify-center gap-2 text-xs shadow-lg shadow-orange-700/20"
+              className="px-6 py-3 bg-[#D4AF37] hover:bg-[#E06C00] text-white font-extrabold rounded-xl transition-all active:scale-97 flex items-center justify-center gap-2 text-xs shadow-lg shadow-orange-700/20"
             >
               <Plus className="w-4 h-5 stroke-[2.5px]" /> Demander de l'aide / un Renfort
             </button>
@@ -990,7 +990,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                         ) : (
                           <button
                             onClick={() => handleQuickApply(renfort)}
-                            className="px-5 py-2.5 bg-[#FF7A00] hover:bg-[#E06C00] text-white font-black rounded-xl text-[11px] uppercase transition-all active:scale-97 flex items-center gap-1 shadow-md shadow-orange-700/15"
+                            className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#E06C00] text-white font-black rounded-xl text-[11px] uppercase transition-all active:scale-97 flex items-center gap-1 shadow-md shadow-orange-700/15"
                           >
                             🔥 Disponible
                           </button>
