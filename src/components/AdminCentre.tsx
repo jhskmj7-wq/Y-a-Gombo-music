@@ -2029,7 +2029,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   }}
                   className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-black border border-[#D4AF37] overflow-hidden flex items-center justify-center select-none shrink-0 mr-1 cursor-pointer"
                 >
-                  <img src="/src/assets/images/afrigombo_logo_music_1782049101038.jpg" alt="Afrigombo Logo" className="w-full h-full object-cover" />
+                  <div className="w-full h-full flex items-center justify-center bg-black">
+                    <svg viewBox="0 0 40 40" className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 text-[#D4AF37]">
+                      <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                      <path d="M15 28 C 15 20, 25 20, 25 12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+                      <circle cx="15" cy="28" r="2" fill="currentColor" />
+                      <circle cx="25" cy="12" r="2" fill="currentColor" />
+                    </svg>
+                  </div>
                 </motion.div>
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-black tracking-[0.08em] text-white leading-none uppercase font-display truncate">
