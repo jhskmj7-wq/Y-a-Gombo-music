@@ -13,6 +13,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<any>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
 }
 
 // --- UTILS ---
@@ -70,6 +71,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("🎬 [AuthContext] Initializing Firebase Auth observer...");
     let profileUnsubscribe: (() => void) | null = null;
     let fallbackTimeout: NodeJS.Timeout | null = null;
+
+    const handleProfileChange = () => {
+      refreshProfile();
+    };
+    window.addEventListener("gomboUserProfileChange", handleProfileChange);
 
     const authUnsubscribe = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
       console.log("👤 [AuthContext] Auth state changed. firebaseUser:", firebaseUser);
@@ -217,6 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       authUnsubscribe();
+      window.removeEventListener("gomboUserProfileChange", handleProfileChange);
       if (profileUnsubscribe) {
         profileUnsubscribe();
       }
@@ -293,7 +300,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, profile, loading, signIn, signUp, loginWithGoogle, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ currentUser, profile, loading, signIn, signUp, loginWithGoogle, logout, refreshProfile, setProfile }}>
       {children}
     </AuthContext.Provider>
   );

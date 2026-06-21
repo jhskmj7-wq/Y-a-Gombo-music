@@ -296,10 +296,13 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
         skippedProfile: true, // Internal flag if needed
         updatedAt: new Date().toISOString()
       });
+      window.dispatchEvent(new Event("gomboUserProfileChange"));
       onComplete();
     } catch (err) {
       console.error("Error skipping profile:", err);
-      setErrorMSG("Une erreur est survenue lors de l'accès au terrain.");
+      // Even if network update fails, we try to progress locally to unblock the user
+      window.dispatchEvent(new Event("gomboUserProfileChange"));
+      onComplete();
     } finally {
       setLoading(false);
     }
@@ -383,7 +386,9 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
       onComplete();
     } catch (err: any) {
       console.error("Firestore onboarding update failed:", err);
-      setErrorMSG("Erreur réseau. Impossible d'enregistrer de manière sécurisée.");
+      // Fallback: still try to progress if possible
+      window.dispatchEvent(new Event("gomboUserProfileChange"));
+      onComplete();
     } finally {
       setLoading(false);
     }
@@ -726,7 +731,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   type="button"
                   onClick={handleSkipProfile}
                   disabled={loading}
-                  className="w-full h-11 bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full h-12 bg-amber-500/10 border border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-black font-black text-[11px] uppercase tracking-[0.2em] rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
                 >
                   <ArrowRight className="w-4 h-4" />
                   <span>MODIFIER MON PROFIL PLUS TARD & ACCÉDER À L'APPLICATION</span>

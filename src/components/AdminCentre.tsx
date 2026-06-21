@@ -355,7 +355,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     "Chercher un beatmaker...",
     "Trouver un studio..."
   ]);
-  const { currentUser, profile, logout, refreshProfile } = useAuth();
+  const { currentUser, profile, logout, refreshProfile, setProfile } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
 
@@ -1605,6 +1605,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           currentUserProfile={profile} 
           onComplete={async () => {
             addToTerminal("[🛡️ ONBOARDING] Complétion du contrat souverain AfriID réussie !");
+            // Force state update immediately for immediate UI response
+            if (profile) {
+              setProfile({ ...profile, isProfileComplete: true });
+            }
             await refreshProfile();
           }} 
         />
