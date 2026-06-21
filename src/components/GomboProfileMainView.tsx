@@ -93,11 +93,11 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             <div className="flex flex-col gap-1.5 sm:items-start">
               <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
                 <h2 className="text-2xl font-black tracking-tight text-gray-950 dark:text-white uppercase font-sans">
-                  {currentUserProfile.prenom || currentUserProfile.firstName} {currentUserProfile.nom || currentUserProfile.lastName}
+                  {((currentUserProfile.prenom || currentUserProfile.firstName || "").trim().normalize("NFC"))} {((currentUserProfile.nom || currentUserProfile.lastName || "").trim().normalize("NFC"))}
                 </h2>
                 {(currentUserProfile.nomArtistique || currentUserProfile.artistName || currentUserProfile.artisticName) && (
                   <span className="text-sm font-black text-[#D4AF37] block">
-                    ({currentUserProfile.nomArtistique || currentUserProfile.artistName || currentUserProfile.artisticName})
+                    ({((currentUserProfile.nomArtistique || currentUserProfile.artistName || currentUserProfile.artisticName || "").trim().normalize("NFC"))})
                   </span>
                 )}
                 {/* Activity Streak */}
@@ -183,7 +183,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
             {currentUserProfile.bio && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2.5 max-w-lg leading-relaxed font-semibold italic">
-                "{currentUserProfile.bio}"
+                "{currentUserProfile.bio.trim().normalize("NFC")}"
               </p>
             )}
 
@@ -191,17 +191,17 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             <div className="mt-4 pt-3.5 border-t border-gray-100 dark:border-gray-800/80 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
               <div className="flex items-center gap-2">
                 <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Ville:</span>
-                <span className="text-gray-800 dark:text-gray-200 font-bold">{currentUserProfile.location?.city || currentUserProfile.ville || currentUserProfile.city || "Abidjan"}</span>
+                <span className="text-gray-800 dark:text-gray-200 font-bold">{(currentUserProfile.location?.city || currentUserProfile.ville || currentUserProfile.city || "Abidjan").trim().normalize("NFC")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Commune:</span>
-                <span className="text-gray-800 dark:text-gray-200 font-bold">{currentUserProfile.location?.district || currentUserProfile.commune || "Cocody"}</span>
+                <span className="text-gray-800 dark:text-gray-200 font-bold">{(currentUserProfile.location?.district || currentUserProfile.commune || "Cocody").trim().normalize("NFC")}</span>
               </div>
               <div className="flex items-center gap-2 sm:col-span-2">
                 <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Quartier / Adresse:</span>
                 <span className="text-gray-800 dark:text-gray-200 font-bold truncate flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                  {currentUserProfile.location?.district || currentUserProfile.quartier || "Quartier non renseigné (à configurer)"}
+                  {(currentUserProfile.location?.district || currentUserProfile.quartier || "Quartier non renseigné (à configurer)").trim().normalize("NFC")}
                 </span>
               </div>
             </div>
@@ -302,6 +302,48 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         onRefresh={onRefreshProfile}
         onSetGallery={setMediaGallery}
       />
+
+      {/* SECTION PUBLICATIONS D'ACTIVITÉ */}
+      <div id="section-activities" className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
+        <h3 className="text-xs font-black uppercase text-gray-400 tracking-widest flex items-center gap-1.5">
+          <span>📢 Publications d'Activité & Murmures d'époque ({myPosts.length})</span>
+        </h3>
+        
+        {myPosts.length === 0 ? (
+          <p className="text-xs text-gray-400 dark:text-zinc-500 italic text-center py-6 font-bold">
+            Aucun murmure de scène ou publication n'a encore été émis par cet artiste d'élite.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {myPosts.map((post) => (
+              <div 
+                key={post.id} 
+                className="p-4 rounded-2xl bg-gray-50 dark:bg-black/40 border border-gray-100 dark:border-zinc-900 text-left relative overflow-hidden"
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <div>
+                    <h4 className="text-xs font-black text-gray-950 dark:text-gray-100 uppercase">
+                      {post.authorArtisticName || currentUserProfile.artisticName || "Artiste Prestigieux"}
+                    </h4>
+                    <span className="text-[9px] font-mono text-gray-400 dark:text-zinc-500">
+                      {post.timestamp ? new Date(post.timestamp).toLocaleDateString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "Récemment"}
+                    </span>
+                  </div>
+                </div>
+                
+                <p className="text-xs text-gray-700 dark:text-gray-300 mt-2.5 leading-relaxed whitespace-pre-wrap font-sans">
+                  {post.content}
+                </p>
+                
+                <div className="flex gap-4 mt-3 pt-2.5 border-t border-gray-150/40 dark:border-zinc-900/60 text-[10px] font-mono font-bold text-gray-500">
+                  <span>👍 {post.likes || 0} Soutiens</span>
+                  <span>💬 {post.comments || 0} Commentaires</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* SECTION STATISTIQUES DES ACTIVITÉS RECRUTEMENT GOMBOS */}
       <div id="section-stats" className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">

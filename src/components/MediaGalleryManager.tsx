@@ -33,6 +33,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
   
   // YouTube Lightbox states
   const [lightboxVideoId, setLightboxVideoId] = useState<string | null>(null);
+  const [lightboxVideoUrl, setLightboxVideoUrl] = useState<string | null>(null);
 
   const getYoutubeId = (url: string) => {
     let videoId = "";
@@ -208,23 +209,33 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
             ) : (
               videos.map((vid) => {
                 const yId = getYoutubeId(vid.url);
+                const isRawVideo = vid.type === "video" || !yId;
                 const thumb = yId 
                   ? `https://img.youtube.com/vi/${yId}/mqdefault.jpg`
-                  : "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=250";
+                  : "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&q=80&w=350";
                 
                 return (
                   <div key={vid.id} className="relative group overflow-hidden bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl flex flex-col">
                     <div className="aspect-video w-full bg-black relative flex items-center justify-center overflow-hidden">
-                      <img src={thumb} alt={vid.title} className="w-full h-full object-cover opacity-85 hover:scale-102 transition-transform" />
+                      {isRawVideo ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 p-4 font-mono text-center select-none">
+                          <Video className="w-8 h-8 text-orange-550 mb-2 animate-pulse" />
+                          <span className="text-[10px] font-black tracking-wider text-orange-400 uppercase">Vidéo de Démo Directe</span>
+                          <span className="text-[8px] text-zinc-500 break-all truncate max-w-full mt-1 px-2">{vid.title}</span>
+                        </div>
+                      ) : (
+                        <img src={thumb} alt={vid.title} className="w-full h-full object-cover opacity-85 hover:scale-102 transition-transform" />
+                      )}
+                      
                       <button
                         onClick={() => {
                           if (yId) {
                             setLightboxVideoId(yId);
                           } else {
-                            window.open(vid.url, "_blank", "no-referrer");
+                            setLightboxVideoUrl(vid.url);
                           }
                         }}
-                        className="absolute p-3 bg-red-600 hover:bg-red-500 text-white rounded-full shadow-lg transform transition-all hover:scale-110 cursor-pointer"
+                        className="absolute p-3 bg-orange-600 hover:bg-orange-500 text-white rounded-full shadow-lg transform transition-all hover:scale-110 cursor-pointer"
                       >
                         <Play className="w-6 h-6 fill-current text-white" />
                       </button>
@@ -328,7 +339,8 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                   onChange={(e) => setMediaType(e.target.value as any)}
                   className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold dark:text-white"
                 >
-                  <option value="youtube">🎥 Lien Vidéo YouTube / Vidéothèque</option>
+                  <option value="youtube">👁️‍🗨️ Lien Vidéo YouTube / Vidéothèque</option>
+                  <option value="video">🎥 Importer Fichier Vidéo (MP4, WebM)</option>
                   <option value="audio">🎵 Fichier Audio / Démo Chanson</option>
                   <option value="photo">📸 Photo de scène / Galerie</option>
                 </select>
@@ -424,7 +436,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
           <div className="w-full max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden relative border border-gray-850">
             <button
               onClick={() => setLightboxVideoId(null)}
-              className="absolute top-3 right-3 z-10 p-2 bg-black/60 hover:bg-black/90 text-white rounded-full text-xs font-bold border border-white/20 hover:scale-105"
+              className="absolute top-3 right-3 z-10 p-2 bg-black/60 hover:bg-black/90 text-white rounded-full text-xs font-bold border border-white/20 hover:scale-105 cursor-pointer leading-none"
             >
               Fermer ✖
             </button>
@@ -435,6 +447,26 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               className="w-full h-full"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Raw Video Lightbox player */}
+      {lightboxVideoUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
+          <div className="w-full max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden relative border border-gray-850 flex items-center justify-center">
+            <button
+              onClick={() => setLightboxVideoUrl(null)}
+              className="absolute top-3 right-3 z-10 p-2 bg-black/60 hover:bg-black/90 text-white rounded-full text-xs font-bold border border-white/20 hover:scale-105 cursor-pointer leading-none"
+            >
+              Fermer ✖
+            </button>
+            <video 
+              src={lightboxVideoUrl} 
+              controls 
+              autoPlay 
+              className="w-full h-full object-contain"
             />
           </div>
         </div>

@@ -624,16 +624,21 @@ export default function AnnuaireTalents({
                 <span>Contacter l'Artiste</span>
               </button>
 
-              {/* WhatsApp direct launch with dynamic wa.me template */}
-              <a 
-                href={`https://wa.me/${selectedTalent.phone.replace(/[^0-9]/g, "") || "2250102030405"}?text=Salut%20${selectedTalent.firstName}%20!%20J%27ai%20vu%20ton%20profil%20sur%20Y%27A%20GOMBO%20MUSIC%20et%20je%20souhaiterais%20te%20recruter.`}
-                target="_blank"
-                rel="no-referrer"
-                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 border border-emerald-600/20"
+              {/* Proposition de Cachet (Requirement 3: internal safe communication and booking) */}
+              <button 
+                onClick={() => {
+                  if (!currentUserProfile) {
+                    alert("Veuillez vous connecter pour formuler une proposition de cachet.");
+                    return;
+                  }
+                  setContactingTalent(selectedTalent);
+                  setContactMessage(`PROPOSITION DE CACHET : Salut ${selectedTalent.firstName}, j'ai examiné avec intérêt ton univers d'artiste et ton parcours sur l'Annuaire AfriGombo. Nous aimerions te proposer officiellement un cachet en toute sécurité pour une prestation à venir. Quels sont tes tarifs et disponibilités actuels ?`);
+                }}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 border border-emerald-600/20 cursor-pointer"
               >
-                <Smartphone className="w-4 h-4" />
-                <span>📱 WhatsApp Direct</span>
-              </a>
+                <Award className="w-4 h-4" />
+                <span>💎 Proposer un Cachet</span>
+              </button>
 
               {/* Share button */}
               <button 

@@ -99,13 +99,6 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
 
   // Initialize fields if they exist in user profile
   useEffect(() => {
-    // Start ambient music loop on mount
-    try {
-      audioSynth.startAmbientLoop();
-    } catch (_) {}
-  }, []);
-
-  useEffect(() => {
     if (currentUserProfile) {
       if (currentUserProfile.prenom) setPrenom(currentUserProfile.prenom);
       else if (currentUserProfile.firstName) setPrenom(currentUserProfile.firstName);
@@ -305,35 +298,35 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
 
     const updates: Partial<UserProfile> = {
       // New structure requested
-      prenom: prenom.trim(),
-      nom: nom.trim(),
-      nomArtistique: nomArtistique.trim() || `${prenom.trim()} ${nom.trim()}`,
+      prenom: prenom.trim().normalize("NFC"),
+      nom: nom.trim().normalize("NFC"),
+      nomArtistique: (nomArtistique.trim() || `${prenom.trim()} ${nom.trim()}`).normalize("NFC"),
       photoURL: avatarUrl,
-      telephone: telephone.trim(),
+      telephone: telephone.trim().normalize("NFC"),
       location: {
-        country: country.trim(),
-        city: finalCity.trim(),
-        district: district.trim()
+        country: country.trim().normalize("NFC"),
+        city: finalCity.trim().normalize("NFC"),
+        district: district.trim().normalize("NFC")
       },
-      bio: bio.trim(),
-      mainRole: finalMainRole,
-      secondaryRoles: secondaryRoles,
-      genres: finalGenres,
-      collaborations: collaborations,
+      bio: bio.trim().normalize("NFC"),
+      mainRole: finalMainRole.normalize("NFC"),
+      secondaryRoles: secondaryRoles.map(r => r.normalize("NFC")),
+      genres: finalGenres.map(g => g.normalize("NFC")),
+      collaborations: collaborations.map(c => c.normalize("NFC")),
       
       // Compatibility fields
-      firstName: prenom.trim(),
-      lastName: nom.trim(),
-      displayName: nomArtistique.trim() || `${prenom.trim()} ${nom.trim()}`,
-      artisticName: nomArtistique.trim() || `${prenom.trim()} ${nom.trim()}`,
-      phone: telephone.trim(),
-      commune: district.trim() || finalCity.trim(),
-      ville: finalCity.trim(),
-      country: country.trim(),
-      city: finalCity.trim(),
+      firstName: prenom.trim().normalize("NFC"),
+      lastName: nom.trim().normalize("NFC"),
+      displayName: (nomArtistique.trim() || `${prenom.trim()} ${nom.trim()}`).normalize("NFC"),
+      artisticName: (nomArtistique.trim() || `${prenom.trim()} ${nom.trim()}`).normalize("NFC"),
+      phone: telephone.trim().normalize("NFC"),
+      commune: (district.trim() || finalCity.trim()).normalize("NFC"),
+      ville: finalCity.trim().normalize("NFC"),
+      country: country.trim().normalize("NFC"),
+      city: finalCity.trim().normalize("NFC"),
       avatarUrl: avatarUrl,
-      role: finalMainRole,
-      specialties: [finalMainRole, ...secondaryRoles],
+      role: finalMainRole.normalize("NFC"),
+      specialties: [finalMainRole, ...secondaryRoles].map(s => s.normalize("NFC")),
 
       isProfileComplete: true,
       updatedAt: new Date().toISOString()

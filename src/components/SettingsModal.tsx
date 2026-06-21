@@ -9,6 +9,8 @@ import { useLanguage, Language } from "../LanguageContext";
 import { useAuth } from "../AuthContext";
 import { gomboDB } from "../firebase";
 import { audioSynth } from "../lib/audio";
+import { playSound } from "../services/audioService";
+import { triggerSettingsSaved, usePerformance } from "../services/performanceService";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -41,10 +43,19 @@ export default function SettingsModal({
   const [region, setRegion] = useState(() => localStorage.getItem("gombo_pref_region") || "Abidjan (Cocody)");
   const [paymentMethod, setPaymentMethod] = useState(() => localStorage.getItem("gombo_pref_payment") || "Wave");
   const [currency, setCurrency] = useState(() => localStorage.getItem("gombo_pref_currency") || "FCFA");
-  const [audioVolume, setAudioVolume] = useState(() => parseInt(localStorage.getItem("gombo_pref_volume") || "80"));
+  const [audioVolume, setAudioVolume] = useState(() => parseInt(localStorage.getItem("gombo_pref_volume") || "70"));
   const [enableSoundAlerts, setEnableSoundAlerts] = useState(() => localStorage.getItem("gombo_pref_alerts") !== "false");
   const [enableUiSounds, setEnableUiSounds] = useState(() => localStorage.getItem("gombo_pref_ui_sounds") !== "false");
   const [enableAmbientMusic, setEnableAmbientMusic] = useState(() => localStorage.getItem("gombo_pref_ambient_music") !== "false");
+  const [enableVibration, setEnableVibration] = useState(() => localStorage.getItem("gombo_pref_vibration") !== "false");
+  const [soundMode, setSoundMode] = useState(() => localStorage.getItem("gombo_pref_sound_mode") || "Standard");
+  const [ambianceAudio, setAmbianceAudio] = useState(() => localStorage.getItem("gombo_pref_ambiance") || "Silencieux");
+
+  // Performance hooks & states
+  const [enableAnimations, setEnableAnimations] = useState(() => localStorage.getItem("gombo_pref_animations") !== "false");
+  const [enableDataSave, setEnableDataSave] = useState(() => localStorage.getItem("gombo_pref_data_save") === "true");
+  const [enableBatterySave, setEnableBatterySave] = useState(() => localStorage.getItem("gombo_pref_battery_save") === "true");
+  const { batteryLevel, isBatteryLow, isSlowConnection, connectionType } = usePerformance();
 
   // Privacy states
   const [publicProfile, setPublicProfile] = useState(() => localStorage.getItem("gombo_pref_public_profile") !== "false");
@@ -104,6 +115,15 @@ export default function SettingsModal({
     localStorage.setItem("gombo_pref_alerts", enableSoundAlerts.toString());
     localStorage.setItem("gombo_pref_ui_sounds", enableUiSounds.toString());
     localStorage.setItem("gombo_pref_ambient_music", enableAmbientMusic.toString());
+    localStorage.setItem("gombo_pref_vibration", enableVibration.toString());
+    localStorage.setItem("gombo_pref_sound_mode", soundMode);
+    localStorage.setItem("gombo_pref_ambiance", ambianceAudio);
+
+    // Performance settings
+    localStorage.setItem("gombo_pref_animations", enableAnimations.toString());
+    localStorage.setItem("gombo_pref_data_save", enableDataSave.toString());
+    localStorage.setItem("gombo_pref_battery_save", enableBatterySave.toString());
+    triggerSettingsSaved();
     
     // Privacy
     localStorage.setItem("gombo_pref_public_profile", publicProfile.toString());
@@ -113,9 +133,12 @@ export default function SettingsModal({
     localStorage.setItem("gombo_pref_newsletter", receiveNewsletter.toString());
 
     // Update ambient loop immediately
-    if (enableAmbientMusic) {
-      audioSynth.startAmbientLoop();
+    if (enableAmbientMusic && ambianceAudio !== "Silencieux") {
+      // Background music component will listen for this
+      window.dispatchEvent(new CustomEvent('gombo_music_toggle', { detail: { play: true, style: ambianceAudio } }));
+      audioSynth.startAmbientLoop(); 
     } else {
+      window.dispatchEvent(new CustomEvent('gombo_music_toggle', { detail: { play: false } }));
       audioSynth.stopAmbientLoop();
     }
 
@@ -130,7 +153,10 @@ export default function SettingsModal({
             themeMode: themeMode,
             audioVolume: audioVolume,
             publicProfile: publicProfile,
-            showContactDetails: showContactDetails
+            showContactDetails: showContactDetails,
+            vibration: enableVibration,
+            soundMode: soundMode,
+            ambianceAudio: ambianceAudio
           }
         });
       } catch (err) {
@@ -149,17 +175,7 @@ export default function SettingsModal({
     // Play confirmation sound if enabled
     if (enableUiSounds) {
       try {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
-        gain.gain.setValueAtTime((audioVolume / 100) * 0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.4);
+        playSound("success");
       } catch (e) {
         // Audio browser safety
       }
@@ -427,48 +443,100 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                <div className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/10 space-y-3.5 mt-8">
-                  <h4 className="text-xs font-black text-gray-800 dark:text-gray-300 uppercase">Volume & Alertes Audio</h4>
+                 <div className="border border-gray-100 dark:border-gray-800 p-5 rounded-2xl bg-[#0b0b0c] space-y-4 mt-8 border-l-4 border-[#D4AF37]">
+                  <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <span>🪘 Sons AFRIGOMBO</span>
+                  </h4>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      <span className="flex items-center gap-1.5">
-                        <Volume2 className="w-4 h-4 text-orange-500" />
-                        Volume des effets
-                      </span>
-                      <span className="font-mono text-xs text-orange-500 font-extrabold">{audioVolume}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={audioVolume}
-                      onChange={(e) => setAudioVolume(parseInt(e.target.value))}
-                      onMouseUp={playDemoBeep}
-                      onTouchEnd={playDemoBeep}
-                      className="w-full accent-orange-500 cursor-pointer"
-                    />
-
-                    <div className="space-y-3 pt-1">
-                      <label className="flex items-center justify-between cursor-pointer group">
-                        <div className="space-y-0.5">
-                          <span className="text-xs font-bold text-gray-800 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
-                            🚨 Flash Gombos Urgents
-                          </span>
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                        <span className="text-xs font-bold text-gray-300">☑ Sons d'effets activés</span>
                         <input
                           type="checkbox"
-                          checked={enableSoundAlerts}
-                          onChange={(e) => setEnableSoundAlerts(e.target.checked)}
+                          checked={enableUiSounds}
+                          onChange={(e) => setEnableUiSounds(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative"></div>
+                        <div className="w-9 h-5 bg-gray-850 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative"></div>
                       </label>
 
-                      <label className="flex items-center justify-between cursor-pointer group">
+                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                        <span className="text-xs font-bold text-gray-300">☑ Vibrations haptiques</span>
+                        <input
+                          type="checkbox"
+                          checked={enableVibration}
+                          onChange={(e) => setEnableVibration(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-gray-850 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative"></div>
+                      </label>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-semibold text-gray-400">
+                        <span className="flex items-center gap-1.5">
+                          <Volume2 className="w-4 h-4 text-[#D4AF37]" />
+                          Volume principal
+                        </span>
+                        <span className="font-mono text-xs text-[#D4AF37] font-black">{audioVolume}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={audioVolume}
+                        onChange={(e) => setAudioVolume(parseInt(e.target.value))}
+                        onMouseUp={playDemoBeep}
+                        onTouchEnd={playDemoBeep}
+                        className="w-full accent-[#D4AF37] cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Mode d'écoute</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {["Silencieux", "Standard", "Immersion"].map((m) => {
+                          const isSelected = soundMode === m;
+                          return (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => {
+                                setSoundMode(m);
+                                if (m !== "Silencieux") {
+                                  try { audioSynth.playTamTam(m === "Immersion"); } catch (_) {}
+                                }
+                              }}
+                              className={`py-2 px-3 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37]"
+                                  : "bg-transparent border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
+                              }`}
+                            >
+                              {m}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border border-gray-100 dark:border-gray-800 p-5 rounded-2xl bg-[#0b0b0c] space-y-4 border-l-4 border-cyan-500">
+                  <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center justify-between">
+                    <span>⚙ Performance & Optimisation</span>
+                    <span className="text-[9px] bg-cyan-500/10 text-cyan-400 font-mono py-0.5 px-2 rounded-full uppercase">Stabilité continue</span>
+                  </h4>
+                  <div className="space-y-4">
+                    <p className="text-[11px] text-zinc-400 leading-relaxed">
+                      Optimisez l'application pour rester parfaitement réactive sur de faibles connexions de données (2G, slow-2g), batterie faible ou téléphones de modeste configuration.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
                         <div className="space-y-0.5">
-                          <span className="text-xs font-bold text-gray-800 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
-                            🛎️ Clics interactifs
-                          </span>
+                          <span className="text-xs font-bold text-gray-300">🎵 Sons AFRIGOMBO</span>
+                          <span className="text-[9px] text-zinc-500 block">Sons et effets sonores</span>
                         </div>
                         <input
                           type="checkbox"
@@ -476,24 +544,136 @@ export default function SettingsModal({
                           onChange={(e) => setEnableUiSounds(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative"></div>
+                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
                       </label>
 
-                      <label className="flex items-center justify-between cursor-pointer group">
+                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
                         <div className="space-y-0.5">
-                          <span className="text-xs font-bold text-gray-800 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
-                            🎷 Atmosphère Musicale (Live)
-                          </span>
+                          <span className="text-xs font-bold text-gray-300">✨ Animations</span>
+                          <span className="text-[9px] text-zinc-500 block">Transitions et animations de glissement</span>
                         </div>
                         <input
                           type="checkbox"
-                          checked={enableAmbientMusic}
-                          onChange={(e) => setEnableAmbientMusic(e.target.checked)}
+                          checked={enableAnimations}
+                          onChange={(e) => setEnableAnimations(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative"></div>
+                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
+                      </label>
+
+                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-bold text-gray-300">📶 Économie de données</span>
+                          <span className="text-[9px] text-zinc-500 block">Qualité d'image minimale, pas de préchargement</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={enableDataSave}
+                          onChange={(e) => setEnableDataSave(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
+                      </label>
+
+                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-bold text-gray-300">🔋 Économie batterie</span>
+                          <span className="text-[9px] text-zinc-500 block">Désactiver vibrations, fréquence réduite</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={enableBatterySave}
+                          onChange={(e) => setEnableBatterySave(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
                       </label>
                     </div>
+
+                    <div className="p-3.5 rounded-xl bg-black/40 border border-zinc-850 space-y-2 font-mono text-[10px] text-zinc-400">
+                      <div className="flex justify-between items-center">
+                        <span className="text-zinc-500 uppercase tracking-widest">Batterie du dispositif:</span>
+                        <span className={`font-bold ${isBatteryLow ? "text-yellow-500 animate-pulse" : "text-emerald-500"}`}>
+                          {batteryLevel}% {isBatteryLow && "(Faible)"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-zinc-500 uppercase tracking-widest">Connexion active:</span>
+                        <span className={`font-bold ${isSlowConnection ? "text-cyan-400 animate-pulse" : "text-emerald-500"}`}>
+                          {connectionType.toUpperCase()} {isSlowConnection && "(Lente)"}
+                        </span>
+                      </div>
+                      {(isBatteryLow || isSlowConnection) && (
+                        <div className="pt-2 border-t border-zinc-900/60 space-y-1">
+                          {isBatteryLow && (
+                            <div className="flex items-center gap-1.5 text-yellow-500 font-bold uppercase text-[9px]">
+                              <span>🔋 Batterie faible détectée. Mode léger AFRIGOMBO activé automatiquement.</span>
+                            </div>
+                          )}
+                          {isSlowConnection && (
+                            <div className="flex items-center gap-1.5 text-cyan-450 font-bold uppercase text-[9px]">
+                              <span>📶 Connexion lente. AFRIGOMBO optimise votre expérience en continu.</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border border-gray-100 dark:border-gray-800 p-5 rounded-2xl bg-[#0b0b0c] space-y-4 border-l-4 border-emerald-500">
+                  <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center justify-between">
+                    <span>🎵 Ambiance AFRIGOMBO</span>
+                    <span className="text-[9px] bg-emerald-500/10 text-emerald-400 font-mono py-0.5 px-2 rounded-full uppercase">Canal Musical Continu</span>
+                  </h4>
+                  <div className="space-y-4">
+                    <p className="text-[11px] text-zinc-400 leading-relaxed">Activez une ambiance sonore de fond pour vous plonger au sein d'une véritable maison de production d'Abidjan.</p>
+                    
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-bold text-gray-300">Activer la musique de fond</span>
+                        <p className="text-[9px] text-zinc-500">Boucles d'instruments de prestige (Kora, Djembé, Saxophone)</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={enableAmbientMusic}
+                        onChange={(e) => setEnableAmbientMusic(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-850 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 relative"></div>
+                    </label>
+
+                    {enableAmbientMusic && (
+                      <div className="space-y-2 pt-1 animate-fadeIn">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Sélectionner l'Univers</span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {["Silencieux", "Afro Chill", "Piano Lounge", "Percussion Africaine", "Studio Beat"].map((style) => {
+                            const isSelected = ambianceAudio === style;
+                            return (
+                              <button
+                                key={style}
+                                type="button"
+                                onClick={() => {
+                                  setAmbianceAudio(style);
+                                  // Live trigger sounds on selection to provide beautiful responsive instant feeling
+                                  try {
+                                    if (style === "Percussion Africaine") audioSynth.playTamTam(false);
+                                    else audioSynth.playKoraNote(392.00, 0, 0.2, 0.4);
+                                  } catch (_) {}
+                                }}
+                                className={`py-2 px-2.5 rounded-xl border text-[11px] font-bold transition-all text-center cursor-pointer ${
+                                  isSelected
+                                    ? "bg-emerald-500/10 border-emerald-500 text-[#10B981] font-black"
+                                    : "bg-transparent border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
+                                }`}
+                              >
+                                {style}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

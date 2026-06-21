@@ -26,7 +26,10 @@ import NotificationCenter from "./NotificationCenter";
 import ComingSoon from "./ComingSoon";
 import { UserTerrainLandingPage } from "./UserTerrainLandingPage";
 import SettingsModal from "./SettingsModal";
+import AfrigomboPlus from "./AfrigomboPlus";
+import MusicianStats from "./MusicianStats";
 import { gomboDB } from "../firebase";
+import { usePerformance } from "../services/performanceService";
 import {
   AdminMenu,
   User,
@@ -107,7 +110,9 @@ import {
   Terminal,
   Database,
   Brain,
-  LifeBuoy
+  LifeBuoy,
+  Video,
+  Play
 } from "lucide-react";
 import {
   AreaChart,
@@ -124,6 +129,13 @@ const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
   "Port-Bouët", "Koumassi", "Adjamé", "Abobo", "Bingerville"
 ];
+
+function getYoutubeId(url: string): string | null {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
 
 // --- INITIAL RESILIENT DATASETS (OFFLINE-FIRST ACCURATE SIMULATIONS) ---
 const INITIAL_USERS: User[] = [
@@ -373,6 +385,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   };
 
   const [activeMenu, setActiveMenu] = useState<any>("user_terrain");
+  const [reelsVideoId, setReelsVideoId] = useState<string | null>(null);
+  const [reelsVideoUrl, setReelsVideoUrl] = useState<string | null>(null);
   
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -430,6 +444,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   }, [currentUser?.uid]);
 
   // Le Terrain, Vibes, and dynamic publishing interactions states
+  const { isBatteryLow, isSlowConnection, isDataSaveActive, isBatterySaveActive, areAnimationsReduced } = usePerformance();
   const [terrainTab, setTerrainTab] = useState<"all" | "musicien" | "contrat">("all");
   const [appliedGombos, setAppliedGombos] = useState<string[]>([]);
   const [newPostContent, setNewPostContent] = useState<string>("");
@@ -666,15 +681,24 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   ]);
 
   // --- DYNAMIC BRIEF DATA (DAILY SUMMARY MODULE) ---
-  const [brief, setBrief] = useState<AdminBrief>({
-    newUsersCount: 38,
-    newPostsCount: 124,
-    newGombosCount: 4,
-    revenuesGenerated: 485000,
-    kycRequestsCount: 1,
-    criticalAlertsCount: 2,
+  // Calculate real admin metrics from live snapshots
+  const newUsersCount = users.filter((u: any) => {
+    // Users registered within the last 7 days
+    const created = new Date(u.createdAt || Date.now());
+    return (Date.now() - created.getTime()) < 7 * 24 * 60 * 60 * 1000;
+  }).length;
+  
+  const brief = {
+    newUsersCount,
+    newPostsCount: posts.length,
+    newGombosCount: gombos.length,
+    revenuesGenerated: transactions.reduce((sum: number, tx: any) => sum + (tx.amount || 0), 0),
+    kycRequestsCount: users.filter((u: any) => u.kycStatus === 'pending').length,
+    criticalAlertsCount: alerts.filter((a: any) => a.status === 'open' || a.priority === 'high').length + posts.filter((p: any) => p.isFlagged).length,
     timestamp: new Date().toLocaleDateString()
-  });
+  };
+
+  const [adminLogs, setAdminLogs] = useState<any[]>([]);
 
   // --- FORMS & EDIT STATES ---
   const [newGombo, setNewGombo] = useState({
@@ -803,6 +827,20 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         console.warn("🔐 Posts sync limited or offline:", error.message);
       });
 
+      const qLogs = collection(db, "admin_logs");
+      const unsubscribeLogs = onSnapshot(qLogs, (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedLogs: any[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedLogs.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          fetchedLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          setAdminLogs(fetchedLogs);
+        }
+      }, (error) => {
+        console.warn("🔐 Logs sync limited:", error.message);
+      });
+
       return () => {
         unsubscribeUsers();
         unsubscribeGombos();
@@ -810,6 +848,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         unsubscribeReviews();
         unsubscribeAlerts();
         unsubscribePosts();
+        unsubscribeLogs();
       };
     } catch (e) {
       addToTerminal(`[Alerte locale] Lancement offline synchronisé.`);
@@ -1043,10 +1082,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     setTransactions(prev => [tx, ...prev]);
     await saveToFirestore("transactions", tx.id, tx);
     
-    setBrief(prev => ({
-      ...prev,
-      revenuesGenerated: prev.revenuesGenerated + amount
-    }));
+    // Update statistics handled dynamically via onSnapshot
     
     addToTerminal(`[💰 LA CAISSE] Paiement de ${amount.toLocaleString()} FCFA reçu : ${description}`);
   };
@@ -1134,11 +1170,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     // Sync with database
     await saveToFirestore("gombos", gomboData.id, gomboData);
 
-    // Update statistics
-    setBrief(prev => ({
-      ...prev,
-      newGombosCount: prev.newGombosCount + 1
-    }));
+    // Update statistics handled dynamically via onSnapshot
 
     // Reset Form
     setNewGombo({
@@ -1395,10 +1427,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       `Attribution de l'identifiant permanent ${gmbId}. Type : ${express ? "Express" : "Standard"}`
     );
 
-    setBrief(prev => ({
-      ...prev,
-      kycRequestsCount: Math.max(0, prev.kycRequestsCount - 1)
-    }));
+    // Update statistics handled dynamically via onSnapshot
   };
 
   const handleRejectKYC = async (userId: string) => {
@@ -1703,24 +1732,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 </span>
                               </div>
                             </div>
-
-                            {/* SIMULATED ACTIVE ARTIST SELECTOR */}
-                            {perspective === "user" && !profile && (
-                              <div className="space-y-1 pt-1 border-t border-[#D4AF37]/10">
-                                <span className="text-[8px] uppercase font-mono text-zinc-400 block font-semibold">🔮 Profil Simulé :</span>
-                                <select
-                                  value={activeArtistId}
-                                  onChange={(e) => setActiveArtistId(e.target.value)}
-                                  className="w-full bg-black border border-[#D4AF37]/25 rounded px-2 py-1 text-[9.5px] text-white font-mono focus:outline-none cursor-pointer"
-                                >
-                                  {users.map(u => (
-                                    <option key={u.id} value={u.id} className="bg-black text-white">
-                                      {u.artisticName}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            )}
                           </div>
                         );
                       })()
@@ -1790,6 +1801,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               setIsSidebarOpen(false);
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/10 uppercase font-black">LIVE</span>)}
+                            {renderMenuItem("menu_reels", "Vidéos Réelles", "🎥", () => {
+                              setPerspective("user");
+                              setActiveMenu("user_reels");
+                              setIsSidebarOpen(false);
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-orange-500/10 text-orange-400 rounded border border-orange-500/10 uppercase font-black" style={{ contentVisibility: 'auto' }}>NEW</span>)}
                             {renderMenuItem("menu_favorites", "Favoris", "⭐", () => {}, true)}
                             {renderMenuItem("menu_history", "Historique", "🕓", () => {}, true)}
                             {renderMenuItem("menu_near_opports", "Opportunités proches", "📍", () => {
@@ -2005,9 +2022,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
-                  className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-black border border-[#D4AF37] flex items-center justify-center select-none shrink-0 mr-1 cursor-pointer"
+                  className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-black border border-[#D4AF37] overflow-hidden flex items-center justify-center select-none shrink-0 mr-1 cursor-pointer"
                 >
-                  <Flame className="text-[#D4AF37] w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2]" />
+                  <img src="/logo.png" alt="Afrigombo Logo" className="w-full h-full object-cover" />
                 </motion.div>
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-black tracking-[0.08em] text-white leading-none uppercase font-display truncate">
@@ -2016,6 +2033,26 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   <span className="text-[7.5px] xs:text-[8.5px] sm:text-[10px] font-sans font-black tracking-wider text-[#D4AF37] leading-none uppercase mt-0.5 sm:mt-1 truncate">
                     Y'A GOMBO MUSIC
                   </span>
+                </div>
+
+                {/* OPTIMIZATION & PERFORMANCE BADGES (INTELLIGENT MODE) */}
+                <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                  {isDataSaveActive && (
+                    <div 
+                      className="flex items-center gap-1 py-0.5 px-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-[8px] xs:text-[9px] font-black uppercase tracking-tight"
+                      title="Économie de données activée"
+                    >
+                      <span>📶 Économie activée</span>
+                    </div>
+                  )}
+                  {isBatterySaveActive && (
+                    <div 
+                      className="flex items-center gap-1 py-0.5 px-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 font-mono text-[8px] xs:text-[9px] font-black uppercase tracking-tight"
+                      title={isBatteryLow ? "Batterie faible (<20%) - mode léger actif" : "Mode léger automatique actif"}
+                    >
+                      <span>🔋 Batterie</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -2084,15 +2121,29 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           )}
         </header>
 
+        {isSlowConnection && (
+          <div className="bg-cyan-950/80 text-cyan-400 border-b border-cyan-800/30 py-2 px-4 flex items-center justify-center gap-2 text-center text-[10px] sm:text-xs font-black animate-slideDown select-none shrink-0">
+            <span>📶</span>
+            <span>AFRIGOMBO optimise votre expérience (Connexion lente détectée — Mode léger actif)</span>
+          </div>
+        )}
+
+        {isBatteryLow && (
+          <div className="bg-yellow-950/80 text-yellow-550 border-b border-yellow-800/30 py-2 px-4 flex items-center justify-center gap-2 text-center text-[10px] sm:text-xs font-black animate-slideDown select-none shrink-0">
+            <span>🔋</span>
+            <span>Mode léger AFRIGOMBO activé (Dispositif en batterie faible)</span>
+          </div>
+        )}
+
         {/* WORKSPACE VIEWS */}
         <div className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeMenu}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
+              initial={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: 20 }}
+              animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
+              exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -20, transition: { duration: 0.1 } }}
+              transition={{ duration: areAnimationsReduced ? 0.05 : 0.25, ease: "easeOut" }}
               className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-12 pt-6"
             >
               
@@ -2150,6 +2201,158 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   onValidateFilters={applyGombosFilters}
                 />
               )}
+
+              {/* 1B. VIDÉOS RÉELLES - VERIFICATION & SHOWCASE */}
+              {activeMenu === "user_reels" && (() => {
+                const [selectedReelFilter, setSelectedReelFilter] = useState("all");
+                
+                // Aggregate real videos uploaded by artists + falling back to premium clips
+                const allReels = [
+                  {
+                    id: "local-reel-1",
+                    title: "Intro Improvisation - Saxophone Prestigieux Live",
+                    type: "video",
+                    url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
+                    artisticName: "Thierry Sax d'Abidjan",
+                    category: "sax",
+                    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+                    description: "Test de sonorité en coulisse avant le live de ce soir à Cocody. Un pur régal instrumental."
+                  },
+                  {
+                    id: "local-reel-2",
+                    title: "Fusion Kora Traditionnelle & Batterie Jazz",
+                    type: "video",
+                    url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4",
+                    artisticName: "Sékou Kora Excellence",
+                    category: "kora",
+                    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
+                    description: "Enregistrement direct de notre répétition en trio à Marcory pour le Gombo de l'ambassade."
+                  },
+                  ...users.flatMap(u => (u.mediaGallery || []).filter(m => m.type === "video" || m.type === "youtube").map(media => ({
+                    id: media.id,
+                    title: media.title || "Démo Artiste",
+                    type: media.type,
+                    url: media.url,
+                    artisticName: u.artisticName || u.name || "Artiste Gombo",
+                    category: media.type === "video" ? "raw" : "youtube",
+                    avatar: u.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+                    description: "Démonstration authentique et accréditée téléchargée directement par l'artiste."
+                  })))
+                ];
+
+                const filteredReels = selectedReelFilter === "all" 
+                  ? allReels 
+                  : allReels.filter(r => r.category === selectedReelFilter || r.type === selectedReelFilter);
+
+                return (
+                  <div className="space-y-6 pb-24 text-left animate-fadeIn">
+                    <div className="bg-gradient-to-r from-orange-600/30 via-zinc-900/60 to-black p-6 rounded-3xl border border-orange-550/20 shadow-2xl relative overflow-hidden">
+                      <div className="absolute right-0 top-0 bottom-0 w-[30%] opacity-25 flex items-center justify-center">
+                        <Video className="w-40 h-40 text-orange-500 animate-pulse" />
+                      </div>
+                      <div className="relative z-10 max-w-xl">
+                        <span className="text-[9px] font-mono tracking-widest text-[#D4AF37] font-black uppercase bg-[#D4AF37]/10 px-2.5 py-1 rounded-full border border-[#D4AF37]/20">
+                          PROUVER VOTRE TALENT
+                        </span>
+                        <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight mt-3">
+                          Vidéos Réelles & Sessions Live
+                        </h2>
+                        <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                          La crédibilité d'un artiste n'est pas négociable. Découvrez les coulisses, les preuves de répétition au studio, et les captations scéniques authentiques des musiciens d'élite d'AfriGombo.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Filter buttons */}
+                    <div className="flex flex-wrap gap-2 py-1 select-none">
+                      {[
+                        { id: "all", label: "✨ Tout voir" },
+                        { id: "video", label: "🎥 Démo Live Directes" },
+                        { id: "youtube", label: "📺 Clips YouTube" },
+                        { id: "sax", label: "🎷 Saxophone" },
+                        { id: "kora", label: "🪕 Kora & Cordes" }
+                      ].map(tab => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setSelectedReelFilter(tab.id)}
+                          className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider border cursor-pointer transition-all duration-200 ${
+                            selectedReelFilter === tab.id
+                              ? "bg-orange-550 text-white border-orange-500 shadow-md shadow-orange-500/10 scale-102"
+                              : "bg-zinc-950/45 text-zinc-400 border-zinc-800/80 hover:text-white hover:border-zinc-700"
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Grid of video feed cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                      {filteredReels.map((reel, rIdx) => {
+                        const isYt = reel.type === "youtube";
+                        const yId = isYt ? getYoutubeId(reel.url) : null;
+                        
+                        return (
+                          <div 
+                            key={reel.id + "-" + rIdx} 
+                            className="bg-zinc-950/80 rounded-2xl border border-zinc-900/90 overflow-hidden hover:border-[#D4AF37]/35 transition-all duration-300 flex flex-col group"
+                          >
+                            <div className="aspect-video w-full bg-black relative flex items-center justify-center overflow-hidden">
+                              {isYt && yId ? (
+                                <img 
+                                  src={`https://img.youtube.com/vi/${yId}/mqdefault.jpg`} 
+                                  alt={reel.title} 
+                                  className="w-full h-full object-cover opacity-80 group-hover:scale-102 transition-transform duration-500" 
+                                />
+                              ) : (
+                                <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 to-zinc-900 flex flex-col items-center justify-center p-3 text-center">
+                                  <Video className="w-10 h-10 text-orange-550/80 mb-2 group-hover:animate-bounce" />
+                                  <span className="text-[9px] font-mono font-black tracking-widest text-[#D4AF37] uppercase">SESSION NATIVE</span>
+                                </div>
+                              )}
+                              
+                              <button
+                                onClick={() => {
+                                  if (isYt && yId) {
+                                    setReelsVideoId(yId);
+                                  } else {
+                                    setReelsVideoUrl(reel.url);
+                                  }
+                                }}
+                                className="absolute p-3 rounded-full bg-orange-600 hover:bg-orange-500 text-white shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer z-10"
+                              >
+                                <Play size={18} className="fill-current text-white" />
+                              </button>
+                            </div>
+
+                            {/* Details */}
+                            <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                              <div className="space-y-1">
+                                <h4 className="text-xs sm:text-xs font-black text-white hover:text-orange-400 transition-colors uppercase leading-tight line-clamp-1">
+                                  {reel.title}
+                                </h4>
+                                <p className="text-[10px] text-zinc-500 line-clamp-2 leading-relaxed font-sans">
+                                  {reel.description}
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-2 pt-2 border-t border-zinc-900/60">
+                                <img src={reel.avatar} alt={reel.artisticName} className="w-5 h-5 rounded-full object-cover border border-[#D4AF37]/30" />
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-[10px] font-black text-zinc-350 truncate block">{reel.artisticName}</span>
+                                </div>
+                                <span className="text-[8px] font-mono bg-zinc-900 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-800">
+                                  {reel.type.toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
               {false && (() => {
                 const searchStr = globalSearchTerm.toLowerCase();
                 
@@ -3402,13 +3605,17 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                               const newComment = {
                                                 id: `comment_${Date.now()}`,
                                                 content,
-                                                writerName
+                                                writerName,
+                                                postId: p.id,
+                                                timestamp: new Date().toISOString()
                                               };
                                               setPostComments(prev => ({
                                                 ...prev,
                                                 [p.id]: [...(prev[p.id] || []), newComment]
                                               }));
                                               e.target.value = "";
+                                              saveToFirestore("post_comments", newComment.id, newComment);
+                                              saveToFirestore("posts", p.id, { ...p, comments: (p.comments || 0) + 1 });
                                               try { audioSynth.playValidationSuccess(); } catch (err) {}
                                               addToTerminal(`[PARLER] Parler ajouté par ${writerName} sur le post ${p.id}`);
                                             }
@@ -4213,7 +4420,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             {currentArtist.collabsCount || 7}
                           </strong>
                           <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
-                            COLLABOS <br /> réalisées
+                            COLLABORATIONS <br /> réalisées
                           </span>
                         </div>
                       </div>
@@ -4657,7 +4864,18 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         </div>
 
                         <button
-                          onClick={() => {
+                          onClick={async () => {
+                            const newAlertId = "renfort_" + Date.now();
+                            const newAlertData = {
+                              id: newAlertId,
+                              type: "renfort",
+                              priority: "high",
+                              status: "active",
+                              title: `Renfort Express: ${currentArtist.artisticName}`,
+                              message: "Besoin d'un musicien remplaçant en urgence !",
+                              timestamp: new Date().toISOString()
+                            };
+                            await saveToFirestore("alerts", newAlertId, newAlertData);
                             addToTerminal(`[RENFORT EXPRESS] Alerte de renfort envoyée vers tous les terminaux de la commune !`);
                             alert("📣 Alerte de Renfort Express envoyée aux talents à proximité !");
                           }}
@@ -4716,9 +4934,19 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           <div className="pt-4 flex justify-between items-center border-t border-white/5 mt-3">
                             <strong className="text-sm font-mono text-[#D4AF37]">{gombo.budget.toLocaleString()} FCFA</strong>
                             <button
-                              onClick={() => {
+                              onClick={async () => {
+                                const appId = "app_" + Date.now();
+                                const applicationData = {
+                                  id: appId,
+                                  gomboId: gombo.id,
+                                  artistId: currentArtist.id,
+                                  artistName: currentArtist.artisticName,
+                                  timestamp: new Date().toISOString(),
+                                  status: "pending"
+                                };
+                                await saveToFirestore("applications", appId, applicationData);
                                 addToTerminal(`[CANDIDATURE] Candidature officielle de ${currentArtist.artisticName} pour ${gombo.title}`);
-                                alert(`🎯 Candidature scellée sur "${gombo.title}" ! Bonne chance !`);
+                                alert(`🎯 Candidature scellée sur "${gombo.title}" ! L'organisateur a été notifié.`);
                               }}
                               className="px-4 py-1.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-transparent rounded-lg text-xs font-mono font-bold text-[#D4AF37] hover:text-black transition-all"
                             >
@@ -4799,6 +5027,16 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 {activeMenu === "user_scanner" && (
                   <div className="animate-fadeIn">
                     <ComingSoon featureId="scanner" onBack={() => setActiveMenu("user_terrain")} />
+                  </div>
+                )}
+                {activeMenu === "user_gombo_plus" && (
+                  <div className="animate-fadeIn">
+                    <AfrigomboPlus onBack={() => setActiveMenu("user_terrain")} />
+                  </div>
+                )}
+                {activeMenu === "user_gombo_stats" && (
+                  <div className="animate-fadeIn">
+                    <MusicianStats onBack={() => setActiveMenu("user_terrain")} audioSynth={audioSynth} />
                   </div>
                 )}
               </div>
@@ -4972,13 +5210,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 };
 
                 const kpiUsersCount = users.length;
-                const kpiOnlineCount = users.filter(u => u.status === "active").length + 7;
+                const kpiOnlineCount = users.filter((u: any) => u.status === "active").length;
                 const kpiGombosCount = gombos.length;
                 const kpiPostsCount = posts.length;
-                const kpiPendingKycCount = users.filter(u => u.kycStatus === "pending").length;
-                const kpiAlertsCount = posts.filter(p => p.isFlagged).length;
-                const kpiApprovedKycCount = users.filter(u => u.kycStatus === "approved").length;
-                const kpiRevenuesSum = transactions.reduce((acc, curr) => acc + (curr.type === "commission" || curr.type === "cert_express" ? curr.amount : 0), 0) || 120000;
+                const kpiPendingKycCount = users.filter((u: any) => u.kycStatus === "pending").length;
+                const kpiAlertsCount = posts.filter((p: any) => p.isFlagged).length + alerts.length;
+                const kpiApprovedKycCount = users.filter((u: any) => u.kycStatus === "approved").length;
+                const kpiRevenuesSum = transactions.reduce((acc: number, curr: any) => acc + (curr.type === "commission" || curr.type === "cert_express" ? curr.amount : 0), 0);
 
                 const pendingIdUsers = users.filter(u => u.kycStatus === "pending");
                 const flaggedPosts = posts.filter(p => p.isFlagged);
@@ -4993,70 +5231,90 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                           <span className="text-[10px] font-mono tracking-widest text-[#D4AF37] font-bold uppercase">
-                            Centre Opérationnel
+                            CENTRE D'ADMINISTRATION
                           </span>
                         </div>
-                        <h2 className="text-2xl font-display font-black tracking-tight text-[#F5F5F5] mt-1 uppercase">
-                          Administration Quotidienne
+                        <h2 className="text-2xl font-display font-black tracking-tight text-[#FFFFFF] mt-1 uppercase">
+                          Gestion • Sécurité • Contrôle
                         </h2>
-                        <p className="text-[11px] text-[#D4AF37]/70 font-mono mt-1">
-                          Sénateur : {userEmail || "admin"}
-                        </p>
+                        <div className="flex items-center gap-3 mt-3">
+                          <img src={currentUser?.photoURL || "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61"} alt="admin" className="w-10 h-10 rounded-full border-2 border-[#D4A017] object-cover" />
+                          <div>
+                            <p className="text-[11px] text-[#B8B8B8] font-mono uppercase tracking-widest font-bold">Administrateur Principal</p>
+                            <p className="text-xs text-[#FFFFFF] font-sans font-medium">{userEmail}</p>
+                          </div>
+                        </div>
                       </div>
                       
                       <div className="text-right flex flex-col items-end gap-3">
                         <div>
-                          <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Heure Système (GMT)</span>
+                          <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Activité temps réel (GMT)</span>
                           <strong className="text-xl font-mono font-black text-[#F5F5F5] tracking-wider block mt-0.5">
                             {liveAdminTime}
                           </strong>
                         </div>
                         {userEmail === "jhs.kmj7@gmail.com" && (
-                          <button
-                            onClick={() => {
-                              setActiveMenu("super_admin");
-                              try { audioSynth.playTamTam(true); } catch(e){}
-                            }}
-                            className="bg-purple-900/40 hover:bg-purple-800 border border-purple-500/50 text-white px-4 py-2 flex items-center gap-2 rounded-lg transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
-                          >
-                            <Crown className="w-4 h-4 text-yellow-400" />
-                            <span className="text-[10px] font-mono font-black uppercase tracking-wider text-yellow-400">Accéder au Palais Numérique Suprême</span>
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <span className="relative flex h-3 w-3">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4A017] opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#D4A017]"></span>
+                            </span>
+                            <span className="text-[10px] font-mono text-[#D4A017] uppercase font-bold tracking-widest">Connecté</span>
+                          </div>
                         )}
                       </div>
                     </div>
 
-                    {/* 1. CARTE RÉSUMÉ DU JOUR */}
+                    {/* 1. CARTE RÉSUMÉ DU JOUR (STATISTIQUES FIREBASE RÉELLES) */}
                     <div className="space-y-4">
-                      <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
-                        <Activity className="w-4 h-4 text-[#D4AF37]" />
-                        Résumé du Jour
+                      <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4A017] flex items-center gap-1.5">
+                        <Activity className="w-4 h-4 text-[#D4A017]" />
+                        Statistiques Réelles du Système
                       </h3>
 
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="p-5 rounded-2xl bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_15px_rgba(212,175,55,0.02)] flex flex-col justify-between text-left relative overflow-hidden transition-all">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-emerald-500 block font-bold">Nouveaux inscrits</span>
-                          <strong className="text-2xl font-display font-black text-white block mt-2">{brief.newUsersCount}</strong>
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Utilisateurs totaux</span>
+                          <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiUsersCount}</strong>
                         </div>
 
-                        <div className="p-5 rounded-2xl bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_15px_rgba(212,175,55,0.02)] flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">Nouveaux Gombos ID</span>
-                          <strong className="text-2xl font-display font-black text-white block mt-2">{brief.kycRequestsCount}</strong>
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left relative">
+                          <span className="w-2 h-2 bg-emerald-500 rounded-full absolute top-4 right-4 animate-pulse"></span>
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Utilisateurs actifs</span>
+                          <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiOnlineCount}</strong>
                         </div>
 
-                        <div className="p-5 rounded-2xl bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_15px_rgba(212,175,55,0.02)] flex flex-col justify-between text-left">
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] block font-bold">Revenus du jour</span>
-                          <strong className="text-lg font-mono font-black text-[#D4AF37] block mt-2">{brief.revenuesGenerated.toLocaleString()} F</strong>
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Publications</span>
+                          <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiPostsCount}</strong>
                         </div>
 
-                        <div className="p-5 rounded-2xl bg-[#050505] border border-red-500/20 shadow-[0_2px_15px_rgba(239,68,68,0.05)] flex flex-col justify-between text-left relative overflow-hidden">
-                           {(brief.criticalAlertsCount > 0 || kpiAlertsCount > 0) && (
-                            <div className="absolute top-0 right-0 p-3">
-                              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse block" />
-                            </div>
-                           )}
-                          <span className="text-[9px] font-mono uppercase tracking-widest text-red-500 block font-bold">Alertes ouvertes</span>
-                          <strong className="text-2xl font-display font-black text-white block mt-2">{brief.criticalAlertsCount || kpiAlertsCount}</strong>
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left relative">
+                          {(kpiAlertsCount > 0) && (
+                            <span className="w-2 h-2 bg-red-500 rounded-full absolute top-4 right-4 animate-pulse"></span>
+                          )}
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Signalements</span>
+                          <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiAlertsCount}</strong>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Opportunités</span>
+                          <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiGombosCount}</strong>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Vidéos partagées</span>
+                          <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{posts.filter((p: any) => p.mediaType === 'video').length}</strong>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4A017] block font-bold">Gombo ID validés</span>
+                          <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiApprovedKycCount}</strong>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Conversations / Msgs</span>
+                          <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">En temps réel</strong>
                         </div>
                       </div>
                     </div>
@@ -5068,44 +5326,18 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         Actions Administrateur
                       </h3>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <button
-                          onClick={() => {
-                            setActiveMenu("users");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-                            activeMenu === "users" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#050505] hover:bg-[#D4AF37]/5 border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-[#F5F5F5]"
-                          }`}
-                        >
-                          <Users className="w-5 h-5 text-[#D4AF37]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Vérifier profils</span>
-                        </button>
-
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <button
                           onClick={() => {
                             setActiveMenu("kyc");
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
                           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-                            activeMenu === "kyc" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#050505] hover:bg-[#D4AF37]/5 border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-[#F5F5F5]"
+                            activeMenu === "kyc" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017] shadow-md shadow-[#D4A017]/20" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
                           }`}
                         >
-                          <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Vérifier Gombo ID</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setActiveMenu("posts");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-                            activeMenu === "posts" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#050505] hover:bg-[#D4AF37]/5 border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-[#F5F5F5]"
-                          }`}
-                        >
-                          <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Modérer contenus</span>
+                          <ShieldCheck className="w-5 h-5 text-[#D4A017]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Valider Gombo ID</span>
                         </button>
 
                         <button
@@ -5114,32 +5346,79 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
                           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-                            activeMenu === "alertes" ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]" : "bg-[#050505] hover:bg-red-500/5 border-[#D4AF37]/20 hover:border-red-500/40 text-[#F5F5F5]"
+                            activeMenu === "alertes" ? "bg-[#0A0A0A] border-red-500 text-red-500 shadow-md shadow-red-500/20" : "bg-[#0A0A0A] hover:bg-red-950/20 border-[rgba(212,160,23,0.25)] hover:border-red-500/40 text-[#FFFFFF]"
                           }`}
                         >
                           <AlertTriangle className="w-5 h-5 text-red-400" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Gérer signalements</span>
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Voir signalements</span>
                         </button>
 
+                        <button
+                          onClick={() => {
+                            setActiveMenu("users");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
+                            activeMenu === "users" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+                          }`}
+                        >
+                          <Users className="w-5 h-5 text-[#D4A017]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Suspendre utilisateur</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setActiveMenu("posts");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
+                            activeMenu === "posts" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+                          }`}
+                        >
+                          <MessageSquare className="w-5 h-5 text-emerald-400" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Approuver publication</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setActiveMenu("posts");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-yellow-500/40 text-[#FFFFFF]"
+                        >
+                          <Briefcase className="w-5 h-5 text-yellow-500" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Modérer publication</span>
+                        </button>
+                        
                         <button
                           onClick={() => {
                             setIsBroadcastModalOpen(true);
                             try { audioSynth.playValidationSuccess(); } catch (err) {}
                           }}
-                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#050505] hover:bg-[#D4AF37]/5 border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-[#F5F5F5]"
+                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
                         >
-                          <Megaphone className="w-5 h-5 text-[#D4AF37]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Diffuser annonce</span>
+                          <Megaphone className="w-5 h-5 text-[#D4A017]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Notifications globales</span>
                         </button>
 
                         <button
                            onClick={() => {
                              setActiveMenu("alertes");
                            }}
-                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#050505] hover:bg-[#D4AF37]/5 border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-[#F5F5F5]"
+                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
                         >
-                          <Send className="w-5 h-5 text-[#D4AF37]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Envoyer notification</span>
+                          <Send className="w-5 h-5 text-[#D4A017]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Support utilisateurs</span>
+                        </button>
+
+                        <button
+                           onClick={() => {
+                             setActiveMenu("logs");
+                           }}
+                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+                        >
+                          <Activity className="w-5 h-5 text-[#D4A017]" />
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Historique actions</span>
                         </button>
                       </div>
                     </div>
@@ -5185,38 +5464,46 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         </ul>
                       </div>
 
-                      {/* 4. Sécurité */}
-                      <div className="p-6 rounded-2xl bg-[#050505] border border-red-500/10 space-y-4">
-                         <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                      {/* 4. Sécurité & Alertes Temps Réel */}
+                      <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] space-y-4 shadow-[0_4px_20px_rgba(212,160,23,0.05)]">
+                         <div className="flex items-center gap-2 pb-3 border-b border-[rgba(212,160,23,0.1)]">
                            <ShieldAlert className="w-4 h-4 text-red-500" />
-                           <h4 className="text-xs font-mono font-black text-[#F5F5F5] uppercase tracking-wider">
-                             Interface de Sécurité
+                           <h4 className="text-xs font-mono font-black text-[#FFFFFF] uppercase tracking-wider">
+                             Alertes Temps Réel
                            </h4>
+                           <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse ml-auto" />
                         </div>
                         <ul className="space-y-3">
-                          <li className="flex justify-between items-center bg-[#010101] p-3 rounded-lg border border-red-500/10">
+                          <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-[#D4A017] transition-all">
                             <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
-                              <AlertTriangle className="w-3 h-3 text-red-500" />
-                              Alertes Actives
+                              <Users className="w-3 h-3 text-emerald-400 group-hover:scale-110 transition-transform" />
+                              Nouveaux utilisateurs
                             </span>
-                            <span className="text-xs font-mono font-black text-red-500">{brief.criticalAlertsCount || kpiAlertsCount}</span>
+                            <span className="text-xs font-mono font-black text-emerald-400">{brief.newUsersCount} (7j)</span>
                           </li>
-                          <li className="flex justify-between items-center bg-[#010101] p-3 rounded-lg border border-white/5">
+                          <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-red-500 transition-all">
                             <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
-                              <UserX className="w-3 h-3 text-zinc-500" />
-                              Comptes Suspendus
+                              <AlertTriangle className="w-3 h-3 text-red-500 group-hover:scale-110 transition-transform" />
+                              Signalements critiques
                             </span>
-                            <span className="text-xs font-mono font-black text-zinc-400">
-                              {users.filter(u => u.isSuspended).length}
-                            </span>
+                            <span className="text-xs font-mono font-black text-red-500">{alerts.filter((a: any) => a.priority === 'high' || a.priority === 'critique').length}</span>
                           </li>
-                          <li className="flex justify-between items-center bg-[#010101] p-3 rounded-lg border border-amber-500/10">
+                          <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-amber-500 transition-all">
                             <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
-                              <Eye className="w-3 h-3 text-amber-500" />
-                              Activité Suspecte
+                              <MessageSquare className="w-3 h-3 text-amber-500 group-hover:scale-110 transition-transform" />
+                              Publications suspectes
                             </span>
                             <span className="text-xs font-mono font-black text-amber-500">
                               {flaggedPosts.length}
+                            </span>
+                          </li>
+                          <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-orange-500 transition-all">
+                            <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+                              <Zap className="w-3 h-3 text-orange-500 group-hover:scale-110 transition-transform" />
+                              Erreurs système
+                            </span>
+                            <span className="text-xs font-mono font-black text-orange-500">
+                              {alerts.filter((a: any) => a.type === 'system_error').length}
                             </span>
                           </li>
                         </ul>
@@ -5224,10 +5511,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         <button
                           onClick={triggerGlobalSystemScan}
                           disabled={scannerStatus === "scanning"}
-                          className="w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#010101] border border-white/10 hover:border-[#D4AF37]/50 hover:text-[#D4AF37] transition-all text-[10px] font-mono font-semibold"
+                          className="w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#D4A017] hover:bg-[#B8860B] active:scale-95 transition-all text-[10px] font-mono font-black uppercase tracking-wider text-black shadow-md shadow-[#D4A017]/20"
                         >
                           <RefreshCw className={`w-3 h-3 ${scannerStatus === "scanning" ? "animate-spin" : ""}`} />
-                          Scan de Sécurité Global
+                          Forcer Scan de Sécurité
                         </button>
                       </div>
                     </div>
@@ -6918,28 +7205,33 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 VIEW: LOGS SYSTEME
                   ---------------------------------------------------- */}
               {activeMenu === "logs" && (
-                <div className="h-[75vh] flex flex-col bg-black border border-white/10 rounded-xl overflow-hidden relative">
-                  <div className="bg-[#121214] border-b border-white/10 p-3 flex justify-between items-center">
-                    <h4 className="text-[10px] font-mono uppercase text-cyan-400 font-bold flex items-center gap-2">
+                <div className="h-[75vh] flex flex-col bg-black border border-[rgba(212,160,23,0.25)] rounded-xl overflow-hidden relative shadow-[0_4px_20px_rgba(212,160,23,0.05)]">
+                  <div className="bg-[#0A0A0A] border-b border-[rgba(212,160,23,0.15)] p-3 flex justify-between items-center">
+                    <h4 className="text-[10px] font-mono uppercase text-[#D4A017] font-bold flex items-center gap-2">
                       <Terminal className="w-4 h-4" />
-                      Terminal de Commandement (Logs Système)
+                      Historique des Actions
                     </h4>
-                    <button onClick={() => setActiveMenu("plus")} className="text-zinc-500 hover:text-white px-2 py-1 text-[10px] font-mono uppercase border border-white/5 rounded">Retour</button>
+                    <button onClick={() => setActiveMenu("dashboard")} className="text-zinc-500 hover:text-white px-2 py-1 text-[10px] font-mono uppercase border border-white/5 rounded">Retour</button>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-[9px] sm:text-[10px]">
-                    {[...terminalFeed].reverse().map((log, i) => (
-                      <div key={i} className="flex gap-2 items-start border-b border-white/5 pb-2">
-                        <span className="text-cyan-600 mt-0.5">▶</span>
+                    {adminLogs.map((log: any, i: number) => (
+                      <div key={log.id || i} className="flex gap-2 items-start border-b border-white/5 pb-2">
+                        <span className="text-[#D4A017] mt-0.5">▶</span>
                         <div className="flex flex-col">
-                          <span className="text-zinc-500 leading-none">{new Date().toLocaleTimeString()}</span>
-                          <span className={`${log.includes("[ALERTE]") || log.includes("[DANGER]") || log.includes("SUSPECT") ? "text-red-400 font-bold" : log.includes("[SOUVERAIN]") || log.includes("[SOUVERAINETÉ]") || log.includes("[SUCCÈS]") ? "text-[#D4AF37]" : "text-zinc-300"}`}>
-                            {log}
+                          <div className="flex items-center gap-2">
+                            <span className="text-zinc-500 leading-none">{new Date(log.timestamp).toLocaleString()}</span>
+                            <span className="text-[8px] bg-[#111111] px-1.5 py-0.5 rounded text-[#D4A017]">{log.adminId}</span>
+                            <span className="text-[8px] border border-cyan-900/50 px-1.5 py-0.5 rounded text-cyan-400">{log.action}</span>
+                          </div>
+                          <span className="text-[#F5F5F5] mt-1">
+                            {log.details}
                           </span>
+                          <span className="text-zinc-600 text-[8px] mt-0.5">Cible: {log.target}</span>
                         </div>
                       </div>
                     ))}
-                    {terminalFeed.length === 0 && (
-                      <div className="text-zinc-600 italic">Terminal en attente de flux de données...</div>
+                    {adminLogs.length === 0 && (
+                      <div className="text-zinc-600 italic">Historique vide...</div>
                     )}
                   </div>
                 </div>
@@ -6992,143 +7284,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           {sortedProducts[0]?.count > 0 ? `${sortedProducts[0].count} activations enregistrées` : "Preneur en attente"}
                         </span>
                       </div>
-                    </div>
-
-                    {/* TWO COLUMN WORKSPACE */}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                      
-                      {/* COLUMN 1: INTERACTIVE SIMULATOR CENTER */}
-                      <div className="p-6 rounded-lg bg-black/30 border border-[#D4AF37]/15 space-y-4">
-                        <div>
-                          <h4 className="text-sm uppercase font-display font-bold text-[#D4AF37] flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-[#D4AF37]" />
-                            Simulateur Transactionnel Premium
-                          </h4>
-                          <p className="text-xs text-[#F5F5F5]/50 mt-1">
-                            Simulez l'activation instantanée d'un service premium par un artiste d'Abidjan pour valider le workflow de la caisse.
-                          </p>
-                        </div>
-
-                        {/* SELECT TARGET ARTIST */}
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono uppercase text-[#F5F5F5]/60 block font-semibold">Artiste Acheteur</label>
-                          <select
-                            value={simUserId}
-                            onChange={(e) => setSimUserId(e.target.value)}
-                            className="w-full text-xs bg-[#0B0B0B] border border-[#D4AF37]/20 focus:border-[#D4AF37] text-white px-3 py-2.5 rounded-lg focus:outline-none"
-                          >
-                            <option value="">-- Choisir un artiste simulé --</option>
-                            {users.map(u => (
-                              <option key={u.id} value={u.id}>
-                                {u.artisticName} ({u.commune}) — {u.isVip ? "👑 VIP" : ""} {u.isPro ? "💼 PRO" : ""} {u.isCertified ? "✓ Certifié" : "Non-Certifié"}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {/* SELECT PREMIUM OFFERING */}
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono uppercase text-[#F5F5F5]/60 block font-semibold">Produit à Activer</label>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                            {[
-                              { id: "cert_express", name: "⚡ Cert Express", price: "500 FCFA", desc: "Priorisation KYC" },
-                              { id: "gombo_vip", name: "👑 Gombo VIP", price: "1 000 FCFA/m", desc: "Badge & Pinned post" },
-                              { id: "boost_gombo", name: "🔥 Boost Tam-Tam", price: "1 000 FCFA", desc: "Mise en vedette" },
-                              { id: "renfort_express", name: "⚡ Renfort Express", price: "500 FCFA", desc: "Marque Urgence" },
-                              { id: "gombo_pro", name: "💼 Gombo PRO", price: "5 000 FCFA/m", desc: "Pour Orchestres" }
-                            ].map((prod) => (
-                              <button
-                                key={prod.id}
-                                type="button"
-                                onClick={() => setSimProduct(prod.id)}
-                                className={`p-2.5 rounded-lg border text-left flex flex-col justify-between transition-all ${
-                                  simProduct === prod.id
-                                    ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]"
-                                    : "bg-[#0B0B0B]/50 border-white/5 hover:border-[#D4AF37]/30 text-[#F5F5F5]/70"
-                                }`}
-                              >
-                                <span className="font-bold flex justify-between items-center w-full">
-                                  <span>{prod.name}</span>
-                                  <span className="font-mono text-[10px]">{prod.price}</span>
-                                </span>
-                                <span className="text-[9px] opacity-60 block mt-1">{prod.desc}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* SPECIFIC BOOST AMOUNT SELECTOR (ONLY IF BOOST_GOMBO) */}
-                        {simProduct === "boost_gombo" && (
-                          <div className="space-y-1.5 p-3 rounded-lg bg-orange-500/5 border border-orange-500/15 animate-fadeIn">
-                            <label className="text-[10px] font-mono uppercase text-orange-400 block font-semibold">Budget du Boost</label>
-                            <div className="flex gap-2 text-xs">
-                              {[500, 1000, 2000].map(amt => (
-                                <button
-                                  key={amt}
-                                  type="button"
-                                  onClick={() => setSimBoostPrice(amt)}
-                                  className={`flex-1 py-1.5 rounded border font-mono font-bold transition-all ${
-                                    simBoostPrice === amt
-                                      ? "bg-amber-500/20 border-amber-500 text-amber-400 shadow"
-                                      : "bg-black/30 border-white/10 hover:bg-black/55 text-zinc-400"
-                                  }`}
-                                >
-                                  {amt} FCFA
-                                </button>
-                              ))}
-                            </div>
-                            <span className="text-[9px] text-[#F5F5F5]/40 block italic mt-1 leading-normal">Le budget définit le poids d'exposition : 500 (24h), 1000 (3 jours), 2000 (7 jours)</span>
-                          </div>
-                        )}
-
-                        {/* SUBMIT BUTTON */}
-                        <button
-                          type="button"
-                          onClick={handlePerformSimulatedPayment}
-                          className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-amber-500 via-[#D4AF37] to-yellow-500 text-black font-semibold text-xs uppercase tracking-wider shadow-[0_4px_15px_rgba(212,175,55,0.25)] hover:bg-opacity-95 active:scale-[0.99] transition-all"
-                        >
-                          💸 Simuler le Paiement de l'Artiste
-                        </button>
-                      </div>
-
-                      {/* COLUMN 2: LEADERBOARD OF PREMIUM USAGES */}
-                      <div className="p-6 rounded-lg bg-[#0B0B0B] border border-[#D4AF37]/15">
-                        <h4 className="text-xs uppercase font-mono font-bold tracking-widest text-[#D4AF37] mb-6 flex items-center gap-2">
-                          <BarChart2 className="w-4 h-4" />
-                          Classement des Produits les plus Utilisés
-                        </h4>
-                        
-                        <div className="space-y-5">
-                          {sortedProducts.map((p, idx) => {
-                            const pct = countPremiumSales > 0 ? (p.count / countPremiumSales) * 100 : 0;
-                            return (
-                              <div key={idx} className="space-y-1 bg-white/[0.02] p-3 rounded border border-white/[0.02] hover:border-amber-500/10 transition-all">
-                                <div className="flex justify-between items-center text-xs">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-mono text-[10px] text-[#F5F5F5]/30">#{idx+1}</span>
-                                    <span className="font-semibold text-white">{p.name.split(" (")[0]}</span>
-                                  </div>
-                                  <div className="text-right font-mono text-[10px]">
-                                    <span className="font-bold text-[#D4AF37]">{p.count} ventes</span>
-                                    <span className="text-[#F5F5F5]/40 ml-2">({pct.toFixed(0)}%)</span>
-                                  </div>
-                                </div>
-                                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5">
-                                  <div
-                                    className="bg-gradient-to-r from-amber-400 to-[#D4AF37] h-full rounded-full transition-all duration-500"
-                                    style={{ width: `${pct}%` }}
-                                  />
-                                </div>
-                                <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono pt-1">
-                                  <span>{pct === 0 ? "En attente d'activité" : "Volume de commandes"}</span>
-                                  <span className="text-emerald-400 font-bold">+{p.rev.toLocaleString()} FCFA</span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
                     </div>
 
                     {/* DOCK OF DETAILED PRICINGS & RULES */}
@@ -8170,6 +8325,51 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           </div>
         );
       })()}
+
+      {/* =========================================================================
+                                     REELS VIDEO LIGHTBOX PORTALS
+         ========================================================================= */}
+      {/* 4. Reels Video YouTube Lightbox player */}
+      {reelsVideoId && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/93 backdrop-blur-md">
+          <div className="w-full max-w-3xl aspect-video bg-black rounded-3xl overflow-hidden relative border border-zinc-900">
+            <button
+              onClick={() => setReelsVideoId(null)}
+              className="absolute top-3.5 right-3.5 z-10 p-2.5 bg-black/70 hover:bg-black/95 text-white rounded-full text-xs font-bold border border-white/10 hover:scale-105 cursor-pointer leading-none"
+            >
+              Fermer ✖
+            </button>
+            <iframe
+              src={`https://www.youtube.com/embed/${reelsVideoId}?autoplay=1`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="w-full h-full"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 5. Reels Raw Video Lightbox player */}
+      {reelsVideoUrl && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/93 backdrop-blur-md">
+          <div className="w-full max-w-3xl aspect-video bg-black rounded-3xl overflow-hidden relative border border-zinc-900 flex items-center justify-center">
+            <button
+              onClick={() => setReelsVideoUrl(null)}
+              className="absolute top-3.5 right-3.5 z-10 p-2.5 bg-black/70 hover:bg-black/95 text-white rounded-full text-xs font-bold border border-white/10 hover:scale-105 cursor-pointer leading-none"
+            >
+              Fermer ✖
+            </button>
+            <video 
+              src={reelsVideoUrl} 
+              controls 
+              autoPlay 
+              className="w-full h-full object-contain"
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );

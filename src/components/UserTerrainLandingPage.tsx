@@ -3,15 +3,26 @@ import { motion } from "motion/react";
 import { 
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
   RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy,
-  PenTool, UserCheck, MessageCircle, History, Headphones, HelpCircle
+  PenTool, UserCheck, MessageCircle, History, Headphones, HelpCircle, Video,
+  Sparkles, BarChart3
 } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { Gombo, User, Post } from "../types";
+import AnnuaireTalents from "./AnnuaireTalents";
+import { usePerformance } from "../services/performanceService";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
   "Port-Bouët", "Koumassi", "Adjamé", "Abobo", "Bingerville"
 ];
+
+const optimizeImageUrl = (url: string, isDataSaveActive: boolean) => {
+  if (!url) return url;
+  if (isDataSaveActive && url.includes("images.unsplash.com")) {
+    return url.replace(/w=\d+/, "w=150").replace(/q=\d+/, "q=30");
+  }
+  return url;
+};
 
 interface UserTerrainLandingPageProps {
   gombos: Gombo[];
@@ -56,6 +67,10 @@ interface UserTerrainLandingPageProps {
   setNewNoticeBody: (val: string) => void;
   addToTerminal: (msg: string) => void;
   onValidateFilters?: (cat: string, loc: string, typeVal: string, dateVal: string) => void;
+  reelsVideoId?: string | null;
+  setReelsVideoId?: (val: string | null) => void;
+  reelsVideoUrl?: string | null;
+  setReelsVideoUrl?: (val: string | null) => void;
 }
 
 export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = React.memo(({
@@ -99,9 +114,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   newNoticeBody,
   setNewNoticeBody,
   addToTerminal,
-  onValidateFilters
+  onValidateFilters,
+  reelsVideoId = null,
+  setReelsVideoId = () => {},
+  reelsVideoUrl = null,
+  setReelsVideoUrl = () => {}
 }) => {
   const { t } = useLanguage();
+  const { isDataSaveActive, areAnimationsReduced } = usePerformance();
   const searchStr = globalSearchTerm.toLowerCase();
 
   // Internal local states for filters (only applied when clicking Valider)
@@ -113,6 +133,68 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   // Collapsible regions states
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  // SWIPEABLE HORIZONTAL MODULES & TABS STATE (Requirement 2)
+  const [currentSection, setCurrentSection] = useState<"home" | "reels">("home");
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [selectedExploreArtist, setSelectedExploreArtist] = useState<any | null>(null);
+  const [reelsFilter, setReelsFilter] = useState("all");
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+
+  const handleTogglePreview = (track: any) => {
+    if (playingTrackId === track.id) {
+      if (audioElement) {
+        audioElement.pause();
+      }
+      setPlayingTrackId(null);
+    } else {
+      if (audioElement) {
+        audioElement.pause();
+      }
+      const audio = new Audio(track.url);
+      audio.loop = true;
+      audio.play().catch(() => {});
+      setAudioElement(audio);
+      setPlayingTrackId(track.id);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+      }
+    };
+  }, [audioElement]);
+
+  const minSwipeDistance = 75;
+
+  const onTouchStartHandler = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMoveHandler = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEndHandler = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && currentSection === "home") {
+      setCurrentSection("reels");
+      try { audioSynth?.playValidationSuccess(); } catch(_) {}
+    }
+    if (isRightSwipe && currentSection === "reels") {
+      setCurrentSection("home");
+      try { audioSynth?.playValidationSuccess(); } catch(_) {}
+    }
+  };
 
   // Sync with outside state (e.g. when resetting from parent)
   useEffect(() => {
@@ -264,7 +346,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   };
 
   return (
-    <div className="space-y-6 pb-24 text-left animate-fadeIn">
+    <div 
+      onTouchStart={onTouchStartHandler}
+      onTouchMove={onTouchMoveHandler}
+      onTouchEnd={onTouchEndHandler}
+      className="space-y-6 pb-24 text-left animate-fadeIn font-sans"
+    >
       
       {/* ==========================================
           1. BARRE DE RECHERCHE UNIVERSELLE
@@ -329,9 +416,59 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       </div>
 
       {/* ==========================================
-          2. ACTIONS RAPIDES (STYLE PREMIUM AFRIGOMBO)
+          SEGMENTED NAVIGATION & DRAG GUIDE (Requirement 2)
          ========================================== */}
-      <div className="space-y-3 bg-[#111113]/30 border border-zinc-900 rounded-2xl p-3.5">
+      <div className="flex justify-center items-center gap-1.5 p-1 bg-[#111113]/85 border border-zinc-900 rounded-2xl w-fit mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.5)] select-none">
+        <button
+          onClick={() => {
+            setCurrentSection("home");
+            try { audioSynth?.playTamTam?.(false); } catch(_) {}
+          }}
+          className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+            currentSection === "home"
+              ? "bg-[#D4AF37] text-black shadow-md scale-[1.02]"
+              : "text-zinc-400 hover:text-white hover:bg-zinc-900/40"
+          }`}
+        >
+          <span>🌟 Tendances & Gombos</span>
+        </button>
+        <button
+          onClick={() => {
+            setCurrentSection("reels");
+            try { audioSynth?.playTamTam?.(false); } catch(_) {}
+          }}
+          className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer relative ${
+            currentSection === "reels"
+              ? "bg-[#FF7A00] text-white shadow-md scale-[1.02]"
+              : "text-zinc-400 hover:text-white hover:bg-zinc-900/40"
+          }`}
+        >
+          <span>🔥 Fil Réels</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+        </button>
+      </div>
+
+      <div className="text-center text-[8.5px] font-mono tracking-wider font-extrabold text-zinc-600 uppercase flex items-center justify-center gap-1 sm:hidden select-none -translate-y-2 mt-1">
+        {currentSection === "home" ? (
+          <>
+            <span>Faites glisser vers la droite</span>
+            <span className="text-[#FF7A00] animate-pulse">➔</span>
+            <span>pour les réels</span>
+          </>
+        ) : (
+          <>
+            <span className="text-[#D4AF37] animate-pulse">◀</span>
+            <span>Faites glisser vers la gauche pour revenir</span>
+          </>
+        )}
+      </div>
+
+      {currentSection === "home" ? (
+        <>
+          {/* ==========================================
+              2. ACTIONS RAPIDES (STYLE PREMIUM AFRIGOMBO)
+             ========================================== */}
+      <div className={`bg-[#111113]/30 border border-zinc-900 rounded-2xl transition-all duration-300 ${isQuickActionsOpen ? "p-3.5 space-y-3" : "py-2 px-3"}`}>
         <button
           onClick={() => {
             setIsQuickActionsOpen(!isQuickActionsOpen);
@@ -366,14 +503,16 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             animate={isQuickActionsOpen ? "show" : "hidden"}
             className="grid grid-cols-4 gap-1.5 w-full select-none"
           >
-            {[
-              { id: "renfort", label: "Renfort", icon: ShieldCheck, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+             {[
+              { id: "renfort", label: "Renfort", icon: ShieldCheck, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "publier", label: t('publier'), icon: PenTool, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "verifier", label: "Vérifier", icon: UserCheck, isSoon: true, action: () => {} },
+              { id: "verifier", label: "Vérifier", icon: ShieldCheck, isSoon: true, action: () => { setActiveQuickActionModal("verify_gombo_id"); try { audioSynth?.playValidationSuccess(); } catch (_) {} } },
               { id: "messages", label: t('messages_tab'), icon: MessageCircle, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "annuaire", label: t('annuaire'), icon: Users, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "booster", label: t('booster_tab'), icon: Award, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_monetisation"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "booster", label: t('booster_tab'), icon: Award, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "evenement", label: t('evenement'), icon: Megaphone, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "gombo_plus", label: "⭐ Plus", icon: Sparkles, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_plus"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } })); } catch (_) {} }) },
+              { id: "gombo_stats", label: "📊 Portfolio", icon: BarChart3, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_stats"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'saxophone' } })); } catch (_) {} }) },
               { id: "scanner", label: "Scanner", icon: QrCode, isSoon: true, action: () => {} }
             ].map(action => {
               const Icon = action.icon;
@@ -429,154 +568,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       </div>
 
       {/* ==========================================
-          3. FILTRES RAPIDES ET RECHERCHE AVANCÉE
+          3. FILTRES RAPIDES ET RECHERCHE AVANCÉE (HIDDEN AS REQUESTED)
          ========================================== */}
-      <div className="space-y-3 bg-[#111113]/30 border border-zinc-900 rounded-2xl p-3.5">
-        <div className="flex justify-between items-center bg-transparent">
-          <button
-            onClick={() => {
-              setIsFiltersOpen(!isFiltersOpen);
-              try { audioSynth?.playTamTam?.(false); } catch(_) {}
-            }}
-            className="flex-1 flex justify-between items-center text-left focus:outline-none cursor-pointer hover:opacity-90 select-none mr-3"
-          >
-            <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase flex items-center gap-1.5">
-              <span>🔎 {t('recherche_filtres')}</span>
-            </h3>
-            <span className="text-[11px] font-mono font-black text-[#D4AF37] bg-zinc-950/80 border border-[#D4AF37]/20 w-6 h-6 rounded-lg flex items-center justify-center transition-all">
-              {isFiltersOpen ? "▲" : "▼"}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              setLocalCategory("all");
-              setLocalLocation("all");
-              setLocalType("all");
-              setLocalDate("all");
-              setSelectedCategory("all");
-              setSelectedLocation("all");
-              setSelectedType("all");
-              setSelectedDateFilter("all");
-              setGlobalSearchTerm("");
-              if (onValidateFilters) {
-                onValidateFilters("all", "all", "all", "all");
-              }
-              try { audioSynth.playTamTam(false); } catch (_) {}
-            }}
-            className="text-[9.5px] text-[#D4AF37]/80 hover:text-[#D4AF37] font-bold transition-all flex items-center gap-1 focus:outline-none shrink-0"
-          >
-            <span>Reset</span>
-            <RefreshCw className="w-3 h-3 opacity-85" />
-          </button>
-        </div>
-
-        <div
-          className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${
-            isFiltersOpen ? "max-h-[500px] opacity-100 mt-2.5" : "max-h-0 opacity-0 pointer-events-none"
-          }`}
-        >
-          <div className="space-y-3 pt-1">
-            {/* 4 Core dropdown selects */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-              {/* Category */}
-              <div className="relative">
-                <select
-                  value={localCategory}
-                  onChange={(e) => {
-                    setLocalCategory(e.target.value);
-                    try { audioSynth.playTamTam(true); } catch (_) {}
-                  }}
-                  className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
-                >
-                  <option value="all">Catégorie</option>
-                  <option value="zouglou">Zouglou</option>
-                  <option value="coupé-décalé">Coupé-Décalé</option>
-                  <option value="rap">Rap / Pop</option>
-                  <option value="traditionnel">Traditionnel</option>
-                  <option value="jazz">Jazz / Blues</option>
-                </select>
-              </div>
-
-              {/* Localisation */}
-              <div className="relative">
-                <select
-                  value={localLocation}
-                  onChange={(e) => {
-                    setLocalLocation(e.target.value);
-                    try { audioSynth.playTamTam(true); } catch (_) {}
-                  }}
-                  className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
-                >
-                  <option value="all">Commune</option>
-                  {IVORIAN_COMMUNES.map(commune => (
-                    <option key={commune} value={commune}>{commune}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Type */}
-              <div className="relative">
-                <select
-                  value={localType}
-                  onChange={(e) => {
-                    setLocalType(e.target.value);
-                    try { audioSynth.playTamTam(true); } catch (_) {}
-                  }}
-                  className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
-                >
-                  <option value="all">Type</option>
-                  <option value="concert">Concert</option>
-                  <option value="studio">Studio</option>
-                  <option value="clip">Clip Vidéo</option>
-                </select>
-              </div>
-
-              {/* Date */}
-              <div className="relative">
-                <select
-                  value={localDate}
-                  onChange={(e) => {
-                    setLocalDate(e.target.value);
-                    try { audioSynth.playTamTam(true); } catch (_) {}
-                  }}
-                  className="w-full bg-[#050505] border border-[#D4AF37]/20 shadow-[0_2px_8px_rgba(212,175,55,0.03)] text-[10.5px] text-[#F5F5F5] rounded-xl p-3 font-bold uppercase tracking-wider focus:outline-none appearance-none cursor-pointer text-center transition-all"
-                >
-                  <option value="all">Date</option>
-                  <option value="mai 2025">Mai 2025</option>
-                  <option value="juin 2026">Juin 2026</option>
-                </select>
-              </div>
-            </div>
-
-            {/* VALIDER Button */}
-            <button
-              onClick={() => {
-                setSelectedCategory(localCategory);
-                setSelectedLocation(localLocation);
-                setSelectedType(localType);
-                setSelectedDateFilter(localDate);
-                if (onValidateFilters) {
-                  onValidateFilters(localCategory, localLocation, localType, localDate);
-                }
-                try { audioSynth.playValidationSuccess(); } catch (_) {}
-                
-                // Scroll to top of both window and container
-                window.scrollTo({ top: 0, behavior: "smooth" });
-                const scrollContainers = document.querySelectorAll(".overflow-y-auto, .h-full, body");
-                scrollContainers.forEach(container => {
-                  try {
-                    container.scrollTo({ top: 0, behavior: "smooth" });
-                  } catch (_) {}
-                });
-              }}
-              className="w-full bg-[#D4AF37] hover:bg-[#F3C43F] text-black font-black text-[10px] tracking-widest py-3 px-4 rounded-xl transition-all cursor-pointer select-none active:scale-95 shadow-md flex items-center justify-center uppercase"
-            >
-              {t('valider_filtres')}
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Search block completely removed to save space */}
 
       {/* ==========================================
           4. OPPORTUNITÉS À LA UNE (SPOTLIGHT)
@@ -601,8 +595,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         {/* Feature Spotlight Card banner */}
         <div className="relative h-[220px] rounded-[24px] overflow-hidden group shadow-2xl border border-zinc-900">
           <img
-            src={currentSlideData.imageUrl}
+            src={optimizeImageUrl(currentSlideData.imageUrl, isDataSaveActive)}
             alt={currentSlideData.title}
+            loading="lazy"
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/25" />
@@ -721,7 +716,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               >
                 {/* Left Thumbnail with Gold G logo overlay */}
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-[#050505] border border-[#D4AF37]/30 flex items-center justify-center">
-                  <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                  <img
+                    src={optimizeImageUrl(item.imageUrl, isDataSaveActive)}
+                    alt={item.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
                   <div className="absolute bottom-1 left-1 w-4.5 h-4.5 bg-[#D4AF37]/95 border border-black rounded-full flex items-center justify-center shadow">
                     <span className="text-[7.5px] font-black text-black">G</span>
                   </div>
@@ -791,6 +791,414 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           )}
         </div>
       </div>
+      </>
+      ) : (
+        <div className="space-y-6 animate-fadeIn pb-12 select-none text-left">
+          {/* Header Banner */}
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-[#FF7A00]/10 via-[#FF7A00]/5 to-transparent border border-[#FF7A00]/25 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF7A00]/5 rounded-full blur-2xl pointer-events-none" />
+            <h2 className="text-sm font-sans font-black uppercase tracking-wider text-white">
+              📱 L'ÉCHO DU SHOWBIZ & RÉELS
+            </h2>
+            <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+              Découvrez en continu les performances, démos d'orchestres, extraits audios et actualités chaudes de nos maîtres de la scène d'Afrique de l'Ouest.
+            </p>
+          </div>
+
+          {/* Reels Filter categories */}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none select-none">
+            {[
+              { id: "all", label: "✨ Tout", icon: "💎" },
+              { id: "videos", label: "🎥 Vidéos", icon: "🎬" },
+              { id: "audios", label: "🎵 Extraits Audios", icon: "🎧" },
+              { id: "murmures", label: "💬 Murmures", icon: "🎤" },
+              { id: "alliances", label: "🏆 Certifications & Actus", icon: "🤝" }
+            ].map(pill => (
+              <button
+                key={pill.id}
+                onClick={() => {
+                  setReelsFilter(pill.id);
+                  try { audioSynth?.playTamTam?.(false); } catch(_) {}
+                }}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase transition shrink-0 flex items-center gap-1 cursor-pointer border ${
+                  reelsFilter === pill.id
+                    ? "bg-[#FF7A00] text-white border-[#FF7A00] shadow-sm scale-105"
+                    : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
+                }`}
+              >
+                <span>{pill.icon}</span>
+                <span>{pill.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Feed Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* 1. MOCK INTEGRATED REELS (VIDEOS) */}
+            {(reelsFilter === "all" || reelsFilter === "videos") && (
+              [
+                {
+                  id: "vid_1",
+                  title: "Improvisation Solo d'Orchestre guitare - Live Cocody",
+                  artistName: "Yoro l'Américain",
+                  specialty: "Guitariste lead",
+                  avatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
+                  videoUrl: "https://www.youtube.com/watch?v=kY9v4CGr7O8",
+                  uid: "mus1",
+                  likes: 245,
+                  views: "1.2K"
+                },
+                {
+                  id: "vid_2",
+                  title: "Vocalises mystiques A Capella - Répétition Matinale",
+                  artistName: "Fanta D'Abobo",
+                  specialty: "Chanteuse Lead",
+                  avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
+                  videoUrl: "https://www.youtube.com/watch?v=F384u51vB8w",
+                  uid: "mus2",
+                  likes: 189,
+                  views: "930"
+                },
+                {
+                  id: "vid_3",
+                  title: "Démonstration Saxophone Jazz - INSAAC prestige session",
+                  artistName: "Marius Bébé Sax",
+                  specialty: "Saxophoniste pro",
+                  avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=200",
+                  videoUrl: "https://www.youtube.com/watch?v=33K-gLREi1o",
+                  uid: "mus3",
+                  likes: 312,
+                  views: "1.8K"
+                }
+              ].map(reel => {
+                const isYt = reel.videoUrl && (reel.videoUrl.includes("youtube.com") || reel.videoUrl.includes("youtu.be"));
+                const getRegYId = () => {
+                  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                  const match = reel.videoUrl.match(regExp);
+                  return (match && match[2].length === 11) ? match[2] : null;
+                };
+                const yId = isYt ? getRegYId() : null;
+
+                return (
+                  <motion.div
+                    key={reel.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      background: "linear-gradient(180deg, rgba(20,20,20,0.95), rgba(10,10,10,1))",
+                      borderRadius: "24px",
+                      border: "1px solid rgba(212,160,23,0.2)",
+                      boxShadow: "0 0 30px rgba(212,160,23,0.08)",
+                    }}
+                    className="p-4 space-y-3 relative overflow-hidden group transition-all"
+                  >
+                    {/* Top Creator Info */}
+                    <div className="flex items-center justify-between">
+                      <div 
+                        onClick={() => {
+                          const matchedUser = users.find(u => u.uid === reel.uid || u.artistName === reel.artistName);
+                          if (matchedUser) {
+                            setSelectedExploreArtist(matchedUser);
+                          } else {
+                            // Seeded fallbacks
+                            setSelectedExploreArtist({
+                              uid: reel.uid,
+                              firstName: reel.artistName.split(" ")[0],
+                              lastName: reel.artistName.split(" ").slice(1).join(" ") || "Artiste",
+                              artistName: reel.artistName,
+                              commune: "Cocody",
+                              experience: "Professionnel",
+                              specialty: reel.specialty,
+                              bio: "Répéteur professionnel d'orchestre, disponible pour vos prestations et mariages à Abidjan.",
+                              role: "musicien",
+                              isAvailableNow: true
+                            } as any);
+                          }
+                          try { audioSynth?.playValidationSuccess?.(); } catch(_) {}
+                        }}
+                        className="flex items-center gap-2 cursor-pointer hover:opacity-85"
+                      >
+                        <img src={reel.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-[rgba(212,160,23,0.25)] object-cover" />
+                        <div>
+                          <h4 className="text-[11px] font-bold text-[#FFFFFF] uppercase leading-none">{reel.artistName}</h4>
+                          <span className="text-[8.5px] text-[#B8B8B8] font-medium font-mono block mt-0.5">{reel.specialty}</span>
+                        </div>
+                      </div>
+                      <span className="text-[8px] font-mono p-1 px-2 rounded-md bg-[#D4A017]/10 border border-[#D4A017]/20 text-[#D4A017] font-black uppercase">RÉEL DÉMO</span>
+                    </div>
+
+                    {/* Thumbnail video player click zone */}
+                    <div className="relative aspect-video rounded-xl bg-black border border-[rgba(212,160,23,0.25)] overflow-hidden group flex items-center justify-center cursor-pointer shadow-inner">
+                      <img 
+                        src={`https://img.youtube.com/vi/${yId}/${isDataSaveActive ? "mqdefault" : "hqdefault"}.jpg`} 
+                        alt="Thumbnail" 
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition duration-500" 
+                      />
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-all duration-500 pointer-events-none" />
+                      
+                      <button
+                        onClick={() => {
+                          if (isYt && yId) {
+                            setReelsVideoId(yId);
+                          }
+                          try { audioSynth?.playValidationSuccess(); } catch(_) {}
+                        }}
+                        className="w-14 h-14 rounded-full bg-black border-2 border-[#D4A017] text-[#D4A017] flex items-center justify-center cursor-pointer hover:bg-[#D4A017] hover:text-black hover:scale-110 transition-all shadow-[0_0_20px_rgba(212,160,23,0.4)] relative z-10"
+                      >
+                        <span className="translate-x-0.5 text-xl">▶</span>
+                      </button>
+                      <span className="absolute bottom-2 right-2 text-[9px] font-mono bg-[#0A0A0A]/90 border border-[#D4A017]/30 px-2 py-1 rounded text-[#D4A017] uppercase tracking-wider font-bold">Vidéo HQ</span>
+                    </div>
+
+                    {/* Interactions summary */}
+                    <div className="pt-2">
+                      <p className="text-[10.5px] font-sans font-bold text-[#FFFFFF] mb-3">{reel.title}</p>
+                      
+                      {/* Premium Interaction Buttons */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                         <button className="flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] hover:bg-[#D4A017]/10 transition-colors text-[9px] font-bold text-[#B8B8B8] hover:text-[#FFFFFF] uppercase tracking-wider">
+                           <span className="text-[#D4A017] text-xs">❤️</span> <span className="truncate">J'honore</span>
+                         </button>
+                         <button className="flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] hover:bg-[#D4A017]/10 transition-colors text-[9px] font-bold text-[#B8B8B8] hover:text-[#FFFFFF] uppercase tracking-wider">
+                           <span className="text-[#D4A017] text-xs">💬</span> <span className="truncate">Palabres</span>
+                         </button>
+                         <button className="flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] hover:bg-[#D4A017]/10 transition-colors text-[9px] font-bold text-[#B8B8B8] hover:text-[#FFFFFF] uppercase tracking-wider">
+                           <span className="text-[#D4A017] text-xs">🔁</span> <span className="truncate">Transmettre</span>
+                         </button>
+                         <button className="flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] hover:bg-[#D4A017]/10 transition-colors text-[9px] font-bold text-[#B8B8B8] hover:text-[#FFFFFF] uppercase tracking-wider">
+                           <span className="text-[#D4A017] text-xs">🤝</span> <span className="truncate">Collaborer</span>
+                         </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
+
+            {/* 2. MUSIC EXTRAITS AUDIOS (Requirement 2 & Background Play integration) */}
+            {(reelsFilter === "all" || reelsFilter === "audios") && (
+              [
+                {
+                  id: "track_101",
+                  title: "Extrait Orchestre Rumba - Solo Rythmique Live",
+                  artistName: "Yoro l'Américain",
+                  specialty: "Guitare Soliste",
+                  avatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
+                  uid: "mus1",
+                  url: "https://assets.mixkit.co/music/preview/mixkit-african-spirit-140.mp3",
+                  duration: "1:42",
+                  claps: 145
+                },
+                {
+                  id: "track_102",
+                  title: "Chant d'Adoration Gospel - Chœur d'Abidjan",
+                  artistName: "Fanta D'Abobo",
+                  specialty: "Voix d'Or",
+                  avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
+                  uid: "mus2",
+                  url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Ketsa/The_Lost_Files/Ketsa_-_04_-_Soul_Searching.mp3",
+                  duration: "2:15",
+                  claps: 232
+                },
+                {
+                  id: "track_103",
+                  title: "Lounge d'Ivoire - Saxophone Acoustique Impromptu",
+                  artistName: "Marius Bébé Sax",
+                  specialty: "Saxophoniste INSAAC",
+                  avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=200",
+                  uid: "mus3",
+                  url: "https://assets.mixkit.co/music/preview/mixkit-tribal-rhythm-263.mp3",
+                  duration: "1:55",
+                  claps: 198
+                }
+              ].map(track => {
+                const isActive = playingTrackId === track.id;
+
+                return (
+                  <motion.div
+                    key={track.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-3 hover:border-[#D4AF37]/45 transition shadow-md relative overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div 
+                        onClick={() => {
+                          const matchedUser = users.find(u => u.uid === track.uid);
+                          if (matchedUser) setSelectedExploreArtist(matchedUser);
+                        }}
+                        className="flex items-center gap-2 cursor-pointer hover:opacity-85"
+                      >
+                        <img src={track.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-zinc-800" />
+                        <div>
+                          <strong className="text-[11px] text-white uppercase font-black leading-none block">{track.artistName}</strong>
+                          <span className="text-[8px] text-zinc-500 font-mono tracking-wider font-extrabold uppercase block mt-0.5">{track.specialty}</span>
+                        </div>
+                      </div>
+                      <span className="text-[8px] font-mono p-1 px-2 rounded bg-amber-500/10 border border-amber-500/20 text-[#D4AF37] font-black uppercase">AUDIO PRESTIGE</span>
+                    </div>
+
+                    {/* Audio Player Row */}
+                    <div className="p-3.5 rounded-xl bg-black/60 border border-zinc-900 flex items-center justify-between gap-3 relative">
+                      {/* Left Play/Pause disk spinner */}
+                      <button
+                        onClick={() => handleTogglePreview(track)}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition ${
+                          isActive ? "bg-amber-500 text-black animate-spin-slow" : "bg-zinc-900 text-[#D4AF37] hover:bg-zinc-800"
+                        }`}
+                      >
+                        {isActive ? (
+                          <span className="text-xs font-bold font-mono">⏸</span>
+                        ) : (
+                          <span className="translate-x-0.5 text-sm">▶</span>
+                        )}
+                      </button>
+
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="text-[10px] text-zinc-100 font-bold truncate leading-snug">{track.title}</p>
+                        {/* Golden Reactive Soundwave animation when playing */}
+                        {isActive ? (
+                          <div className="flex items-end gap-0.5 h-3 mt-1.5 select-none">
+                            <span className="w-0.5 bg-[#D4AF37] rounded-sm animate-[bounce-wave_0.7s_infinite_0.1s]" />
+                            <span className="w-0.5 bg-[#D4AF37] rounded-sm animate-[bounce-wave_0.7s_infinite_0.3s]" />
+                            <span className="w-0.5 bg-[#D4AF37] rounded-sm animate-[bounce-wave_0.7s_infinite_0.5s]" />
+                            <span className="w-0.5 bg-[#D4AF37] rounded-sm animate-[bounce-wave_0.7s_infinite_0.2s]" />
+                            <span className="w-0.5 bg-[#D4AF37] rounded-sm animate-[bounce-wave_0.7s_infinite_0.4s]" />
+                            <span className="w-0.5 bg-amber-600 rounded-sm animate-[bounce-wave_0.7s_infinite_0.1s]" />
+                          </div>
+                        ) : (
+                          <span className="text-[8.5px] text-zinc-600 font-mono tracking-tight block mt-1">Cliquez sur Play pour écouter • Durée : {track.duration}</span>
+                        )}
+                      </div>
+
+                      {/* Continuous ambiance ambient override button */}
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('gombo_music_toggle', { detail: { play: true } }));
+                          addToTerminal("[PRESTIGE] Ambiance musicale générale relancée sur toute l'application.");
+                        }}
+                        className="p-1.5 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 rounded-lg text-[8px] font-mono text-[#D4AF37] font-black uppercase shrink-0"
+                        title="Relancer l'ambiance continue en arrière-plan"
+                      >
+                        📻 Ambiance permanente
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[8px] font-mono text-zinc-500 pt-1">
+                      <span>⚡ {track.claps} CLAPS DE FORCE</span>
+                      <span className="text-amber-500">🏆 GARANTI SOUVERAIN (NFC/NFC)</span>
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
+
+            {/* 3. MURMURES / STATUS DE COMPAGGNIE */}
+            {(reelsFilter === "all" || reelsFilter === "murmures") && (
+              [
+                {
+                  id: "mur_1",
+                  author: "Yoro l'Américain",
+                  text: "Répétition intensive lead guitare de coupés-décalés avec le grand orchestre VIP d'Adjamé. On prépare du lourd pour les mariages de ce week-end à Cocody ! Ambiance zouglou garantie.",
+                  avatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
+                  uid: "mus1",
+                  date: "Il y a 2h"
+                },
+                {
+                  id: "mur_2",
+                  author: "Fanta D'Abobo",
+                  text: "Gloire céleste ! Le gombo ID m'a apporté un immense raccordement pro hier. Merci AFRIGOMBO d'exister et de valoriser notre art vocal sans fuites.",
+                  avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
+                  uid: "mus2",
+                  date: "Il y a 5h"
+                },
+                {
+                  id: "mur_3",
+                  author: "Marius Bébé Sax",
+                  text: "Une alliance signée en toute intimité avec le grand promoteur de Marcory. On va inonder les dîners d'affaires d'Abidjan de mélodies jazzées célestes.",
+                  avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=200",
+                  uid: "mus3",
+                  date: "Hier"
+                }
+              ].map(mur => (
+                <motion.div
+                  key={mur.id}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-3 shadow-md border-l-4 border-l-[#FF7A00]"
+                >
+                  <div className="flex items-center gap-2">
+                    <img src={mur.avatar} alt="Avatar" className="w-7 h-7 rounded-full object-cover border border-zinc-800" />
+                    <div className="flex-1 min-w-0">
+                      <strong className="text-[10px] text-white uppercase font-black tracking-tight block truncate">{mur.author}</strong>
+                      <span className="text-[7.5px] text-zinc-500 font-mono block leading-none">{mur.date} • Côte d'Ivoire</span>
+                    </div>
+                    <span className="text-[9px]">💬</span>
+                  </div>
+                  <p className="text-[10.5px] text-zinc-300 font-sans leading-relaxed font-semibold italic bg-black/40 p-3 rounded-xl border border-zinc-900/60">
+                    "{mur.text.normalize("NFC")}"
+                  </p>
+                  <div className="flex justify-between items-center pt-1 text-[8.5px] font-mono text-zinc-500">
+                    <button 
+                      onClick={() => {
+                        const matchedUser = users.find(u => u.uid === mur.uid);
+                        if (matchedUser) setSelectedExploreArtist(matchedUser);
+                      }}
+                      className="text-[#FF7A00] hover:underline cursor-pointer font-bold uppercase"
+                    >
+                      Explorer l'univers ➔
+                    </button>
+                    <span>✓ ACTU SÉCURISÉE</span>
+                  </div>
+                </motion.div>
+              ))
+            )}
+
+            {/* 4. ALLIANCES ET CERTIFICATIONS D'ACCORDEMENT */}
+            {(reelsFilter === "all" || reelsFilter === "alliances") && (
+              [
+                {
+                  id: "act_1",
+                  title: "Vérification officielle réussie",
+                  description: "Yom Yoro Sangaré a complété son authentification souveraine et décroché le sésame de Gombo ID d'Abidjan.",
+                  badge: "⭐ Maître Souverain Tempéré",
+                  type: "cert",
+                  icon: "🏆"
+                },
+                {
+                  id: "act_2",
+                  title: "Alliance d'Or signée",
+                  description: "Une union d'orchestre a été conclue hier soir à Adjamé pour 12 représentations acoustiques.",
+                  badge: "🤝 Alliance Scène Pro",
+                  type: "alliance",
+                  icon: "✨"
+                }
+              ].map(act => (
+                <motion.div
+                  key={act.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl relative overflow-hidden flex gap-3.5 shadow-md hover:border-[#D4AF37]/30 transition"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 text-lg">
+                    {act.icon}
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1 text-left">
+                    <span className="text-[8.5px] font-mono font-black text-[#D4AF37] uppercase tracking-wider block bg-[#D4AF37]/5 border border-[#D4AF37]/10 px-1.5 py-0.5 rounded w-fit">
+                      {act.badge}
+                    </span>
+                    <h4 className="text-[11px] text-white font-bold uppercase leading-none mt-1">{act.title}</h4>
+                    <p className="text-[10px] text-zinc-400 font-medium leading-relaxed font-sans">{act.description}</p>
+                  </div>
+                </motion.div>
+              ))
+            )}
+
+          </div>
+        </div>
+      )}
 
       {/* ==========================================
           6. SÉCURITÉ ET COPYRIGHT FOOTER
@@ -810,100 +1218,43 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           INTERACTIVE ACTIONS MODAL OVERLAYS (SOUVERAIN COMMANDE CENTRE)
          ========================================================================= */}
       {activeQuickActionModal && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-6 sm:p-8 w-full max-w-md my-8 relative overflow-hidden select-none shadow-[0_15px_50px_rgba(0,0,0,0.95)]">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className={`bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-4 sm:p-6 w-full ${activeQuickActionModal === "search_member" ? "max-w-6xl h-[90vh] overflow-y-auto" : "max-w-md"} my-8 relative overflow-hidden select-none shadow-[0_15px_50px_rgba(0,0,0,0.95)]`}>
             
             <button
               onClick={() => {
                 setActiveQuickActionModal(null);
                 try { audioSynth.playTamTam(false); } catch (_) {}
               }}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 text-[#D4AF37] hover:text-white border border-white/5 flex items-center justify-center cursor-pointer transition focus:outline-none"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 text-[#D4AF37] hover:text-white border border-white/5 flex items-center justify-center cursor-pointer transition focus:outline-none z-50"
             >
               <X className="w-4 h-4" />
             </button>
 
-            {/* MODAL I: ANNURIA DE RECHERCHE DE MEMBRES */}
-            {activeQuickActionModal === "search_member" && (() => {
-              const [memberQuery, setMemberQuery] = useState("");
-              const [communeVal, setCommuneVal] = useState("all");
-              const matched = users.filter(u => {
-                const textOk = (u.artisticName || u.name || "").toLowerCase().includes(memberQuery.toLowerCase());
-                const communeOk = communeVal === "all" || u.commune === communeVal;
-                return textOk && communeOk;
-              });
-
-              return (
-                <div className="space-y-4 text-left">
-                  <div>
-                    <h3 className="text-sm font-sans font-black tracking-widest text-[#FFFFFF] uppercase flex items-center gap-2">
-                      👥 RECHERCHER UN MAÎTRE DE SCÈNE
-                    </h3>
-                    <p className="text-[11px] text-zinc-400 mt-1">Garantie Souveraine de l'Afrique de l'Ouest.</p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Saisir un nom d'artiste..."
-                      value={memberQuery}
-                      onChange={(e) => setMemberQuery(e.target.value)}
-                      className="flex-1 bg-black border border-zinc-800 text-xs text-white p-2.5 rounded-xl font-mono focus:outline-none"
-                    />
-                    <select
-                      value={communeVal}
-                      onChange={(e) => setCommuneVal(e.target.value)}
-                      className="bg-black border border-zinc-800 text-[10px] text-[#D4AF37] px-2 rounded-xl focus:outline-none font-bold"
-                    >
-                      <option value="all">Commune</option>
-                      {IVORIAN_COMMUNES.map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                    {matched.length === 0 ? (
-                      <div className="text-center py-6 text-xs text-zinc-600 font-mono">
-                        Aucun membre ne correspond à ce critère.
-                      </div>
-                    ) : (
-                      matched.map(u => (
-                        <div key={u.id} className="p-3 bg-black border border-zinc-900 rounded-xl space-y-2">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <strong className="text-xs text-white uppercase font-bold block">{u.artisticName}</strong>
-                              <span className="text-[9px] font-mono text-zinc-550 block mt-1">{u.commune} • {u.instruments?.join(", ") || "Zouglou"}</span>
-                            </div>
-                            {u.kycStatus === "approved" && (
-                              <span className="text-[7.5px] font-mono bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] px-1.5 py-0.5 rounded font-black tracking-wide shrink-0">COMPTE VÉRIFIÉ</span>
-                            )}
-                          </div>
-                          <div className="flex gap-2 pt-1">
-                            <a
-                              href={`tel:${u.phone || "0700000000"}`}
-                              className="flex-1 py-1 px-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[9px] font-mono font-bold uppercase rounded-lg text-center"
-                            >
-                              📞 Appeler
-                            </a>
-                            <button
-                              onClick={() => {
-                                addToTerminal(`[MESSAGE] Alliance initiée avec ${u.artisticName}`);
-                                setActiveMenu("user_messages");
-                                try { audioSynth.playValidationSuccess(); } catch(_) {}
-                              }}
-                              className="flex-1 py-1 px-2 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/25 text-[9px] font-mono font-bold uppercase rounded-lg"
-                            >
-                              ✉ S'allier
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
+            {/* MODAL I: COMPREHENSIVE TALENTS DIRECTORY OVER INTERNAL MEMBERS */}
+            {activeQuickActionModal === "search_member" && (
+              <div className="space-y-4 text-left font-sans">
+                <div className="pb-2 border-b border-zinc-900">
+                  <h3 className="text-sm font-sans font-black tracking-widest text-[#FFFFFF] uppercase flex items-center gap-2">
+                    👥 RECHERCHER ET DÉCOUVRIR UN MAÎTRE DE SCÈNE
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 mt-1">Sélecteur de performance certifié d'Afrique de l'Ouest. Explorez librement leur parcours en toute confidentialité.</p>
                 </div>
-              );
-            })()}
+                <div className="bg-[#0b0b0c] p-2 rounded-2xl border border-zinc-900/60 transition-all">
+                  <AnnuaireTalents
+                    currentUserProfile={users.find(u => u.uid === "logged_in_uid") as any || null}
+                    onNavigateView={(view) => {
+                      if (view === "home") {
+                        setActiveQuickActionModal(null);
+                      }
+                    }}
+                    onSelectTalent={(uid) => {
+                      // Handled within directory view
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* MODAL II: VERIFIER GOMBO ID SÉCURISÉ */}
             {activeQuickActionModal === "verify_gombo_id" && (

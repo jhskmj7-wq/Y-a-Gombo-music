@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { audioSynth } from "./lib/audio";
 import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
+import { BackgroundMusic } from "./components/BackgroundMusic";
 
 // Lazy load the main Application Layer
 const AdminCentre = lazy(() => import("./components/AdminCentre.tsx"));
@@ -59,10 +60,9 @@ function App() {
     const t0 = setTimeout(() => setSplashStep(1), 100);    // Step 1: Draw silhouette & gold notes
     const t1 = setTimeout(() => setSplashStep(2), 1200);   // Step 2: Draw AFRIGOMBO and Taglines
     const t2 = setTimeout(() => {
-      // Small success sound and start ambient atmosphere before entering
+      // Small success sound before entering
       try {
         audioSynth.playKoraNote(523.25, 0, 0.12, 0.6); // High pitch d'or
-        audioSynth.startAmbientLoop();
       } catch (err) {
         console.warn("Audio Context startup play blocked or unsupported:", err);
       }
@@ -216,6 +216,9 @@ function App() {
 
       {/* 2. MAIN APPLICATION LAYER */}
       <AppContent darkMode={darkMode} setDarkMode={setDarkModeWrapped} />
+      
+      {/* 3. PERSISTENT BACKGROUND MUSIC */}
+      <BackgroundMusic />
     </div>
   );
 }
