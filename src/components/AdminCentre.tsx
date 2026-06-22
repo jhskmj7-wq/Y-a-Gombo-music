@@ -51,6 +51,7 @@ import { audioSynth } from "../lib/audio";
 import { interactionBus } from "./LivingInteractions";
 import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
 import { useDynamicPlaceholder } from "../hooks/useDynamicPlaceholder";
+import { isSuperFounder } from "../shared/admin/constants";
 import {
   motion,
   AnimatePresence

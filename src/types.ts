@@ -526,3 +526,18 @@ export interface VoiceAnnouncement {
 }
 
 export type ContractStatus = any;
+
+export interface EscrowPayment {
+  id?: string;
+  amount: number;
+  transportAmount: number;
+  performerUid: string;
+  organizerUid: string;
+  status: "held" | "released" | "disputed" | "refunded";
+  performerConfirmed: boolean;
+  organizerConfirmed: boolean;
+  disputeOpened: boolean;
+  autoReleaseAt: string | null;
+  createdAt: string;
+  [key: string]: any;
+}
