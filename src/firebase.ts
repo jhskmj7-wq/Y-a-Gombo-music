@@ -2804,6 +2804,10 @@ export const gomboDB = {
   },
 
   listenToNotifications(userId: string, callback: (notifications: GomboNotification[]) => void): () => void {
+    if (!userId) {
+      console.warn("⚠️ listenToNotifications called without a valid userId.");
+      return () => {};
+    }
     if (!isFirebaseMock && db) {
       try {
         const q = query(collection(db, "notifications"), where("userId", "==", userId));

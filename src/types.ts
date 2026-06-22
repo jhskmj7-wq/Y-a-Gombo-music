@@ -74,6 +74,16 @@ export interface User {
   isVip?: boolean;
   isPro?: boolean;
   gomboIdNumber?: string;
+  gomboId?: {
+    id: string;
+    scoreConfiance: number;
+    niveau: string;
+    prestationsTerminees: number;
+    annulations: number;
+    retards: number;
+    certifie: boolean;
+    createdAt: string;
+  };
   kycApprovedDate?: string;
   kycSubmittedDate?: string;
   kycType?: "standard" | "express";

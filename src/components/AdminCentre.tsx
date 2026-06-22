@@ -355,7 +355,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     "Chercher un beatmaker...",
     "Trouver un studio..."
   ]);
-  const { currentUser, profile, logout, refreshProfile, setProfile } = useAuth();
+  const { currentUser, profile, logout, refreshProfile, setProfile, loginWithGoogle } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
 
@@ -454,6 +454,34 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [newGomboPrice, setNewGomboPrice] = useState<number>(55050);
   const [newGomboCommune, setNewGomboCommune] = useState<string>("Cocody");
   const [newPubType, setNewPubType] = useState<"post" | "gombo" | "opportunite" | "annonce" | "casting" | "evenement" | "contenu">("post");
+  
+  // Obligatory fields for Gombo & Renforts
+  const [newGomboCategory, setNewGomboCategory] = useState<string>("Concert");
+  const [newGomboOtherCategory, setNewGomboOtherCategory] = useState<string>("");
+  const [newGomboCity, setNewGomboCity] = useState<string>("Abidjan");
+  const [newGomboQuartier, setNewGomboQuartier] = useState<string>("");
+  const [newGomboLieuPrecis, setNewGomboLieuPrecis] = useState<string>("");
+  const [newGomboDate, setNewGomboDate] = useState<string>("");
+  const [newGomboHeureDebut, setNewGomboHeureDebut] = useState<string>("20:00");
+  const [newGomboHeureFin, setNewGomboHeureFin] = useState<string>("23:00");
+  const [newGomboStyleMusical, setNewGomboStyleMusical] = useState<string>("");
+  const [newGomboTenueExigee, setNewGomboTenueExigee] = useState<string>("");
+  const [newGomboExperienceSouhaitee, setNewGomboExperienceSouhaitee] = useState<string>("");
+  const [newGomboNombreRecherche, setNewGomboNombreRecherche] = useState<number>(1);
+  // Specific Renfort group fields
+  const [newGomboTransportFee, setNewGomboTransportFee] = useState<number>(3000);
+  const [newGomboRepetitionsCount, setNewGomboRepetitionsCount] = useState<number>(3);
+  const [newGomboRepetitionsSchedule, setNewGomboRepetitionsSchedule] = useState<string>("18h00-21h00");
+  const [newGomboRepetitionsDates, setNewGomboRepetitionsDates] = useState<string>("");
+  
+  // Real contract active tracking states
+  const [contractRepsConfirmed, setContractRepsConfirmed] = useState<Record<string, number>>({});
+  const [contractRepsOrganizerValidated, setContractRepsOrganizerValidated] = useState<Record<string, number>>({});
+  const [contractDDayStarted, setContractDDayStarted] = useState<Record<string, boolean>>({});
+  const [contractDDayEnded, setContractDDayEnded] = useState<Record<string, boolean>>({});
+  const [contractDisputeOpened, setContractDisputeOpened] = useState<Record<string, boolean>>({});
+  const [contractDisputeDetails, setContractDisputeDetails] = useState<Record<string, { reason: string, comment: string, proofUrl: string }>>({});
+  
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
   const [memberQuery, setMemberQuery] = useState<string>("");
   const [communeFilter, setCommuneFilter] = useState<string>("all");
@@ -744,6 +772,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   // --- FIRESTORE ACTIVE SYNC ROUTINE ---
   useEffect(() => {
+    if (!currentUser) return;
     // Attempt Firestore subscription & binding
     try {
       const qUsers = collection(db, "users");
@@ -854,7 +883,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     } catch (e) {
       addToTerminal(`[Alerte locale] Lancement offline synchronisé.`);
     }
-  }, []);
+  }, [currentUser]);
 
   // --- DASHBOARD INTRO MOUNT SEQUENCE ---
   useEffect(() => {
@@ -1401,8 +1430,28 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     const targetUser = users.find(u => u.id === userId);
     if (!targetUser) return;
 
-    // Generate unique ID only on approval
-    const gmbId = "GMB-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.floor(1000 + Math.random() * 9000);
+    const code = (targetUser.artisticName || "ELT").replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "ELT";
+    const digits = Math.floor(10000 + Math.random() * 90000); // 5 digits
+    const gmbId = `GMB-${code}-${digits}`;
+
+    const levels = [
+      "🟢 Vérifié AFRIGOMBO",
+      "🥉 Musicien confirmé",
+      "🥈 Professionnel actif",
+      "🥇 Référence AFRIGOMBO"
+    ];
+    const level = levels[Math.floor(Math.random() * levels.length)];
+
+    const gomboIdObj = {
+      id: gmbId,
+      scoreConfiance: 95,
+      niveau: level,
+      prestationsTerminees: Math.floor(10 + Math.random() * 40),
+      annulations: Math.floor(Math.random() * 2),
+      retards: 0,
+      certifie: true,
+      createdAt: new Date().toISOString()
+    };
 
     const updatedUsers = users.map(user => {
       if (user.id === userId) {
@@ -1411,6 +1460,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           kycStatus: "approved" as const, 
           isCertified: true,
           gomboIdNumber: gmbId,
+          gomboId: gomboIdObj,
           kycApprovedDate: new Date().toLocaleDateString("fr-FR")
         };
         saveToFirestore("users", user.id, u);
@@ -1598,15 +1648,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     );
   });
 
-  if (currentUser && profile && profile.isProfileComplete === false) {
+  const profileSkippedLocally = typeof window !== 'undefined' && localStorage.getItem("gombo_profile_skipped") === "true";
+  if (currentUser && profile && profile.isProfileComplete === false && !profile.profileSkipped && !profile.skippedProfile && !profileSkippedLocally) {
     return (
       <div className="w-full min-h-screen bg-[#0B0B0B] flex items-center justify-center py-6 overflow-y-auto px-4 font-sans select-none">
         <CompleteProfile 
           currentUserProfile={profile} 
           onComplete={async () => {
-            addToTerminal("[🛡️ ONBOARDING] Complétion du contrat souverain AfriID réussie !");
-            // Hard bypass for access
-            setProfile({ ...profile!, isProfileComplete: true });
+            addToTerminal("[🛡️ ONBOARDING] Accès autorisé à l'écosystème Y'A GOMBO MUSIC.");
             await refreshProfile();
             // Force state reload
             window.location.reload(); 
@@ -1834,22 +1883,16 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
                               🌍 Univers AFRI
                             </span>
-                            {renderMenuItem("menu_afri_id", "Afri ID", "🆔", () => {
-                              addToTerminal("🌍 AFRI ID : Identité centrale en préparation...");
+                            {renderMenuItem("menu_afri_id", "AfriID", "🆔", () => {
+                              addToTerminal("🌍 AFRIID : Identité centrale en préparation...");
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-blue-500/10 text-blue-400 rounded border border-blue-500/10 uppercase font-black">EN PRÉPARATION</span>)}
                             {renderMenuItem("menu_wallet", "Wallet", "💳", () => {}, true)}
-                            {renderMenuItem("menu_afri_academy", "Afri Academy", "🎓", () => {
-                              setIsAcademyModalOpen(true);
-                              setIsSidebarOpen(false);
-                              try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-purple-500/10 text-purple-400 rounded border border-purple-500/10 uppercase font-black">PRO</span>)}
-                            {renderMenuItem("menu_afritrust", "Afri Trust", "🛡️", () => {
+                            {renderMenuItem("menu_afritrust", "AfriTrust", "🛡️", () => {
                               addToTerminal("🛡️ AFRITRUST : Certification & Confiance en développement...");
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-green-500/10 text-green-400 rounded border border-green-500/10 uppercase font-black">DÉVELOPPEMENT</span>)}
-                            {renderMenuItem("menu_afrilivraison", "Afri Livraison", "🚚", () => {
+                            {renderMenuItem("menu_afrilivraison", "AfriLivraison", "🚚", () => {
                               addToTerminal("🚚 AFRILIVRAISON : Logistique intelligente en développement...");
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-orange-500/10 text-orange-400 rounded border border-orange-500/10 uppercase font-black">DÉVELOPPEMENT</span>)}
-                            {renderMenuItem("menu_market", "Afri Market", "🛒", () => {}, true)}
                           </div>
 
                           {/* SEPARATOR */}
@@ -2090,8 +2133,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   </button>
                 )}
 
-                {/* Notifications Icon (Bell) */}
-                {currentUser && profile?.isProfileComplete && activeMenu !== "user_edit_profile" && (
+                {/* --- 1. RECHERCHE --- */}
+                <button
+                  id="search-btn"
+                  onClick={() => {
+                    setIsHeaderSearchOpen(true);
+                    try { audioSynth.playValidationSuccess(); } catch (err) {}
+                  }}
+                  className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+                  title="Recherche"
+                >
+                  <Search className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
+                </button>
+
+                {/* --- 2. NOTIFICATIONS --- */}
+                {activeMenu !== "user_edit_profile" && (
                   <button
                     id="bell-btn"
                     onClick={() => {
@@ -2116,7 +2172,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   </button>
                 )}
 
-                {/* Profile Avatar */}
+                {/* --- 3. PROFIL --- */}
                 <div 
                   id="profile-avatar"
                   className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
@@ -3840,7 +3896,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
               {/* 3. USER PUBLISH VIEW */}
               {activeMenu === "user_publish" && (() => {
-                const triggerPubSubmit = () => {
+                const triggerPubSubmit = async () => {
                   const activeArtist = users.find(u => u.id === activeArtistId) || users[0];
                   
                   if (newPubType === "post") {
@@ -3862,27 +3918,110 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     setPosts(prev => [newP, ...prev]);
                     addToTerminal(`[🎼 PUBLICATION] Nouveau murmure d'or diffusé sur Le Terrain !`);
                   } else {
-                    if (!newGomboTitle.trim() || !newGomboDesc.trim()) {
-                      alert("Veuillez renseigner un titre et une description prestigieuse !");
+                    if (!newGomboTitle.trim()) {
+                      alert("Veuillez renseigner un titre spectaculaire pour le Gombo !");
                       return;
                     }
+                    if (!newGomboDesc.trim()) {
+                      alert("Veuillez renseigner une description détaillée de la prestation !");
+                      return;
+                    }
+                    if (newGomboCategory === "Autre" && !newGomboOtherCategory.trim()) {
+                      alert("Si vous choisissez 'Autre', vous devez spécifier le type de Gombo manuellement !");
+                      return;
+                    }
+                    if (!newGomboCity.trim()) {
+                      alert("Veuillez renseigner la ville d'impact !");
+                      return;
+                    }
+                    if (!newGomboQuartier.trim()) {
+                      alert("Veuillez renseigner le quartier de la prestation !");
+                      return;
+                    }
+                    if (!newGomboLieuPrecis.trim()) {
+                      alert("Veuillez renseigner l'adresse ou lieu de ralliement précis !");
+                      return;
+                    }
+                    if (!newGomboDate) {
+                      alert("Veuillez spécifier la date de la prestation !");
+                      return;
+                    }
+                    if (!newGomboHeureDebut) {
+                      alert("Veuillez spécifier l'heure de début !");
+                      return;
+                    }
+                    if (!newGomboHeureFin) {
+                      alert("Veuillez spécifier l'heure de fin attendue !");
+                      return;
+                    }
+                    if (!newGomboStyleMusical.trim()) {
+                      alert("Veuillez spécifier le genre ou style musical attendu !");
+                      return;
+                    }
+                    if (!newGomboTenueExigee.trim()) {
+                      alert("Veuillez spécifier le code vestimentaire ou la tenue exigée !");
+                      return;
+                    }
+                    if (!newGomboExperienceSouhaitee.trim()) {
+                      alert("Veuillez spécifier le niveau d'expérience souhaité !");
+                      return;
+                    }
+                    if (newGomboNombreRecherche <= 0) {
+                      alert("Le nombre d'artistes recherchés doit être d'au moins 1 !");
+                      return;
+                    }
+                    if (!newGomboPrice || newGomboPrice < 15000) {
+                      alert("Le budget minimum d'un Gombo est réglementé à 15 000 FCFA. Les mentions 'montant à discuter' ou budgets inférieurs sont strictement interdits.");
+                      return;
+                    }
+
+                    // Validation specifics for Renfort group
+                    if (newGomboCategory === "Renfort groupe") {
+                      if (!newGomboRepetitionsDates.trim()) {
+                        alert("Pour un Renfort groupe, veuillez spécifier les dates de répétition !");
+                        return;
+                      }
+                      if (!newGomboRepetitionsSchedule.trim()) {
+                        alert("Pour un Renfort groupe, veuillez spécifier les horaires des répétitions !");
+                        return;
+                      }
+                    }
+
+                    const categoryVal = newGomboCategory === "Autre" ? newGomboOtherCategory : newGomboCategory;
+
                     const newG: Gombo = {
                       id: "gombo_new_" + Date.now(),
-                      title: "🎖️ " + newGomboTitle,
+                      title: "🎖️ (" + categoryVal + ") " + newGomboTitle,
                       description: newGomboDesc,
                       budget: newGomboPrice,
                       commissionRate: 0.10,
-                      location: newGomboCommune,
+                      location: newGomboQuartier + ", " + newGomboCity,
+                      city: newGomboCity,
+                      quartier: newGomboQuartier,
+                      lieuPrecis: newGomboLieuPrecis,
                       organizerId: activeArtistId,
-                      organizerName: activeArtist.artisticName,
+                      organizerName: activeArtist.artisticName || activeArtist.name,
                       timestamp: new Date().toISOString(),
                       applicantsCount: 0,
                       status: "open",
                       isBoosted: false,
-                      date: "Date Souveraine"
+                      date: newGomboDate,
+                      time: newGomboHeureDebut + " - " + newGomboHeureFin,
+                      category: categoryVal,
+                      styleMusical: newGomboStyleMusical,
+                      tenueExigee: newGomboTenueExigee,
+                      experienceSouhaitee: newGomboExperienceSouhaitee,
+                      nombreRecherche: newGomboNombreRecherche,
+                      isRenfort: newGomboCategory === "Renfort groupe",
+                      transportFee: newGomboCategory === "Renfort groupe" ? newGomboTransportFee : 0,
+                      repetitionsCount: newGomboCategory === "Renfort groupe" ? newGomboRepetitionsCount : 0,
+                      repetitionsSchedule: newGomboCategory === "Renfort groupe" ? newGomboRepetitionsSchedule : "",
+                      repetitionsDates: newGomboCategory === "Renfort groupe" ? newGomboRepetitionsDates : ""
                     };
+
                     setGombos(prev => [newG, ...prev]);
-                    addToTerminal(`[🎼 CONTRAT] Nouveau cachet (Gombo) d'honneur ouvert sur Le Terrain !`);
+                    await saveToFirestore("gombos", newG.id, newG);
+                    addToTerminal(`[🎼 CONTRAT] Nouveau cachet (${categoryVal}) d'honneur ouvert sur Le Terrain !`);
                   }
 
                   // Reset inputs
@@ -3948,50 +4087,274 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       ) : (
                         <div className="space-y-4 text-left">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Type de Gombo */}
                             <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">TITRE SPECTACULAIRE :</label>
+                              <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">TYPE DE GOMBO (OBLIGATOIRE) :</label>
+                              <select
+                                value={newGomboCategory}
+                                onChange={(e) => {
+                                  setNewGomboCategory(e.target.value);
+                                  if (e.target.value === "Renfort groupe") {
+                                    setNewGomboPrice(15000);
+                                  }
+                                }}
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-sans cursor-pointer"
+                              >
+                                {[
+                                  "Concert", "Mariage", "Anniversaire", "Maquis", "Restaurant", "Lounge", 
+                                  "Église", "Chorale", "Studio", "Festival", "Cabaret", "Spectacle scolaire", 
+                                  "Événement entreprise", "Renfort groupe", "Instrumentiste recherché", 
+                                  "Choriste recherché", "Beatmaker recherché", "Producteur recherché", 
+                                  "Sonorisateur recherché", "DJ", "Danseur", "Vidéaste", "Photographe", "Autre"
+                                ].map(cat => (
+                                  <option key={cat} value={cat} className="bg-black text-white">{cat}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Titre du contrat */}
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">TITRE DU CONTRAT :</label>
                               <input
                                 type="text"
                                 value={newGomboTitle}
                                 onChange={(e) => setNewGomboTitle(e.target.value)}
-                                placeholder="Concert live, Showcase VIP..."
+                                placeholder="ex. Bassiste pour show live VIP..."
                                 className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none placeholder-zinc-600 font-sans"
                               />
                             </div>
-                            
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">COMMUNE D'IMPACT :</label>
-                              <select
-                                value={newGomboCommune}
-                                onChange={(e) => setNewGomboCommune(e.target.value)}
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-sans cursor-pointer"
-                              >
-                                {IVORIAN_COMMUNES.map(c => (
-                                  <option key={c} value={c} className="bg-black text-white">{c}</option>
-                                ))}
-                              </select>
-                            </div>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">VALEUR DU CACHET (FCFA) :</label>
+                          {/* Specific manual Category entry if 'Autre' is selected */}
+                          {newGomboCategory === "Autre" && (
+                            <div className="space-y-2 animate-fadeIn bg-yellow-500/5 p-3 rounded-xl border border-yellow-500/20">
+                              <label className="text-[10px] font-mono uppercase text-yellow-500 block font-bold">VOTRE CATÉGORIE DU CONTRAT :</label>
                               <input
-                                type="number"
-                                value={newGomboPrice}
-                                onChange={(e) => setNewGomboPrice(parseInt(e.target.value) || 0)}
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none"
+                                type="text"
+                                value={newGomboOtherCategory}
+                                onChange={(e) => setNewGomboOtherCategory(e.target.value)}
+                                placeholder="Précisez votre type d'activité..."
+                                className="w-full bg-black border border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none placeholder-zinc-600 font-sans"
+                              />
+                            </div>
+                          )}
+
+                          {/* Location Detail Fields */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-850/60">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">VILLE :</label>
+                              <input
+                                type="text"
+                                value={newGomboCity}
+                                onChange={(e) => setNewGomboCity(e.target.value)}
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">QUARTIER / DEPARTEMENT :</label>
+                              <input
+                                type="text"
+                                value={newGomboQuartier}
+                                onChange={(e) => setNewGomboQuartier(e.target.value)}
+                                placeholder="ex. Angré, Biétry..."
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">LIEU PRÉCIS :</label>
+                              <input
+                                type="text"
+                                value={newGomboLieuPrecis}
+                                onChange={(e) => setNewGomboLieuPrecis(e.target.value)}
+                                placeholder="ex. Club Sovereignty, Terrain d'Or"
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
                               />
                             </div>
                           </div>
 
+                          {/* Schedule / Time Fields */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DATE DE PRESTATION :</label>
+                              <input
+                                type="date"
+                                value={newGomboDate}
+                                onChange={(e) => setNewGomboDate(e.target.value)}
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">HEURE DÉBUT :</label>
+                              <input
+                                type="time"
+                                value={newGomboHeureDebut}
+                                onChange={(e) => setNewGomboHeureDebut(e.target.value)}
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">HEURE FIN ATTENDUE :</label>
+                              <input
+                                type="time"
+                                value={newGomboHeureFin}
+                                onChange={(e) => setNewGomboHeureFin(e.target.value)}
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Style musical & Dresscode */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">STYLE MUSICAL :</label>
+                              <input
+                                type="text"
+                                value={newGomboStyleMusical}
+                                onChange={(e) => setNewGomboStyleMusical(e.target.value)}
+                                placeholder="ex. Coupé-décalé, Afrobeats, Jazz..."
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">TENUE EXIGÉE / DRESSCODE :</label>
+                              <input
+                                type="text"
+                                value={newGomboTenueExigee}
+                                onChange={(e) => setNewGomboTenueExigee(e.target.value)}
+                                placeholder="ex. Noir & Or, Traditionnelle, Décontractée..."
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Experiénce & Nombre */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">EXPÉRIENCE REQUISE :</label>
+                              <input
+                                type="text"
+                                value={newGomboExperienceSouhaitee}
+                                onChange={(e) => setNewGomboExperienceSouhaitee(e.target.value)}
+                                placeholder="ex. Professionnel actif, 2 ans sur scène..."
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">NOMBRE DE PRESTATAIRES CHERCHÉS :</label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={newGomboNombreRecherche}
+                                onChange={(e) => setNewGomboNombreRecherche(Math.max(1, parseInt(e.target.value) || 1))}
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Budget Validation (Min limit 15000 FCFA, with block alerts) */}
+                          <div className="grid grid-cols-1 gap-4">
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">BUDGET TOTAL CACHET DE CONTRAT (FCFA) :</label>
+                                <span className="text-[8px] font-mono text-zinc-500">RÉGLEMENTATION MIN : 15 000 FCFA</span>
+                              </div>
+                              <input
+                                type="number"
+                                min="15000"
+                                value={newGomboPrice}
+                                onChange={(e) => setNewGomboPrice(parseInt(e.target.value) || 0)}
+                                className={`w-full bg-black border rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none transition-all ${
+                                  newGomboPrice < 15000 ? "border-red-500/50 text-red-400 focus:border-red-500" : "border-zinc-800 focus:border-[#D4AF37]"
+                                }`}
+                              />
+                              {newGomboPrice < 15000 && (
+                                <p className="text-[10px] font-mono text-red-500 mt-1">
+                                  ⚠️ Le budget d'honneur minimum est de 15 000 FCFA. Les déclarations de type "à discuter" sont proscrites.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* SYSTEM RENFORT CONTROLS IF RENFORT GROUP SELECTED */}
+                          {newGomboCategory === "Renfort groupe" && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="mt-4 p-5 bg-[#D4AF37]/5 border border-[#D4AF37]/30 rounded-2xl space-y-4 text-left"
+                            >
+                              <div className="border-b border-[#D4AF37]/20 pb-2.5">
+                                <span className="text-[8.5px] uppercase font-mono tracking-widest text-[#D4AF37] font-bold block">🛡️ SYSTEM RENFORT GROUPE ACTIVÉ</span>
+                                <span className="text-[10px] text-zinc-400">Tous les frais de transport et de répétition sont bloqués immédiatement sur notre compte Escrow.</span>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <label className="text-[9px] font-mono text-zinc-400 uppercase font-bold block">INDEMNITÉ TRANSPORT / RÉPÉTITION (FCFA) :</label>
+                                  <input 
+                                    type="number"
+                                    value={newGomboTransportFee}
+                                    onChange={(e) => setNewGomboTransportFee(Math.max(0, parseInt(e.target.value) || 0))}
+                                    className="w-full bg-black border border-[#D4AF37]/20 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-[#D4AF37]"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="text-[9px] font-mono text-zinc-400 uppercase font-bold block">NOMBRE TOTAL DE RÉPÉTITIONS :</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={newGomboRepetitionsCount}
+                                    onChange={(e) => setNewGomboRepetitionsCount(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="w-full bg-black border border-[#D4AF37]/20 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-[#D4AF37]"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <label className="text-[9px] font-mono text-zinc-400 uppercase font-bold block">DATES DES RÉPÉTITIONS :</label>
+                                  <input 
+                                    type="text"
+                                    value={newGomboRepetitionsDates}
+                                    onChange={(e) => setNewGomboRepetitionsDates(e.target.value)}
+                                    placeholder="ex. 12, 14 et 16 Juin (Salle Burida)"
+                                    className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#D4AF37]"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="text-[9px] font-mono text-zinc-400 uppercase font-bold block">HORAIRES DES RÉPÉTITIONS :</label>
+                                  <input 
+                                    type="text"
+                                    value={newGomboRepetitionsSchedule}
+                                    onChange={(e) => setNewGomboRepetitionsSchedule(e.target.value)}
+                                    placeholder="ex. 18:00 - 21:00"
+                                    className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#D4AF37]"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Escrow Guarantee visual details */}
+                              <div className="bg-[#121214] p-3 rounded-xl border border-[#D4AF37]/15 flex items-center justify-between text-xs font-mono">
+                                <span className="text-[#D4AF37]">BUDGET TRANSPORT ESTIMÉ :</span>
+                                <span className="text-white font-bold">{(newGomboTransportFee * newGomboRepetitionsCount).toLocaleString()} FCFA</span>
+                              </div>
+                            </motion.div>
+                          )}
+
                           <div className="space-y-2">
-                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DESCRIPTION DE LA PRESTATION :</label>
+                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DESCRIPTION DU CONTRAT ET DU DÉROULÉ :</label>
                             <textarea
                               value={newGomboDesc}
                               onChange={(e) => setNewGomboDesc(e.target.value)}
-                              placeholder="Quels types d'instruments recherchez-vous ? Règle de cachets, horaires..."
-                              className="w-full h-28 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-xs text-white placeholder-zinc-600 focus:outline-none transition-all resize-none font-sans"
+                              placeholder="Détails du gombo, obligations, styles musicaux phares à respecter..."
+                              className="w-full h-24 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-xs text-white placeholder-zinc-600 focus:outline-none transition-all resize-none font-sans"
                             />
                           </div>
                         </div>
@@ -5003,12 +5366,60 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               })()}
 
               {activeMenu === "user_notifications" && (() => {
+                if (!currentUser) {
+                  return (
+                    <div className="max-w-md mx-auto px-4 py-16 text-center animate-fadeIn select-none">
+                      <div className="w-16 h-16 bg-[#D4AF37]/10 border border-[#D4AF37]/35 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_15px_rgba(212,175,55,0.15)] animate-pulse">
+                        <Bell className="w-8 h-8 text-[#D4AF37]" />
+                      </div>
+                      <h2 className="text-xl font-display font-black text-white uppercase tracking-wider mb-2">
+                        Accès Réservé 🔒
+                      </h2>
+                      <p className="text-xs text-zinc-400 font-sans leading-relaxed mb-8">
+                        Connectez-vous pour accéder à vos notifications et rester synchronisé en temps réel avec AFRIGOMBO.
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <button
+                          onClick={async () => {
+                            try {
+                              if (audioSynth) audioSynth.playValidationSuccess();
+                              await loginWithGoogle();
+                            } catch (err) {
+                              console.error("Google Auth failed in notification gate:", err);
+                              setIsAuthModalOpen(true);
+                            }
+                          }}
+                          className="w-full py-3.5 px-6 rounded-2xl bg-[#D5A01C] hover:bg-[#E5B02C] text-black text-xs font-mono font-black uppercase tracking-widest transition-all shadow-[0_4px_20px_rgba(212,175,55,0.3)] cursor-pointer select-none active:scale-95 flex items-center justify-center gap-2.5"
+                        >
+                          <svg className="w-4 h-4 mr-1 shrink-0" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 1.56-1.56 2.95-3.24 3.5v2.9h5.1c2.98-2.75 4.7-6.8 4.7-11.63c0-.52-.04-1.04-.1-1.5z" />
+                            <path fill="currentColor" d="M12.18 21.43c2.43 0 4.47-.8 5.96-2.2l-5.1-2.9c-.83.56-1.9.9-3.08.9c-2.33 0-4.3-1.58-5-3.7H1.7v3.08c1.5 3 4.58 4.92 8.1 4.92z" />
+                            <path fill="currentColor" d="M7.18 13.53c-.18-.55-.28-1.13-.28-1.73s.1-1.18.28-1.73V7H1.7a10.2 10.2 0 0 0 0 9.6l5.48-3.07z" />
+                            <path fill="currentColor" d="M12.18 5.57c1.33 0 2.5.46 3.44 1.36l2.58-2.58C16.65 2.9 14.6 2 12.18 2c-3.52 0-6.6 1.92-8.1 4.92l5.48 3.07c.7-2.12 2.67-3.7 5.02-3.7z" />
+                          </svg>
+                          Continuer avec Google
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setIsAuthModalOpen(true);
+                          }}
+                          className="w-full py-3 px-6 rounded-2xl bg-zinc-900 hover:bg-zinc-850 text-white text-xs font-mono font-bold uppercase tracking-widest border border-zinc-800 hover:border-zinc-750 transition-all cursor-pointer select-none"
+                        >
+                          Se connecter par email alternative
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
                 return (
                   <div className="space-y-6 animate-fadeIn pb-24 text-left">
                     <NotificationCenter 
-                      currentUserProfile={currentArtist} 
+                      currentUserProfile={profile || currentArtist} 
                       notifications={realNotifications}
                       onRefreshProfile={() => {}}
                       onNavigateHome={() => {
@@ -5096,8 +5507,37 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   ---------------------------------------------------- */}
               {activeMenu === "dashboard" && (() => {
                 const handleQuickApproveKyc = async (userId: string) => {
-                  const gomboIdNumber = "GB-CIV-" + Math.floor(100000 + Math.random() * 900000);
-                  const updatedUser = { kycStatus: "approved" as const, gomboIdNumber };
+                  const targetUser = users.find(u => u.id === userId);
+                  const code = (targetUser?.artisticName || "ELT").replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "ELT";
+                  const digits = Math.floor(10000 + Math.random() * 90000); // 5 digits
+                  const gomboIdNumber = `GMB-${code}-${digits}`;
+
+                  const levels = [
+                    "🟢 Vérifié AFRIGOMBO",
+                    "🥉 Musicien confirmé",
+                    "🥈 Professionnel actif",
+                    "🥇 Référence AFRIGOMBO"
+                  ];
+                  const level = levels[Math.floor(Math.random() * levels.length)];
+
+                  const gomboIdObj = {
+                    id: gomboIdNumber,
+                    scoreConfiance: 95,
+                    niveau: level,
+                    prestationsTerminees: Math.floor(10 + Math.random() * 40),
+                    annulations: Math.floor(Math.random() * 2),
+                    retards: 0,
+                    certifie: true,
+                    createdAt: new Date().toISOString()
+                  };
+
+                  const updatedUser = { 
+                    kycStatus: "approved" as const, 
+                    gomboIdNumber,
+                    gomboId: gomboIdObj,
+                    isCertified: true,
+                    kycApprovedDate: new Date().toLocaleDateString("fr-FR")
+                  };
                   setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updatedUser } : u));
                   await saveToFirestore("users", userId, updatedUser);
                   addToTerminal(`[GOMBO ID] Dossier de ${userId} approuvé par l'administrateur (${gomboIdNumber}).`);
@@ -8059,6 +8499,176 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   <span className="text-[10px] font-mono uppercase text-zinc-500 block font-bold">DESCRIPTION DU CONTRAT :</span>
                   <p>{selectedGomboDetails.description}</p>
                 </div>
+
+                {/* SOVEREIGN CONTRACT TRACKING & ESCROW PANEL */}
+                {hasApplied && (
+                  <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/35 space-y-4 text-xs animate-fadeIn">
+                    <div className="border-b border-[#D4AF37]/20 pb-2 flex items-center justify-between">
+                      <span className="font-mono font-bold text-[#D4AF37] uppercase tracking-wider text-[9px]">⚖️ RECTO-VERSO CONTRACTUEL SOUVERAIN</span>
+                      <span className="text-[8px] bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2 py-0.5 rounded uppercase font-mono font-bold">Escrow Sécurisé GomboCaisse</span>
+                    </div>
+
+                    {/* Section System Renfort group if category === "Renfort groupe" */}
+                    {selectedGomboDetails.category === "Renfort groupe" && (
+                      <div className="space-y-3 bg-black/40 p-3 rounded-xl border border-white/5 text-left">
+                        <div className="flex justify-between items-center text-[10px] uppercase font-mono font-bold text-zinc-400">
+                          <span>📋 Suivi Répétitions :</span>
+                          <span className="text-amber-400 font-mono">{contractRepsConfirmed[selectedGomboDetails.id] || 0} confirmées / {selectedGomboDetails.repetitionsCount || 3}</span>
+                        </div>
+
+                        {/* Rehearsals stats */}
+                        <div className="text-[10px] text-zinc-400 space-y-1 bg-zinc-90 w-full p-2.5 rounded-lg border border-white/5 font-mono">
+                          <div>📅 <span className="text-zinc-500">Dates :</span> <span className="text-white">{selectedGomboDetails.repetitionsDates || "Défini par l'organisateur"}</span></div>
+                          <div>⏰ <span className="text-zinc-500">Horaires :</span> <span className="text-white">{selectedGomboDetails.repetitionsSchedule || "ex: 18:00 - 21:00"}</span></div>
+                          <div>💰 <span className="text-zinc-500">Transport/répétition :</span> <span className="text-[#D4AF37] font-bold">{(selectedGomboDetails.transportFee || 3000).toLocaleString()} FCFA</span></div>
+                          <div>💰 <span className="text-zinc-500">Budget transport bloqué :</span> <span className="text-emerald-400 font-bold">{((selectedGomboDetails.transportFee || 3000) * (selectedGomboDetails.repetitionsCount || 3)).toLocaleString()} FCFA</span></div>
+                        </div>
+
+                        <div className="flex gap-2.5">
+                          <button
+                            onClick={() => {
+                              const currentCount = contractRepsConfirmed[selectedGomboDetails.id] || 0;
+                              const limit = selectedGomboDetails.repetitionsCount || 3;
+                              if (currentCount >= limit) {
+                                alert("Toutes les présences de répétition ont déjà été enregistrées !");
+                                return;
+                              }
+                              // Confirm presence
+                              const now = new Date().toLocaleTimeString();
+                              const selfieOrVideo = prompt("Veuillez entrer une preuve de présence (Selfie photo URL ou courte vidéo, ex: https://afrigombo.ci/presence_selfie.mp4) :");
+                              if (!selfieOrVideo) return;
+                              
+                              setContractRepsConfirmed(prev => ({
+                                ...prev,
+                                [selectedGomboDetails.id]: currentCount + 1
+                              }));
+                              addToTerminal(`[🛡️ PRÉSENCE] Répétition #${currentCount + 1} confirmée à ${now} ! Localisation GPS validée. En attente de validation organisateur (libération sous 8h automatique).`);
+                              audioSynth.playValidationSuccess();
+                            }}
+                            className="flex-1 py-1.5 px-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/35 text-[#D4AF37] hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
+                          >
+                            Présence (Selfie+GPS) 🤳
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              const currentConfirmed = contractRepsConfirmed[selectedGomboDetails.id] || 0;
+                              const currentValidated = contractRepsOrganizerValidated[selectedGomboDetails.id] || 0;
+                              if (currentValidated >= currentConfirmed) {
+                                alert("Aucune nouvelle répétition signalée en attente de validation.");
+                                return;
+                              }
+                              setContractRepsOrganizerValidated(prev => ({
+                                ...prev,
+                                [selectedGomboDetails.id]: currentConfirmed
+                              }));
+                              addToTerminal(`[🛡️ VALIDATION] Présence validée par l'organisateur ! Indemnité de transport libérée immédiatement.`);
+                              audioSynth.playValidationSuccess();
+                            }}
+                            className="flex-1 py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/30 text-emerald-400 hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
+                          >
+                            Validation Organisateur ✅
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Prestation Jour J Section */}
+                    <div className="space-y-3 bg-black/40 p-3 rounded-xl border border-white/5 text-left">
+                      <span className="text-[10px] uppercase font-mono font-bold text-zinc-400 block">🎤 Prestation Jour J :</span>
+                      
+                      <div className="flex items-center justify-between text-[11px] font-mono py-1">
+                        <span className="text-zinc-500">Statut Prestation :</span>
+                        {contractDDayEnded[selectedGomboDetails.id] ? (
+                          <span className="text-emerald-400 font-bold">✓ TERMINÉ & LIBÉRÉ</span>
+                        ) : contractDDayStarted[selectedGomboDetails.id] ? (
+                          <span className="text-amber-400 animate-pulse font-bold">● EN COURS DE PRESTATION</span>
+                        ) : (
+                          <span className="text-zinc-500 font-bold">EN ATTENTE DU SIGNAL</span>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 flex-wrap">
+                        {/* Start prestation button */}
+                        {!contractDDayStarted[selectedGomboDetails.id] && !contractDDayEnded[selectedGomboDetails.id] && (
+                          <button
+                            onClick={() => {
+                              const confirmVideo = prompt("Veuillez enregistrer une courte vidéo face ou entrer son URL pour certifier le début sur scène :");
+                              if (!confirmVideo) return;
+                              setContractDDayStarted(prev => ({
+                                ...prev,
+                                [selectedGomboDetails.id]: true
+                              }));
+                              addToTerminal(`[⚡ DJ-JOUR] Début de la prestation validé avec vidéo face & géolocalisation !`);
+                              audioSynth.playValidationSuccess();
+                            }}
+                            className="w-full py-1.5 px-2.5 bg-sky-500/10 hover:bg-sky-500 border border-sky-500/30 text-sky-400 hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
+                          >
+                            Démarrer Prestation (Vidéo Face+GPS) 📹
+                          </button>
+                        )}
+
+                        {/* End prestation button */}
+                        {contractDDayStarted[selectedGomboDetails.id] && !contractDDayEnded[selectedGomboDetails.id] && (
+                          <button
+                            onClick={() => {
+                              setContractDDayEnded(prev => ({
+                                ...prev,
+                                [selectedGomboDetails.id]: true
+                              }));
+                              addToTerminal(`[🏦 LIBÉRATION ESCROW] Co-confirmation reçue ! Le cachet de ${(selectedGomboDetails.budget || 250000).toLocaleString()} FCFA est débloqué vers le portefeuille du musicien !`);
+                              audioSynth.playValidationSuccess();
+                            }}
+                            className="w-full py-1.5 px-2.5 bg-[#D4AF37]/20 hover:bg-[#D4AF37] border border-[#D4AF37]/35 text-[#D4AF37] hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
+                          >
+                            Co-Confirmer la Fin (Libérer) 🔓
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dispute cancel section */}
+                    <div className="pt-2 border-t border-white/5 space-y-2 text-left">
+                      <div className="flex justify-between items-center text-[10px] uppercase font-mono font-bold">
+                        <span className="text-red-500 uppercase block font-bold">⚡ Litige & Annulations :</span>
+                        {contractDisputeOpened[selectedGomboDetails.id] && (
+                          <span className="text-[8px] font-mono bg-red-400/10 text-red-400 px-1.5 py-0.5 rounded font-bold uppercase animate-pulse">EN ANALYSE LITIGIEUSE</span>
+                        )}
+                      </div>
+
+                      {contractDisputeOpened[selectedGomboDetails.id] ? (
+                        <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/20 space-y-1.5 text-left font-mono text-[10px]">
+                          <p className="text-zinc-400 italic font-sans">Un litige d'Escrow a été ouvert et est actuellement en cours d'analyse par l'Arbitrage final d'AFRIGOMBO.</p>
+                          <div className="text-zinc-500">
+                            <strong>Motif :</strong> {contractDisputeDetails[selectedGomboDetails.id]?.reason || "Non spécifié"}<br/>
+                            <strong>Preuves :</strong> {contractDisputeDetails[selectedGomboDetails.id]?.comment || "Aucun commentaire supplémentaire"}
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            const reason = prompt("Indiquez la raison officielle de l'annulation (obligatoire) :");
+                            if (!reason) return;
+                            const comment = prompt("Commentaires ou preuves (textes, liens, audios) :");
+                            setContractDisputeOpened(prev => ({
+                              ...prev,
+                              [selectedGomboDetails.id]: true
+                            }));
+                            setContractDisputeDetails(prev => ({
+                              ...prev,
+                              [selectedGomboDetails.id]: { reason, comment: comment || "", proofUrl: "" }
+                            }));
+                            addToTerminal(`[⚖️ LITIGE OUVERT] Litige d'annulation engendré ! Le statut est actuellement : EN ANALYSE.`);
+                            audioSynth.playTamTam(false);
+                          }}
+                          className="w-full py-1.5 bg-red-500/10 hover:bg-red-500 border border-red-500/30 text-red-400 hover:text-white font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
+                        >
+                          Ouvrir un Litige / Signaler Annulation ⚖️
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* INTERACTIVE ACTIONS BAR */}
                 <div className="flex items-center justify-between border-t border-b border-zinc-900/60 py-3 text-zinc-400">

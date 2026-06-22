@@ -291,16 +291,50 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
   const handleSkipProfile = async () => {
     try {
       setLoading(true);
+      
+      // Update local storage backup key and active profile immediately for zero-lag page state shifts
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("gombo_profile_skipped", "true");
+        const updatedProfile = {
+          ...currentUserProfile,
+          isProfileComplete: false,
+          profileSkipped: true,
+          skippedProfile: true,
+          updatedAt: new Date().toISOString()
+        };
+        localStorage.setItem("gombo_active_profile", JSON.stringify(updatedProfile));
+      }
+
       await gomboDB.updateUserProfile(currentUserProfile.uid, {
-        isProfileComplete: true,
-        skippedProfile: true, // Internal flag if needed
+        uid: currentUserProfile.uid,
+        email: currentUserProfile.email || "",
+        displayName: currentUserProfile.displayName || currentUserProfile.nomArtistique || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || "Gombo"}`.trim(),
+        photoURL: currentUserProfile.photoURL || currentUserProfile.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+        provider: "google",
+        isProfileComplete: false,
+        profileSkipped: true,
+        skippedProfile: true,
+        createdAt: currentUserProfile.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
       window.dispatchEvent(new Event("gomboUserProfileChange"));
+      
+      if (typeof window !== 'undefined') {
+        const toast = document.createElement('div');
+        toast.className = "fixed bottom-5 right-5 bg-black border border-[#D4AF37] text-white px-6 py-4 rounded-xl shadow-2xl z-[10000] flex flex-col gap-1";
+        toast.innerHTML = `
+          <div class="flex items-center gap-2 text-[#D4AF37] font-black tracking-wide text-xs">
+            <span>AFRIGOMBO LOGISTIC</span> <span>♫ 🎷 🪘</span>
+          </div>
+          <div class="text-xs text-zinc-300">Bienvenue sur AFRIGOMBO</div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+      }
+      
       onComplete();
     } catch (err) {
       console.error("Error skipping profile:", err);
-      // Even if network update fails, we try to progress locally to unblock the user
       window.dispatchEvent(new Event("gomboUserProfileChange"));
       onComplete();
     } finally {

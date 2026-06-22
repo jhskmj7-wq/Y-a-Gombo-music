@@ -324,9 +324,9 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 min-h-[400px] animate-pulse">
-        <div className="w-12 h-12 rounded-full border-4 border-orange-500 border-t-transparent animate-spin mb-4" />
-        <p className="text-sm font-bold text-gray-500">Chargement de votre session sécurisée...</p>
+      <div className="flex flex-col items-center justify-center p-12 min-h-screen bg-[#050505] animate-pulse select-none">
+        <div className="w-12 h-12 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mb-4" />
+        <p className="text-xs font-mono tracking-widest text-[#D4AF37] uppercase">Synchronisation AFRIGOMBO...</p>
       </div>
     );
   }

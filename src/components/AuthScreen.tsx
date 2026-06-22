@@ -57,14 +57,14 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
            if (!snap.empty) {
                setFoundAfriUser(snap.docs[0].data());
            } else {
-               setAfriIdError("Afri ID introuvable");
+               setAfriIdError("AfriID introuvable");
                if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate([50, 50, 50]);
            }
         } else {
            if (formattedId === "AFRI-MOCK001") {
                setFoundAfriUser({ afriId: formattedId, displayName: "Artiste Test", email: "test@gombo.ci", uid: "mock1" });
            } else {
-               setAfriIdError("Afri ID introuvable (Mode Test)");
+               setAfriIdError("AfriID introuvable (Mode Test)");
            }
         }
     } catch(err) {
@@ -322,7 +322,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                       <img src={foundAfriUser.avatarUrl || foundAfriUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(foundAfriUser.displayName || 'A')}&background=050505&color=D4AF37`} alt="Avatar" className="w-full h-full object-cover" />
                    </div>
                    <div className="min-w-0">
-                     <p className="text-[10px] text-[#D4AF37] font-mono font-bold tracking-widest uppercase">Afri ID Détecté</p>
+                     <p className="text-[10px] text-[#D4AF37] font-mono font-bold tracking-widest uppercase">AfriID Détecté</p>
                      <p className="text-white font-bold text-sm truncate">{foundAfriUser.displayName}</p>
                    </div>
                  </div>
@@ -365,7 +365,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                       localStorage.setItem("gombo_auth", JSON.stringify({ uid: resUid, email: resEmail, emailVerified: true }));
                       window.dispatchEvent(new Event("gomboAuthChange"));
                       
-                      setSuccessMSG("✅ Connexion Afri ID réussie !");
+                      setSuccessMSG("✅ Connexion AfriID réussie !");
                       setShowAfriIdModal(false);
                       setTimeout(() => {
                         onSuccess();

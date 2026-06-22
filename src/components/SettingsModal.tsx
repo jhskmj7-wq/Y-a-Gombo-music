@@ -243,7 +243,7 @@ export default function SettingsModal({
               ) : (
                 <>
                   <h4 className="font-extrabold text-[#D4AF37] uppercase text-[11px] tracking-wider">1. Nature de l'écosystème AFRIGOMBO</h4>
-                  <p>AFRIGOMBO est un espace d'ingénierie et de mise en relation artistique premium. Nous garantissons la validité de l'identité des membres via notre identifiant Afri ID unifié pour éliminer toute fraude ou profils simulés.</p>
+                  <p>AFRIGOMBO est un espace d'ingénierie et de mise en relation artistique premium. Nous garantissons la validité de l'identité des membres via notre identifiant AfriID unifié pour éliminer toute fraude ou profils simulés.</p>
                   
                   <h4 className="font-extrabold text-[#D4AF37] uppercase text-[11px] tracking-wider">2. Sécurisation Escrow par Mobile Money</h4>
                   <p>Pour chaque engagement (Gombo), l'acompte de cachet convenu (par ex. 5,000 FCFA pour un booster ou cachet de scène négocié) est placé en séquestre bloqué virtuel sur la plateforme. La somme est transférée au musicien dès la signature de la présence numérique.</p>

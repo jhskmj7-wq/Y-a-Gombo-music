@@ -13,6 +13,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase App
+console.log("🔥 [Firebase Config Initialization Check]:", firebaseConfig);
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize services with long-polling to prevent connection errors in some environments
