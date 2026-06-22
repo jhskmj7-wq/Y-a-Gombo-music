@@ -1,4 +1,3 @@
-import { initializeApp, getApps } from "firebase/app";
 import { 
   getAuth, 
   signInWithEmailAndPassword, 
@@ -18,7 +17,6 @@ import {
   signInWithPhoneNumber
 } from "firebase/auth";
 import { 
-  getFirestore, 
   doc, 
   setDoc, 
   getDoc, 
@@ -34,7 +32,6 @@ import {
   arrayUnion,
   increment
 } from "firebase/firestore";
-import firebaseConfig from "../firebase-applet-config.json";
 import { isCapacitor, performNativeGoogleLogin, performNativeFacebookLogin } from "./lib/capacitor-adapter";
 import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry, Conversation, Message, VerificationRequest, AdminLog, AcademyGuide, GomboSafeContract, GomboTicketEvent, PurchasedTicket, StudioMarketItem, StudioMarketReview, CastingCall, VoiceAnnouncement, ContractStatus } from "./types";
 
@@ -1698,46 +1695,7 @@ export const gomboDB = {
   },
 
   async updateUserProfile(uid: string, profile: Partial<UserProfile>): Promise<void> {
-    if (!isFirebaseMock && db) {
-      try {
-        await setDoc(doc(db, "users", uid), profile, { merge: true });
-        
-        // --- AFRI ID Global Sync ---
-        let afriId = profile.afriId;
-        if (!afriId) {
-          const docSnap = await getDoc(doc(db, "users", uid));
-          if (docSnap.exists()) afriId = docSnap.data().afriId;
-        }
-        
-        if (afriId) {
-          const afriUpdates: any = {};
-          if (profile.displayName !== undefined || profile.firstName !== undefined || profile.lastName !== undefined) {
-             afriUpdates.nom = profile.displayName || profile.firstName;
-          }
-          if (profile.photoURL !== undefined || profile.avatarUrl !== undefined) {
-             afriUpdates.avatar = profile.photoURL || profile.avatarUrl;
-          }
-          if (profile.email !== undefined) afriUpdates.email = profile.email;
-          if (profile.phone !== undefined) afriUpdates.telephone = profile.phone;
-          if (profile.coverUrl !== undefined) afriUpdates.couverture = profile.coverUrl;
-          if (profile.role !== undefined) afriUpdates.role = profile.role;
-          
-          if (Object.keys(afriUpdates).length > 0) {
-            afriUpdates.updatedAt = new Date().toISOString();
-            await setDoc(doc(db, "afri_ids", afriId), afriUpdates, { merge: true });
-          }
-        }
-        return;
-      } catch (error: any) {
-        console.warn("⚠️ Mode Firestore inaccessible or rule block for updateUserProfile. Error details:", error);
-        if (error && error.code === "permission-denied") {
-          return;
-        }
-        if (error && (error.code === "unavailable" || error.message?.includes("offline"))) {
-          setIsFirebaseMock(true);
-        }
-      }
-    }
+    // 1. ALWAYS write to local storage first, so cache is never stale and fallback works instantly
     const users: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
     const index = users.findIndex(u => u.uid === uid);
     let afriIdLocal = profile.afriId;
@@ -1770,6 +1728,42 @@ export const gomboDB = {
       }
     }
 
+    // 2. Write to Firestore if available
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "users", uid), profile, { merge: true });
+        
+        // --- AFRI ID Global Sync ---
+        let afriId = profile.afriId || afriIdLocal;
+        if (!afriId) {
+          const docSnap = await getDoc(doc(db, "users", uid));
+          if (docSnap.exists()) afriId = docSnap.data().afriId;
+        }
+        
+        if (afriId) {
+          const afriUpdates: any = {};
+          if (profile.displayName !== undefined || profile.firstName !== undefined || profile.lastName !== undefined) {
+             afriUpdates.nom = profile.displayName || profile.firstName;
+          }
+          if (profile.photoURL !== undefined || profile.avatarUrl !== undefined) {
+             afriUpdates.avatar = profile.photoURL || profile.avatarUrl;
+          }
+          if (profile.email !== undefined) afriUpdates.email = profile.email;
+          if (profile.phone !== undefined) afriUpdates.telephone = profile.phone;
+          if (profile.coverUrl !== undefined) afriUpdates.couverture = profile.coverUrl;
+          if (profile.role !== undefined) afriUpdates.role = profile.role;
+          
+          if (Object.keys(afriUpdates).length > 0) {
+            afriUpdates.updatedAt = new Date().toISOString();
+            await setDoc(doc(db, "afri_ids", afriId), afriUpdates, { merge: true });
+          }
+        }
+      } catch (error: any) {
+        console.warn("⚠️ Mode Firestore inaccessible or rule block for updateUserProfile. Error details:", error);
+      }
+    }
+
+    // 3. ALWAYS trigger events to notify the whole app to refresh
     triggerStorageEvent();
     window.dispatchEvent(new Event("gomboUserProfileChange"));
   },

@@ -317,6 +317,12 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
         createdAt: currentUserProfile.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
+      
+      if (typeof window !== 'undefined') {
+        window.history.pushState({}, "", "/home");
+        window.dispatchEvent(new Event("popstate"));
+      }
+
       window.dispatchEvent(new Event("gomboUserProfileChange"));
       
       if (typeof window !== 'undefined') {

@@ -979,6 +979,23 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     return () => window.removeEventListener("popstate", handlePopState);
   }, [currentUser, activeMenu, isAuthorizedSuperFounder]);
 
+  // Synchroniser les routes d'adresse pathname (/home, /complete-profile)
+  useEffect(() => {
+    const handlePathnameSync = () => {
+      const path = window.location.pathname;
+      if (path === "/home" || path === "/home/") {
+        if (activeMenu !== "user_terrain") {
+          setActiveMenu("user_terrain");
+        }
+      }
+    };
+    
+    handlePathnameSync();
+    
+    window.addEventListener("popstate", handlePathnameSync);
+    return () => window.removeEventListener("popstate", handlePathnameSync);
+  }, [activeMenu]);
+
   // Watertight access security rules enforcement for administration pages (Level 2 & 3)
   useEffect(() => {
     if (perspective === "admin") {
@@ -1648,14 +1665,23 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     );
   });
 
+  const isCompleteProfilePath = typeof window !== 'undefined' && (window.location.pathname === "/complete-profile" || window.location.pathname === "/complete-profile/");
   const profileSkippedLocally = typeof window !== 'undefined' && localStorage.getItem("gombo_profile_skipped") === "true";
-  if (currentUser && profile && profile.isProfileComplete === false && !profile.profileSkipped && !profile.skippedProfile && !profileSkippedLocally) {
+  
+  const hasIncompleteProfile = currentUser && profile && profile.isProfileComplete === false && !profile.profileSkipped && !profile.skippedProfile && !profileSkippedLocally;
+  const shouldShowOnboarding = hasIncompleteProfile || (currentUser && isCompleteProfilePath);
+
+  if (shouldShowOnboarding) {
     return (
       <div className="w-full min-h-screen bg-[#0B0B0B] flex items-center justify-center py-6 overflow-y-auto px-4 font-sans select-none">
         <CompleteProfile 
           currentUserProfile={profile} 
           onComplete={async () => {
             addToTerminal("[🛡️ ONBOARDING] Accès autorisé à l'écosystème Y'A GOMBO MUSIC.");
+            // Set browser URL back to /home
+            if (typeof window !== 'undefined') {
+              window.history.pushState({}, "", "/home");
+            }
             await refreshProfile();
             // Force state reload
             window.location.reload(); 
@@ -5480,7 +5506,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       currentUserProfile={profile} 
                       onRefreshProfile={refreshProfile}
                       onNavigateView={(view) => {
-                        if (view === "dashboard") {
+                        if (view === "dashboard" || view === "home" || view === "/home") {
                           setActiveMenu("user_terrain");
                         } else if (view === "heritage" || view === "main") {
                           setActiveMenu("user_heritage");

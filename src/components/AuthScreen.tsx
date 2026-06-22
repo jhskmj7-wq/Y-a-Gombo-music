@@ -109,47 +109,97 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
     setLoading(true);
     try {
       console.log("🛠️ [AuthScreen Debug] Syncing user profile data for", uid);
-      const profile = await gomboDB.getUserProfile(uid);
-      const isComplete = profile ? (profile.isProfileComplete ?? false) : false;
-
-      const updatedProfileData: any = {
-        uid,
-        email: userEmail || profile?.email || "",
-        firstName: profile?.firstName || "Artiste",
-        lastName: profile?.lastName || "Gombo",
-        displayName: profile?.displayName || (profile?.firstName ? `${profile.firstName} ${profile.lastName || ""}`.trim() : "Artiste Gombo"),
-        provider: "google.com",
-        isProfileComplete: isComplete,
-        avatarUrl: profile?.avatarUrl || profile?.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-        photoURL: profile?.photoURL || "",
-        lastLoginAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      await gomboDB.updateUserProfile(uid, updatedProfileData);
-      
-      // Log connection activity
+      let profile = null;
       try {
-        await gomboDB.logUserActivity(uid, "Connexion", "Connexion à AFRIGOMBO réussie.");
-      } catch (logErr) {
-        console.warn("Could not log login activity:", logErr);
-      }
-      
-      // Save local reference for session persistence
-      localStorage.setItem("gombo_auth", JSON.stringify({ uid: uid, email: userEmail, emailVerified: true }));
-      window.dispatchEvent(new Event("gomboAuthChange"));
-      
-      if (isTransferMode) {
-        setTransferDone(true);
-        setSuccessMSG("✅ Liaison Google établie ! Synchronisation réussie.");
-        setLoading(false);
-        return;
+        profile = await gomboDB.getUserProfile(uid);
+      } catch (err) {
+        console.warn("Could not retrieve user profile:", err);
       }
 
-      setSuccessMSG("✅ Connexion réussie.");
-      setTimeout(() => {
-        onSuccess();
-      }, 900);
+      const userExistsInFirestore = !!profile;
+
+      if (userExistsInFirestore) {
+        console.log("🎒 User already exists in Firestore. Entering application directly.");
+        
+        // Log connection activity
+        try {
+          await gomboDB.logUserActivity(uid, "Connexion", "Connexion à AFRIGOMBO réussie.");
+        } catch (logErr) {
+          console.warn("Could not log login activity:", logErr);
+        }
+
+        // Save local reference for session persistence
+        localStorage.setItem("gombo_auth", JSON.stringify({ uid: uid, email: userEmail, emailVerified: true }));
+        window.dispatchEvent(new Event("gomboAuthChange"));
+        
+        if (isTransferMode) {
+          setTransferDone(true);
+          setSuccessMSG("✅ Liaison Google établie ! Synchronisation réussie.");
+          setLoading(false);
+          return;
+        }
+
+        setSuccessMSG("✅ Connexion réussie.");
+        
+        // Navigate directly to /home
+        if (typeof window !== "undefined") {
+          window.history.pushState({}, "", "/home");
+          window.dispatchEvent(new Event("popstate"));
+        }
+
+        setTimeout(() => {
+          onSuccess();
+        }, 900);
+
+      } else {
+        console.log("🆕 User inexistant. Creating automated onboarding user profile...");
+        const now = new Date().toISOString();
+        const names = userEmail ? userEmail.split("@")[0].split(".") : ["Artiste"];
+        const computedDisplayName = names.join(" ");
+
+        const minimalProfile: any = {
+          uid: uid,
+          email: userEmail || "",
+          displayName: computedDisplayName || "Artiste Gombo",
+          photoURL: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+          provider: "google",
+          isProfileComplete: false,
+          createdAt: now,
+          updatedAt: now
+        };
+
+        await gomboDB.updateUserProfile(uid, minimalProfile);
+
+        // Log connection activity
+        try {
+          await gomboDB.logUserActivity(uid, "Création de compte", "Création de compte minimale réussie.");
+        } catch (logErr) {
+          console.warn("Could not log activity:", logErr);
+        }
+
+        // Save local reference for session persistence
+        localStorage.setItem("gombo_auth", JSON.stringify({ uid: uid, email: userEmail, emailVerified: true }));
+        window.dispatchEvent(new Event("gomboAuthChange"));
+        
+        if (isTransferMode) {
+          setTransferDone(true);
+          setSuccessMSG("✅ Liaison Google établie ! Synchronisation réussie.");
+          setLoading(false);
+          return;
+        }
+
+        setSuccessMSG("✅ Création du profil en cours...");
+
+        // Navigate to /complete-profile
+        if (typeof window !== "undefined") {
+          window.history.pushState({}, "", "/complete-profile");
+          window.dispatchEvent(new Event("popstate"));
+        }
+
+        setTimeout(() => {
+          onSuccess();
+        }, 900);
+      }
     } catch (err: any) {
       console.error("❌ Profile syncing error:", err);
       
@@ -161,6 +211,10 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       }
 
       setSuccessMSG("✅ Connexion réussie.");
+      if (typeof window !== "undefined") {
+        window.history.pushState({}, "", "/home");
+        window.dispatchEvent(new Event("popstate"));
+      }
       setTimeout(() => {
         onSuccess();
       }, 900);

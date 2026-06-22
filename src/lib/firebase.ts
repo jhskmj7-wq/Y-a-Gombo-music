@@ -1,24 +1,34 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, initializeFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getAnalytics } from "firebase/analytics";
+import config from "../../firebase-applet-config.json";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAMF-0VndIVU9BREb4IpFgMvjVdICzScBQ",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "ya-gombo-music.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "ya-gombo-music",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "ya-gombo-music.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "953766968848",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:953766968848:web:173a4b2ea336ecf50a9495"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || config.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || config.authDomain,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || config.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || config.storageBucket,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || config.messagingSenderId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || config.appId,
+  measurementId: (config as any).measurementId || ""
 };
 
-// Initialize Firebase App
-console.log("🔥 [Firebase Config Initialization Check]:", firebaseConfig);
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize services with long-polling to prevent connection errors in some environments
-const db = initializeFirestore(app, { experimentalForceLongPolling: true });
-const auth = getAuth(app);
-const storage = getStorage(app);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+export const googleProvider = new GoogleAuthProvider();
 
-export { app, db, auth, storage };
+if (typeof window !== "undefined") {
+  try {
+    getAnalytics(app);
+  } catch (err) {
+    console.warn("Analytics initialization skipped or failed:", err);
+  }
+}
+
+export default app;
+
