@@ -305,6 +305,10 @@ export default function GomboProfile({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  
+  const [coverUrl, setCoverUrl] = useState(currentUserProfile.coverUrl || currentUserProfile.couverture || "");
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverUploadProgress, setCoverUploadProgress] = useState(0);
 
   // New state fields for Phase 10
   const [ville, setVille] = useState(currentUserProfile.ville || "Abidjan");
@@ -489,6 +493,47 @@ export default function GomboProfile({
       setAvatarUrl(fallbackUrl);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleCoverUpload = async (file: File) => {
+    setCoverUploading(true);
+    setCoverUploadProgress(0);
+    let downloadUrl = "";
+    try {
+      const path = `covers/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
+      try {
+        downloadUrl = await gomboDB.uploadFile(path, file, (progress) => {
+          setCoverUploadProgress(Math.round(progress));
+        });
+      } catch (uploadError) {
+        console.warn("Cover upload fallback", uploadError);
+        downloadUrl = URL.createObjectURL(file);
+      }
+
+      setCoverUrl(downloadUrl);
+      
+      const payload = {
+        coverUrl: downloadUrl,
+        couverture: downloadUrl,
+      };
+
+      if (!isFirebaseMock && db) {
+        try {
+          const userDocRef = doc(db, "users", currentUserProfile.uid);
+          await updateDoc(userDocRef, payload);
+        } catch (dbErr) {
+          await gomboDB.updateUserProfile(currentUserProfile.uid, payload);
+        }
+      } else {
+        await gomboDB.updateUserProfile(currentUserProfile.uid, payload);
+      }
+
+      onRefreshProfile();
+    } catch (err) {
+      console.error("Cover upload error:", err);
+    } finally {
+      setCoverUploading(false);
     }
   };
 
@@ -1119,6 +1164,11 @@ export default function GomboProfile({
           stopCamera={stopCamera}
           startCamera={startCamera}
           handleFileUpload={handleFileUpload}
+          coverUrl={coverUrl}
+          setCoverUrl={setCoverUrl}
+          handleCoverUpload={handleCoverUpload}
+          coverUploading={coverUploading}
+          coverUploadProgress={coverUploadProgress}
           onIdentityUpload={handleIdentityVerifyUpload}
           verifyingIdentity={verifyingIdentity}
           kycProgress={kycProgress}

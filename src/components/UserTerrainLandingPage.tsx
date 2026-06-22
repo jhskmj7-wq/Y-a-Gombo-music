@@ -511,14 +511,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
              {[
               { id: "renfort", label: "Renfort", icon: ShieldCheck, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "publier", label: t('publier'), icon: PenTool, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "verifier", label: "Vérifier", icon: ShieldCheck, isSoon: true, action: () => { setActiveQuickActionModal("verify_gombo_id"); try { audioSynth?.playValidationSuccess(); } catch (_) {} } },
               { id: "messages", label: t('messages_tab'), icon: MessageCircle, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "annuaire", label: t('annuaire'), icon: Users, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "booster", label: t('booster_tab'), icon: Award, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "evenement", label: t('evenement'), icon: Megaphone, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "gombo_plus", label: "⭐ Plus", icon: Sparkles, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_plus"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } })); } catch (_) {} }) },
-              { id: "gombo_stats", label: "📊 Portfolio", icon: BarChart3, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_stats"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'saxophone' } })); } catch (_) {} }) },
-              { id: "scanner", label: "Scanner", icon: QrCode, isSoon: true, action: () => {} }
+              { id: "gombo_stats", label: "📊 Portfolio", icon: BarChart3, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_stats"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'saxophone' } })); } catch (_) {} }) }
             ].map(action => {
               const Icon = action.icon;
               if (action.isSoon) {

@@ -94,9 +94,25 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       )}
 
       {/* HEADER PROFIL - SECTION IDENTITÉ */}
-      <div id="section-identity" className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col md:flex-row items-center gap-6 justify-between">
-        <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
-          {/* Avatar frame */}
+      <div id="section-identity" className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl overflow-hidden shadow-md relative">
+        {/* Cover Photo */}
+        <div className="h-32 md:h-48 w-full bg-gray-200 dark:bg-[#1A1A1E] relative border-b border-gray-100 dark:border-gray-800">
+          {(currentUserProfile.coverUrl || currentUserProfile.couverture) ? (
+            <img 
+              src={currentUserProfile.coverUrl || currentUserProfile.couverture} 
+              alt="Couverture" 
+              className="w-full h-full object-cover" 
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center opacity-30">
+               <Music className="w-16 h-16 text-gray-500" />
+            </div>
+          )}
+        </div>
+
+        <div className="p-6 pt-0 flex flex-col md:flex-row items-center gap-6 justify-between relative mt-[-2rem] md:mt-[-3rem]">
+          <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left z-10">
+            {/* Avatar frame */}
           <div className="relative">
             <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#D4AF37] bg-gray-100 dark:bg-gray-800">
               <img 
@@ -273,6 +289,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           >
             📝 MODIFIER MON PROFIL
           </button>
+        </div>
         </div>
       </div>
 

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Lock } from "lucide-react";
+import { signOut } from "firebase/auth";
+import { auth } from "./lib/firebase";
 import { gomboAuth, gomboDB } from "./firebase";
 import { initializePushNotifications } from "./lib/capacitor-adapter";
 import { UserProfile } from "./types";
@@ -68,6 +70,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    const runMigrationWipe = async () => {
+      if (!localStorage.getItem("afrigombo_v2_migrated")) {
+        console.log("🧹 [Migration] Formating local data for new AfriGombo official Firebase...");
+        localStorage.clear();
+        sessionStorage.clear();
+        indexedDB.deleteDatabase("firebaseLocalStorageDb");
+        indexedDB.deleteDatabase("firestore");
+        indexedDB.deleteDatabase("firebase-installations-database");
+        localStorage.setItem("afrigombo_v2_migrated", "true");
+        await signOut(auth);
+        setCurrentUser(null);
+        setProfile(null);
+      }
+    };
+    runMigrationWipe();
+
     console.log("🎬 [AuthContext] Initializing Firebase Auth observer...");
     let profileUnsubscribe: (() => void) | null = null;
     let fallbackTimeout: NodeJS.Timeout | null = null;

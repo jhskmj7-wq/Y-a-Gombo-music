@@ -1,34 +1,48 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp,getApps,getApp } from "firebase/app";
+import { getAuth,GoogleAuthProvider } from "firebase/auth";
+import { getFirestore,enableIndexedDbPersistence } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAnalytics } from "firebase/analytics";
-import config from "../../firebase-applet-config.json";
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || config.apiKey,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || config.authDomain,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || config.projectId,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || config.storageBucket,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || config.messagingSenderId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || config.appId,
-  measurementId: (config as any).measurementId || ""
+const firebaseConfig={
+  apiKey:"AIzaSyC3eJm2GfUMxGUNGu7uZeIP9-rtcLRljNk",
+  authDomain:"afrigombo.firebaseapp.com",
+  projectId:"afrigombo",
+  storageBucket:"afrigombo.firebasestorage.app",
+  messagingSenderId:"558547758112",
+  appId:"1:558547758112:web:d84cbcb8fb0e0670c5a045",
+  measurementId:"G-27498CNQX0"
 };
 
-export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const app=
+getApps().length===0
+? initializeApp(firebaseConfig)
+: getApp();
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-export const googleProvider = new GoogleAuthProvider();
+export { app };
 
-if (typeof window !== "undefined") {
-  try {
+export const auth=getAuth(app);
+
+export const db=getFirestore(app);
+
+export const storage=getStorage(app);
+
+export const googleProvider=
+new GoogleAuthProvider();
+
+if(typeof window!=="undefined"){
+  console.log("🔥 Firebase active:", firebaseConfig.projectId);
+  try{
     getAnalytics(app);
-  } catch (err) {
-    console.warn("Analytics initialization skipped or failed:", err);
+  }catch(e){
+    console.log("Analytics ignoré:",e);
   }
 }
+
+enableIndexedDbPersistence(db)
+.catch((err)=>{
+  console.log("Persistence error:",err);
+});
 
 export default app;
 

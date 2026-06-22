@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { audioSynth } from "./lib/audio";
 import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
 import { BackgroundMusic } from "./components/BackgroundMusic";
+import { LivingInteractions } from "./components/LivingInteractions";
 
 // Lazy load the main Application Layer
 const AdminCentre = lazy(() => import("./components/AdminCentre"));
@@ -14,6 +15,7 @@ const AppContent = React.memo(function AppContent({ darkMode, setDarkMode }: { d
           <div className="w-16 h-16 rounded-full border-t-2 border-[#D4AF37] animate-spin"></div>
        </div>
     }>
+      <LivingInteractions />
       <AdminCentre darkMode={darkMode} setDarkMode={setDarkMode} />
     </Suspense>
   );

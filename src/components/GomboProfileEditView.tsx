@@ -54,6 +54,14 @@ interface GomboProfileEditViewProps {
   stopCamera: () => void;
   startCamera: () => void;
   handleFileUpload: (file: File) => void;
+  
+  // Cover Photo
+  coverUrl: string;
+  setCoverUrl: (val: string) => void;
+  handleCoverUpload: (file: File) => void;
+  coverUploading: boolean;
+  coverUploadProgress: number;
+
   onSkip?: () => void;
   autoSaveStatus?: "idle" | "saving" | "saved" | "error";
   kycStatus?: "pending" | "approved" | "rejected" | "none" | "info_required";
@@ -107,6 +115,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
   uploading, uploadProgress,
   capturePhoto, stopCamera, startCamera,
   handleFileUpload,
+  coverUrl, setCoverUrl, handleCoverUpload, coverUploading, coverUploadProgress,
   onSkip,
   autoSaveStatus = "idle",
   kycStatus = "none",
@@ -189,6 +198,28 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
+              {/* Cover Preview */}
+              <div className="w-full h-32 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 relative shadow-inner mb-4 border border-gray-200 dark:border-gray-700">
+                {coverUrl ? (
+                  <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                     <Camera className="w-6 h-6 mb-2 opacity-50" />
+                     <span className="text-[10px] uppercase font-bold tracking-wider">Bannière de couverture</span>
+                  </div>
+                )}
+                
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                   <label className="px-4 py-2 bg-[#D4AF37] hover:bg-[#B8860B] text-black font-extrabold text-[10px] uppercase tracking-wider rounded-lg cursor-pointer">
+                      {coverUploading ? `Transfert... ${coverUploadProgress}%` : "Changer la couverture"}
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleCoverUpload(file);
+                      }} />
+                   </label>
+                </div>
+              </div>
+
               {/* Current Preview or Camera active viewport */}
               <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#D4AF37] bg-gray-100 dark:bg-gray-800 flex-shrink-0 flex items-center justify-center shadow-inner">
                 {cameraActive ? (
@@ -432,20 +463,22 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
             <select
               value={accountRole}
               onChange={(e) => setAccountRole(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm font-bold text-black"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm font-bold text-black dark:text-white"
             >
-              <option value="musicien">🎸 Artiste / Musicien (En quête de Gombos d'Abidjan)</option>
-              <option value="organisateur">🎪 Organisateur de Spectacle (Créateur d’Events public)</option>
-              <option value="client">🤵 Client Professionnel / Particulier (Donneur d'ordre)</option>
-              <option value="manager">💼 Manager d'Artistes / Producteur (VIP Supervisor)</option>
+              <option value="musicien">🎸 Artiste / Musicien</option>
+              <option value="organisateur">🎪 Organisateur de Spectacle</option>
+              <option value="client">🤵 Client Professionnel / Particulier</option>
+              <option value="manager">💼 Manager d'Artistes</option>
+              <option value="administrateur">👑 Administrateur</option>
+              <option value="superviseur">🛡️ Superviseur</option>
             </select>
           </div>
         </div>
 
         {/* 4. SECTION SPÉCIALITÉS & STYLES (Choix multiples + Saisie libre) */}
-        {accountRole === "musicien" && (
+        {(accountRole === "musicien" || accountRole === "administrateur" || accountRole === "superviseur" || accountRole === "manager") && (
           <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-xs space-y-6">
-            <span className="text-[10px] tracking-widest uppercase font-black text-gray-400 block">Section 4. Spécialités & Courants Musicaux</span>
+            <span className="text-[10px] tracking-widest uppercase font-black text-gray-400 block">Section 4. Spécialités & Préférences Musicales</span>
             
             <div className="space-y-3">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">🎸 Spécialités de scène (Choix multiples)</label>

@@ -779,34 +779,6 @@ export default function CertificationHub({
                   </p>
                 </div>
               </div>
-
-              {/* Sandbox controls */}
-              <div className="p-4 bg-purple-50 dark:bg-purple-950/15 border border-purple-200/30 rounded-2xl text-xs space-y-2">
-                <span className="font-extrabold text-[#7C3AED] dark:text-purple-300 flex items-center gap-1 uppercase">
-                  🔧 Sandbox Testeur
-                </span>
-                <p className="text-[10px] text-zinc-500 leading-relaxed">
-                  Basculez manuellement vos badges de démonstration ci-dessous pour apprécier instantanément le rendu sur vos fiches :
-                </p>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {["🟢 Vérifié Google", "🏆 Talent Certifié"].map(badgeName => {
-                    const hasTag = currentUserProfile?.badges?.includes(badgeName) || false;
-                    return (
-                      <button
-                        key={badgeName}
-                        onClick={() => handleToggleBadge(badgeName)}
-                        className={`px-2 py-1 rounded text-[10px] font-bold border transition ${
-                          hasTag 
-                            ? "bg-[#7C3AED] border-purple-650 text-white" 
-                            : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400"
-                        }`}
-                      >
-                        {badgeName.split(" ")[1]} {hasTag ? "✓" : "+"}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
 
           </div>

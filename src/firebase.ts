@@ -587,6 +587,7 @@ export async function ensureAfriIdAndSync(profile: UserProfile): Promise<UserPro
 
 // Initialize mock local data if empty
 const initMockDB = () => {
+  return;
   if (!localStorage.getItem(LOCAL_USERS_KEY)) {
     // Inject some standard initial records to make Gombo Musik lively at first look!
     const mockUsers: UserProfile[] = [

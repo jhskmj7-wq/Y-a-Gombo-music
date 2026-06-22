@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect, lazy, Suspense } from "react";
 import {
   collection,
   onSnapshot,
@@ -13,6 +13,10 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
+
+const AdminStats = lazy(() => import("./AdminStats"));
+const AdminReports = lazy(() => import("./AdminReports"));
+const AdminActions = lazy(() => import("./AdminActions"));
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
 import AuthScreen from "./AuthScreen";
@@ -44,6 +48,7 @@ import {
   UserPerformance
 } from "../types";
 import { audioSynth } from "../lib/audio";
+import { interactionBus } from "./LivingInteractions";
 import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
 import { useDynamicPlaceholder } from "../hooks/useDynamicPlaceholder";
 import {
@@ -346,6 +351,8 @@ interface AdminCentreProps {
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
 }
+
+import WakandaTechBackground from "./WakandaTechBackground";
 
 export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
   const dynamicPlaceholder = useDynamicPlaceholder([
@@ -1129,6 +1136,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     setTransactions(prev => [tx, ...prev]);
     await saveToFirestore("transactions", tx.id, tx);
     
+    if (type === "commission" || type === "cert_express" || type === "subscription") {
+       interactionBus.emit("NEW_REVENUE");
+    }
+    
     // Update statistics handled dynamically via onSnapshot
     
     addToTerminal(`[💰 LA CAISSE] Paiement de ${amount.toLocaleString()} FCFA reçu : ${description}`);
@@ -1424,6 +1435,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         };
       });
 
+      interactionBus.emit("MESSAGE_RECEIVED");
       addToTerminal(`[🗣️ PALABRER] Nouvel échange reçu de ${targetGombo.organizerName}.`);
     }, 1500);
   };
@@ -1487,6 +1499,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     });
     setUsers(updatedUsers);
     
+    // Play interaction!
+    interactionBus.emit("GOMBO_VALIDATED");
+
     // Log in admin_logs
     await logAdminAction(
       "CERTIFIER_ARTISTE",
@@ -1694,6 +1709,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   return (
     <div className={`flex h-screen ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#111]"} font-sans antialiased overflow-hidden uppercase-none`}>
       
+      {(activeMenu === "super_admin" || activeMenu === "dashboard") && (
+        <WakandaTechBackground />
+      )}
+
       {/* BACKDROP AND SLIDING SIDEBAR WITH ANIMATIONS */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -2840,36 +2859,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                     <div className="space-y-2 text-center text-zinc-400 py-2">
                                       <span className="text-xl block">❌</span>
                                       <p className="text-xs font-mono">Aucun artiste ne possède cet identifiant.</p>
-                                      <button
-                                        onClick={async () => {
-                                          try {
-                                            // Demo Auto creation/elevation
-                                            const newId = "user_" + Date.now().toString().slice(-4);
-                                            const demoUser: User = {
-                                              id: newId,
-                                              name: verifyGomboIdInput || "Artiste Inconnu",
-                                              artisticName: verifyGomboIdInput || "Nouveau Talent d'Abidjan",
-                                              phone: "0788998877",
-                                              commune: "Cocody",
-                                              instruments: ["Vocaliste Solo", "Tambour d'Or"],
-                                              avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format",
-                                              kycStatus: "approved",
-                                              kycType: "express",
-                                              revenue: 45000,
-                                              performanceScore: 98,
-                                              gombosCount: 4,
-                                              disputesCount: 0,
-                                              joinDate: new Date().toISOString()
-                                            };
-                                            await saveToFirestore("users", newId, demoUser);
-                                            setVerifyGomboIdResult(demoUser);
-                                            addToTerminal(`[SYNC] Nouveau Talent d'Or certifié d'urgence : ${verifyGomboIdInput}`);
-                                          } catch (_) {}
-                                        }}
-                                        className="py-1 px-3 bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black text-[9px] font-mono font-bold uppercase rounded-lg border border-[#D4AF37]/20 transition"
-                                      >
-                                        Certifier en 1 Clic ⚡
-                                      </button>
                                     </div>
                                   ) : (
                                     <div className="space-y-3">
@@ -4054,6 +4043,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   setNewPostContent("");
                   setNewGomboTitle("");
                   setNewGomboDesc("");
+                  interactionBus.emit("POST_CREATED");
                   audioSynth.playValidationSuccess();
                   setActiveMenu("user_terrain");
                 };
@@ -5477,16 +5467,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               })()}
 
               <div className="pb-24">
-                {activeMenu === "user_events" && (
-                  <div className="animate-fadeIn">
-                    <ComingSoon featureId="evenements" onBack={() => setActiveMenu("user_terrain")} />
-                  </div>
-                )}
-                {activeMenu === "user_scanner" && (
-                  <div className="animate-fadeIn">
-                    <ComingSoon featureId="scanner" onBack={() => setActiveMenu("user_terrain")} />
-                  </div>
-                )}
                 {activeMenu === "user_gombo_plus" && (
                   <div className="animate-fadeIn">
                     <AfrigomboPlus onBack={() => setActiveMenu("user_terrain")} />
@@ -5710,108 +5690,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     </div>
 
                     {/* 2. ACTIONS ADMINISTRATEUR */}
-                    <div className="space-y-4 pt-4">
-                      <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
-                        <Zap className="w-4 h-4 text-[#D4AF37]" />
-                        Actions Administrateur
-                      </h3>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <button
-                          onClick={() => {
-                            setActiveMenu("kyc");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-                            activeMenu === "kyc" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017] shadow-md shadow-[#D4A017]/20" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
-                          }`}
-                        >
-                          <ShieldCheck className="w-5 h-5 text-[#D4A017]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Valider Gombo ID</span>
-                        </button>
-
-                        <button
-                           onClick={() => {
-                            setActiveMenu("alertes");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-                            activeMenu === "alertes" ? "bg-[#0A0A0A] border-red-500 text-red-500 shadow-md shadow-red-500/20" : "bg-[#0A0A0A] hover:bg-red-950/20 border-[rgba(212,160,23,0.25)] hover:border-red-500/40 text-[#FFFFFF]"
-                          }`}
-                        >
-                          <AlertTriangle className="w-5 h-5 text-red-400" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Voir signalements</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setActiveMenu("users");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-                            activeMenu === "users" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
-                          }`}
-                        >
-                          <Users className="w-5 h-5 text-[#D4A017]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Suspendre utilisateur</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setActiveMenu("posts");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-                            activeMenu === "posts" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
-                          }`}
-                        >
-                          <MessageSquare className="w-5 h-5 text-emerald-400" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Approuver publication</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setActiveMenu("posts");
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-yellow-500/40 text-[#FFFFFF]"
-                        >
-                          <Briefcase className="w-5 h-5 text-yellow-500" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Modérer publication</span>
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            setIsBroadcastModalOpen(true);
-                            try { audioSynth.playValidationSuccess(); } catch (err) {}
-                          }}
-                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
-                        >
-                          <Megaphone className="w-5 h-5 text-[#D4A017]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Notifications globales</span>
-                        </button>
-
-                        <button
-                           onClick={() => {
-                             setActiveMenu("alertes");
-                           }}
-                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
-                        >
-                          <Send className="w-5 h-5 text-[#D4A017]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Support utilisateurs</span>
-                        </button>
-
-                        <button
-                           onClick={() => {
-                             setActiveMenu("logs");
-                           }}
-                          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
-                        >
-                          <Activity className="w-5 h-5 text-[#D4A017]" />
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Historique actions</span>
-                        </button>
-                      </div>
-                    </div>
+                    <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement modules AdminActions...</div>}>
+                      <AdminActions 
+                        activeMenu={activeMenu} 
+                        setActiveMenu={setActiveMenu} 
+                        setIsBroadcastModalOpen={setIsBroadcastModalOpen} 
+                        audioSynth={audioSynth} 
+                      />
+                    </Suspense>
 
                     {/* 3. & 4. PANNEAUX DE CONTRÔLE (RÉCENTE / SÉCURITÉ) */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
@@ -6525,6 +6411,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           <button
                             onClick={() => {
                               setRenforts(prev => prev.map(r => r.id === renfort.id ? { ...r, status: "accepted" as const } : r));
+                              interactionBus.emit("MARKET_CONCLUDED");
                               addToTerminal(`[RENFORTS] Artiste accepté pour le rôle de ${renfort.instrument}.`);
                             }}
                             className="bg-[#10B981] hover:bg-emerald-600 text-[#0B0B0B] font-semibold text-[10px] px-3 py-1.5 rounded transition-all uppercase"
@@ -7081,34 +6968,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 VIEW: ALERTS de COMMUNES
                   ---------------------------------------------------- */}
               {activeMenu === "alertes" && (
-                <div className="space-y-4">
-                  <div className="p-4 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-lg text-xs leading-relaxed">
-                    Surveillance géolocalisée et notifications critiques provenant des communes principales d'Abidjan (Yopougon, Cocody, Marcory, etc.).
-                  </div>
-
-                  <div className="space-y-3">
-                    {alerts.map(alert => (
-                      <div
-                        key={alert.id}
-                        className={`p-5 rounded-lg border ${alert.severity === "high" ? "border-red-500/30 bg-red-500/5" : "border-[#D4AF37]/20 bg-[#0B0B0B]"} flex justify-between items-center`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <AlertTriangle className={`w-5 h-5 ${alert.severity === "high" ? "text-[#EF4444]" : "text-[#D4AF37]"}`} />
-                          <div>
-                            <span className="font-display font-bold text-sm block">
-                              Mégaphone Alerte - Artiste {alert.userArtisticName}
-                            </span>
-                            <span className="text-xs text-[#F5F5F5]/70">{alert.reason}</span>
-                          </div>
-                        </div>
-
-                        <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-mono font-semibold ${alert.severity === "high" ? "bg-red-500 text-white" : "bg-[#D4AF37]/10 text-[#D4AF37]"}`}>
-                          {alert.severity} priorité
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement rapports et alertes...</div>}>
+                  <AdminReports alerts={alerts} />
+                </Suspense>
               )}
 
               {/* ----------------------------------------------------
@@ -7407,87 +7269,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 VIEW: ANALYTICS & COURBES
                   ---------------------------------------------------- */}
               {activeMenu === "analytics" && (
-                <div className="space-y-6">
-                  {/* BEAUTIFUL CHART OR AFRIGOMBO GROW CURVE */}
-                  <div className="p-5 rounded-lg bg-black/40 border border-[#D4AF37]/20">
-                    <h4 className="text-xs uppercase font-mono text-[#D4AF37] tracking-wider mb-4">
-                      Revenus & Enregistrements de la semaine (Par jour)
-                    </h4>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={ANALYTICS_DATA} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="colorCommission" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.4}/>
-                              <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                          <XAxis dataKey="name" stroke="#555" fontSize={11} tickLine={false} />
-                          <YAxis stroke="#555" fontSize={11} tickLine={false} />
-                          <Tooltip contentStyle={{ backgroundColor: "#0B0B0B", borderColor: "#D4AF37" }} labelClassName="text-[#D4AF37]" />
-                          <Area type="monotone" dataKey="commission" stroke="#D4AF37" fillOpacity={1} fill="url(#colorCommission)" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
+                <div className="space-y-6 animate-fadeIn pb-24 text-left">
+                  <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-4">
+                    <h3 className="text-sm font-mono uppercase tracking-[0.2em] font-black text-[#D4A017]">
+                      Intelligence & Data
+                    </h3>
                   </div>
-
-                  {/* KEY GEOGRAPHICAL DIVISION STATS */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-5 rounded-lg border border-[#D4AF37]/10 bg-[#0B0B0B]">
-                      <h5 className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] mb-3">Participation par Commune</h5>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs font-mono">
-                          <span>Cocody</span>
-                          <span>45%</span>
-                        </div>
-                        <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-[#D4AF37] h-full" style={{ width: "45%" }} />
-                        </div>
-                        <div className="flex justify-between text-xs font-mono">
-                          <span>Yopougon</span>
-                          <span>35%</span>
-                        </div>
-                        <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-[#D4AF37] h-full" style={{ width: "35%" }} />
-                        </div>
-                        <div className="flex justify-between text-xs font-mono">
-                          <span>Marcory</span>
-                          <span>20%</span>
-                        </div>
-                        <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-[#D4AF37] h-full" style={{ width: "20%" }} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-5 rounded-lg border border-[#D4AF37]/10 bg-[#0B0B0B]">
-                      <h5 className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] mb-3">Répartition des Instruments</h5>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs font-mono">
-                          <span>Chant & Chœur</span>
-                          <span>50%</span>
-                        </div>
-                        <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-[#D4AF37] h-full" style={{ width: "50%" }} />
-                        </div>
-                        <div className="flex justify-between text-xs font-mono">
-                          <span>Clavierist / Piano</span>
-                          <span>30%</span>
-                        </div>
-                        <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-[#D4AF37] h-full" style={{ width: "30%" }} />
-                        </div>
-                        <div className="flex justify-between text-xs font-mono">
-                          <span>Guitare & Basse</span>
-                          <span>20%</span>
-                        </div>
-                        <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-[#D4AF37] h-full" style={{ width: "20%" }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement intelligence des données...</div>}>
+                    <AdminStats users={users} gombos={gombos} transactions={transactions} onBack={() => setActiveMenu("dashboard")} />
+                  </Suspense>
                 </div>
               )}
 
