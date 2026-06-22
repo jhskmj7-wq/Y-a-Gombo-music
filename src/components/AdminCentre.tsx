@@ -3141,7 +3141,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             const [withdrawCarrier, setWithdrawCarrier] = useState("Orange Money");
                             const [withdrawNumber, setWithdrawNumber] = useState("");
                             const currentUserData = users.find(u => u.id === activeArtistId) || users[0];
-                            const balanceValue = currentUserData ? (currentUserData.revenue || 125000) : 125000;
+                            const balanceValue = currentUserData ? (currentUserData.balance || currentUserData.revenue || currentUserData.revenues || 125000) : 125000;
 
                             return (
                               <div className="space-y-4 text-left">
@@ -3203,7 +3203,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                         try {
                                           // Update user balance via Firestore sync
                                           const newBal = balanceValue - cash;
-                                          const updatedUser = { ...currentUserData, revenue: newBal };
+                                          const updatedUser = { 
+                                            ...currentUserData, 
+                                            balance: newBal, 
+                                            revenue: newBal, 
+                                            revenues: newBal 
+                                          };
                                           await saveToFirestore("users", currentUserData.id, updatedUser);
                                           
                                           // Log transaction
