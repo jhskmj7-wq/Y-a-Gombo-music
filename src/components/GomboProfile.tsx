@@ -138,17 +138,42 @@ export default function GomboProfile({
   const handleSkipUpdate = async () => {
     try {
       await gomboDB.updateUserProfile(currentUserProfile.uid, {
+        uid: currentUserProfile.uid,
+        email: currentUserProfile.email || "",
+        displayName: currentUserProfile.displayName || "",
+        photoURL: currentUserProfile.photoURL || "",
         isProfileComplete: false,
         profileSkipped: true,
+        provider: "google",
         updatedAt: new Date().toISOString()
       });
       onRefreshProfile();
+      // Added immediate feedback before navigation
+      if (typeof window !== 'undefined') {
+        const toast = document.createElement('div');
+        toast.textContent = "Bienvenue sur AFRIGOMBO ♫ 🎷 🪘";
+        toast.style.position = 'fixed';
+        toast.style.bottom = '20px';
+        toast.style.right = '20px';
+        toast.style.padding = '10px 20px';
+        toast.style.backgroundColor = '#D4AF37';
+        toast.style.color = 'black';
+        toast.style.borderRadius = '10px';
+        toast.style.zIndex = '9999';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+      }
       onNavigateView("dashboard");
     } catch (err) {
       console.error("Error setting skip property:", err);
-      // Fallback
       onNavigateView("dashboard");
     }
+  };
+
+  const handleStartEditPost = (post: any) => {
+    setEditingPost(post);
+    setEditPostTitle(post.title || "");
+    setEditPostCaption(post.caption || post.description || "");
   };
 
   const handleSavePostEdit = async () => {
@@ -748,22 +773,24 @@ export default function GomboProfile({
       // Real-time notification that profile was updated
       window.dispatchEvent(new Event("gomboUserProfileChange"));
       
-      // Small success sound or kora note
-      try { audioSynth.playKoraSuccess(); } catch(e) {}
+      try { audioSynth.playValidationSuccess(); } catch (_) {}
       
       // Immediately refresh profile locally
       onRefreshProfile();
       
-      // Navigate to main dashboard to "enter" the application in real-time as requested
+      // Redirect back after success, 2s delay
       setTimeout(() => {
         setPanelView("main");
         onNavigateView("dashboard");
+        setEditLoading(false);
       }, 1200);
     } catch (err: any) {
       console.error(err);
       setEditError("Une erreur est survenue lors de la sauvegarde.");
-    } finally {
       setEditLoading(false);
+    } finally {
+      // Don't set loading false here because it's handled in setTimeout if success
+      // Or just handle loading locally
     }
   };
 

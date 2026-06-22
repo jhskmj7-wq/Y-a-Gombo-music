@@ -361,7 +361,7 @@ if (!isFirebaseMock && db) {
   const testConnection = async () => {
     try {
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("La connexion Firebase a expiré (timeout de 3s).")), 3000)
+        setTimeout(() => reject(new Error("La connexion Firebase a expiré (timeout de 10s).")), 10000)
       );
       
       await Promise.race([
