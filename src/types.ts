@@ -67,6 +67,8 @@ export interface User {
   performance?: UserPerformance;
   registrationDate?: string;
   createdAt?: string; // Support firebase blueprint compatibility
+  balance?: number;
+  revenue?: number;
   revenues?: number;
   gombosCompleted?: number;
   flagsCount?: number;

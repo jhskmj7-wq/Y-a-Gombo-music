@@ -1116,6 +1116,8 @@ export const gomboAuth = {
         isProfileComplete: false,
         balance: 25000,
         totalRevenue: 25000,
+        revenue: 25000,
+        revenues: 25000,
         totalWithdrawals: 0,
         gigsCompleted: 0,
         applicationsSent: 0,
