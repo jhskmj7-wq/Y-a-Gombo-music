@@ -38,28 +38,12 @@ import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPos
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
 const savedMock = "false";
-export let isFirebaseMock = false;
+export const isFirebaseMock = false;
+export const setIsFirebaseMock = (val: boolean) => {
+  console.warn("setIsFirebaseMock called - mock mode is disabled.");
+};
 export let isFirebaseForceReal = true;
 export let pendingSignUpProfile: UserProfile | null = null;
-
-export function getPendingSignUpProfile(): UserProfile | null {
-  return pendingSignUpProfile;
-}
-
-export function setPendingSignUpProfile(profile: UserProfile | null) {
-  pendingSignUpProfile = profile;
-}
-
-export function setIsFirebaseMock(val: boolean) {
-  isFirebaseMock = false;
-  isFirebaseForceReal = true;
-  if (typeof localStorage !== "undefined") {
-    localStorage.removeItem("isFirebaseMock");
-  }
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("gomboFirebaseMockChange"));
-  }
-}
 
 import { app, auth, db, storage } from "./lib/firebase";
 export { app, auth, db, storage };
@@ -585,135 +569,7 @@ export async function ensureAfriIdAndSync(profile: UserProfile): Promise<UserPro
   return updated;
 }
 
-// Initialize mock local data if empty
-const initMockDB = () => {
-  return;
-  if (!localStorage.getItem(LOCAL_USERS_KEY)) {
-    // Inject some standard initial records to make Gombo Musik lively at first look!
-    const mockUsers: UserProfile[] = [
-      {
-        uid: "mus1",
-        email: "yoro@gombo.ci",
-        firstName: "Yorobo",
-        lastName: "Sangaré",
-        commune: "Cocody",
-        phone: "+225 07 45 89 12 00",
-        bio: "Guitariste soliste lead. 6 ans de scène avec de grands artistes ivoiriens. Disponible pour concerts, cabarets, mariages rumba et coupé-décalé.",
-        role: "musicien",
-        specialty: "Guitariste",
-        experience: "Professionnel",
-        paymentNumber: "0745891200",
-        paymentProvider: "Wave",
-        avatarUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
-        createdAt: new Date().toISOString()
-      },
-      {
-        uid: "mus2",
-        email: "fanta@gombo.ci",
-        firstName: "Fanta",
-        lastName: "Kouyaté",
-        commune: "Yopougon",
-        phone: "+225 05 12 34 56 78",
-        bio: "Chanteuse lead gospel et acoustique. Voix puissante d'Afrique de l'Ouest. Idéal pour cocktail de mariage chic ou diner de gala.",
-        role: "musicien",
-        specialty: "Chanteur",
-        experience: "Professionnel",
-        paymentNumber: "0512345678",
-        paymentProvider: "Orange Money",
-        avatarUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
-        createdAt: new Date().toISOString()
-      },
-      {
-        uid: "cli1",
-        email: "serge@gombo.ci",
-        firstName: "Serge",
-        lastName: "Kassi",
-        commune: "Marcory",
-        phone: "+225 07 99 88 77 66",
-        bio: "Promoteur événementiel et gérant du Lounge 'Le Paris-Dakar' à Marcory Biétry.",
-        role: "client",
-        createdAt: new Date().toISOString()
-      },
-      {
-        uid: "adm1",
-        email: "admin@gombo.ci",
-        firstName: "Didi",
-        lastName: "B",
-        commune: "Plateau",
-        phone: "+225 01 02 03 04 05",
-        bio: "Admin principal de Gombo Musik Showbiz.",
-        role: "admin",
-        createdAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(mockUsers));
-  }
-
-  if (!localStorage.getItem(LOCAL_GOMBOS_KEY)) {
-    const mockGombos: Gombo[] = [
-      {
-        id: "gom1",
-        clientId: "cli1",
-        clientName: "Serge Kassi",
-        title: "Recherche Guitariste Cabaret Chic",
-        description: "Nous recherchons un guitariste talentueux pour accompagner une chanteuse de jazz/rumba au lounge Le Paris-Dakar à Biétry. Prestation de 3h, repas offert. Ambiance feutrée de qualité.",
-        location: "Lounge Le Paris-Dakar, Biétry Zone 4",
-        commune: "Marcory",
-        date: new Date(Date.now() + 86400000 * 3).toISOString().split("T")[0], // 3 days from now
-        time: "19:30",
-        budget: 45000,
-        eventType: "Bar/Resto",
-        musiciansCount: 1,
-        status: "publie",
-        urgent: true,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: "gom2",
-        clientId: "cli1",
-        clientName: "Serge Kassi",
-        title: "Claviériste & Batteur pour Mariage Chrétien",
-        description: "Prestation complète pour la cérémonie religieuse et la réception d'un grand mariage à l'espace Eden Cocody. Batterie acoustique fournie sur place. Playlist gospel ivoirien.",
-        location: "Espace Eden, Plateau Dokui",
-        commune: "Cocody",
-        date: new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0], // 7 days from now
-        time: "13:00",
-        budget: 120000,
-        eventType: "Mariage",
-        musiciansCount: 2,
-        status: "publie",
-        urgent: false,
-        createdAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem(LOCAL_GOMBOS_KEY, JSON.stringify(mockGombos));
-  }
-
-  if (!localStorage.getItem(LOCAL_APPLICATIONS_KEY)) {
-    const mockApps: Application[] = [
-      {
-        id: "app1",
-        gomboId: "gom1",
-        gomboTitle: "Recherche Guitariste Cabaret Chic",
-        musicianId: "mus1",
-        musicianName: "Yorobo Sangaré",
-        musicianSpecialty: "Guitariste",
-        musicianPhone: "+225 07 45 89 12 00",
-        musicianAvatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
-        message: "Salut grand frère Serge! Je suis ultra motivé et disponible pour ce concert. Je joue de la rumba, du jazz d'Afrique centrale et du coupé-décalé propre. Voici mon link.",
-        status: "en_attente",
-        createdAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem(LOCAL_APPLICATIONS_KEY, JSON.stringify(mockApps));
-  }
-
-  if (!localStorage.getItem(LOCAL_RESERVATIONS_KEY)) {
-    localStorage.setItem(LOCAL_RESERVATIONS_KEY, JSON.stringify([]));
-  }
-  if (!localStorage.getItem(LOCAL_WAITING_KEY)) {
-    localStorage.setItem(LOCAL_WAITING_KEY, JSON.stringify([]));
-  }
+// Mock DB initialization removed
   if (!localStorage.getItem(LOCAL_NOTIFICATIONS_KEY)) {
     localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify([]));
   }
@@ -1011,37 +867,6 @@ const initMockDB = () => {
     localStorage.setItem("gombo_casting_calls", JSON.stringify(mockCastings));
   }
 
-  // === SEED VOICE ANNOUNCEMENTS ===
-  if (!localStorage.getItem("gombo_voice_announcements")) {
-    const mockVoices: VoiceAnnouncement[] = [
-      {
-        id: "vc1",
-        userId: "cli1",
-        userName: "Serge Kassi",
-        userAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
-        audioUrl: "simulated_announcement_1.mp3",
-        duration: 8,
-        title: "Recherche bassiste d'urgence pour cabaret samedi à Marcory",
-        commune: "Marcory",
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: "vc2",
-        userId: "mus1",
-        userName: "Yorobo Sangaré",
-        userAvatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
-        audioUrl: "simulated_announcement_2.mp3",
-        duration: 12,
-        title: "Je propose mes services de guitare live pour tous projets studio",
-        commune: "Cocody",
-        createdAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem("gombo_voice_announcements", JSON.stringify(mockVoices));
-  }
-};
-
-initMockDB();
 
 // Dynamic hooks or state triggers for components using standard localStorage callback routing
 const triggerStorageEvent = () => {
@@ -1266,16 +1091,8 @@ export const gomboAuth = {
           console.log("Résultat :", res);
           console.log("Current User :", auth.currentUser);
         } catch (popupErr: any) {
-          console.warn("⚠️ Popup sign-in option blocked or closed. Falling back to signInWithRedirect...", popupErr);
-          // Auto fall-back to Redirect inside standard web if popup fails/is blocked
-          try {
-            await signInWithRedirect(auth, GOOGLE_PROVIDER);
-            // After redirecting, user returns via getRedirectResult check, so stop here
-            return { webViewRedirectPending: true } as any;
-          } catch (redirectErr: any) {
-            console.error("Erreur Google :", redirectErr);
-            throw redirectErr;
-          }
+          console.warn("⚠️ Popup sign-in option blocked or closed.", popupErr);
+          throw popupErr;
         }
 
         if (res && res.user) {
@@ -3034,7 +2851,8 @@ export const gomboDB = {
             }, 
             (error) => {
               console.error("Storage upload failed:", error);
-              reject(error);
+              alert("Stockage média bientôt disponible");
+              resolve("");
             }, 
             async () => {
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
@@ -3044,6 +2862,8 @@ export const gomboDB = {
         });
       } catch (err) {
         console.warn("Storage unreachable, falling back to local Blob URL:", err);
+        alert("Stockage média bientôt disponible");
+        return "";
       }
     }
     // High-fidelity fallback for offline / mock modes
@@ -4499,6 +4319,21 @@ export const gomboDB = {
       window.dispatchEvent(new Event("gomboConversationsChange"));
     }
     return convoId;
+  },
+
+  async submitBetaFeedback(feedback: { type: string; description: string; attachmentData?: string; userId: string; userName: string; }): Promise<void> {
+    try {
+      const feedbackId = "fb_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+      await setDoc(doc(db, "beta_feedbacks", feedbackId), {
+        id: feedbackId,
+        ...feedback,
+        status: "new",
+        createdAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error submitting beta feedback:", error);
+      throw error;
+    }
   },
 
   async sendMessage(convoId: string, senderId: string, senderName: string, text: string, type: "text" | "image" | "audio" = "text", mediaUrl?: string): Promise<void> {

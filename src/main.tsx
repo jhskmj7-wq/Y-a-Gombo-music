@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./AuthContext";
 import { LanguageProvider } from "./LanguageContext";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -15,11 +16,13 @@ console.log("🛣️ [AfriGombo Boot] chargement Router.");
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <AuthProvider>
-        <LanguageProvider>
-          <App />
-        </LanguageProvider>
-      </AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <LanguageProvider>
+            <App />
+          </LanguageProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </ErrorBoundary>
   </React.StrictMode>
 );

@@ -5,7 +5,7 @@ import {
   MapPin, Clock, Calendar, Users, Shield, Sparkles, Star, Award, Search, Info,
   Heart, MessageCircle, Activity, ChevronDown, PlusCircle, ArrowUpRight, Music
 } from "lucide-react";
-import { gomboDB, isFirebaseMock } from "../firebase";
+import { gomboDB } from "../firebase";
 import { UserProfile, Gombo, Application, Reservation, Renfort, RenfortApplication, MusicGroup, ActivityFeedEntry } from "../types";
 import GriotIA from "./GriotIA";
 import MobileMoneyPayment from "./MobileMoneyPayment";
@@ -38,18 +38,6 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
   useEffect(() => {
     // Scroll intentionally removed to prevent interfering with AdminCentre's custom scroll tracking
   }, [activeTab]);
-  
-  const [mockMode, setMockMode] = useState(isFirebaseMock);
-
-  useEffect(() => {
-    const handleMockChange = () => {
-      setMockMode(isFirebaseMock);
-    };
-    window.addEventListener("gomboFirebaseMockChange", handleMockChange);
-    return () => {
-      window.removeEventListener("gomboFirebaseMockChange", handleMockChange);
-    };
-  }, []);
   
   // Base Data States
   const [myGombos, setMyGombos] = useState<Gombo[]>([]);
@@ -405,11 +393,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
               <span className="px-2.5 py-0.5 bg-[#D4AF37]/20 border border-[#D4AF37]/40 rounded-full text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
                 Espace {currentUserProfile.role === "admin" ? "Administrateur" : currentUserProfile.role === "client" ? "Club / Boss" : "Artiste"}
               </span>
-              {mockMode && (
-                <span className="px-2.5 py-0.5 bg-[#D4AF37] text-black text-[10px] font-extrabold uppercase rounded-full">
-                  Mode Démo
-                </span>
-              )}
+              {/* Mode Démo badge removed */}
             </div>
             <h1 className="text-3xl font-black mt-2">
               Akwaba, {currentUserProfile.firstName} {currentUserProfile.lastName} !

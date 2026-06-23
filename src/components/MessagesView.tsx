@@ -168,61 +168,98 @@ export default function MessagesView({
     }
   };
 
-  // 5. Send voice/audio messages simulation (as requested)
-  const handleSendVoiceMessage = async () => {
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  // 5. Send real voice messages via MediaRecorder
+  const handleToggleVoiceRecord = async () => {
+    if (!activeConvo || isSending) return;
+
+    if (isRecording) {
+      // Stop recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.stop();
+      }
+      setIsRecording(false);
+    } else {
+      // Start recording
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          setIsSending(true);
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          
+          // Stop all tracks to release microphone
+          stream.getTracks().forEach(track => track.stop());
+
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64Audio = reader.result as string;
+            const senderName = currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName}` : "Moi";
+            await gomboDB.sendMessage(
+              activeConvo.id,
+              currentUser.uid,
+              senderName,
+              "🎙️ Message vocal",
+              "audio",
+              base64Audio
+            );
+            setIsSending(false);
+          };
+          reader.readAsDataURL(audioBlob);
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+      } catch (err) {
+        console.error("Microphone access denied or error:", err);
+        alert("Erreur: Impossible d'accéder au microphone.");
+      }
+    }
+  };
+
+  // 6. Send real image via Base64 FileReader
+  const handleSendImageMessage = async (file: File) => {
     if (!activeConvo || isSending) return;
     setIsSending(true);
 
     try {
       const senderName = currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName}` : "Moi";
-      // Send message with media type 'audio'
-      const simulatedAudioUrls = [
-        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
-      ];
-      const audioUrl = simulatedAudioUrls[Math.floor(Math.random() * simulatedAudioUrls.length)];
       
-      await gomboDB.sendMessage(
-        activeConvo.id,
-        currentUser.uid,
-        senderName,
-        "🎙️ Message vocal partagé (5s)",
-        "audio",
-        audioUrl
-      );
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Image = reader.result as string;
+        await gomboDB.sendMessage(
+          activeConvo.id,
+          currentUser.uid,
+          senderName,
+          "📷 Image jointe",
+          "image",
+          base64Image
+        );
+        setIsSending(false);
+      };
+      reader.readAsDataURL(file);
     } catch (err) {
-      console.error("Failed to send voice message:", err);
-    } finally {
+      console.error("Failed to process image message:", err);
       setIsSending(false);
     }
   };
 
-  // 6. Send random show image simulation (as requested)
-  const handleSendImageMessage = async () => {
-    if (!activeConvo || isSending) return;
-    setIsSending(true);
-
-    try {
-      const senderName = currentProfile?.firstName ? `${currentProfile.firstName} ${currentProfile.lastName}` : "Moi";
-      const simulatedImagePreviews = [
-        "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=400",
-        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400",
-        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&q=80&w=400"
-      ];
-      const imageUrl = simulatedImagePreviews[Math.floor(Math.random() * simulatedImagePreviews.length)];
-
-      await gomboDB.sendMessage(
-        activeConvo.id,
-        currentUser.uid,
-        senderName,
-        "📷 Photo artistique partagée",
-        "image",
-        imageUrl
-      );
-    } catch (err) {
-      console.error("Failed to send image message:", err);
-    } finally {
-      setIsSending(false);
+  const onImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleSendImageMessage(e.target.files[0]);
     }
   };
 
@@ -487,29 +524,36 @@ export default function MessagesView({
                 {/* Input message form footer panel */}
                 <div className="p-3 border-t border-gray-150 dark:border-gray-850 bg-white dark:bg-[#0c101b] space-y-2">
                   
-                  {/* Dynamic Simulation Bars */}
+                  {/* Dynamic Realtime Inputs */}
                   <div className="flex items-center justify-between">
                     <span className="text-[8.5px] font-black tracking-wider text-gray-400 uppercase">⚡ Outils multimédias :</span>
                     <div className="flex gap-2">
-                      <button 
-                        type="button"
-                        onClick={handleSendImageMessage}
-                        disabled={isSending}
-                        className="py-1 px-2.5 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 border border-gray-150 dark:border-gray-800 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-1 cursor-pointer transition-all disabled:opacity-50"
-                        title="Partager un média"
+                      <label 
+                        className={`py-1 px-2.5 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 border border-gray-150 dark:border-gray-800 rounded-lg text-[9px] font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-1 cursor-pointer transition-all ${isSending ? 'opacity-50 pointer-events-none' : ''}`}
+                        title="Partager une image"
                       >
                         <ImageIcon className="w-3.5 h-3.5" />
-                        <span>📷 Image Show</span>
-                      </button>
+                        <span>📷 Image</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={onImageSelect} disabled={isSending} />
+                      </label>
                       <button 
                         type="button"
-                        onClick={handleSendVoiceMessage}
-                        disabled={isSending}
-                        className="py-1 px-2.5 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 border border-gray-150 dark:border-gray-800 rounded-lg text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1 cursor-pointer transition-all disabled:opacity-50"
-                        title="Enregistrer un vocal"
+                        onClick={handleToggleVoiceRecord}
+                        disabled={isSending && !isRecording}
+                        className={`py-1 px-2.5 border rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-all disabled:opacity-50 ${isRecording ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-500' : 'bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 border-gray-150 dark:border-gray-800 text-emerald-600 dark:text-emerald-400'}`}
+                        title={isRecording ? "Arrêter l'enregistrement" : "Enregistrer un vocal"}
                       >
-                        <Mic className="w-3.5 h-3.5" />
-                        <span>🎙️ Vocal (5s)</span>
+                        {isRecording ? (
+                          <>
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                            <span>🛑 Stop REC</span>
+                          </>
+                        ) : (
+                          <>
+                            <Mic className="w-3.5 h-3.5" />
+                            <span>🎙️ Vocal</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>

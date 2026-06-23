@@ -365,6 +365,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   ]);
   const { currentUser, profile, logout, refreshProfile, setProfile, loginWithGoogle } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
 
   const requireGoogleAuthThen = (action: () => void) => {
@@ -937,72 +938,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     }
   }, [activeMenu]);
 
-  // --- SYNC /FOUNDER-THRONE PATH & ACCESS PRIVILEGES ---
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-
-    if (currentPath === "/founder-throne") {
-      if (isAuthorizedSuperFounder) {
-        if (activeMenu !== "super_admin") {
-          setActiveMenu("super_admin");
-          setPerspective("admin");
-          addToTerminal(`[Trône] Accès direct autorisé au Fondateur.`);
-        }
-      } else {
-        addToTerminal(`[SÉCURITÉ] Tentative de contournement URI Super Admin bloquée.`);
-        window.history.replaceState({}, "", "/");
-        setPerspective("user");
-        setActiveMenu("user_terrain");
-      }
-    } else {
-      if (activeMenu === "super_admin") {
-        if (isAuthorizedSuperFounder) {
-          window.history.pushState({}, "", "/founder-throne");
-        } else {
-          setActiveMenu("dashboard");
-        }
-      }
-    }
-  }, [currentUser, activeMenu, isAuthorizedSuperFounder]);
-
-  // Handle browser back button (popstate)
-  useEffect(() => {
-    const handlePopState = () => {
-      if (window.location.pathname === "/founder-throne") {
-        if (isAuthorizedSuperFounder) {
-          setActiveMenu("super_admin");
-          setPerspective("admin");
-        } else {
-          window.history.replaceState({}, "", "/");
-          setPerspective("user");
-          setActiveMenu("user_terrain");
-        }
-      } else {
-        if (activeMenu === "super_admin") {
-          setActiveMenu("dashboard");
-        }
-      }
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [currentUser, activeMenu, isAuthorizedSuperFounder]);
-
-  // Synchroniser les routes d'adresse pathname (/home, /complete-profile)
-  useEffect(() => {
-    const handlePathnameSync = () => {
-      const path = window.location.pathname;
-      if (path === "/home" || path === "/home/") {
-        if (activeMenu !== "user_terrain") {
-          setActiveMenu("user_terrain");
-        }
-      }
-    };
-    
-    handlePathnameSync();
-    
-    window.addEventListener("popstate", handlePathnameSync);
-    return () => window.removeEventListener("popstate", handlePathnameSync);
-  }, [activeMenu]);
+  // Removed window.location.pathname syncs to prevent bouncing back.
 
   // Watertight access security rules enforcement for administration pages (Level 2 & 3)
   useEffect(() => {
@@ -1681,31 +1617,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     );
   });
 
-  const isCompleteProfilePath = typeof window !== 'undefined' && (window.location.pathname === "/complete-profile" || window.location.pathname === "/complete-profile/");
-  const profileSkippedLocally = typeof window !== 'undefined' && localStorage.getItem("gombo_profile_skipped") === "true";
-  
-  const hasIncompleteProfile = currentUser && profile && profile.isProfileComplete === false && !profile.profileSkipped && !profile.skippedProfile && !profileSkippedLocally;
-  const shouldShowOnboarding = hasIncompleteProfile || (currentUser && isCompleteProfilePath);
-
-  if (shouldShowOnboarding) {
-    return (
-      <div className="w-full min-h-screen bg-[#0B0B0B] flex items-center justify-center py-6 overflow-y-auto px-4 font-sans select-none">
-        <CompleteProfile 
-          currentUserProfile={profile} 
-          onComplete={async () => {
-            addToTerminal("[🛡️ ONBOARDING] Accès autorisé à l'écosystème Y'A GOMBO MUSIC.");
-            // Set browser URL back to /home
-            if (typeof window !== 'undefined') {
-              window.history.pushState({}, "", "/home");
-            }
-            await refreshProfile();
-            // Force state reload
-            window.location.reload(); 
-          }} 
-        />
-      </div>
-    );
-  }
+  // CompleteProfile route moved to App.tsx
 
   return (
     <div className={`flex h-screen ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#111]"} font-sans antialiased overflow-hidden uppercase-none`}>
@@ -4994,6 +4906,20 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           </span>
                         </button>
 
+                        {/* Beta Feedback */}
+                        <button
+                          onClick={() => {
+                            setIsBetaFeedbackOpen(true);
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                          }}
+                          className="p-4 bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500/50 rounded-2xl text-center space-y-2 transition-all cursor-pointer select-none active:scale-95 shadow-lg group"
+                        >
+                          <AlertTriangle className="w-5 h-5 text-emerald-500 mx-auto transition-colors" />
+                          <span className="text-[10px] text-emerald-400 font-mono block leading-tight font-bold">
+                            Bêta Feedback
+                          </span>
+                        </button>
+
                         {/* Paramètres */}
                         <button
                           onClick={() => {
@@ -8194,6 +8120,94 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           </motion.div>
         </div>
       )}
+      {isBetaFeedbackOpen && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-[#0B0B0B] border border-[#D4AF37]/20 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button 
+              onClick={() => setIsBetaFeedbackOpen(false)}
+              className="absolute top-4 right-4 p-2 text-gray-500 hover:text-white rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                <AlertTriangle className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black tracking-widest text-[#D4AF37] uppercase">Bêta Feedback</h3>
+                <p className="text-[10px] text-gray-400 font-mono">Signaler un bug ou une idée</p>
+              </div>
+            </div>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const form = e.target as HTMLFormElement;
+              const type = (form.elements.namedItem("type") as HTMLSelectElement).value;
+              const desc = (form.elements.namedItem("description") as HTMLTextAreaElement).value;
+              const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+              
+              if (!desc.trim()) return;
+              btn.disabled = true;
+              btn.innerHTML = '<span class="animate-pulse">Envoi...</span>';
+              
+              try {
+                await gomboDB.submitBetaFeedback({
+                  type,
+                  description: desc,
+                  userId: profile?.uid || currentUser?.uid || "anonymous",
+                  userName: profile?.nomArtistique || profile?.displayName || "Anonyme"
+                });
+                
+                setIsBetaFeedbackOpen(false);
+                addToTerminal("[BÊTA] Feedback envoyé avec succès. Merci !");
+                try { audioSynth.playValidationSuccess(); } catch(e){}
+                form.reset();
+              } catch (err) {
+                console.error(err);
+                btn.disabled = false;
+                btn.innerText = "Erreur - Réessayer";
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2">Type de retour</label>
+                <select name="type" className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-white focus:border-[#D4AF37]/50 focus:outline-none">
+                  <option value="bug">🐛 Signaler un bug</option>
+                  <option value="idea">💡 Suggérer une idée</option>
+                  <option value="other">💬 Autre remarque</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2">Description détaillée</label>
+                <textarea 
+                  name="description" 
+                  rows={4} 
+                  required
+                  placeholder="Décrivez le problème rencontré ou votre idée d'amélioration..."
+                  className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-white focus:border-[#D4AF37]/50 focus:outline-none placeholder-gray-600 resize-none"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsBetaFeedbackOpen(false)}
+                  className="flex-1 py-3 border border-gray-800 hover:bg-gray-800 rounded-xl text-xs font-bold text-gray-400 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 py-3 bg-[#D4AF37] hover:bg-[#c19b2e] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-colors"
+                >
+                  Envoyer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {isAuthModalOpen && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
           <div className="w-full max-w-sm relative">

@@ -1,14 +1,20 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { audioSynth } from "./lib/audio";
 import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
 import { BackgroundMusic } from "./components/BackgroundMusic";
 import { LivingInteractions } from "./components/LivingInteractions";
+import { useAuth } from "./AuthContext";
+import { AuthGuard } from "./components/AuthGuard";
+import { ProfileGuard } from "./components/ProfileGuard";
+import CompleteProfile from "./components/CompleteProfile";
+import AuthPage from "./components/AuthPage";
 
 // Lazy load the main Application Layer
 const AdminCentre = lazy(() => import("./components/AdminCentre"));
 
-const AppContent = React.memo(function AppContent({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (d: boolean) => void }) {
+const MainAppLayout = React.memo(function MainAppLayout({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (d: boolean) => void }) {
   return (
     <Suspense fallback={
        <div className="flex h-screen items-center justify-center bg-[#050505]">
@@ -20,6 +26,26 @@ const AppContent = React.memo(function AppContent({ darkMode, setDarkMode }: { d
     </Suspense>
   );
 });
+
+import { gomboDB } from "./firebase";
+
+// A wrapper to handle the CompleteProfile rendering cleanly
+function CompleteProfileView() {
+  const { profile, refreshProfile } = useAuth();
+  const navigate = useNavigate();
+  
+  return (
+    <div className="w-full min-h-screen bg-[#0B0B0B] flex items-center justify-center py-6 overflow-y-auto px-4 font-sans select-none">
+      <CompleteProfile 
+        currentUserProfile={profile} 
+        onComplete={async () => {
+          await refreshProfile();
+          navigate("/home", { replace: true });
+        }} 
+      />
+    </div>
+  );
+}
 
 function App() {
   const [showSplash, setShowSplash] = useState(() => {
@@ -37,6 +63,7 @@ function App() {
 
   // Load theme and run splash sequence
   useEffect(() => {
+
     const root = window.document.documentElement;
     if (darkMode) {
       root.classList.add("dark");
@@ -217,7 +244,30 @@ function App() {
       </AnimatePresence>
 
       {/* 2. MAIN APPLICATION LAYER */}
-      <AppContent darkMode={darkMode} setDarkMode={setDarkModeWrapped} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route 
+          path="/home" 
+          element={
+            <ProfileGuard>
+              <MainAppLayout darkMode={darkMode} setDarkMode={setDarkModeWrapped} />
+            </ProfileGuard>
+          } 
+        />
+        <Route 
+          path="/complete-profile" 
+          element={
+            <AuthGuard>
+              <CompleteProfileView />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/auth" 
+          element={<AuthPage />} 
+        />
+        <Route path="*" element={<Navigate to="/home" replace />} />
+      </Routes>
       
       {/* 3. PERSISTENT BACKGROUND MUSIC */}
       <BackgroundMusic />

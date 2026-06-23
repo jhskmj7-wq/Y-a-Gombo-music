@@ -1,8 +1,87 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Fonction d'aide pour vérifier l'authentification
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Utilisateurs (profils)
+    match /users/{userId} {
+      // Tout le monde peut lire les profils publics (pour l'annuaire, etc.)
+      allow read: if true;
+      // Seul l'utilisateur peut créer ou modifier son propre profil
+      allow create, update: if isAuthenticated() && request.auth.uid == userId;
+      // Pas de suppression de profil depuis le client (admin seulement)
+      allow delete: if false;
+    }
+
+    // Opportunités (Gombos)
+    match /opportunities/{opportunityId} {
+      // Tout le monde peut voir les annonces
+      allow read: if true;
+      // Les utilisateurs connectés peuvent créer une annonce
+      allow create: if isAuthenticated();
+      // Seul l'auteur de l'annonce peut la modifier ou la supprimer
+      allow update, delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+    }
+
+    // Applications (Candidatures aux Gombos)
+    match /applications/{applicationId} {
+      // L'auteur de l'application ou l'auteur de l'annonce peut lire
+      allow read: if isAuthenticated() && (
+        resource.data.applicantId == request.auth.uid || 
+        resource.data.authorId == request.auth.uid
+      );
+      // Seuls les connectés peuvent postuler
+      allow create: if isAuthenticated() && request.resource.data.applicantId == request.auth.uid;
+      allow update: if isAuthenticated(); // Simplifié pour permettre au créateur de l'annonce d'accepter/rejeter
+      allow delete: if isAuthenticated() && resource.data.applicantId == request.auth.uid;
+    }
+
+    // Messages
+    match /messages/{messageId} {
+      allow read: if isAuthenticated(); // Simplifié: tous les connectés
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Les messages ne sont ni modifiés ni supprimés
+    }
+    
+    // Conversations
+    match /conversations/{convoId} {
+      allow read: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // Feed public (Posts/Activités)
+    match /activityFeed/{postId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Beta Feedbacks
+    match /beta_feedbacks/{feedbackId} {
+      allow read: if false; // Admin only
+      allow create: if true; // N'importe qui peut soumettre un feedback
+      allow update, delete: if false;
+    }
+
+    // Escrow / Transactions
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid || 
+        resource.data.receiverId == request.auth.uid
+      );
+      // La création/mise à jour d'escrow est restreinte mais gérée par le client pour la démo
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
+    }
+
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

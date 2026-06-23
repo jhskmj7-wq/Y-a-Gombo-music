@@ -97,9 +97,11 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Initialize fields if they exist in user profile
+  const initializedProfile = useRef(false);
+
+  // Initialize fields if they exist in user profile (only once)
   useEffect(() => {
-    if (currentUserProfile) {
+    if (currentUserProfile && !initializedProfile.current) {
       if (currentUserProfile.prenom) setPrenom(currentUserProfile.prenom);
       else if (currentUserProfile.firstName) setPrenom(currentUserProfile.firstName);
       
@@ -119,6 +121,8 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
       else if (currentUserProfile.ville) setCity(currentUserProfile.ville);
 
       if (currentUserProfile.bio) setBio(currentUserProfile.bio);
+      
+      initializedProfile.current = true;
     }
   }, [currentUserProfile]);
 
@@ -319,8 +323,8 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
       });
       
       if (typeof window !== 'undefined') {
-        window.history.pushState({}, "", "/home");
-        window.dispatchEvent(new Event("popstate"));
+        // window.history.pushState({}, "", "/home");
+        // window.dispatchEvent(new Event("popstate"));
       }
 
       window.dispatchEvent(new Event("gomboUserProfileChange"));

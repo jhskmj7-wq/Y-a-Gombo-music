@@ -7,8 +7,8 @@ import {
   ArrowRight,
   X
 } from "lucide-react";
-import { gomboAuth, gomboDB } from "../firebase";
 import { useAuth } from "../AuthContext";
+import { gomboDB } from "../firebase";
 
 interface AuthScreenProps {
   onSuccess: () => void;
@@ -142,10 +142,10 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         setSuccessMSG("✅ Connexion réussie.");
         
         // Navigate directly to /home
-        if (typeof window !== "undefined") {
-          window.history.pushState({}, "", "/home");
-          window.dispatchEvent(new Event("popstate"));
-        }
+        // if (typeof window !== "undefined") {
+        //   window.history.pushState({}, "", "/home");
+        //   window.dispatchEvent(new Event("popstate"));
+        // }
 
         setTimeout(() => {
           onSuccess();
@@ -191,10 +191,10 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         setSuccessMSG("✅ Création du profil en cours...");
 
         // Navigate to /complete-profile
-        if (typeof window !== "undefined") {
-          window.history.pushState({}, "", "/complete-profile");
-          window.dispatchEvent(new Event("popstate"));
-        }
+        // if (typeof window !== "undefined") {
+        //   window.history.pushState({}, "", "/complete-profile");
+        //   window.dispatchEvent(new Event("popstate"));
+        // }
 
         setTimeout(() => {
           onSuccess();
@@ -211,10 +211,10 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       }
 
       setSuccessMSG("✅ Connexion réussie.");
-      if (typeof window !== "undefined") {
-        window.history.pushState({}, "", "/home");
-        window.dispatchEvent(new Event("popstate"));
-      }
+      // if (typeof window !== "undefined") {
+      //   window.history.pushState({}, "", "/home");
+      //   window.dispatchEvent(new Event("popstate"));
+      // }
       setTimeout(() => {
         onSuccess();
       }, 900);
@@ -290,19 +290,11 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
   const handleGoogleLogin = async () => {
     setErrorMSG("");
     setLoading(true);
-    setActiveErrorCode("");
     try {
-      const res = await loginWithGoogle();
-      if (res && res.webViewRedirectPending) {
-        setIsRedirectPending(true);
-        setPendingTransferId(res.transferId);
-      } else if (res && res.uid) {
-        await handlePostAuthSuccess(res.uid, res.email || "");
-      }
+      await loginWithGoogle();
+      onSuccess();
     } catch (err: any) {
       console.error("Google SSO Failure:", err);
-      const code = err.code || "auth/unknown";
-      setActiveErrorCode(code);
       setErrorMSG("❌ Impossible de se connecter. Veuillez réessayer.");
       setLoading(false);
     }
