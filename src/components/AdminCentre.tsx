@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
+import { useNavigate } from "react-router-dom";
 
 const AdminStats = lazy(() => import("./AdminStats"));
 const AdminReports = lazy(() => import("./AdminReports"));
@@ -364,6 +365,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     "Trouver un studio..."
   ]);
   const { currentUser, profile, logout, refreshProfile, setProfile, loginWithGoogle } = useAuth();
+  const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
@@ -8210,14 +8212,75 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
       {isAuthModalOpen && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="w-full max-w-sm relative">
-            <AuthScreen 
-              onSuccess={() => {
-                setIsAuthModalOpen(false);
-                addToTerminal("[🛡️ AUTH] Authentification réussie via Firebase Auth !");
-              }} 
-              onClose={() => setIsAuthModalOpen(false)}
-            />
+          <div className="w-full max-w-sm bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 relative overflow-hidden text-center shadow-[0_0_50px_rgba(212,175,55,0.1)]">
+            {/* Ambient Background Light */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-3xl rounded-full pointer-events-none" />
+            
+            {/* Elegant Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/30 mx-auto mb-6 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+              <Sparkles className="w-8 h-8 text-[#D4AF37]" />
+            </div>
+
+            <h3 className="text-white text-lg font-bold font-sans mb-2 uppercase tracking-wide">
+              Accès Privé
+            </h3>
+
+            <p className="text-zinc-300 text-sm mb-6 px-2 font-medium">
+              Touchez Continuer pour accéder à cette fonctionnalité
+            </p>
+
+            <div className="space-y-3">
+              <button
+                onClick={async () => {
+                  try {
+                    await loginWithGoogle();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-black font-sans font-black text-sm uppercase tracking-wider transition-all duration-300 shadow-[0_4px_12px_rgba(212,175,55,0.2)] flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                Continuer avec Google
+              </button>
+
+              <button
+                onClick={() => setIsAuthModalOpen(false)}
+                className="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs font-mono font-bold transition-all duration-300 border border-zinc-800"
+              >
+                Plus tard
+              </button>
+            </div>
+            
+            {/* Email link if they prefer email */}
+            <div className="mt-4 pt-4 border-t border-zinc-900">
+              <button
+                onClick={() => {
+                  setIsAuthModalOpen(false);
+                  navigate("/auth");
+                }}
+                className="text-[11px] text-[#D4AF37]/70 hover:text-[#D4AF37] hover:underline font-sans"
+              >
+                Se connecter avec un email
+              </button>
+            </div>
           </div>
         </div>
       )}

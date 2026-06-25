@@ -16,7 +16,7 @@ export function ProfileGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!currentUser) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <>{children}</>;
   }
 
   // Allow passing if the profile exists and is complete or skipped

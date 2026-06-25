@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Lock } from "lucide-react";
-import { signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
 import { auth, db, googleProvider } from "./lib/firebase";
 import { gomboDB } from "./firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -24,34 +24,62 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("🎬 [AuthContext] Initializing Firebase Auth observer...");
+    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log("AUTH STATE:", firebaseUser);
+      setCurrentUser(firebaseUser || null);
 
-    const authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("👤 [AuthContext] Auth state changed. firebaseUser:", firebaseUser);
-      setCurrentUser(firebaseUser);
-      
       if (firebaseUser) {
-        console.log("🔥 [AuthContext] User connected! UID:", firebaseUser.uid);
-        
-        // Fetch profile from Firestore
-        const uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
-        setProfile(uProfile);
-        
-        setLoading(false);
+        console.log("USER:", firebaseUser);
+        try {
+          const uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
+          setProfile(uProfile);
+        } catch (error) {
+          console.error("Error fetching user profile in auth state change:", error);
+        }
       } else {
-        console.log("👤 [AuthContext] No authenticated user detected.");
         setProfile(null);
-        setLoading(false);
       }
+
+      setAuthLoading(false);
     });
 
-    return () => {
-      authUnsubscribe();
-    };
+    return unsub;
   }, []);
+
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        console.log("Résultat Google:", result);
+        if (result?.user) {
+          console.log("Utilisateur:", result.user.uid);
+          const user = result.user;
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (!userDoc.exists()) {
+            await setDoc(doc(db, "users", user.uid), {
+              uid: user.uid,
+              email: user.email || "",
+              displayName: user.displayName || "",
+              photoURL: user.photoURL || "",
+              provider: "google",
+              isProfileComplete: false,
+              createdAt: serverTimestamp()
+            });
+            navigate("/complete-profile");
+          } else {
+            navigate("/home");
+          }
+        }
+      } catch (error) {
+        console.error("Erreur redirect:", error);
+      }
+    };
+    checkRedirect();
+  }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
     return await signInWithEmailAndPassword(auth, email, password);
@@ -71,23 +99,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginWithGoogle = async () => {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    
-    // Check if new user
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    if (!userDoc.exists()) {
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        provider: "google",
-        isProfileComplete: false,
-        createdAt: serverTimestamp()
-      });
+    try {
+      console.log("🚀 Début Google Login");
+      await signInWithRedirect(auth, googleProvider);
+    } catch (error) {
+      console.error("❌ Google Login Error:", error);
     }
-    return result;
   };
 
   const logout = async () => {
@@ -102,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, profile, loading, signIn, signUp, loginWithGoogle, logout, refreshProfile, setProfile }}>
+    <AuthContext.Provider value={{ currentUser, profile, loading: authLoading, signIn, signUp, loginWithGoogle, logout, refreshProfile, setProfile }}>
       {children}
     </AuthContext.Provider>
   );

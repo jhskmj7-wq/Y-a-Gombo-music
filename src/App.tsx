@@ -48,6 +48,7 @@ function CompleteProfileView() {
 }
 
 function App() {
+  const { loading: authLoading } = useAuth();
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search;
@@ -115,6 +116,15 @@ function App() {
     }
     setDarkMode(val);
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 min-h-screen bg-[#050505] animate-pulse select-none">
+        <div className="w-12 h-12 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mb-4" />
+        <p className="text-xs font-mono tracking-widest text-[#D4AF37] uppercase">Synchronisation AFRIGOMBO...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={`h-screen overflow-hidden font-sans antialiased transition-colors duration-300 ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#1F2937]"}`}>
