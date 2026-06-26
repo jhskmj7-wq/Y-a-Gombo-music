@@ -120,9 +120,15 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   reelsVideoUrl = null,
   setReelsVideoUrl = () => {}
 }) => {
+  console.log("UserTerrainLandingPage Hooks initialized");
   const { t } = useLanguage();
   const { isDataSaveActive, areAnimationsReduced } = usePerformance();
   const searchStr = globalSearchTerm.toLowerCase();
+
+  // Mount log
+  useEffect(() => {
+    console.log("UserTerrainLandingPage Component mounted");
+  }, []);
 
   // Internal local states for filters (only applied when clicking Valider)
   const [localCategory, setLocalCategory] = useState(selectedCategory);

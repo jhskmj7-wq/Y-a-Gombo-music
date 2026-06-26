@@ -18,6 +18,7 @@ interface AuthScreenProps {
 }
 
 function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
+  console.log("AuthScreen Hooks initialized");
   const { loginWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
   
@@ -79,6 +80,11 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
   const isTransferMode = typeof window !== "undefined" && window.location.search.includes("transferId");
   const [transferDone, setTransferDone] = useState(false);
+
+  // Mount log
+  React.useEffect(() => {
+    console.log("AuthScreen Component mounted");
+  }, []);
 
   // Auto-redirect to app on transfer success
   React.useEffect(() => {

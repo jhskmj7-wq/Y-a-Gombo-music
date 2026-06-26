@@ -49,6 +49,7 @@ function CompleteProfileView() {
 }
 
 function App() {
+  console.log("App Hooks initialized");
   const { loading: authLoading } = useAuth();
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window !== "undefined") {
@@ -65,6 +66,7 @@ function App() {
 
   // Load theme and run splash sequence
   useEffect(() => {
+    console.log("App Component mounted");
 
     const root = window.document.documentElement;
     if (darkMode) {

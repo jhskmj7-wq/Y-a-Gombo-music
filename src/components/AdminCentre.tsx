@@ -645,6 +645,7 @@ interface AdminCentreProps {
 import WakandaTechBackground from "./WakandaTechBackground";
 
 export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
+  console.log("AdminCentre Hooks initialized");
   const dynamicPlaceholder = useDynamicPlaceholder([
     "Rechercher un artiste...",
     "Trouver une collaboration...",
@@ -657,6 +658,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
+
+  // Mount log
+  useEffect(() => {
+    console.log("AdminCentre Component mounted");
+  }, []);
 
   const requireGoogleAuthThen = (action: () => void) => {
     if (!currentUser) {
