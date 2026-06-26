@@ -349,6 +349,294 @@ const INITIAL_REVIEWS: GomboReview[] = [
   }
 ];
 
+interface UserReelsViewProps {
+  users: any[];
+  setReelsVideoId: (id: string | null) => void;
+  setReelsVideoUrl: (url: string | null) => void;
+}
+
+function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: UserReelsViewProps) {
+  const [selectedReelFilter, setSelectedReelFilter] = useState("all");
+  
+  // Aggregate real videos uploaded by artists + falling back to premium clips
+  const allReels = [
+    {
+      id: "local-reel-1",
+      title: "Intro Improvisation - Saxophone Prestigieux Live",
+      type: "video",
+      url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
+      artisticName: "Thierry Sax d'Abidjan",
+      category: "sax",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+      description: "Test de sonorité en coulisse avant le live de ce soir à Cocody. Un pur régal instrumental."
+    },
+    {
+      id: "local-reel-2",
+      title: "Fusion Kora Traditionnelle & Batterie Jazz",
+      type: "video",
+      url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4",
+      artisticName: "Sékou Kora Excellence",
+      category: "kora",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
+      description: "Enregistrement direct de notre répétition en trio à Marcory pour le Gombo de l'ambassade."
+    },
+    ...users.flatMap(u => (u.mediaGallery || []).filter((m: any) => m.type === "video" || m.type === "youtube").map((media: any) => ({
+      id: media.id,
+      title: media.title || "Démo Artiste",
+      type: media.type,
+      url: media.url,
+      artisticName: u.artisticName || u.name || "Artiste Gombo",
+      category: media.type === "video" ? "raw" : "youtube",
+      avatar: u.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+      description: "Démonstration authentique et accréditée téléchargée directement par l'artiste."
+    })))
+  ];
+
+  const filteredReels = selectedReelFilter === "all" 
+    ? allReels 
+    : allReels.filter(r => r.category === selectedReelFilter || r.type === selectedReelFilter);
+
+  console.log("REELS RENDER");
+  console.log("VIDEOS:", filteredReels);
+
+  return (
+    <div className="space-y-6 pb-24 text-left animate-fadeIn">
+      <div className="bg-gradient-to-r from-zinc-900 via-zinc-950 to-black p-6 rounded-3xl border border-[#D4AF37]/30 shadow-2xl relative overflow-hidden">
+        <div className="absolute right-0 top-0 bottom-0 w-[30%] opacity-25 flex items-center justify-center">
+          <Video className="w-40 h-40 text-[#D4AF37] animate-pulse" />
+        </div>
+        <div className="relative z-10 max-w-xl">
+          <span className="text-[9px] font-mono tracking-widest text-[#D4AF37] font-black uppercase bg-[#D4AF37]/10 px-2.5 py-1 rounded-full border border-[#D4AF37]/20">
+            PROUVER VOTRE TALENT
+          </span>
+          <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight mt-3">
+            Vidéos Réelles & Sessions Live
+          </h2>
+          <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+            La crédibilité d'un artiste n'est pas négociable. Découvrez les coulisses, les preuves de répétition au studio, et les captations scéniques authentiques des musiciens d'élite d'AfriGombo.
+          </p>
+        </div>
+      </div>
+
+      {/* Filter buttons */}
+      <div className="flex flex-wrap gap-2 py-1 select-none">
+        {[
+          { id: "all", label: "✨ Tout voir" },
+          { id: "video", label: "🎥 Démo Live Directes" },
+          { id: "youtube", label: "📺 Clips YouTube" },
+          { id: "sax", label: "🎷 Saxophone" },
+          { id: "kora", label: "🪕 Kora & Cordes" }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setSelectedReelFilter(tab.id)}
+            className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider border cursor-pointer transition-all duration-200 ${
+              selectedReelFilter === tab.id
+                ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md shadow-[#D4AF37]/10 scale-102"
+                : "bg-zinc-950/45 text-zinc-400 border-zinc-800/80 hover:text-white hover:border-zinc-700"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid of video feed cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+        {filteredReels.map((reel, rIdx) => {
+          const isYt = reel.type === "youtube";
+          const yId = isYt ? getYoutubeId(reel.url) : null;
+          
+          return (
+            <div 
+              key={reel.id + "-" + rIdx} 
+              className="bg-zinc-950/80 rounded-2xl border border-zinc-900/90 overflow-hidden hover:border-[#D4AF37]/35 transition-all duration-300 flex flex-col group"
+            >
+              <div className="aspect-video w-full bg-black relative flex items-center justify-center overflow-hidden">
+                {isYt && yId ? (
+                  <img 
+                    src={`https://img.youtube.com/vi/${yId}/mqdefault.jpg`} 
+                    alt={reel.title} 
+                    className="w-full h-full object-cover opacity-80 group-hover:scale-102 transition-transform duration-500" 
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 to-zinc-900 flex flex-col items-center justify-center p-3 text-center">
+                    <Video className="w-10 h-10 text-[#D4AF37]/80 mb-2 group-hover:animate-bounce" />
+                    <span className="text-[9px] font-mono font-black tracking-widest text-[#D4AF37] uppercase">SESSION NATIVE</span>
+                  </div>
+                )}
+                
+                <button
+                  onClick={() => {
+                    if (isYt && yId) {
+                      setReelsVideoId(yId);
+                    } else {
+                      setReelsVideoUrl(reel.url);
+                    }
+                  }}
+                  className="absolute p-3 rounded-full bg-[#D4AF37] hover:bg-[#B48F17] text-black shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer z-10"
+                >
+                  <Play size={18} className="fill-current text-white" />
+                </button>
+              </div>
+
+              {/* Details */}
+              <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                <div className="space-y-1">
+                  <h4 className="text-xs sm:text-xs font-black text-white hover:text-[#D4AF37] transition-colors uppercase leading-tight line-clamp-1">
+                    {reel.title}
+                  </h4>
+                  <p className="text-[10px] text-zinc-500 line-clamp-2 leading-relaxed font-sans">
+                    {reel.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-zinc-900/60">
+                  <img src={reel.avatar} alt={reel.artisticName} className="w-5 h-5 rounded-full object-cover border border-[#D4AF37]/30" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-black text-zinc-350 truncate block">{reel.artisticName}</span>
+                  </div>
+                  <span className="text-[8px] font-mono bg-zinc-900 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-800">
+                    {reel.type.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+interface RevenuQuickActionModalProps {
+  activeArtistId: string;
+  users: User[];
+  saveToFirestore: (collectionName: string, docId: string, data: any) => Promise<void>;
+  transactions: Transaction[];
+  setTransactions: (txs: Transaction[]) => void;
+  setActiveQuickActionModal: (val: string | null) => void;
+  addToTerminal: (msg: string) => void;
+}
+
+function RevenuQuickActionModal({
+  activeArtistId,
+  users,
+  saveToFirestore,
+  transactions,
+  setTransactions,
+  setActiveQuickActionModal,
+  addToTerminal
+}: RevenuQuickActionModalProps) {
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawCarrier, setWithdrawCarrier] = useState("Orange Money");
+  const [withdrawNumber, setWithdrawNumber] = useState("");
+
+  const currentUserData = users.find(u => u.id === activeArtistId) || users[0];
+  const balanceValue = currentUserData ? (currentUserData.balance || currentUserData.revenue || currentUserData.revenues || 125000) : 125000;
+
+  return (
+    <div className="space-y-4 text-left">
+      <div className="space-y-1">
+        <h3 className="text-sm font-display font-black text-white uppercase tracking-widest flex items-center gap-2">
+          <span>💰</span> RETRAITS & REVENUS SÉCURISÉS
+        </h3>
+        <p className="text-[11px] text-zinc-400">Suivi comptable en temps réel lié à l'Académie Afrigombo.</p>
+      </div>
+
+      <div className="p-4 bg-gradient-to-r from-zinc-950 to-black border border-[#D4AF37]/35 rounded-2xl select-none flex justify-between items-center text-left">
+        <div>
+          <span className="text-[8px] font-mono text-[#D4AF37] block uppercase font-black">SOLDE DISPONIBLE</span>
+          <strong className="text-xl font-display font-black text-white block mt-1">{balanceValue.toLocaleString("fr-FR")} FCFA</strong>
+        </div>
+        <div className="text-[8.5px] font-mono py-1 px-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg shrink-0">
+          GARANTI COCOT ⚖
+        </div>
+      </div>
+
+      {/* MOBILE MONEY WITHDRAW FORMS */}
+      <div className="p-3.5 bg-black border border-zinc-900 rounded-2xl space-y-2.5">
+        <span className="text-[9.5px] font-mono text-[#D4AF37] uppercase block font-bold leading-none">DEMANDE DE RETRAIT INSTANTANÉ</span>
+        <div className="space-y-2">
+          <div className="grid grid-cols-3 gap-1">
+            {["Orange Money", "MTN MoMo", "Wave"].map(op => (
+              <button
+                key={op}
+                type="button"
+                onClick={() => setWithdrawCarrier(op)}
+                className={`py-1 rounded text-[8px] font-mono font-bold uppercase border transition ${withdrawCarrier === op ? "bg-[#D4AF37] text-black border-[#D4AF37]" : "bg-zinc-950 border-zinc-900 text-zinc-400 hover:text-white"}`}
+              >
+                {op}
+              </button>
+            ))}
+          </div>
+          <input
+            type="number"
+            placeholder="Ex: 10000 (FCFA)"
+            value={withdrawAmount}
+            onChange={(e) => setWithdrawAmount(e.target.value)}
+            className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2 rounded-lg font-mono focus:outline-none"
+          />
+          <input
+            type="tel"
+            placeholder="N° de téléphone du destinataire..."
+            value={withdrawNumber}
+            onChange={(e) => setWithdrawNumber(e.target.value)}
+            className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2 rounded-lg font-mono focus:outline-none"
+          />
+          <button
+            onClick={async () => {
+              const cash = parseFloat(withdrawAmount);
+              if (isNaN(cash) || cash <= 0 || !withdrawNumber) return;
+              if (cash > balanceValue) {
+                alert("❌ Solde insuffisant pour ce montant de retrait.");
+                return;
+              }
+              try {
+                // Update user balance via Firestore sync
+                const newBal = balanceValue - cash;
+                const updatedUser = { 
+                  ...currentUserData, 
+                  balance: newBal, 
+                  revenue: newBal, 
+                  revenues: newBal 
+                };
+                await saveToFirestore("users", currentUserData.id, updatedUser);
+                
+                // Log transaction
+                const txId = "tx_" + Date.now();
+                const demoTx: Transaction = {
+                  id: txId,
+                  amount: cash,
+                  type: "payout",
+                  description: `Retrait Mobile Money (${withdrawCarrier}) vers le numéro ${withdrawNumber}`,
+                  userId: currentUserData.id,
+                  userArtisticName: currentUserData.artisticName,
+                  timestamp: new Date().toISOString()
+                };
+                await saveToFirestore("transactions", txId, demoTx);
+
+                // Post local list updates
+                setTransactions([demoTx, ...transactions]);
+                
+                setWithdrawAmount("");
+                setWithdrawNumber("");
+                setActiveQuickActionModal(null);
+                addToTerminal(`[PAYOUT] Retrait de ${cash} FCFA demandé via ${withdrawCarrier} vers ${withdrawNumber}.`);
+                try { audioSynth.playKoraSuccess(); } catch(_) {}
+                alert(`💸 Retrait réussi de ${cash.toLocaleString("fr-FR")} FCFA vers votre compte ${withdrawCarrier} !`);
+              } catch (_) {}
+            }}
+            className="w-full py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-mono font-black text-[10.5px] uppercase rounded-lg transition"
+          >
+            ORDONNER LE TRANSFERT ⚡
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface AdminCentreProps {
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
@@ -2240,156 +2528,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {/* 1B. VIDÉOS RÉELLES - VERIFICATION & SHOWCASE */}
-              {activeMenu === "user_reels" && (() => {
-                const [selectedReelFilter, setSelectedReelFilter] = useState("all");
-                
-                // Aggregate real videos uploaded by artists + falling back to premium clips
-                const allReels = [
-                  {
-                    id: "local-reel-1",
-                    title: "Intro Improvisation - Saxophone Prestigieux Live",
-                    type: "video",
-                    url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
-                    artisticName: "Thierry Sax d'Abidjan",
-                    category: "sax",
-                    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-                    description: "Test de sonorité en coulisse avant le live de ce soir à Cocody. Un pur régal instrumental."
-                  },
-                  {
-                    id: "local-reel-2",
-                    title: "Fusion Kora Traditionnelle & Batterie Jazz",
-                    type: "video",
-                    url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4",
-                    artisticName: "Sékou Kora Excellence",
-                    category: "kora",
-                    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
-                    description: "Enregistrement direct de notre répétition en trio à Marcory pour le Gombo de l'ambassade."
-                  },
-                  ...users.flatMap(u => (u.mediaGallery || []).filter(m => m.type === "video" || m.type === "youtube").map(media => ({
-                    id: media.id,
-                    title: media.title || "Démo Artiste",
-                    type: media.type,
-                    url: media.url,
-                    artisticName: u.artisticName || u.name || "Artiste Gombo",
-                    category: media.type === "video" ? "raw" : "youtube",
-                    avatar: u.photoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
-                    description: "Démonstration authentique et accréditée téléchargée directement par l'artiste."
-                  })))
-                ];
-
-                const filteredReels = selectedReelFilter === "all" 
-                  ? allReels 
-                  : allReels.filter(r => r.category === selectedReelFilter || r.type === selectedReelFilter);
-
-                return (
-                  <div className="space-y-6 pb-24 text-left animate-fadeIn">
-                    <div className="bg-gradient-to-r from-zinc-900 via-zinc-950 to-black p-6 rounded-3xl border border-[#D4AF37]/30 shadow-2xl relative overflow-hidden">
-                      <div className="absolute right-0 top-0 bottom-0 w-[30%] opacity-25 flex items-center justify-center">
-                        <Video className="w-40 h-40 text-[#D4AF37] animate-pulse" />
-                      </div>
-                      <div className="relative z-10 max-w-xl">
-                        <span className="text-[9px] font-mono tracking-widest text-[#D4AF37] font-black uppercase bg-[#D4AF37]/10 px-2.5 py-1 rounded-full border border-[#D4AF37]/20">
-                          PROUVER VOTRE TALENT
-                        </span>
-                        <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight mt-3">
-                          Vidéos Réelles & Sessions Live
-                        </h2>
-                        <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                          La crédibilité d'un artiste n'est pas négociable. Découvrez les coulisses, les preuves de répétition au studio, et les captations scéniques authentiques des musiciens d'élite d'AfriGombo.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Filter buttons */}
-                    <div className="flex flex-wrap gap-2 py-1 select-none">
-                      {[
-                        { id: "all", label: "✨ Tout voir" },
-                        { id: "video", label: "🎥 Démo Live Directes" },
-                        { id: "youtube", label: "📺 Clips YouTube" },
-                        { id: "sax", label: "🎷 Saxophone" },
-                        { id: "kora", label: "🪕 Kora & Cordes" }
-                      ].map(tab => (
-                        <button
-                          key={tab.id}
-                          onClick={() => setSelectedReelFilter(tab.id)}
-                          className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider border cursor-pointer transition-all duration-200 ${
-                            selectedReelFilter === tab.id
-                              ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md shadow-[#D4AF37]/10 scale-102"
-                              : "bg-zinc-950/45 text-zinc-400 border-zinc-800/80 hover:text-white hover:border-zinc-700"
-                          }`}
-                        >
-                          {tab.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Grid of video feed cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                      {filteredReels.map((reel, rIdx) => {
-                        const isYt = reel.type === "youtube";
-                        const yId = isYt ? getYoutubeId(reel.url) : null;
-                        
-                        return (
-                          <div 
-                            key={reel.id + "-" + rIdx} 
-                            className="bg-zinc-950/80 rounded-2xl border border-zinc-900/90 overflow-hidden hover:border-[#D4AF37]/35 transition-all duration-300 flex flex-col group"
-                          >
-                            <div className="aspect-video w-full bg-black relative flex items-center justify-center overflow-hidden">
-                              {isYt && yId ? (
-                                <img 
-                                  src={`https://img.youtube.com/vi/${yId}/mqdefault.jpg`} 
-                                  alt={reel.title} 
-                                  className="w-full h-full object-cover opacity-80 group-hover:scale-102 transition-transform duration-500" 
-                                />
-                              ) : (
-                                <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 to-zinc-900 flex flex-col items-center justify-center p-3 text-center">
-                                  <Video className="w-10 h-10 text-[#D4AF37]/80 mb-2 group-hover:animate-bounce" />
-                                  <span className="text-[9px] font-mono font-black tracking-widest text-[#D4AF37] uppercase">SESSION NATIVE</span>
-                                </div>
-                              )}
-                              
-                              <button
-                                onClick={() => {
-                                  if (isYt && yId) {
-                                    setReelsVideoId(yId);
-                                  } else {
-                                    setReelsVideoUrl(reel.url);
-                                  }
-                                }}
-                                className="absolute p-3 rounded-full bg-[#D4AF37] hover:bg-[#B48F17] text-black shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer z-10"
-                              >
-                                <Play size={18} className="fill-current text-white" />
-                              </button>
-                            </div>
-
-                            {/* Details */}
-                            <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                              <div className="space-y-1">
-                                <h4 className="text-xs sm:text-xs font-black text-white hover:text-[#D4AF37] transition-colors uppercase leading-tight line-clamp-1">
-                                  {reel.title}
-                                </h4>
-                                <p className="text-[10px] text-zinc-500 line-clamp-2 leading-relaxed font-sans">
-                                  {reel.description}
-                                </p>
-                              </div>
-
-                              <div className="flex items-center gap-2 pt-2 border-t border-zinc-900/60">
-                                <img src={reel.avatar} alt={reel.artisticName} className="w-5 h-5 rounded-full object-cover border border-[#D4AF37]/30" />
-                                <div className="flex-1 min-w-0">
-                                  <span className="text-[10px] font-black text-zinc-350 truncate block">{reel.artisticName}</span>
-                                </div>
-                                <span className="text-[8px] font-mono bg-zinc-900 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-800">
-                                  {reel.type.toUpperCase()}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
+              {activeMenu === "user_reels" && (
+                <UserReelsView 
+                  users={users}
+                  setReelsVideoId={setReelsVideoId}
+                  setReelsVideoUrl={setReelsVideoUrl}
+                />
+              )}
               {false && (() => {
                 const searchStr = globalSearchTerm.toLowerCase();
                 
@@ -3050,114 +3195,17 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           )}
 
                           {/* MODAL 6: REVENUS / CAISSE */}
-                          {activeQuickActionModal === "revenu" && (() => {
-                            const [withdrawAmount, setWithdrawAmount] = useState("");
-                            const [withdrawCarrier, setWithdrawCarrier] = useState("Orange Money");
-                            const [withdrawNumber, setWithdrawNumber] = useState("");
-                            const currentUserData = users.find(u => u.id === activeArtistId) || users[0];
-                            const balanceValue = currentUserData ? (currentUserData.balance || currentUserData.revenue || currentUserData.revenues || 125000) : 125000;
-
-                            return (
-                              <div className="space-y-4 text-left">
-                                <div className="space-y-1">
-                                  <h3 className="text-sm font-display font-black text-white uppercase tracking-widest flex items-center gap-2">
-                                    <span>💰</span> RETRAITS & REVENUS SÉCURISÉS
-                                  </h3>
-                                  <p className="text-[11px] text-zinc-400">Suivi comptable en temps réel lié à l'Académie Afrigombo.</p>
-                                </div>
-
-                                <div className="p-4 bg-gradient-to-r from-zinc-950 to-black border border-[#D4AF37]/35 rounded-2xl select-none flex justify-between items-center text-left">
-                                  <div>
-                                    <span className="text-[8px] font-mono text-[#D4AF37] block uppercase font-black">SOLDE DISPONIBLE</span>
-                                    <strong className="text-xl font-display font-black text-white block mt-1">{balanceValue.toLocaleString("fr-FR")} FCFA</strong>
-                                  </div>
-                                  <div className="text-[8.5px] font-mono py-1 px-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg shrink-0">
-                                    GARANTI COCOT ⚖
-                                  </div>
-                                </div>
-
-                                {/* MOBILE MONEY WITHDRAW FORMS */}
-                                <div className="p-3.5 bg-black border border-zinc-900 rounded-2xl space-y-2.5">
-                                  <span className="text-[9.5px] font-mono text-[#D4AF37] uppercase block font-bold leading-none">DEMANDE DE RETRAIT INSTANTANÉ</span>
-                                  <div className="space-y-2">
-                                    <div className="grid grid-cols-3 gap-1">
-                                      {["Orange Money", "MTN MoMo", "Wave"].map(op => (
-                                        <button
-                                          key={op}
-                                          type="button"
-                                          onClick={() => setWithdrawCarrier(op)}
-                                          className={`py-1 rounded text-[8px] font-mono font-bold uppercase border transition ${withdrawCarrier === op ? "bg-[#D4AF37] text-black border-[#D4AF37]" : "bg-zinc-950 border-zinc-900 text-zinc-400 hover:text-white"}`}
-                                        >
-                                          {op}
-                                        </button>
-                                      ))}
-                                    </div>
-                                    <input
-                                      type="number"
-                                      placeholder="Ex: 10000 (FCFA)"
-                                      value={withdrawAmount}
-                                      onChange={(e) => setWithdrawAmount(e.target.value)}
-                                      className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2 rounded-lg font-mono focus:outline-none"
-                                    />
-                                    <input
-                                      type="tel"
-                                      placeholder="N° de téléphone du destinataire..."
-                                      value={withdrawNumber}
-                                      onChange={(e) => setWithdrawNumber(e.target.value)}
-                                      className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2 rounded-lg font-mono focus:outline-none"
-                                    />
-                                    <button
-                                      onClick={async () => {
-                                        const cash = parseFloat(withdrawAmount);
-                                        if (isNaN(cash) || cash <= 0 || !withdrawNumber) return;
-                                        if (cash > balanceValue) {
-                                          alert("❌ Solde insuffisant pour ce montant de retrait.");
-                                          return;
-                                        }
-                                        try {
-                                          // Update user balance via Firestore sync
-                                          const newBal = balanceValue - cash;
-                                          const updatedUser = { 
-                                            ...currentUserData, 
-                                            balance: newBal, 
-                                            revenue: newBal, 
-                                            revenues: newBal 
-                                          };
-                                          await saveToFirestore("users", currentUserData.id, updatedUser);
-                                          
-                                          // Log transaction
-                                          const txId = "tx_" + Date.now();
-                                          const demoTx: Transaction = {
-                                            id: txId,
-                                            amount: cash,
-                                            type: "payout",
-                                            description: `Retrait Mobile Money (${withdrawCarrier}) vers le numéro ${withdrawNumber}`,
-                                            userId: currentUserData.id,
-                                            userArtisticName: currentUserData.artisticName,
-                                            timestamp: new Date().toISOString()
-                                          };
-                                          await saveToFirestore("transactions", txId, demoTx);
-
-                                          // Post local list updates
-                                          setTransactions([demoTx, ...transactions]);
-                                          
-                                          setWithdrawAmount("");
-                                          setWithdrawNumber("");
-                                          setActiveQuickActionModal(null);
-                                          addToTerminal(`[PAYOUT] Retrait de ${cash} FCFA demandé via ${withdrawCarrier} vers ${withdrawNumber}.`);
-                                          try { audioSynth.playKoraSuccess(); } catch(_) {}
-                                          alert(`💸 Retrait réussi de ${cash.toLocaleString("fr-FR")} FCFA vers votre compte ${withdrawCarrier} !`);
-                                        } catch (_) {}
-                                      }}
-                                      className="w-full py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-mono font-black text-[10.5px] uppercase rounded-lg transition"
-                                    >
-                                      ORDONNER LE TRANSFERT ⚡
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })()}
+                          {activeQuickActionModal === "revenu" && (
+                            <RevenuQuickActionModal
+                              activeArtistId={activeArtistId}
+                              users={users}
+                              saveToFirestore={saveToFirestore}
+                              transactions={transactions}
+                              setTransactions={setTransactions}
+                              setActiveQuickActionModal={setActiveQuickActionModal}
+                              addToTerminal={addToTerminal}
+                            />
+                          )}
                         </div>
                       </div>
                     )}
