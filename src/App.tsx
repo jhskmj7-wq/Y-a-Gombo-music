@@ -28,6 +28,7 @@ const MainAppLayout = React.memo(function MainAppLayout({ darkMode, setDarkMode 
 });
 
 import { gomboDB } from "./firebase";
+import { app } from "./lib/firebase";
 
 // A wrapper to handle the CompleteProfile rendering cleanly
 function CompleteProfileView() {
@@ -116,6 +117,14 @@ function App() {
     }
     setDarkMode(val);
   };
+
+  if (!app) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 min-h-screen bg-[#050505] text-center">
+        <p className="text-xs font-mono tracking-widest text-[#D4AF37] uppercase">Chargement...</p>
+      </div>
+    );
+  }
 
   if (authLoading) {
     return (

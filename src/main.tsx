@@ -7,6 +7,20 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import App from "./App";
 import "./index.css";
 
+window.addEventListener(
+  "error",
+  (e) => {
+    console.error("RUNTIME ERROR:", e.error);
+  }
+);
+
+window.addEventListener(
+  "unhandledrejection",
+  (e) => {
+    console.error("PROMISE ERROR:", e.reason);
+  }
+);
+
 // 8. Console traces representing boot sequence
 console.log("🚀 [AfriGombo Boot] étape de démarrage.");
 console.log("⚡ [AfriGombo Boot] initialisation Firebase.");

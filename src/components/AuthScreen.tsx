@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { gomboDB } from "../firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
 interface AuthScreenProps {
   onSuccess: () => void;
@@ -48,9 +50,6 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
     setAfriIdLoading(true);
     
     try {
-        const { collection, query, where, getDocs } = await import("firebase/firestore");
-        const { db } = await import("../lib/firebase");
-        
         if (db) {
            const q = query(collection(db, "afri_ids"), where("afriId", "==", formattedId));
            const snap = await getDocs(q);
@@ -390,7 +389,6 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                       const resEmail = foundAfriUser.email || `${foundAfriUser.afriId.toLowerCase()}@afri-id.ci`;
                       const resName = foundAfriUser.displayName || `Artiste ${foundAfriUser.afriId}`;
                       
-                      const { gomboDB } = await import("../firebase");
                       const updatedProfileData: any = {
                         uid: resUid,
                         email: resEmail,
