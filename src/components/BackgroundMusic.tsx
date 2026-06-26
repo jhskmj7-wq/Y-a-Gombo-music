@@ -80,7 +80,12 @@ export const BackgroundMusic: React.FC = () => {
     }
   }, [selectedCategory]);
 
-  const [isShuffle, setIsShuffle] = useState(() => localStorage.getItem("gombo_pref_shuffle") === "true");
+  const [isShuffle, setIsShuffle] = useState(() => {
+    if (typeof window !== "undefined" && window.localStorage) {
+      return localStorage.getItem("gombo_pref_shuffle") === "true";
+    }
+    return false;
+  });
   const [isLoopList, setIsLoopList] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -230,7 +235,7 @@ export const BackgroundMusic: React.FC = () => {
     }
   }, [volume, isPlaying, areSoundsReduced]);
 
-  const togglePlay = () => {
+  function togglePlay() {
     if (!audioRef.current) return;
     
     if (isPlaying) {
@@ -250,9 +255,9 @@ export const BackgroundMusic: React.FC = () => {
         });
       }
     }
-  };
+  }
 
-  const handleNextTrack = (crossfade = false) => {
+  function handleNextTrack(crossfade = false) {
     if (crossfade && audioRef.current) {
       // Smooth fade-out before switching URL
       let currentFadeVol = audioRef.current.volume;
@@ -269,9 +274,9 @@ export const BackgroundMusic: React.FC = () => {
     } else {
       switchTrackNext();
     }
-  };
+  }
 
-  const switchTrackNext = () => {
+  function switchTrackNext() {
     const availableTracks = PLAYLIST.filter(t => selectedCategory === "Tous" || t.category === selectedCategory);
     
     if (availableTracks.length === 0) {
@@ -302,9 +307,9 @@ export const BackgroundMusic: React.FC = () => {
     setCurrentIndex(nextGlobalIdx);
     transitionRef.current = false;
     triggerNotification();
-  };
+  }
 
-  const handlePrevTrack = () => {
+  function handlePrevTrack() {
     const availableTracks = PLAYLIST.filter(t => selectedCategory === "Tous" || t.category === selectedCategory);
     if (availableTracks.length === 0) {
       setCurrentIndex((prev) => (prev - 1 + PLAYLIST.length) % PLAYLIST.length);
@@ -318,13 +323,13 @@ export const BackgroundMusic: React.FC = () => {
     
     setCurrentIndex(prevGlobalIdx);
     triggerNotification();
-  };
+  }
 
-  const triggerNotification = () => {
+  function triggerNotification() {
     setShowNotification(true);
     const timer = setTimeout(() => setShowNotification(false), 4000);
     return () => clearTimeout(timer);
-  };
+  }
 
   return (
     <div 

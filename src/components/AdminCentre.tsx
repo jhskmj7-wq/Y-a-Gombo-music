@@ -418,92 +418,12 @@ function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: UserReelsVi
         </div>
       </div>
 
-      {/* Filter buttons */}
-      <div className="flex flex-wrap gap-2 py-1 select-none">
-        {[
-          { id: "all", label: "✨ Tout voir" },
-          { id: "video", label: "🎥 Démo Live Directes" },
-          { id: "youtube", label: "📺 Clips YouTube" },
-          { id: "sax", label: "🎷 Saxophone" },
-          { id: "kora", label: "🪕 Kora & Cordes" }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setSelectedReelFilter(tab.id)}
-            className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider border cursor-pointer transition-all duration-200 ${
-              selectedReelFilter === tab.id
-                ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md shadow-[#D4AF37]/10 scale-102"
-                : "bg-zinc-950/45 text-zinc-400 border-zinc-800/80 hover:text-white hover:border-zinc-700"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Grid of video feed cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-        {filteredReels.map((reel, rIdx) => {
-          const isYt = reel.type === "youtube";
-          const yId = isYt ? getYoutubeId(reel.url) : null;
-          
-          return (
-            <div 
-              key={reel.id + "-" + rIdx} 
-              className="bg-zinc-950/80 rounded-2xl border border-zinc-900/90 overflow-hidden hover:border-[#D4AF37]/35 transition-all duration-300 flex flex-col group"
-            >
-              <div className="aspect-video w-full bg-black relative flex items-center justify-center overflow-hidden">
-                {isYt && yId ? (
-                  <img 
-                    src={`https://img.youtube.com/vi/${yId}/mqdefault.jpg`} 
-                    alt={reel.title} 
-                    className="w-full h-full object-cover opacity-80 group-hover:scale-102 transition-transform duration-500" 
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 to-zinc-900 flex flex-col items-center justify-center p-3 text-center">
-                    <Video className="w-10 h-10 text-[#D4AF37]/80 mb-2 group-hover:animate-bounce" />
-                    <span className="text-[9px] font-mono font-black tracking-widest text-[#D4AF37] uppercase">SESSION NATIVE</span>
-                  </div>
-                )}
-                
-                <button
-                  onClick={() => {
-                    if (isYt && yId) {
-                      setReelsVideoId(yId);
-                    } else {
-                      setReelsVideoUrl(reel.url);
-                    }
-                  }}
-                  className="absolute p-3 rounded-full bg-[#D4AF37] hover:bg-[#B48F17] text-black shadow-xl hover:scale-110 active:scale-95 transition-all cursor-pointer z-10"
-                >
-                  <Play size={18} className="fill-current text-white" />
-                </button>
-              </div>
-
-              {/* Details */}
-              <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                <div className="space-y-1">
-                  <h4 className="text-xs sm:text-xs font-black text-white hover:text-[#D4AF37] transition-colors uppercase leading-tight line-clamp-1">
-                    {reel.title}
-                  </h4>
-                  <p className="text-[10px] text-zinc-500 line-clamp-2 leading-relaxed font-sans">
-                    {reel.description}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 pt-2 border-t border-zinc-900/60">
-                  <img src={reel.avatar} alt={reel.artisticName} className="w-5 h-5 rounded-full object-cover border border-[#D4AF37]/30" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-black text-zinc-350 truncate block">{reel.artisticName}</span>
-                  </div>
-                  <span className="text-[8px] font-mono bg-zinc-900 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-800">
-                    {reel.type.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      <div className="flex flex-col items-center justify-center p-12 bg-zinc-950/40 border border-zinc-800 rounded-3xl text-center min-h-[300px]">
+        <div className="w-16 h-16 rounded-full bg-[#D4AF37]/10 flex items-center justify-center mb-4 border border-[#D4AF37]/30">
+          <span className="text-[#D4AF37] text-2xl">🎥</span>
+        </div>
+        <h3 className="text-sm font-bold text-white tracking-wide uppercase font-sans">Vidéos Réelles</h3>
+        <p className="text-xs text-zinc-400 mt-2 max-w-xs">Bientôt disponible dans votre espace d'élite.</p>
       </div>
     </div>
   );

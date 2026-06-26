@@ -13,7 +13,12 @@ export default function AfrigomboPlus({ onBack }: AfrigomboPlusProps) {
   const [paymentOption, setPaymentOption] = useState<string | null>(null);
   const [phonePayment, setPhonePayment] = useState("");
   const [paymentStep, setPaymentStep] = useState<"idle" | "processing" | "success">("idle");
-  const [subscribedPlan, setSubscribedPlan] = useState<string | null>(() => localStorage.getItem("gombo_subscription") || "GOMBO FREE");
+  const [subscribedPlan, setSubscribedPlan] = useState<string | null>(() => {
+    if (typeof window !== "undefined" && window.localStorage) {
+      return localStorage.getItem("gombo_subscription") || "GOMBO FREE";
+    }
+    return "GOMBO FREE";
+  });
 
   const plans = [
     {
