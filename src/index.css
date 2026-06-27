@@ -6,17 +6,40 @@
   --font-display: "Cinzel", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-btn: "Montserrat", sans-serif;
+  
+  --color-afri-bg: #050505;
+  --color-afri-bg-sec: #111111;
+  --color-afri-gold: #D4AF37;
+  --color-afri-gold-light: #FFD95A;
+  --color-afri-text: #FFFFFF;
+  --color-afri-text-sec: #B9B9B9;
+  --color-afri-border: rgba(212, 175, 55, 0.2);
+
+  --animate-fadeIn: fadeIn 0.25s ease-out forwards;
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 html, body, #root {
   width: 100%;
   height: 100%;
   max-width: 100vw;
-  overflow: hidden;
+  overflow-x: hidden;
   margin: 0;
   padding: 0;
   position: relative;
   -webkit-overflow-scrolling: touch;
+  background-color: var(--color-afri-bg);
+  color: var(--color-afri-text);
 }
 
 *, *:before, *:after {
@@ -34,12 +57,12 @@ img {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0B0B0B;
+  background: var(--color-afri-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: #D4AF37;
+  background: var(--color-afri-gold);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #B48F17;
+  background: var(--color-afri-gold-light);
 }

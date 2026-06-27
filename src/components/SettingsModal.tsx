@@ -207,37 +207,37 @@ export default function SettingsModal({
     <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
       <div 
         id="settings-modal-card"
-        className="bg-white dark:bg-[#111113] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all duration-300 scale-100 flex flex-col h-[85vh] max-h-[680px] relative"
+        className="bg-[#050505] bg-[#050505] rounded-3xl border border-[#D4AF37]/20 border-[#D4AF37]/20 shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all duration-300 scale-100 flex flex-col h-[85vh] max-h-[680px] relative"
       >
         {/* Absolute Overlay for Legal Documents */}
         {activeLegalPage !== "none" && (
-          <div className="absolute inset-0 bg-white dark:bg-[#111113] z-50 p-6 flex flex-col h-full animate-fadeIn font-sans">
-            <div className="flex justify-between items-center pb-4 border-b border-gray-150 dark:border-gray-800 shrink-0">
-              <h3 className="text-sm font-black uppercase text-gray-900 dark:text-white flex items-center gap-2">
+          <div className="absolute inset-0 bg-[#050505] bg-[#050505] z-50 p-6 flex flex-col h-full animate-fadeIn font-sans">
+            <div className="flex justify-between items-center pb-4 border-b border-[#D4AF37]/20 border-[#D4AF37]/20 shrink-0">
+              <h3 className="text-sm font-black uppercase text-white text-white flex items-center gap-2">
                 <span>{activeLegalPage === "privacy" ? `📋 ${t('confidentialite')} — AFRIGOMBO` : `⚖️ ${t('cgu')} — Escrow`}</span>
               </h3>
               <button 
                 type="button" 
                 onClick={() => setActiveLegalPage("none")}
-                className="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-750 rounded-xl text-xs font-black cursor-pointer transition-colors"
+                className="px-3.5 py-1.5 bg-[#111111] hover:bg-[#D4AF37]/20 bg-[#111111] hover:bg-[#D4AF37]/10 rounded-3xl text-xs font-black cursor-pointer transition-colors"
               >
                 {t('annuler')}
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto py-4 space-y-4 text-xs text-gray-600 dark:text-gray-300 leading-relaxed text-left pr-1 scrollbar-thin">
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 text-xs text-[#B9B9B9] text-[#B9B9B9] leading-relaxed text-left pr-1 scrollbar-thin">
               {activeLegalPage === "privacy" ? (
                 <>
-                  <h4 className="font-extrabold text-gray-900 dark:text-white uppercase text-[11px] tracking-wider">1. Collecte des informations</h4>
+                  <h4 className="font-extrabold text-white text-white uppercase text-[11px] tracking-wider">1. Collecte des informations</h4>
                   <p>Nous collectons votre adresse e-mail unique de l'écosystème Afri, votre afriId unique généré automatiquement à la première connexion, vos numéros Mobile Money facultatifs pour les paiements de cachets, et les données de profil d'artiste que vous décidez de rendre publiques.</p>
                   
-                  <h4 className="font-extrabold text-gray-900 dark:text-white uppercase text-[11px] tracking-wider">2. Utilisation des données</h4>
+                  <h4 className="font-extrabold text-white text-white uppercase text-[11px] tracking-wider">2. Utilisation des données</h4>
                   <p>Vos spécialités de scène, genres musicaux, ville et commune d'Abidjan sont partagés publiquement sur notre annuaire "Base des Talents" pour vous connecter aux opportunités réelles. Vos numéros de téléphone ne sont visibles que par les promoteurs avec qui vous concluez ou postulez à un Gombo officiel.</p>
                   
-                  <h4 className="font-extrabold text-gray-900 dark:text-white uppercase text-[11px] tracking-wider">3. Firebase & Sécurité</h4>
+                  <h4 className="font-extrabold text-white text-white uppercase text-[11px] tracking-wider">3. Firebase & Sécurité</h4>
                   <p>Toutes nos communications transitent par des canaux HTTPS cryptés vers la plateforme Google Firebase (Firestore Database et Auth) afin d'assurer l'intégrité de vos transactions et l'exclusion stricte de toute usurpation de profil ou d'identité.</p>
                   
-                  <h4 className="font-extrabold text-gray-900 dark:text-white uppercase text-[11px] tracking-wider">4. Suppression immédiate</h4>
+                  <h4 className="font-extrabold text-white text-white uppercase text-[11px] tracking-wider">4. Suppression immédiate</h4>
                   <p>Vous possédez un contrôle souverain sur vos informations. Vous pouvez désactiver votre profil ou initier une suppression immédiate à tout moment depuis l'onglet de gestion "Mon Compte".</p>
                 </>
               ) : (
@@ -260,19 +260,19 @@ export default function SettingsModal({
         )}
 
         {/* Header */}
-        <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-orange-500/5 to-transparent">
+        <div className="p-5 border-b border-[#D4AF37]/20 border-[#D4AF37]/20 flex items-center justify-between bg-gradient-to-r from-[#D4AF37]/10 to-transparent">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-500/10 rounded-xl text-orange-500">
+            <div className="p-2 bg-[#D4AF37]/10 rounded-3xl text-[#D4AF37]">
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">{t('settings_title')}</h2>
-              <p className="text-[11px] text-gray-400 dark:text-gray-500">{t('settings_subtitle')}</p>
+              <h2 className="text-lg font-black text-white text-white uppercase tracking-tight">{t('settings_title')}</h2>
+              <p className="text-[11px] text-[#B9B9B9] dark:text-[#B9B9B9]">{t('settings_subtitle')}</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 rounded-3xl hover:bg-[#111111] hover:bg-[#D4AF37]/10 text-[#B9B9B9] hover:text-white hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-4.5 h-4.5" />
           </button>
@@ -282,7 +282,7 @@ export default function SettingsModal({
         <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
           
           {/* Navigation Sidebar (Vertical on Desktop, Horizontal on Mobile) */}
-          <div className="w-full md:w-56 bg-gray-50/50 dark:bg-gray-950/20 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800 flex flex-row md:flex-col p-2.5 gap-1.5 overflow-x-auto md:overflow-x-visible shrink-0 scrollbar-none">
+          <div className="w-full md:w-56 bg-[#111111] bg-[#111111] border-b md:border-b-0 md:border-r border-[#D4AF37]/20 border-[#D4AF37]/20 flex flex-row md:flex-col p-2.5 gap-1.5 overflow-x-auto md:overflow-x-visible shrink-0 scrollbar-none">
             {[
               { id: "compte", label: t('mon_profil'), icon: User },
               { id: "afri_id", label: t('mon_afri_id'), icon: Star },
@@ -306,7 +306,7 @@ export default function SettingsModal({
                         setShowDeleteConfirm(false);
                         if (onLogout) onLogout();
                     }}
-                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer md:w-full select-none text-red-500 hover:bg-red-500/10 md:mt-auto"
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-3xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer md:w-full select-none text-red-500 hover:bg-red-500/10 md:mt-auto"
                   >
                     <TabIcon className="w-4 h-4 shrink-0" />
                     <span>{tab.label}</span>
@@ -321,7 +321,7 @@ export default function SettingsModal({
                      onClick={() => {
                         setActiveLegalPage(tab.id === "confidentialite" ? "privacy" : "terms");
                      }}
-                     className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer md:w-full select-none text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-gray-900/40"
+                     className="flex items-center gap-2.5 px-3 py-2.5 rounded-3xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer md:w-full select-none text-[#B9B9B9] hover:text-white hover:text-white hover:bg-[#D4AF37]/10 dark:hover:bg-gray-900/40"
                    >
                      <TabIcon className="w-4 h-4 shrink-0" />
                      <span>{tab.label}</span>
@@ -336,10 +336,10 @@ export default function SettingsModal({
                     setActiveTab(tab.id as any);
                     setShowDeleteConfirm(false);
                   }}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer md:w-full select-none ${
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-3xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer md:w-full select-none ${
                     isSelected 
-                      ? "bg-orange-500 text-white shadow-sm shadow-orange-500/10 font-black md:translate-x-1" 
-                      : "text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-gray-900/40"
+                      ? "bg-[#D4AF37] text-white shadow-sm shadow-[#D4AF37]/20 font-black md:translate-x-1" 
+                      : "text-[#B9B9B9] hover:text-white hover:text-white hover:bg-[#D4AF37]/10 dark:hover:bg-gray-900/40"
                   }`}
                 >
                   <TabIcon className="w-4 h-4 shrink-0" />
@@ -358,10 +358,10 @@ export default function SettingsModal({
                 {/* Apparence */}
                 <div className="space-y-5">
                   <div>
-                    <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
+                    <h3 className="text-sm font-black text-white text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
                       🎨 Thème visuel
                     </h3>
-                  <p className="text-[11px] text-gray-400 dark:text-gray-500">Choisissez l'interface qui correspond à votre vibe artistique.</p>
+                  <p className="text-[11px] text-[#B9B9B9] dark:text-[#B9B9B9]">Choisissez l'interface qui correspond à votre vibe artistique.</p>
                 </div>
 
               <div className="grid grid-cols-3 gap-2.5">
@@ -393,30 +393,30 @@ export default function SettingsModal({
                           osc.stop(ctx.currentTime + 0.1);
                         } catch (e) {}
                       }}
-                      className={`flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl border text-center transition-all cursor-pointer ${
+                      className={`flex flex-col items-center justify-center gap-1.5 p-4 rounded-3xl border text-center transition-all cursor-pointer ${
                         isSelected
-                          ? "bg-orange-500/5 border-orange-500 text-orange-600 dark:text-orange-400 font-extrabold ring-1 ring-orange-500/20 shadow-sm"
-                          : "bg-gray-50/50 dark:bg-gray-950/20 border-gray-150 dark:border-gray-800 text-gray-400 hover:text-gray-800 dark:hover:text-white"
+                          ? "bg-[#D4AF37]/5 border-[#D4AF37] text-[#D4AF37] text-[#D4AF37] font-extrabold ring-1 ring-[#D4AF37]/20 shadow-sm"
+                          : "bg-[#111111] bg-[#111111] border-[#D4AF37]/20 border-[#D4AF37]/20 text-[#B9B9B9] hover:text-white hover:text-white"
                       }`}
                     >
-                      <ThemeIcon className="w-5 h-5 text-orange-500" />
+                      <ThemeIcon className="w-5 h-5 text-[#D4AF37]" />
                       <span className="text-[11px] font-bold">{theme.label}</span>
-                      <span className="text-[9px] text-gray-400 dark:text-gray-500 font-normal">{theme.desc}</span>
+                      <span className="text-[9px] text-[#B9B9B9] dark:text-[#B9B9B9] font-normal">{theme.desc}</span>
                     </button>
                   );
                 })}
               </div>
               </div>
 
-              <div className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/10 space-y-3.5">
-                  <h4 className="text-xs font-black text-gray-800 dark:text-gray-300 uppercase">Ajustement Régional</h4>
+              <div className="border border-[#D4AF37]/20 border-[#D4AF37]/20 p-4 rounded-3xl bg-[#111111] dark:bg-gray-900/10 space-y-3.5">
+                  <h4 className="text-xs font-black text-white text-[#B9B9B9] uppercase">Ajustement Régional</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase">Commune Gombo</label>
+                      <label className="text-[10px] font-bold text-[#B9B9B9] uppercase">Commune Gombo</label>
                       <select
                         value={region}
                         onChange={(e) => setRegion(e.target.value)}
-                        className="w-full bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl p-2 text-xs font-medium dark:text-white focus:outline-none"
+                        className="w-full bg-[#050505] dark:bg-gray-900 border border-[#D4AF37]/20 border-[#D4AF37]/20 rounded-3xl p-2 text-xs font-medium text-white focus:outline-none"
                       >
                         <option value="Abidjan (Cocody)">Cocody, Abidjan</option>
                         <option value="Abidjan (Marcory)">Marcory, Abidjan</option>
@@ -429,11 +429,11 @@ export default function SettingsModal({
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase">Monnaie</label>
+                      <label className="text-[10px] font-bold text-[#B9B9B9] uppercase">Monnaie</label>
                       <select
                         value={currency}
                         onChange={(e) => setCurrency(e.target.value)}
-                        className="w-full bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl p-2 text-xs font-medium dark:text-white focus:outline-none"
+                        className="w-full bg-[#050505] dark:bg-gray-900 border border-[#D4AF37]/20 border-[#D4AF37]/20 rounded-3xl p-2 text-xs font-medium text-white focus:outline-none"
                       >
                         <option value="FCFA">CFA (FCFA Franc)</option>
                         <option value="EUR">Euros (€)</option>
@@ -443,37 +443,37 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                 <div className="border border-gray-100 dark:border-gray-800 p-5 rounded-2xl bg-[#0b0b0c] space-y-4 mt-8 border-l-4 border-[#D4AF37]">
+                 <div className="border border-[#D4AF37]/20 border-[#D4AF37]/20 p-5 rounded-3xl bg-[#111111] space-y-4 mt-8 border-l-4 border-[#D4AF37]">
                   <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
                     <span>🪘 Sons AFRIGOMBO</span>
                   </h4>
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
-                        <span className="text-xs font-bold text-gray-300">☑ Sons d'effets activés</span>
+                      <label className="flex items-center justify-between p-3 rounded-3xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                        <span className="text-xs font-bold text-[#B9B9B9]">☑ Sons d'effets activés</span>
                         <input
                           type="checkbox"
                           checked={enableUiSounds}
                           onChange={(e) => setEnableUiSounds(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-9 h-5 bg-gray-850 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative"></div>
+                        <div className="w-9 h-5 bg-gray-850 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#050505] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative"></div>
                       </label>
 
-                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
-                        <span className="text-xs font-bold text-gray-300">☑ Vibrations haptiques</span>
+                      <label className="flex items-center justify-between p-3 rounded-3xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                        <span className="text-xs font-bold text-[#B9B9B9]">☑ Vibrations haptiques</span>
                         <input
                           type="checkbox"
                           checked={enableVibration}
                           onChange={(e) => setEnableVibration(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-9 h-5 bg-gray-850 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative"></div>
+                        <div className="w-9 h-5 bg-gray-850 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#050505] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative"></div>
                       </label>
                     </div>
 
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs font-semibold text-gray-400">
+                      <div className="flex items-center justify-between text-xs font-semibold text-[#B9B9B9]">
                         <span className="flex items-center gap-1.5">
                           <Volume2 className="w-4 h-4 text-[#D4AF37]" />
                           Volume principal
@@ -507,7 +507,7 @@ export default function SettingsModal({
                                   try { audioSynth.playTamTam(m === "Immersion"); } catch (_) {}
                                 }
                               }}
-                              className={`py-2 px-3 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
+                              className={`py-2 px-3 rounded-3xl border text-[11px] font-bold transition-all cursor-pointer ${
                                 isSelected
                                   ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37]"
                                   : "bg-transparent border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
@@ -522,7 +522,7 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                <div className="border border-gray-100 dark:border-gray-800 p-5 rounded-2xl bg-[#0b0b0c] space-y-4 border-l-4 border-cyan-500">
+                <div className="border border-[#D4AF37]/20 border-[#D4AF37]/20 p-5 rounded-3xl bg-[#111111] space-y-4 border-l-4 border-cyan-500">
                   <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center justify-between">
                     <span>⚙ Performance & Optimisation</span>
                     <span className="text-[9px] bg-cyan-500/10 text-cyan-400 font-mono py-0.5 px-2 rounded-full uppercase">Stabilité continue</span>
@@ -533,9 +533,9 @@ export default function SettingsModal({
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                      <label className="flex items-center justify-between p-3 rounded-3xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
                         <div className="space-y-0.5">
-                          <span className="text-xs font-bold text-gray-300">🎵 Sons AFRIGOMBO</span>
+                          <span className="text-xs font-bold text-[#B9B9B9]">🎵 Sons AFRIGOMBO</span>
                           <span className="text-[9px] text-zinc-500 block">Sons et effets sonores</span>
                         </div>
                         <input
@@ -544,12 +544,12 @@ export default function SettingsModal({
                           onChange={(e) => setEnableUiSounds(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
+                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#050505] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
                       </label>
 
-                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                      <label className="flex items-center justify-between p-3 rounded-3xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
                         <div className="space-y-0.5">
-                          <span className="text-xs font-bold text-gray-300">✨ Animations</span>
+                          <span className="text-xs font-bold text-[#B9B9B9]">✨ Animations</span>
                           <span className="text-[9px] text-zinc-500 block">Transitions et animations de glissement</span>
                         </div>
                         <input
@@ -558,12 +558,12 @@ export default function SettingsModal({
                           onChange={(e) => setEnableAnimations(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
+                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#050505] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
                       </label>
 
-                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                      <label className="flex items-center justify-between p-3 rounded-3xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
                         <div className="space-y-0.5">
-                          <span className="text-xs font-bold text-gray-300">📶 Économie de données</span>
+                          <span className="text-xs font-bold text-[#B9B9B9]">📶 Économie de données</span>
                           <span className="text-[9px] text-zinc-500 block">Qualité d'image minimale, pas de préchargement</span>
                         </div>
                         <input
@@ -572,12 +572,12 @@ export default function SettingsModal({
                           onChange={(e) => setEnableDataSave(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
+                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#050505] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
                       </label>
 
-                      <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                      <label className="flex items-center justify-between p-3 rounded-3xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
                         <div className="space-y-0.5">
-                          <span className="text-xs font-bold text-gray-300">🔋 Économie batterie</span>
+                          <span className="text-xs font-bold text-[#B9B9B9]">🔋 Économie batterie</span>
                           <span className="text-[9px] text-zinc-500 block">Désactiver vibrations, fréquence réduite</span>
                         </div>
                         <input
@@ -586,11 +586,11 @@ export default function SettingsModal({
                           onChange={(e) => setEnableBatterySave(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
+                        <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#050505] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
                       </label>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-black/40 border border-zinc-850 space-y-2 font-mono text-[10px] text-zinc-400">
+                    <div className="p-3.5 rounded-3xl bg-black/40 border border-zinc-850 space-y-2 font-mono text-[10px] text-zinc-400">
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-500 uppercase tracking-widest">Batterie du dispositif:</span>
                         <span className={`font-bold ${isBatteryLow ? "text-yellow-500 animate-pulse" : "text-emerald-500"}`}>
@@ -621,7 +621,7 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                <div className="border border-gray-100 dark:border-gray-800 p-5 rounded-2xl bg-[#0b0b0c] space-y-4 border-l-4 border-emerald-500">
+                <div className="border border-[#D4AF37]/20 border-[#D4AF37]/20 p-5 rounded-3xl bg-[#111111] space-y-4 border-l-4 border-emerald-500">
                   <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center justify-between">
                     <span>🎵 Ambiance AFRIGOMBO</span>
                     <span className="text-[9px] bg-emerald-500/10 text-emerald-400 font-mono py-0.5 px-2 rounded-full uppercase">Canal Musical Continu</span>
@@ -629,9 +629,9 @@ export default function SettingsModal({
                   <div className="space-y-4">
                     <p className="text-[11px] text-zinc-400 leading-relaxed">Activez une ambiance sonore de fond pour vous plonger au sein d'une véritable maison de production d'Abidjan.</p>
                     
-                    <label className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
+                    <label className="flex items-center justify-between p-3 rounded-3xl bg-neutral-900/40 border border-zinc-800/60 cursor-pointer hover:border-zinc-700/60 transition-all">
                       <div className="space-y-0.5">
-                        <span className="text-xs font-bold text-gray-300">Activer la musique de fond</span>
+                        <span className="text-xs font-bold text-[#B9B9B9]">Activer la musique de fond</span>
                         <p className="text-[9px] text-zinc-500">Boucles d'instruments de prestige (Kora, Djembé, Saxophone)</p>
                       </div>
                       <input
@@ -640,7 +640,7 @@ export default function SettingsModal({
                         onChange={(e) => setEnableAmbientMusic(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-gray-850 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 relative"></div>
+                      <div className="w-9 h-5 bg-gray-850 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#050505] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 relative"></div>
                     </label>
 
                     {enableAmbientMusic && (
@@ -661,7 +661,7 @@ export default function SettingsModal({
                                     else audioSynth.playKoraNote(392.00, 0, 0.2, 0.4);
                                   } catch (_) {}
                                 }}
-                                className={`py-2 px-2.5 rounded-xl border text-[11px] font-bold transition-all text-center cursor-pointer ${
+                                className={`py-2 px-2.5 rounded-3xl border text-[11px] font-bold transition-all text-center cursor-pointer ${
                                   isSelected
                                     ? "bg-emerald-500/10 border-emerald-500 text-[#10B981] font-black"
                                     : "bg-transparent border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
@@ -683,11 +683,11 @@ export default function SettingsModal({
             {activeTab === "langue" && (
               <div className="space-y-6 animate-fadeIn">
                 <div>
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
+                  <h3 className="text-sm font-black text-white text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
                     <Globe className="w-4 h-4 text-[#D4AF37]" />
                     {t('choisir_langue')}
                   </h3>
-                  <p className="text-[11px] text-gray-400 dark:text-gray-500">{t('langue_desc')}</p>
+                  <p className="text-[11px] text-[#B9B9B9] dark:text-[#B9B9B9]">{t('langue_desc')}</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -702,16 +702,16 @@ export default function SettingsModal({
                         key={lang.id}
                         type="button"
                         onClick={() => setLanguage(lang.id as Language)}
-                        className={`flex flex-col items-center justify-center p-5 rounded-2xl border transition-all cursor-pointer ${
+                        className={`flex flex-col items-center justify-center p-5 rounded-3xl border transition-all cursor-pointer ${
                           isSelected 
-                            ? "bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400" 
-                            : "bg-gray-50/50 dark:bg-gray-900/20 border-gray-150 dark:border-gray-800 text-gray-400 hover:text-gray-800 dark:hover:text-white"
+                            ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37] text-[#D4AF37]" 
+                            : "bg-[#111111] dark:bg-gray-900/20 border-[#D4AF37]/20 border-[#D4AF37]/20 text-[#B9B9B9] hover:text-white hover:text-white"
                         }`}
                       >
                         <span className="text-sm font-black uppercase mb-0.5">{lang.label}</span>
                         <span className="text-[9px] font-medium opacity-60 italic">{lang.desc}</span>
                         {isSelected && (
-                          <div className="mt-2 w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                          <div className="mt-2 w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
                         )}
                       </button>
                     );
@@ -724,19 +724,19 @@ export default function SettingsModal({
             {activeTab === "confidentialite" && (
               <div className="space-y-5 animate-fadeIn">
                 <div>
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
+                  <h3 className="text-sm font-black text-white text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
                     🔒 Confidentialité de Recherche
                   </h3>
-                  <p className="text-[11px] text-gray-400 dark:text-gray-500">Contrôlez vos données d’identité sur le showbiz.</p>
+                  <p className="text-[11px] text-[#B9B9B9] dark:text-[#B9B9B9]">Contrôlez vos données d’identité sur le showbiz.</p>
                 </div>
 
                 <div className="space-y-3.5">
                   <label className="flex items-start justify-between cursor-pointer group gap-4">
                     <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
+                      <span className="text-xs font-bold text-white text-[#B9B9B9] group-hover:text-[#D4AF37] transition-colors">
                         🌐 Profil visible publiquement
                       </span>
-                      <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                      <p className="text-[10px] text-[#B9B9B9] dark:text-[#B9B9B9]">
                         Permet aux promoteurs et leaders de groupes de trouver votre avatar dans l'annuaire "Top Talents".
                       </p>
                     </div>
@@ -746,15 +746,15 @@ export default function SettingsModal({
                       onChange={(e) => setPublicProfile(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative shrink-0"></div>
+                    <div className="w-10 h-5.5 bg-gray-200 bg-[#111111] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-[#050505] after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative shrink-0"></div>
                   </label>
 
                   <label className="flex items-start justify-between cursor-pointer group gap-4 pt-1">
                     <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-300 group-hover:text-orange-500 transition-colors">
+                      <span className="text-xs font-bold text-white text-[#B9B9B9] group-hover:text-[#D4AF37] transition-colors">
                         📞 Afficher mes coordonnées WhatsApp
                       </span>
-                      <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                      <p className="text-[10px] text-[#B9B9B9] dark:text-[#B9B9B9]">
                         Votre numéro de téléphone ne sera affiché qu'aux personnes dont vous avez accepté le cachet ou la réservation de gombo.
                       </p>
                     </div>
@@ -764,7 +764,7 @@ export default function SettingsModal({
                       onChange={(e) => setShowContactDetails(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative shrink-0"></div>
+                    <div className="w-10 h-5.5 bg-gray-200 bg-[#111111] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-[#050505] after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative shrink-0"></div>
                   </label>
                 </div>
               </div>
@@ -776,75 +776,75 @@ export default function SettingsModal({
                 {/* Sécurité */}
                 <div className="space-y-5">
                   <div>
-                    <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
+                    <h3 className="text-sm font-black text-white text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
                       🛡️ Sécurité du Compte
                     </h3>
-                  <p className="text-[11px] text-gray-400 dark:text-gray-500">Gérez vos options de sécurité de session et mot de passe.</p>
+                  <p className="text-[11px] text-[#B9B9B9] dark:text-[#B9B9B9]">Gérez vos options de sécurité de session et mot de passe.</p>
                 </div>
 
-                <div className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-55/60 dark:bg-gray-900/10 space-y-3.5">
-                  <h4 className="text-xs font-black text-gray-800 dark:text-gray-300 uppercase">Paramètres de Connexion</h4>
+                <div className="border border-[#D4AF37]/20 border-[#D4AF37]/20 p-4 rounded-3xl bg-gray-55/60 dark:bg-gray-900/10 space-y-3.5">
+                  <h4 className="text-xs font-black text-white text-[#B9B9B9] uppercase">Paramètres de Connexion</h4>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-400">Double Facteur (Simulé)</span>
+                    <span className="text-[#B9B9B9]">Double Facteur (Simulé)</span>
                     <span className="px-2 py-0.5 bg-[#D4AF37]/15 text-[#D4AF37] font-bold rounded text-[10px] uppercase">
                       Actif en simulation
                     </span>
                   </div>
                 </div>
 
-                <form onSubmit={handlePasswordChange} className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-55/60 dark:bg-gray-900/10 space-y-3.5">
-                  <h4 className="text-xs font-black text-gray-800 dark:text-gray-300 uppercase font-sans">Changer mon mot de passe</h4>
+                <form onSubmit={handlePasswordChange} className="border border-[#D4AF37]/20 border-[#D4AF37]/20 p-4 rounded-3xl bg-gray-55/60 dark:bg-gray-900/10 space-y-3.5">
+                  <h4 className="text-xs font-black text-white text-[#B9B9B9] uppercase font-sans">Changer mon mot de passe</h4>
                   
                   {pwChangeSuccess && (
-                     <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs rounded-xl font-bold">
+                     <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs rounded-3xl font-bold">
                        ✓ Votre mot de passe a été modifié avec succès de manière sécurisée !
                      </div>
                   )}
 
                   {pwChangeError && (
-                     <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs rounded-xl font-bold font-sans">
+                     <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs rounded-3xl font-bold font-sans">
                        ⚠️ {pwChangeError}
                      </div>
                   )}
 
                   <div className="space-y-3 text-xs">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase">Ancien mot de passe</label>
+                      <label className="text-[10px] font-bold text-[#B9B9B9] uppercase">Ancien mot de passe</label>
                       <input
                         type="password"
                         value={oldPassword}
                         onChange={(e) => setOldPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl p-2.5 text-xs text-gray-900 dark:text-white"
+                        className="w-full bg-[#050505] dark:bg-gray-900 border border-[#D4AF37]/20 border-[#D4AF37]/20 rounded-3xl p-2.5 text-xs text-white text-white"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase font-sans">Nouveau mot de passe</label>
+                      <label className="text-[10px] font-bold text-[#B9B9B9] uppercase font-sans">Nouveau mot de passe</label>
                       <input
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl p-2.5 text-xs text-gray-900 dark:text-white"
+                        className="w-full bg-[#050505] dark:bg-gray-900 border border-[#D4AF37]/20 border-[#D4AF37]/20 rounded-3xl p-2.5 text-xs text-white text-white"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase font-sans">Confirmer le nouveau mot de passe</label>
+                      <label className="text-[10px] font-bold text-[#B9B9B9] uppercase font-sans">Confirmer le nouveau mot de passe</label>
                       <input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl p-2.5 text-xs text-gray-900 dark:text-white"
+                        className="w-full bg-[#050505] dark:bg-gray-900 border border-[#D4AF37]/20 border-[#D4AF37]/20 rounded-3xl p-2.5 text-xs text-white text-white"
                       />
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-[#D4AF37] hover:bg-[#E06C00] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm mt-2"
+                    className="w-full py-2.5 bg-[#D4AF37] hover:bg-[#E06C00] text-white font-extrabold text-xs uppercase tracking-wider rounded-3xl transition-all cursor-pointer shadow-sm mt-2"
                   >
                     Mettre à jour mon mot de passe
                   </button>
@@ -854,19 +854,19 @@ export default function SettingsModal({
                 {/* Données de Compte */}
                 <div className="space-y-5">
                   <div>
-                    <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
+                    <h3 className="text-sm font-black text-white text-white uppercase tracking-tight flex items-center gap-1.5 mb-1">
                       👤 Données de Compte
                     </h3>
-                  <p className="text-[11px] text-gray-400 dark:text-gray-500">Détails d'authentification et de sécurité.</p>
+                  <p className="text-[11px] text-[#B9B9B9] dark:text-[#B9B9B9]">Détails d'authentification et de sécurité.</p>
                 </div>
 
-                <div className="border border-gray-100 dark:border-gray-800 p-4 rounded-2xl bg-gray-55/60 dark:bg-gray-900/10 space-y-2.5 text-xs">
-                  <div className="flex justify-between items-center py-1.5 border-b border-gray-100/50 dark:border-gray-800/50">
-                    <span className="text-gray-400">Identifiant de session</span>
-                    <span className="font-mono text-gray-900 dark:text-white font-semibold">GOMBO-PRO-CI</span>
+                <div className="border border-[#D4AF37]/20 border-[#D4AF37]/20 p-4 rounded-3xl bg-gray-55/60 dark:bg-gray-900/10 space-y-2.5 text-xs">
+                  <div className="flex justify-between items-center py-1.5 border-b border-[#D4AF37]/20/50 border-[#D4AF37]/20/50">
+                    <span className="text-[#B9B9B9]">Identifiant de session</span>
+                    <span className="font-mono text-white text-white font-semibold">GOMBO-PRO-CI</span>
                   </div>
                   <div className="flex justify-between items-center py-1.5">
-                    <span className="text-gray-400">Statut de sécurité</span>
+                    <span className="text-[#B9B9B9]">Statut de sécurité</span>
                     <span className="px-2 py-0.5 bg-emerald-150 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 font-extrabold rounded-md text-[10px] uppercase">
                       Actif & Sécurisé
                     </span>
@@ -876,8 +876,8 @@ export default function SettingsModal({
                 <div className="space-y-3 pt-3">
                   <label className="flex items-center justify-between cursor-pointer group">
                     <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-300">Newsletter d'Abidjan</span>
-                      <p className="text-[10px] text-gray-400">Recevoir le récapitulatif hebdo des plus gros cachets par email.</p>
+                      <span className="text-xs font-bold text-white text-[#B9B9B9]">Newsletter d'Abidjan</span>
+                      <p className="text-[10px] text-[#B9B9B9]">Recevoir le récapitulatif hebdo des plus gros cachets par email.</p>
                     </div>
                     <input
                       type="checkbox"
@@ -885,26 +885,26 @@ export default function SettingsModal({
                       onChange={(e) => setReceiveNewsletter(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5.5 bg-gray-200 dark:bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative"></div>
+                    <div className="w-10 h-5.5 bg-gray-200 bg-[#111111] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-[#050505] after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4AF37] relative"></div>
                   </label>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                <div className="pt-4 border-t border-[#D4AF37]/20 border-[#D4AF37]/20">
                   {showDeleteConfirm ? (
-                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl space-y-3 font-semibold text-xs text-red-600 dark:text-red-400">
+                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-3xl space-y-3 font-semibold text-xs text-red-600 dark:text-red-400">
                       <p>⚠️ Êtes-vous sûr ? Cette action est irréversible et effacera vos données.</p>
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={deleteAccountSimulate}
-                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold rounded-xl text-[10px] uppercase cursor-pointer"
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold rounded-3xl text-[10px] uppercase cursor-pointer"
                         >
                           Oui, supprimer définitivement
                         </button>
                         <button
                           type="button"
                           onClick={() => setShowDeleteConfirm(false)}
-                          className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-extrabold rounded-xl text-[10px] uppercase cursor-pointer"
+                          className="px-4 py-2 bg-[#111111] bg-[#111111] text-gray-700 text-[#B9B9B9] font-extrabold rounded-3xl text-[10px] uppercase cursor-pointer"
                         >
                           Annuler
                         </button>
@@ -928,26 +928,26 @@ export default function SettingsModal({
             {/* 5. À PROPOS TAB */}
             {activeTab === "support" && (
               <div className="space-y-4 animate-fadeIn">
-                <div className="text-center py-6 bg-gradient-to-tr from-amber-500/5 to-orange-500/5 border border-dashed border-gray-150 dark:border-gray-800/80 rounded-2xl">
+                <div className="text-center py-6 bg-gradient-to-tr from-amber-500/5 to-orange-500/5 border border-dashed border-[#D4AF37]/20 border-[#D4AF37]/20/80 rounded-3xl">
                   <span className="text-3xl">🇨🇮</span>
-                  <p className="text-sm font-black text-gray-900 dark:text-white uppercase mt-2 tracking-wide">Y’A GOMBO MUSIC</p>
-                  <p className="text-[10px] text-orange-500 font-bold">Plateforme de Prestige pour Artistes Ivoiriens</p>
-                  <p className="text-[10px] text-gray-400 mt-1 font-mono">Version 2.5 - Abidjan Edition</p>
+                  <p className="text-sm font-black text-white text-white uppercase mt-2 tracking-wide">Y’A GOMBO MUSIC</p>
+                  <p className="text-[10px] text-[#D4AF37] font-bold">Plateforme de Prestige pour Artistes Ivoiriens</p>
+                  <p className="text-[10px] text-[#B9B9B9] mt-1 font-mono">Version 2.5 - Abidjan Edition</p>
                 </div>
 
-                <div className="space-y-2.5 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                <div className="space-y-2.5 text-xs leading-relaxed text-[#B9B9B9] dark:text-[#B9B9B9]">
                   <p>
-                    <strong className="text-gray-700 dark:text-gray-300">Y’A GOMBO MUSIC</strong> est la première application d'ingénierie musicale de Côte d'Ivoire qui unifie les musiciens, chanteurs et orchestres avec les promoteurs d'événements.
+                    <strong className="text-gray-700 text-[#B9B9B9]">Y’A GOMBO MUSIC</strong> est la première application d'ingénierie musicale de Côte d'Ivoire qui unifie les musiciens, chanteurs et orchestres avec les promoteurs d'événements.
                   </p>
                   <p>
                     Tous les cachets et acomptes payés sur le réseau sont garantis par dépôt bloqué (escrow) 100% sécurisé via Mobile Money (Wave, Orange, MTN, Moov).
                   </p>
-                  <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex justify-between text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold">
+                  <div className="pt-2 border-t border-[#D4AF37]/20 border-[#D4AF37]/20 flex justify-between text-[10px] text-[#B9B9B9] dark:text-[#B9B9B9] uppercase font-bold">
                     <span>© {new Date().getFullYear()} GOMBO SERVICES INC</span>
                     <span>Support : contact@gombo.ci</span>
                   </div>
 
-                  <div className="pt-3 flex flex-wrap gap-2.5 justify-center text-[10px] font-black border-t border-gray-100 dark:border-gray-800">
+                  <div className="pt-3 flex flex-wrap gap-2.5 justify-center text-[10px] font-black border-t border-[#D4AF37]/20 border-[#D4AF37]/20">
                     <button 
                       type="button" 
                       onClick={() => setActiveLegalPage("privacy")} 
@@ -955,7 +955,7 @@ export default function SettingsModal({
                     >
                       Politique de Confidentialité 📋
                     </button>
-                    <span className="text-gray-300 dark:text-gray-700">|</span>
+                    <span className="text-[#B9B9B9] dark:text-gray-700">|</span>
                     <button 
                       type="button" 
                       onClick={() => setActiveLegalPage("terms")} 
@@ -973,7 +973,7 @@ export default function SettingsModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/10 gap-2.5 shrink-0">
+        <div className="p-4 border-t border-[#D4AF37]/20 border-[#D4AF37]/20 flex items-center justify-between bg-[#111111] dark:bg-gray-900/10 gap-2.5 shrink-0">
           <div>
             {onLogout && (
               <button
@@ -982,7 +982,7 @@ export default function SettingsModal({
                   onClose();
                   onLogout();
                 }}
-                className="px-3 py-1.5 text-[10px] tracking-wide font-extrabold uppercase text-red-500 hover:text-white rounded-xl hover:bg-red-500/90 transition-all border border-red-500/20 cursor-pointer"
+                className="px-3 py-1.5 text-[10px] tracking-wide font-extrabold uppercase text-red-500 hover:text-white rounded-3xl hover:bg-red-500/90 transition-all border border-red-500/20 cursor-pointer"
               >
                 Déconnexion
               </button>
@@ -991,7 +991,7 @@ export default function SettingsModal({
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-gray-550 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850/50 transition-all cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-gray-550 hover:text-white dark:text-[#B9B9B9] hover:text-white rounded-3xl hover:bg-[#111111] dark:hover:bg-gray-850/50 transition-all cursor-pointer"
             >
               {t('annuler')}
             </button>
@@ -999,7 +999,7 @@ export default function SettingsModal({
             <button
               onClick={handleSave}
               disabled={saveSuccess || isSaving}
-              className={`px-5 py-2 text-xs font-black uppercase tracking-wider text-white rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-5 py-2 text-xs font-black uppercase tracking-wider text-white rounded-3xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
                 saveSuccess 
                   ? "bg-emerald-500 hover:bg-emerald-500" 
                   : isSaving ? "bg-zinc-700" : "bg-[#D4AF37] hover:bg-[#E06C00]"
