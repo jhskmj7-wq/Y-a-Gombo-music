@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { audioSynth } from "./lib/audio";
 import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
 import { BackgroundMusic } from "./components/BackgroundMusic";
@@ -10,6 +10,7 @@ import { AuthGuard } from "./components/AuthGuard";
 import { ProfileGuard } from "./components/ProfileGuard";
 import CompleteProfile from "./components/CompleteProfile";
 import AuthPage from "./components/AuthPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Lazy load the main Application Layer
 const AdminCentre = lazy(() => import("./components/AdminCentre"));
@@ -49,8 +50,12 @@ function CompleteProfileView() {
 }
 
 function App() {
-  console.log("App Hooks initialized");
-  const { loading: authLoading } = useAuth();
+  console.log("APP START");
+  const { loading: authLoading, currentUser } = useAuth();
+  const location = useLocation();
+  console.log("ROUTE:", location.pathname);
+  console.log("USER:", currentUser);
+  console.log("APP LOADED");
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search;
@@ -138,9 +143,10 @@ function App() {
   }
 
   return (
-    <div className={`h-screen overflow-hidden font-sans antialiased transition-colors duration-300 ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#1F2937]"}`}>
-      
-      {/* 1. PREMIUM SPLASH SCREEN */}
+    <ErrorBoundary>
+      <div className={`h-screen overflow-hidden font-sans antialiased transition-colors duration-300 ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#1F2937]"}`}>
+        
+        {/* 1. PREMIUM SPLASH SCREEN */}
       <AnimatePresence>
         {showSplash && (
           <motion.div
@@ -293,7 +299,8 @@ function App() {
       {/* 3. PERSISTENT BACKGROUND MUSIC */}
       <BackgroundMusic />
     </div>
-  );
+  </ErrorBoundary>
+);
 }
 
 export default App;
