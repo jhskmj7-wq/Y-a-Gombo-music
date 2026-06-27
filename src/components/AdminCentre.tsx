@@ -997,7 +997,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   // --- FIRESTORE ACTIVE SYNC ROUTINE ---
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || !db) return;
     // Attempt Firestore subscription & binding
     try {
       const qUsers = collection(db, "users");

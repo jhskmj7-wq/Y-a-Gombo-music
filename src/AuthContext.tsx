@@ -1,11 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Lock } from "lucide-react";
-import { signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
-import { auth, db, googleProvider } from "./lib/firebase";
-import { gomboDB } from "./firebase";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { gomboDB, gomboAuth } from "./firebase";
 import { UserProfile } from "./types";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   currentUser: any | null;       
@@ -28,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsub = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
       console.log("AUTH STATE:", firebaseUser);
       setCurrentUser(firebaseUser || null);
 
@@ -50,65 +47,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsub;
   }, []);
 
-  useEffect(() => {
-    const checkRedirect = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        console.log("Résultat Google:", result);
-        if (result?.user) {
-          console.log("Utilisateur:", result.user.uid);
-          const user = result.user;
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (!userDoc.exists()) {
-            await setDoc(doc(db, "users", user.uid), {
-              uid: user.uid,
-              email: user.email || "",
-              displayName: user.displayName || "",
-              photoURL: user.photoURL || "",
-              provider: "google",
-              isProfileComplete: false,
-              createdAt: serverTimestamp()
-            });
-            navigate("/complete-profile");
-          } else {
-            navigate("/home");
-          }
-        }
-      } catch (error) {
-        console.error("Erreur redirect:", error);
-      }
-    };
-    checkRedirect();
-  }, [navigate]);
-
   const signIn = async (email: string, password: string) => {
-    return await signInWithEmailAndPassword(auth, email, password);
+    return await gomboAuth.signIn(email, password);
   };
 
-  const signUp = async (email: string, password: string, role: string, details: any) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    await setDoc(doc(db, "users", user.uid), {
-      uid: user.uid,
-      email: user.email,
-      role: role,
-      ...details,
-      createdAt: serverTimestamp()
-    });
-    return userCredential;
+  const signUp = async (email: string, password: string, role: "musicien" | "client", details: any) => {
+    return await gomboAuth.signUp(email, password, role, details);
   };
 
   const loginWithGoogle = async () => {
     try {
       console.log("🚀 Début Google Login");
-      await signInWithRedirect(auth, googleProvider);
+      await gomboAuth.loginWithGoogle();
     } catch (error) {
       console.error("❌ Google Login Error:", error);
     }
   };
 
   const logout = async () => {
-    await signOut(auth);
+    await gomboAuth.signOut();
   };
 
   const refreshProfile = async () => {
