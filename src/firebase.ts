@@ -38,7 +38,8 @@ import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPos
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
 const savedMock = "false";
-export const isFirebaseMock = false;
+const apiKeyVal = import.meta.env.VITE_FIREBASE_API_KEY;
+export const isFirebaseMock = !apiKeyVal || apiKeyVal === "" || apiKeyVal.includes("Fallback");
 export const setIsFirebaseMock = (val: boolean) => {
   console.warn("setIsFirebaseMock called - mock mode is disabled.");
 };

@@ -18,40 +18,24 @@ import {
 } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyFakeKey_GomboMusik_Fallback",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "afrigombo-fallback.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "afrigombo-fallback",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "afrigombo-fallback.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1234567890",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1234567890:web:abcdef123456"
 };
 
-const hasConfig = typeof firebaseConfig.apiKey === "string" && firebaseConfig.apiKey.trim() !== "";
+export const app = getApps().length
+  ? getApp()
+  : initializeApp(firebaseConfig);
 
-export const app = hasConfig
-  ? (getApps().length ? getApp() : initializeApp(firebaseConfig))
-  : null;
+export const auth = getAuth(app);
 
-export const auth = app ? getAuth(app) : null;
+export const db = getFirestore(app);
 
-export const db = app ? getFirestore(app) : null;
-
-export const storage = app ? getStorage(app) : null;
+export const storage = getStorage(app);
 
 export const googleProvider = new GoogleAuthProvider();
 
-console.log(
-  "🔥 FIREBASE PROJECT:",
-  firebaseConfig.projectId
-);
-
-console.log(
-  "AUTH:",
-  auth
-);
-
-console.log(
-  "DB:",
-  db
-);
+console.log("AUTH READY:", auth);

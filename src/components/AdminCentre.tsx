@@ -120,7 +120,11 @@ import {
   Brain,
   LifeBuoy,
   Video,
-  Play
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Smartphone
 } from "lucide-react";
 import {
   AreaChart,
@@ -658,6 +662,65 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   }, []);
 
   const [activeArtistId, setActiveArtistId] = useState<string>("user_3");
+  const [isDemoPlaying, setIsDemoPlaying] = useState<boolean>(false);
+  const [demoProgress, setDemoProgress] = useState<number>(35);
+  const [activeDemoTrackIndex, setActiveDemoTrackIndex] = useState<number>(0);
+
+  useEffect(() => {
+    if (currentUser) {
+      const targetId = currentUser.uid;
+      setActiveArtistId(targetId);
+      
+      setUsers(prev => {
+        const exists = prev.some(u => u.id === targetId);
+        const name = profile?.displayName || currentUser.displayName || currentUser.email?.split("@")[0] || "Artiste Gombo";
+        const email = profile?.email || currentUser.email || "";
+        const avatarUrl = profile?.avatarUrl || currentUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
+        const artisticName = profile?.artisticName || name;
+        
+        const mergedUser: any = {
+          id: targetId,
+          name: name,
+          email: email,
+          artisticName: artisticName,
+          avatarUrl: avatarUrl,
+          commune: profile?.commune || "Cocody",
+          isCertified: profile?.isCertified || true,
+          kycStatus: profile?.kycStatus || "approved",
+          status: "active",
+          specialties: profile?.specialties || ["Artiste", "Chanteur", "Compositeur"],
+          groups: profile?.groups || ["Afrigombo Elite Orchestra"],
+          performance: { 
+            level: profile?.level || 4, 
+            score: profile?.score || 85, 
+            artisticName: artisticName, 
+            commune: profile?.commune || "Cocody", 
+            specialties: profile?.specialties || ["Artiste", "Chanteur"], 
+            groups: profile?.groups || ["Afrigombo"] 
+          },
+          registrationDate: profile?.createdAt?.split("T")[0] || new Date().toISOString().split("T")[0],
+          revenues: profile?.revenues || 123510,
+          gombosCompleted: profile?.gombosCompleted || 12,
+          flagsCount: 0,
+          tracksCount: profile?.tracksCount || 8,
+          concertsCount: profile?.concertsCount || 5,
+          awardsCount: profile?.awardsCount || 3,
+          collabsCount: profile?.collabsCount || 7,
+          followersCount: profile?.followersCount || 142,
+          postsCount: profile?.postsCount || 12,
+          engagementRate: profile?.engagementRate || "12.4%",
+          supportsCount: profile?.supportsCount || 56,
+          bio: profile?.bio || "Artiste passionné. Je transforme les rythmes en héritage. Bienvenue dans mon univers."
+        };
+        
+        if (exists) {
+          return prev.map(u => u.id === targetId ? { ...u, ...mergedUser } : u);
+        } else {
+          return [mergedUser, ...prev];
+        }
+      });
+    }
+  }, [currentUser, profile]);
   const [localSaved, setLocalSaved] = useState<boolean>(true);
   const [autoSaveActive, setAutoSaveActive] = useState<boolean>(false);
 
@@ -2352,7 +2415,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
                   title="Profil Utilisateur" 
                   onClick={() => { 
-                    requireGoogleAuthThen(() => {
+                    requireAuthThen(() => {
                       setActiveMenu("user_heritage"); 
                       setViewingGomboIdDetail(false); 
                     });
@@ -4610,211 +4673,311 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       </div>
                     </div>
 
-                    {/* THREE COLUMNS STATISTICS ROW */}
-                    <div className="grid grid-cols-3 gap-3">
-                      {/* Abonnés */}
-                      <div className="p-4 rounded-2xl bg-zinc-950/30 border border-zinc-900/60 shadow-lg text-center space-y-1">
-                        <Users className="w-5 h-5 text-[#D4AF37] mx-auto opacity-90" />
-                        <strong className="text-xl font-sans font-black text-white block">
-                          {currentArtist.followersCount || 142}
-                        </strong>
-                        <span className="text-[8px] xs:text-[9px] text-zinc-500 font-mono block uppercase tracking-wider font-bold">
-                          ABONNÉS
+                    {/* =========================================================================
+                               ESPACE MUSICIEN SOUVERAIN (9 MODULES DORÉS & NOIRS)
+                       ========================================================================= */}
+                    
+                    {/* 1. MA DÉMO (VIDÉO OU AUDIO PLAYER) */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/30 shadow-2xl space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5">
+                          <span className="animate-pulse">●</span> MA DÉMO (AUDITION OFFICIELLE)
+                        </span>
+                        <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
+                          Studio Gombo, Abidjan
                         </span>
                       </div>
-
-                      {/* Publications */}
-                      <div className="p-4 rounded-2xl bg-zinc-950/30 border border-zinc-900/60 shadow-lg text-center space-y-1">
-                        <div className="text-xl leading-none italic text-[#D4AF37] font-bold">🎚️</div>
-                        <strong className="text-xl font-sans font-black text-white block">
-                          {currentArtist.postsCount || 12}
-                        </strong>
-                        <span className="text-[8px] xs:text-[9px] text-zinc-500 font-mono block uppercase tracking-wider font-bold">
-                          PUBLICATIONS
-                        </span>
-                      </div>
-
-                      {/* Engagement */}
-                      <div className="p-4 rounded-2xl bg-zinc-950/30 border border-zinc-900/60 shadow-lg text-center space-y-1">
-                        <TrendingUp className="w-5 h-5 text-[#D4AF37] mx-auto opacity-90" />
-                        <strong className="text-xl font-sans font-black text-white block">
-                          {currentArtist.engagementRate || "12.4%"}
-                        </strong>
-                        <span className="text-[8px] xs:text-[9px] text-zinc-500 font-mono block uppercase tracking-wider font-bold">
-                          ENGAGEMENT
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* BIOGRAPHY SECTION CARD */}
-                    <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl flex items-start justify-between gap-4">
-                      <div className="space-y-1.5 flex-1 text-left">
-                        <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block">
-                          BIOGRAPHIE
-                        </span>
-                        <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-                          {currentArtist.bio || "Artiste afrobeat passionné. Je transforme les rythmes en héritage. Bienvenue dans mon univers."}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setActiveMenu("user_edit_profile");
-                          try { audioSynth.playValidationSuccess(); } catch (err) {}
-                        }}
-                        className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-[#D4AF37]/50 text-[10px] font-mono font-bold text-zinc-300 uppercase rounded-full flex items-center gap-1 transition-all cursor-pointer active:scale-95 shrink-0"
-                      >
-                        ✏️ MODIFIER
-                      </button>
-                    </div>
-
-                    {/* SECTION: MA CARRIÈRE GOMBO */}
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-sans font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5 pl-1">
-                        <span>☁️</span> MA CARRIÈRE GOMBO
-                      </h3>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {/* item 1: morceaux publiés */}
-                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
-                          <Music className="w-5 h-5 text-[#D4AF37] mx-auto" strokeWidth={1.5} />
-                          <strong className="text-2xl font-sans font-black text-white block mt-1">
-                            {currentArtist.tracksCount || 8}
-                          </strong>
-                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
-                            MORCEAUX <br /> publiés
-                          </span>
-                        </div>
-
-                        {/* item 2: concerts réalisés */}
-                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
-                          <Radio className="w-5 h-5 text-[#D4AF37] mx-auto animate-pulse" strokeWidth={1.5} />
-                          <strong className="text-2xl font-sans font-black text-white block mt-1">
-                            {currentArtist.concertsCount || 5}
-                          </strong>
-                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
-                            CONCERTS <br /> réalisés
-                          </span>
-                        </div>
-
-                        {/* item 3: distinctions reçues */}
-                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
-                          <Award className="w-5 h-5 text-[#D4AF37] mx-auto" strokeWidth={1.5} />
-                          <strong className="text-2xl font-sans font-black text-white block mt-1">
-                            {currentArtist.awardsCount || 3}
-                          </strong>
-                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
-                            DISTINCTIONS <br /> reçues
-                          </span>
-                        </div>
-
-                        {/* item 4: collabos */}
-                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
-                          <div className="text-xl leading-none text-[#D4AF37] font-bold">🤝</div>
-                          <strong className="text-2xl font-sans font-black text-white block mt-1">
-                            {currentArtist.collabsCount || 7}
-                          </strong>
-                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
-                            COLLABORATIONS <br /> réalisées
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* SECTION: MONÉTISATION */}
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-sans font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5 pl-1">
-                        <span>🪙</span> MONÉTISATION
-                      </h3>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {/* item 1: Gawa revenue */}
-                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
-                          <div className="text-xl leading-none text-[#D4AF37]">💳</div>
-                          <strong className="text-[15px] font-mono font-black text-white block mt-1">
-                            {(currentArtist.revenues || 123510).toLocaleString("fr-FR")}
-                          </strong>
-                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
-                            GAWA GAGNÉS
-                          </span>
-                        </div>
-
-                        {/* item 2: Boosts achetés */}
-                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
-                          <Zap className="w-5 h-5 text-[#D4AF37] mx-auto animate-bounce duration-1000" strokeWidth={1.5} />
-                          <strong className="text-2xl font-sans font-black text-white block mt-1">
-                            {currentArtist.boostsCount || 4}
-                          </strong>
-                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
-                            BOOSTS ACHETÉS
-                          </span>
-                        </div>
-
-                        {/* item 3: Candidatures premium */}
-                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
-                          <Star className="w-5 h-5 text-[#D4AF37] mx-auto" strokeWidth={1.5} />
-                          <strong className="text-2xl font-sans font-black text-white block mt-1">
-                            {currentArtist.premiumApplicationsCount || 3}
-                          </strong>
-                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
-                            CANDIDATURES <br /> PREMIUM
-                          </span>
-                        </div>
-
-                        {/* item 4: supports received */}
-                        <div className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl text-center space-y-1 shadow-lg">
-                          <Heart className="w-5 h-5 text-[#D4AF37] mx-auto" strokeWidth={1.5} />
-                          <strong className="text-2xl font-sans font-black text-white block mt-1">
-                            {currentArtist.supportsCount || 56}
-                          </strong>
-                          <span className="text-[9px] text-zinc-500 font-mono block uppercase tracking-wider leading-tight">
-                            SOUTIENS <br /> REÇUS
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* SECTION: MES DOCUMENTS GOMBO */}
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-sans font-black tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5 pl-1">
-                        <span>📄</span> MES DOCUMENTS GOMBO
-                      </h3>
-
-                      <div
-                        onClick={() => {
-                          setViewingGomboIdDetail(true);
-                          try { audioSynth.playValidationSuccess(); } catch (err) {}
-                        }}
-                        className="p-4 bg-zinc-950/30 border border-zinc-900/60 rounded-2xl flex items-center justify-between gap-2 shadow-lg cursor-pointer hover:border-[#D4AF37]/35 transition-all select-none"
-                      >
-                        <div className="flex-1 grid grid-cols-3 divide-x divide-zinc-900/60 gap-1 text-center">
-                          {/* doc 1 */}
-                          <div className="px-1 space-y-1">
-                            <div className="text-xl leading-none">🪪</div>
-                            <h5 className="text-[10px] font-sans font-bold text-white block truncate">Pièce d'identité</h5>
-                            <span className="inline-block text-[8px] font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-                              Vérifiée
+                      
+                      <div className="p-4 bg-zinc-900/40 rounded-xl border border-zinc-900 flex items-center gap-4">
+                        <button
+                          onClick={() => {
+                            setIsDemoPlaying(!isDemoPlaying);
+                            try { audioSynth.playKoraNote(isDemoPlaying ? 261 : 392, 0, 0.1, 0.4); } catch(_) {}
+                          }}
+                          className="w-12 h-12 rounded-full bg-[#D4AF37] text-black flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)] shrink-0"
+                        >
+                          {isDemoPlaying ? <Pause className="w-5 h-5 stroke-[2.5]" /> : <Play className="w-5 h-5 translate-x-0.5 stroke-[2.5]" />}
+                        </button>
+                        
+                        <div className="flex-1 min-w-0 space-y-1.5 text-left">
+                          <div className="flex justify-between items-start gap-2">
+                            <h4 className="text-sm font-sans font-black text-white truncate uppercase">
+                              SOUVERAINETÉ (Teaser Live)
+                            </h4>
+                            <span className="text-[10px] font-mono text-[#D4AF37] whitespace-nowrap">
+                              {isDemoPlaying ? "Lecture en cours" : "En pause"}
                             </span>
                           </div>
-
-                          {/* doc 2 */}
-                          <div className="px-1 space-y-1">
-                            <div className="text-xl leading-none">🛂</div>
-                            <h5 className="text-[10px] font-sans font-bold text-white block truncate">Passeport</h5>
-                            <span className="inline-block text-[8px] font-mono uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded">
-                              En attente
-                            </span>
+                          
+                          {/* Progress bar */}
+                          <div className="relative w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                            <div 
+                              className="absolute left-0 top-0 h-full bg-[#D4AF37] transition-all duration-300" 
+                              style={{ width: `${isDemoPlaying ? demoProgress : 35}%` }}
+                            />
                           </div>
-
-                          {/* doc 3 */}
-                          <div className="px-1 space-y-1">
-                            <div className="text-xl leading-none">🎓</div>
-                            <h5 className="text-[10px] font-sans font-bold text-white block truncate">Certificat artistique</h5>
-                            <span className="inline-block text-[8px] font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-                              Vérifiée
-                            </span>
+                          
+                          <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500">
+                            <span>{isDemoPlaying ? "01:24" : "00:45"}</span>
+                            <span>03:15</span>
                           </div>
                         </div>
-                        <span className="text-[#D4AF37] font-black text-sm px-1 shrink-0">{`>`}</span>
+                      </div>
+                      
+                      {/* Interactive visualizer using flex bars with CSS delay */}
+                      <div className="h-8 flex items-end justify-center gap-1 bg-black/40 rounded-lg p-2 overflow-hidden border border-zinc-900">
+                        {Array.from({ length: 24 }).map((_, i) => (
+                          <div 
+                            key={i} 
+                            className="w-1 bg-[#D4AF37] rounded-full transition-all"
+                            style={{ 
+                              height: isDemoPlaying 
+                                ? `${Math.floor(Math.random() * 80) + 20}%` 
+                                : '15%',
+                              opacity: isDemoPlaying ? 0.85 : 0.3,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 2. MES MORCEAUX (LISTING AVEC INTERACTION) */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
+                      <div className="flex justify-between items-center pb-2 border-b border-zinc-900">
+                        <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5">
+                          <span>🎙️</span> MES MORCEAUX ({currentArtist.tracksCount || 8})
+                        </span>
+                        <span className="text-[9px] font-mono text-zinc-500">Streams Totaux: 325K</span>
+                      </div>
+                      
+                      <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                        {[
+                          { title: "Kpalogo Rhythm", plays: "124.5K", duration: "03:45", id: 1 },
+                          { title: "Gombo Groove (Sénat Mix)", plays: "82.1K", duration: "04:12", id: 2 },
+                          { title: "Symphonie d'Abidjan", plays: "51.8K", duration: "02:58", id: 3 },
+                          { title: "Souveraineté (Acoustique)", plays: "38.2K", duration: "03:15", id: 4 },
+                          { title: "L'Impôt d'Amour", plays: "28.4K", duration: "03:50", id: 5 },
+                        ].map((track, idx) => (
+                          <div 
+                            key={track.id} 
+                            onClick={() => {
+                              setActiveDemoTrackIndex(idx);
+                              setIsDemoPlaying(true);
+                              try { audioSynth.playKoraNote(392 + idx * 40, 0, 0.08, 0.25); } catch(_) {}
+                            }}
+                            className={`p-3 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all ${
+                              activeDemoTrackIndex === idx && isDemoPlaying
+                                ? "bg-[#D4AF37]/10 border-[#D4AF37]/45" 
+                                : "bg-zinc-900/40 border-zinc-900/60 hover:border-zinc-800"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="text-xs font-mono text-[#D4AF37] font-bold w-4">{idx + 1}</span>
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-sans font-bold text-white truncate">{track.title}</h4>
+                                <span className="text-[9px] font-mono text-zinc-500">🔥 {track.plays} écoutes</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-mono text-zinc-500">{track.duration}</span>
+                              <button className="w-6 h-6 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center text-[#D4AF37] shrink-0">
+                                {activeDemoTrackIndex === idx && isDemoPlaying ? <Pause className="w-2.5 h-2.5" /> : <Play className="w-2.5 h-2.5 translate-x-0.5" />}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 3. PERFORMANCES TIMELINE */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                        🎸 PERFORMANCES (LIVE & SCÈNE)
+                      </span>
+                      <div className="space-y-4 text-left">
+                        {[
+                          { event: "Femua Festival 2026", venue: "Grande Scène Anoumabo, Marcory", date: "15 Juin 2026", audience: "15K spectateurs", type: "Tête d'affiche" },
+                          { event: "Acoustic Session Gombo", venue: "Palais de la Culture, Treichville", date: "12 Avril 2026", audience: "800 VIPs", type: "Session Intime" },
+                          { event: "Gombo Lab Launch", venue: "Gombo Space, Cocody", date: "05 Janv 2026", audience: "350 pros", type: "Showcase" },
+                        ].map((perf, idx) => (
+                          <div key={idx} className="relative pl-5 border-l-2 border-[#D4AF37]/30 space-y-1">
+                            <div className="absolute left-[-6px] top-1 w-2.5 h-2.5 rounded-full bg-[#D4AF37] border border-black" />
+                            <div className="flex justify-between items-start gap-2">
+                              <h4 className="text-xs font-sans font-black text-white uppercase">{perf.event}</h4>
+                              <span className="text-[9px] bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 px-1.5 py-0.5 rounded font-mono font-bold">{perf.type}</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-400 font-sans">{perf.venue}</p>
+                            <div className="flex justify-between text-[9px] font-mono text-zinc-500 pt-0.5">
+                              <span>📅 {perf.date}</span>
+                              <span>👥 {perf.audience}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 4. DISTINCTIONS CARD */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                        🏆 DISTINCTIONS & PRIX
+                      </span>
+                      <div className="grid grid-cols-1 gap-3 text-left">
+                        {[
+                          { title: "Meilleur Espoir Afrobeat 2025", issuer: "Award d'Or Gombo de l'Académie", date: "Déc 2025" },
+                          { title: "Single d'Or Certifié Afrigombo", issuer: "Pour 'Kpalogo Rhythm' (100K+ streams)", date: "Oct 2025" },
+                          { title: "Ambassadeur de la Souveraineté", issuer: "Collectif des Créateurs d'Abidjan", date: "Aout 2025" },
+                        ].map((dist, idx) => (
+                          <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shrink-0 text-md">
+                              🏅
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-sans font-black text-white truncate uppercase">{dist.title}</h4>
+                              <p className="text-[10px] text-zinc-400 truncate">{dist.issuer}</p>
+                              <span className="text-[8px] font-mono text-zinc-500">Délivré en {dist.date}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 5. STATS CLÉS (STATISTIQUES SOUVERAINES) */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                        📈 STATISTIQUES SHOWBIZ
+                      </span>
+                      <div className="space-y-3.5 text-left">
+                        {[
+                          { label: "Engagement du Public", val: "12.4%", desc: "+2.1% ce mois-ci", progress: 85 },
+                          { label: "Durée d'écoute moyenne", val: "03:12 mins", desc: "Dans le Top 5% National", progress: 78 },
+                          { label: "Taux de complétion concerts", val: "100%", desc: "5 prestations impeccables", progress: 100 },
+                          { label: "Indice de Prestige Gombo", val: "99.9", desc: "Rang Elite Souverain", progress: 99 },
+                        ].map((stat, idx) => (
+                          <div key={idx} className="space-y-1.5">
+                            <div className="flex justify-between items-end">
+                              <div>
+                                <span className="text-xs font-sans font-bold text-white block">{stat.label}</span>
+                                <span className="text-[9px] text-zinc-500 font-mono">{stat.desc}</span>
+                              </div>
+                              <span className="text-sm font-mono font-black text-[#D4AF37]">{stat.val}</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/50">
+                              <div 
+                                className="h-full bg-gradient-to-r from-zinc-800 to-[#D4AF37] rounded-full" 
+                                style={{ width: `${stat.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 6. FANS (TRIBU SOUVERAINE) */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                        👥 MA TRIBU (TOP FANS)
+                      </span>
+                      <div className="space-y-3 text-left">
+                        {[
+                          { name: "Fatou Diaby", role: "Mécène d'Or", quote: "Ton rythme fait battre l'Afrique !", gawas: "25K Gawa", avatar: "👩🏾‍💼" },
+                          { name: "Jean-Marc Koffi", role: "Vibe Master", quote: "Le vrai son de Cocody, sans filtre.", gawas: "18K Gawa", avatar: "👨🏾‍💻" },
+                          { name: "Awa Touré", role: "Sponsor de Coeur", quote: "Hâte de te voir sur scène à Bouaké !", gawas: "12K Gawa", avatar: "👩🏾‍🎤" },
+                        ].map((fan, idx) => (
+                          <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="w-8 h-8 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center text-md">{fan.avatar}</span>
+                                <div>
+                                  <h4 className="text-xs font-sans font-black text-white">{fan.name}</h4>
+                                  <span className="text-[9px] text-[#D4AF37] font-mono font-bold uppercase">{fan.role}</span>
+                                </div>
+                              </div>
+                              <span className="text-[10px] font-mono bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 px-2 py-0.5 rounded-full font-bold">{fan.gawas}</span>
+                            </div>
+                            <p className="text-[11px] italic text-zinc-400 font-sans pl-1">"{fan.quote}"</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 7. PUBLICATIONS POPULAIRES */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                        🔥 PUBLICATIONS POPULAIRES
+                      </span>
+                      <div className="space-y-3 text-left">
+                        {[
+                          { text: "Répétition générale avant le grand concert de samedi ! Le show s'annonce légendaire... 🎚️🎙️", likes: 245, comments: 42, views: "2.5K" },
+                          { text: "Merci pour la certification Gombo ID ! La souveraineté artistique est en marche. Ensemble pour le sommet. 🙌🇨🇮", likes: 189, comments: 27, views: "1.9K" },
+                        ].map((post, idx) => (
+                          <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl space-y-2.5">
+                            <p className="text-xs text-zinc-300 leading-relaxed font-sans">{post.text}</p>
+                            <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 pt-1 border-t border-zinc-900/80">
+                              <span>❤️ {post.likes}</span>
+                              <span>💬 {post.comments}</span>
+                              <span>👁️ {post.views}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 8. ÉVÉNEMENTS À VENIR */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                        📅 ÉVÉNEMENTS À VENIR
+                      </span>
+                      <div className="space-y-3 text-left">
+                        {[
+                          { title: "Gombo Live Tour", date: "12 Nov 2026", time: "20:00", loc: "Palais de la Culture, Treichville", price: "5,000 FCFA" },
+                          { title: "Masterclass Beatmaking", date: "18 Déc 2026", time: "15:30", loc: "Gombo Lab, Cocody", price: "Gratuit (Sur Invitation)" },
+                        ].map((evt, idx) => (
+                          <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl flex items-center gap-3">
+                            <div className="p-2.5 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl text-center flex flex-col justify-center items-center shrink-0 min-w-[55px]">
+                              <span className="text-[10px] font-sans font-black text-white uppercase">{evt.date.split(" ")[1]}</span>
+                              <span className="text-sm font-mono font-black text-[#D4AF37]">{evt.date.split(" ")[0]}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-xs font-sans font-black text-white truncate uppercase">{evt.title}</h4>
+                              <p className="text-[10px] text-zinc-400 truncate">{evt.loc}</p>
+                              <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 pt-0.5">
+                                <span>⏰ {evt.time}</span>
+                                <span className="text-[#D4AF37] font-bold">{evt.price}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 9. MON RÉSEAU SHOWBIZ */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                        🌐 MON RÉSEAU SHOWBIZ
+                      </span>
+                      <div className="grid grid-cols-1 gap-2.5 text-left">
+                        {[
+                          { role: "Manager Principal", name: "Bakary Diarrassouba (Vieux Bamba)", contact: "bamba@afrigombo.ci" },
+                          { role: "Label de Production", name: "Afrigombo Records", contact: "production@afrigombo.ci" },
+                          { role: "Booking Officiel", name: "Kady de Yopougon", contact: "booking@afrigombo.ci" },
+                        ].map((net, idx) => (
+                          <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl flex justify-between items-center gap-2">
+                            <div className="min-w-0">
+                              <span className="text-[9px] font-mono text-[#D4AF37] font-bold uppercase block">{net.role}</span>
+                              <h4 className="text-xs font-sans font-black text-white truncate">{net.name}</h4>
+                              <span className="text-[9px] font-mono text-zinc-500 block truncate">{net.contact}</span>
+                            </div>
+                            <button 
+                              onClick={() => {
+                                addToTerminal(`[CONTACT] Copie des coordonnées de : ${net.name}`);
+                                try { audioSynth.playValidationSuccess(); } catch(_) {}
+                              }}
+                              className="px-2.5 py-1.5 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 rounded-lg text-[9px] font-mono text-zinc-300 uppercase transition-all whitespace-nowrap active:scale-95 cursor-pointer"
+                            >
+                              Copier
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -7743,7 +7906,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <button
             id="user-nav-heritage"
             onClick={() => {
-              requireGoogleAuthThen(() => {
+              requireAuthThen(() => {
                 setActiveMenu("user_heritage");
                 setViewingGomboIdDetail(false);
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
