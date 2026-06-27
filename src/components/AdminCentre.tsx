@@ -1145,6 +1145,24 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         console.warn("🔐 Posts sync limited or offline:", error.message);
       });
 
+      const qRenforts = collection(db, "renforts");
+      const unsubscribeRenforts = onSnapshot(qRenforts, (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedRenforts: any[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedRenforts.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          fetchedRenforts.sort((a, b) => {
+            const aDate = new Date(a.createdAt || a.date).getTime();
+            const bDate = new Date(b.createdAt || b.date).getTime();
+            return bDate - aDate;
+          });
+          setRenforts(fetchedRenforts);
+        }
+      }, (error) => {
+        console.warn("🔐 Renforts sync limited or offline:", error.message);
+      });
+
       const qLogs = collection(db, "admin_logs");
       const unsubscribeLogs = onSnapshot(qLogs, (snapshot) => {
         if (!snapshot.empty) {
@@ -1166,6 +1184,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         unsubscribeReviews();
         unsubscribeAlerts();
         unsubscribePosts();
+        unsubscribeRenforts();
         unsubscribeLogs();
       };
     } catch (e) {
@@ -2415,10 +2434,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
                   title="Profil Utilisateur" 
                   onClick={() => { 
-                    requireAuthThen(() => {
-                      setActiveMenu("user_heritage"); 
-                      setViewingGomboIdDetail(false); 
-                    });
+                    setActiveMenu("user_heritage"); 
+                    setViewingGomboIdDetail(false); 
                   }}
                 >
                   {profile?.avatarUrl || currentUser?.photoURL ? (
@@ -4377,63 +4394,18 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {activeMenu === "user_heritage" && (() => {
-                const isGoogleConnected = currentUser && (
-                  currentUser.providerData?.some((p: any) => p.providerId === "google.com" || p.providerId === "google") ||
-                  profile?.provider === "google.com" ||
-                  currentUser.email?.endsWith("@gmail.com")
-                );
-
-                if (!isGoogleConnected) {
-                  return (
-                    <div className="max-w-md mx-auto my-12 p-6.5 bg-[#09090b]/90 border border-red-500/30 rounded-3xl text-center space-y-6 shadow-2xl animate-fadeIn">
-                      <div className="flex justify-center">
-                        <div className="w-16 h-16 rounded-full bg-red-950/20 border border-red-500/35 flex items-center justify-center text-3xl">
-                          🔐
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <h2 className="text-sm font-sans font-black tracking-widest text-red-500 uppercase">
-                          ACCÈS STRICTEMENT RESTREINT
-                        </h2>
-                        <p className="text-xs text-zinc-300 leading-relaxed">
-                          La section <strong className="text-[#D4AF37]">Mon Héritage</strong> (droits BURIDA, certification Gombo ID et historique de prestige d'Abidjan) requiert obligatoirement une authentification via un compte Google officiel.
-                        </p>
-                      </div>
-
-                      <div className="bg-black/60 p-4 rounded-2xl border border-zinc-900 text-center">
-                        <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-wider block mb-1">PROTÉGER VOTRE PATRIMOINE</span>
-                        <p className="text-[11px] text-zinc-500 leading-normal">
-                          Pour éradiquer les usurpateurs et certifier la fiabilité d'AFRIGOMBO, la signature Google est la clé unique d'accès.
-                        </p>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        <button
-                          onClick={async () => {
-                            try { audioSynth.playKoraNote(392, 0, 0.08, 0.3); } catch(_) {}
-                            setIsAuthModalOpen(true);
-                          }}
-                          className="w-full py-3 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-sans text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg active:scale-95 cursor-pointer"
-                        >
-                          Se Connecter de manière sécurisée via Google 🚀
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            try { audioSynth.playValidationSuccess(); } catch(_) {}
-                            setActiveMenu("user_terrain");
-                          }}
-                          className="w-full py-2.5 bg-transparent border border-zinc-850 hover:bg-zinc-900 text-zinc-400 hover:text-white rounded-xl text-[10px] uppercase tracking-wider font-mono cursor-pointer transition-all active:scale-95"
-                        >
-                          Retourner au Terrain d'Action 🗺️
-                        </button>
-                      </div>
-                    </div>
-                  );
-                }
-
-                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                let currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste sélectionné.</p>;
+                
+                // Automatically synchronize with Google / Firebase currentUser if available
+                if (currentUser) {
+                  currentArtist = {
+                    ...currentArtist,
+                    avatarUrl: currentUser.photoURL || currentArtist.avatarUrl,
+                    artisticName: currentUser.displayName || currentArtist.artisticName,
+                    email: currentUser.email || currentArtist.email
+                  };
+                }
 
                 // nested Gombo ID screen inside Héritage
                 if (viewingGomboIdDetail) {
@@ -4557,7 +4529,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           </h2>
                         </div>
                         <p className="text-xs text-zinc-500 font-mono mt-0.5">
-                          @{currentArtist.name || "TomSylvestre"}
+                          {currentArtist.email || `@${currentArtist.name || "TomSylvestre"}`}
                         </p>
                         
                         <div className="space-y-1 pt-1 text-xs">
@@ -4674,310 +4646,212 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     </div>
 
                     {/* =========================================================================
-                               ESPACE MUSICIEN SOUVERAIN (9 MODULES DORÉS & NOIRS)
+                               ESPACE MUSICIEN SOUVERAIN (MON PARCOURS, IDENTITÉ, ACTIVITÉ)
                        ========================================================================= */}
                     
-                    {/* 1. MA DÉMO (VIDÉO OU AUDIO PLAYER) */}
+                    {/* 1. MON PARCOURS */}
                     <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/30 shadow-2xl space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5">
-                          <span className="animate-pulse">●</span> MA DÉMO (AUDITION OFFICIELLE)
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                        📜 MON PARCOURS
+                      </span>
+                      <div className="grid grid-cols-2 gap-3 text-left">
+                        <div className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl space-y-1">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block">Arrivée</span>
+                          <strong className="text-sm font-sans font-black text-white block">
+                            {currentArtist.registrationDate ? new Date(currentArtist.registrationDate).toLocaleDateString('fr-FR') : "26 Juin 2026"}
+                          </strong>
+                        </div>
+                        <div className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl space-y-1">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block">Projets Terminés</span>
+                          <strong className="text-sm font-sans font-black text-[#D4AF37] block">
+                            {currentArtist.gombosCompleted || 0}
+                          </strong>
+                        </div>
+                        <div className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl space-y-1">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block">Opportunités</span>
+                          <strong className="text-sm font-sans font-black text-white block">
+                            {currentArtist.concertsCount || 0}
+                          </strong>
+                        </div>
+                        <div className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl space-y-1">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block">Candidatures</span>
+                          <strong className="text-sm font-sans font-black text-white block">
+                            {currentArtist.premiumApplicationsCount || currentArtist.collabsCount || 0}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. IDENTITÉ MUSICALE */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/30 shadow-2xl space-y-4">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                        🎸 IDENTITÉ MUSICALE
+                      </span>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center border-b border-zinc-900/50 pb-2">
+                          <span className="text-[11px] font-mono text-zinc-500 uppercase">Style musical</span>
+                          <span className="text-xs font-sans font-black text-white uppercase">{currentArtist.specialties?.[0] || "Afrobeat"}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-zinc-900/50 pb-2">
+                          <span className="text-[11px] font-mono text-zinc-500 uppercase">Instruments</span>
+                          <span className="text-xs font-sans font-black text-white uppercase text-right max-w-[60%]">{currentArtist.specialties?.slice(1).join(', ') || "Voix, Percussions"}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-zinc-900/50 pb-2">
+                          <span className="text-[11px] font-mono text-zinc-500 uppercase">Commune / Ville</span>
+                          <span className="text-xs font-sans font-black text-white uppercase">{currentArtist.commune || "Abidjan"}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-zinc-900/50 pb-2">
+                          <span className="text-[11px] font-mono text-zinc-500 uppercase">Niveau d'expérience</span>
+                          <span className="text-xs font-sans font-black text-[#D4AF37] uppercase">Elite (Niv. {currentArtist.performance?.level || 4})</span>
+                        </div>
+                        <div className="flex justify-between items-center pb-1">
+                          <span className="text-[11px] font-mono text-zinc-500 uppercase">Disponibilité</span>
+                          <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 uppercase">
+                            Immédiate
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3. ACTIVITÉ EN TEMPS RÉEL (FIRESTORE) */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/30 shadow-2xl space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5 text-left">
+                          <span className="animate-pulse">●</span> ACTIVITÉ EN TEMPS RÉEL
                         </span>
                         <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-                          Studio Gombo, Abidjan
+                          Synchronisé
                         </span>
                       </div>
                       
-                      <div className="p-4 bg-zinc-900/40 rounded-xl border border-zinc-900 flex items-center gap-4">
-                        <button
-                          onClick={() => {
-                            setIsDemoPlaying(!isDemoPlaying);
-                            try { audioSynth.playKoraNote(isDemoPlaying ? 261 : 392, 0, 0.1, 0.4); } catch(_) {}
-                          }}
-                          className="w-12 h-12 rounded-full bg-[#D4AF37] text-black flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)] shrink-0"
-                        >
-                          {isDemoPlaying ? <Pause className="w-5 h-5 stroke-[2.5]" /> : <Play className="w-5 h-5 translate-x-0.5 stroke-[2.5]" />}
-                        </button>
-                        
-                        <div className="flex-1 min-w-0 space-y-1.5 text-left">
-                          <div className="flex justify-between items-start gap-2">
-                            <h4 className="text-sm font-sans font-black text-white truncate uppercase">
-                              SOUVERAINETÉ (Teaser Live)
-                            </h4>
-                            <span className="text-[10px] font-mono text-[#D4AF37] whitespace-nowrap">
-                              {isDemoPlaying ? "Lecture en cours" : "En pause"}
-                            </span>
+                      <div className="space-y-4 text-left">
+                        {/* Publications récentes */}
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase block">Dernières publications</span>
+                          {posts.filter(p => p.userId === currentArtist.id).slice(0, 2).length > 0 ? (
+                            posts.filter(p => p.userId === currentArtist.id).slice(0, 2).map((post, idx) => (
+                              <div key={post.id || idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl space-y-2">
+                                <p className="text-xs text-zinc-300 leading-relaxed font-sans truncate">{post.content}</p>
+                                <span className="text-[9px] font-mono text-zinc-500">
+                                  {new Date(post.timestamp || Date.now()).toLocaleDateString('fr-FR')}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl">
+                              <p className="text-[10px] text-zinc-500 font-mono uppercase">Aucune publication récente.</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Renforts & Collabs */}
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase block">Derniers renforts & Collabs</span>
+                          {renforts.filter(r => r.musicianId === currentArtist.id || r.type === "Collaborations").slice(0, 2).length > 0 ? (
+                            renforts.filter(r => r.musicianId === currentArtist.id || r.type === "Collaborations").slice(0, 2).map((renfort, idx) => (
+                              <div key={renfort.id || idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <h4 className="text-xs font-sans font-black text-white truncate uppercase">{renfort.title}</h4>
+                                  <span className="text-[9px] font-mono text-[#D4AF37] uppercase">{renfort.type || 'Renfort'}</span>
+                                </div>
+                                <span className="text-[10px] font-mono bg-zinc-950 border border-zinc-800 px-2 py-1 rounded text-zinc-400 whitespace-nowrap">
+                                  {renfort.status === 'open' ? 'En cours' : 'Terminé'}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl">
+                              <p className="text-[10px] text-zinc-500 font-mono uppercase">Aucun renfort récent.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 4. MES MORCEAUX PUBLIÉS */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/30 shadow-2xl space-y-4">
+                      <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                        <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5">
+                          <span>🎙️</span> MORCEAUX PUBLIÉS ({currentArtist.tracksCount || 5})
+                        </span>
+                      </div>
+                      <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 text-left">
+                        {[
+                          { title: "Kpalogo Rhythm", date: "Sorti le 12 Jan 2026", duration: "03:45", id: 1 },
+                          { title: "Gombo Groove (Sénat Mix)", date: "Sorti le 05 Mar 2026", duration: "04:12", id: 2 },
+                          { title: "Symphonie d'Abidjan", date: "Sorti le 18 Avr 2026", duration: "02:58", id: 3 },
+                        ].map((track, idx) => (
+                          <div key={track.id} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="text-xs font-mono text-[#D4AF37] font-bold w-4">{idx + 1}</span>
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-sans font-bold text-white truncate uppercase">{track.title}</h4>
+                                <span className="text-[9px] font-mono text-zinc-500">{track.date}</span>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-mono text-zinc-500">{track.duration}</span>
                           </div>
-                          
-                          {/* Progress bar */}
-                          <div className="relative w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                            <div 
-                              className="absolute left-0 top-0 h-full bg-[#D4AF37] transition-all duration-300" 
-                              style={{ width: `${isDemoPlaying ? demoProgress : 35}%` }}
-                            />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 5. RÉPUTATION & HONNEURS */}
+                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/30 shadow-2xl space-y-4">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                        🏆 RÉPUTATION TERRAIN & HONNEURS
+                      </span>
+                      <div className="grid grid-cols-1 gap-3 text-left">
+                        <div className="p-3 bg-zinc-900/40 border border-[#D4AF37]/20 rounded-xl flex items-center gap-3.5">
+                          <div className="w-10 h-10 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shrink-0 text-md">⭐</div>
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-sans font-black text-white truncate uppercase">Prestige Gombo</h4>
+                            <p className="text-[10px] text-zinc-400 truncate">Indice de réputation terrain : <span className="text-[#D4AF37] font-bold">99.9/100</span></p>
                           </div>
-                          
-                          <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500">
-                            <span>{isDemoPlaying ? "01:24" : "00:45"}</span>
-                            <span>03:15</span>
+                        </div>
+                        <div className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl flex items-center gap-3.5">
+                          <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 shrink-0 text-md">🏅</div>
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-sans font-black text-white truncate uppercase">Meilleur Espoir Afrobeat</h4>
+                            <p className="text-[10px] text-zinc-500 truncate">Award d'Or Gombo (Déc 2025)</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 6. ÉVÉNEMENTS À VENIR & RÉSEAU */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Évènements */}
+                      <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/30 shadow-2xl space-y-4">
+                        <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                          📅 ÉVÉNEMENTS À VENIR
+                        </span>
+                        <div className="space-y-3 text-left">
+                          <div className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl">
+                            <h4 className="text-xs font-sans font-black text-white uppercase">Gombo Live Tour</h4>
+                            <p className="text-[10px] text-zinc-400 truncate mt-1">Palais de la Culture, Treichville</p>
+                            <span className="text-[9px] font-mono text-[#D4AF37] block mt-1">12 Nov 2026 - 20:00</span>
                           </div>
                         </div>
                       </div>
                       
-                      {/* Interactive visualizer using flex bars with CSS delay */}
-                      <div className="h-8 flex items-end justify-center gap-1 bg-black/40 rounded-lg p-2 overflow-hidden border border-zinc-900">
-                        {Array.from({ length: 24 }).map((_, i) => (
-                          <div 
-                            key={i} 
-                            className="w-1 bg-[#D4AF37] rounded-full transition-all"
-                            style={{ 
-                              height: isDemoPlaying 
-                                ? `${Math.floor(Math.random() * 80) + 20}%` 
-                                : '15%',
-                              opacity: isDemoPlaying ? 0.85 : 0.3,
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 2. MES MORCEAUX (LISTING AVEC INTERACTION) */}
-                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
-                      <div className="flex justify-between items-center pb-2 border-b border-zinc-900">
-                        <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-1.5">
-                          <span>🎙️</span> MES MORCEAUX ({currentArtist.tracksCount || 8})
+                      {/* Réseau Artistique */}
+                      <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/30 shadow-2xl space-y-4">
+                        <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
+                          🌍 RÉSEAU ARTISTIQUE
                         </span>
-                        <span className="text-[9px] font-mono text-zinc-500">Streams Totaux: 325K</span>
-                      </div>
-                      
-                      <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
-                        {[
-                          { title: "Kpalogo Rhythm", plays: "124.5K", duration: "03:45", id: 1 },
-                          { title: "Gombo Groove (Sénat Mix)", plays: "82.1K", duration: "04:12", id: 2 },
-                          { title: "Symphonie d'Abidjan", plays: "51.8K", duration: "02:58", id: 3 },
-                          { title: "Souveraineté (Acoustique)", plays: "38.2K", duration: "03:15", id: 4 },
-                          { title: "L'Impôt d'Amour", plays: "28.4K", duration: "03:50", id: 5 },
-                        ].map((track, idx) => (
-                          <div 
-                            key={track.id} 
-                            onClick={() => {
-                              setActiveDemoTrackIndex(idx);
-                              setIsDemoPlaying(true);
-                              try { audioSynth.playKoraNote(392 + idx * 40, 0, 0.08, 0.25); } catch(_) {}
-                            }}
-                            className={`p-3 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all ${
-                              activeDemoTrackIndex === idx && isDemoPlaying
-                                ? "bg-[#D4AF37]/10 border-[#D4AF37]/45" 
-                                : "bg-zinc-900/40 border-zinc-900/60 hover:border-zinc-800"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <span className="text-xs font-mono text-[#D4AF37] font-bold w-4">{idx + 1}</span>
-                              <div className="min-w-0">
-                                <h4 className="text-xs font-sans font-bold text-white truncate">{track.title}</h4>
-                                <span className="text-[9px] font-mono text-zinc-500">🔥 {track.plays} écoutes</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-mono text-zinc-500">{track.duration}</span>
-                              <button className="w-6 h-6 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center text-[#D4AF37] shrink-0">
-                                {activeDemoTrackIndex === idx && isDemoPlaying ? <Pause className="w-2.5 h-2.5" /> : <Play className="w-2.5 h-2.5 translate-x-0.5" />}
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 3. PERFORMANCES TIMELINE */}
-                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
-                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
-                        🎸 PERFORMANCES (LIVE & SCÈNE)
-                      </span>
-                      <div className="space-y-4 text-left">
-                        {[
-                          { event: "Femua Festival 2026", venue: "Grande Scène Anoumabo, Marcory", date: "15 Juin 2026", audience: "15K spectateurs", type: "Tête d'affiche" },
-                          { event: "Acoustic Session Gombo", venue: "Palais de la Culture, Treichville", date: "12 Avril 2026", audience: "800 VIPs", type: "Session Intime" },
-                          { event: "Gombo Lab Launch", venue: "Gombo Space, Cocody", date: "05 Janv 2026", audience: "350 pros", type: "Showcase" },
-                        ].map((perf, idx) => (
-                          <div key={idx} className="relative pl-5 border-l-2 border-[#D4AF37]/30 space-y-1">
-                            <div className="absolute left-[-6px] top-1 w-2.5 h-2.5 rounded-full bg-[#D4AF37] border border-black" />
-                            <div className="flex justify-between items-start gap-2">
-                              <h4 className="text-xs font-sans font-black text-white uppercase">{perf.event}</h4>
-                              <span className="text-[9px] bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 px-1.5 py-0.5 rounded font-mono font-bold">{perf.type}</span>
-                            </div>
-                            <p className="text-[10px] text-zinc-400 font-sans">{perf.venue}</p>
-                            <div className="flex justify-between text-[9px] font-mono text-zinc-500 pt-0.5">
-                              <span>📅 {perf.date}</span>
-                              <span>👥 {perf.audience}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 4. DISTINCTIONS CARD */}
-                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
-                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
-                        🏆 DISTINCTIONS & PRIX
-                      </span>
-                      <div className="grid grid-cols-1 gap-3 text-left">
-                        {[
-                          { title: "Meilleur Espoir Afrobeat 2025", issuer: "Award d'Or Gombo de l'Académie", date: "Déc 2025" },
-                          { title: "Single d'Or Certifié Afrigombo", issuer: "Pour 'Kpalogo Rhythm' (100K+ streams)", date: "Oct 2025" },
-                          { title: "Ambassadeur de la Souveraineté", issuer: "Collectif des Créateurs d'Abidjan", date: "Aout 2025" },
-                        ].map((dist, idx) => (
-                          <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl flex items-center gap-3.5">
-                            <div className="w-10 h-10 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shrink-0 text-md">
-                              🏅
-                            </div>
+                        <div className="space-y-3 text-left">
+                          <div className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl flex items-center justify-between">
                             <div className="min-w-0">
-                              <h4 className="text-xs font-sans font-black text-white truncate uppercase">{dist.title}</h4>
-                              <p className="text-[10px] text-zinc-400 truncate">{dist.issuer}</p>
-                              <span className="text-[8px] font-mono text-zinc-500">Délivré en {dist.date}</span>
+                              <h4 className="text-[10px] font-mono font-bold text-zinc-500 uppercase">Suivis Artistiques</h4>
+                              <strong className="text-sm font-sans font-black text-white block mt-0.5">24 Pros</strong>
+                            </div>
+                            <div className="min-w-0 text-right">
+                              <h4 className="text-[10px] font-mono font-bold text-zinc-500 uppercase">Collaborateurs</h4>
+                              <strong className="text-sm font-sans font-black text-white block mt-0.5">12 Actifs</strong>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 5. STATS CLÉS (STATISTIQUES SOUVERAINES) */}
-                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
-                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
-                        📈 STATISTIQUES SHOWBIZ
-                      </span>
-                      <div className="space-y-3.5 text-left">
-                        {[
-                          { label: "Engagement du Public", val: "12.4%", desc: "+2.1% ce mois-ci", progress: 85 },
-                          { label: "Durée d'écoute moyenne", val: "03:12 mins", desc: "Dans le Top 5% National", progress: 78 },
-                          { label: "Taux de complétion concerts", val: "100%", desc: "5 prestations impeccables", progress: 100 },
-                          { label: "Indice de Prestige Gombo", val: "99.9", desc: "Rang Elite Souverain", progress: 99 },
-                        ].map((stat, idx) => (
-                          <div key={idx} className="space-y-1.5">
-                            <div className="flex justify-between items-end">
-                              <div>
-                                <span className="text-xs font-sans font-bold text-white block">{stat.label}</span>
-                                <span className="text-[9px] text-zinc-500 font-mono">{stat.desc}</span>
-                              </div>
-                              <span className="text-sm font-mono font-black text-[#D4AF37]">{stat.val}</span>
-                            </div>
-                            <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/50">
-                              <div 
-                                className="h-full bg-gradient-to-r from-zinc-800 to-[#D4AF37] rounded-full" 
-                                style={{ width: `${stat.progress}%` }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 6. FANS (TRIBU SOUVERAINE) */}
-                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
-                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
-                        👥 MA TRIBU (TOP FANS)
-                      </span>
-                      <div className="space-y-3 text-left">
-                        {[
-                          { name: "Fatou Diaby", role: "Mécène d'Or", quote: "Ton rythme fait battre l'Afrique !", gawas: "25K Gawa", avatar: "👩🏾‍💼" },
-                          { name: "Jean-Marc Koffi", role: "Vibe Master", quote: "Le vrai son de Cocody, sans filtre.", gawas: "18K Gawa", avatar: "👨🏾‍💻" },
-                          { name: "Awa Touré", role: "Sponsor de Coeur", quote: "Hâte de te voir sur scène à Bouaké !", gawas: "12K Gawa", avatar: "👩🏾‍🎤" },
-                        ].map((fan, idx) => (
-                          <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl space-y-2">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <span className="w-8 h-8 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center text-md">{fan.avatar}</span>
-                                <div>
-                                  <h4 className="text-xs font-sans font-black text-white">{fan.name}</h4>
-                                  <span className="text-[9px] text-[#D4AF37] font-mono font-bold uppercase">{fan.role}</span>
-                                </div>
-                              </div>
-                              <span className="text-[10px] font-mono bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 px-2 py-0.5 rounded-full font-bold">{fan.gawas}</span>
-                            </div>
-                            <p className="text-[11px] italic text-zinc-400 font-sans pl-1">"{fan.quote}"</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 7. PUBLICATIONS POPULAIRES */}
-                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
-                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
-                        🔥 PUBLICATIONS POPULAIRES
-                      </span>
-                      <div className="space-y-3 text-left">
-                        {[
-                          { text: "Répétition générale avant le grand concert de samedi ! Le show s'annonce légendaire... 🎚️🎙️", likes: 245, comments: 42, views: "2.5K" },
-                          { text: "Merci pour la certification Gombo ID ! La souveraineté artistique est en marche. Ensemble pour le sommet. 🙌🇨🇮", likes: 189, comments: 27, views: "1.9K" },
-                        ].map((post, idx) => (
-                          <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl space-y-2.5">
-                            <p className="text-xs text-zinc-300 leading-relaxed font-sans">{post.text}</p>
-                            <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 pt-1 border-t border-zinc-900/80">
-                              <span>❤️ {post.likes}</span>
-                              <span>💬 {post.comments}</span>
-                              <span>👁️ {post.views}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 8. ÉVÉNEMENTS À VENIR */}
-                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
-                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
-                        📅 ÉVÉNEMENTS À VENIR
-                      </span>
-                      <div className="space-y-3 text-left">
-                        {[
-                          { title: "Gombo Live Tour", date: "12 Nov 2026", time: "20:00", loc: "Palais de la Culture, Treichville", price: "5,000 FCFA" },
-                          { title: "Masterclass Beatmaking", date: "18 Déc 2026", time: "15:30", loc: "Gombo Lab, Cocody", price: "Gratuit (Sur Invitation)" },
-                        ].map((evt, idx) => (
-                          <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl flex items-center gap-3">
-                            <div className="p-2.5 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl text-center flex flex-col justify-center items-center shrink-0 min-w-[55px]">
-                              <span className="text-[10px] font-sans font-black text-white uppercase">{evt.date.split(" ")[1]}</span>
-                              <span className="text-sm font-mono font-black text-[#D4AF37]">{evt.date.split(" ")[0]}</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-xs font-sans font-black text-white truncate uppercase">{evt.title}</h4>
-                              <p className="text-[10px] text-zinc-400 truncate">{evt.loc}</p>
-                              <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 pt-0.5">
-                                <span>⏰ {evt.time}</span>
-                                <span className="text-[#D4AF37] font-bold">{evt.price}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 9. MON RÉSEAU SHOWBIZ */}
-                    <div className="p-5 rounded-2xl bg-zinc-950 border border-[#D4AF37]/15 shadow-xl space-y-4">
-                      <span className="text-[10px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase block text-left">
-                        🌐 MON RÉSEAU SHOWBIZ
-                      </span>
-                      <div className="grid grid-cols-1 gap-2.5 text-left">
-                        {[
-                          { role: "Manager Principal", name: "Bakary Diarrassouba (Vieux Bamba)", contact: "bamba@afrigombo.ci" },
-                          { role: "Label de Production", name: "Afrigombo Records", contact: "production@afrigombo.ci" },
-                          { role: "Booking Officiel", name: "Kady de Yopougon", contact: "booking@afrigombo.ci" },
-                        ].map((net, idx) => (
-                          <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-900 rounded-xl flex justify-between items-center gap-2">
-                            <div className="min-w-0">
-                              <span className="text-[9px] font-mono text-[#D4AF37] font-bold uppercase block">{net.role}</span>
-                              <h4 className="text-xs font-sans font-black text-white truncate">{net.name}</h4>
-                              <span className="text-[9px] font-mono text-zinc-500 block truncate">{net.contact}</span>
-                            </div>
-                            <button 
-                              onClick={() => {
-                                addToTerminal(`[CONTACT] Copie des coordonnées de : ${net.name}`);
-                                try { audioSynth.playValidationSuccess(); } catch(_) {}
-                              }}
-                              className="px-2.5 py-1.5 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 rounded-lg text-[9px] font-mono text-zinc-300 uppercase transition-all whitespace-nowrap active:scale-95 cursor-pointer"
-                            >
-                              Copier
-                            </button>
-                          </div>
-                        ))}
+                          <p className="text-[10px] text-zinc-500 italic">Réseau 100% professionnel validé.</p>
+                        </div>
                       </div>
                     </div>
 
@@ -7906,11 +7780,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <button
             id="user-nav-heritage"
             onClick={() => {
-              requireAuthThen(() => {
-                setActiveMenu("user_heritage");
-                setViewingGomboIdDetail(false);
-                try { audioSynth.playValidationSuccess(); } catch (err) {}
-              });
+              setActiveMenu("user_heritage");
+              setViewingGomboIdDetail(false);
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
               activeMenu === "user_heritage" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
