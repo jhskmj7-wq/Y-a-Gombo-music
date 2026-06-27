@@ -51,6 +51,7 @@ import {
 import { audioSynth } from "../lib/audio";
 import { interactionBus } from "./LivingInteractions";
 import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
+import { Carousel } from "./Carousel";
 import { useDynamicPlaceholder } from "../hooks/useDynamicPlaceholder";
 import { isSuperFounder } from "../shared/admin/constants";
 import {
@@ -2491,10 +2492,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         )}
 
         {/* WORKSPACE VIEWS */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden h-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeMenu}
+              className="h-full overflow-y-auto overflow-x-hidden"
               initial={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: 20 }}
               animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
               exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -20, transition: { duration: 0.1 } }}
@@ -3241,57 +3243,78 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     )}
                   </div>
 
-                    {/* CARTE HÉRO PRINCIPALE PREMIUM */}
-                    <div className="relative overflow-hidden rounded-3xl bg-[#050505] border border-[#D4AF37]/25 p-5 sm:p-7 shadow-xl h-[280px] sm:h-auto flex flex-col justify-between">
-                      {/* Backdrop / image absolute right with elegant fade mask */}
-                      <div className="absolute right-0 top-0 bottom-0 w-[42%] h-full z-0 overflow-hidden">
-                        <img 
-                          src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=360" 
-                          alt="Artiste en Prestation" 
-                          className="w-full h-full object-cover object-center opacity-80"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/70 to-transparent" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
-                      </div>
+                    {/* CARTE HÉRO PRINCIPALE PREMIUM (CARROUSEL) */}
+                    <Carousel
+                      items={[
+                        <div className="relative overflow-hidden rounded-3xl bg-[#050505] border border-[#D4AF37]/25 p-5 sm:p-7 shadow-xl h-[280px] sm:h-auto flex flex-col justify-between">
+                          <div className="absolute right-0 top-0 bottom-0 w-[42%] h-full z-0 overflow-hidden">
+                            <img 
+                              src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=360" 
+                              alt="Artiste en Prestation" 
+                              className="w-full h-full object-cover object-center opacity-80"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/70 to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+                          </div>
 
-                      <div className="relative z-10 flex flex-col justify-center h-full max-w-[62%] text-left space-y-4">
-                        <div>
-                          <span className="text-[10px] sm:text-xs uppercase font-mono text-[#D4AF37] tracking-[0.2em] block font-extrabold mb-1">
-                            AFRIGOMBO PORTAL
-                          </span>
-                          <h2 className="text-2xl sm:text-4xl font-display font-black tracking-tight leading-none uppercase">
-                            <span className="text-white block mb-1">LE TERRAIN</span>
-                            <span className="text-[#D4AF37]">D'INTELLIGENCE</span>
-                          </h2>
-                          <p className="text-[11px] sm:text-xs text-zinc-400 mt-2 max-w-md leading-relaxed">
-                            Consultez l'actu bouillante du showbiz à Abidjan, décrochez des cachets d'or ou postez de nouvelles alliances.
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <button
-                            onClick={() => {
-                              requireAuthThen(() => {
-                                setActiveMenu("user_publish");
-                                audioSynth.playValidationSuccess();
-                              });
-                            }}
-                            className="px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95"
-                          >
-                            <Plus className="w-4 h-4 stroke-[3]" />
-                            PUBLIER UNE OPPORTUNITÉ
-                          </button>
+                          <div className="relative z-10 flex flex-col justify-center h-full max-w-[62%] text-left space-y-4">
+                            <div>
+                              <span className="text-[10px] sm:text-xs uppercase font-mono text-[#D4AF37] tracking-[0.2em] block font-extrabold mb-1">
+                                AFRIGOMBO PORTAL
+                              </span>
+                              <h2 className="text-2xl sm:text-4xl font-display font-black tracking-tight leading-none uppercase">
+                                <span className="text-white block mb-1">LE TERRAIN</span>
+                                <span className="text-[#D4AF37]">D'INTELLIGENCE</span>
+                              </h2>
+                              <p className="text-[11px] sm:text-xs text-zinc-400 mt-2 max-w-md leading-relaxed">
+                                Consultez l'actu bouillante du showbiz à Abidjan, décrochez des cachets d'or ou postez de nouvelles alliances.
+                              </p>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              <button
+                                onClick={() => {
+                                  requireAuthThen(() => {
+                                    setActiveMenu("user_publish");
+                                    audioSynth.playValidationSuccess();
+                                  });
+                                }}
+                                className="px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95"
+                              >
+                                <Plus className="w-4 h-4 stroke-[3]" />
+                                PUBLIER UNE OPPORTUNITÉ
+                              </button>
+                            </div>
+                          </div>
+                        </div>,
+                        <div className="relative overflow-hidden rounded-3xl bg-[#050505] border border-[#D4AF37]/25 p-5 sm:p-7 shadow-xl h-[280px] sm:h-auto flex flex-col justify-between">
+                          <div className="absolute right-0 top-0 bottom-0 w-[42%] h-full z-0 overflow-hidden">
+                            <img 
+                              src="https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&q=80&w=360" 
+                              alt="Scène Live" 
+                              className="w-full h-full object-cover object-center opacity-80"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/70 to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+                          </div>
 
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] sm:text-[10px] font-mono text-[#D4AF37] select-none uppercase font-bold">
-                            <span className="flex items-center gap-1 font-black">🌐 TOUS DOMAINES</span>
-                            <span className="text-zinc-650">•</span>
-                            <span className="flex items-center gap-1 font-black">🎯 GRATUIT</span>
-                            <span className="text-zinc-650">•</span>
-                            <span className="flex items-center gap-1 font-black">⚡ RAPIDE</span>
+                          <div className="relative z-10 flex flex-col justify-center h-full max-w-[62%] text-left space-y-4">
+                            <div>
+                              <span className="text-[10px] sm:text-xs uppercase font-mono text-[#D4AF37] tracking-[0.2em] block font-extrabold mb-1">
+                                TENDANCE ABIDJAN
+                              </span>
+                              <h2 className="text-2xl sm:text-4xl font-display font-black tracking-tight leading-none uppercase">
+                                <span className="text-white block mb-1">LIVE & VIBES</span>
+                                <span className="text-[#D4AF37]">NOUVEAUTÉS</span>
+                              </h2>
+                              <p className="text-[11px] sm:text-xs text-zinc-400 mt-2 max-w-md leading-relaxed">
+                                Découvrez les nouveaux talents et les tendances musicales qui font vibrer les nuits d'Abidjan.
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      ]}
+                    />
 
                     {/* RACCOURCIS PREMIUM */}
                     <div className="grid grid-cols-4 gap-2 sm:gap-3 select-none">
@@ -4479,242 +4502,226 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 // Main Mon Héritage view
                 return (
                   <div className="space-y-6 animate-fadeIn pb-32 text-left">
-                    {/* CUSTOM HEADER (PREMIUM AFRITRUST IDENTITÉ) */}
-                    <div className="relative rounded-3xl overflow-hidden bg-black border border-[#D4AF37]/30 shadow-2xl group">
-                      {/* Animated Background */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-black via-zinc-950 to-black z-0">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#D4AF37]/5 rounded-full blur-3xl opacity-30 group-hover:opacity-80 transition-opacity duration-1000 delay-300"></div>
-                      </div>
-
-                      <div className="relative z-10 p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                    {/* CUSTOM HEADER (COMPACT PREMIUM AFRITRUST IDENTITÉ) */}
+                    <div className="relative rounded-2xl overflow-hidden bg-[#050505] border border-[#D4AF37]/20 p-5 shadow-lg group">
+                      <div className="relative z-10 flex items-center gap-4">
                         {/* Avatar */}
-                        <div className="relative shrink-0 select-none">
-                          <div className="w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] rounded-full p-1 border-2 border-[#D4AF37]/60 bg-[#050505] flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.2)] relative z-10">
-                            <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center font-bold text-3xl text-[#D4AF37] bg-[#111111] relative">
+                        <div className="relative shrink-0">
+                          <div className="w-20 h-20 rounded-full p-0.5 border border-[#D4AF37]/30 bg-[#050505] flex items-center justify-center">
+                             <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center text-xl text-[#D4AF37] bg-[#111111]">
                               {currentArtist.avatarUrl ? (
                                 <img src={currentArtist.avatarUrl} alt={currentArtist.artisticName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                               ) : (
-                                (currentArtist.artisticName || "Tom Sylvestre").charAt(0)
+                                (currentArtist.artisticName || "A").charAt(0)
                               )}
-                              <div className="absolute inset-0 bg-black/10 hover:bg-transparent transition-colors"></div>
                             </div>
-                          </div>
-                          {/* Badge Level Indicator */}
-                          <div className="absolute -bottom-2 sm:-bottom-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-zinc-950 to-black border border-[#D4AF37]/50 rounded-full px-3 py-1 sm:px-4 sm:py-1.5 whitespace-nowrap shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-20 flex items-center gap-1.5">
-                            {(() => {
-                              const lvl = currentArtist.performance?.level || 1;
-                              if (lvl >= 5) return <><span className="text-sm">👑</span><span className="text-[10px] sm:text-[11px] font-mono font-black text-[#D4AF37] tracking-widest uppercase">Légende AFRIGOMBO</span></>;
-                              if (lvl >= 4) return <><span className="text-sm">🥇</span><span className="text-[10px] sm:text-[11px] font-mono font-black text-[#D4AF37] tracking-widest uppercase">Professionnel</span></>;
-                              if (lvl >= 3) return <><span className="text-sm">🥈</span><span className="text-[10px] sm:text-[11px] font-mono font-black text-zinc-300 tracking-widest uppercase">Confirmé</span></>;
-                              return <><span className="text-sm">🥉</span><span className="text-[10px] sm:text-[11px] font-mono font-black text-[#CD7F32] tracking-widest uppercase">Débutant</span></>;
-                            })()}
                           </div>
                         </div>
 
                         {/* Profile Info */}
-                        <div className="flex-1 text-center sm:text-left space-y-3 pt-2">
-                          <div className="space-y-1">
-                            <h1 className="text-2xl sm:text-4xl font-sans font-black text-white tracking-wide flex items-center justify-center sm:justify-start gap-2">
-                              {currentArtist.artisticName || "Artiste Inconnu"}
-                              <span className="inline-flex w-5 h-5 rounded-full bg-[#D4AF37] items-center justify-center text-xs text-black font-black select-none shadow-[0_0_10px_rgba(212,175,55,0.4)]" title="Identité Vérifiée">
-                                ✓
-                              </span>
-                            </h1>
-                            <p className="text-xs text-zinc-400 font-mono tracking-widest">
-                              {currentArtist.firstName} {currentArtist.lastName}
-                            </p>
+                        <div className="flex-1 space-y-1">
+                          <h1 className="text-xl font-sans font-black text-white flex items-center gap-2">
+                            {currentArtist.artisticName || "Artiste Inconnu"}
+                            <span className="w-4 h-4 rounded-full bg-[#D4AF37] flex items-center justify-center text-[8px] text-black font-black" title="Identité Vérifiée">✓</span>
+                          </h1>
+                          <p className="text-[10px] text-zinc-400 font-mono tracking-widest">{currentArtist.specialties?.[0] || "Musique"} • {currentArtist.commune || "Abidjan"}</p>
+                          <div className="flex items-center gap-2">
+                             <span className="text-[9px] font-mono text-[#D4AF37] border border-[#D4AF37]/30 px-2 py-0.5 rounded uppercase">Niv. {currentArtist.performance?.level || 1}</span>
+                             <span className="text-[9px] font-mono text-zinc-500">ID: {currentArtist.afriId || "---"}</span>
                           </div>
+                        </div>
 
-                          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs">
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#111111]/50 border border-zinc-800 rounded-lg text-zinc-300">
-                              <span className="text-[#D4AF37]">📍</span>
-                              <span className="font-mono">{currentArtist.commune || "Abidjan, CI"}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#111111]/50 border border-zinc-800 rounded-lg text-zinc-300 uppercase tracking-wider font-bold">
-                              <span className="text-[#D4AF37]">🎵</span>
-                              <span>{currentArtist.specialties?.[0] || "Chanteur"}</span>
-                            </div>
-                          </div>
-                          
-                          {/* AFRI ID or GOMBO ID mini status */}
-                          <div className="pt-2 flex justify-center sm:justify-start">
-                            {currentArtist.afriId ? (
-                              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-lg">
-                                <span className="text-[10px] font-mono font-black text-[#D4AF37] tracking-widest">AFRI ID :</span>
-                                <span className="text-xs font-mono text-white">{currentArtist.afriId}</span>
-                              </div>
-                            ) : (
-                              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#111111] border border-zinc-800 rounded-lg">
-                                <span className="text-[10px] font-mono font-black text-zinc-500 tracking-widest">AFRI ID NON DÉFINI</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Quick Action Top Buttons */}
-                        <div className="absolute top-4 right-4 flex gap-2">
-                          <button
-                            onClick={() => {
-                              setActiveMenu("user_edit_profile");
-                              try { audioSynth.playValidationSuccess(); } catch (e) {}
-                            }}
-                            className="w-10 h-10 rounded-full bg-[#111111] border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:border-[#D4AF37]/50 hover:bg-zinc-800 transition-all shadow-lg active:scale-95"
-                            title="Modifier"
-                          >
-                            <Settings className="w-4 h-4" />
-                          </button>
-                        </div>
+                        {/* Quick Action Button */}
+                        <button
+                          onClick={() => {
+                            setActiveMenu("user_edit_profile");
+                            try { audioSynth.playValidationSuccess(); } catch (e) {}
+                          }}
+                          className="w-10 h-10 rounded-full bg-[#111111] border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:border-[#D4AF37]/50 transition-all active:scale-95"
+                          title="Modifier"
+                        >
+                          <Settings className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
 
                     {/* TABLEAU DE RÉPUTATION */}
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {/* Honneurs Reçus */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-colors">
+                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                         <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">🏆</span>
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Honneurs reçus</span>
+                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Honneur reçu</span>
                         <strong className="text-xl font-sans font-black text-white mt-1">
                           {currentArtist.reviewsCount || 0}
                         </strong>
                       </div>
                       
-                      {/* Participations */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-colors">
+                      {/* Collaborations */}
+                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                         <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">🎼</span>
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Participations</span>
+                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Collaborations</span>
+                        <strong className="text-xl font-sans font-black text-white mt-1">
+                          {currentArtist.collabsCount || 0}
+                        </strong>
+                      </div>
+
+                      {/* Renforts */}
+                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                        <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">🪘</span>
+                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Renforts</span>
                         <strong className="text-xl font-sans font-black text-white mt-1">
                           {currentArtist.concertsCount || 0}
                         </strong>
                       </div>
 
                       {/* Opportunités */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-colors">
+                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                         <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">🔥</span>
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Opportunités</span>
+                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Opportunités</span>
                         <strong className="text-xl font-sans font-black text-white mt-1">
                           {currentArtist.gombosCompleted || 0}
                         </strong>
                       </div>
 
-                      {/* Collaborations */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-colors">
-                        <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">🤝</span>
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Collaborations</span>
-                        <strong className="text-xl font-sans font-black text-white mt-1">
-                          {currentArtist.collabsCount || 0}
-                        </strong>
-                      </div>
-
                       {/* Niveau Réputation */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-colors">
+                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                         <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">⭐</span>
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Réputation</span>
+                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Réputation</span>
                         <strong className="text-xl font-sans font-black text-[#D4AF37] mt-1 flex items-baseline gap-1">
-                          {currentArtist.performance?.rating || 5.0} <span className="text-[10px] text-zinc-500">/ 5</span>
+                          {currentArtist.performance?.rating || 5.0} <span className="text-[10px] text-[#B9B9B9]">/ 5</span>
                         </strong>
                       </div>
 
                       {/* Progression */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-colors">
+                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                         <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">📈</span>
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Progression</span>
-                        <strong className="text-xl font-sans font-black text-emerald-400 mt-1 flex items-baseline gap-1">
+                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Progression</span>
+                        <strong className="text-xl font-sans font-black text-[#D4AF37] mt-1 flex items-baseline gap-1">
                           +15%
                         </strong>
                       </div>
+                    </div>
+                    {/* BOUTONS D'ACTIONS RÉELS */}
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
+                      <button 
+                        onClick={() => {
+                          setActiveMenu("user_edit_profile");
+                          try { audioSynth.playValidationSuccess(); } catch(e) {}
+                        }}
+                        className="px-5 py-2.5 bg-[#111111] border border-zinc-700 hover:border-[#D4AF37] text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95"
+                      >
+                        Modifier Profil
+                      </button>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(window.location.href);
+                          addToTerminal("[PARTAGE] Lien du profil copié avec succès !");
+                          try { audioSynth.playValidationSuccess(); } catch(e) {}
+                        }}
+                        className="px-5 py-2.5 bg-[#111111] border border-zinc-700 hover:border-[#D4AF37] text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95 flex items-center gap-2"
+                      >
+                        <Share2 className="w-3 h-3" /> Partager
+                      </button>
+                      <button 
+                        onClick={() => {
+                          goBackMenu();
+                          try { audioSynth.playValidationSuccess(); } catch(e) {}
+                        }}
+                        className="px-5 py-2.5 bg-[#111111] border border-zinc-700 hover:border-zinc-500 text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95 flex items-center gap-2"
+                      >
+                         Retour
+                      </button>
                     </div>
 
                     {/* IDENTITÉ & STATS (2 columns layout) */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       
                       {/* IDENTITÉ MUSICALE */}
-                      <div className="p-6 bg-[#050505] border border-zinc-900/80 rounded-3xl space-y-4">
-                        <h3 className="text-[11px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-2">
+                      <div className="p-6 bg-[#050505] border border-[#D4AF37]/20 rounded-3xl space-y-6 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                        <h3 className="text-xs font-sans font-black tracking-widest text-white uppercase flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
                           Identité Musicale
                         </h3>
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center border-b border-zinc-900/50 pb-2">
-                            <span className="text-[11px] font-mono text-zinc-500 uppercase">Style principal</span>
-                            <span className="text-xs font-sans font-black text-white uppercase">{currentArtist.specialties?.[0] || "Afrobeat"}</span>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center border-b border-[#D4AF37]/10 pb-3">
+                            <span className="text-[10px] font-sans font-black text-[#B9B9B9] uppercase">Styles musicaux</span>
+                            <span className="text-[11px] font-sans font-black text-[#D4AF37] uppercase text-right">{currentArtist.musicGenres?.join(', ') || "Afrobeat, Coupé-Décalé"}</span>
                           </div>
-                          <div className="flex justify-between items-center border-b border-zinc-900/50 pb-2">
-                            <span className="text-[11px] font-mono text-zinc-500 uppercase">Instruments joués</span>
-                            <span className="text-xs font-sans font-black text-white uppercase text-right max-w-[60%]">{currentArtist.specialties?.slice(1).join(', ') || "Voix, Percussions"}</span>
+                          <div className="flex justify-between items-center border-b border-[#D4AF37]/10 pb-3">
+                            <span className="text-[10px] font-sans font-black text-[#B9B9B9] uppercase">Instruments</span>
+                            <span className="text-[11px] font-sans font-black text-white uppercase text-right">{currentArtist.specialties?.join(', ') || "Voix, Percussions"}</span>
                           </div>
-                          <div className="flex justify-between items-center border-b border-zinc-900/50 pb-2">
-                            <span className="text-[11px] font-mono text-zinc-500 uppercase">Ville d'opération</span>
-                            <span className="text-xs font-sans font-black text-white uppercase">{currentArtist.commune || "Abidjan"}</span>
-                          </div>
-                          <div className="flex justify-between items-center border-b border-zinc-900/50 pb-2">
-                            <span className="text-[11px] font-mono text-zinc-500 uppercase">Niveau de performance</span>
-                            <span className="text-xs font-sans font-black text-[#D4AF37] uppercase">Elite (Niv. {currentArtist.performance?.level || 4})</span>
+                          <div className="flex justify-between items-center border-b border-[#D4AF37]/10 pb-3">
+                            <span className="text-[10px] font-sans font-black text-[#B9B9B9] uppercase">Expérience</span>
+                            <span className="text-[11px] font-sans font-black text-white uppercase text-right">{currentArtist.experience || "Professionnel"}</span>
                           </div>
                           <div className="flex justify-between items-center pb-1">
-                            <span className="text-[11px] font-mono text-zinc-500 uppercase">Disponibilité</span>
-                            <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 uppercase">
-                              Immédiate
+                            <span className="text-[10px] font-sans font-black text-[#B9B9B9] uppercase">Disponibilité</span>
+                            <span className="text-[10px] font-sans font-black text-[#050505] bg-[#D4AF37] px-3 py-1 rounded-full uppercase">
+                              {currentArtist.availabilityStatus || "Disponible"}
                             </span>
                           </div>
                         </div>
                       </div>
                       
-                      {/* MON PARCOURS (STATS + TIMELINE) */}
-                      <div className="p-6 bg-[#050505] border border-zinc-900/80 rounded-3xl space-y-6">
-                        <h3 className="text-[11px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-2">
+                      {/* MON PARCOURS (TIMELINE) */}
+                      <div className="p-6 bg-[#050505] border border-[#D4AF37]/20 rounded-3xl space-y-6 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                        <h3 className="text-xs font-sans font-black tracking-widest text-white uppercase flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                          Mon Parcours
+                          Parcours Musical
                         </h3>
 
-                        {/* Stats block inside Mon Parcours */}
-                        <div className="grid grid-cols-2 gap-3 text-left">
-                          <div className="p-3 bg-[#111111] border border-zinc-900 rounded-xl space-y-1">
-                            <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">Date d'arrivée</span>
-                            <strong className="text-xs font-sans font-black text-white block">
-                              {currentArtist.registrationDate ? new Date(currentArtist.registrationDate).toLocaleDateString('fr-FR') : "26 Juin 2026"}
-                            </strong>
-                          </div>
-                          <div className="p-3 bg-[#111111] border border-zinc-900 rounded-xl space-y-1">
-                            <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">Opportunités rejointes</span>
-                            <strong className="text-xs font-sans font-black text-[#D4AF37] block">
-                              {currentArtist.concertsCount || 0}
-                            </strong>
-                          </div>
-                          <div className="p-3 bg-[#111111] border border-zinc-900 rounded-xl space-y-1">
-                            <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">Candidatures</span>
-                            <strong className="text-xs font-sans font-black text-white block">
-                              {currentArtist.premiumApplicationsCount || currentArtist.collabsCount || 0}
-                            </strong>
-                          </div>
-                          <div className="p-3 bg-[#111111] border border-zinc-900 rounded-xl space-y-1">
-                            <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">Projets terminés</span>
-                            <strong className="text-xs font-sans font-black text-[#D4AF37] block">
-                              {currentArtist.gombosCompleted || 0}
-                            </strong>
-                          </div>
-                        </div>
-                        
                         {/* Timeline */}
-                        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent pt-4">
-                          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                            <div className="flex items-center justify-center w-4 h-4 rounded-full border border-[#D4AF37] bg-[#050505] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0.5 md:ml-0"></div>
-                            <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-3 rounded-xl bg-[#111111] border border-zinc-800 shadow">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="font-sans font-bold text-white text-[10px] uppercase">Début musical</h4>
-                                <span className="font-mono text-[8px] text-[#D4AF37]">{currentArtist.registrationDate ? new Date(currentArtist.registrationDate).getFullYear() : 2026}</span>
-                              </div>
-                            </div>
-                          </div>
+                        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-[#D4AF37] before:to-[#D4AF37]/10 pt-4">
+                          
+                          {/* Débuts */}
                           <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                            <div className="flex items-center justify-center w-4 h-4 rounded-full border border-zinc-700 bg-[#050505] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0.5 md:ml-0"></div>
-                            <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-3 rounded-xl border border-dashed border-zinc-800 opacity-60">
+                            <div className="flex items-center justify-center w-4 h-4 rounded-full border-2 border-[#D4AF37] bg-[#050505] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0.5 md:ml-0"></div>
+                            <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-2xl bg-[#111111] border border-[#D4AF37]/20 shadow hover:border-[#D4AF37]/50 transition-colors">
                               <div className="flex items-center justify-between mb-1">
-                                <h4 className="font-sans font-bold text-white text-[10px] uppercase">Grand Live</h4>
-                                <span className="font-mono text-[8px] text-zinc-500">À venir</span>
+                                <h4 className="font-sans font-black text-white text-[11px] uppercase">Débuts artistiques</h4>
+                                <span className="font-mono font-bold text-[9px] text-[#D4AF37]">{currentArtist.registrationDate ? new Date(currentArtist.registrationDate).getFullYear() : "2022"}</span>
                               </div>
+                              <p className="text-[10px] font-sans text-[#B9B9B9] mt-2">Lancement de la carrière et premières scènes locales.</p>
                             </div>
                           </div>
+
+                          {/* Projets */}
+                          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                            <div className="flex items-center justify-center w-4 h-4 rounded-full border-2 border-[#D4AF37] bg-[#050505] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0.5 md:ml-0"></div>
+                            <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-2xl bg-[#111111] border border-[#D4AF37]/20 shadow hover:border-[#D4AF37]/50 transition-colors">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="font-sans font-black text-white text-[11px] uppercase">Projets Majeurs</h4>
+                                <span className="font-mono font-bold text-[9px] text-[#D4AF37]">En cours</span>
+                              </div>
+                              <p className="text-[10px] font-sans text-[#B9B9B9] mt-2">Réalisation de {currentArtist.gombosCompleted || 5} projets studio et scènes.</p>
+                            </div>
+                          </div>
+
+                          {/* Événements */}
+                          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                            <div className="flex items-center justify-center w-4 h-4 rounded-full border-2 border-[#D4AF37] bg-[#050505] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0.5 md:ml-0"></div>
+                            <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-2xl bg-[#111111] border border-[#D4AF37]/20 shadow hover:border-[#D4AF37]/50 transition-colors">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="font-sans font-black text-white text-[11px] uppercase">Événements Live</h4>
+                                <span className="font-mono font-bold text-[9px] text-[#D4AF37]">Concerts</span>
+                              </div>
+                              <p className="text-[10px] font-sans text-[#B9B9B9] mt-2">Participation à {currentArtist.concertsCount || 3} événements majeurs.</p>
+                            </div>
+                          </div>
+
+                          {/* Collaborations */}
+                          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                            <div className="flex items-center justify-center w-4 h-4 rounded-full border-2 border-[#D4AF37] bg-[#050505] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0.5 md:ml-0"></div>
+                            <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-2xl bg-[#111111] border border-[#D4AF37]/20 shadow hover:border-[#D4AF37]/50 transition-colors">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="font-sans font-black text-white text-[11px] uppercase">Collaborations</h4>
+                                <span className="font-mono font-bold text-[9px] text-[#D4AF37]">Réseau</span>
+                              </div>
+                              <p className="text-[10px] font-sans text-[#B9B9B9] mt-2">{currentArtist.collabsCount || 2} collaborations avec d'autres artistes.</p>
+                            </div>
+                          </div>
+
                         </div>
                       </div>
                     </div>
@@ -4886,38 +4893,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           <span className="text-[8px] font-mono bg-zinc-800 px-2 py-0.5 rounded-full">Bientôt disponible</span>
                         </div>
                       </div>
-                    </div>
-
-                    {/* BOUTONS D'ACTIONS RÉELS */}
-                    <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
-                      <button 
-                        onClick={() => {
-                          setActiveMenu("user_edit_profile");
-                          try { audioSynth.playValidationSuccess(); } catch(e) {}
-                        }}
-                        className="px-5 py-2.5 bg-[#111111] border border-zinc-700 hover:border-zinc-500 text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95"
-                      >
-                        Modifier
-                      </button>
-                      <button 
-                        onClick={() => {
-                          navigator.clipboard.writeText(window.location.href);
-                          addToTerminal("[PARTAGE] Lien du profil copié avec succès !");
-                          try { audioSynth.playValidationSuccess(); } catch(e) {}
-                        }}
-                        className="px-5 py-2.5 bg-[#111111] border border-zinc-700 hover:border-zinc-500 text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95 flex items-center gap-2"
-                      >
-                        <Share2 className="w-3 h-3" /> Partager profil
-                      </button>
-                      <button 
-                        onClick={() => {
-                          addToTerminal("[PROFIL] Modifications enregistrées.");
-                          try { audioSynth.playKoraSuccess(); } catch(e) {}
-                        }}
-                        className="px-5 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#B48F17] hover:from-[#E4BF47] hover:to-[#C49F27] text-black rounded-xl text-[10px] font-mono uppercase tracking-wider font-black transition-all shadow-lg active:scale-95 flex items-center gap-2"
-                      >
-                        Enregistrer
-                      </button>
                     </div>
 
                     {/* Historical Earnings Progression Graph */}
@@ -5378,35 +5353,31 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </div>
 
               {activeMenu === "user_edit_profile" && (
-                <div className="animate-fadeIn pb-24 text-left">
-                  {profile ? (
-                    <GomboProfile 
-                      currentUserProfile={profile} 
-                      onRefreshProfile={refreshProfile}
-                      onNavigateView={(view) => {
-                        if (view === "dashboard" || view === "home" || view === "/home") {
-                          setActiveMenu("user_terrain");
-                        } else if (view === "heritage" || view === "main") {
-                          setActiveMenu("user_heritage");
-                        } else if (view === "back") {
-                          goBackMenu();
-                        } else {
-                          goBackMenu();
-                        }
-                      }}
-                      initialPanelView="edit"
-                    />
-                  ) : (
-                    <div className="p-12 text-center space-y-4">
-                      <p className="text-zinc-500 font-mono">Profil non chargé. Veuillez patienter...</p>
-                      <button 
-                        onClick={() => setActiveMenu("user_heritage")}
-                        className="px-6 py-2 bg-[#D4AF37] text-black font-black uppercase rounded-xl"
-                      >
-                        Retour
-                      </button>
+                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md overflow-y-auto">
+                  <div className="min-h-screen flex items-end sm:items-center justify-center p-0 sm:p-4">
+                    <div className="w-full max-w-2xl bg-[#050505] rounded-t-3xl sm:rounded-2xl border border-[#D4AF37]/20 p-6 shadow-2xl relative">
+                      {profile ? (
+                        <GomboProfile 
+                          currentUserProfile={profile} 
+                          onRefreshProfile={refreshProfile}
+                          onNavigateView={(view) => {
+                            setActiveMenu("user_heritage"); // Always return to heritage after edit
+                          }}
+                          initialPanelView="edit"
+                        />
+                      ) : (
+                        <div className="p-12 text-center space-y-4">
+                          <p className="text-zinc-500 font-mono">Profil non chargé...</p>
+                          <button 
+                            onClick={() => setActiveMenu("user_heritage")}
+                            className="px-6 py-2 bg-[#D4AF37] text-black font-black uppercase rounded-xl"
+                          >
+                            Retour
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
 
@@ -7737,9 +7708,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <button
             id="user-nav-heritage"
             onClick={() => {
-              setActiveMenu("user_heritage");
-              setViewingGomboIdDetail(false);
-              try { audioSynth.playValidationSuccess(); } catch (err) {}
+              if (!currentUser) {
+                setShowGoogleLoginRequiredModal(true);
+              } else {
+                setActiveMenu("user_heritage");
+                setViewingGomboIdDetail(false);
+                try { audioSynth.playValidationSuccess(); } catch (err) {}
+              }
             }}
             className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
               activeMenu === "user_heritage" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"

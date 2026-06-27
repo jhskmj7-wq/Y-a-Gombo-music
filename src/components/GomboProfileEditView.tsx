@@ -140,7 +140,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase flex items-center gap-2">
+          <h3 className="text-xl font-black text-white text-white uppercase flex items-center gap-2">
             <User className="w-5.5 h-5.5 text-[#D4AF37]" />
             Modifier mon Profil PRO
           </h3>
@@ -182,12 +182,12 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
         )}
 
         {/* 1. SECTION IDENTITÉ */}
-        <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-xs space-y-4">
-          <span className="text-[10px] tracking-widest uppercase font-black text-gray-400 block">Section 1. Identité d’Artiste (Publique)</span>
+        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-4">
+          <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 1. Identité d’Artiste (Publique)</span>
           
-          <div className="border border-gray-100 dark:border-gray-800 p-4.5 rounded-2xl bg-gray-50/50 dark:bg-gray-850/20 space-y-3">
+          <div className="border border-[#D4AF37]/25 p-4.5 rounded-2xl bg-[#161616]/50 dark:bg-gray-850/20 space-y-3">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-[#B9B9B9] dark:text-[#B9B9B9] uppercase tracking-wider">
                 Photo de Profil (Avatar)
               </label>
               {uploading && (
@@ -203,7 +203,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                 {coverUrl ? (
                   <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                  <div className="w-full h-full flex flex-col items-center justify-center text-[#B9B9B9]">
                      <Camera className="w-6 h-6 mb-2 opacity-50" />
                      <span className="text-[10px] uppercase font-bold tracking-wider">Bannière de couverture</span>
                   </div>
@@ -247,7 +247,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     <button
                       type="button"
                       onClick={stopCamera}
-                      className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-750 dark:text-gray-300 font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                      className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-750 text-[#B9B9B9] font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
                     >
                       Annuler
                     </button>
@@ -255,7 +255,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {/* Choisir une photo button */}
-                    <label className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-750 dark:text-gray-300 font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-gray-200/50 dark:border-gray-750">
+                    <label className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-750 text-[#B9B9B9] font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-gray-200/50 dark:border-gray-750">
                       <Upload className="w-3.5 h-3.5" />
                       Choisir une photo
                       <input
@@ -280,7 +280,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     </button>
                   </div>
                 )}
-                <span className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold">
+                <span className="text-[10px] text-[#B9B9B9] dark:text-[#B9B9B9] font-semibold">
                   Pris en charge via Firebase Storage.
                 </span>
               </div>
@@ -289,132 +289,132 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Prénom (Identité Google)</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Prénom (Identité Google)</label>
               <input
                 type="text"
                 required
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-black dark:text-white"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:ring-0 text-[#FFFFFF] placeholder-[#A9A9A9]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Nom (Identité Google)</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Nom (Identité Google)</label>
               <input
                 type="text"
                 required
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-black dark:text-white"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:ring-0 text-[#FFFFFF] placeholder-[#A9A9A9]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Nom Artistique (Surnom de scène)</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Nom Artistique (Surnom de scène)</label>
               <input
                 type="text"
                 placeholder="Ex: Le Bateleur, King DJ..."
                 value={artistName}
                 onChange={(e) => setArtistName(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-black dark:text-white font-bold"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:ring-0 text-[#FFFFFF] placeholder-[#A9A9A9] font-bold"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Date de Naissance d'Artisme</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Date de Naissance d'Artisme</label>
               <input
                 type="date"
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-black dark:text-white"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:ring-0 text-[#FFFFFF] placeholder-[#A9A9A9]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Genre</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Genre</label>
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm text-black dark:text-white"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm text-[#FFFFFF] placeholder-[#A9A9A9]"
               >
                 <option value="Homme">Homme</option>
                 <option value="Femme">Femme</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Téléphone de Contact</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Téléphone de Contact</label>
               <input
                 type="text"
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm font-semibold text-black dark:text-white"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm font-semibold text-[#FFFFFF] placeholder-[#A9A9A9]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Numéro WhatsApp PRO</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Numéro WhatsApp PRO</label>
               <input
                 type="text"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm font-semibold text-black dark:text-white"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm font-semibold text-[#FFFFFF] placeholder-[#A9A9A9]"
               />
             </div>
           </div>
 
           <div className="pt-2">
-            <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">Ma présentation / Bio (Biographie)</label>
+            <label className="block text-xs font-bold text-[#B9B9B9] mb-1.5 uppercase">Ma présentation / Bio (Biographie)</label>
             <textarea
               value={bio}
               rows={2}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 dark:text-white text-black font-semibold"
+              className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:ring-0 text-[#FFFFFF] placeholder-[#A9A9A9] font-semibold"
               placeholder="Ex: Guitariste soliste chevronné, disponible pour des cachets et concerts..."
             />
           </div>
         </div>
 
         {/* 2. SECTION LOCALISATION */}
-        <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-xs space-y-4">
-          <span className="text-[10px] tracking-widest uppercase font-black text-gray-400 block">Section 2. Localisation d'Abidjan & Zone Civ</span>
+        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-4">
+          <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 2. Localisation d'Abidjan & Zone Civ</span>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Ville</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Ville</label>
               <input
                 type="text"
                 required
                 value={ville}
                 onChange={(e) => setVille(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm text-black dark:text-white font-bold"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm text-[#FFFFFF] placeholder-[#A9A9A9] font-bold"
               />
             </div>
 
             {/* Searchable Commune selector */}
             <div className="relative">
-              <label className="block text-xs font-bold text-gray-500 mb-1">Commune</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Commune</label>
               <button
                 type="button"
                 onClick={() => setShowCommuneDropdown(!showCommuneDropdown)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm text-left flex items-center justify-between text-black dark:text-white font-bold"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm text-left flex items-center justify-between text-[#FFFFFF] placeholder-[#A9A9A9] font-bold"
               >
                 <span>{commune || "Veuillez choisir"}</span>
                 <ChevronDown className="w-4 h-4 text-gray-450 shrink-0" />
               </button>
 
               {showCommuneDropdown && (
-                <div className="absolute z-20 left-0 right-0 mt-1 bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-3 space-y-2 animate-fadeIn">
-                  <div className="flex items-center gap-1.5 px-2 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-lg">
-                    <Search className="w-3.5 h-3.5 text-gray-400" />
+                <div className="absolute z-20 left-0 right-0 mt-1 bg-[#050505] border border-[#D4AF37]/25 rounded-2xl shadow-xl p-3 space-y-2 animate-fadeIn">
+                  <div className="flex items-center gap-1.5 px-2 bg-[#161616] border border-[#D4AF37]/25 rounded-lg">
+                    <Search className="w-3.5 h-3.5 text-[#B9B9B9]" />
                     <input
                       type="text"
                       placeholder="Rechercher Commune..."
                       value={communeSearch}
                       onChange={(e) => setCommuneSearch(e.target.value)}
-                      className="w-full py-1.5 focus:outline-none bg-transparent text-xs text-black dark:text-white"
+                      className="w-full py-1.5 focus:outline-none bg-transparent text-xs text-[#FFFFFF] placeholder-[#A9A9A9]"
                     />
                   </div>
                   <div className="max-h-36 overflow-y-auto space-y-1">
@@ -429,7 +429,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                         className={`w-full text-left p-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                           commune === c 
                             ? "bg-orange-500/10 text-[#D4AF37]" 
-                            : "hover:bg-gray-50 text-gray-700 dark:text-gray-300"
+                            : "hover:bg-[#161616] text-[#B9B9B9] text-[#B9B9B9]"
                         }`}
                       >
                         {c}
@@ -441,29 +441,29 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Quartier (Modification libre)</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Quartier (Modification libre)</label>
               <input
                 type="text"
                 placeholder="Ex: Deux-Plateaux Vallon, Angré..."
                 required
                 value={quartier}
                 onChange={(e) => setQuartier(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm text-black dark:text-white font-bold"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm text-[#FFFFFF] placeholder-[#A9A9A9] font-bold"
               />
             </div>
           </div>
         </div>
 
         {/* 3. SECTION ACTIVITÉ & RÔLE */}
-        <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-xs space-y-4">
-          <span className="text-[10px] tracking-widest uppercase font-black text-gray-400 block">Section 3. Activité du Label / Type de Compte</span>
+        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-4">
+          <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 3. Activité du Label / Type de Compte</span>
           
           <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1">Je suis un :</label>
+            <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Je suis un :</label>
             <select
               value={accountRole}
               onChange={(e) => setAccountRole(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm font-bold text-black dark:text-white"
+              className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm font-bold text-[#FFFFFF] placeholder-[#A9A9A9]"
             >
               <option value="musicien">🎸 Artiste / Musicien</option>
               <option value="organisateur">🎪 Organisateur de Spectacle</option>
@@ -477,11 +477,11 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
         {/* 4. SECTION SPÉCIALITÉS & STYLES (Choix multiples + Saisie libre) */}
         {(accountRole === "musicien" || accountRole === "administrateur" || accountRole === "superviseur" || accountRole === "manager") && (
-          <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-xs space-y-6">
-            <span className="text-[10px] tracking-widest uppercase font-black text-gray-400 block">Section 4. Spécialités & Préférences Musicales</span>
+          <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-6">
+            <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 4. Spécialités & Préférences Musicales</span>
             
             <div className="space-y-3">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">🎸 Spécialités de scène (Choix multiples)</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] uppercase tracking-wider">🎸 Spécialités de scène (Choix multiples)</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {SPECIALTIES_LIST.map((spec) => {
                   const selected = specialties.includes(spec);
@@ -499,7 +499,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                       className={`px-3 py-1.5 rounded-xl text-[11px] font-bold text-left border flex items-center justify-between gap-1 transition-all ${
                         selected
                           ? "bg-[#D4AF37] border-[#D4AF37] text-white"
-                          : "bg-gray-50 dark:bg-[#18181b] border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-350"
+                          : "bg-[#161616] dark:bg-[#18181b] border-gray-200 dark:border-gray-800 text-[#B9B9B9] dark:text-gray-350"
                       }`}
                     >
                       <span className="truncate">{spec}</span>
@@ -516,7 +516,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   placeholder="Autre spécialité libre..."
                   value={freeSpecialty}
                   onChange={(e) => setFreeSpecialty(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-lg text-xs"
+                  className="w-full px-3 py-1.5 bg-[#161616] border border-[#D4AF37]/25 rounded-lg text-xs"
                 />
                 <button
                   type="button"
@@ -534,7 +534,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
             </div>
 
             <div className="space-y-3 pt-4 border-t border-gray-50 dark:border-gray-850">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">🎶 Styles & Genres (Choix multiples)</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] uppercase tracking-wider">🎶 Styles & Genres (Choix multiples)</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {GENRES_LIST.map((gen) => {
                   const selected = musicGenres.includes(gen);
@@ -552,7 +552,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                       className={`px-3 py-1.5 rounded-xl text-[11px] font-bold text-left border flex items-center justify-between gap-1 transition-all ${
                         selected
                           ? "bg-amber-500 border-amber-500 text-white"
-                          : "bg-gray-50 dark:bg-[#18181b] border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-350"
+                          : "bg-[#161616] dark:bg-[#18181b] border-gray-200 dark:border-gray-800 text-[#B9B9B9] dark:text-gray-350"
                       }`}
                     >
                       <span className="truncate">{gen}</span>
@@ -569,7 +569,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   placeholder="Autre courant libre..."
                   value={freeGenre}
                   onChange={(e) => setFreeGenre(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-lg text-xs"
+                  className="w-full px-3 py-1.5 bg-[#161616] border border-[#D4AF37]/25 rounded-lg text-xs"
                 />
                 <button
                   type="button"
@@ -589,11 +589,11 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
             {/* Expérience */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-50 dark:border-gray-850 pt-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">Niveau d'Expérience Scénique</label>
+                <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Niveau d'Expérience Scénique</label>
                 <select
                   value={experience}
                   onChange={(e) => setExperience(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold text-black"
+                  className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-xs font-bold text-black"
                 >
                   {EXPERIENCES.map(ex => (
                     <option key={ex} value={ex}>{ex}</option>
@@ -603,12 +603,12 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
               {/* General Availability days check list */}
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">Disponibilités Générales</label>
+                <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Disponibilités Générales</label>
                 <div className="space-y-1 mt-1 border border-gray-105 p-3 rounded-xl max-h-36 overflow-y-auto">
                   {["Semaine", "Week-end", "Journée", "Soirée", "Disponible immédiatement"].map((day) => {
                     const checked = availabilities.includes(day);
                     return (
-                      <label key={day} className="flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-gray-300 cursor-pointer">
+                      <label key={day} className="flex items-center gap-2 text-xs font-bold text-[#B9B9B9] text-[#B9B9B9] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={checked}
@@ -632,37 +632,37 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
         )}
 
         {/* 5. PAYMENTS MOBILE SYSTEMS */}
-        <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-xs space-y-4">
-          <span className="text-[10px] tracking-widest uppercase font-black text-gray-400 block">Section 5. Cachets de Paiement & Canal Argent Mobile (Mobile Money)</span>
+        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-4">
+          <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 5. Cachets de Paiement & Canal Argent Mobile (Mobile Money)</span>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Numéro WAVE (Retrait direct)</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Numéro WAVE (Retrait direct)</label>
               <input
                 type="text"
                 value={waveNumber}
                 onChange={(e) => setWaveNumber(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm font-semibold text-black dark:text-white"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm font-semibold text-[#FFFFFF] placeholder-[#A9A9A9]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Numéro ORANGE MONEY (Retrait direct)</label>
+              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Numéro ORANGE MONEY (Retrait direct)</label>
               <input
                 type="text"
                 value={orangeMoneyNumber}
                 onChange={(e) => setOrangeMoneyNumber(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-xl text-sm font-semibold text-black dark:text-white"
+                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm font-semibold text-[#FFFFFF] placeholder-[#A9A9A9]"
               />
             </div>
           </div>
         </div>
 
         {/* 6. SECTION VÉRIFICATION D'IDENTITÉ (AFRITRUST) */}
-        <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-xs space-y-4">
+        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] tracking-widest uppercase font-black text-gray-400 block">Section 6. Sécurité & Vérification (AFRITRUST)</span>
-              <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase flex items-center gap-2">
+              <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 6. Sécurité & Vérification (AFRITRUST)</span>
+              <h4 className="text-sm font-black text-white text-white uppercase flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#D4AF37]" />
                 Obtenir le badge de confiance
               </h4>
@@ -680,8 +680,8 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
             )}
           </div>
 
-          <div className="p-4 bg-gray-50/50 dark:bg-gray-850/40 border border-gray-100 dark:border-gray-800 rounded-2xl">
-            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+          <div className="p-4 bg-[#161616]/50 dark:bg-gray-850/40 border border-[#D4AF37]/25 rounded-2xl">
+            <p className="text-xs text-[#B9B9B9] dark:text-[#B9B9B9] leading-relaxed mb-4">
               Pour obtenir le <b>badge bleu Africid/Afritrust</b> et accroître votre crédibilité auprès des clients nationaux et internationaux, veuillez télécharger une photo lisible de votre <b>CNI, Passeport ou Attestation d’Identité</b>.
             </p>
 
@@ -698,7 +698,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row gap-3">
-                <label className="flex-1 px-4 py-3 bg-white dark:bg-[#1A1A1F] border border-dashed border-gray-300 dark:border-gray-700 hover:border-orange-500 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-xs font-black text-gray-500 hover:text-orange-500">
+                <label className="flex-1 px-4 py-3 bg-[#111111] border border-dashed border-gray-300 dark:border-gray-700 hover:border-orange-500 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-xs font-black text-[#B9B9B9] hover:text-orange-500">
                   <Upload className="w-4 h-4" />
                   Télécharger ma pièce d'identité
                   <input 
@@ -715,7 +715,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                 <button
                   type="button"
                   onClick={() => startCamera()} 
-                  className="px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-750 dark:text-gray-300 hover:bg-gray-200 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-750 text-[#B9B9B9] hover:bg-gray-200 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Camera className="w-4 h-4" />
                   Prendre une photo
@@ -733,7 +733,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               if (onSkip) onSkip();
               else if (onCancel) onCancel();
             }}
-            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-750 dark:text-gray-300 font-bold rounded-xl text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-750 text-[#B9B9B9] font-bold rounded-xl text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             Compléter plus tard
           </button>
@@ -741,7 +741,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold rounded-xl text-sm cursor-pointer transition-all"
+            className="px-6 py-3 bg-[#111111] border border-zinc-200 dark:border-zinc-800 hover:bg-[#D4AF37]/10 text-white font-bold rounded-xl text-sm cursor-pointer transition-all"
           >
             Annuler
           </button>
