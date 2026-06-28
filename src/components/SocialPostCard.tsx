@@ -28,9 +28,9 @@ export default function SocialPostCard({
   onApplyGombo
 }: SocialPostCardProps) {
   // Local reactive states
-  const [likes, setLikes] = useState(post.likesCount);
-  const [hasLiked, setHasLiked] = useState(() => {
-    return currentUser ? post.likedBy.includes(currentUser.uid) : false;
+  const [honours, setHonours] = useState(post.honoursCount || 0);
+  const [hasHonoured, setHasHonoured] = useState(() => {
+    return currentUser && post.honouredBy ? post.honouredBy.includes(currentUser.uid) : false;
   });
 
   const [encourages, setEncourages] = useState(post.encouragesCount || 0);
@@ -80,17 +80,15 @@ export default function SocialPostCard({
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Sync like & saved status if currentUser changes
+  // Sync honour status if currentUser changes
   useEffect(() => {
     if (currentUser) {
-      setHasLiked(post.likedBy.includes(currentUser.uid));
+      setHasHonoured((post.honouredBy || []).includes(currentUser.uid));
       setHasSaved(post.savedBy.includes(currentUser.uid));
-      setHasEncouraged(post.encouragedBy ? post.encouragedBy.includes(currentUser.uid) : false);
       setHasReported(post.reportedBy ? post.reportedBy.includes(currentUser.uid) : false);
     } else {
-      setHasLiked(false);
+      setHasHonoured(false);
       setHasSaved(false);
-      setHasEncouraged(false);
       setHasReported(false);
     }
   }, [currentUser, post]);
@@ -293,31 +291,31 @@ export default function SocialPostCard({
     setFollowed(!followed);
   };
 
-  // Like Action
-  const handleLikeToggle = async () => {
+  // Honour / Clap Action
+  const handleHonourToggle = async () => {
     if (!currentUser) {
       onTriggerLogin();
       return;
     }
 
-    let updatedLikedBy = [...post.likedBy];
-    let newLikeCount = likes;
+    let updatedHonouredBy = [...post.honouredBy || []];
+    let newHonourCount = likes;
 
-    if (hasLiked) {
-      updatedLikedBy = updatedLikedBy.filter(uid => uid !== currentUser.uid);
-      newLikeCount = Math.max(0, newLikeCount - 1);
+    if (hasHonoured) {
+      updatedHonouredBy = updatedHonouredBy.filter(uid => uid !== currentUser.uid);
+      newHonourCount = Math.max(0, newHonourCount - 1);
     } else {
-      updatedLikedBy.push(currentUser.uid);
-      newLikeCount += 1;
+      updatedHonouredBy.push(currentUser.uid);
+      newHonourCount += 1;
     }
 
-    setLikes(newLikeCount);
-    setHasLiked(!hasLiked);
+    setLikes(newHonourCount);
+    setHasHonoured(!hasHonoured);
 
     // Save update in DB
     await gomboDB.updateSocialPost(post.id, {
-      likesCount: newLikeCount,
-      likedBy: updatedLikedBy
+      honoursCount: newHonourCount,
+      honouredBy: updatedHonouredBy
     });
   };
 
@@ -328,7 +326,7 @@ export default function SocialPostCard({
       return;
     }
 
-    let updatedSavedBy = [...post.savedBy];
+    let updatedSavedBy = [...post.savedBy || []];
     let newSaveCount = saves;
 
     if (hasSaved) {
@@ -394,7 +392,11 @@ export default function SocialPostCard({
   };
 
   // Share Action (Copy to clipboard simulation)
-  const handleShare = () => {
+  const handleShare = async () => {
+    if (!currentUser) {
+      onTriggerLogin();
+      return;
+    }
     const dummyUrl = `${window.location.origin}/posts/${post.id}`;
     navigator.clipboard.writeText(dummyUrl).then(() => {
       setShareToast(true);
@@ -402,7 +404,7 @@ export default function SocialPostCard({
     });
 
     // Increment share counter quietly
-    gomboDB.updateSocialPost(post.id, {
+    await gomboDB.updateSocialPost(post.id, {
       sharesCount: (post.sharesCount || 0) + 1
     });
   };
@@ -720,18 +722,18 @@ export default function SocialPostCard({
       {/* 4. Footer interactions buttons (Likes, Comments, Shares, Saves, Reports, Répondre) */}
       <div className="px-3 sm:px-5 py-4 bg-gray-50/50 dark:bg-[#121212] border-t border-gray-100 dark:border-[#2B2B2B]">
         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:flex md:flex-wrap items-center gap-3 w-full">
-          {/* Like button - ❤️ J'honore */}
+          {/* Honour button - 🏆 J'honore */}
           <button
             id="btn-honore"
-            onClick={handleLikeToggle}
+            onClick={handleHonourToggle}
             className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer ${
-              hasLiked 
+              hasHonoured 
                 ? "bg-red-500/10 border-red-500/20 text-red-500" 
                 : "bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-gray-500 dark:text-zinc-400 hover:text-[#D4AF37]"
             }`}
           >
-            <Heart className={`w-4 h-4 ${hasLiked ? "fill-current text-red-500" : ""}`} />
-            <span>❤️ J'honore ({likes})</span>
+            <Heart className={`w-4 h-4 ${hasHonoured ? "fill-current text-red-500" : ""}`} />
+            <span>🏆 J'honore ({honours})</span>
           </button>
  
           {/* Comment button - 🗣️ Palabrer */}
