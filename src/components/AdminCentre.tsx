@@ -127,7 +127,9 @@ import {
   VolumeX,
   Smartphone,
   Loader2,
-  Check
+  Check,
+  Info,
+  Mic2
 } from "lucide-react";
 import {
   AreaChart,
@@ -825,6 +827,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [publishDraftDetected, setPublishDraftDetected] = useState<boolean>(false);
   const [showHeritageLoginRequired, setShowHeritageLoginRequired] = useState<boolean>(false);
   
+  // Plus Menu overlay states
+  const [isPlusMenuOpen, setIsPlusMenuOpen] = useState<boolean>(false);
+  const [activePublishType, setActivePublishType] = useState<"gombo" | "reel" | "demo" | "renfort" | "recherche">("gombo");
+  const [selectedPublishTags, setSelectedPublishTags] = useState<string[]>([]);
+  const [multiplePublishPhotos, setMultiplePublishPhotos] = useState<string[]>([]);
+  const [showHowWorksPopup, setShowHowWorksPopup] = useState<boolean>(false);
+  
   // Real contract active tracking states
   const [contractRepsConfirmed, setContractRepsConfirmed] = useState<Record<string, number>>({});
   const [contractRepsOrganizerValidated, setContractRepsOrganizerValidated] = useState<Record<string, number>>({});
@@ -834,6 +843,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [contractDisputeDetails, setContractDisputeDetails] = useState<Record<string, { reason: string, comment: string, proofUrl: string }>>({});
   
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [totalUnreadMessages, setTotalUnreadMessages] = useState<number>(0);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [memberQuery, setMemberQuery] = useState<string>("");
   const [communeFilter, setCommuneFilter] = useState<string>("all");
   const [savedPosts, setSavedPosts] = useState<string[]>([]);
@@ -863,6 +874,24 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       setAdminEmail(currentUser.email);
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser?.uid) {
+      setTotalUnreadMessages(0);
+      return;
+    }
+    const unsubscribe = gomboDB.listenConversations(currentUser.uid, (convos) => {
+      setConversations(convos);
+      let unread = 0;
+      convos.forEach(c => {
+        unread += c.unreadCount?.[currentUser.uid] || 0;
+      });
+      setTotalUnreadMessages(unread);
+    });
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [currentUser?.uid]);
 
   useEffect(() => {
     if (!db) return;
@@ -1625,67 +1654,82 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   // --- PREMIUM INTERACTIVES GOMBO HANDLERS ---
   const toggleSaveGombo = (id: string) => {
-    setSavedGomboIds(prev => {
-      const isSaved = prev.includes(id);
-      if (isSaved) {
-        addToTerminal(`[📌 PERSISTENCE] Gombo retiré du coffre-fort d'or.`);
-        return prev.filter(gid => gid !== id);
-      } else {
-        addToTerminal(`[📌 PERSISTENCE] Gombo précieusement sauvegardé dans votre coffre-fort d'or.`);
-        return [...prev, id];
-      }
+    requireAuthThen(() => {
+      setSavedGomboIds(prev => {
+        const isSaved = prev.includes(id);
+        if (currentUser) {
+          gomboDB.toggleSaveAction(currentUser.uid, id);
+        }
+        if (isSaved) {
+          addToTerminal(`[📌 PERSISTENCE] Gombo retiré du coffre-fort d'or.`);
+          return prev.filter(gid => gid !== id);
+        } else {
+          addToTerminal(`[📌 PERSISTENCE] Gombo précieusement sauvegardé dans votre coffre-fort d'or.`);
+          return [...prev, id];
+        }
+      });
     });
   };
 
   const toggleHonorGombo = (id: string) => {
-    setHonoredGomboIds(prev => {
-      const isHonored = prev.includes(id);
-      if (isHonored) {
-        return prev.filter(gid => gid !== id);
-      } else {
-        addToTerminal(`[❤️ COEUR] Vous honorez solennellement ce Gombo d'un témoignage de respect.`);
-        return [...prev, id];
-      }
+    requireAuthThen(() => {
+      setHonoredGomboIds(prev => {
+        const hasHonored = prev.includes(id);
+        if (currentUser) {
+          gomboDB.toggleHonor(currentUser.uid, id);
+        }
+        if (hasHonored) {
+          addToTerminal(`[🏆 HONNEUR] Vous avez retiré votre honneur au gombo.`);
+          return prev.filter(gid => gid !== id);
+        } else {
+          addToTerminal(`[🏆 HONNEUR] ✨ Honneur suprême accordé au gombo.`);
+          try { audioSynth.playValidationSuccess(); } catch(e){}
+          return [...prev, id];
+        }
+      });
     });
   };
 
   const applyToGombo = async (id: string) => {
-    setGombos(prev =>
-      prev.map(g => {
-        if (g.id === id) {
-          const alreadyApplied = renforts.some(r => r.gomboId === id && r.applicantId === "current_user");
-          if (alreadyApplied) return g;
-          return { ...g, applicantsCount: g.applicantsCount + 1 };
-        }
-        return g;
-      })
-    );
+    requireAuthThen(async () => {
+      setGombos(prev =>
+        prev.map(g => {
+          if (g.id === id) {
+            const alreadyApplied = renforts.some(r => r.gomboId === id && r.applicantId === currentUser?.uid);
+            if (alreadyApplied) return g;
+            return { ...g, applicantsCount: g.applicantsCount + 1 };
+          }
+          return g;
+        })
+      );
 
-    // Create a new Renfort (applicant request)
-    const alreadyApplied = renforts.some(r => r.gomboId === id && r.applicantId === "current_user");
-    if (alreadyApplied) {
-      addToTerminal(`[⚠️ DOUBLON] L'appel du Tam-Tam a déjà été entendu pour ce Gombo.`);
-      return;
-    }
+      // Create a new Renfort (applicant request)
+      const alreadyApplied = renforts.some(r => r.gomboId === id && r.applicantId === currentUser?.uid);
+      if (alreadyApplied) {
+        addToTerminal(`[⚠️ DOUBLON] L'appel du Tam-Tam a déjà été entendu pour ce Gombo.`);
+        return;
+      }
 
-    const gombo = gombos.find(g => g.id === id);
-    if (!gombo) return;
+      const gombo = gombos.find(g => g.id === id);
+      if (!gombo || !currentUser) return;
 
-    const newRenfort: Renfort = {
-      id: "renfort_" + Date.now(),
-      gomboId: id,
-      gomboTitle: gombo.title,
-      applicantId: "current_user",
-      applicantName: "Artiste Majestueux",
-      applicantArtisticName: "Mon Nom d'Artiste",
-      instrument: "Chant / Instrumentiste Elite",
-      status: "pending",
-      timestamp: new Date().toISOString()
-    };
+      const newRenfort: Renfort = {
+        id: "renfort_" + Date.now(),
+        gomboId: id,
+        gomboTitle: gombo.title,
+        applicantId: currentUser.uid,
+        applicantName: currentProfile?.name || "Artiste Majestueux",
+        applicantArtisticName: currentProfile?.artisticName || "Mon Nom d'Artiste",
+        instrument: currentProfile?.instrument || "Chant / Instrumentiste Elite",
+        status: "pending",
+        timestamp: new Date().toISOString()
+      };
 
-    setRenforts(prev => [newRenfort, ...prev]);
-    await saveToFirestore("renforts", newRenfort.id, newRenfort);
-    addToTerminal(`[🎤 CANDIDATURE] Félicitations ! Votre candidature pour "${gombo.title}" a été envoyée sur le réseau céleste.`);
+      setRenforts(prev => [newRenfort, ...prev]);
+      await saveToFirestore("renforts", newRenfort.id, newRenfort);
+      gomboDB.applyForGombo(id, currentUser.uid, gombo.title);
+      addToTerminal(`[🎤 CANDIDATURE] Félicitations ! Votre candidature pour "${gombo.title}" a été envoyée sur le réseau céleste.`);
+    });
   };
 
   const submitPalabreMessage = (id: string) => {
@@ -2252,7 +2296,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 setActiveMenu("user_messages");
                                 setIsSidebarOpen(false);
                                });
-                            }, false)}
+                            }, false, totalUnreadMessages > 0 ? (
+                              <span className="ml-2 bg-red-500 text-white text-[9px] font-mono font-black px-1.5 py-0.5 rounded-full shadow-md">
+                                {totalUnreadMessages}
+                              </span>
+                            ) : undefined)}
                             {renderMenuItem("menu_confidentiality", "Confidentialité", "🔒", () => {
                               setPerspective("user");
                               setActiveMenu("privacy");
@@ -2585,6 +2633,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               setNewNoticeBody={setNewNoticeBody}
               addToTerminal={addToTerminal}
               onValidateFilters={applyGombosFilters}
+              renforts={renforts}
             />
           </div>
 
@@ -3699,20 +3748,24 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                     {/* STATS INTERACTIVES & ACTION BUTTONS */}
                                     <div className="flex items-center justify-between pt-3 border-t border-white/[0.04] text-[10.5px] font-mono text-zinc-450">
                                       <div className="flex items-center gap-4 text-zinc-400">
-                                        {/* Likes / Vibrations Count */}
+                                        {/* Honneurs Count */}
                                         <button
                                           onClick={() => {
-                                            if (isLiked) {
-                                              setLikedPosts(prev => prev.filter(id => id !== p.id));
-                                            } else {
-                                              setLikedPosts(prev => [...prev, p.id]);
-                                              audioSynth.playValidationSuccess();
-                                            }
+                                            requireAuthThen(() => {
+                                              if (isLiked) {
+                                                setLikedPosts(prev => prev.filter(id => id !== p.id));
+                                                gomboDB.toggleHonor(currentUser!.uid, p.id);
+                                              } else {
+                                                setLikedPosts(prev => [...prev, p.id]);
+                                                gomboDB.toggleHonor(currentUser!.uid, p.id);
+                                                try { audioSynth.playValidationSuccess(); } catch(e){}
+                                              }
+                                            });
                                           }}
-                                          className={`flex items-center gap-1.5 transition-colors hover:text-red-400 cursor-pointer ${isLiked ? "text-red-500 font-bold" : ""}`}
+                                          className={`flex items-center gap-1.5 transition-colors hover:text-[#D4AF37] cursor-pointer ${isLiked ? "text-[#D4AF37] font-bold" : ""}`}
                                         >
-                                          <Heart className={`w-3.5 h-3.5 ${isLiked ? "fill-current text-red-500" : ""}`} /> 
-                                          <span>{p.likes + (isLiked ? 1 : 0)} vibrations</span>
+                                          <span className="text-[12px]">{isLiked ? "🪘" : "🪘"}</span> 
+                                          <span>{p.likes + (isLiked ? 1 : 0)} honneurs reçus</span>
                                         </button>
 
                                         {/* Views Count */}
@@ -4029,20 +4082,40 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   setNewGomboExperienceSouhaitee("");
                   setPublishPhoto("");
                   setPublishAudio("");
+                  setMultiplePublishPhotos([]);
+                  setSelectedPublishTags([]);
+                };
+
+                const getCategoryLabel = () => {
+                  switch (activePublishType) {
+                    case "gombo": return "🎉 Événement / Gombo";
+                    case "reel": return "📹 Réel Artistique";
+                    case "demo": return "🎵 Démo musicale";
+                    case "renfort": return "⚡ Renfort Express";
+                    case "recherche": return "🎸 Recherche instrumentiste";
+                    default: return "🎉 Événement / Gombo";
+                  }
                 };
 
                 // Calculate progress dynamically
-                let currentProgress = 25;
-                if (publishStep === 2) {
-                  currentProgress = 50;
-                  let points = 0;
-                  if (newGomboTitle.trim()) points += 10;
-                  if (newGomboDesc.trim()) points += 10;
-                  if (newGomboQuartier.trim()) points += 10;
-                  if (newGomboDate.trim()) points += 10;
-                  if (newGomboPrice >= 15000) points += 10;
-                  currentProgress += points;
-                }
+                let currentProgress = 50;
+                let points = 0;
+                if (newGomboTitle.trim()) points += 10;
+                if (newGomboDesc.trim()) points += 10;
+                if (newGomboQuartier.trim()) points += 10;
+                if (newGomboDate.trim()) points += 10;
+                if (newGomboPrice >= 15000) points += 10;
+                currentProgress += points;
+
+                const handleTagToggle = (tag: string) => {
+                  if (selectedPublishTags.includes(tag)) {
+                    setSelectedPublishTags(prev => prev.filter(t => t !== tag));
+                  } else {
+                    if (selectedPublishTags.length < 5) {
+                      setSelectedPublishTags(prev => [...prev, tag]);
+                    }
+                  }
+                };
 
                 const triggerPubSubmit = async () => {
                   if (!currentUser) {
@@ -4051,25 +4124,32 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     return;
                   }
 
-                  if (!newGomboTitle.trim()) {
-                    alert("Veuillez renseigner un titre spectaculaire pour votre publication !");
+                  if (activePublishType === "reel" && !publishAudio) {
+                    alert("Veuillez uploader une vidéo pour votre Réel.");
                     return;
                   }
-                  if (!newGomboDesc.trim()) {
-                    alert("Veuillez renseigner une description détaillée !");
-                    return;
-                  }
-                  if (!newGomboQuartier.trim()) {
-                    alert("Veuillez spécifier la commune ou le quartier !");
-                    return;
-                  }
-                  if (!newGomboDate) {
-                    alert("Veuillez spécifier une date pour la publication !");
-                    return;
-                  }
-                  if (!newGomboPrice || newGomboPrice < 15000) {
-                    alert("Le budget minimum d'une publication / contrat est réglementé à 15 000 FCFA.");
-                    return;
+
+                  if (activePublishType !== "reel") {
+                    if (!newGomboTitle.trim()) {
+                      alert("Veuillez renseigner un titre spectaculaire pour votre publication !");
+                      return;
+                    }
+                    if (!newGomboDesc.trim()) {
+                      alert("Veuillez renseigner une description détaillée !");
+                      return;
+                    }
+                    if (!newGomboQuartier.trim()) {
+                      alert("Veuillez spécifier la commune ou le quartier !");
+                      return;
+                    }
+                    if (!newGomboDate) {
+                      alert("Veuillez spécifier une date pour la publication !");
+                      return;
+                    }
+                    if (!newGomboPrice || newGomboPrice < 15000) {
+                      alert("Le budget minimum d'une publication / contrat est réglementé à 15 000 FCFA.");
+                      return;
+                    }
                   }
 
                   // 1. Trigger Loading State
@@ -4077,76 +4157,89 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   try { audioSynth.playTamTam(true); } catch (_) {}
 
                   // Simulated upload & processing delay
-                  await new Promise(resolve => setTimeout(resolve, 1500));
+                  await new Promise(resolve => setTimeout(resolve, 2000));
 
                   const activeArtist = users.find(u => u.id === activeArtistId) || users[0];
                   const uniqueId = "gombo_new_" + Date.now();
+                  const categoryLabel = getCategoryLabel();
 
-                  const newG: Gombo = {
-                    id: uniqueId,
-                    title: `🎖️ (${newGomboCategory}) ${newGomboTitle}`,
-                    description: newGomboDesc,
-                    budget: newGomboPrice,
-                    commissionRate: 0.10,
-                    location: `${newGomboQuartier}, ${newGomboCity}`,
-                    city: newGomboCity,
-                    quartier: newGomboQuartier,
-                    lieuPrecis: newGomboLieuPrecis || "Sur scène",
-                    organizerId: activeArtistId,
-                    organizerName: activeArtist.artisticName || activeArtist.name,
-                    timestamp: new Date().toISOString(),
-                    applicantsCount: 0,
-                    status: "open",
-                    isBoosted: false,
-                    date: newGomboDate,
-                    time: `${newGomboHeureDebut} - ${newGomboHeureFin}`,
-                    category: newGomboCategory,
-                    styleMusical: newGomboStyleMusical || "Tous styles",
-                    tenueExigee: newGomboTenueExigee || "Tenue de scène libre",
-                    experienceSouhaitee: newGomboExperienceSouhaitee || "Tous niveaux bienvenus",
-                    nombreRecherche: newGomboNombreRecherche,
-                    isRenfort: newGomboCategory === "⚡ Renfort Express",
-                    transportFee: newGomboCategory === "⚡ Renfort Express" ? newGomboTransportFee : 0,
-                    repetitionsCount: newGomboCategory === "⚡ Renfort Express" ? newGomboRepetitionsCount : 0,
-                    repetitionsSchedule: newGomboCategory === "⚡ Renfort Express" ? newGomboRepetitionsSchedule : "",
-                    repetitionsDates: newGomboCategory === "⚡ Renfort Express" ? newGomboRepetitionsDates : ""
-                  };
+                  if (activePublishType === "reel") {
+                    // Just create a reel post
+                    const newPostId = "post_reel_" + Date.now();
+                    const newP: Post = {
+                      id: newPostId,
+                      userId: activeArtistId,
+                      authorName: activeArtist.name,
+                      authorArtisticName: activeArtist.artisticName,
+                      content: `📹 Nouveau Réel publié !\\n\\n${newGomboDesc}`,
+                      likes: 0,
+                      comments: 0,
+                      isFlagged: false,
+                      timestamp: new Date().toISOString(),
+                      mediaUrl: publishAudio, // Treat audio field as video URL for simplicity here
+                      mediaType: "video"
+                    } as any;
+                    setPosts(prev => [newP, ...prev]);
+                    await saveToFirestore("posts", newP.id, newP);
+                  } else {
+                    const newG: Gombo = {
+                      id: uniqueId,
+                      title: `🎖️ (${categoryLabel}) ${newGomboTitle}`,
+                      description: newGomboDesc + (selectedPublishTags.length > 0 ? `\\n\\nTags: ${selectedPublishTags.map(t => `#${t}`).join(" ")}` : ""),
+                      budget: newGomboPrice,
+                      commissionRate: 0.10,
+                      location: `${newGomboQuartier}, ${newGomboCity}`,
+                      city: newGomboCity,
+                      quartier: newGomboQuartier,
+                      lieuPrecis: newGomboLieuPrecis || "Sur scène",
+                      organizerId: activeArtistId,
+                      organizerName: activeArtist.artisticName || activeArtist.name,
+                      timestamp: new Date().toISOString(),
+                      applicantsCount: 0,
+                      status: "open",
+                      isBoosted: false,
+                      date: newGomboDate,
+                      time: `${newGomboHeureDebut} - ${newGomboHeureFin}`,
+                      category: categoryLabel,
+                      styleMusical: newGomboStyleMusical || "Tous styles",
+                      tenueExigee: newGomboTenueExigee || "Tenue de scène libre",
+                      experienceSouhaitee: newGomboExperienceSouhaitee || "Tous niveaux bienvenus",
+                      nombreRecherche: newGomboNombreRecherche,
+                      isRenfort: activePublishType === "renfort",
+                      transportFee: activePublishType === "renfort" ? newGomboTransportFee : 0,
+                      repetitionsCount: activePublishType === "renfort" ? newGomboRepetitionsCount : 0,
+                      repetitionsSchedule: activePublishType === "renfort" ? newGomboRepetitionsSchedule : "",
+                      repetitionsDates: activePublishType === "renfort" ? newGomboRepetitionsDates : ""
+                    };
 
-                  // Add image or audio custom payload elements to Gombo if present
-                  if (publishPhoto) {
-                    (newG as any).coverUrl = publishPhoto;
+                    if (multiplePublishPhotos.length > 0) {
+                      (newG as any).coverUrl = multiplePublishPhotos[0];
+                      (newG as any).photos = multiplePublishPhotos;
+                    }
+                    if (publishAudio) {
+                      (newG as any).audioUrl = publishAudio;
+                    }
+
+                    setGombos(prev => [newG, ...prev]);
+                    await saveToFirestore("gombos", newG.id, newG);
+
+                    const newPostId = "post_new_" + Date.now();
+                    const newP: Post = {
+                      id: newPostId,
+                      userId: activeArtistId,
+                      authorName: activeArtist.name,
+                      authorArtisticName: activeArtist.artisticName,
+                      content: `📢 [${categoryLabel}] ${newGomboTitle}\\n\\n📍 Lieu : ${newGomboQuartier}, ${newGomboCity}\\n💰 Budget : ${newGomboPrice.toLocaleString()} FCFA\\n📅 Date : ${newGomboDate}\\n\\n${newGomboDesc}`,
+                      likes: 0,
+                      comments: 0,
+                      isFlagged: false,
+                      timestamp: new Date().toISOString()
+                    };
+                    if (multiplePublishPhotos.length > 0) newP.mediaUrl = multiplePublishPhotos[0];
+                    if (publishAudio) (newP as any).audioUrl = publishAudio;
+                    setPosts(prev => [newP, ...prev]);
+                    await saveToFirestore("posts", newP.id, newP);
                   }
-                  if (publishAudio) {
-                    (newG as any).audioUrl = publishAudio;
-                  }
-
-                  // Append to active feeds
-                  setGombos(prev => [newG, ...prev]);
-
-                  // Also create a social post so it appears in "murmures" & Le Terrain streams automatically
-                  const newPostId = "post_new_" + Date.now();
-                  const newP: Post = {
-                    id: newPostId,
-                    userId: activeArtistId,
-                    authorName: activeArtist.name,
-                    authorArtisticName: activeArtist.artisticName,
-                    content: `📢 [${newGomboCategory}] ${newGomboTitle}\n\n📍 Lieu : ${newGomboQuartier}, ${newGomboCity}\n💰 Budget : ${newGomboPrice.toLocaleString()} FCFA\n📅 Date : ${newGomboDate}\n\n${newGomboDesc}`,
-                    likes: 0,
-                    comments: 0,
-                    isFlagged: false,
-                    timestamp: new Date().toISOString()
-                  };
-                  if (publishPhoto) {
-                    newP.mediaUrl = publishPhoto;
-                  }
-                  if (publishAudio) {
-                    (newP as any).audioUrl = publishAudio;
-                  }
-                  setPosts(prev => [newP, ...prev]);
-
-                  // Save real persistence in Firestore
-                  await saveToFirestore("gombos", newG.id, newG);
-                  await saveToFirestore("posts", newP.id, newP);
 
                   // 2. Trigger Success State
                   setPublishLoading(false);
@@ -4156,23 +4249,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   await new Promise(resolve => setTimeout(resolve, 1500));
 
                   // Clear draft, reset status, redirect
-                  localStorage.removeItem("gombo_publish_draft");
+                  clearDraft();
                   setPublishSuccess(false);
-                  setPublishStep(1);
-                  setNewGomboTitle("");
-                  setNewGomboDesc("");
                   setActiveMenu("user_terrain");
                 };
 
                 return (
-                  <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn pb-24 relative select-none">
+                  <div className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none">
+                    <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn pb-24 relative select-none">
                     
                     {/* Draft restoration alert banner */}
                     {publishDraftDetected && (
                       <div className="bg-[#D4AF37]/15 border border-[#D4AF37]/30 rounded-2xl p-4 text-xs text-zinc-300 flex items-center justify-between animate-slideDown">
                         <span className="flex items-center gap-2">
                           <Sparkles className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                          ⚡ Brouillon restauré automatiquement pour continuer la saisie
+                          ⚡ Brouillon restauré automatiquement
                         </span>
                         <button 
                           onClick={clearDraft}
@@ -4184,27 +4275,31 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     )}
 
                     {/* Progress Bar Display */}
-                    <div className="bg-[#111111] border border-zinc-900 rounded-2xl p-4 space-y-2">
-                      <div className="flex justify-between text-[10px] font-mono uppercase tracking-wider">
-                        <span className="text-zinc-550">PROGRESSION DE PUBLICATION :</span>
-                        <span className="text-[#D4AF37] font-bold">{currentProgress}%</span>
+                    {activePublishType !== "reel" && (
+                      <div className="bg-[#111111] border border-zinc-900 rounded-2xl p-4 space-y-2">
+                        <div className="flex justify-between text-[10px] font-mono uppercase tracking-wider">
+                          <span className="text-zinc-550">PROGRESSION DE PUBLICATION :</span>
+                          <span className="text-[#D4AF37] font-bold">{currentProgress}%</span>
+                        </div>
+                        <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-zinc-850">
+                          <div 
+                            className="bg-gradient-to-r from-[#D4AF37] to-amber-500 h-full transition-all duration-500 ease-out"
+                            style={{ width: `${currentProgress}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-zinc-850">
-                        <div 
-                          className="bg-gradient-to-r from-[#D4AF37] to-amber-500 h-full transition-all duration-500 ease-out"
-                          style={{ width: `${currentProgress}%` }}
-                        />
-                      </div>
-                    </div>
+                    )}
 
                     {/* Loading Overlay spinner */}
                     {publishLoading && (
                       <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[999] flex flex-col items-center justify-center space-y-4">
                         <Loader2 className="w-12 h-12 animate-spin text-[#D4AF37]" />
                         <h3 className="text-base font-mono font-black uppercase tracking-widest text-white animate-pulse">
-                          publication en cours...
+                          {activePublishType === "reel" ? "Préparation publication..." : "Publication en cours..."}
                         </h3>
-                        <p className="text-xs text-zinc-500">Création de votre souveraineté sur Le Terrain...</p>
+                        <p className="text-xs text-zinc-500">
+                          {activePublishType === "reel" ? "Compression silencieuse et optimisation réseau..." : "Création de votre souveraineté sur Le Terrain..."}
+                        </p>
                       </div>
                     )}
 
@@ -4222,313 +4317,345 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     )}
 
                     {/* Form block */}
-                    <div className="bg-[#111111] border border-[#D4AF37]/20 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl text-left">
-                      <div className="border-b border-white/5 pb-4">
-                        <span className="text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] font-bold">TRANSMETTEUR MULTI-RÉSEAUX</span>
-                        <h3 className="text-xl font-display font-black text-white uppercase tracking-tight">PUBLIER SUR LE TERRAIN</h3>
-                        <p className="text-xs text-zinc-400 mt-1">
-                          Diffusez vos besoins ou démonstrations à toute la république musicale.
-                        </p>
+                    <div className="bg-[#111111] border border-[#D4AF37]/20 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl text-left relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#D4AF37] to-amber-600 opacity-80" />
+                      
+                      <div className="border-b border-white/5 pb-4 flex justify-between items-start">
+                        <div>
+                          <span className="text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] font-bold">TRANSMETTEUR MULTI-RÉSEAUX</span>
+                          <h3 className="text-xl font-display font-black text-white uppercase tracking-tight mt-1">{getCategoryLabel()}</h3>
+                          <p className="text-xs text-zinc-400 mt-1">
+                            {activePublishType === "reel" 
+                              ? "Partagez un moment musical fort en format vidéo vertical." 
+                              : "Diffusez vos besoins ou démonstrations à toute la république musicale."}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setShowHowWorksPopup(true)}
+                          className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-colors shrink-0"
+                          title="Comment fonctionne AFRIGOMBO ?"
+                        >
+                          <Info className="w-4 h-4" />
+                        </button>
                       </div>
 
-                      {/* STEP 1: Choose Publication Type */}
-                      {publishStep === 1 && (
-                        <div className="space-y-6 animate-fadeIn">
-                          <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold tracking-widest">
-                            ÉTAPES 1 : SÉLECTIONNER VOTRE TYPE DE PUBLICATION :
-                          </label>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {[
-                              { type: "🎵 Démo musicale", desc: "Présentez une démo audio de vos compositions phares.", icon: "🎵" },
-                              { type: "🎤 Opportunité", desc: "Proposez un contrat d'envergure payé à un artiste.", icon: "🎤" },
-                              { type: "🎸 Recherche instrumentiste", desc: "Trouvez un soliste ou rythmicien d'excellence.", icon: "🎸" },
-                              { type: "⚡ Renfort Express", desc: "Recrutement urgent pour combler un maillon manquant ce soir.", icon: "⚡" },
-                              { type: "🎬 Casting", desc: "Auditions de voix ou d'attitude de scène.", icon: "🎬" },
-                              { type: "🎉 Événement", desc: "Annoncez un spectacle, concert, ou festival.", icon: "🎉" }
-                            ].map((item) => (
-                              <button
-                                key={item.type}
-                                type="button"
-                                onClick={() => {
-                                  setNewGomboCategory(item.type);
-                                  saveDraft({ category: item.type });
-                                  setPublishStep(2);
-                                  try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                }}
-                                className="p-4 rounded-2xl bg-black border border-zinc-850 hover:border-[#D4AF37] text-left transition-all hover:scale-[1.02] cursor-pointer group flex gap-3.5"
-                              >
-                                <span className="text-2xl shrink-0 mt-0.5">{item.icon}</span>
-                                <div className="space-y-1">
-                                  <h4 className="text-xs font-sans font-black text-white uppercase tracking-wide group-hover:text-[#D4AF37] transition-colors">
-                                    {item.type}
-                                  </h4>
-                                  <p className="text-[10px] text-zinc-500 leading-normal font-sans">
-                                    {item.desc}
-                                  </p>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-
-                          <div className="pt-4 border-t border-white/5 flex">
-                            <button
-                              type="button"
-                              onClick={() => setActiveMenu("user_terrain")}
-                              className="flex-1 py-3 text-xs font-mono font-bold uppercase rounded-xl border border-zinc-800 text-zinc-400 hover:bg-white/5 transition-all cursor-pointer"
-                            >
-                              Fermer
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* STEP 2: Complete Dynamic Form Details */}
-                      {publishStep === 2 && (
-                        <div className="space-y-5 animate-fadeIn">
-                          
-                          {/* Selected Category overview */}
-                          <div className="flex items-center justify-between bg-black p-3.5 border border-zinc-850 rounded-xl">
-                            <div className="flex items-center gap-2">
-                              <span className="text-emerald-400">●</span>
-                              <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wide">TYPE SELECTIONNÉ :</span>
-                              <strong className="text-xs font-sans text-white uppercase tracking-wide">{newGomboCategory}</strong>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setPublishStep(1)}
-                              className="text-[9px] font-mono font-bold uppercase text-[#D4AF37] hover:underline"
-                            >
-                              Modifier
-                            </button>
-                          </div>
-
-                          {/* 1. Title */}
-                          <div className="space-y-2 text-left">
-                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">TITRE DE L'ACTU / OPPORTUNITÉ :</label>
-                            <input
-                              type="text"
-                              value={newGomboTitle}
-                              onChange={(e) => {
-                                setNewGomboTitle(e.target.value);
-                                saveDraft({ title: e.target.value });
-                              }}
-                              placeholder="ex. Recherche bassiste soliste pour maquis chic ce soir..."
-                              className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none placeholder-zinc-650 font-sans"
-                            />
-                          </div>
-
-                          {/* 2. Description */}
-                          <div className="space-y-2 text-left">
-                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DÉTAILS DU PROJET ET DES CONDITIONS :</label>
-                            <textarea
-                              value={newGomboDesc}
-                              onChange={(e) => {
-                                setNewGomboDesc(e.target.value);
-                                saveDraft({ desc: e.target.value });
-                              }}
-                              placeholder="Décrivez votre déroulé artistique, matériel requis, style musical d'honneur exigé..."
-                              className="w-full h-24 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-xs text-white placeholder-zinc-650 focus:outline-none transition-all resize-none font-sans"
-                            />
-                          </div>
-
-                          {/* 3. Location, Date & Style */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-5 animate-fadeIn">
+                        
+                        {activePublishType === "reel" ? (
+                          <>
+                            {/* REEL FORM */}
                             <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">COMMUNE / QUARTIER :</label>
-                              <select
-                                value={newGomboQuartier}
-                                onChange={(e) => {
-                                  setNewGomboQuartier(e.target.value);
-                                  saveDraft({ quartier: e.target.value });
-                                }}
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-sans cursor-pointer"
-                              >
-                                <option value="">Choisir la commune...</option>
-                                {["Cocody", "Marcory", "Plateau", "Treichville", "Yopougon", "Koumassi", "Abobo", "Adjamé", "Port-Bouët", "Bingerville", "Grand-Bassam"].map(c => (
-                                  <option key={c} value={c} className="bg-black text-white">{c}</option>
-                                ))}
-                              </select>
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">UPLOADER VOTRE VIDÉO (MP4, MOV) :</label>
+                              <div className="border-2 border-dashed border-zinc-800 rounded-2xl p-8 bg-black/40 text-center hover:border-[#D4AF37] transition-all cursor-pointer">
+                                {publishAudio ? (
+                                  <div className="space-y-3">
+                                    <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-400">
+                                      <Check className="w-8 h-8 stroke-[3]" />
+                                    </div>
+                                    <span className="block text-xs font-bold text-emerald-400">Vidéo prête</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setPublishAudio("")}
+                                      className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-mono rounded"
+                                    >
+                                      Remplacer la vidéo
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <label className="cursor-pointer block space-y-2">
+                                    <span className="block text-3xl">📱</span>
+                                    <span className="block text-[12px] font-sans text-zinc-300"><b>Parcourir les fichiers</b> ou glisser la vidéo</span>
+                                    <span className="block text-[9px] font-mono text-zinc-500">Format portrait recommandé (Max 100MB)</span>
+                                    <input 
+                                      type="file" 
+                                      accept="video/*" 
+                                      className="hidden" 
+                                      onChange={(e) => {
+                                        if (e.target.files && e.target.files[0]) {
+                                          const file = e.target.files[0];
+                                          const reader = new FileReader();
+                                          reader.onloadend = () => {
+                                            setPublishAudio(reader.result as string);
+                                            try { audioSynth.playValidationSuccess(); } catch (_) {}
+                                          };
+                                          reader.readAsDataURL(file);
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                )}
+                              </div>
                             </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DATE PRÉVUE :</label>
-                              <input
-                                type="date"
-                                value={newGomboDate}
-                                onChange={(e) => {
-                                  setNewGomboDate(e.target.value);
-                                  saveDraft({ date: e.target.value });
-                                }}
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                            <div className="space-y-2 text-left">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">LÉGENDE / DESCRIPTION :</label>
+                              <textarea
+                                value={newGomboDesc}
+                                onChange={(e) => setNewGomboDesc(e.target.value)}
+                                placeholder="Ajoutez un contexte, des hashtags, ou mentionnez vos collaborateurs..."
+                                className="w-full h-24 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-xs text-white placeholder-zinc-650 focus:outline-none transition-all resize-none font-sans"
                               />
                             </div>
-                          </div>
-
-                          {/* 4. Budget */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">BUDGET CACHET PRÉVU (FCFA) :</label>
-                              <span className="text-[8px] font-mono text-zinc-550">RÈGLEMENTATION MINIMALE : 15 000 FCFA</span>
+                          </>
+                        ) : (
+                          <>
+                            {/* GOMBO / RENFORT / OPPORTUNITY FORM */}
+                            <div className="space-y-2 text-left">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">TITRE DE L'ACTU / OPPORTUNITÉ :</label>
+                              <input
+                                type="text"
+                                value={newGomboTitle}
+                                onChange={(e) => {
+                                  setNewGomboTitle(e.target.value);
+                                  saveDraft({ title: e.target.value });
+                                }}
+                                placeholder="ex. Recherche bassiste soliste pour maquis chic ce soir..."
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none placeholder-zinc-650 font-sans"
+                              />
                             </div>
-                            <input
-                              type="number"
-                              min="15000"
-                              value={newGomboPrice}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value) || 0;
-                                setNewGomboPrice(val);
-                                saveDraft({ price: val });
-                              }}
-                              className={`w-full bg-black border rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none transition-all ${
-                                newGomboPrice < 15000 ? "border-red-500/50 text-red-400 focus:border-red-500" : "border-zinc-800 focus:border-[#D4AF37]"
-                              }`}
-                            />
-                            {newGomboPrice < 15000 && (
-                              <p className="text-[9px] font-mono text-red-500">
-                                ⚠️ Le budget d'honneur minimum requis pour garantir la décence et le respect des artistes est de 15 000 FCFA.
-                              </p>
-                            )}
-                          </div>
 
-                          {/* 5. Cover Photo File (Drag and Drop simulation / custom picker) */}
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">PHOTO DE COUVERTURE / ILLUSTRATION (FACULTATIF) :</label>
-                            
-                            <div className="border border-dashed border-zinc-800 rounded-xl p-4 bg-black/40 text-center relative hover:border-[#D4AF37] transition-all cursor-pointer">
-                              {publishPhoto ? (
-                                <div className="space-y-3">
-                                  <img src={publishPhoto} alt="Cover Preview" className="max-h-28 mx-auto rounded-lg object-cover border border-[#D4AF37]/35" />
+                            <div className="space-y-2 text-left">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DÉTAILS DU PROJET ET DES CONDITIONS :</label>
+                              <textarea
+                                value={newGomboDesc}
+                                onChange={(e) => {
+                                  setNewGomboDesc(e.target.value);
+                                  saveDraft({ desc: e.target.value });
+                                }}
+                                placeholder="Décrivez votre déroulé artistique, matériel requis, style musical d'honneur exigé..."
+                                className="w-full h-24 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-xs text-white placeholder-zinc-650 focus:outline-none transition-all resize-none font-sans"
+                              />
+                            </div>
+
+                            {/* Tags Selection */}
+                            <div className="space-y-2 text-left">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold flex justify-between">
+                                <span>TAGS RECHERCHÉS (MAX 5) :</span>
+                                <span className="text-[#D4AF37]">{selectedPublishTags.length}/5</span>
+                              </label>
+                              <div className="flex flex-wrap gap-2">
+                                {["Pianiste", "Bassiste", "Choriste", "Soliste", "Percussionniste", "Beatmaker", "Ingénieur Son", "Acoustique", "Live", "Urbain"].map(tag => (
                                   <button
+                                    key={tag}
                                     type="button"
-                                    onClick={() => setPublishPhoto("")}
-                                    className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[9px] font-mono rounded"
+                                    onClick={() => handleTagToggle(tag)}
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all border ${
+                                      selectedPublishTags.includes(tag) 
+                                        ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]" 
+                                        : "bg-black border-zinc-800 text-zinc-400 hover:border-zinc-600"
+                                    }`}
                                   >
-                                    Supprimer la photo
+                                    #{tag}
                                   </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">COMMUNE / QUARTIER :</label>
+                                <select
+                                  value={newGomboQuartier}
+                                  onChange={(e) => {
+                                    setNewGomboQuartier(e.target.value);
+                                    saveDraft({ quartier: e.target.value });
+                                  }}
+                                  className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-sans cursor-pointer"
+                                >
+                                  <option value="">Choisir la commune...</option>
+                                  {["Cocody", "Marcory", "Plateau", "Treichville", "Yopougon", "Koumassi", "Abobo", "Adjamé", "Port-Bouët", "Bingerville", "Grand-Bassam"].map(c => (
+                                    <option key={c} value={c} className="bg-black text-white">{c}</option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DATE PRÉVUE :</label>
+                                <input
+                                  type="date"
+                                  value={newGomboDate}
+                                  onChange={(e) => {
+                                    setNewGomboDate(e.target.value);
+                                    saveDraft({ date: e.target.value });
+                                  }}
+                                  className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">BUDGET CACHET PRÉVU (FCFA) :</label>
+                                <span className="text-[8px] font-mono text-zinc-550">RÈGLEMENTATION MINIMALE : 15 000 FCFA</span>
+                              </div>
+                              <input
+                                type="number"
+                                min="15000"
+                                value={newGomboPrice}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value) || 0;
+                                  setNewGomboPrice(val);
+                                  saveDraft({ price: val });
+                                }}
+                                className={`w-full bg-black border rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none transition-all ${
+                                  newGomboPrice < 15000 ? "border-red-500/50 text-red-400 focus:border-red-500" : "border-zinc-800 focus:border-[#D4AF37]"
+                                }`}
+                              />
+                              {newGomboPrice < 15000 && (
+                                <p className="text-[9px] font-mono text-red-500">
+                                  ⚠️ Le budget d'honneur minimum requis pour garantir la décence et le respect des artistes est de 15 000 FCFA.
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Multiple Photos Upload */}
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold flex justify-between">
+                                <span>PHOTOS ILLUSTRATIVES (OPTIONNEL) :</span>
+                                <span className="text-[#D4AF37]">{multiplePublishPhotos.length}/4</span>
+                              </label>
+                              
+                              <div className="grid grid-cols-4 gap-2">
+                                {multiplePublishPhotos.map((photo, idx) => (
+                                  <div key={idx} className="aspect-square relative rounded-xl overflow-hidden border border-[#D4AF37]/30 bg-black group">
+                                    <img src={photo} alt="Upload preview" className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={() => setMultiplePublishPhotos(prev => prev.filter((_, i) => i !== idx))}
+                                      className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                                
+                                {multiplePublishPhotos.length < 4 && (
+                                  <label className="aspect-square border border-dashed border-zinc-800 rounded-xl bg-black/40 flex flex-col items-center justify-center cursor-pointer hover:border-[#D4AF37] transition-all text-zinc-500 hover:text-[#D4AF37]">
+                                    <Plus className="w-5 h-5 mb-1" />
+                                    <span className="text-[8px] font-mono uppercase">Ajouter</span>
+                                    <input 
+                                      type="file" 
+                                      accept="image/*" 
+                                      className="hidden" 
+                                      onChange={(e) => {
+                                        if (e.target.files && e.target.files[0]) {
+                                          const file = e.target.files[0];
+                                          const reader = new FileReader();
+                                          reader.onloadend = () => {
+                                            setMultiplePublishPhotos(prev => [...prev, reader.result as string]);
+                                          };
+                                          reader.readAsDataURL(file);
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Audio Sample Uplink */}
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">EXTRAIT AUDIO (FACULTATIF) :</label>
+                              <div className="p-4 bg-black border border-zinc-850 rounded-xl flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                  <span className="text-xl">🎙️</span>
+                                  <div className="text-left">
+                                    <span className="block text-xs font-sans text-white font-bold">Uploader une maquette</span>
+                                    <span className="block text-[8px] font-mono text-zinc-550">Supporte MP3, WAV</span>
+                                  </div>
                                 </div>
-                              ) : (
-                                <label className="cursor-pointer block space-y-1.5">
-                                  <span className="block text-xl">📷</span>
-                                  <span className="block text-[11px] font-sans text-zinc-400"><b>Cliquez pour ajouter</b> ou glissez un fichier d'image</span>
-                                  <span className="block text-[8px] font-mono text-zinc-600">JPG, PNG (Max 5MB)</span>
+                                <label className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-850 text-white font-mono rounded-lg text-[9px] uppercase font-bold cursor-pointer transition-all border border-zinc-800">
+                                  Choisir fichier
                                   <input 
                                     type="file" 
-                                    accept="image/*" 
-                                    className="hidden" 
+                                    accept="audio/*" 
+                                    className="hidden"
                                     onChange={(e) => {
                                       if (e.target.files && e.target.files[0]) {
                                         const file = e.target.files[0];
                                         const reader = new FileReader();
                                         reader.onloadend = () => {
-                                          setPublishPhoto(reader.result as string);
+                                          setPublishAudio(reader.result as string);
+                                          try { audioSynth.playValidationSuccess(); } catch (_) {}
                                         };
                                         reader.readAsDataURL(file);
                                       }
                                     }}
                                   />
                                 </label>
+                              </div>
+                              {publishAudio && (
+                                <div className="p-2.5 bg-zinc-900/40 rounded-xl flex items-center justify-between border border-emerald-500/10 mt-2">
+                                  <span className="text-[10px] font-mono text-emerald-400">✓ Audio prêt</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPublishAudio("")}
+                                    className="text-[9px] font-mono text-red-500 hover:underline"
+                                  >
+                                    Retirer
+                                  </button>
+                                </div>
                               )}
                             </div>
-                          </div>
 
-                          {/* 6. Audio Sample Uplink / Mic simulation */}
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">EXTRAIT AUDIO DE LA DÉMO / PRÉSENTATION (FACULTATIF) :</label>
-                            
-                            <div className="p-4 bg-black border border-zinc-850 rounded-xl flex items-center justify-between">
-                              <div className="flex items-center gap-2.5">
-                                <span className="text-xl">🎙️</span>
-                                <div className="text-left">
-                                  <span className="block text-xs font-sans text-white font-bold">Uploader une démo ou enregistrer</span>
-                                  <span className="block text-[8px] font-mono text-zinc-550">Supporte MP3, WAV, ou voix en direct</span>
+                            {/* Renfort Express specific fields */}
+                            {activePublishType === "renfort" && (
+                              <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl space-y-3 text-left relative overflow-hidden mt-4">
+                                <div className="absolute top-0 right-0 p-2 opacity-10">
+                                  <Zap className="w-16 h-16 text-red-500" />
                                 </div>
-                              </div>
-                              <label className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-850 text-white font-mono rounded-lg text-[9px] uppercase font-bold cursor-pointer transition-all border border-zinc-800">
-                                Choisir un fichier
-                                <input 
-                                  type="file" 
-                                  accept="audio/*" 
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    if (e.target.files && e.target.files[0]) {
-                                      const file = e.target.files[0];
-                                      const reader = new FileReader();
-                                      reader.onloadend = () => {
-                                        setPublishAudio(reader.result as string);
-                                        try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  }}
-                                />
-                              </label>
-                            </div>
-                            {publishAudio && (
-                              <div className="p-2.5 bg-zinc-900/40 rounded-xl flex items-center justify-between border border-emerald-500/10">
-                                <span className="text-[10px] font-mono text-emerald-400">✓ Extrait audio chargé avec succès</span>
-                                <button
-                                  type="button"
-                                  onClick={() => setPublishAudio("")}
-                                  className="text-[9px] font-mono text-red-500 hover:underline"
-                                >
-                                  Retirer
-                                </button>
+                                <span className="text-[9px] font-mono text-red-400 uppercase font-bold block relative z-10 flex items-center gap-2">
+                                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                  CONFIGURATION RENFORT EXPRESS
+                                </span>
+                                <div className="grid grid-cols-2 gap-3 relative z-10">
+                                  <div>
+                                    <label className="text-[8.5px] font-mono text-zinc-400 uppercase block mb-1">Nombre requis :</label>
+                                    <input 
+                                      type="number" 
+                                      min="1" 
+                                      value={newGomboNombreRecherche} 
+                                      onChange={(e) => setNewGomboNombreRecherche(Math.max(1, parseInt(e.target.value) || 1))}
+                                      className="w-full bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white font-mono"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[8.5px] font-mono text-zinc-400 uppercase block mb-1">Indemnité transport additionnelle (FCFA) :</label>
+                                    <input 
+                                      type="number" 
+                                      value={newGomboTransportFee} 
+                                      onChange={(e) => setNewGomboTransportFee(Math.max(0, parseInt(e.target.value) || 0))}
+                                      className="w-full bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white font-mono"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             )}
-                          </div>
+                          </>
+                        )}
 
-                          {/* System Renfort express fields if relevant */}
-                          {newGomboCategory === "⚡ Renfort Express" && (
-                            <div className="p-4 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-xl space-y-3 text-left">
-                              <span className="text-[9px] font-mono text-[#D4AF37] uppercase font-bold block">⚡ CONFIGURATION RENFORT EXPRESS</span>
-                              <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                  <label className="text-[8.5px] font-mono text-zinc-500 uppercase block mb-1">Nombre requis :</label>
-                                  <input 
-                                    type="number" 
-                                    min="1" 
-                                    value={newGomboNombreRecherche} 
-                                    onChange={(e) => setNewGomboNombreRecherche(Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-full bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white font-mono"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-[8.5px] font-mono text-zinc-500 uppercase block mb-1">Indemnité transport (FCFA) :</label>
-                                  <input 
-                                    type="number" 
-                                    value={newGomboTransportFee} 
-                                    onChange={(e) => setNewGomboTransportFee(Math.max(0, parseInt(e.target.value) || 0))}
-                                    className="w-full bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white font-mono"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Submit / Cancel Buttons */}
-                          <div className="pt-4 border-t border-white/5 flex gap-3">
-                            <button
-                              type="button"
-                              onClick={() => setPublishStep(1)}
-                              className="flex-1 py-3 text-xs font-mono font-bold uppercase rounded-xl border border-zinc-800 text-zinc-400 hover:bg-white/5 transition-all cursor-pointer"
-                            >
-                              Retour
-                            </button>
-                            
-                            <button
-                              type="button"
-                              onClick={triggerPubSubmit}
-                              className="flex-1 py-3 text-xs font-mono font-black uppercase rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] transition-all cursor-pointer shadow-md shadow-[#D4AF37]/10"
-                            >
-                              Publier maintenant 📡
-                            </button>
-                          </div>
-
+                        {/* Submit / Cancel Buttons */}
+                        <div className="pt-6 border-t border-white/5 flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setActiveMenu("user_terrain")}
+                            className="w-1/3 py-3 text-xs font-mono font-bold uppercase rounded-xl border border-zinc-800 text-zinc-400 hover:bg-white/5 transition-all cursor-pointer"
+                          >
+                            Annuler
+                          </button>
+                          <button
+                            type="button"
+                            onClick={triggerPubSubmit}
+                            disabled={publishLoading}
+                            className={`w-2/3 py-3 px-4 text-xs font-display font-black uppercase rounded-xl transition-all shadow-lg text-black ${
+                              publishLoading ? "bg-zinc-600 cursor-not-allowed opacity-50" : "bg-gradient-to-r from-[#D4AF37] to-[#F1C40F] hover:opacity-90 active:scale-[0.98]"
+                            }`}
+                          >
+                            {publishLoading ? "En cours..." : "Publier"}
+                          </button>
                         </div>
-                      )}
-
+                      </div>
                     </div>
+                  </div>
                   </div>
                 );
               })()}
@@ -6163,7 +6290,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 {/* Button: Palabrer */}
                                 <motion.button
                                   whileTap={{ scale: 0.95 }}
-                                  onClick={() => setPalabreGombo(g)}
+                                  onClick={() => requireAuthThen(() => setPalabreGombo(g))}
                                   className="py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 bg-[#050505] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20 transition-all outline-none min-h-[36px]"
                                 >
                                   <span>🗣️ Palabrer</span>
@@ -7719,6 +7846,134 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       )}
 
       {/* =========================================================================
+                                     PLUS MENU OVERLAYS
+         ========================================================================= */}
+      {isPlusMenuOpen && (
+        <div className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center">
+          {/* Dismiss background */}
+          <div className="absolute inset-0" onClick={() => setIsPlusMenuOpen(false)} />
+          
+          <motion.div
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative w-full max-w-md bg-[#0a0a0c] border-t border-x border-[#D4AF37]/20 sm:rounded-3xl sm:border-b p-6 pb-12 shadow-[0_-15px_40px_rgba(0,0,0,0.8)] overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 p-4">
+              <button 
+                onClick={() => setIsPlusMenuOpen(false)}
+                className="text-zinc-500 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <h3 className="text-xl font-display font-black text-white mb-6 tracking-tight">Que souhaitez-vous publier ?</h3>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setActivePublishType("gombo");
+                  setActiveMenu("user_publish");
+                  setIsPlusMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-4 bg-gradient-to-r from-[#D4AF37]/10 to-transparent hover:from-[#D4AF37]/20 border border-[#D4AF37]/20 rounded-2xl p-4 text-left transition-all group"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#D4AF37] to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
+                  <Megaphone className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-[13px] font-sans font-bold text-white uppercase tracking-wider mb-0.5">Publier un Gombo</h4>
+                  <p className="text-[10px] text-zinc-400 font-mono">Recrutez des artistes pour vos événements.</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActivePublishType("reel");
+                  setActiveMenu("user_publish");
+                  setIsPlusMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl p-4 text-left transition-all group"
+              >
+                <div className="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 group-hover:scale-105 transition-transform">
+                  <Video className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-[13px] font-sans font-bold text-white uppercase tracking-wider mb-0.5">Publier un Réel</h4>
+                  <p className="text-[10px] text-zinc-400 font-mono">Partagez votre talent en vidéo courte.</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActivePublishType("demo");
+                  setActiveMenu("user_publish");
+                  setIsPlusMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl p-4 text-left transition-all group"
+              >
+                <div className="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/30 group-hover:scale-105 transition-transform">
+                  <Mic2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-[13px] font-sans font-bold text-white uppercase tracking-wider mb-0.5">Démo Musicale</h4>
+                  <p className="text-[10px] text-zinc-400 font-mono">Publiez une démo audio pour les recruteurs.</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActivePublishType("renfort");
+                  setActiveMenu("user_publish");
+                  setIsPlusMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl p-4 text-left transition-all group relative overflow-hidden"
+              >
+                <div className="w-12 h-12 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 border border-red-500/30 group-hover:scale-105 transition-transform">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-[13px] font-sans font-bold text-white uppercase tracking-wider mb-0.5 flex items-center gap-2">
+                    Renfort Express
+                    <span className="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded uppercase">Urgent</span>
+                  </h4>
+                  <p className="text-[10px] text-zinc-400 font-mono">Demandez un dépannage immédiat (musicien).</p>
+                </div>
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {showHowWorksPopup && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-sm bg-[#111113] border border-[#D4AF37]/30 rounded-2xl p-6 shadow-2xl"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#D4AF37]/20 flex items-center justify-center mb-4">
+              <Info className="w-6 h-6 text-[#D4AF37]" />
+            </div>
+            <h3 className="text-lg font-display font-black text-white mb-2">Comment fonctionne AFRIGOMBO ?</h3>
+            <p className="text-xs text-zinc-300 font-sans leading-relaxed mb-6">
+              AFRIGOMBO permet la mise en relation entre talents et porteurs de projets. 
+              <br/><br/>
+              Certaines options premium (marquage urgent, mise en avant, profils vérifiés) peuvent comporter des frais qui seront affichés avant validation. Les paiements garantissent la sécurité et l'engagement des deux parties.
+            </p>
+            <button 
+              onClick={() => setShowHowWorksPopup(false)}
+              className="w-full py-3 bg-gradient-to-r from-[#D4AF37] to-[#F1C40F] text-black font-bold uppercase tracking-wider text-xs rounded-xl hover:opacity-90 transition-all"
+            >
+              J'ai compris
+            </button>
+          </motion.div>
+        </div>
+      )}
+
+      {/* =========================================================================
                                      FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED)
          ========================================================================= */}
       {perspective === "user" && (
@@ -7760,7 +8015,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             id="user-nav-publish"
             onClick={() => {
               requireAuthThen(() => {
-                setActiveMenu("user_publish");
+                setIsPlusMenuOpen(true);
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
@@ -8738,11 +8993,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   {/* 5. ↗️ Partager */}
                   <button
                     onClick={() => {
-                      try {
-                        navigator.clipboard.writeText(`AFRIGOMBO - ${selectedGomboDetails.title} (Cachet: ${selectedGomboDetails.budget} FCFA)`);
-                        addToTerminal(`[↗️ PARTAGE] Informations du Gombo copiées dans le presse-papiers.`);
-                        audioSynth.playValidationSuccess();
-                      } catch (_) {}
+                      requireAuthThen(() => {
+                        try {
+                          navigator.clipboard.writeText(`AFRIGOMBO - ${selectedGomboDetails.title} (Cachet: ${selectedGomboDetails.budget} FCFA)`);
+                          addToTerminal(`[↗️ PARTAGE] Informations du Gombo copiées dans le presse-papiers.`);
+                          audioSynth.playValidationSuccess();
+                        } catch (_) {}
+                      });
                     }}
                     className="flex items-center gap-1.5 hover:text-[#D4AF37] transition text-[11px] font-bold cursor-pointer"
                     title="Partager ce Gombo"

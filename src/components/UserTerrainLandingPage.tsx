@@ -7,7 +7,7 @@ import {
   Sparkles, BarChart3
 } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
-import { Gombo, User, Post } from "../types";
+import { Gombo, User, Post, Renfort } from "../types";
 import AnnuaireTalents from "./AnnuaireTalents";
 import { usePerformance } from "../services/performanceService";
 
@@ -71,6 +71,7 @@ interface UserTerrainLandingPageProps {
   setReelsVideoId?: (val: string | null) => void;
   reelsVideoUrl?: string | null;
   setReelsVideoUrl?: (val: string | null) => void;
+  renforts?: Renfort[];
 }
 
 export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = React.memo(({
@@ -118,7 +119,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   reelsVideoId = null,
   setReelsVideoId = () => {},
   reelsVideoUrl = null,
-  setReelsVideoUrl = () => {}
+  setReelsVideoUrl = () => {},
+  renforts = []
 }) => {
   console.log("UserTerrainLandingPage Hooks initialized");
   const { t } = useLanguage();
@@ -179,6 +181,41 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       }
     };
   }, [audioElement]);
+
+  // Spotlight Auto-sliding timer (every 3 seconds)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % 4);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [setCurrentSlide]);
+
+  const [sliderTouchStart, setSliderTouchStart] = useState<number | null>(null);
+  const [sliderTouchEnd, setSliderTouchEnd] = useState<number | null>(null);
+
+  const handleSliderTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    setSliderTouchEnd(null);
+    setSliderTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleSliderTouchMove = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    setSliderTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleSliderTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (!sliderTouchStart || !sliderTouchEnd) return;
+    const distance = sliderTouchStart - sliderTouchEnd;
+    if (distance > 50) {
+      setCurrentSlide((prev) => (prev + 1) % 4);
+      try { audioSynth?.playTamTam?.(false); } catch (_) {}
+    } else if (distance < -50) {
+      setCurrentSlide((prev) => (prev - 1 + 4) % 4);
+      try { audioSynth?.playTamTam?.(false); } catch (_) {}
+    }
+  };
 
   const minSwipeDistance = 75;
 
@@ -267,38 +304,49 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     return matchesSearch && matchesCategory && matchesLocation && matchesType && matchesDate;
   });
 
-  // Spotlight carousel slides matching image
+  // Spotlight carousel slides matching requested categories
   const spotlightSlides = [
     {
       id: "gombo_spotlight_1",
-      title: "CONCERT LIVE",
-      description: "Recherche artiste pour concert live à Abidjan.",
-      location: "Abidjan, Côte d'Ivoire",
-      date: "25 mai 2025",
-      budget: "500 000 FCFA",
+      title: "🔥 Gombos tendances",
+      description: "GRAND CONCERT LIVE DES DIX - Recherche orchestre complet et choristes d'élite.",
+      location: "Marcory, Côte d'Ivoire",
+      date: "Immédiat",
+      budget: "1 500 000 FCFA",
       imageUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80",
       isPremium: true,
       isNew: true
     },
     {
       id: "gombo_spotlight_2",
-      title: "FESTIVAL POP",
-      description: "Recherche choristes d'élite et percussionnistes pour Grand Festival.",
-      location: "Koumassi, Côte d'Ivoire",
-      date: "18 juin 2026",
-      budget: "950 000 FCFA",
-      imageUrl: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&auto=format&fit=crop&q=80",
+      title: "🎵 Opportunités récentes",
+      description: "SESSION STUDIO ET ARRANGEMENT - Beatmaker recherché pour composer l'album afro-fusion de l'année.",
+      location: "Cocody, Côte d'Ivoire",
+      date: "Prochainement",
+      budget: "450 000 FCFA",
+      imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80",
       isPremium: true,
       isNew: true
     },
     {
       id: "gombo_spotlight_3",
-      title: "MARIAGE VIP",
-      description: "Prestation de rumba par un orchestre complet.",
-      location: "Marcory, Côte d'Ivoire",
-      date: "20 juin 2026",
-      budget: "1 200 000 FCFA",
-      imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
+      title: "⚡ Urgences",
+      description: "CHORISTE SOPRANO CE SOIR ! Prestation live d'élite à 20h.",
+      location: "Yopougon, Côte d'Ivoire",
+      date: "Ce soir 20h",
+      budget: "30 000 FCFA",
+      imageUrl: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&auto=format&fit=crop&q=80",
+      isPremium: true,
+      isNew: true
+    },
+    {
+      id: "gombo_spotlight_4",
+      title: "📹 Réels populaires",
+      description: "SOLO DE GUITARE DE FEU - Démo de Yoro l'Américain honorée par le Trône !",
+      location: "Koumassi, Côte d'Ivoire",
+      date: "Populaire",
+      budget: "350 000 FCFA",
+      imageUrl: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&auto=format&fit=crop&q=80",
       isPremium: true,
       isNew: false
     }
@@ -576,17 +624,81 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       </div>
 
       {/* ==========================================
+          2B. ⚡ RENFORT EXPRESS (URGENT RECRUITMENTS)
+         ========================================== */}
+      <div className="space-y-2.5 pt-2 select-none">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-1.5">
+            <span className="text-amber-500 animate-pulse text-sm">⚡</span>
+            <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
+              RENFORT EXPRESS
+            </h3>
+          </div>
+          <button
+            onClick={() => {
+              setActiveMenu("user_renforts");
+              try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
+            }}
+            className="text-[10px] font-bold text-[#D4AF37] hover:underline flex items-center gap-0.5 bg-transparent border-none cursor-pointer"
+          >
+            Voir tout <span className="text-[9px]">→</span>
+          </button>
+        </div>
+
+        {/* Dynamic / fallback small cards list */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {(() => {
+            const expressItems = (renforts || []).filter(r => r.isExpress || r.status === "pending" || r.urgent);
+            const seedItems = [
+              { id: "seed_ref_1", title: "🚨 Pianiste recherché aujourd'hui", commune: "Abidjan", budget: 20000 },
+              { id: "seed_ref_2", title: "🚨 Beatmaker urgent", commune: "Yamoussoukro", budget: 50000 },
+              { id: "seed_ref_3", title: "🚨 Choriste urgent", commune: "Bouaké", budget: 15000 }
+            ];
+            
+            const displayItems = expressItems.length > 0 ? expressItems.slice(0, 3) : seedItems;
+            
+            return displayItems.map(item => (
+              <motion.div
+                key={item.id}
+                whileHover={{ scale: 1.01, borderColor: "rgba(212,175,55,0.4)" }}
+                onClick={() => {
+                  setActiveMenu("user_renforts");
+                  try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
+                }}
+                className="bg-[#111113]/65 border border-zinc-900 rounded-xl p-3 flex flex-col justify-between text-left cursor-pointer transition-all hover:bg-zinc-900/50"
+              >
+                <div className="space-y-1">
+                  <h4 className="text-[10.5px] font-sans font-black text-white leading-snug line-clamp-1 flex items-center gap-1">
+                    <span className="text-red-500 shrink-0">🚨</span>
+                    {item.title}
+                  </h4>
+                  <div className="flex items-center justify-between text-[9px] text-zinc-400 font-mono pt-1">
+                    <span className="flex items-center gap-0.5">
+                      <span>📍</span> {item.commune || "Abidjan"}
+                    </span>
+                    <span className="text-[#D4AF37] font-bold">
+                      💰 {(item.budget || 20000).toLocaleString()} FCFA
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ));
+          })()}
+        </div>
+      </div>
+
+      {/* ==========================================
           3. FILTRES RAPIDES ET RECHERCHE AVANCÉE (HIDDEN AS REQUESTED)
          ========================================== */}
       {/* Search block completely removed to save space */}
 
       {/* ==========================================
-          4. OPPORTUNITÉS À LA UNE (SPOTLIGHT)
+          4. OPPORTUNITÉS À LA UNE (SPOTLIGHT / TENDANCES)
          ========================================== */}
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-center">
           <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
-            {t('opportunites_une')}
+            🔥 TENDANCES & COUPS DE PROJECTEUR
           </h3>
           <button
             onClick={() => {
@@ -600,8 +712,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </button>
         </div>
 
-        {/* Feature Spotlight Card banner */}
-        <div className="relative h-[220px] rounded-[24px] overflow-hidden group shadow-2xl border border-zinc-900">
+        {/* Feature Spotlight Card banner with swiping */}
+        <div 
+          onTouchStart={handleSliderTouchStart}
+          onTouchMove={handleSliderTouchMove}
+          onTouchEnd={handleSliderTouchEnd}
+          className="relative h-[220px] rounded-[24px] overflow-hidden group shadow-2xl border border-zinc-900 cursor-grab active:cursor-grabbing"
+        >
           <img
             src={optimizeImageUrl(currentSlideData.imageUrl, isDataSaveActive)}
             alt={currentSlideData.title}
@@ -620,10 +737,10 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               )}
               <button
                 onClick={() => toggleLike(currentSlideData.id)}
-                className="text-white hover:text-red-500 transition-colors p-1"
-                title="S'allier"
+                className="text-white transition-colors p-1"
+                title="Honneur"
               >
-                <Heart className={`w-5 h-5 ${isLiked(currentSlideData.id) ? "fill-[#D4AF37] text-[#D4AF37]" : "text-white"}`} />
+                <span className="text-[18px]">{isLiked(currentSlideData.id) ? "🪘" : "🪘"}</span>
               </button>
             </div>
 
@@ -687,51 +804,59 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       </div>
 
       {/* ==========================================
-          5. OPPORTUNITÉS RÉCENTES (HORIZONTAL ROWS)
+          5. 🎼 GOMBOS RÉCENTS (HORIZONTAL ROWS)
          ========================================== */}
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-center">
-          <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
-            {t('recents')}
-          </h3>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[#D4AF37]">🎼</span>
+            <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
+              GOMBOS RÉCENTS
+            </h3>
+          </div>
           <button
             onClick={() => {
               setSelectedCategory("all");
               setSelectedLocation("all");
               try { audioSynth.playTamTam(false); } catch (_) {}
             }}
-            className="text-xs text-[#D4AF37] font-bold"
+            className="text-xs text-[#D4AF37] font-bold bg-transparent border-none cursor-pointer hover:underline"
           >
             Voir tout
           </button>
         </div>
 
-        {/* List representation matches physical drawing on photo */}
+        {/* List representation */}
         <div className="space-y-3.5">
           {allRecentItems.length === 0 ? (
             <div className="p-8 text-center rounded-2xl bg-[#050505] border border-[#D4AF37]/20 text-[#D4AF37]/60 text-xs font-mono shadow-[0_2px_15px_rgba(212,175,55,0.03)]">
-              Aucune opportunité récente pour vos filtres sélectionnés.
+              Aucun gombo récent disponible.
             </div>
           ) : (
-            allRecentItems.map((item) => (
+            allRecentItems.slice(0, 4).map((item) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-20px" }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="flex bg-[#050505] border border-[#D4AF37]/20 hover:border-[#D4AF37]/60 rounded-2xl p-3 items-center gap-3 transition-colors shadow-[0_2px_15px_rgba(212,175,55,0.05)] cursor-pointer relative group"
+                viewport={{ once: true, margin: "-10px" }}
+                transition={{ duration: 0.3 }}
+                onClick={() => {
+                  try { audioSynth.playTamTam(false); } catch(_) {}
+                  const foundReal = gombos.find(g => g.id === item.id) || gombos[0];
+                  setSelectedGomboDetails(foundReal);
+                }}
+                className="flex bg-[#050505] border border-zinc-900 hover:border-[#D4AF37]/40 rounded-2xl p-3 items-center gap-3 transition-colors cursor-pointer relative group"
               >
                 {/* Left Thumbnail with Gold G logo overlay */}
-                <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-[#050505] border border-[#D4AF37]/30 flex items-center justify-center">
+                <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-[#050505] border border-[#D4AF37]/10 flex items-center justify-center">
                   <img
                     src={optimizeImageUrl(item.imageUrl, isDataSaveActive)}
                     alt={item.title}
                     loading="lazy"
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute bottom-1 left-1 w-4.5 h-4.5 bg-[#D4AF37]/95 border border-black rounded-full flex items-center justify-center shadow">
-                    <span className="text-[7.5px] font-black text-black">G</span>
+                  <div className="absolute bottom-0.5 left-0.5 w-4 h-4 bg-[#D4AF37] border border-black rounded-full flex items-center justify-center shadow">
+                    <span className="text-[7px] font-black text-black">G</span>
                   </div>
                 </div>
 
@@ -739,57 +864,53 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 <div className="flex-1 min-w-0 h-full flex flex-col justify-between py-0.5">
                   <div className="flex justify-between items-start gap-1">
                     <div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="flex items-center gap-1 flex-wrap">
                         {item.isNew && (
-                          <span className="text-[7px] font-bold bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 px-1.5 py-0.5 rounded uppercase font-mono tracking-wider">
+                          <span className="text-[6.5px] font-bold bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 px-1 py-0.5 rounded uppercase font-mono tracking-wider">
                             NOUVEAU
                           </span>
                         )}
                         {item.isPremium && (
-                          <span className="text-[7px] font-bold bg-[#D4AF37]/10 border border-[#D4AF37]/35 text-[#D4AF37] px-1.5 py-0.5 rounded uppercase font-mono tracking-wider">
+                          <span className="text-[6.5px] font-bold bg-[#D4AF37]/10 border border-[#D4AF37]/35 text-[#D4AF37] px-1 py-0.5 rounded uppercase font-mono tracking-wider">
                             PREMIUM
                           </span>
                         )}
                       </div>
                       
-                      <h4
-                        onClick={() => {
-                          try { audioSynth.playTamTam(false); } catch(_) {}
-                          const foundReal = gombos.find(g => g.id === item.id) || gombos[0];
-                          setSelectedGomboDetails(foundReal);
-                        }}
-                        className="text-xs font-black text-white hover:text-zinc-300 transition-all cursor-pointer tracking-wide mt-1 truncate max-w-[190px] sm:max-w-xs uppercase"
-                      >
+                      <h4 className="text-xs font-black text-white hover:text-zinc-300 transition-all cursor-pointer tracking-wide mt-0.5 truncate max-w-[190px] sm:max-w-xs uppercase">
                         {item.title}
                       </h4>
                       
-                      <p className="text-[9.5px] text-zinc-400 truncate max-w-[190px] sm:max-w-xs mt-0.5 font-sans leading-none">
+                      <p className="text-[9px] text-zinc-400 truncate max-w-[190px] sm:max-w-xs mt-0.5 font-sans leading-none">
                         {item.description}
                       </p>
                     </div>
 
                     {/* Heart button */}
                     <button
-                      onClick={() => toggleLike(item.id)}
-                      className="text-zinc-500 hover:text-white transition p-1 shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleLike(item.id);
+                      }}
+                      className="transition p-1 shrink-0 bg-transparent border-none cursor-pointer"
                     >
-                      <Heart className={`w-4 h-4 ${isLiked(item.id) ? "fill-[#D4AF37] text-[#D4AF37]" : "text-zinc-500"}`} />
+                      <span className="text-[12px]">{isLiked(item.id) ? "🪘" : "🪘"}</span>
                     </button>
                   </div>
 
                   {/* Location under description */}
-                  <div className="flex justify-between items-end mt-2 pt-1.5 border-t border-zinc-900/40">
-                    <span className="text-[9px] text-zinc-500 font-medium font-sans">
+                  <div className="flex justify-between items-end mt-1.5 pt-1 border-t border-zinc-900/40">
+                    <span className="text-[8.5px] text-zinc-500 font-medium font-sans">
                       📍 {item.location}
                     </span>
 
                     {/* Budget & Date beneath it */}
-                    <div className="text-right">
-                      <span className="text-xs font-bold text-[#D4AF37] block leading-none">
-                        {item.budget}
-                      </span>
-                      <span className="text-[8px] text-zinc-500 font-mono tracking-tight block mt-0.5 leading-none">
+                    <div className="text-right flex items-center gap-2">
+                      <span className="text-[8px] text-zinc-500 font-mono tracking-tight leading-none">
                         {item.date}
+                      </span>
+                      <span className="text-[11px] font-bold text-[#D4AF37] leading-none">
+                        {item.budget}
                       </span>
                     </div>
                   </div>
@@ -797,6 +918,176 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               </motion.div>
             ))
           )}
+        </div>
+      </div>
+
+      {/* ==========================================
+          6. ⚡ OPPORTUNITÉS URGENTES (DURABLE CLOUD SYNC)
+         ========================================== */}
+      <div className="space-y-3 pt-2 select-none">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-red-500 animate-pulse text-sm">🔥</span>
+            <h3 className="text-[11px] font-sans font-black tracking-widest text-white uppercase">
+              OPPORTUNITÉS URGENTES
+            </h3>
+          </div>
+          <span className="text-[8px] font-mono text-zinc-500 tracking-wider">
+            SYNCHRONISÉ LIVE 📡
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {(() => {
+            const urgentItems = allRecentItems.filter(item => item.isNew || item.isPremium || item.title.toLowerCase().includes("urgent") || item.title.toLowerCase().includes("🚨"));
+            const seedUrgents = [
+              {
+                id: "seed_urg_1",
+                title: "🚨 Bassiste urgent ce soir à Zone 4",
+                description: "Remplacement lead pour un cabaret réputé. Solo requis.",
+                location: "Marcory, Côte d'Ivoire",
+                budget: "45 000 FCFA",
+                date: "Ce soir 21h",
+                imageUrl: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400"
+              },
+              {
+                id: "seed_urg_2",
+                title: "🚨 Beatmaker urgent studio session",
+                description: "Production d'un single Coupé-Décalé de haut niveau.",
+                location: "Cocody, Côte d'Ivoire",
+                budget: "120 000 FCFA",
+                date: "Aujourd'hui 14h",
+                imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"
+              }
+            ];
+
+            const displayUrgents = urgentItems.length > 0 ? urgentItems.slice(0, 2) : seedUrgents;
+
+            return displayUrgents.map((item) => (
+              <motion.div
+                key={item.id}
+                whileHover={{ scale: 1.01 }}
+                onClick={() => {
+                  try { audioSynth.playTamTam(false); } catch(_) {}
+                  const foundReal = gombos.find(g => g.id === item.id) || gombos[0];
+                  setSelectedGomboDetails(foundReal);
+                }}
+                className="bg-gradient-to-r from-red-950/15 to-amber-950/10 border border-red-900/40 rounded-2xl p-3.5 flex flex-col justify-between text-left cursor-pointer hover:border-red-500/50 transition-all relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-full blur-xl group-hover:bg-red-500/10 transition-colors pointer-events-none" />
+                
+                <div className="space-y-1.5 relative">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[7.5px] font-black bg-red-500 text-white px-2 py-0.5 rounded-lg uppercase tracking-widest font-mono">
+                      URGENT CE SOIR
+                    </span>
+                    <span className="text-[10px] font-black text-[#D4AF37] font-sans">
+                      {item.budget}
+                    </span>
+                  </div>
+                  <h4 className="text-xs font-black text-white group-hover:text-[#D4AF37] transition-colors leading-snug uppercase">
+                    {item.title}
+                  </h4>
+                  <p className="text-[9.5px] text-zinc-400 line-clamp-2 leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between text-[8.5px] text-zinc-500 font-mono pt-3 mt-2 border-t border-zinc-900/60 relative">
+                  <span>📍 {item.location}</span>
+                  <span className="text-red-400 font-black flex items-center gap-1">
+                    <span>⏱</span> {item.date}
+                  </span>
+                </div>
+              </motion.div>
+            ));
+          })()}
+        </div>
+      </div>
+
+      {/* ==========================================
+          7. 📹 RÉELS D'ARTISTES (LIVELY VIDEO PREVIEW GALLERY)
+         ========================================== */}
+      <div className="space-y-3 pt-2 select-none">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[#D4AF37]">📹</span>
+            <h3 className="text-[11px] font-sans font-black tracking-widest text-white uppercase">
+              RÉELS D'ARTISTES
+            </h3>
+          </div>
+          <button
+            onClick={() => {
+              setCurrentSection("reels");
+              try { audioSynth.playTamTam(false); } catch (_) {}
+            }}
+            className="text-xs text-[#D4AF37] font-bold bg-transparent border-none cursor-pointer hover:underline"
+          >
+            Voir tout
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2.5">
+          {[
+            {
+              id: "local-reel-1",
+              title: "Intro Solo Saxophone",
+              artist: "Thierry Sax d'Abidjan",
+              views: "1.2K vues",
+              url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
+              thumbnail: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200"
+            },
+            {
+              id: "local-reel-2",
+              title: "Improvisation Batterie",
+              artist: "Sékou Batterie d'or",
+              views: "890 vues",
+              url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4",
+              thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=200"
+            },
+            {
+              id: "local-reel-3",
+              title: "Vocalises Rumba",
+              artist: "Fanta D'Abobo",
+              views: "2.4K vues",
+              url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
+              thumbnail: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200"
+            }
+          ].map((reel, index) => (
+            <motion.div
+              key={reel.id}
+              whileHover={{ scale: 1.02 }}
+              onClick={() => {
+                setReelsVideoUrl(reel.url);
+                try { audioSynth.playValidationSuccess(); } catch(_) {}
+              }}
+              className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-900 group cursor-pointer"
+            >
+              <img
+                src={reel.thumbnail}
+                alt={reel.title}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-60"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+              
+              {/* Play icon overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-full bg-black/60 border border-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <span className="text-[#D4AF37] text-[10px] pl-0.5">▶</span>
+                </div>
+              </div>
+
+              {/* Bottom text overlays */}
+              <div className="absolute bottom-2 left-2 right-2 text-left">
+                <p className="text-[7.5px] font-sans font-black text-white uppercase leading-none truncate mb-0.5">
+                  {reel.title}
+                </p>
+                <p className="text-[6.5px] text-zinc-400 font-mono truncate leading-none">
+                  {reel.artist}
+                </p>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
       </>

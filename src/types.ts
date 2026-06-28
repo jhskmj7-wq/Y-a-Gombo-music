@@ -434,6 +434,8 @@ export interface ActivityFeedEntry {
 export interface Conversation {
   id?: string;
   participants?: string[];
+  participantNames?: Record<string, string>;
+  participantAvatars?: Record<string, string>;
   lastMessage?: string;
   lastMessageAt?: string;
   [key: string]: any;
@@ -443,7 +445,19 @@ export interface Message {
   id?: string;
   conversationId?: string;
   senderId?: string;
+  receiverId?: string;
   text?: string;
+  image?: string;
+  audio?: string;
+  isRead?: boolean;
+  createdAt?: string;
+  [key: string]: any;
+}
+
+export interface Honor {
+  id?: string;
+  userId?: string;
+  targetPost?: string;
   createdAt?: string;
   [key: string]: any;
 }

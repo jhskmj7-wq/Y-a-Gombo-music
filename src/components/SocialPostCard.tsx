@@ -311,6 +311,7 @@ export default function SocialPostCard({
 
     setHonours(newHonourCount);
     setHasHonoured(!hasHonoured);
+    gomboDB.toggleHonor(currentUser.uid, post.id);
 
     // Save update in DB
     await gomboDB.updateSocialPost(post.id, {
@@ -339,6 +340,7 @@ export default function SocialPostCard({
 
     setSaves(newSaveCount);
     setHasSaved(!hasSaved);
+    gomboDB.toggleSaveAction(currentUser.uid, post.id);
 
     // Save update in DB
     await gomboDB.updateSocialPost(post.id, {
@@ -722,18 +724,18 @@ export default function SocialPostCard({
       {/* 4. Footer interactions buttons (Likes, Comments, Shares, Saves, Reports, Répondre) */}
       <div className="px-3 sm:px-5 py-4 bg-gray-50/50 dark:bg-[#121212] border-t border-gray-100 dark:border-[#2B2B2B]">
         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:flex md:flex-wrap items-center gap-3 w-full">
-          {/* Honour button - 🏆 J'honore */}
+          {/* Honour button - 🪘 Honneur reçu */}
           <button
             id="btn-honore"
             onClick={handleHonourToggle}
             className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer ${
               hasHonoured 
-                ? "bg-red-500/10 border-red-500/20 text-red-500" 
+                ? "bg-[#D4AF37]/10 border-[#D4AF37]/20 text-[#D4AF37]" 
                 : "bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-gray-500 dark:text-zinc-400 hover:text-[#D4AF37]"
             }`}
           >
-            <Heart className={`w-4 h-4 ${hasHonoured ? "fill-current text-red-500" : ""}`} />
-            <span>🏆 J'honore ({honours})</span>
+            <span className="text-[14px]">{hasHonoured ? "🪘" : "🪘"}</span>
+            <span>Honneur reçu ({honours})</span>
           </button>
  
           {/* Comment button - 🗣️ Palabrer */}

@@ -2144,6 +2144,76 @@ export const gomboDB = {
     };
   },
 
+  async applyForGombo(gomboId: string, userId: string, gomboTitle: string): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        const appId = "app_" + Math.random().toString(36).substr(2, 9);
+        const ref = doc(db, "applications", appId);
+        await setDoc(ref, {
+          id: appId,
+          gomboId,
+          userId,
+          gomboTitle,
+          status: "pending",
+          createdAt: new Date().toISOString()
+        });
+        return;
+      } catch (err) {
+        console.warn("⚠️ Mode Firestore inaccessible pour applyForGombo.", err);
+      }
+    }
+  },
+
+  async toggleHonor(userId: string, postId: string): Promise<boolean> {
+    if (!isFirebaseMock && db) {
+      try {
+        const honorId = `honor_${userId}_${postId}`;
+        const ref = doc(db, "honors", honorId);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          await deleteDoc(ref);
+          return false; // Removed
+        } else {
+          await setDoc(ref, {
+            id: honorId,
+            userId,
+            targetPost: postId,
+            createdAt: new Date().toISOString()
+          });
+          return true; // Added
+        }
+      } catch (err) {
+        console.warn("⚠️ Mode Firestore inaccessible pour toggleHonor.", err);
+      }
+    }
+    return true;
+  },
+
+  async toggleSaveAction(userId: string, postId: string): Promise<boolean> {
+    if (!isFirebaseMock && db) {
+      try {
+        const saveId = `save_${userId}_${postId}`;
+        const ref = doc(db, "saved", saveId);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          await deleteDoc(ref);
+          return false;
+        } else {
+          await setDoc(ref, {
+            id: saveId,
+            userId,
+            targetPost: postId,
+            createdAt: new Date().toISOString()
+          });
+          return true;
+        }
+      } catch (err) {
+        console.warn("⚠️ Mode Firestore inaccessible pour toggleSaveAction.", err);
+      }
+    }
+    return true;
+  },
+
   async publishSocialPost(post: Omit<SocialPost, "id" | "createdAt" | "likesCount" | "sharesCount" | "savesCount" | "likedBy" | "savedBy" | "comments">): Promise<SocialPost> {
     const id = "post_" + Math.random().toString(36).substring(2, 9);
     const newPost: SocialPost = {
