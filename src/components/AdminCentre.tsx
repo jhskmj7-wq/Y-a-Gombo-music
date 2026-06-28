@@ -125,7 +125,9 @@ import {
   Pause,
   Volume2,
   VolumeX,
-  Smartphone
+  Smartphone,
+  Loader2,
+  Check
 } from "lucide-react";
 import {
   AreaChart,
@@ -608,6 +610,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   const requireAuthThen = (action: () => void) => {
     if (!currentUser) {
+      alert("🔒 Connectez-vous pour continuer");
       setIsAuthModalOpen(true);
       try { audioSynth.playKoraSuccess(); } catch (err) {}
     } else {
@@ -649,6 +652,17 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     }
   }, [activeMenu]);
   const [viewingGomboIdDetail, setViewingGomboIdDetail] = useState<boolean>(false);
+  const [isUniversAfriOpen, setIsUniversAfriOpen] = useState<boolean>(false);
+  const [followedArtists, setFollowedArtists] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return JSON.parse(localStorage.getItem("gombo_followed_artists") || "[]");
+      } catch (_) {
+        return [];
+      }
+    }
+    return [];
+  });
   const [selectedGomboDetails, setSelectedGomboDetails] = useState<Gombo | null>(null);
   const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
   
@@ -786,6 +800,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [newGomboRepetitionsCount, setNewGomboRepetitionsCount] = useState<number>(3);
   const [newGomboRepetitionsSchedule, setNewGomboRepetitionsSchedule] = useState<string>("18h00-21h00");
   const [newGomboRepetitionsDates, setNewGomboRepetitionsDates] = useState<string>("");
+  
+  // Custom states for premium multi-step publish and heritage flow
+  const [publishStep, setPublishStep] = useState<number>(1);
+  const [publishLoading, setPublishLoading] = useState<boolean>(false);
+  const [publishSuccess, setPublishSuccess] = useState<boolean>(false);
+  const [publishPhoto, setPublishPhoto] = useState<string>("");
+  const [publishAudio, setPublishAudio] = useState<string>("");
+  const [publishDraftDetected, setPublishDraftDetected] = useState<boolean>(false);
+  const [showHeritageLoginRequired, setShowHeritageLoginRequired] = useState<boolean>(false);
   
   // Real contract active tracking states
   const [contractRepsConfirmed, setContractRepsConfirmed] = useState<Record<string, number>>({});
@@ -2459,8 +2482,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
                   title="Profil Utilisateur" 
                   onClick={() => { 
-                    setActiveMenu("user_heritage"); 
-                    setViewingGomboIdDetail(false); 
+                    if (!currentUser) {
+                      setShowHeritageLoginRequired(true);
+                    } else {
+                      setActiveMenu("user_heritage"); 
+                      setViewingGomboIdDetail(false); 
+                    }
                   }}
                 >
                   {profile?.avatarUrl || currentUser?.photoURL ? (
@@ -2496,7 +2523,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <AnimatePresence mode="wait">
             <motion.div
               key={activeMenu}
-              className="h-full overflow-y-auto overflow-x-hidden"
               initial={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: 20 }}
               animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
               exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -20, transition: { duration: 0.1 } }}
@@ -3932,488 +3958,550 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
               {/* 3. USER PUBLISH VIEW */}
               {activeMenu === "user_publish" && (() => {
-                const triggerPubSubmit = async () => {
-                  const activeArtist = users.find(u => u.id === activeArtistId) || users[0];
-                  
-                  if (newPubType === "post") {
-                    if (!newPostContent.trim()) {
-                      alert("Veuillez renseigner le contenu de votre message murmure !");
-                      return;
+                // Draft restoration and auto-saving logic
+                useEffect(() => {
+                  try {
+                    const saved = localStorage.getItem("gombo_publish_draft");
+                    if (saved) {
+                      const draft = JSON.parse(saved);
+                      if (draft.title) setNewGomboTitle(draft.title);
+                      if (draft.desc) setNewGomboDesc(draft.desc);
+                      if (draft.price) setNewGomboPrice(draft.price);
+                      if (draft.category) setNewGomboCategory(draft.category);
+                      if (draft.city) setNewGomboCity(draft.city);
+                      if (draft.quartier) setNewGomboQuartier(draft.quartier);
+                      if (draft.lieuPrecis) setNewGomboLieuPrecis(draft.lieuPrecis);
+                      if (draft.date) setNewGomboDate(draft.date);
+                      if (draft.style) setNewGomboStyleMusical(draft.style);
+                      if (draft.tenue) setNewGomboTenueExigee(draft.tenue);
+                      if (draft.exp) setNewGomboExperienceSouhaitee(draft.exp);
+                      setPublishDraftDetected(true);
+                      setTimeout(() => setPublishDraftDetected(false), 5000);
                     }
-                    const newP: Post = {
-                      id: "post_new_" + Date.now(),
-                      userId: activeArtistId,
-                      authorName: activeArtist.name,
-                      authorArtisticName: activeArtist.artisticName,
-                      content: newPostContent,
-                      likes: 0,
-                      comments: 0,
-                      isFlagged: false,
-                      timestamp: new Date().toISOString()
-                    };
-                    setPosts(prev => [newP, ...prev]);
-                    addToTerminal(`[🎼 PUBLICATION] Nouveau murmure d'or diffusé sur Le Terrain !`);
-                  } else {
-                    if (!newGomboTitle.trim()) {
-                      alert("Veuillez renseigner un titre spectaculaire pour le Gombo !");
-                      return;
-                    }
-                    if (!newGomboDesc.trim()) {
-                      alert("Veuillez renseigner une description détaillée de la prestation !");
-                      return;
-                    }
-                    if (newGomboCategory === "Autre" && !newGomboOtherCategory.trim()) {
-                      alert("Si vous choisissez 'Autre', vous devez spécifier le type de Gombo manuellement !");
-                      return;
-                    }
-                    if (!newGomboCity.trim()) {
-                      alert("Veuillez renseigner la ville d'impact !");
-                      return;
-                    }
-                    if (!newGomboQuartier.trim()) {
-                      alert("Veuillez renseigner le quartier de la prestation !");
-                      return;
-                    }
-                    if (!newGomboLieuPrecis.trim()) {
-                      alert("Veuillez renseigner l'adresse ou lieu de ralliement précis !");
-                      return;
-                    }
-                    if (!newGomboDate) {
-                      alert("Veuillez spécifier la date de la prestation !");
-                      return;
-                    }
-                    if (!newGomboHeureDebut) {
-                      alert("Veuillez spécifier l'heure de début !");
-                      return;
-                    }
-                    if (!newGomboHeureFin) {
-                      alert("Veuillez spécifier l'heure de fin attendue !");
-                      return;
-                    }
-                    if (!newGomboStyleMusical.trim()) {
-                      alert("Veuillez spécifier le genre ou style musical attendu !");
-                      return;
-                    }
-                    if (!newGomboTenueExigee.trim()) {
-                      alert("Veuillez spécifier le code vestimentaire ou la tenue exigée !");
-                      return;
-                    }
-                    if (!newGomboExperienceSouhaitee.trim()) {
-                      alert("Veuillez spécifier le niveau d'expérience souhaité !");
-                      return;
-                    }
-                    if (newGomboNombreRecherche <= 0) {
-                      alert("Le nombre d'artistes recherchés doit être d'au moins 1 !");
-                      return;
-                    }
-                    if (!newGomboPrice || newGomboPrice < 15000) {
-                      alert("Le budget minimum d'un Gombo est réglementé à 15 000 FCFA. Les mentions 'montant à discuter' ou budgets inférieurs sont strictement interdits.");
-                      return;
-                    }
+                  } catch (_) {}
+                }, []);
 
-                    // Validation specifics for Renfort group
-                    if (newGomboCategory === "Renfort groupe") {
-                      if (!newGomboRepetitionsDates.trim()) {
-                        alert("Pour un Renfort groupe, veuillez spécifier les dates de répétition !");
-                        return;
-                      }
-                      if (!newGomboRepetitionsSchedule.trim()) {
-                        alert("Pour un Renfort groupe, veuillez spécifier les horaires des répétitions !");
-                        return;
-                      }
-                    }
+                const saveDraft = (fields: any) => {
+                  try {
+                    const saved = localStorage.getItem("gombo_publish_draft");
+                    const current = saved ? JSON.parse(saved) : {};
+                    const updated = { ...current, ...fields };
+                    localStorage.setItem("gombo_publish_draft", JSON.stringify(updated));
+                  } catch (_) {}
+                };
 
-                    const categoryVal = newGomboCategory === "Autre" ? newGomboOtherCategory : newGomboCategory;
-
-                    const newG: Gombo = {
-                      id: "gombo_new_" + Date.now(),
-                      title: "🎖️ (" + categoryVal + ") " + newGomboTitle,
-                      description: newGomboDesc,
-                      budget: newGomboPrice,
-                      commissionRate: 0.10,
-                      location: newGomboQuartier + ", " + newGomboCity,
-                      city: newGomboCity,
-                      quartier: newGomboQuartier,
-                      lieuPrecis: newGomboLieuPrecis,
-                      organizerId: activeArtistId,
-                      organizerName: activeArtist.artisticName || activeArtist.name,
-                      timestamp: new Date().toISOString(),
-                      applicantsCount: 0,
-                      status: "open",
-                      isBoosted: false,
-                      date: newGomboDate,
-                      time: newGomboHeureDebut + " - " + newGomboHeureFin,
-                      category: categoryVal,
-                      styleMusical: newGomboStyleMusical,
-                      tenueExigee: newGomboTenueExigee,
-                      experienceSouhaitee: newGomboExperienceSouhaitee,
-                      nombreRecherche: newGomboNombreRecherche,
-                      isRenfort: newGomboCategory === "Renfort groupe",
-                      transportFee: newGomboCategory === "Renfort groupe" ? newGomboTransportFee : 0,
-                      repetitionsCount: newGomboCategory === "Renfort groupe" ? newGomboRepetitionsCount : 0,
-                      repetitionsSchedule: newGomboCategory === "Renfort groupe" ? newGomboRepetitionsSchedule : "",
-                      repetitionsDates: newGomboCategory === "Renfort groupe" ? newGomboRepetitionsDates : ""
-                    };
-
-                    setGombos(prev => [newG, ...prev]);
-                    await saveToFirestore("gombos", newG.id, newG);
-                    addToTerminal(`[🎼 CONTRAT] Nouveau cachet (${categoryVal}) d'honneur ouvert sur Le Terrain !`);
-                  }
-
-                  // Reset inputs
-                  setNewPostContent("");
+                const clearDraft = () => {
+                  localStorage.removeItem("gombo_publish_draft");
                   setNewGomboTitle("");
                   setNewGomboDesc("");
-                  interactionBus.emit("POST_CREATED");
-                  audioSynth.playValidationSuccess();
+                  setNewGomboPrice(15000);
+                  setNewGomboQuartier("");
+                  setNewGomboLieuPrecis("");
+                  setNewGomboDate("");
+                  setNewGomboStyleMusical("");
+                  setNewGomboTenueExigee("");
+                  setNewGomboExperienceSouhaitee("");
+                  setPublishPhoto("");
+                  setPublishAudio("");
+                };
+
+                // Calculate progress dynamically
+                let currentProgress = 25;
+                if (publishStep === 2) {
+                  currentProgress = 50;
+                  let points = 0;
+                  if (newGomboTitle.trim()) points += 10;
+                  if (newGomboDesc.trim()) points += 10;
+                  if (newGomboQuartier.trim()) points += 10;
+                  if (newGomboDate.trim()) points += 10;
+                  if (newGomboPrice >= 15000) points += 10;
+                  currentProgress += points;
+                }
+
+                const triggerPubSubmit = async () => {
+                  if (!currentUser) {
+                    addToTerminal("🔒 Action refusée : Connectez-vous pour continuer.");
+                    setIsAuthModalOpen(true);
+                    return;
+                  }
+
+                  if (!newGomboTitle.trim()) {
+                    alert("Veuillez renseigner un titre spectaculaire pour votre publication !");
+                    return;
+                  }
+                  if (!newGomboDesc.trim()) {
+                    alert("Veuillez renseigner une description détaillée !");
+                    return;
+                  }
+                  if (!newGomboQuartier.trim()) {
+                    alert("Veuillez spécifier la commune ou le quartier !");
+                    return;
+                  }
+                  if (!newGomboDate) {
+                    alert("Veuillez spécifier une date pour la publication !");
+                    return;
+                  }
+                  if (!newGomboPrice || newGomboPrice < 15000) {
+                    alert("Le budget minimum d'une publication / contrat est réglementé à 15 000 FCFA.");
+                    return;
+                  }
+
+                  // 1. Trigger Loading State
+                  setPublishLoading(true);
+                  try { audioSynth.playTamTam(true); } catch (_) {}
+
+                  // Simulated upload & processing delay
+                  await new Promise(resolve => setTimeout(resolve, 1500));
+
+                  const activeArtist = users.find(u => u.id === activeArtistId) || users[0];
+                  const uniqueId = "gombo_new_" + Date.now();
+
+                  const newG: Gombo = {
+                    id: uniqueId,
+                    title: `🎖️ (${newGomboCategory}) ${newGomboTitle}`,
+                    description: newGomboDesc,
+                    budget: newGomboPrice,
+                    commissionRate: 0.10,
+                    location: `${newGomboQuartier}, ${newGomboCity}`,
+                    city: newGomboCity,
+                    quartier: newGomboQuartier,
+                    lieuPrecis: newGomboLieuPrecis || "Sur scène",
+                    organizerId: activeArtistId,
+                    organizerName: activeArtist.artisticName || activeArtist.name,
+                    timestamp: new Date().toISOString(),
+                    applicantsCount: 0,
+                    status: "open",
+                    isBoosted: false,
+                    date: newGomboDate,
+                    time: `${newGomboHeureDebut} - ${newGomboHeureFin}`,
+                    category: newGomboCategory,
+                    styleMusical: newGomboStyleMusical || "Tous styles",
+                    tenueExigee: newGomboTenueExigee || "Tenue de scène libre",
+                    experienceSouhaitee: newGomboExperienceSouhaitee || "Tous niveaux bienvenus",
+                    nombreRecherche: newGomboNombreRecherche,
+                    isRenfort: newGomboCategory === "⚡ Renfort Express",
+                    transportFee: newGomboCategory === "⚡ Renfort Express" ? newGomboTransportFee : 0,
+                    repetitionsCount: newGomboCategory === "⚡ Renfort Express" ? newGomboRepetitionsCount : 0,
+                    repetitionsSchedule: newGomboCategory === "⚡ Renfort Express" ? newGomboRepetitionsSchedule : "",
+                    repetitionsDates: newGomboCategory === "⚡ Renfort Express" ? newGomboRepetitionsDates : ""
+                  };
+
+                  // Add image or audio custom payload elements to Gombo if present
+                  if (publishPhoto) {
+                    (newG as any).coverUrl = publishPhoto;
+                  }
+                  if (publishAudio) {
+                    (newG as any).audioUrl = publishAudio;
+                  }
+
+                  // Append to active feeds
+                  setGombos(prev => [newG, ...prev]);
+
+                  // Also create a social post so it appears in "murmures" & Le Terrain streams automatically
+                  const newPostId = "post_new_" + Date.now();
+                  const newP: Post = {
+                    id: newPostId,
+                    userId: activeArtistId,
+                    authorName: activeArtist.name,
+                    authorArtisticName: activeArtist.artisticName,
+                    content: `📢 [${newGomboCategory}] ${newGomboTitle}\n\n📍 Lieu : ${newGomboQuartier}, ${newGomboCity}\n💰 Budget : ${newGomboPrice.toLocaleString()} FCFA\n📅 Date : ${newGomboDate}\n\n${newGomboDesc}`,
+                    likes: 0,
+                    comments: 0,
+                    isFlagged: false,
+                    timestamp: new Date().toISOString()
+                  };
+                  if (publishPhoto) {
+                    newP.mediaUrl = publishPhoto;
+                  }
+                  if (publishAudio) {
+                    (newP as any).audioUrl = publishAudio;
+                  }
+                  setPosts(prev => [newP, ...prev]);
+
+                  // Save real persistence in Firestore
+                  await saveToFirestore("gombos", newG.id, newG);
+                  await saveToFirestore("posts", newP.id, newP);
+
+                  // 2. Trigger Success State
+                  setPublishLoading(false);
+                  setPublishSuccess(true);
+                  try { audioSynth.playValidationSuccess(); } catch (_) {}
+
+                  await new Promise(resolve => setTimeout(resolve, 1500));
+
+                  // Clear draft, reset status, redirect
+                  localStorage.removeItem("gombo_publish_draft");
+                  setPublishSuccess(false);
+                  setPublishStep(1);
+                  setNewGomboTitle("");
+                  setNewGomboDesc("");
                   setActiveMenu("user_terrain");
                 };
 
                 return (
-                  <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn pb-24">
-                    <div className="bg-[#111111] border border-[#D4AF37]/20 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+                  <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn pb-24 relative select-none">
+                    
+                    {/* Draft restoration alert banner */}
+                    {publishDraftDetected && (
+                      <div className="bg-[#D4AF37]/15 border border-[#D4AF37]/30 rounded-2xl p-4 text-xs text-zinc-300 flex items-center justify-between animate-slideDown">
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                          ⚡ Brouillon restauré automatiquement pour continuer la saisie
+                        </span>
+                        <button 
+                          onClick={clearDraft}
+                          className="px-2.5 py-1 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] font-mono rounded-lg text-[10px] uppercase font-bold"
+                        >
+                          Effacer
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Progress Bar Display */}
+                    <div className="bg-[#111111] border border-zinc-900 rounded-2xl p-4 space-y-2">
+                      <div className="flex justify-between text-[10px] font-mono uppercase tracking-wider">
+                        <span className="text-zinc-550">PROGRESSION DE PUBLICATION :</span>
+                        <span className="text-[#D4AF37] font-bold">{currentProgress}%</span>
+                      </div>
+                      <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-zinc-850">
+                        <div 
+                          className="bg-gradient-to-r from-[#D4AF37] to-amber-500 h-full transition-all duration-500 ease-out"
+                          style={{ width: `${currentProgress}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Loading Overlay spinner */}
+                    {publishLoading && (
+                      <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[999] flex flex-col items-center justify-center space-y-4">
+                        <Loader2 className="w-12 h-12 animate-spin text-[#D4AF37]" />
+                        <h3 className="text-base font-mono font-black uppercase tracking-widest text-white animate-pulse">
+                          publication en cours...
+                        </h3>
+                        <p className="text-xs text-zinc-500">Création de votre souveraineté sur Le Terrain...</p>
+                      </div>
+                    )}
+
+                    {/* Success Overlay Check */}
+                    {publishSuccess && (
+                      <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[999] flex flex-col items-center justify-center space-y-4">
+                        <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center text-emerald-400 animate-scaleUp">
+                          <Check className="w-10 h-10 stroke-[3]" />
+                        </div>
+                        <h3 className="text-lg font-sans font-black uppercase tracking-widest text-white">
+                          ✅ Publication créée
+                        </h3>
+                        <p className="text-xs text-zinc-400">Diffusion instantanée sur Le Terrain !</p>
+                      </div>
+                    )}
+
+                    {/* Form block */}
+                    <div className="bg-[#111111] border border-[#D4AF37]/20 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl text-left">
                       <div className="border-b border-white/5 pb-4">
-                        <span className="text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] font-bold">TRANSMETTEUR INTEGRÉ</span>
-                        <h3 className="text-xl font-display font-black text-white">PUBLIER SUR LE TERRAIN</h3>
+                        <span className="text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] font-bold">TRANSMETTEUR MULTI-RÉSEAUX</span>
+                        <h3 className="text-xl font-display font-black text-white uppercase tracking-tight">PUBLIER SUR LE TERRAIN</h3>
                         <p className="text-xs text-zinc-400 mt-1">
-                          Votre message sera retransmis à travers toute la république du Showbiz dans la seconde.
+                          Diffusez vos besoins ou démonstrations à toute la république musicale.
                         </p>
                       </div>
 
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">NATURE DE LA PORTANCE :</label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setNewPubType("post")}
-                            className={`p-3.5 rounded-xl border text-xs font-bold uppercase transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
-                              newPubType === "post"
-                                ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]"
-                                : "bg-black/30 border-zinc-800 text-zinc-400 hover:text-white"
-                            }`}
-                          >
-                            <MessageSquare className="w-5 h-5" />
-                            <span>Mise à jour d'Actu (Murmure)</span>
-                          </button>
+                      {/* STEP 1: Choose Publication Type */}
+                      {publishStep === 1 && (
+                        <div className="space-y-6 animate-fadeIn">
+                          <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold tracking-widest">
+                            ÉTAPES 1 : SÉLECTIONNER VOTRE TYPE DE PUBLICATION :
+                          </label>
 
-                          <button
-                            type="button"
-                            onClick={() => setNewPubType("gombo")}
-                            className={`p-3.5 rounded-xl border text-xs font-bold uppercase transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
-                              newPubType === "gombo"
-                                ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]"
-                                : "bg-black/30 border-zinc-800 text-zinc-400 hover:text-white"
-                            }`}
-                          >
-                            <Briefcase className="w-5 h-5" />
-                            <span>Ouvrir un Cachet (Contrat)</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {newPubType === "post" ? (
-                        <div className="space-y-4 text-left">
-                          <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">MURMURE À TRANSMETTRE :</label>
-                          <textarea
-                            value={newPostContent}
-                            onChange={(e) => setNewPostContent(e.target.value)}
-                            placeholder="Que se passe-t-il sur la scène ce soir ? Laissez votre empreinte..."
-                            className="w-full h-32 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3.5 text-xs text-white placeholder-zinc-600 focus:outline-none transition-all resize-none font-sans"
-                          />
-                        </div>
-                      ) : (
-                        <div className="space-y-4 text-left">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Type de Gombo */}
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">TYPE DE GOMBO (OBLIGATOIRE) :</label>
-                              <select
-                                value={newGomboCategory}
-                                onChange={(e) => {
-                                  setNewGomboCategory(e.target.value);
-                                  if (e.target.value === "Renfort groupe") {
-                                    setNewGomboPrice(15000);
-                                  }
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {[
+                              { type: "🎵 Démo musicale", desc: "Présentez une démo audio de vos compositions phares.", icon: "🎵" },
+                              { type: "🎤 Opportunité", desc: "Proposez un contrat d'envergure payé à un artiste.", icon: "🎤" },
+                              { type: "🎸 Recherche instrumentiste", desc: "Trouvez un soliste ou rythmicien d'excellence.", icon: "🎸" },
+                              { type: "⚡ Renfort Express", desc: "Recrutement urgent pour combler un maillon manquant ce soir.", icon: "⚡" },
+                              { type: "🎬 Casting", desc: "Auditions de voix ou d'attitude de scène.", icon: "🎬" },
+                              { type: "🎉 Événement", desc: "Annoncez un spectacle, concert, ou festival.", icon: "🎉" }
+                            ].map((item) => (
+                              <button
+                                key={item.type}
+                                type="button"
+                                onClick={() => {
+                                  setNewGomboCategory(item.type);
+                                  saveDraft({ category: item.type });
+                                  setPublishStep(2);
+                                  try { audioSynth.playValidationSuccess(); } catch (_) {}
                                 }}
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-sans cursor-pointer"
+                                className="p-4 rounded-2xl bg-black border border-zinc-850 hover:border-[#D4AF37] text-left transition-all hover:scale-[1.02] cursor-pointer group flex gap-3.5"
                               >
-                                {[
-                                  "Concert", "Mariage", "Anniversaire", "Maquis", "Restaurant", "Lounge", 
-                                  "Église", "Chorale", "Studio", "Festival", "Cabaret", "Spectacle scolaire", 
-                                  "Événement entreprise", "Renfort groupe", "Instrumentiste recherché", 
-                                  "Choriste recherché", "Beatmaker recherché", "Producteur recherché", 
-                                  "Sonorisateur recherché", "DJ", "Danseur", "Vidéaste", "Photographe", "Autre"
-                                ].map(cat => (
-                                  <option key={cat} value={cat} className="bg-black text-white">{cat}</option>
-                                ))}
-                              </select>
-                            </div>
-
-                            {/* Titre du contrat */}
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">TITRE DU CONTRAT :</label>
-                              <input
-                                type="text"
-                                value={newGomboTitle}
-                                onChange={(e) => setNewGomboTitle(e.target.value)}
-                                placeholder="ex. Bassiste pour show live VIP..."
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none placeholder-zinc-600 font-sans"
-                              />
-                            </div>
+                                <span className="text-2xl shrink-0 mt-0.5">{item.icon}</span>
+                                <div className="space-y-1">
+                                  <h4 className="text-xs font-sans font-black text-white uppercase tracking-wide group-hover:text-[#D4AF37] transition-colors">
+                                    {item.type}
+                                  </h4>
+                                  <p className="text-[10px] text-zinc-500 leading-normal font-sans">
+                                    {item.desc}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
                           </div>
 
-                          {/* Specific manual Category entry if 'Autre' is selected */}
-                          {newGomboCategory === "Autre" && (
-                            <div className="space-y-2 animate-fadeIn bg-yellow-500/5 p-3 rounded-xl border border-yellow-500/20">
-                              <label className="text-[10px] font-mono uppercase text-yellow-500 block font-bold">VOTRE CATÉGORIE DU CONTRAT :</label>
-                              <input
-                                type="text"
-                                value={newGomboOtherCategory}
-                                onChange={(e) => setNewGomboOtherCategory(e.target.value)}
-                                placeholder="Précisez votre type d'activité..."
-                                className="w-full bg-black border border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none placeholder-zinc-600 font-sans"
-                              />
-                            </div>
-                          )}
-
-                          {/* Location Detail Fields */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#111111] p-4 rounded-2xl border border-zinc-850/60">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">VILLE :</label>
-                              <input
-                                type="text"
-                                value={newGomboCity}
-                                onChange={(e) => setNewGomboCity(e.target.value)}
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">QUARTIER / DEPARTEMENT :</label>
-                              <input
-                                type="text"
-                                value={newGomboQuartier}
-                                onChange={(e) => setNewGomboQuartier(e.target.value)}
-                                placeholder="ex. Angré, Biétry..."
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">LIEU PRÉCIS :</label>
-                              <input
-                                type="text"
-                                value={newGomboLieuPrecis}
-                                onChange={(e) => setNewGomboLieuPrecis(e.target.value)}
-                                placeholder="ex. Club Sovereignty, Terrain d'Or"
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Schedule / Time Fields */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DATE DE PRESTATION :</label>
-                              <input
-                                type="date"
-                                value={newGomboDate}
-                                onChange={(e) => setNewGomboDate(e.target.value)}
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">HEURE DÉBUT :</label>
-                              <input
-                                type="time"
-                                value={newGomboHeureDebut}
-                                onChange={(e) => setNewGomboHeureDebut(e.target.value)}
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">HEURE FIN ATTENDUE :</label>
-                              <input
-                                type="time"
-                                value={newGomboHeureFin}
-                                onChange={(e) => setNewGomboHeureFin(e.target.value)}
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Style musical & Dresscode */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">STYLE MUSICAL :</label>
-                              <input
-                                type="text"
-                                value={newGomboStyleMusical}
-                                onChange={(e) => setNewGomboStyleMusical(e.target.value)}
-                                placeholder="ex. Coupé-décalé, Afrobeats, Jazz..."
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">TENUE EXIGÉE / DRESSCODE :</label>
-                              <input
-                                type="text"
-                                value={newGomboTenueExigee}
-                                onChange={(e) => setNewGomboTenueExigee(e.target.value)}
-                                placeholder="ex. Noir & Or, Traditionnelle, Décontractée..."
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Experiénce & Nombre */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">EXPÉRIENCE REQUISE :</label>
-                              <input
-                                type="text"
-                                value={newGomboExperienceSouhaitee}
-                                onChange={(e) => setNewGomboExperienceSouhaitee(e.target.value)}
-                                placeholder="ex. Professionnel actif, 2 ans sur scène..."
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">NOMBRE DE PRESTATAIRES CHERCHÉS :</label>
-                              <input
-                                type="number"
-                                min="1"
-                                value={newGomboNombreRecherche}
-                                onChange={(e) => setNewGomboNombreRecherche(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-mono"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Budget Validation (Min limit 15000 FCFA, with block alerts) */}
-                          <div className="grid grid-cols-1 gap-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">BUDGET TOTAL CACHET DE CONTRAT (FCFA) :</label>
-                                <span className="text-[8px] font-mono text-zinc-500">RÉGLEMENTATION MIN : 15 000 FCFA</span>
-                              </div>
-                              <input
-                                type="number"
-                                min="15000"
-                                value={newGomboPrice}
-                                onChange={(e) => setNewGomboPrice(parseInt(e.target.value) || 0)}
-                                className={`w-full bg-black border rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none transition-all ${
-                                  newGomboPrice < 15000 ? "border-red-500/50 text-red-400 focus:border-red-500" : "border-zinc-800 focus:border-[#D4AF37]"
-                                }`}
-                              />
-                              {newGomboPrice < 15000 && (
-                                <p className="text-[10px] font-mono text-red-500 mt-1">
-                                  ⚠️ Le budget d'honneur minimum est de 15 000 FCFA. Les déclarations de type "à discuter" sont proscrites.
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* SYSTEM RENFORT CONTROLS IF RENFORT GROUP SELECTED */}
-                          {newGomboCategory === "Renfort groupe" && (
-                            <motion.div 
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="mt-4 p-5 bg-[#D4AF37]/5 border border-[#D4AF37]/30 rounded-2xl space-y-4 text-left"
+                          <div className="pt-4 border-t border-white/5 flex">
+                            <button
+                              type="button"
+                              onClick={() => setActiveMenu("user_terrain")}
+                              className="flex-1 py-3 text-xs font-mono font-bold uppercase rounded-xl border border-zinc-800 text-zinc-400 hover:bg-white/5 transition-all cursor-pointer"
                             >
-                              <div className="border-b border-[#D4AF37]/20 pb-2.5">
-                                <span className="text-[8.5px] uppercase font-mono tracking-widest text-[#D4AF37] font-bold block">🛡️ SYSTEM RENFORT GROUPE ACTIVÉ</span>
-                                <span className="text-[10px] text-zinc-400">Tous les frais de transport et de répétition sont bloqués immédiatement sur notre compte Escrow.</span>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <label className="text-[9px] font-mono text-zinc-400 uppercase font-bold block">INDEMNITÉ TRANSPORT / RÉPÉTITION (FCFA) :</label>
-                                  <input 
-                                    type="number"
-                                    value={newGomboTransportFee}
-                                    onChange={(e) => setNewGomboTransportFee(Math.max(0, parseInt(e.target.value) || 0))}
-                                    className="w-full bg-black border border-[#D4AF37]/20 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-[#D4AF37]"
-                                  />
-                                </div>
-
-                                <div className="space-y-2">
-                                  <label className="text-[9px] font-mono text-zinc-400 uppercase font-bold block">NOMBRE TOTAL DE RÉPÉTITIONS :</label>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={newGomboRepetitionsCount}
-                                    onChange={(e) => setNewGomboRepetitionsCount(Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-full bg-black border border-[#D4AF37]/20 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-[#D4AF37]"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <label className="text-[9px] font-mono text-zinc-400 uppercase font-bold block">DATES DES RÉPÉTITIONS :</label>
-                                  <input 
-                                    type="text"
-                                    value={newGomboRepetitionsDates}
-                                    onChange={(e) => setNewGomboRepetitionsDates(e.target.value)}
-                                    placeholder="ex. 12, 14 et 16 Juin (Salle Burida)"
-                                    className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#D4AF37]"
-                                  />
-                                </div>
-
-                                <div className="space-y-2">
-                                  <label className="text-[9px] font-mono text-zinc-400 uppercase font-bold block">HORAIRES DES RÉPÉTITIONS :</label>
-                                  <input 
-                                    type="text"
-                                    value={newGomboRepetitionsSchedule}
-                                    onChange={(e) => setNewGomboRepetitionsSchedule(e.target.value)}
-                                    placeholder="ex. 18:00 - 21:00"
-                                    className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:border-[#D4AF37]"
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Escrow Guarantee visual details */}
-                              <div className="bg-[#111111] p-3 rounded-xl border border-[#D4AF37]/15 flex items-center justify-between text-xs font-mono">
-                                <span className="text-[#D4AF37]">BUDGET TRANSPORT ESTIMÉ :</span>
-                                <span className="text-white font-bold">{(newGomboTransportFee * newGomboRepetitionsCount).toLocaleString()} FCFA</span>
-                              </div>
-                            </motion.div>
-                          )}
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DESCRIPTION DU CONTRAT ET DU DÉROULÉ :</label>
-                            <textarea
-                              value={newGomboDesc}
-                              onChange={(e) => setNewGomboDesc(e.target.value)}
-                              placeholder="Détails du gombo, obligations, styles musicaux phares à respecter..."
-                              className="w-full h-24 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-xs text-white placeholder-zinc-600 focus:outline-none transition-all resize-none font-sans"
-                            />
+                              Fermer
+                            </button>
                           </div>
                         </div>
                       )}
 
-                      <div className="pt-4 border-t border-white/5 flex gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setActiveMenu("user_terrain")}
-                          className="flex-1 py-3 text-xs font-mono font-bold uppercase rounded-xl border border-zinc-800 text-zinc-400 hover:bg-white/5 transition-all cursor-pointer"
-                        >
-                          Annuler
-                        </button>
-                        
-                        <button
-                          type="button"
-                          onClick={triggerPubSubmit}
-                          className="flex-1 py-3 text-xs font-mono font-black uppercase rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] transition-all cursor-pointer shadow-md"
-                        >
-                          Publier sur Le Terrain 📡
-                        </button>
-                      </div>
+                      {/* STEP 2: Complete Dynamic Form Details */}
+                      {publishStep === 2 && (
+                        <div className="space-y-5 animate-fadeIn">
+                          
+                          {/* Selected Category overview */}
+                          <div className="flex items-center justify-between bg-black p-3.5 border border-zinc-850 rounded-xl">
+                            <div className="flex items-center gap-2">
+                              <span className="text-emerald-400">●</span>
+                              <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wide">TYPE SELECTIONNÉ :</span>
+                              <strong className="text-xs font-sans text-white uppercase tracking-wide">{newGomboCategory}</strong>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setPublishStep(1)}
+                              className="text-[9px] font-mono font-bold uppercase text-[#D4AF37] hover:underline"
+                            >
+                              Modifier
+                            </button>
+                          </div>
+
+                          {/* 1. Title */}
+                          <div className="space-y-2 text-left">
+                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">TITRE DE L'ACTU / OPPORTUNITÉ :</label>
+                            <input
+                              type="text"
+                              value={newGomboTitle}
+                              onChange={(e) => {
+                                setNewGomboTitle(e.target.value);
+                                saveDraft({ title: e.target.value });
+                              }}
+                              placeholder="ex. Recherche bassiste soliste pour maquis chic ce soir..."
+                              className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none placeholder-zinc-650 font-sans"
+                            />
+                          </div>
+
+                          {/* 2. Description */}
+                          <div className="space-y-2 text-left">
+                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DÉTAILS DU PROJET ET DES CONDITIONS :</label>
+                            <textarea
+                              value={newGomboDesc}
+                              onChange={(e) => {
+                                setNewGomboDesc(e.target.value);
+                                saveDraft({ desc: e.target.value });
+                              }}
+                              placeholder="Décrivez votre déroulé artistique, matériel requis, style musical d'honneur exigé..."
+                              className="w-full h-24 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-xs text-white placeholder-zinc-650 focus:outline-none transition-all resize-none font-sans"
+                            />
+                          </div>
+
+                          {/* 3. Location, Date & Style */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">COMMUNE / QUARTIER :</label>
+                              <select
+                                value={newGomboQuartier}
+                                onChange={(e) => {
+                                  setNewGomboQuartier(e.target.value);
+                                  saveDraft({ quartier: e.target.value });
+                                }}
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-sans cursor-pointer"
+                              >
+                                <option value="">Choisir la commune...</option>
+                                {["Cocody", "Marcory", "Plateau", "Treichville", "Yopougon", "Koumassi", "Abobo", "Adjamé", "Port-Bouët", "Bingerville", "Grand-Bassam"].map(c => (
+                                  <option key={c} value={c} className="bg-black text-white">{c}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">DATE PRÉVUE :</label>
+                              <input
+                                type="date"
+                                value={newGomboDate}
+                                onChange={(e) => {
+                                  setNewGomboDate(e.target.value);
+                                  saveDraft({ date: e.target.value });
+                                }}
+                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* 4. Budget */}
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">BUDGET CACHET PRÉVU (FCFA) :</label>
+                              <span className="text-[8px] font-mono text-zinc-550">RÈGLEMENTATION MINIMALE : 15 000 FCFA</span>
+                            </div>
+                            <input
+                              type="number"
+                              min="15000"
+                              value={newGomboPrice}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 0;
+                                setNewGomboPrice(val);
+                                saveDraft({ price: val });
+                              }}
+                              className={`w-full bg-black border rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none transition-all ${
+                                newGomboPrice < 15000 ? "border-red-500/50 text-red-400 focus:border-red-500" : "border-zinc-800 focus:border-[#D4AF37]"
+                              }`}
+                            />
+                            {newGomboPrice < 15000 && (
+                              <p className="text-[9px] font-mono text-red-500">
+                                ⚠️ Le budget d'honneur minimum requis pour garantir la décence et le respect des artistes est de 15 000 FCFA.
+                              </p>
+                            )}
+                          </div>
+
+                          {/* 5. Cover Photo File (Drag and Drop simulation / custom picker) */}
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">PHOTO DE COUVERTURE / ILLUSTRATION (FACULTATIF) :</label>
+                            
+                            <div className="border border-dashed border-zinc-800 rounded-xl p-4 bg-black/40 text-center relative hover:border-[#D4AF37] transition-all cursor-pointer">
+                              {publishPhoto ? (
+                                <div className="space-y-3">
+                                  <img src={publishPhoto} alt="Cover Preview" className="max-h-28 mx-auto rounded-lg object-cover border border-[#D4AF37]/35" />
+                                  <button
+                                    type="button"
+                                    onClick={() => setPublishPhoto("")}
+                                    className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[9px] font-mono rounded"
+                                  >
+                                    Supprimer la photo
+                                  </button>
+                                </div>
+                              ) : (
+                                <label className="cursor-pointer block space-y-1.5">
+                                  <span className="block text-xl">📷</span>
+                                  <span className="block text-[11px] font-sans text-zinc-400"><b>Cliquez pour ajouter</b> ou glissez un fichier d'image</span>
+                                  <span className="block text-[8px] font-mono text-zinc-600">JPG, PNG (Max 5MB)</span>
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    onChange={(e) => {
+                                      if (e.target.files && e.target.files[0]) {
+                                        const file = e.target.files[0];
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                          setPublishPhoto(reader.result as string);
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 6. Audio Sample Uplink / Mic simulation */}
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">EXTRAIT AUDIO DE LA DÉMO / PRÉSENTATION (FACULTATIF) :</label>
+                            
+                            <div className="p-4 bg-black border border-zinc-850 rounded-xl flex items-center justify-between">
+                              <div className="flex items-center gap-2.5">
+                                <span className="text-xl">🎙️</span>
+                                <div className="text-left">
+                                  <span className="block text-xs font-sans text-white font-bold">Uploader une démo ou enregistrer</span>
+                                  <span className="block text-[8px] font-mono text-zinc-550">Supporte MP3, WAV, ou voix en direct</span>
+                                </div>
+                              </div>
+                              <label className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-850 text-white font-mono rounded-lg text-[9px] uppercase font-bold cursor-pointer transition-all border border-zinc-800">
+                                Choisir un fichier
+                                <input 
+                                  type="file" 
+                                  accept="audio/*" 
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      const file = e.target.files[0];
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        setPublishAudio(reader.result as string);
+                                        try { audioSynth.playValidationSuccess(); } catch (_) {}
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+                            {publishAudio && (
+                              <div className="p-2.5 bg-zinc-900/40 rounded-xl flex items-center justify-between border border-emerald-500/10">
+                                <span className="text-[10px] font-mono text-emerald-400">✓ Extrait audio chargé avec succès</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setPublishAudio("")}
+                                  className="text-[9px] font-mono text-red-500 hover:underline"
+                                >
+                                  Retirer
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* System Renfort express fields if relevant */}
+                          {newGomboCategory === "⚡ Renfort Express" && (
+                            <div className="p-4 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-xl space-y-3 text-left">
+                              <span className="text-[9px] font-mono text-[#D4AF37] uppercase font-bold block">⚡ CONFIGURATION RENFORT EXPRESS</span>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="text-[8.5px] font-mono text-zinc-500 uppercase block mb-1">Nombre requis :</label>
+                                  <input 
+                                    type="number" 
+                                    min="1" 
+                                    value={newGomboNombreRecherche} 
+                                    onChange={(e) => setNewGomboNombreRecherche(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="w-full bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white font-mono"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[8.5px] font-mono text-zinc-500 uppercase block mb-1">Indemnité transport (FCFA) :</label>
+                                  <input 
+                                    type="number" 
+                                    value={newGomboTransportFee} 
+                                    onChange={(e) => setNewGomboTransportFee(Math.max(0, parseInt(e.target.value) || 0))}
+                                    className="w-full bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white font-mono"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Submit / Cancel Buttons */}
+                          <div className="pt-4 border-t border-white/5 flex gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setPublishStep(1)}
+                              className="flex-1 py-3 text-xs font-mono font-bold uppercase rounded-xl border border-zinc-800 text-zinc-400 hover:bg-white/5 transition-all cursor-pointer"
+                            >
+                              Retour
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={triggerPubSubmit}
+                              className="flex-1 py-3 text-xs font-mono font-black uppercase rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] transition-all cursor-pointer shadow-md shadow-[#D4AF37]/10"
+                            >
+                              Publier maintenant 📡
+                            </button>
+                          </div>
+
+                        </div>
+                      )}
+
                     </div>
                   </div>
                 );
@@ -4501,447 +4589,383 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 // Main Mon Héritage view
                 return (
-                  <div className="space-y-6 animate-fadeIn pb-32 text-left">
-                    {/* CUSTOM HEADER (COMPACT PREMIUM AFRITRUST IDENTITÉ) */}
-                    <div className="relative rounded-2xl overflow-hidden bg-[#050505] border border-[#D4AF37]/20 p-5 shadow-lg group">
-                      <div className="relative z-10 flex items-center gap-4">
-                        {/* Avatar */}
-                        <div className="relative shrink-0">
-                          <div className="w-20 h-20 rounded-full p-0.5 border border-[#D4AF37]/30 bg-[#050505] flex items-center justify-center">
-                             <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center text-xl text-[#D4AF37] bg-[#111111]">
-                              {currentArtist.avatarUrl ? (
-                                <img src={currentArtist.avatarUrl} alt={currentArtist.artisticName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                              ) : (
-                                (currentArtist.artisticName || "A").charAt(0)
+                  <div className="h-full overflow-y-auto max-w-2xl mx-auto px-1 pb-24 text-left space-y-5 scrollbar-none animate-fadeIn">
+                    
+                    {/* 1. HERO CARD COMPACTE PREMIUM */}
+                    <div className="relative rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#D4AF37]/20 p-4 shadow-[0_0_20px_rgba(212,175,55,0.03)] flex flex-col space-y-4">
+                      {/* Accent light glow reflection at top-left */}
+                      <div className="absolute top-0 left-0 w-24 h-24 bg-gradient-to-br from-[#D4AF37]/10 to-transparent rounded-br-full pointer-events-none"></div>
+                      
+                      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        {/* Profile Photo & Info Group */}
+                        <div className="flex items-center gap-3.5">
+                          {/* Round profile picture */}
+                          <div 
+                            onClick={() => {
+                              if (currentUser) {
+                                setActiveMenu("user_edit_profile");
+                                try { audioSynth.playValidationSuccess(); } catch (e) {}
+                              }
+                            }}
+                            className={`relative shrink-0 ${currentUser ? "cursor-pointer group/avatar" : ""}`}
+                            title={currentUser ? "Modifier la photo de profil" : ""}
+                          >
+                            <div className="w-14 h-14 rounded-full p-0.5 border border-[#D4AF37]/30 bg-[#050505] flex items-center justify-center relative overflow-hidden">
+                              <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center text-lg text-[#D4AF37] bg-[#111111] relative font-bold">
+                                {currentArtist.avatarUrl ? (
+                                  <img src={currentArtist.avatarUrl} alt={currentArtist.artisticName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                ) : (
+                                  (currentArtist.artisticName || "A").charAt(0)
+                                )}
+                                {currentUser && (
+                                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity">
+                                    <span className="text-white text-[8px] font-mono font-bold uppercase">Éditer</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Verified Badge: Displayed only if certified/verified, NEVER automatically */}
+                            {(currentArtist.isCertified || currentArtist.isVerified) && (
+                              <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500 text-black w-4.5 h-4.5 rounded-full flex items-center justify-center text-[8px] font-black border border-black shadow shadow-emerald-500/25">
+                                ✓
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Center info */}
+                          <div className="min-w-0">
+                            <h2 className="text-base font-sans font-black text-white flex items-center gap-1.5 leading-tight">
+                              {currentArtist.artisticName || "Artiste Inconnu"}
+                              {currentUser && (
+                                <button
+                                  onClick={() => {
+                                    setActiveMenu("user_edit_profile");
+                                    try { audioSynth.playValidationSuccess(); } catch (e) {}
+                                  }}
+                                  className="text-zinc-500 hover:text-[#D4AF37] transition-all"
+                                >
+                                  ✏️
+                                </button>
                               )}
+                            </h2>
+                            {currentArtist.name && (
+                              <p className="text-[10px] text-zinc-500 font-mono mt-0.5">{currentArtist.name}</p>
+                            )}
+                            <div className="mt-1">
+                              <span className="text-[8.5px] font-mono text-[#D4AF37] bg-[#D4AF37]/5 border border-[#D4AF37]/20 px-2 py-0.5 rounded-md inline-block">
+                                {(() => {
+                                  const roleLower = String(currentArtist.role || "").toLowerCase();
+                                  const specs = (currentArtist.specialties || []).map(s => s.toLowerCase());
+                                  if (roleLower.includes("producteur") || specs.includes("producteur") || specs.includes("production")) return "🎙 Producteur";
+                                  if (specs.some(s => s.includes("compositeur") || s.includes("composition"))) return "🎼 Compositeur";
+                                  if (specs.some(s => ["guitare", "percussion", "clavier", "piano", "batterie", "synth", "instrument", "bass", "tambour", "flute", "trompette"].some(inst => s.includes(inst)))) return "🎹 Instrumentiste";
+                                  return "🎵 Artiste actif";
+                                })()}
+                              </span>
                             </div>
                           </div>
                         </div>
 
-                        {/* Profile Info */}
-                        <div className="flex-1 space-y-1">
-                          <h1 className="text-xl font-sans font-black text-white flex items-center gap-2">
-                            {currentArtist.artisticName || "Artiste Inconnu"}
-                            <span className="w-4 h-4 rounded-full bg-[#D4AF37] flex items-center justify-center text-[8px] text-black font-black" title="Identité Vérifiée">✓</span>
-                          </h1>
-                          <p className="text-[10px] text-zinc-400 font-mono tracking-widest">{currentArtist.specialties?.[0] || "Musique"} • {currentArtist.commune || "Abidjan"}</p>
-                          <div className="flex items-center gap-2">
-                             <span className="text-[9px] font-mono text-[#D4AF37] border border-[#D4AF37]/30 px-2 py-0.5 rounded uppercase">Niv. {currentArtist.performance?.level || 1}</span>
-                             <span className="text-[9px] font-mono text-zinc-500">ID: {currentArtist.afriId || "---"}</span>
+                        {/* Right Group: ID details & scores */}
+                        <div className="bg-black/30 border border-zinc-900 rounded-xl p-2.5 flex flex-col space-y-1 text-right text-[9px] font-mono text-zinc-400 min-w-[170px] self-start sm:self-center">
+                          <div className="flex justify-between gap-4">
+                            <span className="text-zinc-550">GOMBO ID:</span>
+                            <span className="text-[#D4AF37] font-bold">{currentArtist.gomboIdNumber || currentArtist.gomboId?.id || `GMB-ART-${String(currentArtist.id || "0041").slice(-4).toUpperCase()}`}</span>
+                          </div>
+                          <div className="flex justify-between gap-4">
+                            <span className="text-zinc-550">AFRI ID:</span>
+                            <span className="text-white font-bold">{currentArtist.afriId || `AFR-${String(currentArtist.id || "7729").slice(-4).toUpperCase()}`}</span>
+                          </div>
+                          <div className="flex justify-between gap-4">
+                            <span className="text-zinc-550">NIVEAU:</span>
+                            <span className="text-white font-bold">Niv. {currentArtist.performance?.level || currentArtist.gomboId?.niveau || 1}</span>
+                          </div>
+                          <div className="flex justify-between gap-4">
+                            <span className="text-zinc-550">TRUST SCORE:</span>
+                            <span className="text-emerald-400 font-bold">{currentArtist.performance?.score || currentArtist.gomboId?.scoreConfiance || 95}%</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="border-t border-zinc-900/80"></div>
+
+                      {/* Mini Statistiques Compactes Capsules */}
+                      <div className="flex flex-wrap gap-2">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111111] border border-zinc-900 text-[10px] text-zinc-300 font-mono">
+                          <span>🏆</span>
+                          <span className="text-zinc-500 uppercase text-[8px] font-bold tracking-wider">Honneurs :</span>
+                          <span className="text-white font-black">{currentArtist.reviewsCount || reviews.filter(r => r.revieweeId === currentArtist.id).length || 0}</span>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111111] border border-zinc-900 text-[10px] text-zinc-300 font-mono">
+                          <span>🎵</span>
+                          <span className="text-zinc-500 uppercase text-[8px] font-bold tracking-wider">Gombos :</span>
+                          <span className="text-white font-black">{posts.filter(p => p.userId === currentArtist.id).length || currentArtist.gombosCompleted || 0}</span>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111111] border border-zinc-900 text-[10px] text-zinc-300 font-mono">
+                          <span>🤝</span>
+                          <span className="text-zinc-500 uppercase text-[8px] font-bold tracking-wider">Collab. :</span>
+                          <span className="text-white font-black">{currentArtist.collabsCount || 0}</span>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111111] border border-zinc-900 text-[10px] text-zinc-300 font-mono">
+                          <span>👥</span>
+                          <span className="text-zinc-500 uppercase text-[8px] font-bold tracking-wider">Suiveurs :</span>
+                          <span className="text-white font-black">{currentArtist.followersCount || currentArtist.ratingCount || 24}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. SECTION : MON PARCOURS TIMELINE */}
+                    <div className="rounded-2xl bg-[#0A0A0A] border border-zinc-900 p-4 space-y-4">
+                      <h3 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
+                        Mon Parcours
+                      </h3>
+
+                      <div className="relative border-l border-zinc-900 pl-4 ml-2 space-y-4 py-1">
+                        {/* Timeline Item 1: Premier Gombo */}
+                        <div className="relative group">
+                          {/* Circle bullet node */}
+                          <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 ${(posts.filter(p => p.userId === currentArtist.id).length > 0 || (currentArtist.gombosCompleted || 0) > 0) ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111111] border-zinc-700"} z-10 transition-all`}></div>
+                          
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                            <div className="space-y-0.5">
+                              <h4 className={`text-xs font-sans font-bold uppercase transition-colors ${(posts.filter(p => p.userId === currentArtist.id).length > 0 || (currentArtist.gombosCompleted || 0) > 0) ? "text-white" : "text-zinc-500"}`}>
+                                🎵 Premier Gombo publié
+                              </h4>
+                              <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
+                                {(posts.filter(p => p.userId === currentArtist.id).length > 0 || (currentArtist.gombosCompleted || 0) > 0) ? "Accompli avec brio !" : "Publiez votre première opportunité ou post sur Le Terrain."}
+                              </p>
+                            </div>
+                            <span className="text-[8.5px] font-mono text-[#D4AF37] whitespace-nowrap">
+                              {(posts.filter(p => p.userId === currentArtist.id).length > 0 || (currentArtist.gombosCompleted || 0) > 0) ? "✓ Déverrouillé" : "🔒 À faire"}
+                            </span>
                           </div>
                         </div>
 
-                        {/* Quick Action Button */}
-                        <button
-                          onClick={() => {
-                            setActiveMenu("user_edit_profile");
-                            try { audioSynth.playValidationSuccess(); } catch (e) {}
-                          }}
-                          className="w-10 h-10 rounded-full bg-[#111111] border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:border-[#D4AF37]/50 transition-all active:scale-95"
-                          title="Modifier"
-                        >
-                          <Settings className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* TABLEAU DE RÉPUTATION */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {/* Honneurs Reçus */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                        <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">🏆</span>
-                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Honneur reçu</span>
-                        <strong className="text-xl font-sans font-black text-white mt-1">
-                          {currentArtist.reviewsCount || 0}
-                        </strong>
-                      </div>
-                      
-                      {/* Collaborations */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                        <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">🎼</span>
-                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Collaborations</span>
-                        <strong className="text-xl font-sans font-black text-white mt-1">
-                          {currentArtist.collabsCount || 0}
-                        </strong>
-                      </div>
-
-                      {/* Renforts */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                        <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">🪘</span>
-                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Renforts</span>
-                        <strong className="text-xl font-sans font-black text-white mt-1">
-                          {currentArtist.concertsCount || 0}
-                        </strong>
-                      </div>
-
-                      {/* Opportunités */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                        <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">🔥</span>
-                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Opportunités</span>
-                        <strong className="text-xl font-sans font-black text-white mt-1">
-                          {currentArtist.gombosCompleted || 0}
-                        </strong>
-                      </div>
-
-                      {/* Niveau Réputation */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                        <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">⭐</span>
-                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Réputation</span>
-                        <strong className="text-xl font-sans font-black text-[#D4AF37] mt-1 flex items-baseline gap-1">
-                          {currentArtist.performance?.rating || 5.0} <span className="text-[10px] text-[#B9B9B9]">/ 5</span>
-                        </strong>
-                      </div>
-
-                      {/* Progression */}
-                      <div className="p-4 bg-[#050505] border border-[#D4AF37]/20 rounded-2xl flex flex-col items-center sm:items-start text-center sm:text-left hover:border-[#D4AF37]/40 transition-all hover:scale-105 duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                        <span className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-2 text-lg">📈</span>
-                        <span className="text-[10px] font-sans uppercase tracking-widest text-[#B9B9B9] font-black">Progression</span>
-                        <strong className="text-xl font-sans font-black text-[#D4AF37] mt-1 flex items-baseline gap-1">
-                          +15%
-                        </strong>
-                      </div>
-                    </div>
-                    {/* BOUTONS D'ACTIONS RÉELS */}
-                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-4">
-                      <button 
-                        onClick={() => {
-                          setActiveMenu("user_edit_profile");
-                          try { audioSynth.playValidationSuccess(); } catch(e) {}
-                        }}
-                        className="px-5 py-2.5 bg-[#111111] border border-zinc-700 hover:border-[#D4AF37] text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95"
-                      >
-                        Modifier Profil
-                      </button>
-                      <button 
-                        onClick={() => {
-                          navigator.clipboard.writeText(window.location.href);
-                          addToTerminal("[PARTAGE] Lien du profil copié avec succès !");
-                          try { audioSynth.playValidationSuccess(); } catch(e) {}
-                        }}
-                        className="px-5 py-2.5 bg-[#111111] border border-zinc-700 hover:border-[#D4AF37] text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95 flex items-center gap-2"
-                      >
-                        <Share2 className="w-3 h-3" /> Partager
-                      </button>
-                      <button 
-                        onClick={() => {
-                          goBackMenu();
-                          try { audioSynth.playValidationSuccess(); } catch(e) {}
-                        }}
-                        className="px-5 py-2.5 bg-[#111111] border border-zinc-700 hover:border-zinc-500 text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95 flex items-center gap-2"
-                      >
-                         Retour
-                      </button>
-                    </div>
-
-                    {/* IDENTITÉ & STATS (2 columns layout) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      
-                      {/* IDENTITÉ MUSICALE */}
-                      <div className="p-6 bg-[#050505] border border-[#D4AF37]/20 rounded-3xl space-y-6 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
-                        <h3 className="text-xs font-sans font-black tracking-widest text-white uppercase flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                          Identité Musicale
-                        </h3>
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center border-b border-[#D4AF37]/10 pb-3">
-                            <span className="text-[10px] font-sans font-black text-[#B9B9B9] uppercase">Styles musicaux</span>
-                            <span className="text-[11px] font-sans font-black text-[#D4AF37] uppercase text-right">{currentArtist.musicGenres?.join(', ') || "Afrobeat, Coupé-Décalé"}</span>
+                        {/* Timeline Item 2: Premier Honneur */}
+                        <div className="relative group">
+                          <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 ${(currentArtist.reviewsCount || reviews.filter(r => r.revieweeId === currentArtist.id).length > 0) ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111111] border-zinc-700"} z-10 transition-all`}></div>
+                          
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                            <div className="space-y-0.5">
+                              <h4 className={`text-xs font-sans font-bold uppercase transition-colors ${(currentArtist.reviewsCount || reviews.filter(r => r.revieweeId === currentArtist.id).length > 0) ? "text-white" : "text-zinc-500"}`}>
+                                🏆 Premier Honneur reçu
+                              </h4>
+                              <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
+                                {(currentArtist.reviewsCount || reviews.filter(r => r.revieweeId === currentArtist.id).length > 0) ? "Votre réputation commence à briller !" : "Recevez un vote d'honneur (note) d'un collaborateur."}
+                              </p>
+                            </div>
+                            <span className="text-[8.5px] font-mono text-[#D4AF37] whitespace-nowrap">
+                              {(currentArtist.reviewsCount || reviews.filter(r => r.revieweeId === currentArtist.id).length > 0) ? "✓ Déverrouillé" : "🔒 À faire"}
+                            </span>
                           </div>
-                          <div className="flex justify-between items-center border-b border-[#D4AF37]/10 pb-3">
-                            <span className="text-[10px] font-sans font-black text-[#B9B9B9] uppercase">Instruments</span>
-                            <span className="text-[11px] font-sans font-black text-white uppercase text-right">{currentArtist.specialties?.join(', ') || "Voix, Percussions"}</span>
+                        </div>
+
+                        {/* Timeline Item 3: Première Collaboration */}
+                        <div className="relative group">
+                          <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 {(currentArtist.collabsCount || 0) > 0 ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111111] border-zinc-700"} z-10 transition-all`}></div>
+                          
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                            <div className="space-y-0.5">
+                              <h4 className={`text-xs font-sans font-bold uppercase transition-colors {(currentArtist.collabsCount || 0) > 0 ? "text-white" : "text-zinc-500"}`}>
+                                🤝 Première collaboration
+                              </h4>
+                              <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
+                                {(currentArtist.collabsCount || 0) > 0 ? "Lien d'alliance établi !" : "Raccordez vos tambours avec un autre artiste de la communauté."}
+                              </p>
+                            </div>
+                            <span className="text-[8.5px] font-mono text-[#D4AF37] whitespace-nowrap">
+                              {(currentArtist.collabsCount || 0) > 0 ? "✓ Déverrouillé" : "🔒 À faire"}
+                            </span>
                           </div>
-                          <div className="flex justify-between items-center border-b border-[#D4AF37]/10 pb-3">
-                            <span className="text-[10px] font-sans font-black text-[#B9B9B9] uppercase">Expérience</span>
-                            <span className="text-[11px] font-sans font-black text-white uppercase text-right">{currentArtist.experience || "Professionnel"}</span>
+                        </div>
+
+                        {/* Timeline Item 4: Première Prestation */}
+                        <div className="relative group">
+                          <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 {((currentArtist.gombosCompleted || 0) > 0 || (currentArtist.concertsCount || 0) > 0) ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111111] border-zinc-700"} z-10 transition-all`}></div>
+                          
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                            <div className="space-y-0.5">
+                              <h4 className={`text-xs font-sans font-bold uppercase transition-colors {((currentArtist.gombosCompleted || 0) > 0 || (currentArtist.concertsCount || 0) > 0) ? "text-white" : "text-zinc-500"}`}>
+                                🎤 Première prestation
+                              </h4>
+                              <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
+                                {((currentArtist.gombosCompleted || 0) > 0 || (currentArtist.concertsCount || 0) > 0) ? "La scène vous appartient !" : "Finalisez avec succès votre première prestation ou concert."}
+                              </p>
+                            </div>
+                            <span className="text-[8.5px] font-mono text-[#D4AF37] whitespace-nowrap">
+                              {((currentArtist.gombosCompleted || 0) > 0 || (currentArtist.concertsCount || 0) > 0) ? "✓ Déverrouillé" : "🔒 À faire"}
+                            </span>
                           </div>
-                          <div className="flex justify-between items-center pb-1">
-                            <span className="text-[10px] font-sans font-black text-[#B9B9B9] uppercase">Disponibilité</span>
-                            <span className="text-[10px] font-sans font-black text-[#050505] bg-[#D4AF37] px-3 py-1 rounded-full uppercase">
-                              {currentArtist.availabilityStatus || "Disponible"}
+                        </div>
+
+                        {/* Timeline Item 5: Certification obtenue */}
+                        <div className="relative group">
+                          <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 ${(currentArtist.isCertified || currentArtist.isVerified || currentArtist.gomboId?.certifie) ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111111] border-zinc-700"} z-10 transition-all`}></div>
+                          
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                            <div className="space-y-0.5">
+                              <h4 className={`text-xs font-sans font-bold uppercase transition-colors ${(currentArtist.isCertified || currentArtist.isVerified || currentArtist.gomboId?.certifie) ? "text-white" : "text-zinc-500"}`}>
+                                🛡 Certification obtenue
+                              </h4>
+                              <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
+                                {(currentArtist.isCertified || currentArtist.isVerified || currentArtist.gomboId?.certifie) ? "Souveraineté d'identité certifiée Gombo ID !" : "Validez votre identité dans le cockpit de certification."}
+                              </p>
+                            </div>
+                            <span className="text-[8.5px] font-mono text-[#D4AF37] whitespace-nowrap">
+                              {(currentArtist.isCertified || currentArtist.isVerified || currentArtist.gomboId?.certifie) ? "✓ Déverrouillé" : "🔒 À faire"}
                             </span>
                           </div>
                         </div>
                       </div>
-                      
-                      {/* MON PARCOURS (TIMELINE) */}
-                      <div className="p-6 bg-[#050505] border border-[#D4AF37]/20 rounded-3xl space-y-6 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
-                        <h3 className="text-xs font-sans font-black tracking-widest text-white uppercase flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                          Parcours Musical
-                        </h3>
-
-                        {/* Timeline */}
-                        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-[#D4AF37] before:to-[#D4AF37]/10 pt-4">
-                          
-                          {/* Débuts */}
-                          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                            <div className="flex items-center justify-center w-4 h-4 rounded-full border-2 border-[#D4AF37] bg-[#050505] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0.5 md:ml-0"></div>
-                            <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-2xl bg-[#111111] border border-[#D4AF37]/20 shadow hover:border-[#D4AF37]/50 transition-colors">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="font-sans font-black text-white text-[11px] uppercase">Débuts artistiques</h4>
-                                <span className="font-mono font-bold text-[9px] text-[#D4AF37]">{currentArtist.registrationDate ? new Date(currentArtist.registrationDate).getFullYear() : "2022"}</span>
-                              </div>
-                              <p className="text-[10px] font-sans text-[#B9B9B9] mt-2">Lancement de la carrière et premières scènes locales.</p>
-                            </div>
-                          </div>
-
-                          {/* Projets */}
-                          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                            <div className="flex items-center justify-center w-4 h-4 rounded-full border-2 border-[#D4AF37] bg-[#050505] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0.5 md:ml-0"></div>
-                            <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-2xl bg-[#111111] border border-[#D4AF37]/20 shadow hover:border-[#D4AF37]/50 transition-colors">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="font-sans font-black text-white text-[11px] uppercase">Projets Majeurs</h4>
-                                <span className="font-mono font-bold text-[9px] text-[#D4AF37]">En cours</span>
-                              </div>
-                              <p className="text-[10px] font-sans text-[#B9B9B9] mt-2">Réalisation de {currentArtist.gombosCompleted || 5} projets studio et scènes.</p>
-                            </div>
-                          </div>
-
-                          {/* Événements */}
-                          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                            <div className="flex items-center justify-center w-4 h-4 rounded-full border-2 border-[#D4AF37] bg-[#050505] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0.5 md:ml-0"></div>
-                            <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-2xl bg-[#111111] border border-[#D4AF37]/20 shadow hover:border-[#D4AF37]/50 transition-colors">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="font-sans font-black text-white text-[11px] uppercase">Événements Live</h4>
-                                <span className="font-mono font-bold text-[9px] text-[#D4AF37]">Concerts</span>
-                              </div>
-                              <p className="text-[10px] font-sans text-[#B9B9B9] mt-2">Participation à {currentArtist.concertsCount || 3} événements majeurs.</p>
-                            </div>
-                          </div>
-
-                          {/* Collaborations */}
-                          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                            <div className="flex items-center justify-center w-4 h-4 rounded-full border-2 border-[#D4AF37] bg-[#050505] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0.5 md:ml-0"></div>
-                            <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-2xl bg-[#111111] border border-[#D4AF37]/20 shadow hover:border-[#D4AF37]/50 transition-colors">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="font-sans font-black text-white text-[11px] uppercase">Collaborations</h4>
-                                <span className="font-mono font-bold text-[9px] text-[#D4AF37]">Réseau</span>
-                              </div>
-                              <p className="text-[10px] font-sans text-[#B9B9B9] mt-2">{currentArtist.collabsCount || 2} collaborations avec d'autres artistes.</p>
-                            </div>
-                          </div>
-
-                        </div>
-                      </div>
                     </div>
 
-                    {/* ACTIVITÉ & MORCEAUX (2 columns layout) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      
-                      {/* ACTIVITÉ RÉCENTE (Publications & Renforts) */}
-                      <div className="p-6 bg-[#050505] border border-zinc-900/80 rounded-3xl space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-[11px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
-                            Activité Récente
-                          </h3>
-                        </div>
-                        
-                        <div className="space-y-4 text-left">
-                          <div className="space-y-2">
-                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase block">Publications populaires</span>
-                            {posts.filter(p => p.userId === currentArtist.id).slice(0, 1).length > 0 ? (
-                              posts.filter(p => p.userId === currentArtist.id).slice(0, 1).map((post, idx) => (
-                                <div key={post.id || idx} className="p-3 bg-[#111111] border border-zinc-900 rounded-xl space-y-2">
-                                  <p className="text-[10px] text-zinc-300 leading-relaxed font-sans truncate">{post.content}</p>
-                                  <span className="text-[9px] font-mono text-[#D4AF37]">{post.likes} likes • {new Date(post.timestamp || Date.now()).toLocaleDateString('fr-FR')}</span>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="p-3 bg-[#111111] border border-zinc-900 rounded-xl">
-                                <p className="text-[9px] text-zinc-500 font-mono uppercase">Aucune publication.</p>
-                              </div>
-                            )}
-                          </div>
+                    {/* 3. SECTION : DISTINCTIONS (Display only if achieved, strictly matching prompt: "Masquer badges non obtenus.") */}
+                    {(() => {
+                      const badgesList = [
+                        { id: "premium", name: "Premium", icon: "⭐", achieved: currentArtist.isVip || currentArtist.isPro, color: "bg-[#D4AF37]/10 border-[#D4AF37]/35 text-[#D4AF37]" },
+                        { id: "certifie", name: "Certifié", icon: "🛡️", achieved: currentArtist.isCertified || currentArtist.isVerified || currentArtist.gomboId?.certifie, color: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" },
+                        { id: "fondateur", name: "Fondateur", icon: "👑", achieved: currentArtist.role === "admin" || currentArtist.role === "founder" || currentArtist.role === "super_founder" || isAuthorizedSuperFounder || isAuthorizedAdmin, color: "bg-purple-500/10 border-purple-500/20 text-purple-400" },
+                        { id: "elite", name: "Élite", icon: "💎", achieved: (currentArtist.performance?.level || 1) >= 5 || (currentArtist.performance?.score || 95) >= 90, color: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400" },
+                        { id: "topGombo", name: "Top Gombo", icon: "🔥", achieved: (currentArtist.gombosCompleted || 0) >= 10, color: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
+                        { id: "collabActif", name: "Collaborateur actif", icon: "🤝", achieved: (currentArtist.collabsCount || 0) > 0 || (currentArtist.concertsCount || 0) > 0, color: "bg-pink-500/10 border-pink-500/20 text-pink-400" }
+                      ].filter(b => b.achieved);
 
-                          <div className="space-y-2">
-                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase block">Derniers renforts reçus</span>
-                            {renforts.filter(r => r.musicianId === currentArtist.id || r.type === "Collaborations").slice(0, 1).length > 0 ? (
-                              renforts.filter(r => r.musicianId === currentArtist.id || r.type === "Collaborations").slice(0, 1).map((renfort, idx) => (
-                                <div key={renfort.id || idx} className="p-3 bg-[#111111] border border-zinc-900 rounded-xl flex items-center justify-between gap-3">
-                                  <div className="min-w-0">
-                                    <h4 className="text-[10px] font-sans font-black text-white truncate uppercase">{renfort.title}</h4>
-                                    <span className="text-[9px] font-mono text-[#D4AF37] uppercase">{renfort.type || 'Renfort'}</span>
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="p-3 bg-[#111111] border border-zinc-900 rounded-xl">
-                                <p className="text-[9px] text-zinc-500 font-mono uppercase">Aucun renfort.</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      if (badgesList.length === 0) return null;
 
-                      {/* MORCEAUX PUBLIÉS */}
-                      <div className="p-6 bg-[#050505] border border-zinc-900/80 rounded-3xl space-y-4">
-                        <div className="flex justify-between items-center pb-2">
-                          <h3 className="text-[11px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-2">
+                      return (
+                        <div className="rounded-2xl bg-[#0A0A0A] border border-zinc-900 p-4 space-y-3">
+                          <h3 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                            Morceaux Publiés
+                            Distinctions
                           </h3>
-                        </div>
-                        <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1 text-left">
-                          {[
-                            { title: "Kpalogo Rhythm", date: "Sorti le 12 Jan 2026", duration: "03:45", id: 1 },
-                            { title: "Gombo Groove (Sénat Mix)", date: "Sorti le 05 Mar 2026", duration: "04:12", id: 2 },
-                            { title: "Symphonie d'Abidjan", date: "Sorti le 18 Avr 2026", duration: "02:58", id: 3 },
-                          ].map((track, idx) => (
-                            <div key={track.id} className="p-3 bg-[#111111] border border-zinc-900 rounded-xl flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <span className="text-[10px] font-mono text-[#D4AF37] font-bold w-4">{idx + 1}</span>
-                                <div className="min-w-0">
-                                  <h4 className="text-[10px] font-sans font-bold text-white truncate uppercase">{track.title}</h4>
-                                  <span className="text-[9px] font-mono text-zinc-500">{track.date}</span>
-                                </div>
-                              </div>
-                              <span className="text-[9px] font-mono text-zinc-500">{track.duration}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* RÉSEAU & ÉVÉNEMENTS (2 columns layout) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                      {/* RÉSEAU MUSICAL */}
-                      <div className="p-6 bg-[#050505] border border-zinc-900/80 rounded-3xl space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-[11px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                            Réseau Artistique
-                          </h3>
-                        </div>
-                        <div className="space-y-3">
-                          <div className="p-3 bg-[#111111] border border-zinc-800 rounded-xl flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs">👥</div>
-                              <div>
-                                <h4 className="text-[10px] font-sans font-black text-white uppercase">Suivis Artistiques</h4>
-                                <p className="text-[8px] font-mono text-zinc-500">Abonnements actifs</p>
-                              </div>
-                            </div>
-                            <strong className="text-xs font-black text-[#D4AF37]">24</strong>
-                          </div>
-                          
-                          <div className="p-3 bg-[#111111] border border-zinc-800 rounded-xl flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs">🤝</div>
-                              <div>
-                                <h4 className="text-[10px] font-sans font-black text-white uppercase">Collaborateurs</h4>
-                                <p className="text-[8px] font-mono text-zinc-500">Projets conjoints</p>
-                              </div>
-                            </div>
-                            <strong className="text-xs font-black text-[#D4AF37]">12</strong>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {badgesList.map(badge => (
+                              <span 
+                                key={badge.id}
+                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase tracking-wider border ${badge.color} shadow-sm`}
+                              >
+                                <span>{badge.icon}</span> {badge.name}
+                              </span>
+                            ))}
                           </div>
                         </div>
-                      </div>
+                      );
+                    })()}
 
-                      {/* ÉVÉNEMENTS À VENIR */}
-                      <div className="p-6 bg-[#050505] border border-zinc-900/80 rounded-3xl space-y-4">
-                        <h3 className="text-[11px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                          Évènements à venir
-                        </h3>
-                        <div className="space-y-3 text-left">
-                          <div className="p-4 bg-[#111111] border border-zinc-900 rounded-xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-[#D4AF37]/5 rounded-bl-full"></div>
-                            <h4 className="text-xs font-sans font-black text-white uppercase relative z-10">Gombo Live Tour</h4>
-                            <p className="text-[10px] text-zinc-400 truncate mt-1 relative z-10">Palais de la Culture, Treichville</p>
-                            <span className="text-[9px] font-mono font-bold text-[#D4AF37] block mt-2 relative z-10 bg-[#D4AF37]/10 inline-block px-2 py-1 rounded">12 Nov 2026 - 20:00</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* GALERIE MUSICALE */}
-                    <div className="p-6 bg-[#050505] border border-zinc-900/80 rounded-3xl space-y-6">
-                      <h3 className="text-[11px] font-mono font-bold tracking-widest text-[#D4AF37] uppercase flex items-center gap-2">
+                    {/* 4. SECTION : ACTIVITÉ RÉCENTE */}
+                    <div className="rounded-2xl bg-[#0A0A0A] border border-zinc-900 p-4 space-y-3.5">
+                      <h3 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                        Galerie Musicale
+                        Activité Récente
                       </h3>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {/* Audio */}
-                        <div className="aspect-square rounded-2xl border border-dashed border-zinc-800 bg-[#111111]/30 flex flex-col items-center justify-center gap-2 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-all cursor-not-allowed group">
-                          <Music className="w-6 h-6" />
-                          <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Démo Audio</span>
-                          <span className="text-[8px] font-mono bg-zinc-800 px-2 py-0.5 rounded-full">Bientôt disponible</span>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Publication récente */}
+                        <div className="p-3 bg-black/40 border border-zinc-900 rounded-xl space-y-1">
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Publication récente</span>
+                          {posts.filter(p => p.userId === currentArtist.id).length > 0 ? (
+                            <div className="space-y-1">
+                              <p className="text-[10px] text-zinc-300 font-sans leading-relaxed truncate">{posts.filter(p => p.userId === currentArtist.id)[0].content}</p>
+                              <span className="text-[8px] font-mono text-[#D4AF37] block">
+                                {posts.filter(p => p.userId === currentArtist.id)[0].likes} likes • {new Date(posts.filter(p => p.userId === currentArtist.id)[0].timestamp || Date.now()).toLocaleDateString('fr-FR')}
+                              </span>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-zinc-600 font-sans italic">Aucune publication récente sur Le Terrain.</p>
+                          )}
                         </div>
-                        
-                        {/* Photos */}
-                        <div className="aspect-square rounded-2xl border border-dashed border-zinc-800 bg-[#111111]/30 flex flex-col items-center justify-center gap-2 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-all cursor-not-allowed group">
-                          <div className="text-xl">📸</div>
-                          <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Photos</span>
-                          <span className="text-[8px] font-mono bg-zinc-800 px-2 py-0.5 rounded-full">Bientôt disponible</span>
+
+                        {/* Renfort récent */}
+                        <div className="p-3 bg-black/40 border border-zinc-900 rounded-xl space-y-1">
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Renfort récent</span>
+                          {renforts.filter(r => r.musicianId === currentArtist.id).length > 0 ? (
+                            <div className="flex items-center justify-between">
+                              <div className="min-w-0">
+                                <h4 className="text-[10px] font-sans font-bold text-white uppercase truncate">{renforts.filter(r => r.musicianId === currentArtist.id)[0].title}</h4>
+                                <span className="text-[8px] font-mono text-zinc-450 uppercase">{renforts.filter(r => r.musicianId === currentArtist.id)[0].type || "Renfort"}</span>
+                              </div>
+                              <span className="text-[8.5px] font-mono text-emerald-400 shrink-0">Actif</span>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-zinc-600 font-sans italic">Aucun renfort récent enregistré.</p>
+                          )}
                         </div>
-                        
-                        {/* Vidéos */}
-                        <div className="aspect-square rounded-2xl border border-dashed border-zinc-800 bg-[#111111]/30 flex flex-col items-center justify-center gap-2 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-all cursor-not-allowed group">
-                          <div className="text-xl">🎥</div>
-                          <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Vidéos</span>
-                          <span className="text-[8px] font-mono bg-zinc-800 px-2 py-0.5 rounded-full">Bientôt disponible</span>
+
+                        {/* Honneur reçu */}
+                        <div className="p-3 bg-black/40 border border-zinc-900 rounded-xl space-y-1">
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Honneur reçu</span>
+                          {reviews.filter(r => r.revieweeId === currentArtist.id && r.type === "client_to_musician").length > 0 ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[#D4AF37] font-bold text-[10px]">★ {reviews.filter(r => r.revieweeId === currentArtist.id && r.type === "client_to_musician")[0].rating} / 5</span>
+                                <span className="text-[8px] font-mono text-zinc-500">{new Date(reviews.filter(r => r.revieweeId === currentArtist.id && r.type === "client_to_musician")[0].timestamp || Date.now()).toLocaleDateString('fr-FR')}</span>
+                              </div>
+                              <p className="text-[10px] text-zinc-300 font-sans italic truncate">"{reviews.filter(r => r.revieweeId === currentArtist.id && r.type === "client_to_musician")[0].comment || "Excellente prestation !"}"</p>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-zinc-600 font-sans italic">Aucun vote d'honneur reçu pour le moment.</p>
+                          )}
                         </div>
-                        
-                        {/* Projets */}
-                        <div className="aspect-square rounded-2xl border border-dashed border-zinc-800 bg-[#111111]/30 flex flex-col items-center justify-center gap-2 text-zinc-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-all cursor-not-allowed group">
-                          <div className="text-xl">📁</div>
-                          <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Projets</span>
-                          <span className="text-[8px] font-mono bg-zinc-800 px-2 py-0.5 rounded-full">Bientôt disponible</span>
+
+                        {/* Nouveau contact */}
+                        <div className="p-3 bg-black/40 border border-zinc-900 rounded-xl space-y-1">
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Nouveau contact</span>
+                          <p className="text-[10px] text-zinc-300 font-sans">
+                            {(currentArtist.collabsCount || 0) > 0 ? `Dernière alliance de raccordement établie avec succès.` : `Aucune nouvelle connexion établie récemment.`}
+                          </p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Historical Earnings Progression Graph */}
-                    <div className="p-6 bg-[#050505]/30 border border-zinc-900/60 rounded-2xl space-y-4">
-                      <h3 className="text-xs font-mono uppercase text-[#D4AF37] tracking-wider font-bold">Progression Cumulée des Cachets</h3>
-                      <div className="h-48 w-full font-mono text-xs">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={ANALYTICS_DATA}>
-                            <defs>
-                              <linearGradient id="glowGombo" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.25}/>
-                                <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                            <XAxis dataKey="name" stroke="#555" />
-                            <YAxis stroke="#555" />
-                            <Tooltip contentStyle={{ backgroundColor: "#000", border: '1px solid #D4AF37', color: '#fff' }} />
-                            <Area type="monotone" dataKey="commission" stroke="#D4AF37" fillOpacity={1} fill="url(#glowGombo)" strokeWidth={2} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
+                    {/* ACTION BUTTONS (Compact & Elegant) */}
+                    <div className="flex items-center gap-3 pt-2">
+                      <button 
+                        onClick={() => {
+                          try {
+                            navigator.clipboard.writeText(window.location.href);
+                            addToTerminal("[PARTAGE] Lien de votre héritage copié !");
+                            audioSynth.playValidationSuccess();
+                          } catch (e) {}
+                        }}
+                        className="flex-1 py-2.5 bg-[#0A0A0A] border border-zinc-900 hover:border-[#D4AF37]/50 text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                      >
+                        <Share2 className="w-3.5 h-3.5" /> Partager ma carrière
+                      </button>
+                      <button 
+                        onClick={() => {
+                          goBackMenu();
+                          try { audioSynth.playValidationSuccess(); } catch (e) {}
+                        }}
+                        className="px-6 py-2.5 bg-[#0A0A0A] border border-zinc-900 hover:border-zinc-700 text-zinc-450 rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95"
+                      >
+                        Retour
+                      </button>
                     </div>
 
-                    {/* IMPERIAL SÉNAT FAST SWITCHBOARD CARD - Preserved for Admins */}
+                    {/* IMPERIAL SÉNAT COMPACT ACTION BOARD (Preserved for Admins) */}
                     {(isAuthorizedAdmin || isAuthorizedSuperFounder) && (
-                      <div className="p-6 bg-gradient-to-br from-[#0a0a0A] via-[#111111] to-black border border-[#D4AF37]/30 rounded-2xl space-y-4 shadow-xl mt-6">
+                      <div className="p-3.5 bg-gradient-to-r from-black to-[#0F0F0F] border border-[#D4AF37]/20 rounded-xl flex items-center justify-between gap-4 shadow-md mt-4">
                         <div className="flex items-center gap-2">
-                          <Crown className="w-5 h-5 text-[#D4AF37] animate-pulse" />
-                          <h4 className="text-sm font-display font-black text-white uppercase tracking-wider">
-                            Portail de Commandement Impérial GOMBO ELITE
-                          </h4>
+                          <Crown className="w-4 h-4 text-[#D4AF37]" />
+                          <div>
+                            <h4 className="text-[10px] font-sans font-black text-white uppercase tracking-wider">Commandement Impérial</h4>
+                            <p className="text-[9px] text-zinc-550 font-mono">Portail Gombo Élite</p>
+                          </div>
                         </div>
-                        <p className="text-xs text-zinc-300">
-                          En tant que Fondateur ou Administrateur Souverain, vous disposez d'un accès au Saint des Saints pour gouverner, certifier les artistes, et auditer les transactions.
-                        </p>
-                        <div className="flex flex-wrap gap-2.5 pt-1">
-                          <button
-                            onClick={() => {
-                              setPerspective("admin");
-                              setActiveMenu("dashboard");
-                              try { audioSynth.playValidationSuccess(); } catch (err) {}
-                              addToTerminal("[SOUVERAIN] Accès au Cockpit Administrateur.");
-                            }}
-                            className="px-4 py-2 bg-black border border-[#D4AF37]/50 hover:bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-mono font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg active:scale-95"
-                          >
-                            🛡️ Ouvrir le Cockpit Admin
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => {
+                            setPerspective("admin");
+                            setActiveMenu("dashboard");
+                            try { audioSynth.playValidationSuccess(); } catch (err) {}
+                            addToTerminal("[SOUVERAIN] Cockpit Administrateur activé.");
+                          }}
+                          className="px-3 py-1.5 bg-black border border-[#D4AF37]/35 hover:bg-[#D4AF37]/10 text-[#D4AF37] text-[9px] font-mono font-black uppercase tracking-wider rounded-lg transition-all"
+                        >
+                          Cockpit Admin →
+                        </button>
                       </div>
                     )}
 
@@ -7709,7 +7733,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             id="user-nav-heritage"
             onClick={() => {
               if (!currentUser) {
-                setShowGoogleLoginRequiredModal(true);
+                setShowHeritageLoginRequired(true);
               } else {
                 setActiveMenu("user_heritage");
                 setViewingGomboIdDetail(false);
@@ -8245,6 +8269,49 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         </div>
       )}
 
+      {showHeritageLoginRequired && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-[999] animate-fadeIn text-left select-none">
+          <div className="w-full max-w-sm bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-6 space-y-5 shadow-2xl shadow-amber-500/5">
+            <div className="w-14 h-14 bg-[#D4AF37]/10 rounded-full flex items-center justify-center text-[#D4AF37] mx-auto">
+              <Lock className="w-7 h-7" />
+            </div>
+            
+            <div className="text-center space-y-2">
+              <h3 className="text-white text-base font-sans font-black uppercase tracking-wide">
+                🔐 Connexion requise
+              </h3>
+              <p className="text-zinc-400 text-xs leading-relaxed font-sans">
+                Connectez-vous pour accéder à votre identité AFRIGOMBO
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={async () => {
+                  setShowHeritageLoginRequired(false);
+                  try {
+                    await loginWithGoogle();
+                    try { audioSynth.playTamTam(true); } catch (_) {}
+                  } catch (err) {
+                    console.error("Google login failed", err);
+                    setIsAuthModalOpen(true);
+                  }
+                }}
+                className="w-full py-3 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-black font-sans font-black uppercase tracking-wider text-xs transition-all cursor-pointer"
+              >
+                Continuer avec Google
+              </button>
+              <button
+                onClick={() => setShowHeritageLoginRequired(false)}
+                className="w-full py-2.5 rounded-xl bg-transparent border border-zinc-800 text-zinc-400 hover:text-white font-mono font-bold text-xs transition-all cursor-pointer"
+              >
+                Plus tard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showGoogleLoginRequiredModal && (
         <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-[999] animate-fadeIn text-left">
           <div className="w-full max-w-sm bg-[#050505] border border-amber-500/35 rounded-3xl p-6 space-y-5 shadow-2xl shadow-amber-500/5">
@@ -8530,61 +8597,96 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 )}
 
                 {/* INTERACTIVE ACTIONS BAR */}
-                <div className="flex items-center justify-between border-t border-b border-zinc-900/60 py-3 text-zinc-400">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-b border-zinc-900/60 py-3 text-zinc-400">
+                  {/* 1. 🏆 Honneur reçu */}
                   <button
                     onClick={() => {
-                      const isLiked = likedGombos.includes(selectedGomboDetails.id);
-                      setLikedGombos(prev =>
-                        isLiked ? prev.filter(id => id !== selectedGomboDetails.id) : [...prev, selectedGomboDetails.id]
-                      );
-                      try { audioSynth.playTamTam(true); } catch (_) {}
+                      requireAuthThen(() => {
+                        const isLiked = likedGombos.includes(selectedGomboDetails.id);
+                        setLikedGombos(prev =>
+                          isLiked ? prev.filter(id => id !== selectedGomboDetails.id) : [...prev, selectedGomboDetails.id]
+                        );
+                        try { audioSynth.playTamTam(true); } catch (_) {}
+                        addToTerminal(`[🏆 HONNEUR] ${isLiked ? "Retrait d'honneur" : "Honneur accordé"} sur le Gombo "${selectedGomboDetails.title}".`);
+                      });
                     }}
-                    className="flex items-center gap-1.5 hover:text-[#D4AF37] transition text-xs font-bold"
+                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${likedGombos.includes(selectedGomboDetails.id) ? "text-[#D4AF37]" : "hover:text-[#D4AF37]"}`}
+                    title="Accorder un honneur prestigieux à ce Gombo"
                   >
-                    <Heart className={`w-4 h-4 ${likedGombos.includes(selectedGomboDetails.id) ? "fill-[#D4AF37] text-[#D4AF37]" : ""}`} />
-                    <span>{likedGombos.includes(selectedGomboDetails.id) ? "Aimé" : "Aimer"}</span>
+                    <Award className={`w-4 h-4 ${likedGombos.includes(selectedGomboDetails.id) ? "fill-[#D4AF37] text-[#D4AF37]" : ""}`} />
+                    <span>{likedGombos.includes(selectedGomboDetails.id) ? "Honouré" : "🏆 Honneur reçu"}</span>
                   </button>
 
+                  {/* 2. 🔖 Enregistrer */}
+                  <button
+                    onClick={() => {
+                      requireAuthThen(() => {
+                        const isSaved = savedGomboIds.includes(selectedGomboDetails.id);
+                        setSavedGomboIds(prev =>
+                          isSaved ? prev.filter(id => id !== selectedGomboDetails.id) : [...prev, selectedGomboDetails.id]
+                        );
+                        try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        addToTerminal(`[🔖 ENREGISTRER] Gombo "${selectedGomboDetails.title}" ${isSaved ? "retiré de vos" : "enregistré dans vos"} favoris.`);
+                      });
+                    }}
+                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${savedGomboIds.includes(selectedGomboDetails.id) ? "text-[#D4AF37]" : "hover:text-[#D4AF37]"}`}
+                    title="Enregistrer ce Gombo dans votre espace personnel"
+                  >
+                    <Bookmark className={`w-4 h-4 ${savedGomboIds.includes(selectedGomboDetails.id) ? "fill-[#D4AF37] text-[#D4AF37]" : ""}`} />
+                    <span>{savedGomboIds.includes(selectedGomboDetails.id) ? "Enregistré" : "🔖 Enregistrer"}</span>
+                  </button>
+
+                  {/* 3. 👥 Suivre artiste */}
+                  <button
+                    onClick={() => {
+                      requireAuthThen(() => {
+                        const orgId = selectedGomboDetails.organizerId || "admin";
+                        const isFollowing = followedArtists.includes(orgId);
+                        const newList = isFollowing ? followedArtists.filter(id => id !== orgId) : [...followedArtists, orgId];
+                        setFollowedArtists(newList);
+                        localStorage.setItem("gombo_followed_artists", JSON.stringify(newList));
+                        try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        addToTerminal(`[👥 SUIVRE] ${isFollowing ? "Désabonnement" : "Abonnement"} à l'organisateur "${selectedGomboDetails.organizerName || "Admin"}".`);
+                      });
+                    }}
+                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "text-[#D4AF37]" : "hover:text-[#D4AF37]"}`}
+                    title="Suivre l'activité de cet artiste / organisateur"
+                  >
+                    <Users className={`w-4 h-4 ${followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "fill-[#D4AF37] text-[#D4AF37]" : ""}`} />
+                    <span>{followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "Abonné" : "👥 Suivre artiste"}</span>
+                  </button>
+
+                  {/* 4. 🚨 Signaler */}
+                  <button
+                    onClick={() => {
+                      requireAuthThen(() => {
+                        const reason = prompt("Indiquez la raison du signalement (obligatoire) :");
+                        if (!reason) return;
+                        addToTerminal(`[SIGNALEMENT] Alerte transmise avec succès pour examen de "${selectedGomboDetails.title}". Motif: ${reason}`);
+                        try { audioSynth.playTamTam(false); } catch (_) {}
+                      });
+                    }}
+                    className="flex items-center gap-1.5 hover:text-red-500 transition text-[11px] font-bold cursor-pointer"
+                    title="Signaler ce Gombo en cas de fraude ou comportement inapproprié"
+                  >
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    <span>🚨 Signaler</span>
+                  </button>
+
+                  {/* 5. ↗️ Partager */}
                   <button
                     onClick={() => {
                       try {
                         navigator.clipboard.writeText(`AFRIGOMBO - ${selectedGomboDetails.title} (Cachet: ${selectedGomboDetails.budget} FCFA)`);
-                        addToTerminal(`[INFO] Informations copiées dans le presse-papiers.`);
+                        addToTerminal(`[↗️ PARTAGE] Informations du Gombo copiées dans le presse-papiers.`);
                         audioSynth.playValidationSuccess();
                       } catch (_) {}
                     }}
-                    className="flex items-center gap-1.5 hover:text-[#D4AF37] transition text-xs font-bold"
+                    className="flex items-center gap-1.5 hover:text-[#D4AF37] transition text-[11px] font-bold cursor-pointer"
+                    title="Partager ce Gombo"
                   >
                     <Share2 className="w-4 h-4" />
-                    <span>Partager</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (!currentUser) {
-                        addToTerminal("[ALERTE] Veuillez vous connecter pour envoyer un message.");
-                        return;
-                      }
-                      setSelectedGomboDetails(null);
-                      setOpenConvoWithUserId(selectedGomboDetails.organizerId || "admin");
-                      setActiveMenu("user_messages");
-                      try { audioSynth.playValidationSuccess(); } catch (_) {}
-                    }}
-                    className="flex items-center gap-1.5 hover:text-[#D4AF37] transition text-xs font-bold"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>Contacter</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      addToTerminal(`[SIGNALEMENT] Alerte transmise avec succès pour examen de "${selectedGomboDetails.title}".`);
-                      try { audioSynth.playTamTam(false); } catch (_) {}
-                    }}
-                    className="flex items-center gap-1.5 hover:text-red-500 transition text-xs font-bold"
-                  >
-                    <AlertTriangle className="w-4 h-4" />
-                    <span>Signaler</span>
+                    <span>↗️ Partager</span>
                   </button>
                 </div>
 

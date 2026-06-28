@@ -299,7 +299,7 @@ export default function SocialPostCard({
     }
 
     let updatedHonouredBy = [...post.honouredBy || []];
-    let newHonourCount = likes;
+    let newHonourCount = honours;
 
     if (hasHonoured) {
       updatedHonouredBy = updatedHonouredBy.filter(uid => uid !== currentUser.uid);
@@ -309,7 +309,7 @@ export default function SocialPostCard({
       newHonourCount += 1;
     }
 
-    setLikes(newHonourCount);
+    setHonours(newHonourCount);
     setHasHonoured(!hasHonoured);
 
     // Save update in DB
