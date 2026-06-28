@@ -586,6 +586,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
 
+  // Scroll Position Memory Engine for Independent Scroll Preservation
+  const scrollPositionsRef = useRef<Record<string, number>>({});
+  const workspaceScrollRef = useRef<HTMLDivElement | null>(null);
+
   // Mount log
   useEffect(() => {
     console.log("AdminCentre Component mounted");
@@ -643,6 +647,17 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       return prev;
     });
   };
+
+  useLayoutEffect(() => {
+    // Small timeout to allow the DOM elements to render and mount
+    const timer = setTimeout(() => {
+      if (workspaceScrollRef.current) {
+        const savedPos = scrollPositionsRef.current[activeMenu] || 0;
+        workspaceScrollRef.current.scrollTop = savedPos;
+      }
+    }, 30);
+    return () => clearTimeout(timer);
+  }, [activeMenu]);
   const [reelsVideoId, setReelsVideoId] = useState<string | null>(null);
   const [reelsVideoUrl, setReelsVideoUrl] = useState<string | null>(null);
   
@@ -2519,71 +2534,82 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         )}
 
         {/* WORKSPACE VIEWS */}
-        <div className="flex-1 overflow-hidden h-full">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeMenu}
-              initial={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: 20 }}
-              animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
-              exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -20, transition: { duration: 0.1 } }}
-              transition={{ duration: areAnimationsReduced ? 0.05 : 0.25, ease: "easeOut" }}
-              className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-12 pt-6"
-            >
-              
-              {/* ----------------------------------------------------
-                                STEP I: TABLEAU UTILISATEUR (10 CORE SECTIONS)
-                  ---------------------------------------------------- */}
-              {/* ----------------------------------------------------
-                                NEW CORE EXPERIENCES FOR USER PERSPECTIVE
-                  ---------------------------------------------------- */}
+        <div className="flex-1 overflow-hidden h-full relative">
+          
+          {/* ===================================================
+              PERSISTENT CORE VIEWS (SCROLL PRESERVATION ENGINE)
+              =================================================== */}
 
-              {/* 1. LE TERRAIN - CENTRAL HUB FEED & opportunities GOMBOS */}
-              {activeMenu === "user_terrain" && (
-                <UserTerrainLandingPage
-                  gombos={gombos}
-                  users={users}
-                  posts={posts}
-                  setPosts={setPosts}
-                  globalSearchTerm={globalSearchTerm}
-                  setGlobalSearchTerm={setGlobalSearchTerm}
-                  universalSearchTerm={universalSearchTerm}
-                  setUniversalSearchTerm={setUniversalSearchTerm}
-                  activeMenu={activeMenu}
-                  setActiveMenu={setActiveMenu}
-                  terrainTab={terrainTab}
-                  setTerrainTab={setTerrainTab}
-                  currentSlide={currentSlide}
-                  setCurrentSlide={setCurrentSlide}
-                  likedGombos={likedGombos}
-                  setLikedGombos={setLikedGombos}
-                  selectedCategory={selectedCategory}
-                  setSelectedCategory={setSelectedCategory}
-                  selectedLocation={selectedLocation}
-                  setSelectedLocation={setSelectedLocation}
-                  selectedType={selectedType}
-                  setSelectedType={setSelectedType}
-                  selectedDateFilter={selectedDateFilter}
-                  setSelectedDateFilter={setSelectedDateFilter}
-                  setSelectedGomboDetails={setSelectedGomboDetails}
-                  requireAuthThen={requireAuthThen}
-                  requireGoogleAuthThen={requireGoogleAuthThen}
-                  audioSynth={audioSynth}
-                  activeQuickActionModal={activeQuickActionModal}
-                  setActiveQuickActionModal={setActiveQuickActionModal}
-                  verifyGomboIdInput={verifyGomboIdInput}
-                  setVerifyGomboIdInput={setVerifyGomboIdInput}
-                  verifyGomboIdResult={verifyGomboIdResult}
-                  setVerifyGomboIdResult={setVerifyGomboIdResult}
-                  newNoticeTitle={newNoticeTitle}
-                  setNewNoticeTitle={setNewNoticeTitle}
-                  newNoticeCategory={newNoticeCategory}
-                  setNewNoticeCategory={setNewNoticeCategory}
-                  newNoticeBody={newNoticeBody}
-                  setNewNoticeBody={setNewNoticeBody}
-                  addToTerminal={addToTerminal}
-                  onValidateFilters={applyGombosFilters}
-                />
-              )}
+          {/* 1. LE TERRAIN - CENTRAL HUB FEED */}
+          <div className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none animate-fadeIn text-left" : "hidden"}>
+            <UserTerrainLandingPage
+              gombos={gombos}
+              users={users}
+              posts={posts}
+              setPosts={setPosts}
+              globalSearchTerm={globalSearchTerm}
+              setGlobalSearchTerm={setGlobalSearchTerm}
+              universalSearchTerm={universalSearchTerm}
+              setUniversalSearchTerm={setUniversalSearchTerm}
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
+              terrainTab={terrainTab}
+              setTerrainTab={setTerrainTab}
+              currentSlide={currentSlide}
+              setCurrentSlide={setCurrentSlide}
+              likedGombos={likedGombos}
+              setLikedGombos={setLikedGombos}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              selectedLocation={selectedLocation}
+              setSelectedLocation={setSelectedLocation}
+              selectedType={selectedType}
+              setSelectedType={setSelectedType}
+              selectedDateFilter={selectedDateFilter}
+              setSelectedDateFilter={setSelectedDateFilter}
+              setSelectedGomboDetails={setSelectedGomboDetails}
+              requireAuthThen={requireAuthThen}
+              requireGoogleAuthThen={requireGoogleAuthThen}
+              audioSynth={audioSynth}
+              activeQuickActionModal={activeQuickActionModal}
+              setActiveQuickActionModal={setActiveQuickActionModal}
+              verifyGomboIdInput={verifyGomboIdInput}
+              setVerifyGomboIdInput={setVerifyGomboIdInput}
+              verifyGomboIdResult={verifyGomboIdResult}
+              setVerifyGomboIdResult={setVerifyGomboIdResult}
+              newNoticeTitle={newNoticeTitle}
+              setNewNoticeTitle={setNewNoticeTitle}
+              newNoticeCategory={newNoticeCategory}
+              setNewNoticeCategory={setNewNoticeCategory}
+              newNoticeBody={newNoticeBody}
+              setNewNoticeBody={setNewNoticeBody}
+              addToTerminal={addToTerminal}
+              onValidateFilters={applyGombosFilters}
+            />
+          </div>
+
+          <AnimatePresence mode="wait">
+            {activeMenu !== "user_terrain" && (
+              <motion.div
+                key={activeMenu}
+                ref={workspaceScrollRef}
+                onScroll={(e) => {
+                  scrollPositionsRef.current[activeMenu] = e.currentTarget.scrollTop;
+                }}
+                initial={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: 20 }}
+                animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
+                exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -20, transition: { duration: 0.1 } }}
+                transition={{ duration: areAnimationsReduced ? 0.05 : 0.25, ease: "easeOut" }}
+                className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none"
+              >
+                
+                {/* ----------------------------------------------------
+                                  STEP I: TABLEAU UTILISATEUR (10 CORE SECTIONS)
+                                    ---------------------------------------------------- */}
+                {/* ----------------------------------------------------
+                                  NEW CORE EXPERIENCES FOR USER PERSPECTIVE
+                                    ---------------------------------------------------- */}
+
 
               {/* 1B. VIDÉOS RÉELLES - VERIFICATION & SHOWCASE */}
               {activeMenu === "user_reels" && (
@@ -4715,6 +4741,41 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         </div>
                       </div>
                     </div>
+
+                    {/* COMPTE ASSOCIÉ */}
+                    {currentUser && (
+                      <div className="rounded-2xl bg-[#0A0A0A] border border-zinc-900 p-4 space-y-3 shadow-[0_0_15px_rgba(212,175,55,0.01)]">
+                        <h3 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
+                          Compte Associé
+                        </h3>
+                        <div className="flex items-center gap-3.5 bg-black/30 border border-zinc-900 rounded-xl p-3">
+                          {currentUser.photoURL ? (
+                            <img 
+                              src={currentUser.photoURL} 
+                              alt="Google" 
+                              className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/20 shrink-0" 
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-black text-[#D4AF37] shrink-0 font-mono">
+                              {String(currentUser.displayName || currentUser.email || "G").charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-sans font-bold text-white truncate leading-tight">
+                              {currentUser.displayName || "Artiste Gombo"}
+                            </p>
+                            <p className="text-[10px] font-mono text-zinc-500 truncate mt-0.5">
+                              {currentUser.email}
+                            </p>
+                          </div>
+                          <div className="text-[8.5px] font-mono text-[#D4AF37] bg-[#D4AF37]/5 border border-[#D4AF37]/20 px-2.5 py-1 rounded-lg select-none">
+                            🟢 Google Sync
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* 2. SECTION : MON PARCOURS TIMELINE */}
                     <div className="rounded-2xl bg-[#0A0A0A] border border-zinc-900 p-4 space-y-4">
@@ -7409,6 +7470,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               })()}
 
             </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </main>

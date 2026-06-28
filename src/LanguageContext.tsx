@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-export type Language = "fr" | "en" | "nouchi";
+export type Language = "fr" | "en" | "nouchi" | "es";
 
 interface LanguageContextType {
   language: Language;
@@ -131,6 +131,47 @@ const translations: Record<Language, Record<string, string>> = {
     opportunites_une: "GOMBOS CHICS",
     recents: "DERNIÈRES INFOS",
     monetisation_tab: "L'ARGENT",
+  },
+  es: {
+    settings_title: "Ajustes del Sistema",
+    settings_subtitle: "Personaliza tu experiencia Y’A GOMBO MUSIC",
+    mon_profil: "Mi Perfil",
+    mon_afri_id: "Mi AfriID",
+    notifications: "Notificaciones",
+    securite: "Seguridad",
+    langue: "Idioma",
+    theme: "Tema",
+    confidentialite: "Privacidad",
+    cgu: "Términos",
+    centre_aide: "Centro de Ayuda",
+    deconnexion: "Cerrar sesión",
+    annuler: "Cancelar",
+    enregistrer: "Guardar",
+    heritage: "Mi Herencia",
+    terrain: "Navegar",
+    messages: "Mensajes",
+    commentaires: "Comentarios",
+    publications: "Publicaciones",
+    theme_noir_or: "Negro & Oro",
+    theme_blanc_or: "Blanco & Oro",
+    theme_bleu_nuit: "Azul Medianoche",
+    choisir_langue: "Elegir Idioma",
+    langue_desc: "Selecciona tu idioma de navegación preferido.",
+    langue_fr: "Francés",
+    langue_en: "Inglés",
+    langue_nouchi: "Nouchi (Local)",
+    recherche: "Buscar",
+    publier: "Publicar",
+    messages_tab: "Mensajes",
+    annuaire: "Directorio",
+    booster_tab: "Impulsar",
+    evenement: "Eventos",
+    recherche_filtres: "BUSCAR Y FILTRAR",
+    valider_filtres: "Aplicar Filtros ⚡",
+    voir_tout: "Ver todo",
+    opportunites_une: "OPORTUNIDADES DESTACADAS",
+    recents: "RECIENTES Y POPULARES",
+    monetisation_tab: "MONETIZACIÓN",
   }
 };
 

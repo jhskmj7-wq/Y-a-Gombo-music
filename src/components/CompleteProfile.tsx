@@ -13,15 +13,6 @@ const CIV_CITIES = [
   "Abidjan", "Bouaké", "Yamoussoukro", "San-Pédro", "Korhogo", "Daloa", "Man", "Gagnoa", "Grand-Bassam", "Bingerville", "Autre"
 ];
 
-const PRESET_AVATARS = [
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150",
-  "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=150"
-];
-
 const AFRIGOMBO_ROLES = [
   { label: "🎤 Artiste", value: "Artiste" },
   { label: "🎧 Producteur", value: "Producteur" },
@@ -85,7 +76,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
   const [collaborations, setCollaborations] = useState<string[]>([]);
 
   // STEP 5 STATES
-  const initialGdPhoto = currentUserProfile.photoURL || currentUserProfile.avatarUrl || PRESET_AVATARS[0];
+  const initialGdPhoto = currentUserProfile.photoURL || currentUserProfile.avatarUrl || "";
   const [gdPhoto, setGdPhoto] = useState(initialGdPhoto);
   const [avatarUrl, setAvatarUrl] = useState(gdPhoto);
 
@@ -948,19 +939,19 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                         key={g}
                         type="button"
                         onClick={() => toggleGenre(g)}
-                        className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between font-bold text-xs uppercase tracking-wider ${
+                        className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between font-bold text-[10.5px] xs:text-xs uppercase tracking-tight break-normal ${
                           isSelected
                             ? "border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37] scale-[1.01]"
-                            : "border-zinc-90 w-full bg-zinc-955 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 border-zinc-900"
+                            : "border-zinc-900 w-full bg-zinc-950 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
                         }`}
                       >
-                        <span>{g}</span>
+                        <span className="truncate">{g}</span>
                         {isSelected ? (
-                          <div className="w-4 h-4 rounded-full bg-[#D4AF37] text-black flex items-center justify-center">
+                          <div className="w-4 h-4 rounded-full bg-[#D4AF37] text-black flex items-center justify-center shrink-0 ml-1">
                             <Check className="w-2.5 h-2.5 stroke-[4px]" />
                           </div>
                         ) : (
-                          <div className="w-4 h-4 rounded-full border border-zinc-800" />
+                          <div className="w-4 h-4 rounded-full border border-zinc-800 shrink-0 ml-1" />
                         )}
                       </button>
                     );
@@ -1054,19 +1045,19 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                         key={collab}
                         type="button"
                         onClick={() => toggleCollab(collab)}
-                        className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between font-bold text-xs uppercase tracking-wider ${
+                        className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between font-bold text-[10.5px] xs:text-xs uppercase tracking-tight break-normal ${
                           isSelected
                             ? "border-amber-500 bg-amber-500/10 text-amber-400 scale-[1.01]"
-                            : "border-zinc-90 w-full bg-zinc-955 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 border-zinc-900"
+                            : "border-zinc-900 w-full bg-zinc-950 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
                         }`}
                       >
-                        <span>{collab}</span>
+                        <span className="truncate">{collab}</span>
                         {isSelected ? (
-                          <div className="w-4 h-4 rounded-full bg-amber-500 text-black flex items-center justify-center">
+                          <div className="w-4 h-4 rounded-full bg-amber-500 text-black flex items-center justify-center shrink-0 ml-1">
                             <Check className="w-2.5 h-2.5 stroke-[4px]" />
                           </div>
                         ) : (
-                          <div className="w-4 h-4 rounded-full border border-zinc-800" />
+                          <div className="w-4 h-4 rounded-full border border-zinc-800 shrink-0 ml-1" />
                         )}
                       </button>
                     );
@@ -1137,12 +1128,16 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                       playsInline 
                       className="w-full h-full object-cover rounded-full scale-x-[-1]"
                     />
-                  ) : (
+                  ) : avatarUrl ? (
                     <img
                       src={avatarUrl}
                       alt="Artiste"
                       className="w-full h-full object-cover rounded-full"
                     />
+                  ) : (
+                    <div className="w-full h-full bg-zinc-950 flex items-center justify-center text-[#D4AF37] font-sans font-black text-3xl uppercase rounded-full">
+                      {(nomArtistique || prenom || "A").charAt(0)}
+                    </div>
                   )}
                   {uploading && (
                     <div className="absolute inset-0 bg-black/80 flex items-center justify-center rounded-full">
@@ -1206,28 +1201,6 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                         </label>
                       </>
                     )}
-                  </div>
-                </div>
-
-                {/* Quick select avatars */}
-                <div className="w-full text-center space-y-2 pt-4 border-t border-zinc-900 mt-2">
-                  <span className="text-[9px] font-mono font-black text-zinc-650 uppercase tracking-widest block">Ou choisissez parmi nos avatars d'Afrique</span>
-                  <div className="flex justify-center gap-2">
-                    {PRESET_AVATARS.map((pic, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setAvatarUrl(pic);
-                          try { audioSynth.playTamTam(true); } catch (_) {}
-                        }}
-                        className={`w-11 h-11 rounded-full overflow-hidden border-2 transition-all ${
-                          avatarUrl === pic ? "border-[#D4AF37] scale-105 shadow-[0_0_10px_rgba(212,175,55,0.3)]" : "border-transparent opacity-65 hover:opacity-100"
-                        }`}
-                      >
-                        <img src={pic} className="w-full h-full object-cover" />
-                      </button>
-                    ))}
                   </div>
                 </div>
               </div>

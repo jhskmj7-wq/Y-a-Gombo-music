@@ -22,14 +22,6 @@ const EXPERIENCES = [
   "Légende du Showbiz"
 ];
 
-const AVATARS = [
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150",
-  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150"
-];
 
 interface ProfileEditProps {
   initialProfile: UserProfile;
@@ -45,7 +37,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
   const [ville, setVille] = useState(initialProfile.ville || "Abidjan");
   const [commune, setCommune] = useState(initialProfile.commune || "Cocody");
   const [bio, setBio] = useState(initialProfile.bio || "");
-  const [avatarUrl, setAvatarUrl] = useState(initialProfile.avatarUrl || AVATARS[0]);
+  const [avatarUrl, setAvatarUrl] = useState(initialProfile.avatarUrl || "");
   
   // Musicians fields only
   const [specialty, setSpecialty] = useState(initialProfile.specialty || SPECIALTIES[0]);
@@ -305,8 +297,14 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
           </label>
           
           <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-[#FAF9F5] dark:bg-[#1c1c1f]/40 rounded-2xl border border-dashed border-[#D4AF37]/20">
-            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[#D4AF37] bg-gray-100 shrink-0">
-              <img src={avatarUrl} alt="Aperçu" className="w-full h-full object-cover" />
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[#D4AF37] bg-zinc-950 shrink-0 flex items-center justify-center">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Aperçu" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[#D4AF37] text-lg font-black uppercase font-mono">
+                  {(artistName || "U").charAt(0)}
+                </span>
+              )}
               {uploading && (
                 <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-[10px] font-bold text-white">
                   {Math.round(uploadProgress)}%
@@ -333,29 +331,6 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
                 <span>{uploading ? "Chargement..." : "Uploader de vraies photos"}</span>
               </label>
               <p className="text-[10px] text-gray-400">Photos de scène réelles acceptées (JPG, PNG, TIFF. Max : 4 Mo).</p>
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Ou choisir parmi nos avatars réels :</p>
-            <div className="flex flex-wrap gap-3 items-center pt-1.5">
-              {AVATARS.map((url, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => setAvatarUrl(url)}
-                  className={`relative w-11 h-11 rounded-full overflow-hidden border-2 transition-all ${
-                    avatarUrl === url ? "border-[#D4AF37] scale-105 shadow-md" : "border-transparent opacity-70 hover:opacity-100"
-                  }`}
-                >
-                  <img src={url} alt={`Avatar ${index}`} className="w-full h-full object-cover" />
-                  {avatarUrl === url && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <Check className="w-3.5 h-3.5 text-white" />
-                    </div>
-                  )}
-                </button>
-              ))}
             </div>
           </div>
         </div>
