@@ -46,7 +46,7 @@ export default function SettingsModal({
   // Detect Auth Provider
   let authProvider = "Email";
   if (currentUser) {
-    const providerId = currentUser.providerData[0]?.providerId;
+    const providerId = currentUser.providerData?.[0]?.providerId;
     if (providerId === "google.com") {
       authProvider = "Google Sync";
     } else if (providerId === "phone") {

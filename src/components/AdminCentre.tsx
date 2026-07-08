@@ -610,9 +610,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       setIsAuthModalOpen(true);
       try { audioSynth.playKoraSuccess(); } catch (err) {}
     } else {
-      const hasGoogle = currentUser.providerData.some(
+      const hasGoogle = currentUser.providerData?.some(
         (p) => p.providerId === "google.com" || p.providerId.includes("google")
-      );
+      ) ?? false;
       if (!hasGoogle) {
         setShowGoogleLoginRequiredModal(true);
         try { audioSynth.playKoraSuccess(); } catch (err) {}

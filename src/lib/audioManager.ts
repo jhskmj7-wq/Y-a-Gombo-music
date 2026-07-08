@@ -25,9 +25,16 @@ class AudioManager {
       const savedVol = localStorage.getItem("gombo_pref_music_volume");
       this.volume = savedVol !== null ? parseFloat(savedVol) : 0.7;
 
+      // Get robust URLs in case Vite packs them differently
+      const introUrl = typeof introMusic === "string" ? introMusic : (introMusic as any)?.default || introMusic;
+      const anthemUrl = typeof anthemMusic === "string" ? anthemMusic : (anthemMusic as any)?.default || anthemMusic;
+
       // Initialize HTMLAudioElements
-      this.introAudio = new Audio(introMusic);
-      this.hymneAudio = new Audio(anthemMusic);
+      this.introAudio = new Audio(introUrl);
+      this.hymneAudio = new Audio(anthemUrl);
+
+      this.introAudio.preload = "auto";
+      this.hymneAudio.preload = "auto";
 
       this.introAudio.volume = this.isMuted ? 0 : this.volume;
       this.hymneAudio.volume = this.isMuted ? 0 : this.volume;
