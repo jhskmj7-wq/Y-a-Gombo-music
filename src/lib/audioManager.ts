@@ -5,9 +5,9 @@
 
 import { audioSynth } from "./audio";
 // @ts-ignore
-import introMusic from "../assets/audio/AFRIGOMBO — Thème d'introduction officiel.mp3";
+import introMusic from "../assets/audio/AFRIGOMBO — Official Intro Theme.mp3";
 // @ts-ignore
-import anthemMusic from "../assets/audio/AFRIGOMBO — Hymne officiel.mp3";
+import anthemMusic from "../assets/audio/AFRIGOMBO — Official Anthem.mp3";
 
 class AudioManager {
   private introAudio: HTMLAudioElement | null = null;
