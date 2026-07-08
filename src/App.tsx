@@ -11,6 +11,7 @@ import { ProfileGuard } from "./components/ProfileGuard";
 import CompleteProfile from "./components/CompleteProfile";
 import AuthPage from "./components/AuthPage";
 import ErrorBoundary from "./components/ErrorBoundary";
+import AfrigomboCinematicIntro from "./components/AfrigomboCinematicIntro";
 
 // Lazy load the main Application Layer
 const AdminCentre = lazy(() => import("./components/AdminCentre"));
@@ -62,6 +63,12 @@ function App() {
       return !search.includes("transferId") && !search.includes("auth_transfer");
     }
     return true;
+  });
+  const [showCinematicIntro, setShowCinematicIntro] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("gombo_cinematic_intro_done") !== "true";
+    }
+    return false;
   });
   const [splashStep, setSplashStep] = useState(0);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -124,6 +131,19 @@ function App() {
     }
     setDarkMode(val);
   };
+
+  if (showCinematicIntro) {
+    return (
+      <ErrorBoundary>
+        <AfrigomboCinematicIntro
+          onComplete={() => {
+            localStorage.setItem("gombo_cinematic_intro_done", "true");
+            setShowCinematicIntro(false);
+          }}
+        />
+      </ErrorBoundary>
+    );
+  }
 
   if (authLoading) {
     return (

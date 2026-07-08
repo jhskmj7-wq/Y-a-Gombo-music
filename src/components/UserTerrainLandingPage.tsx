@@ -10,6 +10,7 @@ import { useLanguage } from "../LanguageContext";
 import { Gombo, User, Post, Renfort } from "../types";
 import AnnuaireTalents from "./AnnuaireTalents";
 import { usePerformance } from "../services/performanceService";
+import { globalAudioManager } from "../lib/audioManager";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -621,6 +622,24 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             })}
           </motion.div>
         </div>
+      </div>
+
+      {/* BOUTON HYMNE OFFICIEL AFRIGOMBO */}
+      <div className="mt-2 text-left select-none">
+        <button
+          onClick={() => {
+            globalAudioManager.playHymne();
+          }}
+          className="w-full flex items-center justify-between p-3.5 bg-zinc-950/90 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl text-xs font-bold text-white shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-[#D4AF37] animate-pulse">👑</span>
+            <span className="font-extrabold uppercase tracking-wide">▶ Hymne officiel AFRIGOMBO</span>
+          </div>
+          <span className="text-[8px] font-mono text-[#D4AF37] border border-[#D4AF37]/20 px-2 py-0.5 rounded-md uppercase font-black tracking-widest bg-[#D4AF37]/5">
+            SOUVERAINETÉ
+          </span>
+        </button>
       </div>
 
       {/* ==========================================

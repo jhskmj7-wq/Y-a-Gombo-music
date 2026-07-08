@@ -14,6 +14,7 @@ import { gomboDB } from "../firebase";
 import { audioSynth } from "../lib/audio";
 import { playSound } from "../services/audioService";
 import { triggerSettingsSaved, usePerformance } from "../services/performanceService";
+import { globalAudioManager } from "../lib/audioManager";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -90,6 +91,11 @@ export default function SettingsModal({
   const [autoPlayVideo, setAutoPlayVideo] = useState(() => localStorage.getItem("gombo_pref_autoplay_video") === "true");
   const [autoPlayAudio, setAutoPlayAudio] = useState(() => localStorage.getItem("gombo_pref_autoplay_audio") !== "false");
   const [audioQuality, setAudioQuality] = useState(() => localStorage.getItem("gombo_pref_audio_quality") || "standard");
+
+  // Global Audio Manager States
+  const [musicVolume, setMusicVolume] = useState(() => globalAudioManager.getVolume());
+  const [musicMuted, setMusicMuted] = useState(() => globalAudioManager.getIsMuted());
+  const [activeMusicPlay, setActiveMusicPlay] = useState<"none" | "intro" | "hymne">("none");
 
   // Support Screens Overlay
   const [activeSupportPage, setActiveSupportPage] = useState<"none" | "help" | "issue" | "terms" | "privacy_policy" | "about">("none");
@@ -667,6 +673,99 @@ export default function SettingsModal({
                 />
                 <div className="w-8 h-4.5 bg-zinc-900 peer-checked:bg-[#D4AF37] rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5"></div>
               </label>
+            </div>
+
+            {/* NEW MUSIC CONTROLS SUBSECTION */}
+            <div className="space-y-3 pt-3.5 border-t border-zinc-900/60">
+              <span className="text-[9px] font-mono text-[#D4AF37] uppercase tracking-widest block font-bold">● Musique Officielle AFRIGOMBO</span>
+              
+              {/* BUTTONS ROW */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    globalAudioManager.playIntro(true);
+                    setActiveMusicPlay("intro");
+                  }}
+                  className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer ${
+                    activeMusicPlay === "intro"
+                      ? "bg-[#D4AF37]/20 border-[#D4AF37] text-white"
+                      : "bg-zinc-950 border-zinc-900 text-zinc-300 hover:text-white"
+                  }`}
+                >
+                  ▶ Réécouter l'introduction
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    globalAudioManager.playHymne();
+                    setActiveMusicPlay("hymne");
+                  }}
+                  className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer ${
+                    activeMusicPlay === "hymne"
+                      ? "bg-[#D4AF37]/20 border-[#D4AF37] text-white"
+                      : "bg-zinc-950 border-zinc-900 text-zinc-300 hover:text-white"
+                  }`}
+                >
+                  ▶ Hymne officiel
+                </button>
+              </div>
+
+              {/* STOP BUTTON */}
+              {activeMusicPlay !== "none" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    globalAudioManager.stopAll();
+                    setActiveMusicPlay("none");
+                  }}
+                  className="w-full py-1.5 bg-red-950/20 hover:bg-red-950/35 border border-red-900/30 text-red-400 rounded-lg text-[9.5px] font-bold uppercase transition-all cursor-pointer"
+                >
+                  ■ Arrêter la musique
+                </button>
+              )}
+
+              {/* MUTED / ENABLE TOGGLE */}
+              <label className="flex items-center justify-between cursor-pointer group pt-1">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-bold text-zinc-300 group-hover:text-white transition-colors">Activer / Désactiver la Musique</span>
+                  <p className="text-[9px] text-zinc-500 leading-none">Mettre en sourdine toutes les musiques de fond</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={!musicMuted}
+                  onChange={(e) => {
+                    const isEnabled = e.target.checked;
+                    globalAudioManager.setIsMuted(!isEnabled);
+                    setMusicMuted(!isEnabled);
+                    if (!isEnabled) {
+                      setActiveMusicPlay("none");
+                    }
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-zinc-900 peer-checked:bg-[#D4AF37] rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5"></div>
+              </label>
+
+              {/* VOLUME SLIDER */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500">
+                  <span>Volume de la musique</span>
+                  <span className="text-[#D4AF37] font-bold">{Math.round(musicVolume * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={musicVolume * 100}
+                  onChange={(e) => {
+                    const vol = parseFloat(e.target.value) / 100;
+                    globalAudioManager.setVolume(vol);
+                    setMusicVolume(vol);
+                  }}
+                  className="w-full h-1.5 bg-zinc-950 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5 pt-1.5 border-t border-zinc-950">

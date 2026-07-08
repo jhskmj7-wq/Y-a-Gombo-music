@@ -5,7 +5,7 @@ interface AdminActionsProps {
   activeMenu: string;
   setActiveMenu: (menu: string) => void;
   setIsBroadcastModalOpen: (isOpen: boolean) => void;
-  audioSynth?: any; // Add optional audioSynth
+  audioSynth?: any;
 }
 
 export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiveMenu, setIsBroadcastModalOpen, audioSynth }) => {
@@ -27,9 +27,9 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <button
-          onClick={() => handleMenuChange("kyc")}
+          onClick={() => handleMenuChange("users")}
           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-            activeMenu === "kyc" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017] shadow-md shadow-[#D4A017]/20" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+            activeMenu === "users" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017] shadow-md shadow-[#D4A017]/20" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
           }`}
         >
           <ShieldCheck className="w-5 h-5 text-[#D4A017]" />
@@ -37,9 +37,9 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
         </button>
 
         <button
-           onClick={() => handleMenuChange("alertes")}
+          onClick={() => handleMenuChange("reports")}
           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-            activeMenu === "alertes" ? "bg-[#0A0A0A] border-red-500 text-red-500 shadow-md shadow-red-500/20" : "bg-[#0A0A0A] hover:bg-red-950/20 border-[rgba(212,160,23,0.25)] hover:border-red-500/40 text-[#FFFFFF]"
+            activeMenu === "reports" ? "bg-[#0A0A0A] border-red-500 text-red-500 shadow-md shadow-red-500/20" : "bg-[#0A0A0A] hover:bg-red-950/20 border-[rgba(212,160,23,0.25)] hover:border-red-500/40 text-[#FFFFFF]"
           }`}
         >
           <AlertTriangle className="w-5 h-5 text-red-400" />
@@ -57,9 +57,9 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
         </button>
 
         <button
-          onClick={() => handleMenuChange("posts")}
+          onClick={() => handleMenuChange("reports")}
           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-            activeMenu === "posts" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+            activeMenu === "reports" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
           }`}
         >
           <MessageSquare className="w-5 h-5 text-emerald-400" />
@@ -67,7 +67,7 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
         </button>
 
         <button
-          onClick={() => handleMenuChange("posts")}
+          onClick={() => handleMenuChange("reports")}
           className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-yellow-500/40 text-[#FFFFFF]"
         >
           <Briefcase className="w-5 h-5 text-yellow-500" />
@@ -75,27 +75,28 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
         </button>
         
         <button
-          onClick={() => {
-            setIsBroadcastModalOpen(true);
-            try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (err) {}
-          }}
-          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+          onClick={() => handleMenuChange("notifications")}
+          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
+            activeMenu === "notifications" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+          }`}
         >
           <Megaphone className="w-5 h-5 text-[#D4A017]" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Notifications globales</span>
         </button>
 
         <button
-           onClick={() => handleMenuChange("alertes")}
-          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+          onClick={() => handleMenuChange("reports")}
+          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4AF37] text-[#FFFFFF]"
         >
-          <Send className="w-5 h-5 text-[#D4A017]" />
+          <Send className="w-5 h-5 text-[#D4AF37]" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Support utilisateurs</span>
         </button>
 
         <button
-           onClick={() => handleMenuChange("logs")}
-          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+          onClick={() => handleMenuChange("security")}
+          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
+            activeMenu === "security" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+          }`}
         >
           <Activity className="w-5 h-5 text-[#D4A017]" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Historique actions</span>

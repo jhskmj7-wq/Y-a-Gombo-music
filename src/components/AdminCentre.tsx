@@ -16,10 +16,15 @@ import { db, storage } from "../lib/firebase";
 import { useNavigate } from "react-router-dom";
 
 const AdminStats = lazy(() => import("./AdminStats"));
-const AdminReports = lazy(() => import("./AdminReports"));
+const AdminReports = lazy(() => import("./admin/AdminReports"));
 const AdminActions = lazy(() => import("./AdminActions"));
 const AdminDashboard = lazy(() => import("./admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("./admin/AdminUsers"));
+const AdminNotifications = lazy(() => import("./admin/AdminNotifications"));
+const AdminRevenue = lazy(() => import("./admin/AdminRevenue"));
+const AdminSettings = lazy(() => import("./admin/AdminSettings"));
+const AdminSecurity = lazy(() => import("./admin/AdminSecurity"));
+const AdminFounderThrone = lazy(() => import("./admin/AdminFounderThrone"));
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
 import AuthScreen from "./AuthScreen";
@@ -635,7 +640,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       if (prev[prev.length - 1] === menu) return prev;
       const rootMenus = [
         "user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_heritage",
-        "dashboard", "users", "posts", "gombos", "verifications", "admin_finances"
+        "dashboard", "users", "posts", "gombos", "verifications", "admin_finances",
+        "notifications", "alertes", "reports", "revenue", "settings", "security", "super_admin"
       ];
       if (rootMenus.includes(menu)) {
         return [menu];
@@ -1927,6 +1933,91 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     }
   };
 
+  const handleBroadcast = async (message: string) => {
+    addToTerminal(`[📡 MÉGAPHONE] Bulletin quotidien diffusé : "${message}"`);
+    try {
+      const newNotif = {
+        text: message,
+        timestamp: new Date().toISOString(),
+        read: false,
+        type: "megaphone"
+      };
+      await addDoc(collection(db, "notifications"), newNotif);
+      addToTerminal(`[📡 MÉGAPHONE] Enregistré sur Firestore.`);
+    } catch (err) {
+      console.error("Error broadcasting megaphone", err);
+    }
+  };
+
+  const handleDeleteNotification = async (id: string) => {
+    addToTerminal(`[🗑️ MÉGAPHONE] Notification supprimée : ${id}`);
+    try {
+      // Opt-in removal or log deletion
+    } catch (err) {
+      console.error("Error deleting notification", err);
+    }
+  };
+
+  const handleDismissAlert = async (alertId: string) => {
+    try {
+      const alertObj = alerts.find(a => a.id === alertId);
+      if (alertObj) {
+        const updated = { ...alertObj, status: "resolved" };
+        await saveToFirestore("alerts", alertId, updated);
+        setAlerts(prev => prev.filter(a => a.id !== alertId));
+        addToTerminal(`[ARBITRAGE] Litige #${alertId} clos avec honneurs.`);
+        try { audioSynth.playKoraSuccess(); } catch(_) {}
+      }
+    } catch (err) {
+      console.error("Error dismissing alert", err);
+    }
+  };
+
+  const handleDeletePostFromReports = async (postId: string) => {
+    try {
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      setAutoFlaggedPosts(prev => prev.filter(p => p.id !== postId));
+      await saveToFirestore("posts", postId, { isDeleted: true });
+      addToTerminal(`[FILE REVIEW] Contenu supprimé définitivement de la base.`);
+      try { audioSynth.playTamTam(false); } catch (_) {}
+    } catch (err) {
+      console.error("Error deleting post from reports", err);
+    }
+  };
+
+  const handleUnflagPostFromReports = async (postId: string) => {
+    try {
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, isFlagged: false } : p));
+      setAutoFlaggedPosts(prev => prev.filter(p => p.id !== postId));
+      await saveToFirestore("posts", postId, { isFlagged: false });
+      addToTerminal(`[FILE REVIEW] Signalement levé, publication approuvée.`);
+      try { audioSynth.playValidationSuccess(); } catch (_) {}
+    } catch (err) {
+      console.error("Error unflagging post", err);
+    }
+  };
+
+  const handleUpdateCommissionRate = async (rate: number) => {
+    try {
+      setSystemCommissionRate(rate);
+      addToTerminal(`[FRAIS] Taux de commission de plateforme mis à jour à ${rate}%.`);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err) {
+      console.error("Error updating commission rate", err);
+    }
+  };
+
+  const handleUpdateThroneConfig = async (newFounders: string[], newSuperAdmins: string[]) => {
+    try {
+      setDynamicFounders(newFounders);
+      setDynamicSuperAdmins(newSuperAdmins);
+      addToTerminal(`[TRÔNE] Configuration du Trône mise à jour.`);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err) {
+      console.error("Error updating throne configuration", err);
+    }
+  };
+
   const handleAppointGomboDuJour = (gomboId: string) => {
     addToTerminal(`[🔥 LE TAM-TAM] Gombo du Jour activé : "${gombos.find(g => g.id === gomboId)?.title}"!`);
   };
@@ -2648,10 +2739,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 onScroll={(e) => {
                   scrollPositionsRef.current[activeMenu] = e.currentTarget.scrollTop;
                 }}
-                initial={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: 20 }}
+                initial={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: 10 }}
                 animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
-                exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -20, transition: { duration: 0.1 } }}
-                transition={{ duration: areAnimationsReduced ? 0.05 : 0.25, ease: "easeOut" }}
+                exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
+                transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none"
               >
                 
@@ -5630,30 +5721,16 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 VIEW: CABINET SUPRÊME PRIVÉ (LE TRÔNE DU FONDATEUR)
                   ---------------------------------------------------- */}
               {activeMenu === "super_admin" && (
-                <FounderThrone
-                  adminEmail={adminEmail}
-                  users={users}
-                  setUsers={setUsers}
-                  gombos={gombos}
-                  setGombos={setGombos}
-                  transactions={transactions}
-                  setTransactions={setTransactions}
-                  alerts={alerts}
-                  setAlerts={setAlerts}
-                  reviews={reviews}
-                  setReviews={setReviews}
-                  systemCommissionRate={systemCommissionRate}
-                  setSystemCommissionRate={setSystemCommissionRate}
-                  addToTerminal={addToTerminal}
-                  saveToFirestore={saveToFirestore}
-                  createTransaction={createTransaction}
-                  onClose={() => {
-                    window.history.pushState({}, "", "/");
-                    setPerspective("user");
-                    setActiveMenu("user_terrain");
-                    addToTerminal(`[INFO] Cabinet du Trône fermé. Retour au Terrain.`);
-                  }}
-                />
+                <Suspense fallback={<div className="p-12 text-center text-[#D4AF37] font-mono animate-pulse">Chargement du Trône...</div>}>
+                  <AdminFounderThrone
+                    founders={dynamicFounders}
+                    superAdmins={dynamicSuperAdmins}
+                    adminEmail={userEmail || ""}
+                    isAuthorizedSuperFounder={isAuthorizedSuperFounder}
+                    onUpdateThroneConfig={handleUpdateThroneConfig}
+                    audioSynth={audioSynth}
+                  />
+                </Suspense>
               )}
 
               {/* ----------------------------------------------------
@@ -6321,305 +6398,74 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {/* ----------------------------------------------------
-                                VIEW: ALERTS de COMMUNES
+                                VIEW: ALERTS de COMMUNES (SIGNALEMENTS)
                   ---------------------------------------------------- */}
-              {activeMenu === "alertes" && (
+              {(activeMenu === "alertes" || activeMenu === "reports") && (
                 <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement rapports et alertes...</div>}>
-                  <AdminReports alerts={alerts} />
+                  <AdminReports
+                    alerts={alerts}
+                    posts={posts}
+                    onDismissAlert={handleDismissAlert}
+                    onDeletePost={handleDeletePostFromReports}
+                    onUnflagPost={handleUnflagPostFromReports}
+                    audioSynth={audioSynth}
+                  />
+                </Suspense>
+              )}
+
+              {/* ----------------------------------------------------
+                                VIEW: NOTIFICATIONS (ANNONCES GLOBALES)
+                  ---------------------------------------------------- */}
+              {activeMenu === "notifications" && (
+                <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement notifications...</div>}>
+                  <AdminNotifications
+                    onBroadcast={handleBroadcast}
+                    notificationsList={realNotifications}
+                    onDeleteNotification={handleDeleteNotification}
+                    audioSynth={audioSynth}
+                  />
                 </Suspense>
               )}
 
               {/* ----------------------------------------------------
                                 VIEW: LA CAISSE GOMBO (FINANCIALS / REVENUS)
                   ---------------------------------------------------- */}
-              {(activeMenu === "caisse" || activeMenu === "finances") && (() => {
-                const now = new Date();
-                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-                const startOfWeek = now.getTime() - 7 * 24 * 60 * 60 * 1000;
-                const startOfMonth = now.getTime() - 30 * 24 * 60 * 60 * 1000;
+              {(activeMenu === "caisse" || activeMenu === "finances" || activeMenu === "revenue") && (
+                <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement revenus...</div>}>
+                  <AdminRevenue
+                    transactions={transactions}
+                    systemCommissionRate={systemCommissionRate}
+                    audioSynth={audioSynth}
+                  />
+                </Suspense>
+              )}
 
-                const totals = transactions.reduce((sum, t) => sum + (t.type !== "payout" ? t.amount : 0), 0);
-                const daily = transactions
-                  .filter(t => new Date(t.timestamp).getTime() >= startOfToday && t.type !== "payout")
-                  .reduce((sum, t) => sum + t.amount, 0);
-                const weekly = transactions
-                  .filter(t => new Date(t.timestamp).getTime() >= startOfWeek && t.type !== "payout")
-                  .reduce((sum, t) => sum + t.amount, 0);
-                const monthly = transactions
-                  .filter(t => new Date(t.timestamp).getTime() >= startOfMonth && t.type !== "payout")
-                  .reduce((sum, t) => sum + t.amount, 0);
+              {/* ----------------------------------------------------
+                                VIEW: PARAMÈTRES DU SYSTÈME (SETTINGS)
+                  ---------------------------------------------------- */}
+              {activeMenu === "settings" && (
+                <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement paramètres...</div>}>
+                  <AdminSettings
+                    systemCommissionRate={systemCommissionRate}
+                    onUpdateCommissionRate={handleUpdateCommissionRate}
+                    audioSynth={audioSynth}
+                  />
+                </Suspense>
+              )}
 
-                const cExpress = transactions.filter(t => t.type === "cert_express").reduce((s, t) => s + t.amount, 0);
-                const bGombo = transactions.filter(t => t.type === "boost_gombo").reduce((s, t) => s + t.amount, 0);
-                const rExpress = transactions.filter(t => t.type === "renfort_express").reduce((s, t) => s + t.amount, 0);
-                const gVip = transactions.filter(t => t.type === "gombo_vip").reduce((s, t) => s + t.amount, 0);
-                const gPro = transactions.filter(t => t.type === "gombo_pro").reduce((s, t) => s + t.amount, 0);
-                const otherRev = transactions.filter(t => t.type === "commission" || t.type === "subscription").reduce((s, t) => s + t.amount, 0);
-
-                const premiumSum = cExpress + bGombo + rExpress + gVip + gPro;
-
-                return (
-                  <div className="space-y-6">
-                    {/* TOP STATS: CAISSE REVENUES METRICS */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
-                        <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Revenus du Jour</span>
-                        <span className="text-2xl font-display font-bold text-[#D4AF37] block mt-1 font-mono">
-                          {daily.toLocaleString()} <span className="text-sm font-sans font-medium text-[#F5F5F5]/60">FCFA</span>
-                        </span>
-                        <div className="flex items-center gap-1.5 mt-2 text-[9px] font-mono text-[#10B981]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
-                          Mise à jour temps réel
-                        </div>
-                      </div>
-
-                      <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
-                        <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Revenus de la Semaine</span>
-                        <span className="text-2xl font-display font-bold text-[#D4AF37] block mt-1 font-mono">
-                          {weekly.toLocaleString()} <span className="text-sm font-sans font-medium text-[#F5F5F5]/60">FCFA</span>
-                        </span>
-                        <div className="text-[9px] text-[#F5F5F5]/40 mt-2 font-mono">Derniers 7 jours glissants</div>
-                      </div>
-
-                      <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
-                        <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Revenus du Mois</span>
-                        <span className="text-2xl font-display font-bold text-[#D4AF37] block mt-1 font-mono">
-                          {monthly.toLocaleString()} <span className="text-sm font-sans font-medium text-[#F5F5F5]/60">FCFA</span>
-                        </span>
-                        <div className="text-[9px] text-[#F5F5F5]/40 mt-2 font-mono">Derniers 30 jours glissants</div>
-                      </div>
-
-                      <div className="p-5 rounded-lg border border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/5 to-[#D4AF37]/0 shadow-[0_4px_20px_rgba(212,175,55,0.1)]">
-                        <div className="flex justify-between items-start">
-                          <span className="text-[10px] uppercase font-mono text-[#D4AF37] font-semibold block">Revenus Totaux</span>
-                          <Award className="w-4 h-4 text-[#D4AF37]" />
-                        </div>
-                        <span className="text-2xl font-display font-extrabold text-[#D4AF37] block mt-1 font-mono">
-                          {totals.toLocaleString()} <span className="text-sm font-sans font-medium text-[#F5F5F5]">FCFA</span>
-                        </span>
-                        <div className="text-[9px] text-[#D4AF37]/80 mt-2 font-mono">Rentabilité Globale Réelle</div>
-                      </div>
-                    </div>
-
-                    {/* REPARTITION DES REVENUS SOUVERAINS */}
-                    <div className="p-6 rounded-lg bg-black/30 border border-[#D4AF37]/15">
-                      <h4 className="text-xs uppercase font-mono font-bold tracking-widest text-[#D4AF37] mb-6 flex items-center gap-2">
-                        <Coins className="w-4 h-4" />
-                        Répartition par Flux de Revenus Africains
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* LEFT GRID: DISTRIBUTION list */}
-                        <div className="space-y-4">
-                          {[
-                            { name: "⚡ Certifications Express", amount: cExpress, desc: "Frais de traitement prioritaire de Gombo ID", color: "from-[#10B981] to-[#059669]" },
-                            { name: "🔥 Boost Gombo", amount: bGombo, desc: "Publications d'artistes mises en vedette", color: "from-amber-500 to-red-500" },
-                            { name: "⚡ Renfort Express Urgent", amount: rExpress, desc: "Offres de renforts marquées en urgence", color: "from-cyan-400 to-blue-500" },
-                            { name: "✨ Adhésions Gombo VIP", amount: gVip, desc: "Abonnements d'artistes (1 000 FCFA/mois)", color: "from-purple-500 to-pink-500" },
-                            { name: "💼 Statut Gombo PRO", amount: gPro, desc: "Formules pour Orchestres, Managers e.a.", color: "from-[#D4AF37] to-[#B48F17]" },
-                            { name: "🎼 Commissions standard & Subs", amount: otherRev, desc: "Commissions de 10% sur gombos finalisés", color: "from-gray-500 to-slate-400" },
-                          ].map((item, idx) => {
-                            const percent = totals > 0 ? (item.amount / totals) * 100 : 0;
-                            return (
-                              <div key={idx} className="space-y-1.5 p-3 rounded bg-white/5 border border-white/5">
-                                <div className="flex justify-between items-center text-xs">
-                                  <div>
-                                    <span className="font-semibold text-[#F5F5F5] block">{item.name}</span>
-                                    <span className="text-[10px] text-[#F5F5F5]/40">{item.desc}</span>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="font-mono font-bold text-[#D4AF37] block">
-                                      {item.amount.toLocaleString()} FCFA
-                                    </span>
-                                    <span className="text-[10px] font-mono text-[#F5F5F5]/50 block">
-                                      {percent.toFixed(1)}%
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="w-full bg-[#D4AF37]/5 h-2 rounded-full overflow-hidden border border-white/5">
-                                  <div
-                                    className={`bg-gradient-to-r ${item.color} h-full`}
-                                    style={{ width: `${percent}%` }}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* RIGHT GRID: ARCHITECTURE SUMMARY */}
-                        <div className="flex flex-col justify-between p-5 rounded-lg bg-[#D4AF37]/5 border border-[#D4AF37]/10">
-                          <div>
-                            <span className="text-xs uppercase font-mono font-semibold text-[#D4AF37] tracking-wider block mb-2">
-                              Souveraineté Économique Africaine
-                            </span>
-                            <p className="text-xs text-[#F5F5F5]/70 leading-relaxed space-y-2">
-                              La répartition d'AFRIGOMBO est optimisée pour une rentabilité équilibrée. 
-                              Toutes les transactions s'effectuent via un flux transactionnel en temps réel connecté à Firestore. 
-                              Cette architecture intègre une couche d'abstraction ouverte pour connecter nativement les SDKs africains:
-                            </p>
-                            
-                            {/* FUTURE PAYMENTS PLATFORM BADGES */}
-                            <div className="grid grid-cols-2 gap-2 mt-4 font-mono text-[10px]">
-                              <div className="p-2 border border-[#D4AF37]/20 rounded bg-black/40 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                                Wave Sénégal/CI
-                              </div>
-                              <div className="p-2 border border-[#D4AF37]/20 rounded bg-black/40 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-amber-500" />
-                                Orange Money
-                              </div>
-                              <div className="p-2 border border-[#D4AF37]/20 rounded bg-black/40 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-yellow-400" />
-                                MTN Mobile Money
-                              </div>
-                              <div className="p-2 border border-[#D4AF37]/20 rounded bg-black/40 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-blue-500" />
-                                Moov Money
-                              </div>
-                              <div className="p-2 border border-[#D4AF37]/30 rounded bg-[#D4AF37]/10 flex items-center gap-2 col-span-2 justify-center text-[#D4AF37]">
-                                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-                                Passerelle CinetPay (Afrique de l'Ouest)
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="border-t border-[#D4AF37]/10 pt-4 mt-6 text-[11px] text-[#F5F5F5]/50 italic">
-                            💡 Chaque transaction listée ci-contre est répercutée en temps réel et persistée de manière offline-first.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* DYNAMIC REAL-TIME TRANSACTION DIARY */}
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h4 className="text-sm uppercase font-mono font-bold tracking-widest text-[#D4AF37]">
-                          Journal des paiements de Caisse (Firebase Live)
-                        </h4>
-                        <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/40">
-                          {transactions.length} transactions indexées
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-2 bg-black/20 p-4 rounded-lg border border-white/5 max-h-96 overflow-y-auto scrollbar-thin">
-                        {transactions.map(tx => {
-                          let typeBadge = "";
-                          let typeColor = "";
-                          switch (tx.type) {
-                            case "cert_express":
-                              typeBadge = "⚡ Express";
-                              typeColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
-                              break;
-                            case "boost_gombo":
-                              typeBadge = "🔥 Boost";
-                              typeColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
-                              break;
-                            case "renfort_express":
-                              typeBadge = "⚡ Renfort";
-                              typeColor = "text-cyan-400 bg-cyan-500/10 border-cyan-500/20";
-                              break;
-                            case "gombo_vip":
-                              typeBadge = "✨ VIP Sub";
-                              typeColor = "text-purple-400 bg-purple-500/10 border-purple-500/20";
-                              break;
-                            case "gombo_pro":
-                              typeBadge = "💼 PRO Sub";
-                              typeColor = "text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/20";
-                              break;
-                            default:
-                              typeBadge = "🎼 Commission";
-                              typeColor = "text-gray-400 bg-gray-500/10 border-gray-500/20";
-                          }
-
-                          return (
-                            <div key={tx.id} className="p-3.5 rounded bg-[#010101]/60 border border-white/5 flex justify-between items-center text-xs hover:border-[#D4AF37]/25 transition-all">
-                              <div className="flex items-center gap-3">
-                                <div className={`px-2 py-0.5 rounded text-[9px] font-mono border font-bold ${typeColor}`}>
-                                  {typeBadge}
-                                </div>
-                                <div>
-                                  <span className="font-semibold text-white block">{tx.description}</span>
-                                  <span className="text-[#F5F5F5]/40 text-[9px] font-mono">
-                                    {new Date(tx.timestamp).toLocaleString()} • Artiste : <strong className="text-[#D4AF37]">{tx.userArtisticName}</strong>
-                                  </span>
-                                </div>
-                              </div>
-                              <span className="font-mono font-bold text-sm text-emerald-400">
-                                +{tx.amount.toLocaleString()} FCFA
-                              </span>
-                            </div>
-                          );
-                        })}
-
-                        {transactions.length === 0 && (
-                          <div className="text-center py-8 text-xs text-[#F5F5F5]/40">
-                            Aucune transaction de caisse enregistrée pour le moment.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* ADDITIONAL PLUS SYSTEMS PANEL */}
-                    <div className="p-6 rounded-2xl bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-[#D4AF37]/25 space-y-6">
-                      <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-                        <Settings className="w-5 h-5 text-[#D4AF37]" />
-                        <div>
-                          <h4 className="text-sm font-display font-black text-white uppercase tracking-wider">
-                            Services & Outillage Plus Gombo
-                          </h4>
-                          <p className="text-[10px] text-zinc-400">Actions d'optimisation système de l'empire.</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Action 1: Scan global */}
-                        <div className="p-4 bg-black border border-white/5 rounded-xl space-y-2">
-                          <h5 className="text-xs font-bold text-white font-mono uppercase">Diagnostic Système</h5>
-                          <p className="text-[10px] text-zinc-400">Lance une routine de nettoyage des documents orphelins et vérifie l'intégrité de Firestore.</p>
-                          <button
-                            onClick={triggerGlobalSystemScan}
-                            disabled={scannerStatus === "scanning"}
-                            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-[10px] font-mono font-semibold"
-                          >
-                            <RefreshCw className={`w-3 h-3 ${scannerStatus === "scanning" ? "animate-spin" : ""}`} />
-                            Scan Global
-                          </button>
-                        </div>
-
-                        {/* Action 2: Diffusions bulletins */}
-                        <div className="p-4 bg-black border border-white/5 rounded-xl space-y-2">
-                          <h5 className="text-xs font-bold text-white font-mono uppercase">Mégaphone Citoyen</h5>
-                          <p className="text-[10px] text-zinc-400">Diffusez un flash d'urgence épinglé directement au sommet du Tam-Tam des Artistes.</p>
-                          <button
-                            onClick={() => setIsBroadcastModalOpen(true)}
-                            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-[10px] font-mono font-semibold"
-                          >
-                            <Megaphone className="w-3 h-3" />
-                            📣 Diffuser Bulletin
-                          </button>
-                        </div>
-
-                        {/* Action 3: Switch perspective */}
-                        <div className="p-4 bg-black border border-white/5 rounded-xl space-y-2">
-                          <h5 className="text-xs font-bold text-white font-mono uppercase">Perspective Terrain</h5>
-                          <p className="text-[10px] text-zinc-400">Quittez temporairement le cockpit pour tester l'application en mode artiste.</p>
-                          <button
-                            onClick={() => {
-                              setPerspective("user");
-                              setActiveMenu("user_terrain");
-                              addToTerminal("[INFO] Retour au Terrain d'Action.");
-                            }}
-                            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-[10px] font-mono font-semibold"
-                          >
-                            <Users className="w-3 h-3" />
-                            Mode Artiste
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
+              {/* ----------------------------------------------------
+                                VIEW: CONSOLE DE SÉCURITÉ (DIAGNOSTICS & LOGS)
+                  ---------------------------------------------------- */}
+              {(activeMenu === "security" || activeMenu === "logs") && (
+                <Suspense fallback={<div className="p-10 text-center text-cyan-400 font-mono animate-pulse">Chargement de la Console de Sécurité...</div>}>
+                  <AdminSecurity
+                    adminLogs={terminalFeed}
+                    scannerStatus={scannerStatus}
+                    onTriggerSystemScan={triggerGlobalSystemScan}
+                    audioSynth={audioSynth}
+                  />
+                </Suspense>
+              )}
 
               {/* ----------------------------------------------------
                                 VIEW: ANALYTICS & COURBES
@@ -6663,7 +6509,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     </button>
 
                     {/* Paramètres */}
-                    <button className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group">
+                    <button 
+                      onClick={() => setActiveMenu("settings")}
+                      className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
+                    >
                       <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
                         <Settings className="w-5 h-5 text-zinc-300" />
                       </div>
@@ -6674,7 +6523,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     </button>
 
                     {/* Sauvegardes */}
-                    <button className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group">
+                    <button 
+                      onClick={() => setActiveMenu("analytics")}
+                      className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
+                    >
                       <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
                         <Database className="w-5 h-5 text-emerald-400" />
                       </div>
@@ -6685,7 +6537,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     </button>
 
                     {/* Audit sécurité */}
-                    <button className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group">
+                    <button 
+                      onClick={() => setActiveMenu("security")}
+                      className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
+                    >
                       <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
                         <ShieldAlert className="w-5 h-5 text-red-400" />
                       </div>
@@ -6696,7 +6551,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     </button>
 
                     {/* IA AFRIGOMBO */}
-                    <button className="p-4 bg-[#0A0A0C] hover:bg-purple-500/5 border border-purple-500/10 hover:border-purple-500/30 rounded-xl flex items-start gap-4 text-left transition-all group">
+                    <button 
+                      onClick={() => { setActiveMenu("security"); addToTerminal("[IA] Accès à la configuration du moteur de recommandation."); }}
+                      className="p-4 bg-[#0A0A0C] hover:bg-purple-500/5 border border-purple-500/10 hover:border-purple-500/30 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
+                    >
                       <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500/50">
                         <Brain className="w-5 h-5 text-purple-400" />
                       </div>
@@ -6707,7 +6565,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     </button>
 
                     {/* Centre d'aide */}
-                    <button className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group">
+                    <button 
+                      onClick={() => { setActiveMenu("dashboard"); addToTerminal("[SUPPORT] Accès au centre d'aide."); }}
+                      className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
+                    >
                       <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
                         <LifeBuoy className="w-5 h-5 text-amber-400" />
                       </div>
@@ -7342,80 +7203,125 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                      ADMIN FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
       {perspective === "admin" && (
-        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-[#111111]/95 sm:bg-[#111111]/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/35 p-2.5 px-4 sm:px-8 flex justify-around sm:justify-between sm:gap-6 items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.2)] w-full sm:w-auto min-w-[320px] max-w-lg mx-auto">
-          {/* 1. COCKPIT */}
+        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-black/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/35 p-2 px-4 sm:px-6 flex items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.2)] w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1 sm:gap-4 select-none">
+          {/* 1. DASHBOARD */}
           <button
-            id="admin-nav-cockpit"
+            id="admin-nav-dashboard"
             onClick={() => {
               setActiveMenu("dashboard");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "dashboard" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "dashboard" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Home className="w-5 h-5" />
-            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Cockpit</span>
+            <Home className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Dashboard</span>
           </button>
 
           {/* 2. UTILISATEURS */}
           <button
-            id="admin-nav-utilisateurs"
+            id="admin-nav-users"
             onClick={() => {
               setActiveMenu("users");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "users" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "users" || activeMenu === "kyc" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Users className="w-5 h-5" />
-            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Utilisateurs</span>
+            <Users className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Utilisateurs</span>
           </button>
 
-          {/* 3. PUBLICATIONS */}
+          {/* 3. NOTIFICATIONS */}
           <button
-            id="admin-nav-publications"
+            id="admin-nav-notifications"
             onClick={() => {
-              setActiveMenu("posts");
+              setActiveMenu("notifications");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "posts" || activeMenu === "gombos" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "notifications" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Briefcase className="w-5 h-5" />
-            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Publications</span>
+            <Megaphone className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Notifications</span>
           </button>
 
-          {/* 4. VÉRIFICATIONS */}
+          {/* 4. SIGNALEMENTS */}
           <button
-            id="admin-nav-verifications"
+            id="admin-nav-reports"
             onClick={() => {
-              setActiveMenu("kyc");
+              setActiveMenu("reports");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "kyc" || activeMenu === "revision" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "reports" || activeMenu === "alertes" || activeMenu === "revision" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <ShieldCheck className="w-5 h-5" />
-            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Vérifications</span>
+            <ShieldAlert className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Signalements</span>
           </button>
 
-          {/* 5. PLUS */}
+          {/* 5. REVENUS */}
           <button
-            id="admin-nav-plus"
+            id="admin-nav-revenue"
             onClick={() => {
-              setActiveMenu("plus");
+              setActiveMenu("revenue");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "plus" || activeMenu === "super_admin" ? "text-[#D4AF37] scale-105" : "text-zinc-500 hover:text-zinc-300"
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "revenue" || activeMenu === "caisse" || activeMenu === "finances" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Settings className="w-5 h-5" />
-            <span className="text-[9px] font-mono font-black uppercase tracking-wider">Plus</span>
+            <Coins className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Revenus</span>
+          </button>
+
+          {/* 6. PARAMÈTRES */}
+          <button
+            id="admin-nav-settings"
+            onClick={() => {
+              setActiveMenu("settings");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "settings" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Settings className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Paramètres</span>
+          </button>
+
+          {/* 7. SÉCURITÉ */}
+          <button
+            id="admin-nav-security"
+            onClick={() => {
+              setActiveMenu("security");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "security" || activeMenu === "logs" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <ShieldCheck className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Sécurité</span>
+          </button>
+
+          {/* 8. TRÔNE DU FONDATEUR */}
+          <button
+            id="admin-nav-super_admin"
+            onClick={() => {
+              setActiveMenu("super_admin");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "super_admin" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Crown className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Fondateur</span>
           </button>
         </div>
       )}
