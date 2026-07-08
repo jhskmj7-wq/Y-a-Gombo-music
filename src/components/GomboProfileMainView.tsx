@@ -48,6 +48,8 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 }) => {
   const [uidCopied, setUidCopied] = useState(false);
 
+  if (!currentUserProfile) return null;
+
   const handleCopyUid = () => {
     navigator.clipboard.writeText(currentUserProfile.uid);
     setUidCopied(true);

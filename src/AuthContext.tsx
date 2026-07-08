@@ -16,6 +16,9 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
+  showAuthPopup: boolean;
+  setShowAuthPopup: (show: boolean) => void;
+  requireAuth: (action: () => void) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -100,8 +104,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const requireAuth = (action: () => void) => {
+    if (!currentUser) {
+      setShowAuthPopup(true);
+      return;
+    }
+    action();
+  };
+
   return (
-    <AuthContext.Provider value={{ currentUser, profile, loading: authLoading, signIn, signUp, loginWithGoogle, logout, refreshProfile, setProfile }}>
+    <AuthContext.Provider value={{ currentUser, profile, loading: authLoading, signIn, signUp, loginWithGoogle, logout, refreshProfile, setProfile, showAuthPopup, setShowAuthPopup, requireAuth }}>
       {children}
     </AuthContext.Provider>
   );

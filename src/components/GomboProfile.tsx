@@ -239,13 +239,13 @@ export default function GomboProfile({
   };
   
   // Available toggle value
-  const [isAvailable, setIsAvailable] = useState(currentUserProfile.isAvailableNow ?? true);
+  const [isAvailable, setIsAvailable] = useState(currentUserProfile?.isAvailableNow ?? true);
   const [availabilityStatus, setAvailabilityStatus] = useState<"disponible" | "occupe" | "indisponible">(() => {
-    if (currentUserProfile.verificationStatus) { // We can check if it exists or use fallback
+    if (currentUserProfile?.verificationStatus) { // We can check if it exists or use fallback
       // wait, check the actual property in currentUserProfile:
     }
-    if (currentUserProfile.availabilityStatus) return currentUserProfile.availabilityStatus;
-    return (currentUserProfile.isAvailableNow ?? true) ? "disponible" : "indisponible";
+    if (currentUserProfile?.availabilityStatus) return currentUserProfile.availabilityStatus;
+    return (currentUserProfile?.isAvailableNow ?? true) ? "disponible" : "indisponible";
   });
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
 
@@ -257,44 +257,44 @@ export default function GomboProfile({
   const [withdrawErrorMsg, setWithdrawErrorMsg] = useState("");
 
   // Wallet defaults in database
-  const balance = currentUserProfile.balance ?? 0;
-  const totalRevenue = currentUserProfile.totalRevenue ?? 0;
-  const totalWithdrawals = currentUserProfile.totalWithdrawals ?? 0;
+  const balance = currentUserProfile?.balance ?? 0;
+  const totalRevenue = currentUserProfile?.totalRevenue ?? 0;
+  const totalWithdrawals = currentUserProfile?.totalWithdrawals ?? 0;
 
   // Stats defaults
-  const gigsCompleted = currentUserProfile.gigsCompleted ?? (currentUserProfile.role === "musicien" ? 3 : 0);
-  const applicationsSent = currentUserProfile.applicationsSent ?? (currentUserProfile.role === "musicien" ? 8 : 0);
-  const acceptanceRate = currentUserProfile.acceptanceRate ?? (currentUserProfile.role === "musicien" ? 85 : 100);
+  const gigsCompleted = currentUserProfile?.gigsCompleted ?? (currentUserProfile?.role === "musicien" ? 3 : 0);
+  const applicationsSent = currentUserProfile?.applicationsSent ?? (currentUserProfile?.role === "musicien" ? 8 : 0);
+  const acceptanceRate = currentUserProfile?.acceptanceRate ?? (currentUserProfile?.role === "musicien" ? 85 : 100);
 
   // Edit Profile fields State
-  const [firstName, setFirstName] = useState(currentUserProfile.firstName || "");
-  const [lastName, setLastName] = useState(currentUserProfile.lastName || "");
-  const [artistName, setArtistName] = useState(currentUserProfile.artistName || "");
-  const [gender, setGender] = useState(currentUserProfile.gender || "Homme");
-  const [birthDate, setBirthDate] = useState(currentUserProfile.birthDate || "");
-  const [phone, setPhone] = useState(currentUserProfile.phone || "");
-  const [whatsapp, setWhatsapp] = useState(currentUserProfile.whatsapp || "");
-  const [commune, setCommune] = useState(currentUserProfile.commune || "Cocody");
+  const [firstName, setFirstName] = useState(currentUserProfile?.firstName || "");
+  const [lastName, setLastName] = useState(currentUserProfile?.lastName || "");
+  const [artistName, setArtistName] = useState(currentUserProfile?.artistName || "");
+  const [gender, setGender] = useState(currentUserProfile?.gender || "Homme");
+  const [birthDate, setBirthDate] = useState(currentUserProfile?.birthDate || "");
+  const [phone, setPhone] = useState(currentUserProfile?.phone || "");
+  const [whatsapp, setWhatsapp] = useState(currentUserProfile?.whatsapp || "");
+  const [commune, setCommune] = useState(currentUserProfile?.commune || "Cocody");
   const [communeSearch, setCommuneSearch] = useState("");
   const [showCommuneDropdown, setShowCommuneDropdown] = useState(false);
-  const [bio, setBio] = useState(currentUserProfile.bio || "");
-  const [avatarUrl, setAvatarUrl] = useState(currentUserProfile.avatarUrl || currentUserProfile.photoURL || AVATARS[0]);
+  const [bio, setBio] = useState(currentUserProfile?.bio || "");
+  const [avatarUrl, setAvatarUrl] = useState(currentUserProfile?.avatarUrl || currentUserProfile?.photoURL || AVATARS[0]);
   
   const [specialties, setSpecialties] = useState<string[]>(
-    currentUserProfile.specialties || 
-    (currentUserProfile.specialty ? [currentUserProfile.specialty] : [])
+    currentUserProfile?.specialties || 
+    (currentUserProfile?.specialty ? [currentUserProfile.specialty] : [])
   );
   const [musicGenres, setMusicGenres] = useState<string[]>(
-    currentUserProfile.musicGenres || 
-    (currentUserProfile.musicGenre ? [currentUserProfile.musicGenre] : [])
+    currentUserProfile?.musicGenres || 
+    (currentUserProfile?.musicGenre ? [currentUserProfile.musicGenre] : [])
   );
-  const [experience, setExperience] = useState(currentUserProfile.experience || "Intermédiaire");
+  const [experience, setExperience] = useState(currentUserProfile?.experience || "Intermédiaire");
   const [availabilities, setAvailabilities] = useState<string[]>(
-    currentUserProfile.availabilities || 
-    (currentUserProfile.isAvailableNow ? ["Disponible immédiatement"] : [])
+    currentUserProfile?.availabilities || 
+    (currentUserProfile?.isAvailableNow ? ["Disponible immédiatement"] : [])
   );
-  const [waveNumber, setWaveNumber] = useState(currentUserProfile.waveNumber || currentUserProfile.paymentNumber || "");
-  const [orangeMoneyNumber, setOrangeMoneyNumber] = useState(currentUserProfile.orangeMoneyNumber || "");
+  const [waveNumber, setWaveNumber] = useState(currentUserProfile?.waveNumber || currentUserProfile?.paymentNumber || "");
+  const [orangeMoneyNumber, setOrangeMoneyNumber] = useState(currentUserProfile?.orangeMoneyNumber || "");
 
   const [editLoading, setEditLoading] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
@@ -306,19 +306,19 @@ export default function GomboProfile({
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   
-  const [coverUrl, setCoverUrl] = useState(currentUserProfile.coverUrl || currentUserProfile.couverture || "");
+  const [coverUrl, setCoverUrl] = useState(currentUserProfile?.coverUrl || currentUserProfile?.couverture || "");
   const [coverUploading, setCoverUploading] = useState(false);
   const [coverUploadProgress, setCoverUploadProgress] = useState(0);
 
   // New state fields for Phase 10
-  const [ville, setVille] = useState(currentUserProfile.ville || "Abidjan");
-  const [quartier, setQuartier] = useState(currentUserProfile.quartier || "");
-  const [accountRole, setAccountRole] = useState(currentUserProfile.role || "musicien");
+  const [ville, setVille] = useState(currentUserProfile?.ville || "Abidjan");
+  const [quartier, setQuartier] = useState(currentUserProfile?.quartier || "");
+  const [accountRole, setAccountRole] = useState(currentUserProfile?.role || "musicien");
   const [freeSpecialty, setFreeSpecialty] = useState("");
   const [freeGenre, setFreeGenre] = useState("");
 
   // Media portfolio states
-  const [mediaGallery, setMediaGallery] = useState<any[]>(currentUserProfile.mediaGallery || []);
+  const [mediaGallery, setMediaGallery] = useState<any[]>(currentUserProfile?.mediaGallery || []);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [newMediaType, setNewMediaType] = useState<"photo" | "audio" | "video" | "youtube">("youtube");
   const [newMediaUrl, setNewMediaUrl] = useState("");
@@ -1081,6 +1081,15 @@ export default function GomboProfile({
     }
     return videoId;
   };
+
+  if (!currentUserProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
+        <div className="w-8 h-8 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mb-3" />
+        <p className="text-xs font-mono tracking-widest text-[#D4AF37]/80 uppercase">Chargement du profil...</p>
+      </div>
+    );
+  }
 
   if (panelView === "main") {
     return (

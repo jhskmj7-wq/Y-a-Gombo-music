@@ -438,6 +438,7 @@ export interface Conversation {
   participantAvatars?: Record<string, string>;
   lastMessage?: string;
   lastMessageAt?: string;
+  unreadCount?: Record<string, number>;
   [key: string]: any;
 }
 

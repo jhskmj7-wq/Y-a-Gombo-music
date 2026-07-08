@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, setShowAuthPopup } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -16,8 +16,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!currentUser) {
-    console.log("🔒 [AuthGuard] No user detected, redirecting to /auth");
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    console.log("🔒 [AuthGuard] No user detected, redirecting to /home and opening auth popup");
+    setTimeout(() => {
+      setShowAuthPopup(true);
+    }, 100);
+    return <Navigate to="/home" replace />;
   }
 
   return <>{children}</>;

@@ -570,302 +570,57 @@ export async function ensureAfriIdAndSync(profile: UserProfile): Promise<UserPro
   return updated;
 }
 
-// Mock DB initialization removed
   if (!localStorage.getItem(LOCAL_NOTIFICATIONS_KEY)) {
     localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, JSON.stringify([]));
   }
   if (!localStorage.getItem(LOCAL_RENFORS_KEY)) {
-    const mockRenforts: Renfort[] = [
-      {
-        id: "ren_mock1",
-        userId: "cli1",
-        userName: "Serge Kassi",
-        userAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
-        title: "Pianiste / Claviériste pour culte spécial Église",
-        description: "Recherche un pianiste expérimenté pour accompagner la chorale durant le culte spécial ce dimanche matin. Doit maîtriser le répertoire Gospel de Côte d’Ivoire.",
-        instrument: "Piano",
-        instruments: ["Piano", "Clavier"],
-        date: new Date(Date.now() + 86400005 * 2).toISOString().split("T")[0],
-        time: "08:30",
-        musiciansCount: 1,
-        budget: 25000,
-        commune: "Cocody",
-        whatsapp: "0700112233",
-        requestType: "Église",
-        genres: ["Gospel"],
-        status: "publie",
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: "ren_mock2",
-        userId: "mus1",
-        userName: "Yorobo Sangaré",
-        userAvatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
-        title: "Remplacement Batteur Urgent Zouglou Live",
-        description: "Notre batteur s’est blessé, il nous faut un remplaçant ce soir pour notre prestation live au maquis VIP à Yopougon. Ambiance Zouglou assurée !",
-        instrument: "Batterie",
-        instruments: ["Batterie"],
-        date: new Date().toISOString().split("T")[0],
-        time: "21:00",
-        musiciansCount: 1,
-        budget: 35000,
-        commune: "Yopougon",
-        whatsapp: "0511223344",
-        requestType: "Remplacement urgent",
-        genres: ["Zouglou", "Wôyô"],
-        status: "publie",
-        createdAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem(LOCAL_RENFORS_KEY, JSON.stringify(mockRenforts));
+    localStorage.setItem(LOCAL_RENFORS_KEY, JSON.stringify([]));
   }
   if (!localStorage.getItem(LOCAL_RENFORT_APPLICATIONS_KEY)) {
     localStorage.setItem(LOCAL_RENFORT_APPLICATIONS_KEY, JSON.stringify([]));
   }
   if (!localStorage.getItem(LOCAL_ACTIVITY_FEED_KEY)) {
-    const mockActivities: ActivityFeedEntry[] = [
-      {
-        id: "act1",
-        type: "gombo",
-        title: "Nouveau Gombo publié !",
-        message: "Recherche Claviériste & Batteur pour Mariage Chrétien à Espace Eden, Cocody",
-        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-        userId: "cli1",
-        userName: "Serge Kassi",
-        userAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
-        targetId: "gom2"
-      },
-      {
-        id: "act2",
-        type: "talent",
-        title: "Nouveau Talent à Cocody",
-        message: "Yorobo Sangaré s'est inscrit en tant que Guitariste professionnel.",
-        createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-        userId: "mus1",
-        userName: "Yorobo Sangaré",
-        userAvatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
-        targetId: "mus1"
-      },
-      {
-        id: "act3",
-        type: "certification",
-        title: "Audition Réussie !",
-        message: "Fanta Kouyaté a obtenu son badge de Talent Certifié ⭐",
-        createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
-        userId: "mus2",
-        userName: "Fanta Kouyaté",
-        userAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
-        targetId: "mus2"
-      }
-    ];
-    localStorage.setItem(LOCAL_ACTIVITY_FEED_KEY, JSON.stringify(mockActivities));
+    localStorage.setItem(LOCAL_ACTIVITY_FEED_KEY, JSON.stringify([]));
   }
 
   if (!localStorage.getItem("gombo_admins")) {
-    const mockAdmins = [
-      { email: "johnsylvesterh@gmail.com", role: "super_admin", permissions: ["all"], createdAt: new Date().toISOString() },
-      { email: "jhs.kmj7@gmail.com", role: "super_admin", permissions: ["all"], createdAt: new Date().toISOString() },
-      { email: "sylvestrehounkpevi777@gmail.com", role: "super_admin", permissions: ["all"], createdAt: new Date().toISOString() }
-    ];
-    localStorage.setItem("gombo_admins", JSON.stringify(mockAdmins));
+    localStorage.setItem("gombo_admins", JSON.stringify([]));
   }
   if (!localStorage.getItem("gombo_admin_logs")) {
-    localStorage.setItem("gombo_admin_logs", JSON.stringify([
-      { id: "log_init", adminEmail: "system", action: "INITIALIZE_CENTRE_COMMANDE", targetId: "system", createdAt: new Date().toISOString() }
-    ]));
+    localStorage.setItem("gombo_admin_logs", JSON.stringify([]));
   }
   if (!localStorage.getItem("gombo_reports")) {
-    localStorage.setItem("gombo_reports", JSON.stringify([
-      {
-        id: "rep_mock1",
-        reportedBy: "mus1",
-        reporterEmail: "yoro@gombo.ci",
-        contentId: "gom2",
-        contentType: "gombo",
-        contentTitle: "Claviériste & Batteur pour Mariage Chrétien",
-        authorId: "cli1",
-        reason: "Le budget de 120000 est incorrect selon nos accords.",
-        createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-        status: "pending"
-      }
-    ]));
+    localStorage.setItem("gombo_reports", JSON.stringify([]));
   }
 
   // === SEED AFRIGOMBO 2.0 ACADEMY ===
   if (!localStorage.getItem("gombo_academy_guides")) {
-    const mockAcademy: AcademyGuide[] = [
-      {
-        id: "g1",
-        title: "Comment fixer vos tarifs de cachets à Abidjan",
-        category: "tarifs",
-        excerpt: "Apprenez à calculer votre tarif horaire et journalier selon votre instrument et le type d'événement.",
-        content: "### Introduction\nFixer ses tarifs pour un gombo musical à Cocody ou Marcory n'est pas toujours simple. Voici notre grille conseillée pour l'Afrique de l'Ouest.\n\n### Grille indicative (en FCFA / prestation)\n- **Guitariste / Pianiste solo** : 30 000 à 60 000 FCFA.\n- **Batteur / Bassiste** : 25 000 à 50 000 FCFA.\n- **Chanteur principal** : 50 000 à 100 000 FCFA.\n- **Orchestre complet (Live)** : 300 000 à 800 000 FCFA.\n\n### Facteurs de négociation\n1. **La durée** : Une prestation standard dure 3 heures.\n2. **La sonorisation** : Si vous emportez vos amplis ou si tout est fourni.\n3. **Le transport** : S'il s'agit de l'intérieur du pays (ex: Yamoussoukro, Bassam), exigez des indemnités de route.",
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: "g2",
-        title: "Négocier un contrat d'orchestre en toute sérénité",
-        category: "contrat",
-        excerpt: "Découvrez les clauses indispensables à mettre dans un contrat musical avec un promoteur de bar.",
-        content: "### Protéger ses cachets avec Gombo Safe\nUn accord écrit vaut mieux que dix promesses verbales. Utilisez **Gombo Safe** sur AFRIGOMBO pour bloquer l'accord.\n\n### Clauses indispensables :\n- Le montant exact du cachet, y compris une avance de minimum 30%.\n- L'heure de la balance sonore.\n- Les pénalités en cas d'annulation de dernière minute par le client.\n\nNe montez jamais sur scène sans confirmation écrite !",
-        createdAt: new Date(Date.now() - 3600000 * 4).toISOString()
-      },
-      {
-        id: "g3",
-        title: "Éviter les arnaques et fausses annonces de promoteurs",
-        category: "securite",
-        excerpt: "Conseils pratiques pour démasquer les imposteurs qui profitent des jeunes talents.",
-        content: "### Les signaux d'alertes :\n1. **Le promoteur refuse de donner son vrai nom** ou demande à négocier uniquement sur place sans détails.\n2. **Demande de paiement anticipé** pour prétendus frais de dossier.\n3. **Ambiguité sur le matériel** de sonorisation.\n\n*Sur AFRIGOMBO, fiez-vous au badge ✓ Talent Certifié et passez exclusivement par notre messagerie cryptée !*",
-        createdAt: new Date(Date.now() - 3600000 * 20).toISOString()
-      }
-    ];
-    localStorage.setItem("gombo_academy_guides", JSON.stringify(mockAcademy));
+    localStorage.setItem("gombo_academy_guides", JSON.stringify([]));
   }
 
   // === SEED GOMBO SAFE CONTRACTS ===
   if (!localStorage.getItem("gombo_safe_contracts")) {
-    const mockContracts: GomboSafeContract[] = [
-      {
-        id: "ctr1",
-        creatorId: "cli1",
-        creatorName: "Serge Kassi",
-        partnerEmail: "yoro@gombo.ci",
-        partnerId: "mus1",
-        partnerName: "Yorobo Sangaré",
-        title: "Prestation Cabaret Privé - Accord Live",
-        amount: 50000,
-        commission: 2500, // 5% AFRIGOMBO Commission
-        conditions: "Le musicien s'engage à assurer la guitare solo pour 4 sets de 45 minutes le samedi 14 juin. Boisson et dîner compris à la charge du promoteur.",
-        status: "en_attente",
-        creatorAccepted: true,
-        partnerAccepted: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem("gombo_safe_contracts", JSON.stringify(mockContracts));
+    localStorage.setItem("gombo_safe_contracts", JSON.stringify([]));
   }
 
   // === SEED BILLETTERIE EVENTS ===
   if (!localStorage.getItem("gombo_ticket_events")) {
-    const mockEvents: GomboTicketEvent[] = [
-      {
-        id: "evt1",
-        creatorId: "cli1",
-        creatorName: "Serge Kassi",
-        title: "Grand Concert Zouglou Live Abidjan",
-        description: "Une soirée explosive avec les meilleurs orchestres de Cocody et Yopougon. Ambiance wôyô garantie !",
-        date: new Date(Date.now() + 86400000 * 5).toISOString().split("T")[0],
-        time: "20:00",
-        location: "Maquis VIP Les Châteaux, Cocody Angré",
-        price: 5000,
-        capacity: 100,
-        ticketsSold: 12,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: "evt2",
-        creatorId: "mus1",
-        creatorName: "Yorobo Sangaré",
-        title: "Masterclass Guitare Rumba & Funk",
-        description: "Venez apprendre les secrets de l'accompagnement rumba congolaise et du coup de médiator africain.",
-        date: new Date(Date.now() + 86400000 * 10).toISOString().split("T")[0],
-        time: "15:00",
-        location: "Centre Culturel d'Adjamé",
-        price: 3000,
-        capacity: 30,
-        ticketsSold: 4,
-        createdAt: new Date(Date.now() - 3600000 * 2).toISOString()
-      }
-    ];
-    localStorage.setItem("gombo_ticket_events", JSON.stringify(mockEvents));
+    localStorage.setItem("gombo_ticket_events", JSON.stringify([]));
   }
 
   // === SEED TICKETS PURCHASED ===
   if (!localStorage.getItem("gombo_purchased_tickets")) {
-    const mockPurchases: PurchasedTicket[] = [
-      {
-        id: "t_p1",
-        eventId: "evt1",
-        eventTitle: "Grand Concert Zouglou Live Abidjan",
-        buyerId: "mus2",
-        buyerName: "Fanta Kouyaté",
-        buyerPhone: "0512345678",
-        pricePaid: 5000,
-        ticketCode: "AG-7429-1981",
-        createdAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem("gombo_purchased_tickets", JSON.stringify(mockPurchases));
+    localStorage.setItem("gombo_purchased_tickets", JSON.stringify([]));
   }
 
   // === SEED STUDIO MARKET ITEMS ===
   if (!localStorage.getItem("gombo_studio_market_items")) {
-    const mockStudioItems: StudioMarketItem[] = [
-      {
-        id: "st_1",
-        name: "Studio Red Zone Cocody",
-        category: "studio",
-        description: "Studio d'enregistrement professionnel climatisé. Cabine voix isolée acoustiquement. Ingénieur de son certifié Zouglou & Rap.",
-        commune: "Cocody",
-        price: "15 000 FCFA / Heure",
-        phone: "+225 07 43 89 21 11",
-        image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&q=80&w=400",
-        rating: 4.8,
-        reviews: [
-          { userId: "mus1", userName: "Yorobo Sangaré", comment: "Le meilleur son d'Abidjan ! Micro Neumann exceptionnel.", rating: 5, createdAt: new Date().toISOString() }
-        ],
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: "st_2",
-        name: "Beatmaker K-Melody Beatz",
-        category: "beatmaker",
-        description: "Compositeur et arrangeur de génie. Beats personnalisés pour Coupé-Décalé, Afro-pop, et variété chrétienne.",
-        commune: "Yopougon",
-        price: "40 000 FCFA / Beat exclusif",
-        phone: "+225 05 91 12 00 33",
-        image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=400",
-        rating: 4.5,
-        reviews: [],
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: "st_3",
-        name: "Costumier Showbiz & Scène 'Afritudes'",
-        category: "costumier",
-        description: "Créateur de vêtements d'apparat africains pour orchestres et chanteurs leads. Tissus de qualité.",
-        commune: "Plateau",
-        price: "25 000 FCFA / Tenue",
-        phone: "+225 01 22 34 56 12",
-        rating: 5,
-        reviews: [],
-        createdAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem("gombo_studio_market_items", JSON.stringify(mockStudioItems));
+    localStorage.setItem("gombo_studio_market_items", JSON.stringify([]));
   }
 
   // === SEED CASTINGS ===
   if (!localStorage.getItem("gombo_casting_calls")) {
-    const mockCastings: CastingCall[] = [
-      {
-        id: "cst_1",
-        creatorId: "cli1",
-        creatorName: "Serge Kassi",
-        title: "Casting Choristes de Backup - Tournée Nationale",
-        rolesNeeded: "2 Sopranos, 1 Alto",
-        description: "Grand label recherche choristes féminines avec voix puissante pour assurer les chœurs d'une tournée nationale de 6 mois à travers la Côte d'Ivoire.",
-        deadline: new Date(Date.now() + 86400000 * 15).toISOString().split("T")[0],
-        commune: "Cocody",
-        budget: "400 000 FCFA / mois",
-        applications: [
-          { userId: "mus2", userName: "Fanta Kouyaté", phone: "0512345678", status: "en_attente", createdAt: new Date().toISOString() }
-        ],
-        createdAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem("gombo_casting_calls", JSON.stringify(mockCastings));
+    localStorage.setItem("gombo_casting_calls", JSON.stringify([]));
   }
 
 

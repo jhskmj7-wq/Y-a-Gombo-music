@@ -12,6 +12,8 @@ export const ProfileCompletionScore: React.FC<ProfileCompletionScoreProps> = ({
   onEdit,
   onNavigateView
 }) => {
+  if (!currentUserProfile) return null;
+
   let score = 0;
   const missing = [];
 
