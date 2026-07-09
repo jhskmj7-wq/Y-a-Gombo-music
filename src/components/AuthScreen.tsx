@@ -61,11 +61,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate([50, 50, 50]);
            }
         } else {
-           if (formattedId === "AFRI-MOCK001") {
-               setFoundAfriUser({ afriId: formattedId, displayName: "Artiste Test", email: "test@gombo.ci", uid: "mock1" });
-           } else {
-               setAfriIdError("AfriID introuvable (Mode Test)");
-           }
+           setAfriIdError("AfriID introuvable (Mode Test)");
         }
     } catch(err) {
         setAfriIdError("Erreur lors de la vérification");

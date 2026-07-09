@@ -14,6 +14,7 @@ export type AdminMenu =
   | "caisse"
   | "analytics"
   | "monetisation"
+  | "contracts"
   | "super_admin";
 
 export type UserRole = "client" | "musicien" | "admin" | string;
@@ -97,7 +98,21 @@ export interface User {
   };
   averageRating?: number;
   ratingCount?: number;
+  trustScore?: number;
+  totalContracts?: number;
+  cancelledContracts?: number;
   [key: string]: any;
+}
+
+export interface EconomySettings {
+  id?: string;
+  commissionRateStandard: number;
+  commissionRatePremium: number;
+  boostPriceStandard: number;
+  boostPricePremium: number;
+  renfortExpressPrice: number;
+  updatedAt: string;
+  updatedBy: string;
 }
 
 export type UserProfile = User; // Standard alias widely used in App
@@ -160,7 +175,10 @@ export interface Gombo {
   
   applicantsCount?: number;
   musiciansCount?: number; 
-  status?: "open" | "filled" | "completed" | "publie" | "reserve" | "termine";
+  status?: "publie" | "en_cours" | "artiste_selectionne" | "contrat_accepte" | "contrat_refuse" | "mission_terminee" | "mission_annulee" | "paiement_effectue" | "open" | "filled" | "completed" | "reserve" | "termine";
+  selectedTalentId?: string;
+  selectedTalentName?: string;
+  contractId?: string; // Linked contract ID
   isBoosted?: boolean;
   eventType?: string;
   date?: string;
@@ -433,13 +451,26 @@ export interface ActivityFeedEntry {
 
 export interface Conversation {
   id?: string;
-  participants?: string[];
+  participants: string[];
   participantNames?: Record<string, string>;
   participantAvatars?: Record<string, string>;
   lastMessage?: string;
   lastMessageAt?: string;
   unreadCount?: Record<string, number>;
+  contractAccepted?: boolean;
+  gomboId?: string; // Associated Gombo (contract)
   [key: string]: any;
+}
+
+export interface BypassAttempt {
+  id?: string;
+  userId: string;
+  userName: string;
+  convoId: string;
+  type: "phone" | "email" | "link" | "image_contact" | "bank" | string;
+  content: string;
+  timestamp: string;
+  trustScoreReduced: number;
 }
 
 export interface Message {
@@ -492,10 +523,51 @@ export interface AcademyGuide {
 }
 
 export interface GomboSafeContract {
-  id?: string;
+  id: string; // AG-YYYY-NNNNNN
   gomboId?: string;
-  status?: string;
-  createdAt?: string;
+  clientId?: string;
+  clientName?: string;
+  artistId?: string;
+  artistName?: string;
+  title?: string;
+  description?: string;
+  commune?: string;
+  date?: string;
+  time?: string;
+  amount?: number; // Cachet
+  commissionClient?: number;
+  commissionArtist?: number;
+  totalClientPaid?: number;
+  totalArtistReceives?: number;
+  status: "generated" | "accepted_client" | "accepted_artist" | "signed" | "payment_held" | "completed" | "disputed" | "archived" | "cancelled" | "en_attente" | "accepte" | "termine";
+  clientSignedAt?: string;
+  artistSignedAt?: string;
+  clientValidation?: boolean;
+  artistValidation?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  history?: { action: string; timestamp: string; userId: string }[];
+  creatorId?: string;
+  creatorName?: string;
+  partnerId?: string;
+  partnerName?: string;
+  partnerEmail?: string;
+  creatorAccepted?: boolean;
+  partnerAccepted?: boolean;
+  [key: string]: any;
+}
+
+export interface GomboDispute {
+  id?: string;
+  contractId: string;
+  gomboId: string;
+  openedById: string;
+  openedByName: string;
+  reason: string;
+  status: "open" | "investigating" | "resolved";
+  resolution?: string;
+  createdAt: string;
+  updatedAt: string;
   [key: string]: any;
 }
 

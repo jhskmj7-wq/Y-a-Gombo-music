@@ -42,7 +42,7 @@ import ComingSoon from "./ComingSoon";
 import { UserTerrainLandingPage } from "./UserTerrainLandingPage";
 import SettingsModal from "./SettingsModal";
 import AfrigomboPlus from "./AfrigomboPlus";
-import MusicianStats from "./MusicianStats";
+import PremiumEmptyState from "./PremiumEmptyState";
 import { gomboDB } from "../firebase";
 import { usePerformance } from "../services/performanceService";
 import {
@@ -58,6 +58,7 @@ import {
   UserPerformance,
   Conversation
 } from "../types";
+import GomboContractsDashboard from "./GomboContractsDashboard";
 import { audioSynth } from "../lib/audio";
 import { interactionBus } from "./LivingInteractions";
 import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
@@ -139,7 +140,11 @@ import {
   Loader2,
   Check,
   Info,
-  Mic2
+  Mic2,
+  FileSignature,
+  BadgeCheck,
+  History,
+  Download
 } from "lucide-react";
 import {
   AreaChart,
@@ -164,209 +169,7 @@ function getYoutubeId(url: string): string | null {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-// --- INITIAL RESILIENT DATASETS (OFFLINE-FIRST ACCURATE SIMULATIONS) ---
-const INITIAL_USERS: User[] = [
-  {
-    id: "user_1",
-    name: "Ariel Loua",
-    email: "ariel.l@gombo.ci",
-    artisticName: "Ariel Sheney G",
-    commune: "Cocody",
-    isCertified: true,
-    kycStatus: "approved",
-    status: "active",
-    specialties: ["Coupé-Décalé", "Arrangement", "Clavier"],
-    groups: ["Yorogang Orchestra", "Ariel Crew"],
-    performance: { level: 4, score: 82, artisticName: "Ariel Sheney G", commune: "Cocody", specialties: ["Coupé-Décalé", "Arrangement"], groups: ["Yorogang"] },
-    registrationDate: "2026-01-14",
-    revenues: 1250000,
-    gombosCompleted: 24,
-    flagsCount: 0
-  },
-  {
-    id: "user_2",
-    name: "Mireille Gbado",
-    email: "mireille@gombo.ci",
-    artisticName: "Kady de Yopougon",
-    commune: "Yopougon",
-    isCertified: false,
-    kycStatus: "pending",
-    status: "active",
-    specialties: ["Zouglou Vocals", "Percussion"],
-    groups: ["Femmes Zouglou de Yop"],
-    performance: { level: 3, score: 55, artisticName: "Kady de Yopougon", commune: "Yopougon", specialties: ["Zouglou"], groups: ["Femmes Zouglou"] },
-    registrationDate: "2026-03-02",
-    revenues: 450000,
-    gombosCompleted: 9,
-    flagsCount: 0
-  },
-  {
-    id: "user_3",
-    name: "Bakary Diarrassouba",
-    email: "bamba.b@gombo.ci",
-    artisticName: "DJ Vieux Bamba",
-    commune: "Adjamé",
-    isCertified: false,
-    kycStatus: "none",
-    status: "suspect",
-    specialties: ["Mixage", "Afrobeats DJ"],
-    groups: ["Stars d'Adjamé"],
-    performance: { level: 2, score: 32, artisticName: "DJ Vieux Bamba", commune: "Adjamé", specialties: ["DJ"], groups: ["Stars"] },
-    registrationDate: "2026-05-18",
-    revenues: 180000,
-    gombosCompleted: 3,
-    flagsCount: 3
-  }
-];
-
-const INITIAL_GOMBOS: Gombo[] = [
-  {
-    id: "gombo_1",
-    title: "🎖️ Grand Concert Réveillon Select",
-    description: "Recherche bassiste et guitariste soliste de Zouglou hautement qualifiés. Prestation en direct pour un parterre diplomatique distingué au cœur du Plateau.",
-    budget: 450000,
-    commissionRate: 0.10,
-    location: "Plateau",
-    organizerId: "org_1",
-    organizerName: "Le Caveau Elite Venue",
-    timestamp: "2026-06-10T09:00:00Z",
-    applicantsCount: 6,
-    status: "open",
-    isBoosted: true,
-    imageUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80",
-    date: "15 Juin 2026",
-    isUrgent: true,
-    isPopular: false
-  },
-  {
-    id: "gombo_2",
-    title: "💍 Célébration Nuptiale Royale",
-    description: "Prestation de prestige de 4 heures par un orchestre de haut standing. Répertoire fusion classique, rumba et coupé-décalé raffiné.",
-    budget: 1200000,
-    commissionRate: 0.12,
-    location: "Marcory",
-    organizerId: "org_2",
-    organizerName: "Hôtel Ivoire Prestige",
-    timestamp: "2026-06-10T08:30:00Z",
-    applicantsCount: 14,
-    status: "open",
-    imageUrl: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&auto=format&fit=crop&q=80",
-    date: "20 Juin 2026",
-    isUrgent: false,
-    isPopular: true
-  },
-  {
-    id: "gombo_3",
-    title: "🎙️ Cabaret Acoustic Heritage & Soul",
-    description: "Recherche diva ou ténor de jazz moderne d'Abidjan pour session de lounge intime. Performance entourée d'un trio acoustique d'élite.",
-    budget: 350000,
-    commissionRate: 0.15,
-    location: "Cocody",
-    organizerId: "org_3",
-    organizerName: "Le Toit d'Abidjan Lounge",
-    timestamp: "2026-06-10T07:20:00Z",
-    applicantsCount: 4,
-    status: "open",
-    imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80",
-    date: "12 Juin 2026",
-    isUrgent: false,
-    isPopular: true
-  },
-  {
-    id: "gombo_4",
-    title: "🎻 Cocktail d'Ambassade Aristocratique",
-    description: "Cocktail d'expatriés recherchant des joueurs virtuoses d'instruments folkloriques d'Afrique de l'Ouest (Kora ou Balafon concertiste).",
-    budget: 950000,
-    commissionRate: 0.10,
-    location: "Plateau",
-    organizerId: "org_4",
-    organizerName: "Résidence de l'Ambassadeur",
-    timestamp: "2026-06-10T05:10:00Z",
-    applicantsCount: 9,
-    status: "open",
-    imageUrl: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=500&auto=format&fit=crop&q=80",
-    date: "18 Juin 2026",
-    isUrgent: true,
-    isPopular: false
-  },
-  {
-    id: "gombo_5",
-    title: "🎧 Nuit Électro-Sabar d'Abidjan",
-    description: "Performance haut de gamme mêlant percussions traditionnelles de Côte d'Ivoire et synthétiseurs modernes sous la houlette d'un DJ d'exception.",
-    budget: 500000,
-    commissionRate: 0.12,
-    location: "Treichville",
-    organizerId: "org_5",
-    organizerName: "Studio Monument National",
-    timestamp: "2026-06-09T21:40:00Z",
-    applicantsCount: 7,
-    status: "open",
-    imageUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80",
-    date: "25 Juin 2026",
-    isUrgent: false,
-    isPopular: false
-  }
-];
-
-const INITIAL_ALERTS: Alerte[] = [
-  {
-    id: "alert_1",
-    userId: "user_3",
-    userArtisticName: "DJ Vieux Bamba",
-    reason: "Multiples signalements pour non-présentation sur un Gombo négocié.",
-    severity: "high",
-    timestamp: "2026-06-10T07:15:00Z",
-    status: "open"
-  },
-  {
-    id: "alert_2",
-    userId: "user_2",
-    userArtisticName: "Kady de Yopougon",
-    reason: "Tentative de contournement de la commission de caisse.",
-    severity: "medium",
-    timestamp: "2026-06-10T06:40:00Z",
-    status: "open"
-  }
-];
-
-const ANALYTICS_DATA = [
-  { name: "Lun", inscrits: 22, gombos: 15, commission: 85000 },
-  { name: "Mar", inscrits: 35, gombos: 28, commission: 142000 },
-  { name: "Mer", inscrits: 41, gombos: 32, commission: 185000 },
-  { name: "Jeu", inscrits: 32, gombos: 24, commission: 120000 },
-  { name: "Ven", inscrits: 58, gombos: 41, commission: 260000 },
-  { name: "Sam", inscrits: 84, gombos: 62, commission: 415000 },
-  { name: "Dim", inscrits: 61, gombos: 39, commission: 290000 }
-];
-
-const INITIAL_REVIEWS: GomboReview[] = [
-  {
-    id: "rev_1",
-    gomboId: "gombo_1",
-    gomboTitle: "🎖️ Grand Concert Réveillon Select",
-    reviewerId: "org_1",
-    reviewerName: "Le Caveau Elite Venue",
-    revieweeId: "user_1",
-    revieweeName: "Ariel Loua",
-    rating: 5,
-    comment: "Prestation magistrale ! Ariel a enflammé la scène diplomatique hier soir. Grand professionnalisme.",
-    timestamp: "2026-06-11T23:00:00Z",
-    type: "client_to_musician"
-  },
-  {
-    id: "rev_2",
-    gomboId: "gombo_1",
-    gomboTitle: "🎖️ Grand Concert Réveillon Select",
-    reviewerId: "user_1",
-    reviewerName: "Ariel Loua",
-    revieweeId: "org_1",
-    revieweeName: "Le Caveau Elite Venue",
-    rating: 5,
-    comment: "Superbe accueil au Caveau, sonorisation digne des standards internationaux et cachet versé sans délai.",
-    timestamp: "2026-06-12T00:15:00Z",
-    type: "musician_to_client"
-  }
-];
+// --- TYPE DEFINITIONS AND COMPONENT INTERFACES ---
 
 interface UserReelsViewProps {
   users: any[];
@@ -641,8 +444,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     setMenuHistory(prev => {
       if (prev[prev.length - 1] === menu) return prev;
       const rootMenus = [
-        "user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_heritage",
-        "dashboard", "users", "posts", "gombos", "verifications", "admin_finances",
+        "user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_contracts", "user_heritage",
+        "dashboard", "users", "posts", "gombos", "verifications", "admin_finances", "contracts",
         "notifications", "alertes", "reports", "revenue", "settings", "security", "super_admin"
       ];
       if (rootMenus.includes(menu)) {
@@ -673,12 +476,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   }, [activeMenu]);
   const [reelsVideoId, setReelsVideoId] = useState<string | null>(null);
   const [reelsVideoUrl, setReelsVideoUrl] = useState<string | null>(null);
-  
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, [activeMenu]);
   const [viewingGomboIdDetail, setViewingGomboIdDetail] = useState<boolean>(false);
   const [isUniversAfriOpen, setIsUniversAfriOpen] = useState<boolean>(false);
   const [followedArtists, setFollowedArtists] = useState<string[]>(() => {
@@ -693,6 +490,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   });
   const [selectedGomboDetails, setSelectedGomboDetails] = useState<Gombo | null>(null);
   const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
+  const [openConvoWithGomboId, setOpenConvoWithGomboId] = useState<string | null>(null);
   
   // Custom states for Le Terrain High Fidelity Experience (Home Page)
   const [currentSlide, setCurrentSlide] = useState<number>(0);
@@ -720,6 +518,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [isHeaderSearchOpen, setIsHeaderSearchOpen] = useState<boolean>(false);
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
   const [liveAdminTime, setLiveAdminTime] = useState<string>(new Date().toLocaleTimeString("fr-FR"));
+  const [heritageSubTab, setHeritageSubTab] = useState<"parcours" | "portfolio">("parcours");
+  const [portfolioMediaTab, setPortfolioMediaTab] = useState<"photo" | "audio" | "video">("video");
+  const [activeAudioUrl, setActiveAudioUrl] = useState<string | null>(null);
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+  const [activeYoutubeId, setActiveYoutubeId] = useState<string | null>(null);
+  const heritageAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -944,7 +748,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   });
 
   // Custom Reviews & Gombo completeness state
-  const [reviews, setReviews] = useState<GomboReview[]>(INITIAL_REVIEWS);
+  const [reviews, setReviews] = useState<GomboReview[]>([]);
   const [completingGombo, setCompletingGombo] = useState<Gombo | null>(null);
 
   // Complete Gombo reviews form state
@@ -960,109 +764,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
 
   // --- CORE APPLICATION STATES ---
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
-  const [gombos, setGombos] = useState<Gombo[]>(INITIAL_GOMBOS);
-  const [alerts, setAlerts] = useState<Alerte[]>(INITIAL_ALERTS);
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: "post_1",
-      userId: "user_3",
-      authorName: "Bakary Diarrassouba",
-      authorArtisticName: "DJ Vieux Bamba",
-      content: "Vente de micros contrefaits Shure SM58 - Stock disponible en cachette à Adjamé.",
-      likes: 0,
-      comments: 1,
-      isFlagged: true,
-      flagReason: "Vente de matériel contrefait",
-      timestamp: "2026-06-10T04:20:00Z",
-      aiModerated: true,
-      category: "Recherche",
-      tags: ["#studio", "#micro"],
-      shares: 0,
-      views: 12
-    },
-    {
-      id: "post_2",
-      userId: "user_1",
-      authorName: "Ariel Loua",
-      authorArtisticName: "Ariel Sheney G",
-      content: "Showcase déjanté ce soir à la Villa d'Or de Cocody! Tous les Gombos du tam-tam sont les bienvenus 🔥",
-      likes: 124,
-      comments: 18,
-      isFlagged: false,
-      timestamp: "2026-06-19T22:15:00Z",
-      mediaUrl: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80",
-      category: "Événement",
-      tags: ["#afrobeats", "#concert", "#abidjan"],
-      shares: 14,
-      views: 685
-    },
-    {
-      id: "post_3",
-      userId: "user_2",
-      authorName: "Mireille Gbado",
-      authorArtisticName: "Kady de Yopougon",
-      content: "Recherche d'urgence un arrangeur de talent (Beatmaker) spécialisé Zouglou pour finaliser mon prochain EP au studio de Yopougon. Projetez vos forces !",
-      likes: 37,
-      comments: 4,
-      isFlagged: false,
-      timestamp: "2026-06-19T14:24:00Z",
-      mediaUrl: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&auto=format&fit=crop&q=80",
-      category: "Collaboration",
-      tags: ["#zouglou", "#studio", "#beatmaker"],
-      shares: 5,
-      views: 247
-    },
-    {
-      id: "post_4",
-      userId: "user_1",
-      authorName: "Ariel Loua",
-      authorArtisticName: "Ariel Sheney G",
-      content: "Nouveau pack de beats Afro-fusion gratuit disponible pour les artistes de l'Académie ! Écrivez-moi directement pour recevoir le lien d'écoute haute qualité.",
-      likes: 92,
-      comments: 11,
-      isFlagged: false,
-      timestamp: "2026-06-19T08:10:00Z",
-      mediaUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80",
-      category: "Opportunité",
-      tags: ["#afrobeats", "#instrumental", "#souverainete"],
-      shares: 19,
-      views: 412
-    }
-  ]);
-  const [renforts, setRenforts] = useState<Renfort[]>([
-    {
-      id: "renfort_1",
-      gomboId: "gombo_1",
-      gomboTitle: "Concert de Gala - Réveillon Privé Abidjan",
-      applicantId: "user_2",
-      applicantName: "Mireille Gbado",
-      applicantArtisticName: "Kady de Yopougon",
-      instrument: "Vocaliste & Chœur",
-      status: "pending",
-      timestamp: "2026-06-10T09:12:00Z"
-    }
-  ]);
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    {
-      id: "tx_1",
-      amount: 35000,
-      type: "commission",
-      description: "Commission 10% sur Gombo #gombo_1 d'Ariel Loua",
-      userId: "user_1",
-      userArtisticName: "Ariel Sheney G",
-      timestamp: "2026-06-10T08:14:00Z"
-    },
-    {
-      id: "tx_2",
-      amount: 50000,
-      type: "subscription",
-      description: "Abonnement Annuel Elite Premium - Kady de Yop",
-      userId: "user_2",
-      userArtisticName: "Kady de Yopougon",
-      timestamp: "2026-06-09T14:32:00Z"
-    }
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [gombos, setGombos] = useState<Gombo[]>([]);
+  const [alerts, setAlerts] = useState<Alerte[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [renforts, setRenforts] = useState<Renfort[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   // --- ÉTAPE 7 : TABLEAU DE BORD ULTRA-AUTONOME STATES ---
   const [scannerStatus, setScannerStatus] = useState<"idle" | "scanning" | "completed">("idle");
@@ -1177,114 +884,98 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     try {
       const qUsers = collection(db, "users");
       const unsubscribeUsers = onSnapshot(qUsers, (snapshot) => {
-        if (!snapshot.empty) {
-          const fetchedUsers: User[] = [];
-          snapshot.forEach((docSnap) => {
-            fetchedUsers.push({ id: docSnap.id, ...docSnap.data() } as User);
-          });
-          setUsers(fetchedUsers);
-          addToTerminal(`[INFO] Synchronisation : ${fetchedUsers.length} comptes synchronisés depuis Firestore.`);
-        }
+        const fetchedUsers: User[] = [];
+        snapshot.forEach((docSnap) => {
+          fetchedUsers.push({ id: docSnap.id, ...docSnap.data() } as User);
+        });
+        setUsers(fetchedUsers);
+        addToTerminal(`[INFO] Synchronisation : ${fetchedUsers.length} comptes synchronisés depuis Firestore.`);
       }, (error) => {
         addToTerminal(`[Alerte réseau] Firestore non-accessible directement. Mode local premium activé.`);
       });
 
       const qGombos = collection(db, "gombos");
       const unsubscribeGombos = onSnapshot(qGombos, (snapshot) => {
-        if (!snapshot.empty) {
-          const fetchedGombos: Gombo[] = [];
-          snapshot.forEach((docSnap) => {
-            fetchedGombos.push({ id: docSnap.id, ...docSnap.data() } as Gombo);
-          });
-          setGombos(fetchedGombos);
-        }
+        const fetchedGombos: Gombo[] = [];
+        snapshot.forEach((docSnap) => {
+          fetchedGombos.push({ id: docSnap.id, ...docSnap.data() } as Gombo);
+        });
+        setGombos(fetchedGombos);
       }, (error) => {
         console.warn("🔐 Gombos sync limited or offline:", error.message);
       });
 
       const qTransactions = collection(db, "transactions");
       const unsubscribeTransactions = onSnapshot(qTransactions, (snapshot) => {
-        if (!snapshot.empty) {
-          const fetchedTransactions: Transaction[] = [];
-          snapshot.forEach((docSnap) => {
-            fetchedTransactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
-          });
-          // Sort transactions by timestamp desc
-          fetchedTransactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-          setTransactions(fetchedTransactions);
-        }
+        const fetchedTransactions: Transaction[] = [];
+        snapshot.forEach((docSnap) => {
+          fetchedTransactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
+        });
+        // Sort transactions by timestamp desc
+        fetchedTransactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        setTransactions(fetchedTransactions);
       }, (error) => {
         console.warn("🔐 Transactions sync restricted for current user role:", error.message);
       });
 
       const qReviews = collection(db, "reviews");
       const unsubscribeReviews = onSnapshot(qReviews, (snapshot) => {
-        if (!snapshot.empty) {
-          const fetchedReviews: GomboReview[] = [];
-          snapshot.forEach((docSnap) => {
-            fetchedReviews.push({ id: docSnap.id, ...docSnap.data() } as GomboReview);
-          });
-          setReviews(fetchedReviews);
-        }
+        const fetchedReviews: GomboReview[] = [];
+        snapshot.forEach((docSnap) => {
+          fetchedReviews.push({ id: docSnap.id, ...docSnap.data() } as GomboReview);
+        });
+        setReviews(fetchedReviews);
       }, (error) => {
         console.warn("🔐 Reviews sync limited or offline:", error.message);
       });
 
       const qAlerts = collection(db, "alerts");
       const unsubscribeAlerts = onSnapshot(qAlerts, (snapshot) => {
-        if (!snapshot.empty) {
-          const fetchedAlerts: Alerte[] = [];
-          snapshot.forEach((docSnap) => {
-            fetchedAlerts.push({ id: docSnap.id, ...docSnap.data() } as Alerte);
-          });
-          setAlerts(fetchedAlerts);
-        }
+        const fetchedAlerts: Alerte[] = [];
+        snapshot.forEach((docSnap) => {
+          fetchedAlerts.push({ id: docSnap.id, ...docSnap.data() } as Alerte);
+        });
+        setAlerts(fetchedAlerts);
       }, (error) => {
         console.warn("🔐 Alerts sync restricted for current user role:", error.message);
       });
 
       const qPosts = collection(db, "posts");
       const unsubscribePosts = onSnapshot(qPosts, (snapshot) => {
-        if (!snapshot.empty) {
-          const fetchedPosts: Post[] = [];
-          snapshot.forEach((docSnap) => {
-            fetchedPosts.push({ id: docSnap.id, ...docSnap.data() } as Post);
-          });
-          fetchedPosts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-          setPosts(fetchedPosts);
-        }
+        const fetchedPosts: Post[] = [];
+        snapshot.forEach((docSnap) => {
+          fetchedPosts.push({ id: docSnap.id, ...docSnap.data() } as Post);
+        });
+        fetchedPosts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        setPosts(fetchedPosts);
       }, (error) => {
         console.warn("🔐 Posts sync limited or offline:", error.message);
       });
 
       const qRenforts = collection(db, "renforts");
       const unsubscribeRenforts = onSnapshot(qRenforts, (snapshot) => {
-        if (!snapshot.empty) {
-          const fetchedRenforts: any[] = [];
-          snapshot.forEach((docSnap) => {
-            fetchedRenforts.push({ id: docSnap.id, ...docSnap.data() });
-          });
-          fetchedRenforts.sort((a, b) => {
-            const aDate = new Date(a.createdAt || a.date).getTime();
-            const bDate = new Date(b.createdAt || b.date).getTime();
-            return bDate - aDate;
-          });
-          setRenforts(fetchedRenforts);
-        }
+        const fetchedRenforts: any[] = [];
+        snapshot.forEach((docSnap) => {
+          fetchedRenforts.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        fetchedRenforts.sort((a, b) => {
+          const aDate = new Date(a.createdAt || a.date).getTime();
+          const bDate = new Date(b.createdAt || b.date).getTime();
+          return bDate - aDate;
+        });
+        setRenforts(fetchedRenforts);
       }, (error) => {
         console.warn("🔐 Renforts sync limited or offline:", error.message);
       });
 
       const qLogs = collection(db, "admin_logs");
       const unsubscribeLogs = onSnapshot(qLogs, (snapshot) => {
-        if (!snapshot.empty) {
-          const fetchedLogs: any[] = [];
-          snapshot.forEach((docSnap) => {
-            fetchedLogs.push({ id: docSnap.id, ...docSnap.data() });
-          });
-          fetchedLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-          setAdminLogs(fetchedLogs);
-        }
+        const fetchedLogs: any[] = [];
+        snapshot.forEach((docSnap) => {
+          fetchedLogs.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        fetchedLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        setAdminLogs(fetchedLogs);
       }, (error) => {
         console.warn("🔐 Logs sync limited:", error.message);
       });
@@ -2694,7 +2385,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               =================================================== */}
 
           {/* 1. LE TERRAIN - CENTRAL HUB FEED */}
-          <div className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none animate-fadeIn text-left" : "hidden"}>
+          <div 
+            ref={activeMenu === "user_terrain" ? workspaceScrollRef : null}
+            onScroll={(e) => {
+              scrollPositionsRef.current["user_terrain"] = e.currentTarget.scrollTop;
+            }}
+            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none animate-fadeIn text-left" : "hidden"}
+          >
             <UserTerrainLandingPage
               gombos={gombos}
               users={users}
@@ -4073,12 +3770,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredArtists.map(artist => (
-                        <motion.div
-                          key={artist.id}
-                          whileHover={{ scale: 1.015, y: -3 }}
-                          className="bg-[#111111] rounded-2xl border border-zinc-800/80 p-5 space-y-4 flex flex-col justify-between"
-                        >
+                      {filteredArtists.length === 0 ? (
+                        <div className="col-span-full">
+                          <PremiumEmptyState 
+                            message="Aucun virtuose trouvé." 
+                            submessage="Modifiez votre recherche ou découvrez d'autres artistes." 
+                            icon={Search}
+                          />
+                        </div>
+                      ) : (
+                        filteredArtists.map(artist => (
+                          <motion.div
+                            key={artist.id}
+                            whileHover={{ scale: 1.015, y: -3 }}
+                            className="bg-[#111111] rounded-2xl border border-zinc-800/80 p-5 space-y-4 flex flex-col justify-between"
+                          >
                           <div className="space-y-3">
                             <div className="flex items-center gap-3">
                               <div className="w-12 h-12 rounded-full border border-[#D4AF37]/25 overflow-hidden bg-black flex items-center justify-center font-bold font-mono text-md text-[#D4AF37]">
@@ -4134,7 +3840,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             </button>
                           </div>
                         </motion.div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
                 );
@@ -4786,6 +4493,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </div>
               )}
 
+              {/* 7. CONTRATS AFRIGOMBO (USER) */}
+              {activeMenu === "user_contracts" && (
+                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                  <GomboContractsDashboard currentUser={profile || (currentUser as any)} />
+                </div>
+              )}
+
               {activeMenu === "user_heritage" && (() => {
                 let currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste sélectionné.</p>;
@@ -4846,18 +4560,77 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 }
 
                 // Main Mon Héritage view
+                const mergedArtist = {
+                  ...currentArtist,
+                  ...(profile && profile.uid === currentArtist.id ? profile : {})
+                };
+
+                const mediaList = mergedArtist.mediaGallery || [];
+                const photos = mediaList.filter((m: any) => m.type === "photo");
+                const audios = mediaList.filter((m: any) => m.type === "audio");
+                const videos = mediaList.filter((m: any) => m.type === "video" || m.type === "youtube");
+
+                const handlePlayAudio = (url: string) => {
+                  if (activeAudioUrl === url) {
+                    if (heritageAudioRef.current) {
+                      heritageAudioRef.current.pause();
+                    }
+                    setActiveAudioUrl(null);
+                  } else {
+                    if (heritageAudioRef.current) {
+                      heritageAudioRef.current.pause();
+                    }
+                    const nextAudio = new Audio(url);
+                    nextAudio.play().catch(e => console.warn("Autoplay blocked:", e));
+                    heritageAudioRef.current = nextAudio;
+                    setActiveAudioUrl(url);
+                    nextAudio.onended = () => {
+                      setActiveAudioUrl(null);
+                    };
+                  }
+                };
+
+                const extractYoutubeId = (url: string) => {
+                  let videoId = "";
+                  if (url.includes("youtube.com/watch")) {
+                    const parts = url.split("v=");
+                    if (parts[1]) videoId = parts[1].split("&")[0];
+                  } else if (url.includes("youtu.be/")) {
+                    const parts = url.split("youtu.be/");
+                    if (parts[1]) videoId = parts[1].split("?")[0];
+                  } else if (url.includes("youtube.com/embed/")) {
+                    const parts = url.split("youtube.com/embed/");
+                    if (parts[1]) videoId = parts[1].split("?")[0];
+                  }
+                  return videoId;
+                };
+
                 return (
-                  <div className="h-full overflow-y-auto max-w-2xl mx-auto px-1 pb-24 text-left space-y-5 scrollbar-none animate-fadeIn">
+                  <div className="h-full overflow-y-auto max-w-2xl mx-auto px-2 pb-24 text-left space-y-6 scrollbar-none animate-fadeIn font-sans">
                     
-                    {/* 1. HERO CARD COMPACTE PREMIUM */}
-                    <div className="relative rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#D4AF37]/20 p-4 shadow-[0_0_20px_rgba(212,175,55,0.03)] flex flex-col space-y-4">
-                      {/* Accent light glow reflection at top-left */}
-                      <div className="absolute top-0 left-0 w-24 h-24 bg-gradient-to-br from-[#D4AF37]/10 to-transparent rounded-br-full pointer-events-none"></div>
+                    {/* Header: Carte d'Identité Artistique */}
+                    <div className="bg-gradient-to-r from-amber-500/10 via-amber-600/5 to-transparent border border-[#D4AF37]/30 rounded-2xl p-4 flex items-center justify-between shadow-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
+                          <Award className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h2 className="text-xs font-black uppercase tracking-widest text-[#D4AF37]">Carte d'Identité Artistique</h2>
+                          <p className="text-[10px] text-zinc-400 font-mono">Souveraineté d'identité certifiée Gombo ID</p>
+                        </div>
+                      </div>
+                      <div className="text-[9px] font-mono bg-[#D4AF37]/10 text-[#D4AF37] px-2 py-1 rounded border border-[#D4AF37]/20 uppercase font-black">
+                        {mergedArtist.isCertified ? "💠 Certifié" : "⭐ Élite"}
+                      </div>
+                    </div>
+
+                    {/* 1. HERO IDENTITY CARD LAYOUT */}
+                    <div className="relative rounded-2xl overflow-hidden bg-[#070708] border border-[#D4AF37]/25 p-5 shadow-[0_0_25px_rgba(212,175,55,0.04)] flex flex-col space-y-5">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#D4AF37]/5 to-transparent rounded-bl-full pointer-events-none"></div>
                       
-                      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        {/* Profile Photo & Info Group */}
-                        <div className="flex items-center gap-3.5">
-                          {/* Round profile picture */}
+                      <div className="relative z-10 flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
+                        {/* Profile Photo & Info */}
+                        <div className="flex items-center gap-4">
                           <div 
                             onClick={() => {
                               if (currentUser) {
@@ -4865,355 +4638,331 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 try { audioSynth.playValidationSuccess(); } catch (e) {}
                               }
                             }}
-                            className={`relative shrink-0 ${currentUser ? "cursor-pointer group/avatar" : ""}`}
-                            title={currentUser ? "Modifier la photo de profil" : ""}
+                            className="relative group shrink-0 cursor-pointer"
                           >
-                            <div className="w-14 h-14 rounded-full p-0.5 border border-[#D4AF37]/30 bg-[#050505] flex items-center justify-center relative overflow-hidden">
-                              <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center text-lg text-[#D4AF37] bg-[#111111] relative font-bold">
-                                {currentArtist.avatarUrl ? (
-                                  <img src={currentArtist.avatarUrl} alt={currentArtist.artisticName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <div className="w-16 h-16 rounded-full p-0.5 border-2 border-[#D4AF37]/50 bg-[#000] flex items-center justify-center overflow-hidden">
+                              <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-zinc-900 text-[#D4AF37] relative font-black text-xl">
+                                {mergedArtist.avatarUrl ? (
+                                  <img src={mergedArtist.avatarUrl} alt={mergedArtist.artisticName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                 ) : (
-                                  (currentArtist.artisticName || "A").charAt(0)
+                                  (mergedArtist.artisticName || "A").charAt(0)
                                 )}
-                                {currentUser && (
-                                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity">
-                                    <span className="text-white text-[8px] font-mono font-bold uppercase">Éditer</span>
-                                  </div>
-                                )}
+                                <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                  <span className="text-white text-[8px] font-mono uppercase">Éditer</span>
+                                </div>
                               </div>
                             </div>
                             
-                            {/* Verified Badge: Displayed only if certified/verified, NEVER automatically */}
-                            {(currentArtist.isCertified || currentArtist.isVerified) && (
-                              <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500 text-black w-4.5 h-4.5 rounded-full flex items-center justify-center text-[8px] font-black border border-black shadow shadow-emerald-500/25">
-                                ✓
-                              </div>
-                            )}
+                            {/* Verified crown */}
+                            <div className="absolute -top-1 -left-1 bg-amber-500 text-black w-5 h-5 rounded-full flex items-center justify-center shadow-md border border-black">
+                              <Crown className="w-3 h-3 text-black fill-current" />
+                            </div>
                           </div>
 
-                          {/* Center info */}
                           <div className="min-w-0">
-                            <h2 className="text-base font-sans font-black text-white flex items-center gap-1.5 leading-tight">
-                              {currentArtist.artisticName || "Artiste Inconnu"}
-                              {currentUser && (
-                                <button
-                                  onClick={() => {
-                                    setActiveMenu("user_edit_profile");
-                                    try { audioSynth.playValidationSuccess(); } catch (e) {}
-                                  }}
-                                  className="text-zinc-500 hover:text-[#D4AF37] transition-all"
-                                >
-                                  ✏️
-                                </button>
+                            <h2 className="text-lg font-black tracking-tight text-white flex items-center gap-2 uppercase">
+                              {mergedArtist.artisticName || "Artiste Gombo"}
+                              {mergedArtist.isCertified && (
+                                <ShieldCheck className="w-4.5 h-4.5 text-blue-400 fill-current" />
                               )}
                             </h2>
-                            {currentArtist.name && (
-                              <p className="text-[10px] text-zinc-500 font-mono mt-0.5">{currentArtist.name}</p>
-                            )}
-                            <div className="mt-1">
-                              <span className="text-[8.5px] font-mono text-[#D4AF37] bg-[#D4AF37]/5 border border-[#D4AF37]/20 px-2 py-0.5 rounded-md inline-block">
-                                {(() => {
-                                  const roleLower = String(currentArtist.role || "").toLowerCase();
-                                  const specs = (currentArtist.specialties || []).map(s => s.toLowerCase());
-                                  if (roleLower.includes("producteur") || specs.includes("producteur") || specs.includes("production")) return "🎙 Producteur";
-                                  if (specs.some(s => s.includes("compositeur") || s.includes("composition"))) return "🎼 Compositeur";
-                                  if (specs.some(s => ["guitare", "percussion", "clavier", "piano", "batterie", "synth", "instrument", "bass", "tambour", "flute", "trompette"].some(inst => s.includes(inst)))) return "🎹 Instrumentiste";
-                                  return "🎵 Artiste actif";
-                                })()}
+                            <p className="text-[10px] text-zinc-500 font-mono tracking-wider font-semibold">{mergedArtist.firstName || mergedArtist.prenom || ""} {mergedArtist.lastName || mergedArtist.nom || ""}</p>
+                            
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              <span className="text-[8.5px] font-mono font-bold text-[#D4AF37] bg-[#D4AF37]/5 border border-[#D4AF37]/20 px-2.5 py-0.5 rounded-md">
+                                📍 {mergedArtist.commune || "Cocody, Abidjan"}
                               </span>
                             </div>
                           </div>
                         </div>
 
-                        {/* Right Group: ID details & scores */}
-                        <div className="bg-black/30 border border-zinc-900 rounded-xl p-2.5 flex flex-col space-y-1 text-right text-[9px] font-mono text-zinc-400 min-w-[170px] self-start sm:self-center">
+                        {/* Gombo ID Details Block */}
+                        <div className="w-full md:w-auto bg-zinc-950/80 border border-zinc-900 rounded-xl p-3 flex flex-col space-y-1.5 text-xs font-mono text-zinc-400 min-w-[200px]">
                           <div className="flex justify-between gap-4">
-                            <span className="text-zinc-550">GOMBO ID:</span>
-                            <span className="text-[#D4AF37] font-bold">{currentArtist.gomboIdNumber || currentArtist.gomboId?.id || `GMB-ART-${String(currentArtist.id || "0041").slice(-4).toUpperCase()}`}</span>
+                            <span className="text-zinc-600">GOMBO ID:</span>
+                            <span className="text-[#D4AF37] font-black">{mergedArtist.gomboIdNumber || `GMB-ID-${String(mergedArtist.id || "0042").slice(-4).toUpperCase()}`}</span>
                           </div>
                           <div className="flex justify-between gap-4">
-                            <span className="text-zinc-550">AFRI ID:</span>
-                            <span className="text-white font-bold">{currentArtist.afriId || `AFR-${String(currentArtist.id || "7729").slice(-4).toUpperCase()}`}</span>
+                            <span className="text-zinc-600">NIVEAU:</span>
+                            <span className="text-white font-bold">Niv. {mergedArtist.performance?.level || 1}</span>
                           </div>
                           <div className="flex justify-between gap-4">
-                            <span className="text-zinc-550">NIVEAU:</span>
-                            <span className="text-white font-bold">Niv. {currentArtist.performance?.level || currentArtist.gomboId?.niveau || 1}</span>
-                          </div>
-                          <div className="flex justify-between gap-4">
-                            <span className="text-zinc-550">TRUST SCORE:</span>
-                            <span className="text-emerald-400 font-bold">{currentArtist.performance?.score || currentArtist.gomboId?.scoreConfiance || 95}%</span>
+                            <span className="text-zinc-600">TRUST SCORE:</span>
+                            <span className="text-emerald-400 font-black">
+                              {(() => {
+                                let score = 100;
+                                score -= (mergedArtist.cancelledContracts || 0) * 5;
+                                score -= (mergedArtist.flagsCount || 0) * 10;
+                                if ((mergedArtist.averageRating || 5) < 4) score -= 15;
+                                if ((mergedArtist.totalContracts || 0) > 10) score += 5;
+                                return Math.max(0, Math.min(100, score));
+                              })()}%
+                            </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Divider */}
-                      <div className="border-t border-zinc-900/80"></div>
-
-                      {/* Mini Statistiques Compactes Capsules */}
-                      <div className="flex flex-wrap gap-2">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111111] border border-zinc-900 text-[10px] text-zinc-300 font-mono">
-                          <span>🏆</span>
-                          <span className="text-zinc-500 uppercase text-[8px] font-bold tracking-wider">Honneurs :</span>
-                          <span className="text-white font-black">{currentArtist.reviewsCount || reviews.filter(r => r.revieweeId === currentArtist.id).length || 0}</span>
-                        </div>
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111111] border border-zinc-900 text-[10px] text-zinc-300 font-mono">
-                          <span>🎵</span>
-                          <span className="text-zinc-500 uppercase text-[8px] font-bold tracking-wider">Gombos :</span>
-                          <span className="text-white font-black">{posts.filter(p => p.userId === currentArtist.id).length || currentArtist.gombosCompleted || 0}</span>
-                        </div>
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111111] border border-zinc-900 text-[10px] text-zinc-300 font-mono">
-                          <span>🤝</span>
-                          <span className="text-zinc-500 uppercase text-[8px] font-bold tracking-wider">Collab. :</span>
-                          <span className="text-white font-black">{currentArtist.collabsCount || 0}</span>
-                        </div>
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111111] border border-zinc-900 text-[10px] text-zinc-300 font-mono">
-                          <span>👥</span>
-                          <span className="text-zinc-500 uppercase text-[8px] font-bold tracking-wider">Suiveurs :</span>
-                          <span className="text-white font-black">{currentArtist.followersCount || currentArtist.ratingCount || 24}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* COMPTE ASSOCIÉ */}
-                    {currentUser && (
-                      <div className="rounded-2xl bg-[#0A0A0A] border border-zinc-900 p-4 space-y-3 shadow-[0_0_15px_rgba(212,175,55,0.01)]">
-                        <h3 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                          Compte Associé
-                        </h3>
-                        <div className="flex items-center gap-3.5 bg-black/30 border border-zinc-900 rounded-xl p-3">
-                          {currentUser.photoURL ? (
-                            <img 
-                              src={currentUser.photoURL} 
-                              alt="Google" 
-                              className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/20 shrink-0" 
-                              referrerPolicy="no-referrer"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-black text-[#D4AF37] shrink-0 font-mono">
-                              {String(currentUser.displayName || currentUser.email || "G").charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-sans font-bold text-white truncate leading-tight">
-                              {currentUser.displayName || "Artiste Gombo"}
-                            </p>
-                            <p className="text-[10px] font-mono text-zinc-500 truncate mt-0.5">
-                              {currentUser.email}
-                            </p>
-                          </div>
-                          <div className="text-[8.5px] font-mono text-[#D4AF37] bg-[#D4AF37]/5 border border-[#D4AF37]/20 px-2.5 py-1 rounded-lg select-none">
-                            🟢 Google Sync
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 2. SECTION : MON PARCOURS TIMELINE */}
-                    <div className="rounded-2xl bg-[#0A0A0A] border border-zinc-900 p-4 space-y-4">
-                      <h3 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                        Mon Parcours
-                      </h3>
-
-                      <div className="relative border-l border-zinc-900 pl-4 ml-2 space-y-4 py-1">
-                        {/* Timeline Item 1: Premier Gombo */}
-                        <div className="relative group">
-                          {/* Circle bullet node */}
-                          <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 ${(posts.filter(p => p.userId === currentArtist.id).length > 0 || (currentArtist.gombosCompleted || 0) > 0) ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111111] border-zinc-700"} z-10 transition-all`}></div>
-                          
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                            <div className="space-y-0.5">
-                              <h4 className={`text-xs font-sans font-bold uppercase transition-colors ${(posts.filter(p => p.userId === currentArtist.id).length > 0 || (currentArtist.gombosCompleted || 0) > 0) ? "text-white" : "text-zinc-500"}`}>
-                                🎵 Premier Gombo publié
-                              </h4>
-                              <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
-                                {(posts.filter(p => p.userId === currentArtist.id).length > 0 || (currentArtist.gombosCompleted || 0) > 0) ? "Accompli avec brio !" : "Publiez votre première opportunité ou post sur Le Terrain."}
-                              </p>
-                            </div>
-                            <span className="text-[8.5px] font-mono text-[#D4AF37] whitespace-nowrap">
-                              {(posts.filter(p => p.userId === currentArtist.id).length > 0 || (currentArtist.gombosCompleted || 0) > 0) ? "✓ Déverrouillé" : "🔒 À faire"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Timeline Item 2: Premier Honneur */}
-                        <div className="relative group">
-                          <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 ${(currentArtist.reviewsCount || reviews.filter(r => r.revieweeId === currentArtist.id).length > 0) ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111111] border-zinc-700"} z-10 transition-all`}></div>
-                          
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                            <div className="space-y-0.5">
-                              <h4 className={`text-xs font-sans font-bold uppercase transition-colors ${(currentArtist.reviewsCount || reviews.filter(r => r.revieweeId === currentArtist.id).length > 0) ? "text-white" : "text-zinc-500"}`}>
-                                🏆 Premier Honneur reçu
-                              </h4>
-                              <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
-                                {(currentArtist.reviewsCount || reviews.filter(r => r.revieweeId === currentArtist.id).length > 0) ? "Votre réputation commence à briller !" : "Recevez un vote d'honneur (note) d'un collaborateur."}
-                              </p>
-                            </div>
-                            <span className="text-[8.5px] font-mono text-[#D4AF37] whitespace-nowrap">
-                              {(currentArtist.reviewsCount || reviews.filter(r => r.revieweeId === currentArtist.id).length > 0) ? "✓ Déverrouillé" : "🔒 À faire"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Timeline Item 3: Première Collaboration */}
-                        <div className="relative group">
-                          <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 {(currentArtist.collabsCount || 0) > 0 ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111111] border-zinc-700"} z-10 transition-all`}></div>
-                          
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                            <div className="space-y-0.5">
-                              <h4 className={`text-xs font-sans font-bold uppercase transition-colors {(currentArtist.collabsCount || 0) > 0 ? "text-white" : "text-zinc-500"}`}>
-                                🤝 Première collaboration
-                              </h4>
-                              <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
-                                {(currentArtist.collabsCount || 0) > 0 ? "Lien d'alliance établi !" : "Raccordez vos tambours avec un autre artiste de la communauté."}
-                              </p>
-                            </div>
-                            <span className="text-[8.5px] font-mono text-[#D4AF37] whitespace-nowrap">
-                              {(currentArtist.collabsCount || 0) > 0 ? "✓ Déverrouillé" : "🔒 À faire"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Timeline Item 4: Première Prestation */}
-                        <div className="relative group">
-                          <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 {((currentArtist.gombosCompleted || 0) > 0 || (currentArtist.concertsCount || 0) > 0) ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111111] border-zinc-700"} z-10 transition-all`}></div>
-                          
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                            <div className="space-y-0.5">
-                              <h4 className={`text-xs font-sans font-bold uppercase transition-colors {((currentArtist.gombosCompleted || 0) > 0 || (currentArtist.concertsCount || 0) > 0) ? "text-white" : "text-zinc-500"}`}>
-                                🎤 Première prestation
-                              </h4>
-                              <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
-                                {((currentArtist.gombosCompleted || 0) > 0 || (currentArtist.concertsCount || 0) > 0) ? "La scène vous appartient !" : "Finalisez avec succès votre première prestation ou concert."}
-                              </p>
-                            </div>
-                            <span className="text-[8.5px] font-mono text-[#D4AF37] whitespace-nowrap">
-                              {((currentArtist.gombosCompleted || 0) > 0 || (currentArtist.concertsCount || 0) > 0) ? "✓ Déverrouillé" : "🔒 À faire"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Timeline Item 5: Certification obtenue */}
-                        <div className="relative group">
-                          <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 ${(currentArtist.isCertified || currentArtist.isVerified || currentArtist.gomboId?.certifie) ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111111] border-zinc-700"} z-10 transition-all`}></div>
-                          
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                            <div className="space-y-0.5">
-                              <h4 className={`text-xs font-sans font-bold uppercase transition-colors ${(currentArtist.isCertified || currentArtist.isVerified || currentArtist.gomboId?.certifie) ? "text-white" : "text-zinc-500"}`}>
-                                🛡 Certification obtenue
-                              </h4>
-                              <p className="text-[10px] text-zinc-400 leading-relaxed font-sans">
-                                {(currentArtist.isCertified || currentArtist.isVerified || currentArtist.gomboId?.certifie) ? "Souveraineté d'identité certifiée Gombo ID !" : "Validez votre identité dans le cockpit de certification."}
-                              </p>
-                            </div>
-                            <span className="text-[8.5px] font-mono text-[#D4AF37] whitespace-nowrap">
-                              {(currentArtist.isCertified || currentArtist.isVerified || currentArtist.gomboId?.certifie) ? "✓ Déverrouillé" : "🔒 À faire"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 3. SECTION : DISTINCTIONS (Display only if achieved, strictly matching prompt: "Masquer badges non obtenus.") */}
-                    {(() => {
-                      const badgesList = [
-                        { id: "premium", name: "Premium", icon: "⭐", achieved: currentArtist.isVip || currentArtist.isPro, color: "bg-[#D4AF37]/10 border-[#D4AF37]/35 text-[#D4AF37]" },
-                        { id: "certifie", name: "Certifié", icon: "🛡️", achieved: currentArtist.isCertified || currentArtist.isVerified || currentArtist.gomboId?.certifie, color: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" },
-                        { id: "fondateur", name: "Fondateur", icon: "👑", achieved: currentArtist.role === "admin" || currentArtist.role === "founder" || currentArtist.role === "super_founder" || isAuthorizedSuperFounder || isAuthorizedAdmin, color: "bg-purple-500/10 border-purple-500/20 text-purple-400" },
-                        { id: "elite", name: "Élite", icon: "💎", achieved: (currentArtist.performance?.level || 1) >= 5 || (currentArtist.performance?.score || 95) >= 90, color: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400" },
-                        { id: "topGombo", name: "Top Gombo", icon: "🔥", achieved: (currentArtist.gombosCompleted || 0) >= 10, color: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
-                        { id: "collabActif", name: "Collaborateur actif", icon: "🤝", achieved: (currentArtist.collabsCount || 0) > 0 || (currentArtist.concertsCount || 0) > 0, color: "bg-pink-500/10 border-pink-500/20 text-pink-400" }
-                      ].filter(b => b.achieved);
-
-                      if (badgesList.length === 0) return null;
-
-                      return (
-                        <div className="rounded-2xl bg-[#0A0A0A] border border-zinc-900 p-4 space-y-3">
-                          <h3 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                            Distinctions
-                          </h3>
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            {badgesList.map(badge => (
-                              <span 
-                                key={badge.id}
-                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase tracking-wider border ${badge.color} shadow-sm`}
-                              >
-                                <span>{badge.icon}</span> {badge.name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* 4. SECTION : ACTIVITÉ RÉCENTE */}
-                    <div className="rounded-2xl bg-[#0A0A0A] border border-zinc-900 p-4 space-y-3.5">
-                      <h3 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
-                        Activité Récente
-                      </h3>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {/* Publication récente */}
-                        <div className="p-3 bg-black/40 border border-zinc-900 rounded-xl space-y-1">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Publication récente</span>
-                          {posts.filter(p => p.userId === currentArtist.id).length > 0 ? (
-                            <div className="space-y-1">
-                              <p className="text-[10px] text-zinc-300 font-sans leading-relaxed truncate">{posts.filter(p => p.userId === currentArtist.id)[0].content}</p>
-                              <span className="text-[8px] font-mono text-[#D4AF37] block">
-                                {posts.filter(p => p.userId === currentArtist.id)[0].likes} likes • {new Date(posts.filter(p => p.userId === currentArtist.id)[0].timestamp || Date.now()).toLocaleDateString('fr-FR')}
-                              </span>
-                            </div>
-                          ) : (
-                            <p className="text-[10px] text-zinc-600 font-sans italic">Aucune publication récente sur Le Terrain.</p>
-                          )}
-                        </div>
-
-                        {/* Renfort récent */}
-                        <div className="p-3 bg-black/40 border border-zinc-900 rounded-xl space-y-1">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Renfort récent</span>
-                          {renforts.filter(r => r.musicianId === currentArtist.id).length > 0 ? (
-                            <div className="flex items-center justify-between">
-                              <div className="min-w-0">
-                                <h4 className="text-[10px] font-sans font-bold text-white uppercase truncate">{renforts.filter(r => r.musicianId === currentArtist.id)[0].title}</h4>
-                                <span className="text-[8px] font-mono text-zinc-450 uppercase">{renforts.filter(r => r.musicianId === currentArtist.id)[0].type || "Renfort"}</span>
-                              </div>
-                              <span className="text-[8.5px] font-mono text-emerald-400 shrink-0">Actif</span>
-                            </div>
-                          ) : (
-                            <p className="text-[10px] text-zinc-600 font-sans italic">Aucun renfort récent enregistré.</p>
-                          )}
-                        </div>
-
-                        {/* Honneur reçu */}
-                        <div className="p-3 bg-black/40 border border-zinc-900 rounded-xl space-y-1">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Honneur reçu</span>
-                          {reviews.filter(r => r.revieweeId === currentArtist.id && r.type === "client_to_musician").length > 0 ? (
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[#D4AF37] font-bold text-[10px]">★ {reviews.filter(r => r.revieweeId === currentArtist.id && r.type === "client_to_musician")[0].rating} / 5</span>
-                                <span className="text-[8px] font-mono text-zinc-500">{new Date(reviews.filter(r => r.revieweeId === currentArtist.id && r.type === "client_to_musician")[0].timestamp || Date.now()).toLocaleDateString('fr-FR')}</span>
-                              </div>
-                              <p className="text-[10px] text-zinc-300 font-sans italic truncate">"{reviews.filter(r => r.revieweeId === currentArtist.id && r.type === "client_to_musician")[0].comment || "Excellente prestation !"}"</p>
-                            </div>
-                          ) : (
-                            <p className="text-[10px] text-zinc-600 font-sans italic">Aucun vote d'honneur reçu pour le moment.</p>
-                          )}
-                        </div>
-
-                        {/* Nouveau contact */}
-                        <div className="p-3 bg-black/40 border border-zinc-900 rounded-xl space-y-1">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Nouveau contact</span>
-                          <p className="text-[10px] text-zinc-300 font-sans">
-                            {(currentArtist.collabsCount || 0) > 0 ? `Dernière alliance de raccordement établie avec succès.` : `Aucune nouvelle connexion établie récemment.`}
+                      {/* Bio Section */}
+                      {mergedArtist.bio && (
+                        <div className="pt-3 border-t border-zinc-900/60">
+                          <p className="text-xs text-zinc-300 font-sans italic leading-relaxed">
+                            "{mergedArtist.bio}"
                           </p>
                         </div>
+                      )}
+
+                      {/* Specialties List */}
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {mergedArtist.specialties && mergedArtist.specialties.length > 0 ? (
+                          mergedArtist.specialties.map((spec: string, idx: number) => (
+                            <span key={idx} className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/25 text-[#D4AF37] text-[10px] font-black uppercase rounded-lg">
+                              🎸 {spec}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[10px] text-zinc-500 italic">Aucune spécialité renseignée.</span>
+                        )}
+                      </div>
+
+                      {/* Stats Badges */}
+                      <div className="flex flex-wrap gap-2 pt-1 border-t border-zinc-900/40">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111112] border border-zinc-900 text-[10px] text-zinc-400 font-mono">
+                          <span>🏆</span> <span className="text-zinc-550 uppercase text-[8px] font-black">Honneurs :</span> <span className="text-white font-bold">{reviews.filter(r => r.revieweeId === mergedArtist.id).length || 0}</span>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111112] border border-zinc-900 text-[10px] text-zinc-400 font-mono">
+                          <span>🎵</span> <span className="text-zinc-550 uppercase text-[8px] font-black">Prestations :</span> <span className="text-white font-bold">{posts.filter(p => p.userId === mergedArtist.id).length || 0}</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* ACTION BUTTONS (Compact & Elegant) */}
+                    {/* 2. SUB-TAB SWITCHER (Parcours vs Portfolio) */}
+                    <div className="flex bg-[#050505] p-1 border border-zinc-900 rounded-xl">
+                      <button
+                        onClick={() => {
+                          setHeritageSubTab("parcours");
+                          try { audioSynth.playTamTam(true); } catch (_) {}
+                        }}
+                        className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all ${
+                          heritageSubTab === "parcours"
+                            ? "bg-[#D4AF37] text-black font-extrabold shadow-md"
+                            : "text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        🏆 Mon Parcours
+                      </button>
+                      <button
+                        onClick={() => {
+                          setHeritageSubTab("portfolio");
+                          try { audioSynth.playTamTam(true); } catch (_) {}
+                        }}
+                        className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all ${
+                          heritageSubTab === "portfolio"
+                            ? "bg-[#D4AF37] text-black font-extrabold shadow-md"
+                            : "text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        🎨 Mon Portfolio ({mediaList.length})
+                      </button>
+                    </div>
+
+                    {/* 3. SUB-TAB CONTENT RENDERING */}
+                    <div className="space-y-4 animate-fadeIn">
+                      {heritageSubTab === "parcours" && (
+                        <div className="rounded-2xl bg-[#070708] border border-zinc-900 p-5 space-y-4">
+                          <h3 className="text-xs font-mono font-black tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
+                            Chronologie de ma Carrière
+                          </h3>
+
+                          <div className="relative border-l border-zinc-900 pl-4 ml-2 space-y-4 py-1">
+                            {/* Timeline Item 1 */}
+                            <div className="relative">
+                              <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border bg-[#D4AF37] border-[#D4AF37]"></div>
+                              <div className="space-y-0.5">
+                                <h4 className="text-xs font-bold text-white uppercase">🎵 Membre d'Élite Enregistré</h4>
+                                <p className="text-[10px] text-zinc-400 leading-relaxed">Création sécurisée de votre identité et synchronisation Google réussie.</p>
+                              </div>
+                            </div>
+
+                            {/* Timeline Item 2 */}
+                            <div className="relative">
+                              <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border ${audios.length > 0 ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111] border-zinc-700"}`}></div>
+                              <div className="space-y-0.5">
+                                <h4 className={`text-xs font-bold uppercase ${audios.length > 0 ? "text-white" : "text-zinc-600"}`}>🎙 Enregistrement d'une Démo Audio</h4>
+                                <p className="text-[10px] text-zinc-400 leading-relaxed">Votre voix et vos maquettes musicales sont raccordées sur Le Terrain.</p>
+                              </div>
+                            </div>
+
+                            {/* Timeline Item 3 */}
+                            <div className="relative">
+                              <div className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border ${videos.length > 0 ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-[#111] border-zinc-700"}`}></div>
+                              <div className="space-y-0.5">
+                                <h4 className={`text-xs font-bold uppercase ${videos.length > 0 ? "text-white" : "text-zinc-600"}`}>🎥 Première Vidéo de Scène Connectée</h4>
+                                <p className="text-[10px] text-zinc-400 leading-relaxed">Vos prestations de concert sont visibles par tous les promoteurs.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {heritageSubTab === "portfolio" && (
+                        <div className="space-y-4">
+                          {/* Inner Portfolio Tab selection */}
+                          <div className="flex gap-2 border-b border-zinc-900 pb-2">
+                            {[
+                              { id: "video", label: "🎥 Vidéothèque", count: videos.length },
+                              { id: "audio", label: "🎵 Sonothèque", count: audios.length },
+                              { id: "photo", label: "📸 Photothèque", count: photos.length }
+                            ].map((tab) => (
+                              <button
+                                key={tab.id}
+                                onClick={() => {
+                                  setPortfolioMediaTab(tab.id as any);
+                                  try { audioSynth.playTamTam(true); } catch (_) {}
+                                }}
+                                className={`flex-1 pb-1.5 text-[10px] font-black uppercase tracking-wider transition-all relative ${
+                                  portfolioMediaTab === tab.id
+                                    ? "text-[#D4AF37] border-b border-[#D4AF37] font-black"
+                                    : "text-zinc-500 hover:text-zinc-300"
+                                }`}
+                              >
+                                {tab.label} <span className="ml-1 px-1.5 py-0.5 bg-zinc-950 text-[8px] text-zinc-400 rounded-full">{tab.count}</span>
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Media Contents Showcase */}
+                          <div className="animate-fadeIn pt-1">
+                            
+                            {/* VIDEOS TAB */}
+                            {portfolioMediaTab === "video" && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {videos.length === 0 ? (
+                                  <div className="col-span-full">
+                                    <PremiumEmptyState 
+                                      message="Aucune démo vidéo" 
+                                      submessage="Enrichissez votre identité en ajoutant un lien YouTube ou une vidéo de concert depuis votre profil." 
+                                    />
+                                  </div>
+                                ) : (
+                                  videos.map((vid: any) => {
+                                    const ytId = extractYoutubeId(vid.url);
+                                    const isRaw = vid.type === "video" || !ytId;
+                                    const thumbnail = ytId
+                                      ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`
+                                      : "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&q=80&w=350";
+                                    
+                                    return (
+                                      <div key={vid.id} className="relative group overflow-hidden bg-zinc-950 border border-zinc-900 rounded-xl flex flex-col">
+                                        <div className="aspect-video w-full bg-black relative flex items-center justify-center overflow-hidden">
+                                          {isRaw ? (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 p-4 text-center">
+                                              <Video className="w-8 h-8 text-[#D4AF37] mb-1 animate-pulse" />
+                                              <span className="text-[10px] font-bold text-[#D4AF37] uppercase">Vidéo Live</span>
+                                            </div>
+                                          ) : (
+                                            <img src={thumbnail} alt={vid.title} className="w-full h-full object-cover opacity-80" />
+                                          )}
+                                          <button
+                                            onClick={() => {
+                                              if (ytId) {
+                                                setActiveYoutubeId(ytId);
+                                              } else {
+                                                setActiveVideoUrl(vid.url);
+                                              }
+                                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                                            }}
+                                            className="absolute p-3 bg-[#D4AF37] text-black rounded-full shadow-lg transform transition-all hover:scale-110 cursor-pointer"
+                                          >
+                                            <Play className="w-4.5 h-4.5 fill-current text-black" />
+                                          </button>
+                                        </div>
+                                        <div className="p-3">
+                                          <span className="text-[10px] font-black uppercase text-white truncate block">{vid.title}</span>
+                                          <span className="text-[8px] font-mono text-zinc-500 block truncate">{vid.url}</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            )}
+
+                            {/* AUDIOS TAB */}
+                            {portfolioMediaTab === "audio" && (
+                              <div className="space-y-2">
+                                {audios.length === 0 ? (
+                                  <PremiumEmptyState 
+                                    message="Aucun fichier audio" 
+                                    submessage="Partagez vos chansons, maquettes ou refrains pour envoûter les recruteurs du showbiz." 
+                                  />
+                                ) : (
+                                  audios.map((aud: any) => (
+                                    <div key={aud.id} className="p-3 bg-zinc-950 border border-zinc-900 rounded-xl flex items-center justify-between gap-4">
+                                      <div className="flex items-center gap-3 truncate">
+                                        <button
+                                          onClick={() => handlePlayAudio(aud.url)}
+                                          className="p-2 bg-[#D4AF37] text-black rounded-full cursor-pointer flex items-center justify-center"
+                                        >
+                                          {activeAudioUrl === aud.url ? (
+                                            <Pause className="w-4 h-4 fill-current text-black" />
+                                          ) : (
+                                            <Play className="w-4 h-4 fill-current text-black" />
+                                          )}
+                                        </button>
+                                        <div className="truncate">
+                                          <span className="text-[11px] font-black uppercase text-white block truncate">{aud.title}</span>
+                                          <span className="text-[8.5px] font-mono text-zinc-500 block truncate">{aud.url}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            )}
+
+                            {/* PHOTOS TAB */}
+                            {portfolioMediaTab === "photo" && (
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {photos.length === 0 ? (
+                                  <div className="col-span-full">
+                                    <PremiumEmptyState 
+                                      message="Aucune photo de scène" 
+                                      submessage="Téléversez vos plus belles photos de concert ou d'enregistrement studio." 
+                                    />
+                                  </div>
+                                ) : (
+                                  photos.map((ph: any) => (
+                                    <div key={ph.id} className="relative group overflow-hidden aspect-square border border-zinc-900 rounded-xl bg-zinc-950">
+                                      <img src={ph.url} alt={ph.title} className="w-full h-full object-cover" />
+                                      <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
+                                        <span className="text-[9px] font-black text-white uppercase truncate block">{ph.title}</span>
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            )}
+
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Shortcuts to edit and add media */}
+                    <div className="flex gap-3 justify-center">
+                      <button
+                        onClick={() => {
+                          setActiveMenu("user_edit_profile");
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        }}
+                        className="py-2.5 px-4 bg-zinc-950 hover:bg-zinc-900 border border-zinc-850 hover:border-[#D4AF37]/50 text-white text-[10px] font-mono font-bold uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5"
+                      >
+                        ✏️ CONFIGURER MES MÉDIAS / PROFIL
+                      </button>
+                    </div>
+
+                    {/* Action buttons (Share & Back) */}
                     <div className="flex items-center gap-3 pt-2">
                       <button 
                         onClick={() => {
@@ -5223,7 +4972,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             audioSynth.playValidationSuccess();
                           } catch (e) {}
                         }}
-                        className="flex-1 py-2.5 bg-[#0A0A0A] border border-zinc-900 hover:border-[#D4AF37]/50 text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                        className="flex-1 py-2.5 bg-[#070708] border border-zinc-900 hover:border-[#D4AF37]/50 text-white rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"
                       >
                         <Share2 className="w-3.5 h-3.5" /> Partager ma carrière
                       </button>
@@ -5232,7 +4981,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           goBackMenu();
                           try { audioSynth.playValidationSuccess(); } catch (e) {}
                         }}
-                        className="px-6 py-2.5 bg-[#0A0A0A] border border-zinc-900 hover:border-zinc-700 text-zinc-450 rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95"
+                        className="px-6 py-2.5 bg-[#070708] border border-zinc-900 hover:border-zinc-700 text-zinc-500 rounded-xl text-[10px] font-mono uppercase tracking-wider font-bold transition-all active:scale-95"
                       >
                         Retour
                       </button>
@@ -5240,12 +4989,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                     {/* IMPERIAL SÉNAT COMPACT ACTION BOARD (Preserved for Admins) */}
                     {(isAuthorizedAdmin || isAuthorizedSuperFounder) && (
-                      <div className="p-3.5 bg-gradient-to-r from-black to-[#0F0F0F] border border-[#D4AF37]/20 rounded-xl flex items-center justify-between gap-4 shadow-md mt-4">
+                      <div className="p-3.5 bg-gradient-to-r from-black to-[#0F0F0F] border border-[#D4AF37]/20 rounded-xl flex items-center justify-between gap-4 shadow-md">
                         <div className="flex items-center gap-2">
                           <Crown className="w-4 h-4 text-[#D4AF37]" />
                           <div>
                             <h4 className="text-[10px] font-sans font-black text-white uppercase tracking-wider">Commandement Impérial</h4>
-                            <p className="text-[9px] text-zinc-550 font-mono">Portail Gombo Élite</p>
+                            <p className="text-[9px] text-zinc-500 font-mono">Portail Gombo Élite</p>
                           </div>
                         </div>
                         <button
@@ -5259,6 +5008,48 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         >
                           Cockpit Admin →
                         </button>
+                      </div>
+                    )}
+
+                    {/* YouTube Video Lightbox player */}
+                    {activeYoutubeId && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm">
+                        <div className="w-full max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden relative border border-zinc-800">
+                          <button
+                            onClick={() => setActiveYoutubeId(null)}
+                            className="absolute top-3 right-3 z-10 p-2 bg-black/80 hover:bg-black text-white rounded-full text-xs font-bold border border-white/10"
+                          >
+                            ✖ Fermer
+                          </button>
+                          <iframe
+                            src={`https://www.youtube.com/embed/${activeYoutubeId}?autoplay=1`}
+                            title="YouTube video player"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                            className="w-full h-full"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Raw Video Lightbox player */}
+                    {activeVideoUrl && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm">
+                        <div className="w-full max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden relative border border-zinc-800 flex items-center justify-center">
+                          <button
+                            onClick={() => setActiveVideoUrl(null)}
+                            className="absolute top-3 right-3 z-10 p-2 bg-black/80 hover:bg-black text-white rounded-full text-xs font-bold border border-white/10"
+                          >
+                            ✖ Fermer
+                          </button>
+                          <video 
+                            src={activeVideoUrl} 
+                            controls 
+                            autoPlay 
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
                       </div>
                     )}
 
@@ -5304,57 +5095,132 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               {activeMenu === "user_mes_gombos" && (() => {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
+
+                const myGombos = gombos.filter(g => g.organizerId === currentArtist.id || g.applicantIds?.includes(currentArtist.id) || g.selectedTalentId === currentArtist.id);
+
+                const getStatusLabel = (status: string | undefined) => {
+                  switch(status) {
+                    case "publie": return "Publié (En attente)";
+                    case "en_cours": return "Candidatures ouvertes";
+                    case "artiste_selectionne": return "Artiste Sélectionné";
+                    case "contrat_accepte": return "Contrat Verrouillé";
+                    case "contrat_refuse": return "Contrat Refusé";
+                    case "mission_terminee": return "Prestation Terminée";
+                    case "mission_annulee": return "Annulé";
+                    case "paiement_effectue": return "Payé & Clôturé";
+                    default: return status || "En attente";
+                  }
+                };
+
                 return (
                   <div className="p-6 rounded-2xl bg-[#050505] border border-white/5 space-y-6 animate-fadeIn">
                     <div className="pb-3 border-b border-white/5">
                       <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
-                        💼 Mes Prestations & Évaluations Réciproques
+                        💼 Cycle de Contrats & Prestations
                       </h3>
-                      <p className="text-xs text-zinc-400">Suivez vos gombos réservés et notez mutuellement vos organisateurs.</p>
+                      <p className="text-xs text-zinc-400">Suivez vos gombos réservés, contrats signés et notez mutuellement vos collaborateurs.</p>
                     </div>
 
                     {/* Prestations list */}
                     <div className="space-y-4">
-                      {gombos.slice(0, 2).map((gombo, index) => (
-                        <div key={gombo.id} className="p-4 bg-black border border-white/5 rounded-xl space-y-3">
-                          <div className="flex justify-between items-start flex-wrap gap-2">
+                      {myGombos.length === 0 ? (
+                        <PremiumEmptyState 
+                          message="Aucun Contrat en cours." 
+                          submessage="Trouvez des opportunités sur Le Terrain." 
+                          icon={Briefcase}
+                        />
+                      ) : (
+                        myGombos.map((gombo, index) => (
+                          <div key={gombo.id} className="p-4 bg-black border border-white/5 rounded-xl space-y-3">
+                            <div className="flex justify-between items-start flex-wrap gap-2">
                             <div>
                               <strong className="text-sm text-white block">{gombo.title}</strong>
                               <span className="text-[10px] text-zinc-500 font-mono">Organisé par : {gombo.organizerName} • {gombo.location}</span>
                             </div>
-                            <span className="px-2.5 py-1 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] font-bold uppercase">
-                              Cachet : {gombo.budget.toLocaleString()} FCFA
-                            </span>
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="px-2.5 py-1 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] font-bold uppercase">
+                                Cachet : {gombo.budget ? gombo.budget.toLocaleString() : "À DÉBATTRE"} FCFA
+                              </span>
+                              <span className="text-[9px] font-mono uppercase bg-zinc-900 text-zinc-300 px-1.5 py-0.5 rounded">
+                                {getStatusLabel(gombo.status)}
+                              </span>
+                            </div>
                           </div>
 
-                          {/* Reciprocal feedback review trigger */}
-                          <div className="p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded-lg space-y-2">
-                            <span className="text-[10px] uppercase font-mono text-[#D4AF37] block font-bold">✍️ Évaluation Réciproque d'Académie :</span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-zinc-300">Note Accordée :</span>
-                              <div className="flex gap-1 text-[#D4AF37]">
-                                {[1, 2, 3, 4, 5].map(n => (
-                                  <Star key={n} className="w-3.5 h-3.5 fill-current cursor-pointer" />
-                                ))}
-                              </div>
-                            </div>
-                            <textarea
-                              rows={2}
-                              placeholder="Ex: Excellent accueil, la régie technique était très professionnelle, et le paiement a été honoré dès la fin de la performance !"
-                              className="w-full bg-black border border-white/10 rounded-lg p-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#D4AF37]"
-                            />
-                            <button
-                              onClick={() => {
-                                addToTerminal(`[ÉVALUATION] Évaluation impériale transmise pour Gombo ${gombo.id}`);
-                                alert("⭐ Votre avis réciproque d'honneur a été scellé dans le marbre d'AFRIGOMBO !");
-                              }}
-                              className="px-4 py-1.5 bg-[#D4AF37] hover:bg-[#B48F17] text-black text-[10px] font-mono font-bold uppercase rounded transition-all"
-                            >
-                              Soumettre l'avis
-                            </button>
+                          {/* Action Buttons if user is organizer or selected talent */}
+                          <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
+                            {gombo.organizerId === currentArtist.id && gombo.status === "publie" && (
+                              <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "artiste_selectionne")} className="px-3 py-1.5 bg-[#D4AF37] text-black text-[9px] font-bold uppercase rounded hover:bg-[#B48F17]">
+                                Sélectionner un Candidat
+                              </button>
+                            )}
+                            {gombo.selectedTalentId === currentArtist.id && gombo.status === "artiste_selectionne" && (
+                              <>
+                                <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_accepte")} className="px-3 py-1.5 bg-emerald-500 text-black text-[9px] font-bold uppercase rounded hover:bg-emerald-400">
+                                  Accepter le Contrat
+                                </button>
+                                <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_refuse")} className="px-3 py-1.5 bg-red-900 text-red-100 text-[9px] font-bold uppercase rounded hover:bg-red-800">
+                                  Refuser
+                                </button>
+                              </>
+                            )}
+                            {gombo.organizerId === currentArtist.id && gombo.status === "contrat_accepte" && (
+                              <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "mission_terminee")} className="px-3 py-1.5 bg-blue-500 text-white text-[9px] font-bold uppercase rounded hover:bg-blue-400">
+                                Valider la Prestation
+                              </button>
+                            )}
+                            {gombo.organizerId === currentArtist.id && gombo.status === "mission_terminee" && (
+                              <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "paiement_effectue")} className="px-3 py-1.5 bg-green-500 text-black text-[9px] font-bold uppercase rounded hover:bg-green-400">
+                                Libérer le Paiement
+                              </button>
+                            )}
+                            {(gombo.organizerId === currentArtist.id || gombo.selectedTalentId === currentArtist.id) && gombo.selectedTalentId && (
+                               <button 
+                                 onClick={() => {
+                                   const targetId = gombo.organizerId === currentArtist.id ? gombo.selectedTalentId : gombo.organizerId;
+                                   setOpenConvoWithUserId(targetId!);
+                                   setOpenConvoWithGomboId(gombo.id!);
+                                   setActiveMenu("user_messages");
+                                   try { audioSynth.playValidationSuccess(); } catch (_) {}
+                                 }} 
+                                 className="px-3 py-1.5 bg-zinc-800 text-zinc-300 text-[9px] font-bold uppercase rounded hover:bg-zinc-700 flex items-center gap-1.5"
+                               >
+                                 <MessageSquare className="w-3.5 h-3.5 text-[#D4AF37]" /> Discuter
+                               </button>
+                             )}
                           </div>
+
+                          {/* Reciprocal feedback review trigger (only when mission completed) */}
+                          {(gombo.status === "mission_terminee" || gombo.status === "paiement_effectue") && (
+                            <div className="p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded-lg space-y-2 mt-2">
+                              <span className="text-[10px] uppercase font-mono text-[#D4AF37] block font-bold">✍️ Évaluation Réciproque :</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-zinc-300">Note Accordée :</span>
+                                <div className="flex gap-1 text-[#D4AF37]">
+                                  {[1, 2, 3, 4, 5].map(n => (
+                                    <Star key={n} className="w-3.5 h-3.5 fill-current cursor-pointer" />
+                                  ))}
+                                </div>
+                              </div>
+                              <textarea
+                                rows={2}
+                                placeholder="Avis sur la collaboration..."
+                                className="w-full bg-black border border-white/10 rounded-lg p-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                              />
+                              <button
+                                onClick={() => {
+                                  addToTerminal(`[ÉVALUATION] Évaluation transmise pour Gombo ${gombo.id}`);
+                                  alert("⭐ Votre avis a été enregistré avec succès !");
+                                }}
+                                className="px-4 py-1.5 bg-[#D4AF37] hover:bg-[#B48F17] text-black text-[10px] font-mono font-bold uppercase rounded transition-all"
+                              >
+                                Soumettre l'avis
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
                 );
@@ -5376,13 +5242,20 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Active Group cards user belongs to */}
-                      {currentArtist.groups.map(group => (
-                        <div key={group} className="p-4 bg-black border border-[#D4AF37]/30 rounded-xl space-y-2">
-                          <strong className="text-xs uppercase font-mono tracking-wider text-[#D4AF37] block">🎼 {group}</strong>
-                          <span className="text-[10px] text-zinc-500 font-mono block">Rôle : Guitariste Solo / Soliste Majeur</span>
-                          <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold font-mono">Affiliation Active</span>
+                      {(!currentArtist.groups || currentArtist.groups.length === 0) ? (
+                        <div className="flex flex-col items-center justify-center p-4 bg-black border border-white/5 rounded-xl space-y-2 min-h-[8rem]">
+                          <Users className="w-6 h-6 text-zinc-600 mb-1" />
+                          <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 text-center">Aucune alliance active</span>
                         </div>
-                      ))}
+                      ) : (
+                        currentArtist.groups.map(group => (
+                          <div key={group} className="p-4 bg-black border border-[#D4AF37]/30 rounded-xl space-y-2">
+                            <strong className="text-xs uppercase font-mono tracking-wider text-[#D4AF37] block">🎼 {group}</strong>
+                            <span className="text-[10px] text-zinc-500 font-mono block">Rôle : Membre / Musicien</span>
+                            <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold font-mono">Affiliation Active</span>
+                          </div>
+                        ))
+                      )}
 
                       {/* Add new orchestration alliance */}
                       <div className="p-4 bg-black border border-white/5 rounded-xl space-y-3">
@@ -5478,14 +5351,24 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       {/* Active reinforcements view */}
                       <div className="space-y-2">
                         <span className="text-xs uppercase font-mono text-zinc-500 font-bold block">Appels de Renforts en cours</span>
-                        <div className="p-4 bg-black border border-white/5 rounded-xl min-h-60 space-y-3">
-                          <div className="p-3 bg-red-500/5 border border-red-500/20 rounded-lg">
-                            <div className="flex justify-between text-xs">
-                              <strong className="text-white">Guitariste Solo Zouglou</strong>
-                              <span className="text-red-400 font-mono text-[9px] uppercase animate-pulse">Prestation ce soir !</span>
-                            </div>
-                            <p className="text-[10px] text-zinc-400 mt-1">Lieu : Toit d'Abidjan • Cocody • Cachet : 65 000 FCFA</p>
-                          </div>
+                        <div className="p-4 bg-black border border-white/5 rounded-xl min-h-[15rem] space-y-3">
+                          {renforts.length === 0 ? (
+                            <PremiumEmptyState 
+                              message="Aucun renfort actuel." 
+                              submessage="Créez une alerte pour chercher des renforts." 
+                              icon={ShieldCheck}
+                            />
+                          ) : (
+                            renforts.map(r => (
+                              <div key={r.id} className="p-3 bg-red-500/5 border border-red-500/20 rounded-lg">
+                                <div className="flex justify-between text-xs">
+                                  <strong className="text-white">{r.instrument || r.title || "Renfort Demandé"}</strong>
+                                  {r.isExpress && <span className="text-red-400 font-mono text-[9px] uppercase animate-pulse">Prestation ce soir !</span>}
+                                </div>
+                                <p className="text-[10px] text-zinc-400 mt-1">Lieu : {r.commune || "Abidjan"} • Cachet : {r.budget || "À négocier"} FCFA</p>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
                     </div>
@@ -5647,6 +5530,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       currentProfile={currentProfileForChat}
                       openConvoWithUserId={openConvoWithUserId}
                       setOpenConvoWithUserId={setOpenConvoWithUserId}
+                      openConvoWithGomboId={openConvoWithGomboId}
+                      setOpenConvoWithGomboId={setOpenConvoWithGomboId}
                       onBack={() => {
                         setActiveMenu("user_terrain");
                         try { audioSynth.playValidationSuccess(); } catch (err) {}
@@ -5660,11 +5545,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 {activeMenu === "user_gombo_plus" && (
                   <div className="animate-fadeIn">
                     <AfrigomboPlus onBack={() => goBackMenu()} />
-                  </div>
-                )}
-                {activeMenu === "user_gombo_stats" && (
-                  <div className="animate-fadeIn">
-                    <MusicianStats onBack={() => goBackMenu()} audioSynth={audioSynth} />
                   </div>
                 )}
               </div>
@@ -5726,6 +5606,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     setGombos={setGombos}
                   />
                 </Suspense>
+              )}
+
+              {/* ----------------------------------------------------
+                                VIEW: CONTRATS & LITIGES (ADMIN)
+                  ---------------------------------------------------- */}
+              {activeMenu === "contracts" && (
+                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                  <div className="flex items-center justify-between gap-4 mb-8">
+                    <div>
+                      <h2 className="text-2xl font-sans font-black text-white uppercase tracking-tighter">CENTRE DES CONTRATS</h2>
+                      <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Surveillance des engagements et résolution des litiges</p>
+                    </div>
+                  </div>
+                  <GomboContractsDashboard currentUser={{ ...profile, role: 'admin' } as any} />
+                </div>
               )}
 
               {/* ----------------------------------------------------
@@ -7236,7 +7131,24 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Mes Gombos</span>
           </button>
 
-          {/* 5. MON HÉRITAGE */}
+          {/* 5. CONTRATS */}
+          <button
+            id="user-nav-contracts"
+            onClick={() => {
+              requireAuthThen(() => {
+                setActiveMenu("user_contracts");
+                try { audioSynth.playValidationSuccess(); } catch (err) {}
+              });
+            }}
+            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+              activeMenu === "user_contracts" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <FileSignature className="w-4.5 h-4.5" />
+            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Contrats</span>
+          </button>
+
+          {/* 6. MON HÉRITAGE */}
           <button
             id="user-nav-heritage"
             onClick={() => {
@@ -7306,6 +7218,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           >
             <Megaphone className="w-4.5 h-4.5" />
             <span className="text-[9px] font-mono uppercase tracking-wider">Notifications</span>
+          </button>
+
+          {/* 3.1 CONTRATS */}
+          <button
+            id="admin-nav-contracts"
+            onClick={() => {
+              setActiveMenu("contracts");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "contracts" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <FileSignature className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Contrats</span>
           </button>
 
           {/* 4. SIGNALEMENTS */}

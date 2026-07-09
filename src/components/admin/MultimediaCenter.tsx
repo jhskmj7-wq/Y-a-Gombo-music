@@ -551,8 +551,8 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       if (asset.fileSize.includes("Ko")) return acc + val * 1024;
       return acc + val;
     }
-    return acc + 1.2 * 1024 * 1024; // default 1.2 Mo mock
-  }, 412 * 1024 * 1024); // base mock overhead of 412 Mo
+    return acc;
+  }, 0);
 
   const lastAdded = Object.values(mediaAssets).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
   const lastModified = lastAdded; // since we update in-place

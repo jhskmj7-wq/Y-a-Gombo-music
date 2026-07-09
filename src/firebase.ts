@@ -30,10 +30,12 @@ import {
   getDocFromServer,
   onSnapshot,
   arrayUnion,
-  increment
+  increment,
+  orderBy,
+  limit
 } from "firebase/firestore";
 import { isCapacitor, performNativeGoogleLogin, performNativeFacebookLogin } from "./lib/capacitor-adapter";
-import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry, Conversation, Message, VerificationRequest, AdminLog, AcademyGuide, GomboSafeContract, GomboTicketEvent, PurchasedTicket, StudioMarketItem, StudioMarketReview, CastingCall, VoiceAnnouncement, ContractStatus } from "./types";
+import { UserProfile, Gombo, Application, Reservation, WaitingFeature, SocialPost, GomboNotification, ApplicationStatus, Renfort, RenfortApplication, GomboSubscription, GomboPayment, GomboBoost, GomboCertification, CertificationRequest, MusicGroup, GroupMember, GroupGalleryMedia, ActivityFeedEntry, Conversation, Message, VerificationRequest, AdminLog, AcademyGuide, GomboSafeContract, GomboDispute, GomboTicketEvent, PurchasedTicket, StudioMarketItem, StudioMarketReview, CastingCall, VoiceAnnouncement, ContractStatus, BypassAttempt } from "./types";
 
 // Setup and determine if using Real Firebase or Fallback Local Mock DB.
 // Gombo Musik can fall back automatically if the credentials are the mock values or empty.
@@ -1803,66 +1805,7 @@ export const gomboDB = {
     }
 
     if (!localStorage.getItem("gombo_social_posts")) {
-      const initialPosts: SocialPost[] = [
-        {
-          id: "post1",
-          userId: "mus1",
-          userName: "Yorobo Sangaré",
-          userAvatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
-          userRole: "Guitariste Soliste Lead",
-          title: "Ambiance Choc Rumba",
-          caption: "Un petit extrait de mon solo de guitare enregistré en live hier soir au lounge Le Paris-Dakar à Marcory Biétry 🇨🇮. Dites-moi ce que vous en pensez en commentaire, dispo pour vos gombos d'ambiance et sessions de studio !",
-          beatProd: "Yorobo Solo Prod",
-          tags: ["#Afro", "#Rumba", "#GuitarSolo", "#ShowbizCI", "#YaGomboMusic"],
-          likesCount: 24,
-          sharesCount: 12,
-          savesCount: 8,
-          likedBy: [],
-          savedBy: [],
-          comments: [
-            {
-              id: "com1",
-              userId: "mus2",
-              userName: "Fanta Kouyaté",
-              userAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
-              text: "Le toucher de guitare est trop doux mon frère ! Force à toi 🔥",
-              createdAt: new Date().toISOString()
-            }
-          ],
-          audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-          imageUrl: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?auto=format&fit=crop&q=80&w=500",
-          createdAt: new Date(Date.now() - 3600000 * 3).toISOString()
-        },
-        {
-          id: "post2",
-          userId: "mus2",
-          userName: "Fanta Kouyaté",
-          userAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
-          userRole: "Chanteuse Lead Gospel",
-          title: "Voix d'Or Acoustique",
-          caption: "A cappella direct depuis l'Espace Eden pendant la répétition pour le mariage princier de samedi. Toujours prête à rajouter une ambiance royale à vos célébrations chics 👑✨. Contactez-moi pour réserver !",
-          beatProd: "Acoustique Vocals",
-          tags: ["#Gospel", "#Voice", "#WeddingLive", "#AbidjanChic", "#YAGOMBOMUSIC"],
-          likesCount: 18,
-          sharesCount: 5,
-          savesCount: 14,
-          likedBy: [],
-          savedBy: [],
-          comments: [
-            {
-              id: "com2",
-              userId: "mus1",
-              userName: "Yorobo Sangaré",
-              userAvatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
-              text: "La voix de Côte d'Ivoire ! Pur talent !",
-              createdAt: new Date().toISOString()
-            }
-          ],
-          audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-          imageUrl: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&q=80&w=500",
-          createdAt: new Date(Date.now() - 3600000 * 12).toISOString()
-        }
-      ];
+      const initialPosts: SocialPost[] = [];
       localStorage.setItem("gombo_social_posts", safeStringify(initialPosts));
     }
     return JSON.parse(localStorage.getItem("gombo_social_posts") || "[]");
@@ -4071,7 +4014,7 @@ export const gomboDB = {
   },
 
   // --- INTERNAL MESSAGING SYSTEM ---
-  async getOrCreateConversation(user1Id: string, user2Id: string, user1Details: any, user2Details: any): Promise<string> {
+  async getOrCreateConversation(user1Id: string, user2Id: string, user1Details: any, user2Details: any, gomboId?: string): Promise<string> {
     const participants = [user1Id, user2Id].sort();
     const convoId = `convo_${participants[0]}_${participants[1]}`;
 
@@ -4080,12 +4023,18 @@ export const gomboDB = {
         const docRef = doc(db, "conversations", convoId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
+          // If we have a gomboId now, but it wasn't there before, update it
+          if (gomboId && !docSnap.data().gomboId) {
+            await updateDoc(docRef, { gomboId });
+          }
           return convoId;
         }
 
         const convoData: Conversation = {
           id: convoId,
           participants,
+          gomboId: gomboId || null,
+          contractAccepted: false,
           participantDetails: {
             [user1Id]: {
               name: user1Details.name || "Artiste",
@@ -4162,7 +4111,89 @@ export const gomboDB = {
     }
   },
 
+  async logBypassAttempt(attempt: Omit<BypassAttempt, "id" | "timestamp">): Promise<void> {
+    const id = "bypass_" + Math.random().toString(36).substr(2, 9);
+    const timestamp = new Date().toISOString();
+    const data = { ...attempt, id, timestamp };
+
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "bypass_attempts", id), data);
+        
+        // Reduce trust score
+        const userRef = doc(db, "users", attempt.userId);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          const currentScore = userData.trustScore ?? 100;
+          const newScore = Math.max(0, currentScore - attempt.trustScoreReduced);
+          await updateDoc(userRef, { trustScore: newScore });
+        }
+      } catch (e) {
+        console.error("Error logging bypass attempt:", e);
+      }
+    } else {
+      const logs = JSON.parse(localStorage.getItem("gombo_bypass_logs") || "[]");
+      logs.push(data);
+      localStorage.setItem("gombo_bypass_logs", JSON.stringify(logs));
+      
+      // Update local user trust score
+      const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+      const updatedUsers = users.map((u: any) => {
+        if (u.uid === attempt.userId || u.id === attempt.userId) {
+          const currentScore = u.trustScore ?? 100;
+          return { ...u, trustScore: Math.max(0, currentScore - attempt.trustScoreReduced) };
+        }
+        return u;
+      });
+      localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(updatedUsers));
+    }
+  },
+
+  checkTextForBypass(text: string): { blocked: boolean; reason?: string; type?: string } {
+    const phonePatterns = [/\+225/i, /\b07\d{8}\b/, /\b05\d{8}\b/, /\b01\d{8}\b/, /\b02\d{8}\b/, /\b03\d{8}\b/, /\b\d{2}\s\d{2}\s\d{2}\s\d{2}\s\d{2}\b/];
+    const emailPatterns = [/@/, /gmail/i, /hotmail/i, /icloud/i, /yahoo/i];
+    const linkPatterns = [/http/i, /https/i, /www\./i, /facebook/i, /instagram/i, /telegram/i, /whatsapp/i, /wa\.me/i, /t\.me/i, /snapchat/i, /tiktok/i];
+    const bankPatterns = [/RIB/i, /IBAN/i, /BIC/i, /SWIFT/i, /compte bancaire/i];
+
+    for (const pattern of phonePatterns) {
+      if (pattern.test(text)) return { blocked: true, reason: "Numéro de téléphone détecté.", type: "phone" };
+    }
+    for (const pattern of emailPatterns) {
+      if (pattern.test(text)) return { blocked: true, reason: "Adresse e-mail détectée.", type: "email" };
+    }
+    for (const pattern of linkPatterns) {
+      if (pattern.test(text)) return { blocked: true, reason: "Lien externe détecté.", type: "link" };
+    }
+    for (const pattern of bankPatterns) {
+      if (pattern.test(text)) return { blocked: true, reason: "Coordonnées bancaires détectées.", type: "bank" };
+    }
+
+    return { blocked: false };
+  },
+
   async sendMessage(convoId: string, senderId: string, senderName: string, text: string, type: "text" | "image" | "audio" = "text", mediaUrl?: string): Promise<void> {
+    // 1. Security Check
+    if (type === "text") {
+      const check = this.checkTextForBypass(text);
+      if (check.blocked) {
+        await this.logBypassAttempt({
+          userId: senderId,
+          userName: senderName,
+          convoId,
+          type: check.type || "unknown",
+          content: text,
+          trustScoreReduced: 10
+        });
+        throw new Error("Ce contenu enfreint les règles de sécurité AFRIGOMBO.");
+      }
+    }
+
+    if (type === "image" && mediaUrl) {
+      // Image analysis will be called before sendMessage from the component, 
+      // but we can add a secondary check here if we have a server.
+    }
+
     const msgId = "msg_" + Math.random().toString(36).substr(2, 9);
     const timestamp = new Date().toISOString();
     const msgData: Message = {
@@ -4910,5 +4941,331 @@ export const gomboDB = {
       // Try to dispatch a storage update or customized event
       window.dispatchEvent(new Event("gomboUsersChange"));
     }
+  },
+
+  // === 8. ECONOMY & CONTROLS ===
+  async getEconomySettings(): Promise<any> {
+    if (!isFirebaseMock && db) {
+      try {
+        const snap = await getDoc(doc(db, "settings", "economy"));
+        if (snap.exists()) {
+          return snap.data();
+        }
+      } catch (err) {
+        console.warn("⚠️ getEconomySettings Firestore error:", err);
+      }
+    }
+    const def = {
+      commissionRateStandard: 0.10,
+      commissionRatePremium: 0.05,
+      commissionClientSplit: 0.50,
+      commissionArtistSplit: 0.50,
+      boostPriceStandard: 5000,
+      boostPricePremium: 10000,
+      renfortExpressPrice: 7500,
+      updatedAt: new Date().toISOString()
+    };
+    const local = localStorage.getItem("gombo_economy_settings");
+    if (local) {
+      return { ...def, ...JSON.parse(local) };
+    }
+    return def;
+  },
+
+  async generateContractId(): Promise<string> {
+    const year = new Date().getFullYear();
+    let nextNum = 1;
+    
+    if (!isFirebaseMock && db) {
+      try {
+        const q = query(collection(db, "contracts"), orderBy("createdAt", "desc"), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const lastId = snap.docs[0].id;
+          const parts = lastId.split("-");
+          if (parts.length === 3 && parseInt(parts[1]) === year) {
+            nextNum = parseInt(parts[2]) + 1;
+          }
+        }
+      } catch (e) {}
+    } else {
+      const contracts = JSON.parse(localStorage.getItem("gombo_contracts") || "[]");
+      if (contracts.length > 0) {
+        const lastId = contracts[0].id;
+        const parts = lastId.split("-");
+        if (parts.length === 3 && parseInt(parts[1]) === year) {
+          nextNum = parseInt(parts[2]) + 1;
+        }
+      }
+    }
+    
+    return `AG-${year}-${nextNum.toString().padStart(6, "0")}`;
+  },
+
+  async createContract(gombo: Gombo, artist: UserProfile): Promise<GomboSafeContract> {
+    const id = await this.generateContractId();
+    const settings = await this.getEconomySettings();
+    
+    const commissionRate = gombo.isBoosted ? settings.commissionRatePremium : settings.commissionRateStandard;
+    const totalCommission = (gombo.budget || 0) * commissionRate;
+    
+    const commissionClient = totalCommission * (settings.commissionClientSplit || 0.5);
+    const commissionArtist = totalCommission * (settings.commissionArtistSplit || 0.5);
+    
+    const totalClientPaid = (gombo.budget || 0) + commissionClient;
+    const totalArtistReceives = (gombo.budget || 0) - commissionArtist;
+
+    const contract: GomboSafeContract = {
+      id,
+      gomboId: gombo.id!,
+      clientId: gombo.organizerId!,
+      clientName: gombo.organizerName || "Client",
+      artistId: artist.uid || artist.id!,
+      artistName: artist.artisticName || artist.name || "Artiste",
+      title: gombo.title!,
+      description: gombo.description!,
+      commune: gombo.location || gombo.commune || "Abidjan",
+      date: gombo.date || "",
+      time: gombo.time || "",
+      amount: gombo.budget!,
+      commissionClient,
+      commissionArtist,
+      totalClientPaid,
+      totalArtistReceives,
+      status: "generated",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      history: [
+        { action: "Contrat généré automatiquement suite à la sélection de l'artiste", timestamp: new Date().toISOString(), userId: "system" }
+      ]
+    };
+
+    if (!isFirebaseMock && db) {
+      await setDoc(doc(db, "contracts", id), contract);
+      await updateDoc(doc(db, "gombos", gombo.id!), { contractId: id });
+    } else {
+      const contracts = JSON.parse(localStorage.getItem("gombo_contracts") || "[]");
+      contracts.unshift(contract);
+      localStorage.setItem("gombo_contracts", JSON.stringify(contracts));
+      
+      const gombos = JSON.parse(localStorage.getItem(LOCAL_GOMBOS_KEY) || "[]");
+      const gIdx = gombos.findIndex((g: any) => g.id === gombo.id);
+      if (gIdx !== -1) {
+        gombos[gIdx].contractId = id;
+        localStorage.setItem(LOCAL_GOMBOS_KEY, JSON.stringify(gombos));
+      }
+    }
+    
+    return contract;
+  },
+
+  async getContract(contractId: string): Promise<GomboSafeContract | null> {
+    if (!isFirebaseMock && db) {
+      const snap = await getDoc(doc(db, "contracts", contractId));
+      return snap.exists() ? snap.data() as GomboSafeContract : null;
+    }
+    const contracts = JSON.parse(localStorage.getItem("gombo_contracts") || "[]");
+    return contracts.find((c: any) => c.id === contractId) || null;
+  },
+
+  async updateContract(contractId: string, updates: Partial<GomboSafeContract>, userId: string, actionDesc: string): Promise<void> {
+    const timestamp = new Date().toISOString();
+    const historyEntry = { action: actionDesc, timestamp, userId };
+    
+    if (!isFirebaseMock && db) {
+      const docRef = doc(db, "contracts", contractId);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const history = [...(data.history || []), historyEntry];
+        await updateDoc(docRef, { ...updates, history, updatedAt: timestamp });
+      }
+    } else {
+      const contracts = JSON.parse(localStorage.getItem("gombo_contracts") || "[]");
+      const idx = contracts.findIndex((c: any) => c.id === contractId);
+      if (idx !== -1) {
+        contracts[idx] = { 
+          ...contracts[idx], 
+          ...updates, 
+          history: [...(contracts[idx].history || []), historyEntry],
+          updatedAt: timestamp 
+        };
+        localStorage.setItem("gombo_contracts", JSON.stringify(contracts));
+      }
+    }
+  },
+
+  async openDispute(contractId: string, reason: string, userId: string, userName: string): Promise<void> {
+    const contract = await this.getContract(contractId);
+    if (!contract) return;
+
+    const dispute: GomboDispute = {
+      id: "dispute_" + Math.random().toString(36).substr(2, 9),
+      contractId,
+      gomboId: contract.gomboId,
+      openedById: userId,
+      openedByName: userName,
+      reason,
+      status: "open",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseMock && db) {
+      await setDoc(doc(db, "disputes", dispute.id!), dispute);
+      await this.updateContract(contractId, { status: "disputed" }, userId, `Litige ouvert : ${reason}`);
+    } else {
+      const disputes = JSON.parse(localStorage.getItem("gombo_disputes") || "[]");
+      disputes.unshift(dispute);
+      localStorage.setItem("gombo_disputes", JSON.stringify(disputes));
+      await this.updateContract(contractId, { status: "disputed" }, userId, `Litige ouvert : ${reason}`);
+    }
+  },
+
+  async updateEconomySettings(settings: any): Promise<void> {
+    const updated = { ...settings, updatedAt: new Date().toISOString() };
+    if (!isFirebaseMock && db) {
+      try {
+        await setDoc(doc(db, "settings", "economy"), updated, { merge: true });
+        return;
+      } catch (err) {
+        console.warn("⚠️ updateEconomySettings error:", err);
+      }
+    }
+    localStorage.setItem("gombo_economy_settings", JSON.stringify(updated));
+  },
+
+  async updateGomboStatus(gomboId: string, status: string, updates: any = {}): Promise<void> {
+    if (!isFirebaseMock && db) {
+      try {
+        await updateDoc(doc(db, "gombos", gomboId), { status, ...updates });
+        
+        // AUTO CONTRACT GENERATION
+        if (status === "artiste_selectionne" && updates.selectedTalentId) {
+          const gSnap = await getDoc(doc(db, "gombos", gomboId));
+          const tSnap = await getDoc(doc(db, "users", updates.selectedTalentId));
+          if (gSnap.exists() && tSnap.exists()) {
+            await this.createContract(gSnap.data() as Gombo, tSnap.data() as UserProfile);
+          }
+        }
+
+        // If contract is accepted, update linked conversations
+        if (status === "contrat_accepte") {
+          const q = query(collection(db, "conversations"), where("gomboId", "==", gomboId));
+          const snap = await getDocs(q);
+          snap.forEach(async (d) => {
+            await updateDoc(doc(db, "conversations", d.id), { contractAccepted: true });
+          });
+        }
+        return;
+      } catch (err) {
+        console.warn("⚠️ updateGomboStatus error:", err);
+      }
+    }
+    const list = JSON.parse(localStorage.getItem(LOCAL_GOMBOS_KEY) || "[]");
+    const idx = list.findIndex((g: any) => g.id === gomboId);
+    if (idx !== -1) {
+      const oldStatus = list[idx].status;
+      list[idx] = { ...list[idx], status, ...updates };
+      localStorage.setItem(LOCAL_GOMBOS_KEY, JSON.stringify(list));
+
+      // AUTO CONTRACT GENERATION LOCAL
+      if (status === "artiste_selectionne" && updates.selectedTalentId && oldStatus !== "artiste_selectionne") {
+        const users = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+        const artist = users.find((u: any) => u.uid === updates.selectedTalentId || u.id === updates.selectedTalentId);
+        if (artist) {
+          await this.createContract(list[idx], artist);
+        }
+      }
+
+      if (status === "contrat_accepte") {
+        const convos = JSON.parse(localStorage.getItem("gombo_conversations") || "[]");
+        const updatedConvos = convos.map((c: any) => {
+          if (c.gomboId === gomboId) return { ...c, contractAccepted: true };
+          return c;
+        });
+        localStorage.setItem("gombo_conversations", JSON.stringify(updatedConvos));
+      }
+
+      window.dispatchEvent(new Event("gomboDBChange"));
+    }
+  },
+
+  async getContractsForUser(userId: string): Promise<GomboSafeContract[]> {
+    if (!isFirebaseMock && db) {
+      const q = query(
+        collection(db, "contracts"), 
+        where("clientId", "==", userId)
+      );
+      const q2 = query(
+        collection(db, "contracts"), 
+        where("artistId", "==", userId)
+      );
+      const [s1, s2] = await Promise.all([getDocs(q), getDocs(q2)]);
+      const results: GomboSafeContract[] = [];
+      s1.forEach(d => results.push(d.data() as GomboSafeContract));
+      s2.forEach(d => results.push(d.data() as GomboSafeContract));
+      return results.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    const contracts = JSON.parse(localStorage.getItem("gombo_contracts") || "[]");
+    return contracts.filter((c: any) => c.clientId === userId || c.artistId === userId)
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  async getAllContracts(): Promise<GomboSafeContract[]> {
+    if (!isFirebaseMock && db) {
+      const snap = await getDocs(collection(db, "contracts"));
+      return snap.docs.map(d => d.data() as GomboSafeContract)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    return JSON.parse(localStorage.getItem("gombo_contracts") || "[]")
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  async getAllDisputes(): Promise<GomboDispute[]> {
+    if (!isFirebaseMock && db) {
+      const snap = await getDocs(collection(db, "disputes"));
+      return snap.docs.map(d => d.data() as GomboDispute)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    return JSON.parse(localStorage.getItem("gombo_disputes") || "[]")
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  async calculateTrustScore(userId: string): Promise<number> {
+    let contracts = 0;
+    let cancelled = 0;
+    let flags = 0;
+    let averageRating = 5;
+
+    if (!isFirebaseMock && db) {
+      try {
+        const uSnap = await getDoc(doc(db, "users", userId));
+        if (uSnap.exists()) {
+          const u = uSnap.data();
+          contracts = u.totalContracts || 0;
+          cancelled = u.cancelledContracts || 0;
+          flags = u.flagsCount || 0;
+          averageRating = u.averageRating || 5;
+        }
+      } catch (e) {}
+    } else {
+      const usersList = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || "[]");
+      const u = usersList.find((x: any) => x.uid === userId || x.id === userId);
+      if (u) {
+        contracts = u.totalContracts || 0;
+        cancelled = u.cancelledContracts || 0;
+        flags = u.flagsCount || 0;
+        averageRating = u.averageRating || 5;
+      }
+    }
+
+    let score = 100;
+    score -= (cancelled * 5);
+    score -= (flags * 10);
+    if (averageRating < 4) score -= 15;
+    if (contracts > 10) score += 5;
+    
+    return Math.max(0, Math.min(100, score));
   }
 };

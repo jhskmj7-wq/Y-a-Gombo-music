@@ -11,6 +11,7 @@ import { Gombo, User, Post, Renfort } from "../types";
 import AnnuaireTalents from "./AnnuaireTalents";
 import { usePerformance } from "../services/performanceService";
 import { globalAudioManager } from "../lib/audioManager";
+import PremiumEmptyState from "./PremiumEmptyState";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -570,7 +571,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               { id: "annuaire", label: t('annuaire'), icon: Users, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "booster", label: t('booster_tab'), icon: Award, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "gombo_plus", label: "⭐ Plus", icon: Sparkles, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_plus"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } })); } catch (_) {} }) },
-              { id: "gombo_stats", label: "📊 Portfolio", icon: BarChart3, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_stats"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'saxophone' } })); } catch (_) {} }) }
+              { id: "gombo_stats", label: "📊 Portfolio", icon: BarChart3, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_heritage"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'saxophone' } })); } catch (_) {} }) }
             ].map(action => {
               const Icon = action.icon;
               if (action.isSoon) {
@@ -1155,363 +1156,38 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             
             {/* 1. MOCK INTEGRATED REELS (VIDEOS) */}
             {(reelsFilter === "all" || reelsFilter === "videos") && (
-              [
-                {
-                  id: "vid_1",
-                  title: "Improvisation Solo d'Orchestre guitare - Live Cocody",
-                  artistName: "Yoro l'Américain",
-                  specialty: "Guitariste lead",
-                  avatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
-                  videoUrl: "https://www.youtube.com/watch?v=kY9v4CGr7O8",
-                  uid: "mus1",
-                  likes: 245,
-                  views: "1.2K"
-                },
-                {
-                  id: "vid_2",
-                  title: "Vocalises mystiques A Capella - Répétition Matinale",
-                  artistName: "Fanta D'Abobo",
-                  specialty: "Chanteuse Lead",
-                  avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
-                  videoUrl: "https://www.youtube.com/watch?v=F384u51vB8w",
-                  uid: "mus2",
-                  likes: 189,
-                  views: "930"
-                },
-                {
-                  id: "vid_3",
-                  title: "Démonstration Saxophone Jazz - INSAAC prestige session",
-                  artistName: "Marius Bébé Sax",
-                  specialty: "Saxophoniste pro",
-                  avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=200",
-                  videoUrl: "https://www.youtube.com/watch?v=33K-gLREi1o",
-                  uid: "mus3",
-                  likes: 312,
-                  views: "1.8K"
-                }
-              ].map(reel => {
-                const isYt = reel.videoUrl && (reel.videoUrl.includes("youtube.com") || reel.videoUrl.includes("youtu.be"));
-                const getRegYId = () => {
-                  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                  const match = reel.videoUrl.match(regExp);
-                  return (match && match[2].length === 11) ? match[2] : null;
-                };
-                const yId = isYt ? getRegYId() : null;
-
-                return (
-                  <motion.div
-                    key={reel.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    style={{
-                      background: "linear-gradient(180deg, rgba(20,20,20,0.95), rgba(10,10,10,1))",
-                      borderRadius: "24px",
-                      border: "1px solid rgba(212,160,23,0.2)",
-                      boxShadow: "0 0 30px rgba(212,160,23,0.08)",
-                    }}
-                    className="p-4 space-y-3 relative overflow-hidden group transition-all"
-                  >
-                    {/* Top Creator Info */}
-                    <div className="flex items-center justify-between">
-                      <div 
-                        onClick={() => {
-                          const matchedUser = users.find(u => u.uid === reel.uid || u.artistName === reel.artistName);
-                          if (matchedUser) {
-                            setSelectedExploreArtist(matchedUser);
-                          } else {
-                            // Seeded fallbacks
-                            setSelectedExploreArtist({
-                              uid: reel.uid,
-                              firstName: reel.artistName.split(" ")[0],
-                              lastName: reel.artistName.split(" ").slice(1).join(" ") || "Artiste",
-                              artistName: reel.artistName,
-                              commune: "Cocody",
-                              experience: "Professionnel",
-                              specialty: reel.specialty,
-                              bio: "Répéteur professionnel d'orchestre, disponible pour vos prestations et mariages à Abidjan.",
-                              role: "musicien",
-                              isAvailableNow: true
-                            } as any);
-                          }
-                          try { audioSynth?.playValidationSuccess?.(); } catch(_) {}
-                        }}
-                        className="flex items-center gap-2 cursor-pointer hover:opacity-85"
-                      >
-                        <img src={reel.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-[rgba(212,160,23,0.25)] object-cover" />
-                        <div>
-                          <h4 className="text-[11px] font-bold text-[#FFFFFF] uppercase leading-none">{reel.artistName}</h4>
-                          <span className="text-[8.5px] text-[#B8B8B8] font-medium font-mono block mt-0.5">{reel.specialty}</span>
-                        </div>
-                      </div>
-                      <span className="text-[8px] font-mono p-1 px-2 rounded-md bg-[#D4A017]/10 border border-[#D4A017]/20 text-[#D4A017] font-black uppercase">RÉEL DÉMO</span>
-                    </div>
-
-                    {/* Thumbnail video player click zone */}
-                    <div className="relative aspect-video rounded-xl bg-black border border-[rgba(212,160,23,0.25)] overflow-hidden group flex items-center justify-center cursor-pointer shadow-inner">
-                      <img 
-                        src={`https://img.youtube.com/vi/${yId}/${isDataSaveActive ? "mqdefault" : "hqdefault"}.jpg`} 
-                        alt="Thumbnail" 
-                        loading="lazy"
-                        className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition duration-500" 
-                      />
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-all duration-500 pointer-events-none" />
-                      
-                      <button
-                        onClick={() => {
-                          if (isYt && yId) {
-                            setReelsVideoId(yId);
-                          }
-                          try { audioSynth?.playValidationSuccess(); } catch(_) {}
-                        }}
-                        className="w-14 h-14 rounded-full bg-black border-2 border-[#D4A017] text-[#D4A017] flex items-center justify-center cursor-pointer hover:bg-[#D4A017] hover:text-black hover:scale-110 transition-all shadow-[0_0_20px_rgba(212,160,23,0.4)] relative z-10"
-                      >
-                        <span className="translate-x-0.5 text-xl">▶</span>
-                      </button>
-                      <span className="absolute bottom-2 right-2 text-[9px] font-mono bg-[#0A0A0A]/90 border border-[#D4A017]/30 px-2 py-1 rounded text-[#D4A017] uppercase tracking-wider font-bold">Vidéo HQ</span>
-                    </div>
-
-                    {/* Interactions summary */}
-                    <div className="pt-2">
-                      <p className="text-[10.5px] font-sans font-bold text-[#FFFFFF] mb-3">{reel.title}</p>
-                      
-                      {/* Premium Interaction Buttons */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                         <button className="flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] hover:bg-[#D4A017]/10 transition-colors text-[9px] font-bold text-[#B8B8B8] hover:text-[#FFFFFF] uppercase tracking-wider">
-                           <span className="text-[#D4A017] text-xs">❤️</span> <span className="truncate">J'honore</span>
-                         </button>
-                         <button className="flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] hover:bg-[#D4A017]/10 transition-colors text-[9px] font-bold text-[#B8B8B8] hover:text-[#FFFFFF] uppercase tracking-wider">
-                           <span className="text-[#D4A017] text-xs">💬</span> <span className="truncate">Palabres</span>
-                         </button>
-                         <button className="flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] hover:bg-[#D4A017]/10 transition-colors text-[9px] font-bold text-[#B8B8B8] hover:text-[#FFFFFF] uppercase tracking-wider">
-                           <span className="text-[#D4A017] text-xs">🔁</span> <span className="truncate">Transmettre</span>
-                         </button>
-                         <button className="flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] hover:bg-[#D4A017]/10 transition-colors text-[9px] font-bold text-[#B8B8B8] hover:text-[#FFFFFF] uppercase tracking-wider">
-                           <span className="text-[#D4A017] text-xs">🤝</span> <span className="truncate">Collaborer</span>
-                         </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })
+              <PremiumEmptyState 
+                message="Aucune vidéo disponible." 
+                submessage="Publiez vos reels pour être vu par le réseau." 
+                icon={Video}
+              />
             )}
 
             {/* 2. MUSIC EXTRAITS AUDIOS (Requirement 2 & Background Play integration) */}
             {(reelsFilter === "all" || reelsFilter === "audios") && (
-              [
-                {
-                  id: "track_101",
-                  title: "Extrait Orchestre Rumba - Solo Rythmique Live",
-                  artistName: "Yoro l'Américain",
-                  specialty: "Guitare Soliste",
-                  avatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
-                  uid: "mus1",
-                  url: "https://assets.mixkit.co/music/preview/mixkit-african-spirit-140.mp3",
-                  duration: "1:42",
-                  claps: 145
-                },
-                {
-                  id: "track_102",
-                  title: "Chant d'Adoration Gospel - Chœur d'Abidjan",
-                  artistName: "Fanta D'Abobo",
-                  specialty: "Voix d'Or",
-                  avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
-                  uid: "mus2",
-                  url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Ketsa/The_Lost_Files/Ketsa_-_04_-_Soul_Searching.mp3",
-                  duration: "2:15",
-                  claps: 232
-                },
-                {
-                  id: "track_103",
-                  title: "Lounge d'Ivoire - Saxophone Acoustique Impromptu",
-                  artistName: "Marius Bébé Sax",
-                  specialty: "Saxophoniste INSAAC",
-                  avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=200",
-                  uid: "mus3",
-                  url: "https://assets.mixkit.co/music/preview/mixkit-tribal-rhythm-263.mp3",
-                  duration: "1:55",
-                  claps: 198
-                }
-              ].map(track => {
-                const isActive = playingTrackId === track.id;
-
-                return (
-                  <motion.div
-                    key={track.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-3 hover:border-[#D4AF37]/45 transition shadow-md relative overflow-hidden"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div 
-                        onClick={() => {
-                          const matchedUser = users.find(u => u.uid === track.uid);
-                          if (matchedUser) setSelectedExploreArtist(matchedUser);
-                        }}
-                        className="flex items-center gap-2 cursor-pointer hover:opacity-85"
-                      >
-                        <img src={track.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-zinc-800" />
-                        <div>
-                          <strong className="text-[11px] text-white uppercase font-black leading-none block">{track.artistName}</strong>
-                          <span className="text-[8px] text-zinc-500 font-mono tracking-wider font-extrabold uppercase block mt-0.5">{track.specialty}</span>
-                        </div>
-                      </div>
-                      <span className="text-[8px] font-mono p-1 px-2 rounded bg-amber-500/10 border border-amber-500/20 text-[#D4AF37] font-black uppercase">AUDIO PRESTIGE</span>
-                    </div>
-
-                    {/* Audio Player Row */}
-                    <div className="p-3.5 rounded-xl bg-black/60 border border-zinc-900 flex items-center justify-between gap-3 relative">
-                      {/* Left Play/Pause disk spinner */}
-                      <button
-                        onClick={() => handleTogglePreview(track)}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition ${
-                          isActive ? "bg-amber-500 text-black animate-spin-slow" : "bg-zinc-900 text-[#D4AF37] hover:bg-zinc-800"
-                        }`}
-                      >
-                        {isActive ? (
-                          <span className="text-xs font-bold font-mono">⏸</span>
-                        ) : (
-                          <span className="translate-x-0.5 text-sm">▶</span>
-                        )}
-                      </button>
-
-                      <div className="flex-1 min-w-0 pr-2">
-                        <p className="text-[10px] text-zinc-100 font-bold truncate leading-snug">{track.title}</p>
-                        {/* Golden Reactive Soundwave animation when playing */}
-                        {isActive ? (
-                          <div className="flex items-end gap-0.5 h-3 mt-1.5 select-none">
-                            <span className="w-0.5 bg-[#D4AF37] rounded-sm animate-[bounce-wave_0.7s_infinite_0.1s]" />
-                            <span className="w-0.5 bg-[#D4AF37] rounded-sm animate-[bounce-wave_0.7s_infinite_0.3s]" />
-                            <span className="w-0.5 bg-[#D4AF37] rounded-sm animate-[bounce-wave_0.7s_infinite_0.5s]" />
-                            <span className="w-0.5 bg-[#D4AF37] rounded-sm animate-[bounce-wave_0.7s_infinite_0.2s]" />
-                            <span className="w-0.5 bg-[#D4AF37] rounded-sm animate-[bounce-wave_0.7s_infinite_0.4s]" />
-                            <span className="w-0.5 bg-amber-600 rounded-sm animate-[bounce-wave_0.7s_infinite_0.1s]" />
-                          </div>
-                        ) : (
-                          <span className="text-[8.5px] text-zinc-600 font-mono tracking-tight block mt-1">Cliquez sur Play pour écouter • Durée : {track.duration}</span>
-                        )}
-                      </div>
-
-                      {/* Continuous ambiance ambient override button */}
-                      <button
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent('gombo_music_toggle', { detail: { play: true } }));
-                          addToTerminal("[PRESTIGE] Ambiance musicale générale relancée sur toute l'application.");
-                        }}
-                        className="p-1.5 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 rounded-lg text-[8px] font-mono text-[#D4AF37] font-black uppercase shrink-0"
-                        title="Relancer l'ambiance continue en arrière-plan"
-                      >
-                        📻 Ambiance permanente
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[8px] font-mono text-zinc-500 pt-1">
-                      <span>⚡ {track.claps} CLAPS DE FORCE</span>
-                      <span className="text-amber-500">🏆 GARANTI SOUVERAIN (NFC/NFC)</span>
-                    </div>
-                  </motion.div>
-                );
-              })
+              <PremiumEmptyState 
+                message="Aucun extrait audio." 
+                submessage="Partagez vos maquettes et créations audio." 
+                icon={Music}
+              />
             )}
 
             {/* 3. MURMURES / STATUS DE COMPAGGNIE */}
             {(reelsFilter === "all" || reelsFilter === "murmures") && (
-              [
-                {
-                  id: "mur_1",
-                  author: "Yoro l'Américain",
-                  text: "Répétition intensive lead guitare de coupés-décalés avec le grand orchestre VIP d'Adjamé. On prépare du lourd pour les mariages de ce week-end à Cocody ! Ambiance zouglou garantie.",
-                  avatar: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200",
-                  uid: "mus1",
-                  date: "Il y a 2h"
-                },
-                {
-                  id: "mur_2",
-                  author: "Fanta D'Abobo",
-                  text: "Gloire céleste ! Le gombo ID m'a apporté un immense raccordement pro hier. Merci AFRIGOMBO d'exister et de valoriser notre art vocal sans fuites.",
-                  avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=200",
-                  uid: "mus2",
-                  date: "Il y a 5h"
-                },
-                {
-                  id: "mur_3",
-                  author: "Marius Bébé Sax",
-                  text: "Une alliance signée en toute intimité avec le grand promoteur de Marcory. On va inonder les dîners d'affaires d'Abidjan de mélodies jazzées célestes.",
-                  avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=200",
-                  uid: "mus3",
-                  date: "Hier"
-                }
-              ].map(mur => (
-                <motion.div
-                  key={mur.id}
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-3 shadow-md border-l-4 border-l-[#D4AF37]"
-                >
-                  <div className="flex items-center gap-2">
-                    <img src={mur.avatar} alt="Avatar" className="w-7 h-7 rounded-full object-cover border border-zinc-800" />
-                    <div className="flex-1 min-w-0">
-                      <strong className="text-[10px] text-white uppercase font-black tracking-tight block truncate">{mur.author}</strong>
-                      <span className="text-[7.5px] text-zinc-500 font-mono block leading-none">{mur.date} • Côte d'Ivoire</span>
-                    </div>
-                    <span className="text-[9px]">💬</span>
-                  </div>
-                  <p className="text-[10.5px] text-zinc-300 font-sans leading-relaxed font-semibold italic bg-black/40 p-3 rounded-xl border border-zinc-900/60">
-                    "{mur.text.normalize("NFC")}"
-                  </p>
-                  <div className="flex justify-between items-center pt-1 text-[8.5px] font-mono text-zinc-500">
-                    <button 
-                      onClick={() => {
-                        const matchedUser = users.find(u => u.uid === mur.uid);
-                        if (matchedUser) setSelectedExploreArtist(matchedUser);
-                      }}
-                      className="text-[#D4AF37] hover:underline cursor-pointer font-bold uppercase"
-                    >
-                      Explorer l'univers ➔
-                    </button>
-                    <span>✓ ACTU SÉCURISÉE</span>
-                  </div>
-                </motion.div>
-              ))
+              <PremiumEmptyState 
+                message="Aucun murmure pour le moment." 
+                submessage="Partagez vos actualités et statuts." 
+                icon={MessageSquare}
+              />
             )}
 
             {/* 4. ALLIANCES ET CERTIFICATIONS D'ACCORDEMENT */}
             {(reelsFilter === "all" || reelsFilter === "alliances") && (
-              [
-                {
-                  id: "act_1",
-                  title: "Vérification officielle réussie",
-                  description: "Yom Yoro Sangaré a complété son authentification souveraine et décroché le sésame de Gombo ID d'Abidjan.",
-                  badge: "⭐ Maître Souverain Tempéré",
-                  type: "cert",
-                  icon: "🏆"
-                },
-                {
-                  id: "act_2",
-                  title: "Alliance d'Or signée",
-                  description: "Une union d'orchestre a été conclue hier soir à Adjamé pour 12 représentations acoustiques.",
-                  badge: "🤝 Alliance Scène Pro",
-                  type: "alliance",
-                  icon: "✨"
-                }
-              ].map(act => (
-                <motion.div
-                  key={act.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl relative overflow-hidden flex gap-3.5 shadow-md hover:border-[#D4AF37]/30 transition"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 text-lg">
-                    {act.icon}
-                  </div>
-                  <div className="flex-1 min-w-0 space-y-1 text-left">
-                    <span className="text-[8.5px] font-mono font-black text-[#D4AF37] uppercase tracking-wider block bg-[#D4AF37]/5 border border-[#D4AF37]/10 px-1.5 py-0.5 rounded w-fit">
-                      {act.badge}
-                    </span>
-                    <h4 className="text-[11px] text-white font-bold uppercase leading-none mt-1">{act.title}</h4>
-                    <p className="text-[10px] text-zinc-400 font-medium leading-relaxed font-sans">{act.description}</p>
-                  </div>
-                </motion.div>
-              ))
+              <PremiumEmptyState 
+                message="Aucune alliance récente." 
+                submessage="Découvrez et collaborez avec d'autres artistes." 
+                icon={ShieldCheck}
+              />
             )}
 
           </div>

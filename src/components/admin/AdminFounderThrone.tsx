@@ -6,7 +6,7 @@ import {
   Sparkles, Wallet, CreditCard, Bell, BarChart3, Brain, DatabaseBackup, ListCollapse,
   Play, Pause, Trash2, Volume2, Plus, ArrowUp, ArrowDown, Send, 
   RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award,
-  Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield
+  Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square
 } from "lucide-react";
 import { db } from "../../lib/firebase";
 import { 
@@ -80,6 +80,50 @@ export default function AdminFounderThrone({
     afriLivraison: "EN ATTENTE",
     gomboMusik: "DÉPLOYÉ & ACTIF"
   });
+
+  const [betaChecklist, setBetaChecklist] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem("afrigombo_beta_checklist");
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return {
+      "Connexion Google": false,
+      "Déconnexion": false,
+      "Création publication": false,
+      "Modification profil": false,
+      "Upload image": false,
+      "Notifications": false,
+      "Navigation": false,
+      "Centre de Commandement": false,
+      "Trône": false,
+      "Responsive Android": false,
+      "Firebase": false,
+    };
+  });
+
+  const [economySettings, setEconomySettings] = useState<any>(null);
+  
+  useEffect(() => {
+    // Load economy settings if needed
+    if (selectedSection === "economy") {
+      import("../../firebase").then(({ gomboDB }) => {
+        gomboDB.getEconomySettings().then(settings => {
+          setEconomySettings(settings);
+        });
+      });
+    }
+  }, [selectedSection]);
+
+  const toggleChecklist = (key: string) => {
+    const updated = { ...betaChecklist, [key]: !betaChecklist[key] };
+    setBetaChecklist(updated);
+    try {
+      localStorage.setItem("afrigombo_beta_checklist", JSON.stringify(updated));
+    } catch (_) {}
+    try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+  };
+
+  const progressCount = Object.values(betaChecklist).filter(Boolean).length;
 
   // 1. GOUVERNANCE FIRESTORE SYNC
   const [govData, setGovData] = useState<GovernanceData>({
@@ -993,6 +1037,69 @@ export default function AdminFounderThrone({
                 </span>
               </motion.div>
 
+              {/* Card 10: 📋 Checklist Bêta */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("checklist");
+                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+                }}
+                className="bg-gradient-to-br from-[#060606] to-[#0d0d0d] border border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between"
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <CheckSquare className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform duration-300">
+                    <CheckSquare className="w-6 h-6 text-emerald-400" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                      📋 Checklist Bêta
+                    </h3>
+                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                      Suivi interactif de validation des fonctionnalités critiques pour la version Bêta d'AFRIGOMBO ELITE.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-[10px] font-mono text-[#D4AF37] uppercase font-bold">
+                  <span>{progressCount} / 11 VALIDÉS</span>
+                  <span>Voir la checklist →</span>
+                </div>
+              </motion.div>
+
+              {/* Card 11: 💰 Économie AFRIGOMBO */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("economy");
+                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+                }}
+                className="bg-gradient-to-br from-[#060606] to-[#0d0d0d] border border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between"
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <Coins className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform duration-300">
+                    <Coins className="w-6 h-6 text-[#D4AF37]" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                      💰 Économie AFRIGOMBO
+                    </h3>
+                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                      Moteur de commissions, paramètres de paiements, boosts, contrats et statistiques financières.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                  Ouvrir le Coffre →
+                </span>
+              </motion.div>
+
             </div>
           </motion.div>
         ) : (
@@ -1838,6 +1945,190 @@ export default function AdminFounderThrone({
                     </form>
                   </div>
 
+                </div>
+              </div>
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 📋 Checklist Bêta
+                 ========================================================= */}
+            {selectedSection === "checklist" && (
+              <div className="space-y-6">
+                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                  <CheckSquare className="w-8 h-8 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
+                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                    <strong>📋 CHECKLIST DE VALIDATION DE LA BÊTA PUBLIQUE :</strong> Suivez pas à pas la validation de l'écosystème souverain AFRIGOMBO ELITE. Cochez les modules pour certifier leur bon fonctionnement avant le déploiement général.
+                  </div>
+                </div>
+
+                <div className="bg-black border border-zinc-900 rounded-3xl p-6 space-y-6">
+                  {/* Progress Header */}
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-zinc-900">
+                    <div>
+                      <h3 className="text-sm font-sans font-black text-white uppercase tracking-wider">
+                        Progression de la Certification Bêta
+                      </h3>
+                      <p className="text-[10px] font-mono text-zinc-500 uppercase mt-1">
+                        Chaque jalon doit être testé rigoureusement sur mobile et ordinateur
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs font-black text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/25 px-3 py-1 rounded-xl">
+                        {progressCount} / 11 VALIDÉS ({Math.round((progressCount / 11) * 100)}%)
+                      </span>
+                      <button
+                        onClick={() => {
+                          const reset = Object.keys(betaChecklist).reduce((acc, k) => ({ ...acc, [k]: false }), {});
+                          setBetaChecklist(reset);
+                          localStorage.setItem("afrigombo_beta_checklist", JSON.stringify(reset));
+                          if (audioSynth) {
+                            try { audioSynth.playValidationSuccess(); } catch (_) {}
+                          }
+                        }}
+                        className="text-[9px] font-mono uppercase text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                      >
+                        Réinitialiser
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="w-full h-2 bg-zinc-950 rounded-full overflow-hidden border border-zinc-900">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 shadow-[0_0_10px_rgba(212,175,55,0.3)]"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(progressCount / 11) * 100}%` }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </div>
+
+                  {/* Checklist grid list */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries({
+                      "Connexion Google": "Authentification sécurisée avec Firebase Auth et persistance de session.",
+                      "Déconnexion": "Fermeture propre de session, effacement sécurisé du cache utilisateur local.",
+                      "Création publication": "Ajout fluide de posts, textes, catégories, et liaison Gombo ID en temps réel.",
+                      "Modification profil": "Mise à jour des coordonnées d'artiste, biographie, réseaux sociaux et rôle.",
+                      "Upload image": "Traitement optimisé avec compression et hébergement cloud résilient.",
+                      "Notifications": "Envoi d'alertes instantanées, notifications d'activité, et décrets souverains.",
+                      "Navigation": "Routage réactif de 200 à 300ms sans clignotement ni blocage tactile.",
+                      "Centre de Commandement": "Monitoring en temps réel des flux d'activités, des signalements et logs.",
+                      "Trône": "Accès souverain restreint au fondateur d'élite pour la gouvernance impériale.",
+                      "Responsive Android": "Adaptation pixel-perfect, zones de touches de 44px minimum, fluidité absolue.",
+                      "Firebase": "Configuration offline par long-polling configurée et gestion des pings de base de données."
+                    }).map(([key, desc]) => {
+                      const isChecked = betaChecklist[key];
+                      return (
+                        <div
+                          key={key}
+                          onClick={() => toggleChecklist(key)}
+                          className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 select-none ${isChecked ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40' : 'bg-zinc-950/40 border-zinc-900 hover:border-zinc-800'}`}
+                        >
+                          <div className="mt-0.5 shrink-0">
+                            {isChecked ? (
+                              <CheckSquare className="w-5 h-5 text-emerald-400" />
+                            ) : (
+                              <Square className="w-5 h-5 text-zinc-650 hover:text-zinc-500" />
+                            )}
+                          </div>
+                          <div className="space-y-1 text-left">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs font-sans font-bold ${isChecked ? 'text-white' : 'text-zinc-300'}`}>
+                                {key}
+                              </span>
+                              <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded uppercase font-black ${isChecked ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-500'}`}>
+                                {isChecked ? 'VALIDÉ' : 'EN COURS'}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
+                              {desc}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedSection === "economy" && (
+              <div className="space-y-6">
+                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                  <Coins className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5" />
+                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                    <strong>💰 GESTION ÉCONOMIQUE & COMMISSIONS :</strong> Configurez les paramètres monétaires, contrôlez les boosts et analysez les métriques d'activité financière de l'Empire.
+                  </div>
+                </div>
+
+                {/* Dashboard Economy Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-black border border-zinc-900 rounded-2xl p-4 text-center">
+                    <span className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">Total Contrats</span>
+                    <span className="text-xl font-black text-white">{gombos.length}</span>
+                  </div>
+                  <div className="bg-black border border-zinc-900 rounded-2xl p-4 text-center">
+                    <span className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">Volume Financier</span>
+                    <span className="text-xl font-black text-[#D4AF37]">{gombos.reduce((acc, g) => acc + (g.budget || 0), 0).toLocaleString()} FCFA</span>
+                  </div>
+                  <div className="bg-black border border-zinc-900 rounded-2xl p-4 text-center">
+                    <span className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">Commissions</span>
+                    <span className="text-xl font-black text-emerald-400">~{Math.round(gombos.reduce((acc, g) => acc + (g.budget || 0), 0) * 0.10).toLocaleString()} FCFA</span>
+                  </div>
+                  <div className="bg-black border border-zinc-900 rounded-2xl p-4 text-center">
+                    <span className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">Boosts Actifs</span>
+                    <span className="text-xl font-black text-amber-500">{gombos.filter(g => g.isBoosted).length}</span>
+                  </div>
+                </div>
+
+                {/* Economy Settings Form */}
+                <div className="bg-black border border-zinc-900 rounded-3xl p-6 space-y-6">
+                  <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider border-b border-white/5 pb-2">
+                    Paramètres de Commission & Tarification (FCFA)
+                  </h3>
+                  
+                  {economySettings ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Taux Commission Standard (%)</label>
+                        <input type="number" value={economySettings.commissionRateStandard * 100} onChange={(e) => setEconomySettings({...economySettings, commissionRateStandard: Number(e.target.value) / 100})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Taux Commission Premium (%)</label>
+                        <input type="number" value={economySettings.commissionRatePremium * 100} onChange={(e) => setEconomySettings({...economySettings, commissionRatePremium: Number(e.target.value) / 100})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Boost Standard</label>
+                        <input type="number" value={economySettings.boostPriceStandard} onChange={(e) => setEconomySettings({...economySettings, boostPriceStandard: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Boost Premium</label>
+                        <input type="number" value={economySettings.boostPricePremium} onChange={(e) => setEconomySettings({...economySettings, boostPricePremium: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Renfort Express</label>
+                        <input type="number" value={economySettings.renfortExpressPrice} onChange={(e) => setEconomySettings({...economySettings, renfortExpressPrice: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                      </div>
+                      <div className="md:col-span-2 flex justify-end mt-4">
+                        <button 
+                          onClick={() => {
+                            import("../../firebase").then(({ gomboDB }) => {
+                              gomboDB.updateEconomySettings(economySettings).then(() => {
+                                setSuccessMsg("Paramètres économiques mis à jour avec succès !");
+                                setTimeout(() => setSuccessMsg(""), 3000);
+                                try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            });
+                          }}
+                          className="bg-[#D4AF37] hover:bg-[#B48F17] text-black px-6 py-2.5 rounded-xl font-bold font-mono text-[10px] uppercase transition-colors"
+                        >
+                          Sauvegarder les Paramètres
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-zinc-500 font-mono text-xs animate-pulse">Chargement des paramètres...</div>
+                  )}
                 </div>
               </div>
             )}
