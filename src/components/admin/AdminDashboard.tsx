@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { 
   Activity, 
   UserPlus, 
@@ -13,6 +13,63 @@ import {
   Crown 
 } from 'lucide-react';
 import { motion } from 'motion/react';
+
+function AnimatedCounter({ value, duration = 1200 }: { value: number; duration?: number }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number | null = null;
+    const endValue = typeof value === 'number' ? value : 0;
+    
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const percentage = Math.min(progress / duration, 1);
+      
+      const easeOutQuad = (t: number) => t * (2 - t);
+      const easeProgress = easeOutQuad(percentage);
+      
+      setCount(Math.floor(easeProgress * endValue));
+
+      if (progress < duration) {
+        requestAnimationFrame(animate);
+      } else {
+        setCount(endValue);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [value, duration]);
+
+  return <>{count.toLocaleString("fr-FR")}</>;
+}
+
+const statsContainerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04, // 40ms stagger delay
+    }
+  }
+};
+
+const statsItemVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 12, 
+    scale: 0.97 
+  },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { 
+      duration: 0.2, // 200ms animation duration
+      ease: "easeOut"
+    }
+  }
+};
 
 const AdminActions = lazy(() => import('../AdminActions'));
 
@@ -165,51 +222,70 @@ export default function AdminDashboard({
           Statistiques Réelles du Système
         </h3>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left">
+        <motion.div 
+          variants={statsContainerVariants}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        >
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">Utilisateurs totaux</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiUsersCount}</strong>
-          </div>
+            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+              <AnimatedCounter value={kpiUsersCount} />
+            </strong>
+          </motion.div>
 
-          <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left relative">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left relative">
             <span className="w-2 h-2 bg-emerald-500 rounded-full absolute top-4 right-4 animate-pulse"></span>
             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">Utilisateurs actifs</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiOnlineCount}</strong>
-          </div>
+            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+              <AnimatedCounter value={kpiOnlineCount} />
+            </strong>
+          </motion.div>
 
-          <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">Publications</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiPostsCount}</strong>
-          </div>
+            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+              <AnimatedCounter value={kpiPostsCount} />
+            </strong>
+          </motion.div>
 
-          <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left relative">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left relative">
             {(kpiAlertsCount > 0) && (
               <span className="w-2 h-2 bg-red-500 rounded-full absolute top-4 right-4 animate-pulse"></span>
             )}
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Signalements</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiAlertsCount}</strong>
-          </div>
+            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+              <AnimatedCounter value={kpiAlertsCount} />
+            </strong>
+          </motion.div>
 
-          <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Opportunités</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiGombosCount}</strong>
-          </div>
+            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+              <AnimatedCounter value={kpiGombosCount} />
+            </strong>
+          </motion.div>
 
-          <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Vidéos partagées</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{posts.filter((p: any) => p.mediaType === 'video').length}</strong>
-          </div>
+            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+              <AnimatedCounter value={posts.filter((p: any) => p.mediaType === 'video').length} />
+            </strong>
+          </motion.div>
 
-          <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4A017] block font-bold">Gombo ID validés</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">{kpiApprovedKycCount}</strong>
-          </div>
+            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+              <AnimatedCounter value={kpiApprovedKycCount} />
+            </strong>
+          </motion.div>
 
-          <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Conversations / Msgs</span>
             <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">En temps réel</strong>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* 2. ACTIONS ADMINISTRATEUR */}
@@ -278,14 +354,18 @@ export default function AdminDashboard({
                 <Users className="w-3 h-3 text-emerald-400 group-hover:scale-110 transition-transform" />
                 Nouveaux utilisateurs
               </span>
-              <span className="text-xs font-mono font-black text-emerald-400">{brief.newUsersCount} (7j)</span>
+              <span className="text-xs font-mono font-black text-emerald-400">
+                <AnimatedCounter value={brief.newUsersCount || 0} /> (7j)
+              </span>
             </li>
             <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-red-500 transition-all">
               <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
                 <AlertTriangle className="w-3 h-3 text-red-500 group-hover:scale-110 transition-transform" />
                 Signalements critiques
               </span>
-              <span className="text-xs font-mono font-black text-red-500">{alerts.filter((a: any) => a.priority === 'high' || a.priority === 'critique').length}</span>
+              <span className="text-xs font-mono font-black text-red-500">
+                <AnimatedCounter value={alerts.filter((a: any) => a.priority === 'high' || a.priority === 'critique').length} />
+              </span>
             </li>
             <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-amber-500 transition-all">
               <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
@@ -293,7 +373,7 @@ export default function AdminDashboard({
                 Publications suspectes
               </span>
               <span className="text-xs font-mono font-black text-amber-500">
-                {flaggedPosts.length}
+                <AnimatedCounter value={flaggedPosts.length} />
               </span>
             </li>
             <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-[#D4AF37] transition-all">
@@ -302,7 +382,7 @@ export default function AdminDashboard({
                 Erreurs système
               </span>
               <span className="text-xs font-mono font-black text-[#D4AF37]">
-                {alerts.filter((a: any) => a.type === 'system_error').length}
+                <AnimatedCounter value={alerts.filter((a: any) => a.type === 'system_error').length} />
               </span>
             </li>
           </ul>
@@ -338,13 +418,13 @@ export default function AdminDashboard({
           <button
             onClick={() => {
               setActiveMenu("super_admin");
-              addToTerminal("👑 [SOUVERAINETÉ] Accès accordé au Palais Numérique.");
+              addToTerminal("👑 [SOUVERAINETÉ] Entrée dans le Trône demandée.");
               try { audioSynth.playTamTam(true); } catch (err) {}
             }}
             className="relative z-10 group px-8 py-4 bg-black border border-[#D4AF37] hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-display font-black text-sm uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-4 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_40px_rgba(212,175,55,0.4)] mx-auto w-full md:w-auto"
           >
             <Crown className="w-5 h-5" />
-            <span>Accéder au Palais Fondateur</span>
+            <span>👑 Entrer dans le Trône</span>
           </button>
         </div>
       )}

@@ -420,9 +420,57 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "uid", "appId"]
+    },
+    "SystemMedia": {
+      "title": "System Media Asset",
+      "description": "Dynamic multimedia assets managed by Super Founder",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique category ID" },
+        "title": { "type": "string", "description": "Display title of the media" },
+        "category": { "type": "string", "description": "The category name or section (audio, images, videos, animations, documents, promotion)" },
+        "storagePath": { "type": "string", "description": "Path in Firebase Storage" },
+        "downloadURL": { "type": "string", "description": "Public playback/view URL" },
+        "enabled": { "type": "boolean", "description": "Whether the media is active" },
+        "autoplay": { "type": "boolean", "description": "Auto-play on target screen" },
+        "loop": { "type": "boolean", "description": "Loop during playback" },
+        "volume": { "type": "number", "description": "Individual volume level (0 to 1)" },
+        "updatedAt": { "type": "string", "description": "Last updated timestamp" },
+        "updatedBy": { "type": "string", "description": "Email of the admin who updated" },
+        "fileSize": { "type": "string", "description": "Human-readable file size" },
+        "fileType": { "type": "string", "description": "Mime type or extension" },
+        "useCount": { "type": "number", "description": "Total plays or views" },
+        "resolution": { "type": "string", "description": "Image/Video resolution" },
+        "duration": { "type": "string", "description": "Audio/Video duration" },
+        "history": { "type": "array", "description": "Array of past version URLs and timestamps for rollbacks" }
+      },
+      "required": ["id", "title", "downloadURL", "enabled", "updatedAt"]
+    },
+    "MediaLog": {
+      "title": "Media Modification Log",
+      "description": "Audit trail log of all multimedia updates and actions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "mediaId": { "type": "string" },
+        "mediaTitle": { "type": "string" },
+        "action": { "type": "string" },
+        "updatedBy": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "details": { "type": "string" }
+      },
+      "required": ["id", "mediaId", "action", "updatedBy", "timestamp"]
     }
   },
   "firestore": {
+    "/system_media/{mediaId}": {
+      "schema": "SystemMedia",
+      "description": "System-wide audio and media assets dynamically controlled by the Super Founder"
+    },
+    "/media_logs/{logId}": {
+      "schema": "MediaLog",
+      "description": "Audit logs of all multimedia center activities"
+    },
     "/afri_ids/{id}": {
       "schema": "AfriId",
       "description": "AfriID security registry database"

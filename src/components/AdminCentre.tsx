@@ -25,6 +25,8 @@ const AdminRevenue = lazy(() => import("./admin/AdminRevenue"));
 const AdminSettings = lazy(() => import("./admin/AdminSettings"));
 const AdminSecurity = lazy(() => import("./admin/AdminSecurity"));
 const AdminFounderThrone = lazy(() => import("./admin/AdminFounderThrone"));
+const MultimediaCenter = lazy(() => import("./admin/MultimediaCenter"));
+import ThroneCinematicIntro from "./admin/ThroneCinematicIntro";
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
 import AuthScreen from "./AuthScreen";
@@ -929,6 +931,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     return () => unsub();
   }, [adminEmail]);
   const [isSuperWelcomeOpen, setIsSuperWelcomeOpen] = useState<boolean>(false);
+  const [showThroneCinematic, setShowThroneCinematic] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (activeMenu === "super_admin") {
+      setShowThroneCinematic(true);
+    }
+  }, [activeMenu]);
+
   const [themeMode, setThemeMode] = useState<"dark-gold" | "light-gold" | "night-navy">(() => {
     return (localStorage.getItem("gombo_theme_mode") as any) || "dark-gold";
   });
@@ -1077,6 +1087,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [sonsEnabled, setSonsEnabled] = useState<boolean>(() => localStorage.getItem("afrigombo_sounds") !== "false");
   const [showDashboardIntro, setShowDashboardIntro] = useState<boolean>(true);
   const [dashboardStep, setDashboardStep] = useState<number>(1);
+  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "media">("throne");
 
   // --- STATE FOR ACTIONS RAPIDES AND RECHERCHE UNIVERSELLE ---
   const [universalSearchTerm, setUniversalSearchTerm] = useState("");
@@ -5718,19 +5729,67 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {/* ----------------------------------------------------
-                                VIEW: CABINET SUPRÊME PRIVÉ (LE TRÔNE DU FONDATEUR)
+                                VIEW: CABINET SUPRÊME PRIVÉ (LE TRÔNE DU FONDATEUR / CENTRE MULTIMÉDIA)
                   ---------------------------------------------------- */}
               {activeMenu === "super_admin" && (
-                <Suspense fallback={<div className="p-12 text-center text-[#D4AF37] font-mono animate-pulse">Chargement du Trône...</div>}>
-                  <AdminFounderThrone
-                    founders={dynamicFounders}
-                    superAdmins={dynamicSuperAdmins}
-                    adminEmail={userEmail || ""}
-                    isAuthorizedSuperFounder={isAuthorizedSuperFounder}
-                    onUpdateThroneConfig={handleUpdateThroneConfig}
-                    audioSynth={audioSynth}
-                  />
-                </Suspense>
+                showThroneCinematic ? (
+                  <ThroneCinematicIntro onComplete={() => setShowThroneCinematic(false)} />
+                ) : (
+                  <div className="space-y-6">
+                    {/* Tab Switcher for Super Founder */}
+                    <div className="flex gap-2 pb-1 border-b border-zinc-900">
+                      <button
+                        onClick={() => {
+                          setSuperAdminTab("throne");
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        }}
+                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                          superAdminTab === "throne"
+                            ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37] font-black"
+                            : "bg-black/40 border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800"
+                        }`}
+                      >
+                        👑 Le Trône Royal
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSuperAdminTab("media");
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        }}
+                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                          superAdminTab === "media"
+                            ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37] font-black"
+                            : "bg-black/40 border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800"
+                        }`}
+                      >
+                        🎵 Centre Multimédia
+                      </button>
+                    </div>
+
+                    <Suspense fallback={<div className="p-12 text-center text-[#D4AF37] font-mono animate-pulse">Chargement de la Console...</div>}>
+                      {superAdminTab === "throne" ? (
+                        <AdminFounderThrone
+                          founders={dynamicFounders}
+                          superAdmins={dynamicSuperAdmins}
+                          adminEmail={userEmail || ""}
+                          isAuthorizedSuperFounder={isAuthorizedSuperFounder}
+                          onUpdateThroneConfig={handleUpdateThroneConfig}
+                          audioSynth={audioSynth}
+                          users={users}
+                          gombos={gombos}
+                          posts={posts}
+                          transactions={transactions}
+                          alerts={alerts}
+                        />
+                      ) : (
+                        <MultimediaCenter
+                          adminEmail={userEmail || ""}
+                          isAuthorizedSuperFounder={isAuthorizedSuperFounder}
+                        />
+                      )}
+                    </Suspense>
+                  </div>
+                )
               )}
 
               {/* ----------------------------------------------------
@@ -6585,13 +6644,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       <button
                         onClick={() => {
                           setActiveMenu("super_admin");
-                          addToTerminal("👑 [SOUVERAINETÉ] Accès demandé au Tableau de Bord Super Fondateur.");
+                          addToTerminal("👑 [SOUVERAINETÉ] Entrée dans le Trône demandée.");
                           try { audioSynth.playTamTam(true); } catch (err) {}
                         }}
                         className="group w-full max-w-sm p-4 bg-black border border-[#D4AF37]/20 hover:border-[#D4AF37] text-[#D4AF37] font-display font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-500 flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.05)] hover:shadow-[0_0_30px_rgba(212,175,55,0.2)]"
                       >
                         <Crown className="w-4 h-4 text-[#D4AF37] animate-pulse" />
-                        Accéder au Palais Numérique Suprême
+                        👑 Entrer dans le Trône
                       </button>
                     </div>
                   )}
@@ -6971,7 +7030,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               }}
               className="w-full py-3 bg-gradient-to-r from-purple-600 to-[#FF6600] text-white hover:opacity-90 font-display font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all"
             >
-              Gouverner l'Application 👑
+              👑 Entrer dans le Trône
             </button>
           </div>
         </motion.div>
@@ -7310,19 +7369,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           </button>
 
           {/* 8. TRÔNE DU FONDATEUR */}
-          <button
-            id="admin-nav-super_admin"
-            onClick={() => {
-              setActiveMenu("super_admin");
-              try { audioSynth.playValidationSuccess(); } catch (err) {}
-            }}
-            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-              activeMenu === "super_admin" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <Crown className="w-4.5 h-4.5" />
-            <span className="text-[9px] font-mono uppercase tracking-wider">Fondateur</span>
-          </button>
+          {isAuthorizedSuperFounder && (
+            <button
+              id="admin-nav-super_admin"
+              onClick={() => {
+                setActiveMenu("super_admin");
+                try { audioSynth.playValidationSuccess(); } catch (err) {}
+              }}
+              className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+                activeMenu === "super_admin" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              <Crown className="w-4.5 h-4.5" />
+              <span className="text-[9px] font-mono uppercase tracking-wider">Fondateur</span>
+            </button>
+          )}
         </div>
       )}
 

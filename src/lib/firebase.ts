@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 
 import {
-  getFirestore
+  initializeFirestore
 } from "firebase/firestore";
 
 import {
@@ -32,7 +32,9 @@ export const app = getApps().length
 
 export const auth = getAuth(app);
 
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true
+});
 
 export const storage = getStorage(app);
 

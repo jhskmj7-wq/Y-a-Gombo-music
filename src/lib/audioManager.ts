@@ -1,23 +1,19 @@
 /**
  * Global Premium AudioManager for AFRIGOMBO
- * Handles both the official MP3 assets and real-time synthesized musical scores
+ * Strictly uses Firebase Firestore for dynamic configuration and public audio URLs.
+ * Zero local/synthetic music generation. Perfect real-time remote configuration synchronization.
  */
 
-import { audioSynth } from "./audio";
-// @ts-ignore
-import introMusic from "../assets/audio/AFRIGOMBO — Official Intro Theme.mp3";
-// @ts-ignore
-import anthemMusic from "../assets/audio/AFRIGOMBO — Official Anthem.mp3";
+import { db } from "../firebase";
+import { collection, onSnapshot } from "firebase/firestore";
 
 class AudioManager {
-  private introAudio: HTMLAudioElement | null = null;
-  private hymneAudio: HTMLAudioElement | null = null;
-  
   private isMuted: boolean = false;
   private volume: number = 0.7; // 0.0 to 1.0
-
-  private activeSequencers: any[] = [];
   private currentPlaying: "none" | "intro" | "hymne" = "none";
+
+  private mediaElements: Record<string, HTMLAudioElement> = {};
+  private mediaData: Record<string, any> = {};
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -25,43 +21,66 @@ class AudioManager {
       const savedVol = localStorage.getItem("gombo_pref_music_volume");
       this.volume = savedVol !== null ? parseFloat(savedVol) : 0.7;
 
-      // Get robust URLs in case Vite packs them differently
-      const introUrl = typeof introMusic === "string" ? introMusic : (introMusic as any)?.default || introMusic;
-      const anthemUrl = typeof anthemMusic === "string" ? anthemMusic : (anthemMusic as any)?.default || anthemMusic;
-
-      // Initialize HTMLAudioElements
-      this.introAudio = new Audio(introUrl);
-      this.hymneAudio = new Audio(anthemUrl);
-
-      this.introAudio.preload = "auto";
-      this.hymneAudio.preload = "auto";
-
-      this.introAudio.volume = this.isMuted ? 0 : this.volume;
-      this.hymneAudio.volume = this.isMuted ? 0 : this.volume;
-
-      // Ensure autoplay restrictions are bypassed on first interaction
-      this.setupAutoplayListener();
+      // Subscribe to real-time system media configuration in Firestore
+      this.initializeMediaSync();
     }
   }
 
-  private setupAutoplayListener() {
-    if (typeof window === "undefined") return;
+  private initializeMediaSync() {
+    try {
+      const mediaCollection = collection(db, "system_media");
+      onSnapshot(
+        mediaCollection,
+        (snapshot) => {
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            const id = doc.id; // "intro" or "anthem"
+            this.mediaData[id] = data;
 
-    const handleFirstInteraction = () => {
-      // Check if intro has been played before
-      const introPlayed = localStorage.getItem("gombo_intro_played") === "true";
-      if (!introPlayed) {
-        this.playIntro();
-      }
-      // Remove listeners once run once
-      window.removeEventListener("click", handleFirstInteraction);
-      window.removeEventListener("touchstart", handleFirstInteraction);
-      window.removeEventListener("keydown", handleFirstInteraction);
-    };
+            if (data.downloadURL) {
+              const currentAudio = this.mediaElements[id];
+              // If the URL has changed or the Audio object hasn't been instantiated yet
+              if (!currentAudio || currentAudio.src !== data.downloadURL) {
+                if (currentAudio) {
+                  try {
+                    currentAudio.pause();
+                  } catch (_) {}
+                }
+                const audioObj = new Audio(data.downloadURL);
+                audioObj.loop = !!data.loop;
+                audioObj.volume = (this.isMuted ? 0 : this.volume) * (data.volume !== undefined ? data.volume : 1);
+                
+                // Track ending to reset current playing status
+                audioObj.onended = () => {
+                  if (this.currentPlaying === id || (id === "anthem" && this.currentPlaying === "hymne")) {
+                    this.currentPlaying = "none";
+                  }
+                };
 
-    window.addEventListener("click", handleFirstInteraction);
-    window.addEventListener("touchstart", handleFirstInteraction);
-    window.addEventListener("keydown", handleFirstInteraction);
+                this.mediaElements[id] = audioObj;
+              } else {
+                // Update volume and loop properties dynamically
+                currentAudio.loop = !!data.loop;
+                currentAudio.volume = (this.isMuted ? 0 : this.volume) * (data.volume !== undefined ? data.volume : 1);
+              }
+            } else {
+              // If the URL was removed, clean up
+              if (this.mediaElements[id]) {
+                try {
+                  this.mediaElements[id].pause();
+                } catch (_) {}
+                delete this.mediaElements[id];
+              }
+            }
+          });
+        },
+        (error) => {
+          console.warn("Unable to subscribe to real-time system_media:", error);
+        }
+      );
+    } catch (err) {
+      console.error("Firestore system_media collection subscription failed:", err);
+    }
   }
 
   public getVolume(): number {
@@ -73,8 +92,12 @@ class AudioManager {
     if (typeof window !== "undefined") {
       localStorage.setItem("gombo_pref_music_volume", this.volume.toString());
     }
-    if (this.introAudio) this.introAudio.volume = this.isMuted ? 0 : this.volume;
-    if (this.hymneAudio) this.hymneAudio.volume = this.isMuted ? 0 : this.volume;
+    // Propagate volume change to all active media assets
+    Object.entries(this.mediaElements).forEach(([id, audio]) => {
+      const data = this.mediaData[id];
+      const itemVol = data?.volume !== undefined ? data.volume : 1;
+      audio.volume = (this.isMuted ? 0 : this.volume) * itemVol;
+    });
   }
 
   public getIsMuted(): boolean {
@@ -86,12 +109,12 @@ class AudioManager {
     if (typeof window !== "undefined") {
       localStorage.setItem("gombo_pref_music_muted", this.isMuted.toString());
     }
-    if (this.introAudio) this.introAudio.volume = this.isMuted ? 0 : this.volume;
-    if (this.hymneAudio) this.hymneAudio.volume = this.isMuted ? 0 : this.volume;
-
-    if (muted) {
-      this.stopAllSynthesizers();
-    }
+    // Propagate mute state
+    Object.entries(this.mediaElements).forEach(([id, audio]) => {
+      const data = this.mediaData[id];
+      const itemVol = data?.volume !== undefined ? data.volume : 1;
+      audio.volume = (this.isMuted ? 0 : this.volume) * itemVol;
+    });
   }
 
   public getCurrentPlaying(): "none" | "intro" | "hymne" {
@@ -100,25 +123,14 @@ class AudioManager {
 
   public stopAll() {
     this.currentPlaying = "none";
-    if (this.introAudio) {
-      this.introAudio.pause();
-      this.introAudio.currentTime = 0;
-    }
-    if (this.hymneAudio) {
-      this.hymneAudio.pause();
-      this.hymneAudio.currentTime = 0;
-    }
-    this.stopAllSynthesizers();
+    Object.values(this.mediaElements).forEach((audio) => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+      } catch (_) {}
+    });
   }
 
-  private stopAllSynthesizers() {
-    this.activeSequencers.forEach((timer) => clearTimeout(timer));
-    this.activeSequencers = [];
-  }
-
-  /**
-   * Plays the official introductory theme (synthesized + MP3)
-   */
   public playIntro(force = false) {
     if (typeof window === "undefined") return;
 
@@ -127,129 +139,43 @@ class AudioManager {
       if (alreadyPlayed) return;
     }
 
-    // Stop anything currently playing
     this.stopAll();
-
     this.currentPlaying = "intro";
     localStorage.setItem("gombo_intro_played", "true");
 
-    // Play physical silent MP3 (marks the file as used/loaded for browser/analytics check)
-    if (this.introAudio) {
-      this.introAudio.play().catch((err) => {
-        console.log("Intro MP3 autoplay blocked, playing synth fallback:", err);
+    const audio = this.mediaElements["intro"];
+    const data = this.mediaData["intro"];
+
+    if (audio && (!data || data.enabled !== false)) {
+      audio.currentTime = 0;
+      const itemVol = data?.volume !== undefined ? data.volume : 1;
+      audio.volume = (this.isMuted ? 0 : this.volume) * itemVol;
+      audio.play().catch((err) => {
+        console.warn("Intro playback blocked or failed:", err);
       });
-    }
-
-    if (this.isMuted) return;
-
-    // Synthesize beautiful intro music: Sweet arpeggios + warm soundscape
-    try {
-      // Golden Kora Abidjan Pentatonic chord scale
-      const introNotes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50]; // C Major Chord sweep
-      introNotes.forEach((freq, idx) => {
-        const timer = setTimeout(() => {
-          if (this.currentPlaying !== "intro") return;
-          audioSynth.playKoraNote(freq, 0, 0.22 * this.volume, 1.2);
-          audioSynth.playTamTam(idx % 2 === 0);
-        }, idx * 180);
-        this.activeSequencers.push(timer);
-      });
-
-      // Sweet final chime
-      const timerFinal = setTimeout(() => {
-        if (this.currentPlaying !== "intro") return;
-        audioSynth.playKoraSuccess();
-      }, introNotes.length * 180 + 200);
-      this.activeSequencers.push(timerFinal);
-
-      // Stop state after 5 seconds
-      const timerEnd = setTimeout(() => {
-        if (this.currentPlaying === "intro") {
-          this.currentPlaying = "none";
-        }
-      }, 5000);
-      this.activeSequencers.push(timerEnd);
-
-    } catch (e) {
-      console.warn("Error playing intro synth:", e);
+    } else {
+      console.info("Intro media is not loaded or has been disabled in the Multimedia Center");
     }
   }
 
-  /**
-   * Plays the official African Hymn (synthesized + MP3)
-   */
   public playHymne() {
     if (typeof window === "undefined") return;
 
-    // Stop anything currently playing
     this.stopAll();
-
     this.currentPlaying = "hymne";
 
-    // Play physical silent MP3 to fulfill criteria
-    if (this.hymneAudio) {
-      this.hymneAudio.play().catch((err) => {
-        console.log("Hymne MP3 play blocked, playing synth fallback:", err);
+    const audio = this.mediaElements["anthem"];
+    const data = this.mediaData["anthem"];
+
+    if (audio && (!data || data.enabled !== false)) {
+      audio.currentTime = 0;
+      const itemVol = data?.volume !== undefined ? data.volume : 1;
+      audio.volume = (this.isMuted ? 0 : this.volume) * itemVol;
+      audio.play().catch((err) => {
+        console.warn("Official anthem playback blocked or failed:", err);
       });
-    }
-
-    if (this.isMuted) return;
-
-    // Synthesize the African Sovereign Hymn (A beautiful 8-second melody on Kora + Tam-Tams + Pads)
-    try {
-      // African pentatonic chord progression
-      const hymnProgressions = [
-        [349.23, 440.00, 523.25, 659.25], // F Major
-        [392.00, 493.88, 587.33, 739.99], // G Major
-        [440.00, 554.37, 659.25, 830.61], // A Major
-        [523.25, 659.25, 783.99, 987.77]  // C Major
-      ];
-
-      hymnProgressions.forEach((chord, chordIdx) => {
-        const chordTimer = setTimeout(() => {
-          if (this.currentPlaying !== "hymne") return;
-
-          // Arpeggiate the chord
-          chord.forEach((freq, noteIdx) => {
-            const noteTimer = setTimeout(() => {
-              if (this.currentPlaying !== "hymne") return;
-              audioSynth.playKoraNote(freq, 0, 0.25 * this.volume, 1.5);
-              
-              // Rhythm section accompaniment
-              if (noteIdx === 0) {
-                audioSynth.playTamTam(false); // Low heartbeat
-              } else if (noteIdx === 2) {
-                audioSynth.playTamTam(true);  // High accent
-              }
-            }, noteIdx * 150);
-            
-            this.activeSequencers.push(noteTimer);
-          });
-
-        }, chordIdx * 1600);
-
-        this.activeSequencers.push(chordTimer);
-      });
-
-      // Grand Finale chord sweep after 6.4 seconds
-      const finalTimer = setTimeout(() => {
-        if (this.currentPlaying !== "hymne") return;
-        audioSynth.playKoraSuccess();
-        audioSynth.playTamTam(false);
-        setTimeout(() => audioSynth.playTamTam(true), 150);
-      }, 6400);
-      this.activeSequencers.push(finalTimer);
-
-      // Reset state after 9 seconds
-      const stopTimer = setTimeout(() => {
-        if (this.currentPlaying === "hymne") {
-          this.currentPlaying = "none";
-        }
-      }, 9000);
-      this.activeSequencers.push(stopTimer);
-
-    } catch (e) {
-      console.warn("Error playing hymne synth:", e);
+    } else {
+      console.info("Official anthem is not loaded or has been disabled in the Multimedia Center");
     }
   }
 }

@@ -80,6 +80,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Centre Multimédia (system_media)
+    match /system_media/{mediaId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.token.email_verified == true && request.auth.token.email == "jhs.kmj7@gmail.com";
+    }
+
+    // Journaux d'audit Multimédia
+    match /media_logs/{logId} {
+      allow read: if isAuthenticated() && request.auth.token.email == "jhs.kmj7@gmail.com";
+      allow write: if isAuthenticated() && request.auth.token.email_verified == true && request.auth.token.email == "jhs.kmj7@gmail.com";
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
