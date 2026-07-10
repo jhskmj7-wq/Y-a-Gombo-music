@@ -156,13 +156,13 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
         const minimalProfile: any = {
           uid: uid,
-          email: userEmail || "",
           displayName: computedDisplayName || "Artiste Gombo",
-          photoURL: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-          provider: "google",
-          isProfileComplete: false,
+          photoURL: "",
+          email: userEmail || "",
+          provider: "google.com",
           createdAt: now,
-          updatedAt: now
+          role: "musicien",
+          isProfileComplete: false
         };
 
         await gomboDB.updateUserProfile(uid, minimalProfile);
@@ -288,7 +288,19 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       onSuccess();
     } catch (err: any) {
       console.error("Google SSO Failure:", err);
-      setErrorMSG("❌ Impossible de se connecter. Veuillez réessayer.");
+      let message = "Erreur Firebase.";
+      if (err.code === "auth/popup-closed-by-user" || err.message?.includes("closed-by-user")) {
+        message = "Connexion annulée.";
+      } else if (err.code === "auth/popup-blocked" || err.message?.includes("popup-blocked")) {
+        message = "Pop-up bloqué par le navigateur.";
+      } else if (err.code === "auth/network-request-failed" || err.message?.includes("network")) {
+        message = "Connexion Internet indisponible.";
+      } else if (err.code === "auth/unauthorized-domain" || err.message?.includes("unauthorized-domain")) {
+        message = "Domaine Firebase non autorisé.";
+      } else if (err.message) {
+        message = err.message;
+      }
+      setErrorMSG(message);
       setLoading(false);
     }
   };

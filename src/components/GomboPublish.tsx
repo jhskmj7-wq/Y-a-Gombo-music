@@ -88,21 +88,20 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       let uploadedImageUrl = "";
       let uploadedAudioUrl = "";
 
-      const authorName = `${currentUserProfile.firstName} ${currentUserProfile.lastName}`.trim() || "Artiste Gombo";
-      const authorPhoto = currentUserProfile.avatarUrl || "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&q=80&w=150";
+      const authorName = currentUserProfile.displayName || currentUserProfile.name || "Artiste Gombo";
+      const authorPhoto = currentUserProfile.photoURL || currentUserProfile.avatarUrl || "";
 
       // 1. Upload files if present
       if (imageFile) {
         setUploadingState(p => ({ ...p, image: true }));
         try {
           uploadedImageUrl = await gomboDB.uploadFile(
-            `posts_assets/images/${Date.now()}_${imageFile.name}`,
             imageFile,
-            (pct) => setUploadProgress(p => ({ ...p, image: Math.round(pct) }))
+            `posts_assets/images/${Date.now()}_${imageFile.name}`
           );
         } catch (err) {
-          console.warn("⚠️ Fallback link for cover image file upload due to offline simulator:", err);
-          uploadedImageUrl = "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&q=80&w=500";
+          console.error("⚠️ Cover image upload failed:", err);
+          throw new Error("Échec de l'importation de la photo de couverture. Veuillez vérifier votre connexion.");
         }
         setUploadingState(p => ({ ...p, image: false }));
       }
@@ -111,13 +110,12 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         setUploadingState(p => ({ ...p, audio: true }));
         try {
           uploadedAudioUrl = await gomboDB.uploadFile(
-            `posts_assets/audios/${Date.now()}_${audioFile.name}`,
             audioFile,
-            (pct) => setUploadProgress(p => ({ ...p, audio: Math.round(pct) }))
+            `posts_assets/audios/${Date.now()}_${audioFile.name}`
           );
         } catch (err) {
-          console.warn("⚠️ Fallback link for audio track file upload due to offline simulator:", err);
-          uploadedAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3";
+          console.error("⚠️ Audio file upload failed:", err);
+          throw new Error("Échec de l'importation de la piste audio. Veuillez vérifier votre connexion.");
         }
         setUploadingState(p => ({ ...p, audio: false }));
       }
@@ -142,8 +140,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         description: description.trim(),
         commune: commune,
         locationDetail: locationDetail.trim() || undefined,
-        imageUrl: uploadedImageUrl || (selectedType === "demo" ? "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=400" : undefined),
-        audioUrl: uploadedAudioUrl || (selectedType === "demo" ? "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" : undefined),
+        imageUrl: uploadedImageUrl || undefined,
+        audioUrl: uploadedAudioUrl || undefined,
         mediaUrl: uploadedImageUrl || uploadedAudioUrl || "",
         budget: budget ? Number(budget) : undefined,
         specialty: selectedType === "renfort" ? "Renfort Urgent" : (selectedType === "recherche" ? "Instrumentiste" : undefined),

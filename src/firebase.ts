@@ -52,7 +52,9 @@ import {
   StudioMarketItem, 
   CastingCall,
   BypassAttempt,
-  UserActivity
+  UserActivity,
+  AcademyGuide,
+  VoiceAnnouncement
 } from "./types";
 
 // Setup and determine if using Real Firebase
@@ -205,29 +207,15 @@ export const gomboAuth = {
         if (res && res.user) {
           const uDoc = await getDoc(doc(db, "users", res.user.uid));
           if (!uDoc.exists()) {
-            const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Gombo"];
             const userProfile: UserProfile = {
               uid: res.user.uid,
-              email: res.user.email || "",
-              firstName: names[0],
-              lastName: names.slice(1).join(" ") || "Ivoirien",
               displayName: res.user.displayName || "",
               photoURL: res.user.photoURL || "",
-              avatarUrl: res.user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-              phone: res.user.phoneNumber || "",
-              commune: "Cocody",
-              role: "musicien", 
+              email: res.user.email || "",
               provider: "google.com",
-              isProfileComplete: false,
-              balance: 0,
-              totalRevenue: 0,
               createdAt: new Date().toISOString(),
-              afriId: generateAfriId(),
-              ecosystemApps: {
-                afrigombo: true,
-                afritrust: false,
-                africoach: false
-              }
+              role: "musicien",
+              isProfileComplete: false
             };
             await setDoc(doc(db, "users", res.user.uid), userProfile);
           }
@@ -519,6 +507,17 @@ export const gomboDB = {
   async updateGombo(id: string, updates: Partial<Gombo>) {
     if (db) {
       await updateDoc(doc(db, "gombos", id), updates);
+    }
+  },
+
+  async updateGomboStatus(id: string, status: string, extra: any = {}) {
+    if (db) {
+      const ref = doc(db, "gombos", id);
+      await updateDoc(ref, {
+        status,
+        ...extra,
+        updatedAt: new Date().toISOString()
+      });
     }
   },
 
@@ -1043,16 +1042,73 @@ export const gomboDB = {
   async createContract(contract: Partial<GomboSafeContract>) {
     if (db) {
       const id = contract.id || this.generateContractId();
+      
+      // Calculate dynamic commission if not pre-calculated
+      let commissionClient = contract.commissionClient;
+      let commissionArtist = contract.commissionArtist;
+      let totalClientPaid = contract.totalClientPaid;
+      let totalArtistReceives = contract.totalArtistReceives;
+      let amount = contract.amount || 0;
+
+      if (amount > 0 && (commissionClient === undefined || commissionArtist === undefined)) {
+        const ratePercent = await this.getSystemCommissionRate(); // e.g. 10 for 10%
+        const totalCommission = amount * (ratePercent / 100);
+        // 50% split of the total commission
+        commissionClient = Math.round(totalCommission * 0.5);
+        commissionArtist = Math.round(totalCommission * 0.5);
+        totalClientPaid = amount + commissionClient;
+        totalArtistReceives = amount - commissionArtist;
+      }
+
+      const initialHistory = [
+        {
+          action: "Contrat généré automatiquement par AFRIGOMBO (Tiers de Confiance)",
+          timestamp: new Date().toISOString(),
+          userId: "system"
+        }
+      ];
+
       const ref = doc(db, "contracts", id);
       await setDoc(ref, {
         ...contract,
         id,
+        amount,
+        commissionClient: commissionClient || 0,
+        commissionArtist: commissionArtist || 0,
+        totalClientPaid: totalClientPaid || amount,
+        totalArtistReceives: totalArtistReceives || amount,
         status: contract.status || "generated",
+        history: initialHistory,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
       return id;
     }
+  },
+
+  async getSystemCommissionRate(): Promise<number> {
+    if (db) {
+      try {
+        const snap = await getDoc(doc(db, "configs", "commission"));
+        if (snap.exists() && typeof snap.data().rate === "number") {
+          return snap.data().rate;
+        }
+      } catch (e) {
+        console.warn("Could not fetch commission rate", e);
+      }
+    }
+    return 10; // Default fallback to 10%
+  },
+
+  async updateSystemCommissionRate(rate: number) {
+    if (db) {
+      const ref = doc(db, "configs", "commission");
+      await setDoc(ref, { rate, updatedAt: new Date().toISOString() }, { merge: true });
+    }
+  },
+
+  async getContract(id: string): Promise<GomboSafeContract | null> {
+    return this.getContractById(id);
   },
 
   async getContractById(id: string): Promise<GomboSafeContract | null> {
@@ -1061,6 +1117,78 @@ export const gomboDB = {
       if (snap.exists()) return { id: snap.id, ...snap.data() } as GomboSafeContract;
     }
     return null;
+  },
+
+  async updateContract(id: string, updates: any, userId: string, actionName?: string) {
+    if (db) {
+      const ref = doc(db, "contracts", id);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data();
+        const history = data.history || [];
+        if (actionName) {
+          history.push({
+            action: actionName,
+            timestamp: new Date().toISOString(),
+            userId: userId
+          });
+        }
+        
+        const finalUpdates = {
+          ...updates,
+          history,
+          updatedAt: new Date().toISOString()
+        };
+
+        await updateDoc(ref, finalUpdates);
+
+        // If status becomes completed, trigger certification automatically
+        if (updates.status === "completed" || finalUpdates.status === "completed") {
+          try {
+            // 1. Create a certificate doc
+            await addDoc(collection(db, "certificates"), {
+              id: `CERT-${id.substring(3)}`,
+              contractId: id,
+              title: data.title || "Prestation de Musique d'Élite",
+              artistId: data.artistId || "",
+              artistName: data.artistName || "",
+              clientId: data.clientId || "",
+              clientName: data.clientName || "",
+              amount: data.amount || 0,
+              createdAt: new Date().toISOString(),
+              status: "Mission Réussie Certifiée"
+            });
+
+            // 2. Add as a dynamic activity log
+            await addDoc(collection(db, "user_activities"), {
+              userId: data.artistId,
+              type: "certification",
+              action: "Médaille d'Or d'Élite Obtenue",
+              details: `Mission réussie : "${data.title}" (${id}). Cachet de ${data.amount?.toLocaleString()} FCFA sécurisé.`,
+              timestamp: new Date().toISOString()
+            });
+
+            await addDoc(collection(db, "user_activities"), {
+              userId: data.clientId,
+              type: "contract",
+              action: "Fin d'engagement certifiée",
+              details: `Le Gombo "${data.title}" (${id}) s'est achevé avec succès.`,
+              timestamp: new Date().toISOString()
+            });
+
+            // 3. Update the associated Gombo if available
+            if (data.gomboId) {
+              await updateDoc(doc(db, "gombos", data.gomboId), {
+                status: "mission_terminee",
+                paymentStatus: "paid"
+              });
+            }
+          } catch (certError) {
+            console.error("Error generating contract certificates/activities:", certError);
+          }
+        }
+      }
+    }
   },
 
   async getContractsForUser(userId: string): Promise<GomboSafeContract[]> {
@@ -1219,12 +1347,63 @@ export const gomboDB = {
     }
   },
 
-  async openDispute(dispute: any) {
+  async openDispute(contractIdOrDispute: any, reason?: string, userId?: string, userName?: string) {
     if (db) {
+      let disputeData: any = {};
+      if (typeof contractIdOrDispute === "string") {
+        disputeData = {
+          contractId: contractIdOrDispute,
+          reason,
+          userId,
+          userName,
+          status: "open",
+        };
+      } else {
+        disputeData = {
+          ...contractIdOrDispute,
+          status: "open"
+        };
+      }
+      
+      const contractId = disputeData.contractId;
+
+      // 1. Create a dispute document
       await addDoc(collection(db, "disputes"), {
-        ...dispute,
+        ...disputeData,
         createdAt: new Date().toISOString()
       });
+
+      // 2. Update contract status to disputed
+      if (contractId) {
+        await updateDoc(doc(db, "contracts", contractId), {
+          status: "disputed",
+          updatedAt: new Date().toISOString()
+        });
+
+        // 3. Append to contract history
+        const ref = doc(db, "contracts", contractId);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const history = snap.data().history || [];
+          history.push({
+            action: `Litige ouvert par ${disputeData.userName || "un utilisateur"} : "${disputeData.reason || "Non spécifié"}"`,
+            timestamp: new Date().toISOString(),
+            userId: disputeData.userId || "system"
+          });
+          await updateDoc(ref, { history });
+        }
+      }
+
+      // 4. Log as a critical activity
+      if (disputeData.userId) {
+        await addDoc(collection(db, "user_activities"), {
+          userId: disputeData.userId,
+          type: "litige",
+          action: "Ouverture de Litige",
+          details: `Litige signalé sur le contrat ${contractId} : "${disputeData.reason || "Non spécifié"}"`,
+          timestamp: new Date().toISOString()
+        });
+      }
     }
   }
 };

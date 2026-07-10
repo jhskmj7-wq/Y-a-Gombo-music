@@ -4,7 +4,7 @@ import {
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
   RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy,
   PenTool, UserCheck, MessageCircle, History, Headphones, HelpCircle, Video,
-  Sparkles, BarChart3
+  Sparkles, BarChart3, FileSignature, Zap
 } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { Gombo, User, Post, Renfort } from "../types";
@@ -144,6 +144,19 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
+  // Advanced real filter states matching requested criteria
+  const [filterCommune, setFilterCommune] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterMinBudget, setFilterMinBudget] = useState<number>(0);
+  const [filterMaxBudget, setFilterMaxBudget] = useState<number>(5000000);
+  const [filterDateMode, setFilterDateMode] = useState<"all" | "today" | "week" | "month">("all");
+  const [filterPremium, setFilterPremium] = useState<boolean>(false);
+  const [filterExpress, setFilterExpress] = useState<boolean>(false);
+  const [filterVerifiedOnly, setFilterVerifiedOnly] = useState<boolean>(false);
+  const [filterHasPhoto, setFilterHasPhoto] = useState<boolean>(false);
+  const [filterHasAudio, setFilterHasAudio] = useState<boolean>(false);
+
   // SWIPEABLE HORIZONTAL MODULES & TABS STATE (Requirement 2)
   const [currentSection, setCurrentSection] = useState<"home" | "reels">("home");
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -265,29 +278,37 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
   // Filter Gombos based on selections
   const GombosToRender = gombos.filter(g => {
+    // 1. Global Search Term
     const matchesSearch = !globalSearchTerm || 
       (g.title || "").toLowerCase().includes(searchStr) ||
       (g.description || "").toLowerCase().includes(searchStr) ||
       (g.location || "").toLowerCase().includes(searchStr);
 
-    let matchesCategory = true;
-    if (selectedCategory !== "all") {
-      const cat = selectedCategory.toLowerCase();
-      const txt = ((g.title || "") + " " + (g.description || "")).toLowerCase();
-      if (cat === "zouglou") matchesCategory = txt.includes("zouglou");
-      else if (cat === "coupé-décalé") matchesCategory = txt.includes("coupé") || txt.includes("décalé") || txt.includes("sheney");
-      else if (cat === "rap") matchesCategory = txt.includes("rap") || txt.includes("hip") || txt.includes("beat");
-      else if (cat === "traditionnel") matchesCategory = txt.includes("kora") || txt.includes("balafon") || txt.includes("folklore") || txt.includes("sabar");
-      else if (cat === "jazz") matchesCategory = txt.includes("jazz") || txt.includes("cabaret") || txt.includes("soul");
+    // 2. Commune/Location filter
+    let matchesCommune = true;
+    if (filterCommune !== "all") {
+      const gLoc = (g.location || g.commune || "").toLowerCase();
+      matchesCommune = gLoc.includes(filterCommune.toLowerCase());
+    } else if (selectedLocation !== "all") {
+      const gLoc = (g.location || g.commune || "").toLowerCase();
+      matchesCommune = gLoc.includes(selectedLocation.toLowerCase());
     }
 
-    let matchesLocation = true;
-    if (selectedLocation !== "all") {
-      matchesLocation = (g.location || "").toLowerCase() === selectedLocation.toLowerCase();
-    }
-
+    // 3. Type of Gombo filter
     let matchesType = true;
-    if (selectedType !== "all") {
+    if (filterType !== "all") {
+      const typeLower = filterType.toLowerCase();
+      const txt = ((g.title || "") + " " + (g.description || "")).toLowerCase();
+      if (typeLower === "concert") {
+        matchesType = txt.includes("concert") || txt.includes("gala") || txt.includes("festival") || txt.includes("show") || txt.includes("live");
+      } else if (typeLower === "studio") {
+        matchesType = txt.includes("studio") || txt.includes("enregistrement") || txt.includes("cabaret");
+      } else if (typeLower === "clip") {
+        matchesType = txt.includes("clip") || txt.includes("danse") || txt.includes("vidéo") || txt.includes("video");
+      } else if (typeLower === "renfort") {
+        matchesType = txt.includes("renfort") || g.isExpress || g.urgent;
+      }
+    } else if (selectedType !== "all") {
       const typeLower = selectedType.toLowerCase();
       const txt = ((g.title || "") + " " + (g.description || "")).toLowerCase();
       if (typeLower === "concert") matchesType = txt.includes("concert") || txt.includes("gala") || txt.includes("festival") || txt.includes("show") || txt.includes("live");
@@ -295,15 +316,86 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       else if (typeLower === "clip") matchesType = txt.includes("clip") || txt.includes("danse") || txt.includes("vidéo") || txt.includes("video");
     }
 
+    // 4. Budget filter
+    const gBudget = g.budget || 0;
+    const matchesBudget = gBudget >= filterMinBudget && gBudget <= filterMaxBudget;
+
+    // 5. Date filter
     let matchesDate = true;
-    if (selectedDateFilter !== "all") {
+    if (filterDateMode !== "all") {
+      const gDateStr = g.date || g.timestamp || "";
+      if (gDateStr) {
+        const gDate = new Date(gDateStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Difference in ms
+        const diffTime = Math.abs(today.getTime() - gDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (filterDateMode === "today") {
+          matchesDate = diffDays <= 1 || gDateStr.includes(new Date().toISOString().split("T")[0]);
+        } else if (filterDateMode === "week") {
+          matchesDate = diffDays <= 7;
+        } else if (filterDateMode === "month") {
+          matchesDate = diffDays <= 30;
+        }
+      } else {
+        matchesDate = false;
+      }
+    } else if (selectedDateFilter !== "all") {
       const df = selectedDateFilter.toLowerCase();
       const gDate = (g.date || "").toLowerCase();
       if (df === "mai 2025") matchesDate = gDate.includes("mai 2025") || gDate.includes("2025-05") || (g.timestamp && g.timestamp.includes("2025-05"));
       else if (df === "juin 2026") matchesDate = gDate.includes("juin 2026") || gDate.includes("2026-06") || (g.timestamp && g.timestamp.includes("2026-06"));
     }
 
-    return matchesSearch && matchesCategory && matchesLocation && matchesType && matchesDate;
+    // 5.5. Category filter
+    let matchesCategory = true;
+    if (filterCategory !== "all") {
+      const catLower = filterCategory.toLowerCase();
+      const gStyle = (g.style || g.category || g.musicalStyle || "").toLowerCase();
+      const txt = ((g.title || "") + " " + (g.description || "")).toLowerCase();
+      matchesCategory = gStyle.includes(catLower) || txt.includes(catLower);
+    } else if (selectedCategory !== "all") {
+      const catLower = selectedCategory.toLowerCase();
+      const gStyle = (g.style || g.category || g.musicalStyle || "").toLowerCase();
+      const txt = ((g.title || "") + " " + (g.description || "")).toLowerCase();
+      matchesCategory = gStyle.includes(catLower) || txt.includes(catLower);
+    }
+
+    // 6. Premium filter
+    let matchesPremium = true;
+    if (filterPremium) {
+      matchesPremium = g.isBoosted || g.isPremium || false;
+    }
+
+    // 7. Renfort Express filter
+    let matchesExpress = true;
+    if (filterExpress) {
+      matchesExpress = g.isExpress || g.urgent || false;
+    }
+
+    // 8. Verified Users filter
+    let matchesVerified = true;
+    if (filterVerifiedOnly) {
+      const author = users.find(u => u.id === g.userId || u.uid === g.userId);
+      matchesVerified = author?.isCertified || author?.isVerified || false;
+    }
+
+    // 9. Has Photo filter
+    let matchesPhoto = true;
+    if (filterHasPhoto) {
+      matchesPhoto = !!g.imageUrl && g.imageUrl.trim() !== "" && !g.imageUrl.includes("placeholder");
+    }
+
+    // 10. Has Audio filter
+    let matchesAudio = true;
+    if (filterHasAudio) {
+      matchesAudio = !!g.audioUrl && g.audioUrl.trim() !== "";
+    }
+
+    return matchesSearch && matchesCommune && matchesType && matchesBudget && matchesDate && matchesCategory && matchesPremium && matchesExpress && matchesVerified && matchesPhoto && matchesAudio;
   });
 
   // Spotlight carousel slides matching requested categories
@@ -356,47 +448,18 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
   const currentSlideData = spotlightSlides[currentSlide] || spotlightSlides[0];
 
-  // Raw items matching screenshot rows exactly
-  const recentOpportunitiesRaw = [
-    {
-      id: "gombo_recent_1",
-      title: "Enregistrement studio",
-      description: "Besoin d'un chanteur pour un projet en studio.",
-      location: "Yamoussoukro, Côte d'Ivoire",
-      budget: "200 000 FCFA",
-      date: "20 mai 2025",
-      imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&auto=format&fit=crop&q=80",
-      isNew: true,
-      isPremium: false
-    },
-    {
-      id: "gombo_recent_2",
-      title: "Danseurs pour clip vidéo",
-      description: "Recherche danseurs professionnels pour clip.",
-      location: "Abidjan, Côte d'Ivoire",
-      budget: "300 000 FCFA",
-      date: "19 mai 2025",
-      imageUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&auto=format&fit=crop&q=80",
-      isNew: false,
-      isPremium: true
-    }
-  ];
-
-  // Combine items
-  const allRecentItems = [
-    ...recentOpportunitiesRaw,
-    ...GombosToRender.filter(g => g.id !== "gombo_1" && g.id !== "gombo_2" && !g.id?.includes("spotlight")).map(g => ({
-      id: g.id || `gombo_${Math.random()}`,
-      title: g.title || "Prestation Musicale",
-      description: g.description || "Contrat d'artiste de grande envergure.",
-      location: `${g.location || "Abidjan"}, Côte d'Ivoire`,
-      budget: `${(g.budget || 250000).toLocaleString("fr-FR")} FCFA`,
-      date: g.date || "Immédiat",
-      imageUrl: g.imageUrl || "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&auto=format&fit=crop&q=80",
-      isNew: g.urgent || false,
-      isPremium: g.isBoosted || false
-    }))
-  ];
+  // Combine items exclusively from real Firestore data
+  const allRecentItems = GombosToRender.filter(g => !g.id?.includes("spotlight")).map(g => ({
+    id: g.id || `gombo_${Math.random()}`,
+    title: g.title || "Prestation Musicale",
+    description: g.description || "Contrat d'artiste de grande envergure.",
+    location: `${g.location || "Abidjan"}, Côte d'Ivoire`,
+    budget: `${(g.budget || 250000).toLocaleString("fr-FR")} FCFA`,
+    date: g.date || "Immédiat",
+    imageUrl: g.imageUrl || "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&auto=format&fit=crop&q=80",
+    isNew: g.urgent || false,
+    isPremium: g.isBoosted || false
+  }));
 
   const isLiked = (id: string) => likedGombos.includes(id);
   const toggleLike = (id: string) => {
@@ -435,19 +498,260 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           />
           <button
             onClick={() => {
-              setSelectedCategory("all");
-              setSelectedLocation("all");
-              setSelectedType("all");
-              setSelectedDateFilter("all");
-              setGlobalSearchTerm("");
+              setIsFiltersOpen(!isFiltersOpen);
               try { audioSynth.playTamTam(false); } catch (_) {}
             }}
-            className="text-[#D4AF37] hover:text-[#F1C40F] transition p-1"
-            title="Réinitialiser"
+            className={`transition p-1 cursor-pointer ${isFiltersOpen ? "text-[#F1C40F]" : "text-[#D4AF37] hover:text-[#F1C40F]"}`}
+            title="Filtres avancés"
           >
             <Sliders className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Real Advanced Interactive Filter Panel */}
+        {isFiltersOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-3 bg-[#0a0a0c] border border-zinc-800 rounded-2xl p-4 space-y-4 shadow-2xl z-30 relative text-left"
+          >
+            <div className="flex justify-between items-center pb-2 border-b border-zinc-900">
+              <span className="text-xs font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-1.5">
+                🎛️ Filtres de Recherche Réels
+              </span>
+              <span className="text-[10px] font-mono text-zinc-500">
+                {GombosToRender.length} Gombos trouvés
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Commune select */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Commune / Ville</label>
+                <select
+                  value={filterCommune}
+                  onChange={(e) => setFilterCommune(e.target.value)}
+                  className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                >
+                  <option value="all">Toutes les communes</option>
+                  {IVORIAN_COMMUNES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Category select */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Catégorie / Style</label>
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                >
+                  <option value="all">Toutes les catégories</option>
+                  <option value="Zouglou">Zouglou 🇨🇮</option>
+                  <option value="Coupé-Décalé">Coupé-Décalé 🔥</option>
+                  <option value="Rap">Rap / Hip-Hop 🎤</option>
+                  <option value="Traditionnel">Musique Traditionnelle 🪘</option>
+                  <option value="Jazz">Jazz & Cabaret 🎷</option>
+                </select>
+              </div>
+
+              {/* Type select */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Type de Gombo</label>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                >
+                  <option value="all">Tous les types</option>
+                  <option value="concert">🎵 Concert & Live Show</option>
+                  <option value="studio">🎙️ Studio & Cabaret</option>
+                  <option value="clip">🎥 Clip & Danse</option>
+                  <option value="renfort">🚨 Renfort Express urgent</option>
+                </select>
+              </div>
+
+              {/* Budget Min & Max */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Budget (FCFA)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={filterMinBudget || ""}
+                    onChange={(e) => setFilterMinBudget(Number(e.target.value))}
+                    className="w-1/2 bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={filterMaxBudget || ""}
+                    onChange={(e) => setFilterMaxBudget(Number(e.target.value))}
+                    className="w-1/2 bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+              </div>
+
+              {/* Date */}
+              <div className="space-y-1 col-span-1 sm:col-span-2">
+                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Date de l'événement</label>
+                <div className="flex gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setFilterDateMode("all")}
+                    className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                      filterDateMode === "all"
+                        ? "bg-[#D4AF37] border-[#D4AF37] text-black"
+                        : "bg-[#050505] border-zinc-800 text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Tout
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterDateMode("today")}
+                    className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                      filterDateMode === "today"
+                        ? "bg-[#D4AF37] border-[#D4AF37] text-black"
+                        : "bg-[#050505] border-zinc-800 text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Aujourd'hui
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterDateMode("week")}
+                    className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                      filterDateMode === "week"
+                        ? "bg-[#D4AF37] border-[#D4AF37] text-black"
+                        : "bg-[#050505] border-zinc-800 text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Cette semaine
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterDateMode("month")}
+                    className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                      filterDateMode === "month"
+                        ? "bg-[#D4AF37] border-[#D4AF37] text-black"
+                        : "bg-[#050505] border-zinc-800 text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Ce mois
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Checkboxes / Toggles row */}
+            <div className="flex flex-wrap gap-x-6 gap-y-3 pt-2">
+              {/* Premium toggle */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={filterPremium}
+                  onChange={(e) => setFilterPremium(e.target.checked)}
+                  className="rounded bg-[#050505] border-zinc-800 text-[#D4AF37] focus:ring-[#D4AF37]"
+                />
+                <span className="text-[11px] font-bold text-zinc-300">★ Uniquement Premium</span>
+              </label>
+
+              {/* Express toggle */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={filterExpress}
+                  onChange={(e) => setFilterExpress(e.target.checked)}
+                  className="rounded bg-[#050505] border-zinc-800 text-[#D4AF37] focus:ring-[#D4AF37]"
+                />
+                <span className="text-[11px] font-bold text-zinc-300">🚨 Renfort Express</span>
+              </label>
+
+              {/* Verified users only toggle */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={filterVerifiedOnly}
+                  onChange={(e) => setFilterVerifiedOnly(e.target.checked)}
+                  className="rounded bg-[#050505] border-zinc-800 text-[#D4AF37] focus:ring-[#D4AF37]"
+                />
+                <span className="text-[11px] font-bold text-zinc-300">✔ Profils d'Artistes vérifiés</span>
+              </label>
+
+              {/* With Photo toggle */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={filterHasPhoto}
+                  onChange={(e) => setFilterHasPhoto(e.target.checked)}
+                  className="rounded bg-[#050505] border-zinc-800 text-[#D4AF37] focus:ring-[#D4AF37]"
+                />
+                <span className="text-[11px] font-bold text-zinc-300">🖼️ Avec photo</span>
+              </label>
+
+              {/* With Audio toggle */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={filterHasAudio}
+                  onChange={(e) => setFilterHasAudio(e.target.checked)}
+                  className="rounded bg-[#050505] border-zinc-800 text-[#D4AF37] focus:ring-[#D4AF37]"
+                />
+                <span className="text-[11px] font-bold text-zinc-300">🔊 Avec audio</span>
+              </label>
+            </div>
+
+            {/* Close / Apply / Reset Actions */}
+            <div className="flex justify-between items-center pt-3 border-t border-zinc-900">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterCommune("all");
+                  setFilterType("all");
+                  setFilterCategory("all");
+                  setFilterMinBudget(0);
+                  setFilterMaxBudget(5000000);
+                  setFilterDateMode("all");
+                  setFilterPremium(false);
+                  setFilterExpress(false);
+                  setFilterVerifiedOnly(false);
+                  setFilterHasPhoto(false);
+                  setFilterHasAudio(false);
+                  try { audioSynth.playTamTam(false); } catch (_) {}
+                }}
+                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
+              >
+                Réinitialiser
+              </button>
+              
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsFiltersOpen(false);
+                    try { audioSynth.playTamTam(false); } catch (_) {}
+                  }}
+                  className="px-4 py-2 bg-[#050505] border border-zinc-850 hover:bg-zinc-950 text-zinc-300 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
+                >
+                  Fermer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsFiltersOpen(false);
+                    try { audioSynth.playTamTam(true); } catch (_) {}
+                  }}
+                  className="px-5 py-2 bg-[#D4AF37] hover:bg-[#F3C43F] text-black rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-md"
+                >
+                  Appliquer ({GombosToRender.length})
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Dynamic Inline Search Results Dropdown Overlay */}
         {globalSearchTerm.trim().length > 0 && (
@@ -565,13 +869,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             className="grid grid-cols-4 gap-1.5 w-full select-none"
           >
              {[
-              { id: "renfort", label: "Renfort", icon: ShieldCheck, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "publier", label: t('publier'), icon: PenTool, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "renfort", label: "Renfort", icon: ShieldCheck, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+              { id: "contrats", label: "Contrats", icon: FileSignature, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_contracts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
               { id: "messages", label: t('messages_tab'), icon: MessageCircle, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "annuaire", label: t('annuaire'), icon: Users, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_ecosystem"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "booster", label: t('booster_tab'), icon: Award, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "gombo_plus", label: "⭐ Plus", icon: Sparkles, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_plus"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } })); } catch (_) {} }) },
-              { id: "gombo_stats", label: "📊 Portfolio", icon: BarChart3, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_heritage"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'saxophone' } })); } catch (_) {} }) }
+              { id: "booster", label: "Booster", icon: Zap, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_plus"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } })); } catch (_) {} }) },
+              { id: "portfolio", label: "Portfolio", icon: BarChart3, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_heritage"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'saxophone' } })); } catch (_) {} }) },
+              { id: "plus", label: "Plus", icon: Sparkles, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_plus"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } })); } catch (_) {} }) }
             ].map(action => {
               const Icon = action.icon;
               if (action.isSoon) {
@@ -669,15 +973,16 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           {(() => {
             const expressItems = (renforts || []).filter(r => r.isExpress || r.status === "pending" || r.urgent);
-            const seedItems = [
-              { id: "seed_ref_1", title: "🚨 Pianiste recherché aujourd'hui", commune: "Abidjan", budget: 20000 },
-              { id: "seed_ref_2", title: "🚨 Beatmaker urgent", commune: "Yamoussoukro", budget: 50000 },
-              { id: "seed_ref_3", title: "🚨 Choriste urgent", commune: "Bouaké", budget: 15000 }
-            ];
             
-            const displayItems = expressItems.length > 0 ? expressItems.slice(0, 3) : seedItems;
+            if (expressItems.length === 0) {
+              return (
+                <div className="col-span-full py-4 text-center border border-zinc-900/60 rounded-xl bg-zinc-950/20">
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">🚨 Encore aucune donnée.</p>
+                </div>
+              );
+            }
             
-            return displayItems.map(item => (
+            return expressItems.slice(0, 3).map(item => (
               <motion.div
                 key={item.id}
                 whileHover={{ scale: 1.01, borderColor: "rgba(212,175,55,0.4)" }}
@@ -850,7 +1155,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <div className="space-y-3.5">
           {allRecentItems.length === 0 ? (
             <div className="p-8 text-center rounded-2xl bg-[#050505] border border-[#D4AF37]/20 text-[#D4AF37]/60 text-xs font-mono shadow-[0_2px_15px_rgba(212,175,55,0.03)]">
-              Aucun gombo récent disponible.
+              Encore aucune donnée.
             </div>
           ) : (
             allRecentItems.slice(0, 4).map((item) => (
@@ -960,37 +1265,25 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {(() => {
             const urgentItems = allRecentItems.filter(item => item.isNew || item.isPremium || item.title.toLowerCase().includes("urgent") || item.title.toLowerCase().includes("🚨"));
-            const seedUrgents = [
-              {
-                id: "seed_urg_1",
-                title: "🚨 Bassiste urgent ce soir à Zone 4",
-                description: "Remplacement lead pour un cabaret réputé. Solo requis.",
-                location: "Marcory, Côte d'Ivoire",
-                budget: "45 000 FCFA",
-                date: "Ce soir 21h",
-                imageUrl: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400"
-              },
-              {
-                id: "seed_urg_2",
-                title: "🚨 Beatmaker urgent studio session",
-                description: "Production d'un single Coupé-Décalé de haut niveau.",
-                location: "Cocody, Côte d'Ivoire",
-                budget: "120 000 FCFA",
-                date: "Aujourd'hui 14h",
-                imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"
-              }
-            ];
+            
+            if (urgentItems.length === 0) {
+              return (
+                <div className="col-span-full py-6 text-center border border-zinc-900/60 rounded-2xl bg-zinc-950/20">
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">🔥 Encore aucune donnée.</p>
+                </div>
+              );
+            }
 
-            const displayUrgents = urgentItems.length > 0 ? urgentItems.slice(0, 2) : seedUrgents;
-
-            return displayUrgents.map((item) => (
+            return urgentItems.slice(0, 2).map((item) => (
               <motion.div
                 key={item.id}
                 whileHover={{ scale: 1.01 }}
                 onClick={() => {
                   try { audioSynth.playTamTam(false); } catch(_) {}
                   const foundReal = gombos.find(g => g.id === item.id) || gombos[0];
-                  setSelectedGomboDetails(foundReal);
+                  if (foundReal) {
+                    setSelectedGomboDetails(foundReal);
+                  }
                 }}
                 className="bg-gradient-to-r from-red-950/15 to-amber-950/10 border border-red-900/40 rounded-2xl p-3.5 flex flex-col justify-between text-left cursor-pointer hover:border-red-500/50 transition-all relative overflow-hidden group"
               >
@@ -999,7 +1292,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 <div className="space-y-1.5 relative">
                   <div className="flex justify-between items-center">
                     <span className="text-[7.5px] font-black bg-red-500 text-white px-2 py-0.5 rounded-lg uppercase tracking-widest font-mono">
-                      URGENT CE SOIR
+                      URGENT
                     </span>
                     <span className="text-[10px] font-black text-[#D4AF37] font-sans">
                       {item.budget}

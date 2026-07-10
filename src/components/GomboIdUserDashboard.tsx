@@ -194,15 +194,8 @@ export default function GomboIdUserDashboard({
             
             addToTerminal(`[STORAGE] Upload réussi pour ${key} : ${storagePath}`);
           } catch (storageErr) {
-            console.error("Storage upload bypassed/interrupted, using local simulation URL", storageErr);
-            // Fallback to local simulated mock URL
-            const mockUrl = previews[key as keyof typeof previews] || `https://simulated-storage.gombo.ci/kyc/${currentUser.id}/${key}.jpg`;
-            
-            if (key === "idCard") urls.identityCardUrl = mockUrl;
-            if (key === "selfie") urls.selfieUrl = mockUrl;
-            if (key === "musicProof") urls.activityUrl = mockUrl;
-            
-            addToTerminal(`[LOCAL INTERRUPT] Stockage simulé activé pour ${key}`);
+            console.error("Storage upload failed:", storageErr);
+            throw new Error(`Échec du téléversement pour le fichier ${key}. Veuillez vérifier votre connexion et l'accès au stockage.`);
           }
         }
       }

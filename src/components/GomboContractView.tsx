@@ -68,12 +68,31 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
     }
   };
 
+  const handleDeposit = async () => {
+    if (!contract || processing) return;
+    setProcessing(true);
+    try {
+      const updates = {
+        status: "payment_held"
+      };
+      const action = "Dépôt de garantie sécurisé effectué par le client";
+      await gomboDB.updateContract(contract.id, updates, currentUser.uid!, action);
+      try { audioSynth.playValidationSuccess(); } catch(_) {}
+      await loadContract();
+      if (onUpdate) onUpdate();
+    } catch (e) {
+      console.error("Error holding payment in contract", e);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleValidation = async (isValid: boolean) => {
     if (!contract || processing) return;
     setProcessing(true);
     try {
       const updates: any = {};
-      const action = isValid ? "Validation de la mission" : "Refus de validation (Litige)";
+      const action = isValid ? "Validation de la prestation" : "Refus de validation (Litige)";
       
       if (isClient) updates.clientValidation = isValid;
       else updates.artistValidation = isValid;
@@ -375,37 +394,60 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
               <div className="space-y-6">
                 <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl flex items-start gap-4 text-center justify-center">
                   <div>
-                    <CreditCard className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
-                    <h4 className="text-white font-bold mb-1">Prêt pour le dépôt sécurisé</h4>
-                    <p className="text-zinc-500 text-[11px]">Veuillez effectuer le dépôt pour activer la garantie AFRIGOMBO.</p>
+                    <CreditCard className="w-10 h-10 text-emerald-500 mx-auto mb-3 animate-pulse" />
+                    <h4 className="text-white font-bold mb-1">Prêt pour le dépôt de garantie</h4>
+                    <p className="text-zinc-500 text-[11px]">Le contrat est signé et scellé. Veuillez effectuer le dépôt sécurisé d'un montant total de <span className="text-white font-bold font-mono">{contract.totalClientPaid?.toLocaleString()} FCFA</span> pour activer la garantie et engager la mission.</p>
                   </div>
                 </div>
                 <button 
-                  onClick={() => handleValidation(true)}
+                  onClick={handleDeposit}
                   disabled={processing}
-                  className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-emerald-600/10 active:scale-95 disabled:opacity-50"
+                  className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-emerald-600/10 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
-                  Effectuer le dépôt sécurisé
+                  {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Effectuer le dépôt sécurisé"}
                 </button>
               </div>
+            ) : contract.status === "signed" && isArtist ? (
+              <div className="p-6 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-3xl text-center space-y-3">
+                <Clock className="w-8 h-8 text-[#D4AF37] mx-auto animate-pulse" />
+                <h4 className="text-white font-bold text-xs uppercase tracking-wider">En attente du Dépôt Sécurisé</h4>
+                <p className="text-zinc-500 text-[11px] leading-relaxed max-w-md mx-auto">
+                  Le contrat est signé et scellé par les deux parties. L'organisateur doit maintenant effectuer le dépôt de garantie de <span className="text-white font-bold font-mono">{contract.totalClientPaid?.toLocaleString()} FCFA</span> pour activer la protection d'AFRIGOMBO. Ne commencez pas la mission avant cette confirmation.
+                </p>
+              </div>
             ) : contract.status === "payment_held" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button 
-                  onClick={() => handleValidation(true)}
-                  disabled={processing || (isClient && contract.clientValidation) || (isArtist && contract.artistValidation)}
-                  className="flex-1 py-5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3"
-                >
-                  <CheckCircle2 className="w-5 h-5" />
-                  {(isClient && contract.clientValidation) || (isArtist && contract.artistValidation) ? "Déjà Validé" : "Valider la prestation"}
-                </button>
-                <button 
-                  onClick={() => handleValidation(false)}
-                  disabled={processing}
-                  className="flex-1 py-5 bg-zinc-900 border border-red-500/30 text-red-500 font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3"
-                >
-                  <XCircle className="w-5 h-5" />
-                  Signaler un litige
-                </button>
+              <div className="space-y-6">
+                <div className="p-6 bg-gradient-to-r from-emerald-950/40 to-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-3xl text-center space-y-3 animate-fadeIn relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <ShieldCheck className="w-20 h-20 text-[#D4AF37]" />
+                  </div>
+                  <div className="relative z-10 space-y-2">
+                    <ShieldCheck className="w-12 h-12 text-[#D4AF37] mx-auto animate-bounce" />
+                    <h4 className="text-[#D4AF37] font-sans font-black uppercase tracking-widest text-sm">Paiement sécurisé par AFRIGOMBO</h4>
+                    <p className="text-zinc-400 text-[11px] leading-relaxed max-w-lg mx-auto">
+                      Le client a effectué le dépôt de garantie de <span className="text-white font-bold font-mono">{contract.totalClientPaid?.toLocaleString() || contract.amount?.toLocaleString()} FCFA</span>. Les fonds sont bloqués en toute sécurité et seront libérés automatiquement dès la validation finale des deux parties.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => handleValidation(true)}
+                    disabled={processing || (isClient && contract.clientValidation) || (isArtist && contract.artistValidation)}
+                    className="flex-1 py-5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                    {(isClient && contract.clientValidation) || (isArtist && contract.artistValidation) ? "Déjà Validé par vous" : "Valider la prestation"}
+                  </button>
+                  <button 
+                    onClick={() => handleValidation(false)}
+                    disabled={processing}
+                    className="flex-1 py-5 bg-zinc-900 border border-red-500/30 text-red-500 font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 cursor-pointer"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    Signaler un litige
+                  </button>
+                </div>
               </div>
             ) : contract.status === "disputed" && isAdmin ? (
               <div className="space-y-6">

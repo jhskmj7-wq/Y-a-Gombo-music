@@ -347,7 +347,7 @@ function RevenuQuickActionModal({
                 
                 // Log transaction
                 const txId = "tx_" + Date.now();
-                const demoTx: Transaction = {
+                const tx: Transaction = {
                   id: txId,
                   amount: cash,
                   type: "payout",
@@ -356,10 +356,10 @@ function RevenuQuickActionModal({
                   userArtisticName: currentUserData.artisticName,
                   timestamp: new Date().toISOString()
                 };
-                await saveToFirestore("transactions", txId, demoTx);
+                await saveToFirestore("transactions", txId, tx);
 
                 // Post local list updates
-                setTransactions([demoTx, ...transactions]);
+                setTransactions([tx, ...transactions]);
                 
                 setWithdrawAmount("");
                 setWithdrawNumber("");
@@ -403,7 +403,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   // Scroll Position Memory Engine for Independent Scroll Preservation
   const scrollPositionsRef = useRef<Record<string, number>>({});
-  const workspaceScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Mount log
   useEffect(() => {
@@ -464,16 +463,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     });
   };
 
-  useLayoutEffect(() => {
-    // Small timeout to allow the DOM elements to render and mount
-    const timer = setTimeout(() => {
-      if (workspaceScrollRef.current) {
-        const savedPos = scrollPositionsRef.current[activeMenu] || 0;
-        workspaceScrollRef.current.scrollTop = savedPos;
-      }
-    }, 30);
-    return () => clearTimeout(timer);
-  }, [activeMenu]);
   const [reelsVideoId, setReelsVideoId] = useState<string | null>(null);
   const [reelsVideoUrl, setReelsVideoUrl] = useState<string | null>(null);
   const [viewingGomboIdDetail, setViewingGomboIdDetail] = useState<boolean>(false);
@@ -518,7 +507,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [isHeaderSearchOpen, setIsHeaderSearchOpen] = useState<boolean>(false);
   const [perspective, setPerspective] = useState<"admin" | "user">("user");
   const [liveAdminTime, setLiveAdminTime] = useState<string>(new Date().toLocaleTimeString("fr-FR"));
-  const [heritageSubTab, setHeritageSubTab] = useState<"parcours" | "portfolio">("parcours");
+  const [heritageSubTab, setHeritageSubTab] = useState<"parcours" | "portfolio" | "contrats">("parcours");
   const [portfolioMediaTab, setPortfolioMediaTab] = useState<"photo" | "audio" | "video">("video");
   const [activeAudioUrl, setActiveAudioUrl] = useState<string | null>(null);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
@@ -546,42 +535,44 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         const exists = prev.some(u => u.id === targetId);
         const name = profile?.displayName || currentUser.displayName || currentUser.email?.split("@")[0] || "Artiste Gombo";
         const email = profile?.email || currentUser.email || "";
-        const avatarUrl = profile?.avatarUrl || currentUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
+        const avatarUrl = profile?.avatarUrl || currentUser.photoURL || "";
         const artisticName = profile?.artisticName || name;
         
         const mergedUser: any = {
           id: targetId,
+          uid: targetId,
           name: name,
           email: email,
           artisticName: artisticName,
+          photoURL: avatarUrl,
           avatarUrl: avatarUrl,
-          commune: profile?.commune || "Cocody",
-          isCertified: profile?.isCertified || true,
-          kycStatus: profile?.kycStatus || "approved",
-          status: "active",
-          specialties: profile?.specialties || ["Artiste", "Chanteur", "Compositeur"],
-          groups: profile?.groups || ["Afrigombo Elite Orchestra"],
+          commune: profile?.commune || "",
+          isCertified: profile?.isCertified || false,
+          kycStatus: profile?.kycStatus || "none",
+          status: profile?.status || "active",
+          specialties: profile?.specialties || [],
+          groups: profile?.groups || [],
           performance: { 
-            level: profile?.level || 4, 
-            score: profile?.score || 85, 
+            level: profile?.level || 1, 
+            score: profile?.score || 0, 
             artisticName: artisticName, 
-            commune: profile?.commune || "Cocody", 
-            specialties: profile?.specialties || ["Artiste", "Chanteur"], 
-            groups: profile?.groups || ["Afrigombo"] 
+            commune: profile?.commune || "", 
+            specialties: profile?.specialties || [], 
+            groups: profile?.groups || [] 
           },
           registrationDate: profile?.createdAt?.split("T")[0] || new Date().toISOString().split("T")[0],
-          revenues: profile?.revenues || 123510,
-          gombosCompleted: profile?.gombosCompleted || 12,
-          flagsCount: 0,
-          tracksCount: profile?.tracksCount || 8,
-          concertsCount: profile?.concertsCount || 5,
-          awardsCount: profile?.awardsCount || 3,
-          collabsCount: profile?.collabsCount || 7,
-          followersCount: profile?.followersCount || 142,
-          postsCount: profile?.postsCount || 12,
-          engagementRate: profile?.engagementRate || "12.4%",
-          supportsCount: profile?.supportsCount || 56,
-          bio: profile?.bio || "Artiste passionné. Je transforme les rythmes en héritage. Bienvenue dans mon univers."
+          revenues: profile?.revenues || 0,
+          gombosCompleted: profile?.gombosCompleted || 0,
+          flagsCount: profile?.flagsCount || 0,
+          tracksCount: profile?.tracksCount || 0,
+          concertsCount: profile?.concertsCount || 0,
+          awardsCount: profile?.awardsCount || 0,
+          collabsCount: profile?.collabsCount || 0,
+          followersCount: profile?.followersCount || 0,
+          postsCount: profile?.postsCount || 0,
+          engagementRate: profile?.engagementRate || "0%",
+          supportsCount: profile?.supportsCount || 0,
+          bio: profile?.bio || ""
         };
         
         if (exists) {
@@ -761,6 +752,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   // System parameters
   const [systemCommissionRate, setSystemCommissionRate] = useState<number>(10);
+  const [contracts, setContracts] = useState<GomboSafeContract[]>([]);
 
 
   // --- CORE APPLICATION STATES ---
@@ -882,6 +874,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     if (!currentUser || !db) return;
     // Attempt Firestore subscription & binding
     try {
+      gomboDB.getSystemCommissionRate().then((rate) => {
+        setSystemCommissionRate(rate);
+        addToTerminal(`[SYS] Taux de commission chargé : ${rate}%.`);
+      }).catch(err => {
+        console.warn("Could not fetch commission rate from db:", err);
+      });
       const qUsers = collection(db, "users");
       const unsubscribeUsers = onSnapshot(qUsers, (snapshot) => {
         const fetchedUsers: User[] = [];
@@ -980,6 +978,17 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         console.warn("🔐 Logs sync limited:", error.message);
       });
 
+      const qContracts = collection(db, "contracts");
+      const unsubscribeContracts = onSnapshot(qContracts, (snapshot) => {
+        const fetchedContracts: GomboSafeContract[] = [];
+        snapshot.forEach((docSnap) => {
+          fetchedContracts.push({ id: docSnap.id, ...docSnap.data() } as GomboSafeContract);
+        });
+        setContracts(fetchedContracts);
+      }, (error) => {
+        console.warn("🔐 Contracts sync limited:", error.message);
+      });
+
       return () => {
         unsubscribeUsers();
         unsubscribeGombos();
@@ -989,6 +998,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         unsubscribePosts();
         unsubscribeRenforts();
         unsubscribeLogs();
+        unsubscribeContracts();
       };
     } catch (e) {
       addToTerminal(`[Alerte locale] Lancement offline synchronisé.`);
@@ -1067,6 +1077,38 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       }
     }
   }, [perspective, activeMenu, currentUser, isAuthorizedAdmin, isAuthorizedSuperFounder]);
+
+  // Watertight access security rules enforcement for non-authenticated users
+  useEffect(() => {
+    const protectedMenus = [
+      "user_publish",
+      "user_mes_gombos",
+      "user_contracts",
+      "user_heritage",
+      "user_messages",
+      "user_renforts",
+      "notifications",
+      "alertes",
+      "settings",
+      "security",
+      "dashboard",
+      "users",
+      "posts",
+      "gombos",
+      "verifications",
+      "admin_finances",
+      "contracts",
+      "reports",
+      "revenue",
+      "super_admin"
+    ];
+    if (protectedMenus.includes(activeMenu) && !currentUser) {
+      console.log(`[🛡️ SECURE] Accès anonyme interdit au menu ${activeMenu}. Redirection.`);
+      setActiveMenu("user_terrain");
+      setIsAuthModalOpen(true);
+      addToTerminal(`[🛡️ SECURE] Tentative d'accès anonyme au menu ${activeMenu} bloquée.`);
+    }
+  }, [activeMenu, currentUser]);
 
   // --- AUTOMATIC BACKGROUND MODERATION ROUTINE ("PILOTAGE AUTOMATIQUE") ---
   useEffect(() => {
@@ -1702,6 +1744,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const handleUpdateCommissionRate = async (rate: number) => {
     try {
       setSystemCommissionRate(rate);
+      await gomboDB.updateSystemCommissionRate(rate);
       addToTerminal(`[FRAIS] Taux de commission de plateforme mis à jour à ${rate}%.`);
       try { audioSynth?.playValidationSuccess(); } catch (_) {}
     } catch (err) {
@@ -2386,7 +2429,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
           {/* 1. LE TERRAIN - CENTRAL HUB FEED */}
           <div 
-            ref={activeMenu === "user_terrain" ? workspaceScrollRef : null}
+            ref={(el) => {
+              if (el) {
+                const savedPos = scrollPositionsRef.current["user_terrain"] || 0;
+                if (el.scrollTop !== savedPos) {
+                  el.scrollTop = savedPos;
+                }
+              }
+            }}
             onScroll={(e) => {
               scrollPositionsRef.current["user_terrain"] = e.currentTarget.scrollTop;
             }}
@@ -2443,7 +2493,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             {activeMenu !== "user_terrain" && (
               <motion.div
                 key={activeMenu}
-                ref={workspaceScrollRef}
+                ref={(el) => {
+                  if (el) {
+                    const savedPos = scrollPositionsRef.current[activeMenu] || 0;
+                    if (el.scrollTop !== savedPos) {
+                      el.scrollTop = savedPos;
+                    }
+                  }
+                }}
                 onScroll={(e) => {
                   scrollPositionsRef.current[activeMenu] = e.currentTarget.scrollTop;
                 }}
@@ -2790,6 +2847,26 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <div className="min-w-0">
                               <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Configuration</div>
                               <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Système</span>
+                            </div>
+                          </button>
+
+                          {/* 9. Contrats Gombo */}
+                          <button
+                            onClick={() => {
+                              requireAuthThen(() => {
+                                setActiveMenu("user_contracts");
+                                addToTerminal("[ACTIONS RAPIDES] Gestionnaire de Contrats Gombo ouvert.");
+                                try { audioSynth.playValidationSuccess(); } catch (err) {}
+                              });
+                            }}
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                          >
+                            <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500 transition">
+                              <span className="text-xs">✍️</span>
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Contrats Gombo</div>
+                              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Signature</span>
                             </div>
                           </button>
                         </div>
@@ -4735,14 +4812,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       </div>
                     </div>
 
-                    {/* 2. SUB-TAB SWITCHER (Parcours vs Portfolio) */}
-                    <div className="flex bg-[#050505] p-1 border border-zinc-900 rounded-xl">
+                    {/* 2. SUB-TAB SWITCHER (Parcours vs Portfolio vs Contrats) */}
+                    <div className="flex bg-[#050505] p-1 border border-zinc-900 rounded-xl gap-1">
                       <button
                         onClick={() => {
                           setHeritageSubTab("parcours");
                           try { audioSynth.playTamTam(true); } catch (_) {}
                         }}
-                        className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all ${
+                        className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
                           heritageSubTab === "parcours"
                             ? "bg-[#D4AF37] text-black font-extrabold shadow-md"
                             : "text-zinc-400 hover:text-white"
@@ -4755,7 +4832,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           setHeritageSubTab("portfolio");
                           try { audioSynth.playTamTam(true); } catch (_) {}
                         }}
-                        className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all ${
+                        className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
                           heritageSubTab === "portfolio"
                             ? "bg-[#D4AF37] text-black font-extrabold shadow-md"
                             : "text-zinc-400 hover:text-white"
@@ -4763,10 +4840,28 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       >
                         🎨 Mon Portfolio ({mediaList.length})
                       </button>
+                      <button
+                        onClick={() => {
+                          setHeritageSubTab("contrats");
+                          try { audioSynth.playTamTam(true); } catch (_) {}
+                        }}
+                        className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                          heritageSubTab === "contrats"
+                            ? "bg-[#D4AF37] text-black font-extrabold shadow-md"
+                            : "text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        ✍️ Mes Contrats
+                      </button>
                     </div>
 
                     {/* 3. SUB-TAB CONTENT RENDERING */}
                     <div className="space-y-4 animate-fadeIn">
+                      {heritageSubTab === "contrats" && (
+                        <div className="rounded-2xl bg-[#070708] border border-zinc-900 p-5 space-y-4">
+                          <GomboContractsDashboard currentUser={profile || (currentUser as any)} />
+                        </div>
+                      )}
                       {heritageSubTab === "parcours" && (
                         <div className="rounded-2xl bg-[#070708] border border-zinc-900 p-5 space-y-4">
                           <h3 className="text-xs font-mono font-black tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
@@ -4801,6 +4896,28 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 <p className="text-[10px] text-zinc-400 leading-relaxed">Vos prestations de concert sont visibles par tous les promoteurs.</p>
                               </div>
                             </div>
+
+                            {/* Dynamically Certified Gombos (Contracts) */}
+                            {contracts
+                              .filter(c => c.status === "completed" && (c.artistId === currentArtist.id || c.artistId === currentUser?.uid))
+                              .map((c, index) => (
+                                <div key={c.id || index} className="relative animate-fadeIn">
+                                  <div className="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full border bg-[#D4AF37] border-[#D4AF37] shadow-[0_0_8px_#D4AF37]"></div>
+                                  <div className="space-y-0.5 bg-zinc-950/60 p-3 rounded-xl border border-zinc-900/80">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <h4 className="text-[11px] font-black text-white uppercase tracking-tight flex items-center gap-1">
+                                        🌟 {c.title}
+                                      </h4>
+                                      <span className="text-[7px] font-mono bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded-full uppercase font-bold tracking-widest shrink-0">CERTIFIÉ ÉLITE</span>
+                                    </div>
+                                    <p className="text-[10px] text-zinc-400 leading-relaxed italic mt-1">"{c.description}"</p>
+                                    <div className="flex items-center justify-between text-[8px] text-zinc-500 font-mono pt-1.5 border-t border-zinc-900/50 mt-1.5">
+                                      <span>ID unique: {c.id}</span>
+                                      <span className="text-white font-bold">{c.amount?.toLocaleString()} FCFA</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
                           </div>
                         </div>
                       )}
@@ -7129,23 +7246,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           >
             <Megaphone className="w-4.5 h-4.5" />
             <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Mes Gombos</span>
-          </button>
-
-          {/* 5. CONTRATS */}
-          <button
-            id="user-nav-contracts"
-            onClick={() => {
-              requireAuthThen(() => {
-                setActiveMenu("user_contracts");
-                try { audioSynth.playValidationSuccess(); } catch (err) {}
-              });
-            }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_contracts" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <FileSignature className="w-4.5 h-4.5" />
-            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Contrats</span>
           </button>
 
           {/* 6. MON HÉRITAGE */}
