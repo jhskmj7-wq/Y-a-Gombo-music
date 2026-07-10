@@ -1,4 +1,4 @@
-import { db, isFirebaseMock } from "../firebase";
+import { db } from "../firebase";
 import { 
   doc, 
   getDoc, 
@@ -62,7 +62,7 @@ export class AfriIdentityService {
     const emailStr = profile?.email || "";
     const phoneStr = profile?.phone || profile?.whatsapp || "";
 
-    if (!isFirebaseMock && db) {
+    if (db) {
       try {
         // 1. Find if already registered under this uid
         const qUid = query(collection(db, COLLECTION_NAME), where("uid", "==", uid));
@@ -141,82 +141,19 @@ export class AfriIdentityService {
 
         return newAfriId;
       } catch (e: any) {
-        console.warn("⚠️ Firestore Afri ID generation error, fallback local:", e.message);
+        console.warn("⚠️ Firestore Afri ID generation error:", e.message);
+        throw e;
       }
     }
 
-    // Local Storage Fallback
-    const localData = JSON.parse(localStorage.getItem(COLLECTION_NAME) || "{}");
-    const existing = Object.values(localData).find(
-      (item: any) => item.uid === uid || (item.email && item.email === emailStr) || (item.telephone && item.telephone === phoneStr)
-    ) as AfriIdentity | undefined;
-
-    if (existing) {
-      if (!existing.uid) {
-        existing.uid = uid;
-        localData[existing.afriId] = existing;
-        localStorage.setItem(COLLECTION_NAME, JSON.stringify(localData));
-      }
-      return existing.afriId;
-    }
-
-    const newAfriId = this.generateAfriId();
-    const mockIdentity: AfriIdentity = {
-      afriId: newAfriId,
-      uid,
-      email: emailStr,
-      telephone: phoneStr,
-      displayName: profile?.artisticName || profile?.name || "Talent Souverain",
-      avatar: profile?.avatarUrl || "",
-      coverPhoto: "",
-      bio: profile?.bio || "Artiste d'Abidjan",
-      role: "USER",
-      status: "ACTIVE",
-      subscription: {
-        level: "FREE"
-      },
-      applications: {
-        afriGombo: true,
-        afriTrust: false,
-        afriWallet: false,
-        afriMarket: false,
-        afriAcademy: false,
-        afriLivraison: false
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    localData[newAfriId] = mockIdentity;
-    localStorage.setItem(COLLECTION_NAME, JSON.stringify(localData));
-
-    // Simple Map storage
-    let afriIds = JSON.parse(localStorage.getItem("afri_ids_map") || "{}");
-    afriIds[uid] = newAfriId;
-    localStorage.setItem("afri_ids_map", JSON.stringify(afriIds));
-
-    // Security Log Local
-    const secLogs = JSON.parse(localStorage.getItem("security_logs") || "[]");
-    secLogs.push({
-      type: "CREATION_AFRIID",
-      afriId: newAfriId,
-      uid,
-      details: `Création locale de l'identité souveraine pour ${emailStr}`,
-      timestamp: new Date().toISOString()
-    });
-    localStorage.setItem("security_logs", JSON.stringify(secLogs));
-
-    return newAfriId;
+    throw new Error("Base de données indisponible");
   }
 
   /**
    * getAfriUser: Retrieves the full universal Afri identity by id
    */
   static async getAfriUser(afriId: string): Promise<AfriIdentity | null> {
-    if (isFirebaseMock || !db) {
-        const localData = JSON.parse(localStorage.getItem(COLLECTION_NAME) || "{}");
-        return localData[afriId] || null;
-    }
+    if (!db) return null;
 
     try {
         const afriDoc = await getDoc(doc(db, COLLECTION_NAME, afriId));
@@ -267,7 +204,7 @@ export class AfriIdentityService {
       createdAt: new Date().toISOString()
     };
 
-    if (!isFirebaseMock && db) {
+    if (db) {
       try {
         await setDoc(doc(db, "afri_sessions", sessionId), sessionObj);
         await addDoc(collection(db, "security_logs"), {
@@ -278,22 +215,10 @@ export class AfriIdentityService {
           timestamp: new Date().toISOString()
         });
         return sessionId;
-      } catch (_) {}
+      } catch (err) {
+        console.warn("⚠️ createAfriSession failed", err);
+      }
     }
-
-    const localSessions = JSON.parse(localStorage.getItem("afri_sessions") || "[]");
-    localSessions.push(sessionObj);
-    localStorage.setItem("afri_sessions", JSON.stringify(localSessions));
-
-    const secLogs = JSON.parse(localStorage.getItem("security_logs") || "[]");
-    secLogs.push({
-      type: "CONNEXION_SESSION",
-      afriId,
-      uid,
-      details: `Connexion locale pour AfriID ${afriId}`,
-      timestamp: new Date().toISOString()
-    });
-    localStorage.setItem("security_logs", JSON.stringify(secLogs));
 
     return sessionId;
   }
@@ -305,20 +230,12 @@ export class AfriIdentityService {
     try {
         const dataToSave = {
             ...profileData,
-            updatedAt: !isFirebaseMock && db ? serverTimestamp() : new Date().toISOString()
+            updatedAt: serverTimestamp()
         };
 
-        if (isFirebaseMock || !db) {
-            const localData = JSON.parse(localStorage.getItem(COLLECTION_NAME) || "{}");
-            localData[afriId] = { ...(localData[afriId] || {}), ...dataToSave };
-            localStorage.setItem(COLLECTION_NAME, JSON.stringify(localData));
-            
-            // Dispatch live window update event to synchronise between apps in real time
-            window.dispatchEvent(new Event("afriIdSyncChange"));
-            return;
+        if (db) {
+            await setDoc(doc(db, COLLECTION_NAME, afriId), dataToSave, { merge: true });
         }
-
-        await setDoc(doc(db, COLLECTION_NAME, afriId), dataToSave, { merge: true });
     } catch (e) {
         console.warn("⚠️ syncAfriProfile failed", e);
     }
@@ -329,25 +246,14 @@ export class AfriIdentityService {
    */
   static async linkApplication(afriId: string, appName: keyof AfriIdentity["applications"]): Promise<void> {
        try {
-          if (isFirebaseMock || !db) {
-              const localData = JSON.parse(localStorage.getItem(COLLECTION_NAME) || "{}");
-              if (localData[afriId]) {
-                  localData[afriId].applications = {
-                      ...localData[afriId].applications,
-                      [appName]: true
-                  };
-                  localData[afriId].updatedAt = new Date().toISOString();
-                  localStorage.setItem(COLLECTION_NAME, JSON.stringify(localData));
-              }
-              return;
+          if (db) {
+            await setDoc(doc(db, COLLECTION_NAME, afriId), {
+                applications: {
+                    [appName]: true
+                },
+                updatedAt: serverTimestamp()
+            }, { merge: true });
           }
-
-          await setDoc(doc(db, COLLECTION_NAME, afriId), {
-              applications: {
-                  [appName]: true
-              },
-              updatedAt: serverTimestamp()
-          }, { merge: true });
       } catch (e) {
           console.warn("⚠️ linkApplication failed", e);
       }

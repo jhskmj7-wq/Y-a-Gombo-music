@@ -462,6 +462,16 @@ export interface Conversation {
   [key: string]: any;
 }
 
+export interface UserActivity {
+  id?: string;
+  userId?: string;
+  type?: string;
+  action?: string;
+  details?: string;
+  timestamp?: string;
+  [key: string]: any;
+}
+
 export interface BypassAttempt {
   id?: string;
   userId: string;

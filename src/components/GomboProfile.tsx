@@ -336,7 +336,7 @@ export default function GomboProfile({
     setKycProgress(0);
     try {
       const path = `kyc/${currentUserProfile.uid}/${Date.now()}_identity_${file.name}`;
-      const downloadUrl = await gomboDB.uploadFile(path, file, (progress) => {
+      const downloadUrl = await gomboDB.uploadFile(file, path, (progress) => {
         setKycProgress(Math.round(progress));
       });
       
@@ -378,9 +378,8 @@ export default function GomboProfile({
       setDynamicGroupsCount(mine.length);
     });
 
-    const unsubApps = gomboDB.listenApplications((apps) => {
-      const mine = apps.filter(a => a.musicianId === currentUserProfile.uid);
-      setDynamicAppsCount(mine.length);
+    const unsubApps = gomboDB.listenUserApplications(currentUserProfile.uid, (apps) => {
+      setDynamicAppsCount(apps.length);
     });
 
     const unsubPosts = gomboDB.listenSocialPosts((posts) => {
@@ -454,7 +453,7 @@ export default function GomboProfile({
     try {
       const path = `avatars/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
       try {
-        downloadUrl = await gomboDB.uploadFile(path, file, (progress) => {
+        downloadUrl = await gomboDB.uploadFile(file, path, (progress) => {
           setUploadProgress(Math.round(progress));
         });
       } catch (uploadError) {
@@ -503,7 +502,7 @@ export default function GomboProfile({
     try {
       const path = `covers/${currentUserProfile.uid}/${Date.now()}_${file.name}`;
       try {
-        downloadUrl = await gomboDB.uploadFile(path, file, (progress) => {
+        downloadUrl = await gomboDB.uploadFile(file, path, (progress) => {
           setCoverUploadProgress(Math.round(progress));
         });
       } catch (uploadError) {
@@ -546,7 +545,7 @@ export default function GomboProfile({
       try {
         const fileExt = mediaFile.name.split('.').pop();
         const path = `portfolio/${currentUserProfile.uid}/${Date.now()}_media.${fileExt}`;
-        const downloadUrl = await gomboDB.uploadFile(path, mediaFile, (progress) => {
+        const downloadUrl = await gomboDB.uploadFile(mediaFile, path, (progress) => {
           setMediaUploadProgress(Math.round(progress));
         });
         const newItem = {
@@ -977,28 +976,28 @@ export default function GomboProfile({
           specialties: [sMainRole, ...sSecondaryRoles]
         };
         await gomboDB.updateUserProfile(currentUserProfile.uid, updates);
-        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", "Mise à jour des coordonnées et rôles du profil musical.");
+        await gomboDB.logUserActivity({ userId: currentUserProfile.uid, type: "Modifications profil", details: "Mise à jour des coordonnées et rôles du profil musical." });
         setSettingsStatusMsg("🟢 Profil musical mis à jour avec succès !");
       } else if (settingsTab === "styles") {
         await gomboDB.updateUserProfile(currentUserProfile.uid, { genres: sGenres });
-        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", `Mise à jour des styles musicaux préférés : ${sGenres.join(', ')}.`);
+        await gomboDB.logUserActivity({ userId: currentUserProfile.uid, type: "Modifications profil", details: `Mise à jour des styles musicaux préférés : ${sGenres.join(', ')}.` });
         setSettingsStatusMsg("🟢 Genres et styles musicaux enregistrés.");
       } else if (settingsTab === "collaborations") {
         await gomboDB.updateUserProfile(currentUserProfile.uid, { collaborations: sCollaborations });
-        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", `Mise à jour des préférences de collaborations : ${sCollaborations.join(', ')}.`);
+        await gomboDB.logUserActivity({ userId: currentUserProfile.uid, type: "Modifications profil", details: `Mise à jour des préférences de collaborations : ${sCollaborations.join(', ')}.` });
         setSettingsStatusMsg("🟢 Préférences de collaborations enregistrées.");
       } else if (settingsTab === "notifications") {
         setSettingsStatusMsg("🟢 Préférences de notifications SMS Showbiz enregistrées.");
-        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", "Préférence d'alerte notifications showbiz configurée.");
+        await gomboDB.logUserActivity({ userId: currentUserProfile.uid, type: "Modifications profil", details: "Préférence d'alerte notifications showbiz configurée." });
       } else if (settingsTab === "langue") {
         setSettingsStatusMsg(`🟢 Langue de navigation modifiée : [${language === 'fr' ? 'Français' : 'Anglais'}].`);
-        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", `Langue modifiée en : ${language === 'fr' ? 'Français' : 'Anglais'}.`);
+        await gomboDB.logUserActivity({ userId: currentUserProfile.uid, type: "Modifications profil", details: `Langue modifiée en : ${language === 'fr' ? 'Français' : 'Anglais'}.` });
       } else if (settingsTab === "audio") {
         setSettingsStatusMsg(`🟢 Volume de sortie réglé à ${audioVolume}%.`);
         try { audioSynth.playTamTam(true); } catch (_) {}
       } else if (settingsTab === "confidentialite") {
         await gomboDB.updateUserProfile(currentUserProfile.uid, { phoneVisibility });
-        await gomboDB.logUserActivity(currentUserProfile.uid, "Modifications profil", `Confidentialité ajustée sur option : ${phoneVisibility}.`);
+        await gomboDB.logUserActivity({ userId: currentUserProfile.uid, type: "Modifications profil", details: `Confidentialité ajustée sur option : ${phoneVisibility}.` });
         setSettingsStatusMsg(`La visibilité de vos coordonnées est désormais restreinte : [${phoneVisibility}].`);
       } else {
         setSettingsStatusMsg("Sécurité auditée avec succès.");

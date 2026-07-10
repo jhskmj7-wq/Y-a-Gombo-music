@@ -245,7 +245,42 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
         amount: targetGombo.budget
       });
 
-      alert(`Performance validée ! Les détails de contact de ${app.musicianName} sont désormais disponibles.`);
+      // --- NEW: AUTOMATIC CONTRACT GENERATION ---
+      const contractId = gomboDB.generateContractId();
+      const commissionRate = targetGombo.commissionRate || 0.10;
+      const amount = targetGombo.budget || 0;
+      const commission = amount * commissionRate;
+
+      await gomboDB.createContract({
+        id: contractId,
+        gomboId: app.gomboId,
+        clientId: currentUserProfile.uid,
+        clientName: currentUserProfile.firstName + " " + currentUserProfile.lastName,
+        artistId: app.musicianId,
+        artistName: app.musicianName,
+        title: targetGombo.title,
+        description: targetGombo.description,
+        commune: targetGombo.commune || targetGombo.location,
+        date: targetGombo.date,
+        time: targetGombo.time,
+        amount: amount,
+        commissionClient: commission,
+        totalClientPaid: amount + commission,
+        totalArtistReceives: amount,
+        status: "generated",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
+      // Update Gombo with contract link and new status
+      await gomboDB.updateGombo(app.gomboId || "", {
+        status: "artiste_selectionne",
+        selectedTalentId: app.musicianId,
+        selectedTalentName: app.musicianName,
+        contractId: contractId
+      });
+
+      alert(`✅ Performance validée ! Un contrat numérique sécurisé (${contractId}) a été automatiquement généré. Les détails sont disponibles dans votre dashboard.`);
     } catch (err) {
       console.error(err);
       alert("Une erreur est survenue lors de l'enregistrement de l'accord.");

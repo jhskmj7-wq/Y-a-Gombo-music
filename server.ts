@@ -32,7 +32,7 @@ async function startServer() {
       const base64Data = imageBase64.split(",")[1] || imageBase64;
       
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-1.5-flash",
         contents: {
           parts: [
             { text: prompt },
@@ -64,7 +64,7 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.get('*all', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

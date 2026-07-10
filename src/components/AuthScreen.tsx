@@ -129,10 +129,6 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
           console.warn("Could not log login activity:", logErr);
         }
 
-        // Save local reference for session persistence
-        localStorage.setItem("gombo_auth", JSON.stringify({ uid: uid, email: userEmail, emailVerified: true }));
-        window.dispatchEvent(new Event("gomboAuthChange"));
-        
         if (isTransferMode) {
           setTransferDone(true);
           setSuccessMSG("✅ Liaison Google établie ! Synchronisation réussie.");
@@ -178,10 +174,6 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
           console.warn("Could not log activity:", logErr);
         }
 
-        // Save local reference for session persistence
-        localStorage.setItem("gombo_auth", JSON.stringify({ uid: uid, email: userEmail, emailVerified: true }));
-        window.dispatchEvent(new Event("gomboAuthChange"));
-        
         if (isTransferMode) {
           setTransferDone(true);
           setSuccessMSG("✅ Liaison Google établie ! Synchronisation réussie.");
@@ -407,9 +399,6 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                       };
                       
                       await gomboDB.updateUserProfile(resUid, updatedProfileData);
-                      
-                      localStorage.setItem("gombo_auth", JSON.stringify({ uid: resUid, email: resEmail, emailVerified: true }));
-                      window.dispatchEvent(new Event("gomboAuthChange"));
                       
                       setSuccessMSG("✅ Connexion AfriID réussie !");
                       setShowAfriIdModal(false);

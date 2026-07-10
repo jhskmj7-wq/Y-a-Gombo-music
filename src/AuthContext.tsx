@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Lock } from "lucide-react";
-import { gomboDB, gomboAuth, isFirebaseMock } from "./firebase";
+import { gomboDB, gomboAuth } from "./firebase";
 import { auth } from "./lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { UserProfile } from "./types";
-import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   currentUser: any | null;       
@@ -28,52 +27,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isFirebaseMock && auth) {
-      console.log("Subscribing to direct firebase onAuthStateChanged");
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        console.log("USER:", firebaseUser);
-        setCurrentUser(firebaseUser || null);
+    console.log("Subscribing to gomboAuth.onAuthStateChanged");
+    const unsubscribe = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
+      console.log("AUTH STATE:", firebaseUser);
+      setCurrentUser(firebaseUser || null);
 
-        if (firebaseUser) {
-          try {
-            const uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
-            setProfile(uProfile);
-          } catch (error) {
-            console.error("Error fetching user profile in auth state change:", error);
-          }
-        } else {
-          setProfile(null);
+      if (firebaseUser) {
+        try {
+          const uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
+          setProfile(uProfile);
+        } catch (error) {
+          console.error("Error fetching user profile in auth state change:", error);
         }
+      } else {
+        setProfile(null);
+      }
 
-        setAuthLoading(false);
-      });
+      setAuthLoading(false);
+    });
 
-      return unsubscribe;
-    } else {
-      console.log("Subscribing to mock gomboAuth.onAuthStateChanged");
-      const unsub = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
-        console.log("AUTH STATE (MOCK):", firebaseUser);
-        setCurrentUser(firebaseUser || null);
-
-        if (firebaseUser) {
-          try {
-            const uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
-            setProfile(uProfile);
-          } catch (error) {
-            console.error("Error fetching user profile in auth state change:", error);
-          }
-        } else {
-          setProfile(null);
-        }
-
-        setAuthLoading(false);
-      });
-
-      return unsub;
-    }
+    return unsubscribe;
   }, []);
 
   const signIn = async (email: string, password: string) => {
