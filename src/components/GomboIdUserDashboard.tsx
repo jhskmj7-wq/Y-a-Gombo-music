@@ -35,6 +35,8 @@ export default function GomboIdUserDashboard({
   onCreateTransaction,
   addToTerminal = () => {}
 }: GomboIdUserDashboardProps) {
+  if (!currentUser) return null;
+
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<"intro" | "conditions" | "upload" | "checkout" | "submitted">("intro");
   

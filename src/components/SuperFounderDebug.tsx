@@ -4,6 +4,10 @@ import { auth } from "../lib/firebase";
 import { getRedirectResult } from "firebase/auth";
 
 export default function SuperFounderDebug() {
+  const isDebugMode = (typeof window !== "undefined" && window.location.search.includes("debug=true")) || import.meta.env.DEV;
+
+  if (!isDebugMode) return null;
+
   const { currentUser } = useAuth();
   const [redirectResult, setRedirectResult] = useState<any>(null);
   const [redirectError, setRedirectError] = useState<any>(null);
@@ -27,15 +31,8 @@ export default function SuperFounderDebug() {
     }
   }, []);
 
-  const isSuperFounder = currentUser?.email === "jhs.kmj7@gmail.com";
-  const search = typeof window !== "undefined" ? window.location.search : "";
-  const isDev = import.meta.env.DEV || (typeof process !== "undefined" && process.env?.NODE_ENV !== "production");
-  const shouldRenderAtAll = isSuperFounder || isDev || search.includes("debug=true");
-
-  if (!shouldRenderAtAll) return null;
-
   if (!isOpen) {
-    // Hidden trigger button only visible to the Super Founder (or in dev)
+    // Hidden trigger button only visible in debug/dev
     return (
       <button
         type="button"

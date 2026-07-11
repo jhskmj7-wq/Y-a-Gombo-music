@@ -33,7 +33,7 @@ import {
   arrayRemove,
   or
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { app, auth, db, storage } from "./lib/firebase";
 import { 
   UserProfile, 
@@ -1003,7 +1003,7 @@ export const gomboDB = {
   },
 
   // FILES
-  async uploadFile(fileOrPath: File | string, pathOrFile: string | File, metadata?: any): Promise<string> {
+  async uploadFile(fileOrPath: File | string, pathOrFile: string | File, callbackOrMetadata?: any): Promise<string> {
     if (storage) {
       let finalFile: File | string;
       let finalPath: string;
@@ -1018,15 +1018,56 @@ export const gomboDB = {
       }
 
       const storageRef = ref(storage, finalPath);
-      if (typeof finalFile === "string") {
-        // Handle Base64
-        const response = await fetch(finalFile);
-        const blob = await response.blob();
-        await uploadBytes(storageRef, blob, metadata);
-      } else {
-        await uploadBytes(storageRef, finalFile, metadata);
-      }
-      return await getDownloadURL(storageRef);
+      
+      return new Promise(async (resolve, reject) => {
+        try {
+          let fileToUpload: Blob | Uint8Array | ArrayBuffer;
+          if (typeof finalFile === "string") {
+            // Handle Base64
+            const response = await fetch(finalFile);
+            fileToUpload = await response.blob();
+          } else {
+            fileToUpload = finalFile;
+          }
+
+          let metadata = typeof callbackOrMetadata === "object" ? callbackOrMetadata : undefined;
+          let progressCallback = typeof callbackOrMetadata === "function" ? callbackOrMetadata : undefined;
+
+          // In case it's a legacy call with only file and path and no callback
+          if (!metadata && !progressCallback) {
+            await uploadBytes(storageRef, fileToUpload);
+            const url = await getDownloadURL(storageRef);
+            resolve(url);
+            return;
+          }
+
+          const uploadTask = uploadBytesResumable(storageRef, fileToUpload, metadata);
+          
+          uploadTask.on(
+            "state_changed",
+            (snapshot) => {
+              if (progressCallback) {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                progressCallback(progress);
+              }
+            },
+            (error) => {
+              console.error("Upload error:", error);
+              reject(error);
+            },
+            async () => {
+              try {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                resolve(downloadURL);
+              } catch (err) {
+                reject(err);
+              }
+            }
+          );
+        } catch (err) {
+          reject(err);
+        }
+      });
     }
     throw new Error("Storage non disponible");
   },
@@ -1336,12 +1377,39 @@ export const gomboDB = {
     return [];
   },
 
+  listenContractsForUser(userId: string, callback: (contracts: GomboSafeContract[]) => void) {
+    if (db) {
+      const q = query(
+        collection(db, "contracts"),
+        or(where("clientId", "==", userId), where("artistId", "==", userId))
+      );
+      return onSnapshot(q, (snap) => {
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as GomboSafeContract));
+        list.sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
+        callback(list);
+      });
+    }
+    return () => {};
+  },
+
   async getAllContracts(): Promise<GomboSafeContract[]> {
     if (db) {
       const snap = await getDocs(collection(db, "contracts"));
       return snap.docs.map(d => ({ id: d.id, ...d.data() } as GomboSafeContract));
     }
     return [];
+  },
+
+  listenAllContracts(callback: (contracts: GomboSafeContract[]) => void) {
+    if (db) {
+      const q = query(collection(db, "contracts"));
+      return onSnapshot(q, (snap) => {
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as GomboSafeContract));
+        list.sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
+        callback(list);
+      });
+    }
+    return () => {};
   },
 
   listenContract(id: string, callback: (contract: GomboSafeContract | null) => void) {
@@ -1511,6 +1579,16 @@ export const gomboDB = {
       // 1. Create a dispute document
       await addDoc(collection(db, "disputes"), {
         ...disputeData,
+        createdAt: new Date().toISOString()
+      });
+
+      // Also create a litige dossier
+      await addDoc(collection(db, "litiges"), {
+        contractId: disputeData.contractId || "",
+        openedBy: disputeData.userId || "system",
+        openedByName: disputeData.userName || "Anonyme",
+        reason: disputeData.reason || "Non spécifié",
+        status: "en_attente",
         createdAt: new Date().toISOString()
       });
 
@@ -1742,6 +1820,352 @@ export const gomboDB = {
         if (suspension.type === "temp_block" || suspension.type === "perm_block") userStatus = "suspended";
         else if (suspension.type === "restriction" || suspension.type === "warning") userStatus = "suspect";
         await updateDoc(doc(db, "users", suspension.userId), { status: userStatus });
+      }
+    }
+  },
+
+  async depositToEscrow(contractId: string, amount: number, creatorId: string, creatorName: string) {
+    if (db) {
+      const now = new Date().toISOString();
+      const commissionClient = Math.round(amount * 0.05);
+      const commissionArtist = Math.round(amount * 0.05);
+      const totalClientPaid = amount + commissionClient;
+      const totalArtistReceives = amount - commissionArtist;
+
+      // 1. Create a record in payments
+      await addDoc(collection(db, "payments"), {
+        contractId,
+        userId: creatorId,
+        userName: creatorName,
+        amount: totalClientPaid,
+        purpose: "depot_garantie_gombo",
+        provider: "mobile_money",
+        status: "Paiement reçu",
+        createdAt: now
+      });
+
+      // 2. Create a record in escrow
+      await setDoc(doc(db, "escrow", contractId), {
+        id: contractId,
+        contractId,
+        amount,
+        commissionClient,
+        commissionArtist,
+        totalLocked: totalClientPaid,
+        status: "locked",
+        createdAt: now
+      });
+
+      // 3. Create a record in transactions
+      await addDoc(collection(db, "transactions"), {
+        contractId,
+        type: "deposit",
+        amount: totalClientPaid,
+        userId: creatorId,
+        userName: creatorName,
+        description: `Dépôt de garantie séquestre de ${totalClientPaid} FCFA pour le contrat ${contractId}`,
+        createdAt: now
+      });
+
+      // 4. Update the contract
+      const contractRef = doc(db, "contracts", contractId);
+      await updateDoc(contractRef, {
+        status: "payment_held",
+        commissionClient,
+        commissionArtist,
+        totalClientPaid,
+        totalArtistReceives,
+        updatedAt: now
+      });
+
+      // 5. Append to history
+      const snap = await getDoc(contractRef);
+      if (snap.exists()) {
+        const history = snap.data().history || [];
+        history.push({
+          action: "Paiement reçu. Argent bloqué. En attente de prestation (Coffre AFRIGOMBO)",
+          timestamp: now,
+          userId: creatorId
+        });
+        await updateDoc(contractRef, { history });
+      }
+    }
+  },
+
+  async releaseEscrow(contractId: string) {
+    if (db) {
+      const now = new Date().toISOString();
+      const escrowRef = doc(db, "escrow", contractId);
+      const escrowSnap = await getDoc(escrowRef);
+      if (!escrowSnap.exists()) return;
+
+      const escrowData = escrowSnap.data();
+      const amount = escrowData.amount;
+      const totalCommission = escrowData.commissionClient + escrowData.commissionArtist;
+      const netToArtist = escrowData.amount - escrowData.commissionArtist;
+
+      // 1. Mark escrow as released
+      await updateDoc(escrowRef, {
+        status: "released",
+        releasedAt: now
+      });
+
+      // 2. Create commission record
+      await addDoc(collection(db, "commissions"), {
+        contractId,
+        amount: totalCommission,
+        rate: 10,
+        createdAt: now
+      });
+
+      // 3. Create release transaction
+      await addDoc(collection(db, "transactions"), {
+        contractId,
+        type: "release",
+        amount: netToArtist,
+        description: `Libération des fonds séquestres de ${netToArtist} FCFA pour l'artiste`,
+        createdAt: now
+      });
+
+      // 4. Update contract status to completed
+      const contractRef = doc(db, "contracts", contractId);
+      await updateDoc(contractRef, {
+        status: "completed",
+        updatedAt: now
+      });
+
+      // 5. Append to history
+      const snap = await getDoc(contractRef);
+      if (snap.exists()) {
+        const history = snap.data().history || [];
+        history.push({
+          action: "Validation finale : Fonds libérés à l'artiste (Coffre AFRIGOMBO)",
+          timestamp: now,
+          userId: "system"
+        });
+        await updateDoc(contractRef, { history });
+      }
+    }
+  },
+
+  async openContractDispute(contractId: string, reason: string, openedById: string, openedByName: string) {
+    if (db) {
+      const now = new Date().toISOString();
+
+      // 1. Create Litige dossier
+      const litigeRef = await addDoc(collection(db, "litiges"), {
+        contractId,
+        openedBy: openedById,
+        openedByName,
+        reason,
+        status: "en_attente",
+        createdAt: now
+      });
+
+      // 2. Mark escrow as disputed
+      await updateDoc(doc(db, "escrow", contractId), {
+        status: "disputed"
+      });
+
+      // 3. Update contract status to disputed
+      const contractRef = doc(db, "contracts", contractId);
+      await updateDoc(contractRef, {
+        status: "disputed",
+        updatedAt: now
+      });
+
+      // 4. Append to history
+      const snap = await getDoc(contractRef);
+      if (snap.exists()) {
+        const history = snap.data().history || [];
+        history.push({
+          action: `Litige ouvert par ${openedByName} : "${reason}" - Fonds bloqués dans le Coffre-fort`,
+          timestamp: now,
+          userId: openedById
+        });
+        await updateDoc(contractRef, { history });
+      }
+
+      return litigeRef.id;
+    }
+  },
+
+  async resolveDispute(litigeId: string, resolution: "release_to_artist" | "refund_to_creator", adminId: string) {
+    if (db) {
+      const now = new Date().toISOString();
+      const litigeRef = doc(db, "litiges", litigeId);
+      const litigeSnap = await getDoc(litigeRef);
+      if (!litigeSnap.exists()) return;
+
+      const litigeData = litigeSnap.data();
+      const contractId = litigeData.contractId;
+
+      const escrowRef = doc(db, "escrow", contractId);
+      const escrowSnap = await getDoc(escrowRef);
+      if (!escrowSnap.exists()) return;
+
+      const escrowData = escrowSnap.data();
+      const amount = escrowData.amount;
+      const totalCommission = escrowData.commissionClient + escrowData.commissionArtist;
+      const netToArtist = escrowData.amount - escrowData.commissionArtist;
+
+      if (resolution === "release_to_artist") {
+        // Option A: release to artist
+        await updateDoc(escrowRef, {
+          status: "released",
+          releasedAt: now
+        });
+
+        await addDoc(collection(db, "commissions"), {
+          contractId,
+          amount: totalCommission,
+          rate: 10,
+          createdAt: now
+        });
+
+        await addDoc(collection(db, "transactions"), {
+          contractId,
+          type: "release",
+          amount: netToArtist,
+          description: `Arbitrage Admin : Libération des fonds de ${netToArtist} FCFA à l'artiste`,
+          createdAt: now
+        });
+
+        const contractRef = doc(db, "contracts", contractId);
+        await updateDoc(contractRef, {
+          status: "completed",
+          updatedAt: now
+        });
+
+        // Update contract history
+        const snap = await getDoc(contractRef);
+        if (snap.exists()) {
+          const history = snap.data().history || [];
+          history.push({
+            action: `Litige résolu par l'Administrateur : Fonds libérés à l'artiste`,
+            timestamp: now,
+            userId: adminId
+          });
+          await updateDoc(contractRef, { history });
+        }
+      } else {
+        // Option B: refund to creator
+        await updateDoc(escrowRef, {
+          status: "refunded",
+          releasedAt: now
+        });
+
+        await addDoc(collection(db, "transactions"), {
+          contractId,
+          type: "refund",
+          amount: escrowData.totalLocked,
+          description: `Arbitrage Admin : Remboursement des fonds de ${escrowData.totalLocked} FCFA au créateur`,
+          createdAt: now
+        });
+
+        const contractRef = doc(db, "contracts", contractId);
+        await updateDoc(contractRef, {
+          status: "cancelled",
+          updatedAt: now
+        });
+
+        // Update contract history
+        const snap = await getDoc(contractRef);
+        if (snap.exists()) {
+          const history = snap.data().history || [];
+          history.push({
+            action: `Litige résolu par l'Administrateur : Fonds remboursés à l'annonceur`,
+            timestamp: now,
+            userId: adminId
+          });
+          await updateDoc(contractRef, { history });
+        }
+      }
+
+      await updateDoc(litigeRef, {
+        status: "resolu",
+        resolution,
+        resolvedAt: now,
+        adminNotes: `Arbitré par l'administrateur ${adminId}`
+      });
+    }
+  },
+
+  listenLitiges(callback: (litiges: any[]) => void) {
+    if (db) {
+      const q = query(collection(db, "litiges"), orderBy("createdAt", "desc"));
+      return onSnapshot(q, (snapshot) => {
+        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    }
+    return () => {};
+  },
+
+  listenEscrow(callback: (escrows: any[]) => void) {
+    if (db) {
+      return onSnapshot(collection(db, "escrow"), (snapshot) => {
+        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    }
+    return () => {};
+  },
+
+  listenWithdrawals(callback: (withdrawals: any[]) => void) {
+    if (db) {
+      const q = query(collection(db, "withdrawals"), orderBy("createdAt", "desc"));
+      return onSnapshot(q, (snapshot) => {
+        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    }
+    return () => {};
+  },
+
+  async requestWithdrawal(userId: string, userName: string, amount: number, provider: string, phone: string) {
+    if (db) {
+      const now = new Date().toISOString();
+      await addDoc(collection(db, "withdrawals"), {
+        userId,
+        userName,
+        amount,
+        mobileMoneyProvider: provider,
+        mobileMoneyNumber: phone,
+        status: "pending",
+        createdAt: now
+      });
+
+      await addDoc(collection(db, "transactions"), {
+        type: "withdraw_request",
+        amount,
+        userId,
+        userName,
+        description: `Demande de retrait de ${amount} FCFA vers ${provider} (${phone})`,
+        createdAt: now
+      });
+    }
+  },
+
+  async processWithdrawal(withdrawalId: string, status: "approved" | "rejected") {
+    if (db) {
+      const now = new Date().toISOString();
+      const ref = doc(db, "withdrawals", withdrawalId);
+      await updateDoc(ref, {
+        status,
+        processedAt: now
+      });
+
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data();
+        await addDoc(collection(db, "transactions"), {
+          type: status === "approved" ? "withdraw_approved" : "withdraw_rejected",
+          amount: data.amount,
+          userId: data.userId,
+          userName: data.userName,
+          description: status === "approved" 
+            ? `Retrait approuvé de ${data.amount} FCFA` 
+            : `Retrait rejeté de ${data.amount} FCFA`,
+          createdAt: now
+        });
       }
     }
   }

@@ -648,51 +648,109 @@ export default function AdminFounderThrone({
       opacity: 1,
       scale: 1,
       transition: {
-        staggerChildren: 0.08,
-        duration: 0.4,
+        staggerChildren: 0.05,
+        duration: 0.3,
         ease: "easeOut"
       }
     }
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      scale: 1, 
+      transition: { duration: 0.25, ease: "easeOut" } 
+    },
     hover: {
       scale: 1.03,
       borderColor: "#D4AF37",
-      boxShadow: "0 0 35px rgba(212, 175, 55, 0.2)",
-      transition: { duration: 0.3 }
+      boxShadow: "0 0 25px rgba(212, 175, 55, 0.35), inset 0 0 10px rgba(212, 175, 55, 0.1)",
+      transition: { duration: 0.2 }
     }
   };
 
   return (
     <div className="space-y-8 text-left pb-28 font-sans text-zinc-100 select-none bg-black/40 min-h-screen">
       
+      {/* Dynamic Keyframes Injector */}
+      <style>{`
+        @keyframes goldSweep {
+          0% { transform: translateX(-100%) skewX(-15deg); }
+          50% { transform: translateX(100%) skewX(-15deg); }
+          100% { transform: translateX(100%) skewX(-15deg); }
+        }
+        @keyframes goldDustUp {
+          0% { transform: translateY(110%) scale(0.6); opacity: 0; }
+          30% { opacity: 0.7; }
+          70% { opacity: 0.7; }
+          100% { transform: translateY(-110%) scale(1.3); opacity: 0; }
+        }
+        .animate-goldSweep {
+          animation: goldSweep 12s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+      `}</style>
+
       {/* ----------------------------------------------------
-           TEMPLE HEADER
+           PREMIUM TRÔNE DU FONDATEUR HEADER
            ---------------------------------------------------- */}
-      <div className="border-b border-[#D4AF37]/25 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-3.5">
-          <span className="p-3 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
-            <Crown className="w-6 h-6 text-[#D4AF37] animate-pulse" />
-          </span>
-          <div>
-            <h2 className="text-sm font-display font-black uppercase tracking-[0.25em] text-[#D4AF37] flex items-center gap-2">
-              LE TRÔNE DU FONDATEUR SUPRÊME
-            </h2>
-            <p className="text-[10px] font-mono tracking-wider text-zinc-400 uppercase mt-1 flex items-center gap-1.5">
-              👑 AFRIGOMBO ELITE — CENTRE DE COMMANDE DE L'EMPIRE GLOBAL
-            </p>
-          </div>
+      <div className="relative overflow-hidden rounded-3xl bg-[#020202] border border-[#D4AF37]/30 p-6 md:p-8 shadow-[0_12px_45px_rgba(212,175,55,0.15)]">
+        
+        {/* Golden glow halo */}
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-80 h-80 rounded-full bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-60 h-60 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
+
+        {/* Slow moving light beam */}
+        <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-[#D4AF37]/8 to-transparent animate-goldSweep pointer-events-none" />
+
+        {/* Rising Gold Dust Particles */}
+        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+          {Array.from({ length: 15 }).map((_, idx) => {
+            const randomX = Math.random() * 100;
+            const randomDelay = Math.random() * 8;
+            const randomDur = Math.random() * 6 + 6;
+            const randomSize = Math.random() * 3 + 1.5;
+            return (
+              <div
+                key={idx}
+                className="absolute rounded-full bg-[#D4AF37]/50"
+                style={{
+                  width: `${randomSize}px`,
+                  height: `${randomSize}px`,
+                  left: `${randomX}%`,
+                  bottom: "0px",
+                  opacity: 0,
+                  animation: `goldDustUp ${randomDur}s linear infinite`,
+                  animationDelay: `${randomDelay}s`
+                }}
+              />
+            );
+          })}
         </div>
 
-        {/* Real Sovereign Badge */}
-        <div className="flex items-center gap-3 bg-[#050505] border border-[#D4AF37]/35 rounded-2xl px-4 py-3 text-xs shadow-[0_0_20px_rgba(212,175,55,0.12)]">
-          <span className="w-2.5 h-2.5 bg-[#D4AF37] rounded-full animate-ping" />
-          <span className="font-mono text-[10px] uppercase font-bold text-[#D4AF37] tracking-wider">
-            SOUVERAIN UNIQUE : {adminEmail}
-          </span>
+        {/* Header content */}
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex items-center gap-4">
+            <span className="p-4 rounded-2xl bg-gradient-to-b from-[#D4AF37]/20 to-black border border-[#D4AF37]/45 shadow-[0_0_25px_rgba(212,175,55,0.3)] shrink-0">
+              <Crown className="w-8 h-8 text-[#D4AF37] animate-pulse" />
+            </span>
+            <div>
+              <h2 className="text-xl md:text-2xl font-display font-black uppercase tracking-[0.18em] text-[#D4AF37] flex items-center gap-2">
+                👑 TRÔNE DU FONDATEUR
+              </h2>
+              <p className="text-xs font-mono tracking-wider text-zinc-300 uppercase mt-1 flex items-center gap-1.5">
+                Le Temple du Gombo reconnaît son Gardien.
+              </p>
+            </div>
+          </div>
+
+          {/* Unique Guardian Badge */}
+          <div className="flex items-center gap-3 bg-black/80 border border-[#D4AF37]/35 rounded-2xl px-4 py-3 text-xs shadow-[0_0_20px_rgba(212,175,55,0.12)] shrink-0 self-stretch md:self-auto justify-center">
+            <span className="w-2.5 h-2.5 bg-[#D4AF37] rounded-full animate-ping shrink-0" />
+            <span className="font-mono text-[10px] uppercase font-bold text-[#D4AF37] tracking-wider">
+              GARDIEN : {adminEmail}
+            </span>
+          </div>
         </div>
       </div>
 

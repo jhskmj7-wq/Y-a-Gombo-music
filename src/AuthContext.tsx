@@ -35,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (firebaseUser) {
         setAuthLoading(true);
-        setCurrentUser(firebaseUser);
         try {
           let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
           
@@ -50,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               displayName: firebaseUser.displayName || "",
               photoURL: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
               avatarUrl: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-              role: "musicien",
+              role: "user",
               provider: firebaseUser.providerData?.[0]?.providerId || "google.com",
               isProfileComplete: false,
               balance: 0,
@@ -66,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           console.log("currentUserProfile:", uProfile);
           setProfile(uProfile);
+          setCurrentUser(firebaseUser);
         } catch (error) {
           console.error("Error fetching/creating user profile in auth state change:", error);
         }

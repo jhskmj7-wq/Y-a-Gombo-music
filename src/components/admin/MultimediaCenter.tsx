@@ -110,7 +110,13 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
   const [sortBy, setSortBy] = useState<string>("updatedAt_desc");
 
   // Upload/Progress States
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  type UploadState = "waiting" | "uploading" | "success" | "error";
+  interface UploadStatus {
+    progress: number;
+    state: UploadState;
+    error?: string;
+  }
+  const [uploadStatuses, setUploadStatuses] = useState<Record<string, UploadStatus>>({});
   const [uploadingId, setUploadingId] = useState<string | null>(null);
 
   // Edit / Form states
@@ -197,7 +203,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
   useEffect(() => {
     // 1. Listen to system media assets
     const unsubMedia = onSnapshot(
-      collection(db, "system_media"),
+      collection(db, "media"),
       (snapshot) => {
         const assets: Record<string, MediaAsset> = {};
         snapshot.forEach((doc) => {
@@ -284,25 +290,36 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       useCount: (asset.useCount || 0) + 1,
       lastPlayed: new Date().toISOString()
     };
-
     try {
-      await setDoc(doc(db, "system_media", id), updated);
+      await setDoc(doc(db, "media", id), updated);
     } catch (_) {}
   };
 
   // Handle uploading files safely with history saving
   const handleFileUpload = async (id: string, file: File, sectionName: string) => {
     if (!isAuthorizedSuperFounder) return;
+
     setUploadingId(id);
-    setUploadProgress((prev) => ({ ...prev, [id]: 1 }));
+    setUploadStatuses((prev) => ({
+      ...prev,
+      [id]: { progress: 0, state: "waiting" }
+    }));
 
     const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, "_");
     const storagePath = `media/${id}/${Date.now()}_${cleanName}`;
     const formattedSize = formatBytes(file.size);
 
     try {
+      setUploadStatuses((prev) => ({
+        ...prev,
+        [id]: { progress: 1, state: "uploading" }
+      }));
+
       const downloadURL = await gomboDB.uploadFile(storagePath, file, (progress) => {
-        setUploadProgress((prev) => ({ ...prev, [id]: Math.max(1, Math.round(progress)) }));
+        setUploadStatuses((prev) => ({
+          ...prev,
+          [id]: { progress: Math.max(1, Math.round(progress)), state: "uploading" }
+        }));
       });
 
       if (downloadURL) {
@@ -342,24 +359,35 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           history: historyList.slice(0, 10) // store up to last 10 versions for safety
         };
 
-        await setDoc(doc(db, "system_media", id), newAsset);
+        await setDoc(doc(db, "media", id), newAsset);
         await logAudit(
           id,
           newAsset.title,
           "Mise en ligne",
           `Nouveau fichier téléversé de type ${file.type} (${formattedSize})`
         );
+        
+        setUploadStatuses((prev) => ({
+          ...prev,
+          [id]: { progress: 100, state: "success" }
+        }));
+
+        setTimeout(() => {
+          setUploadStatuses((prev) => {
+            const copy = { ...prev };
+            delete copy[id];
+            return copy;
+          });
+        }, 3000);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload process failed:", error);
-      alert("Erreur lors de l'envoi du fichier.");
+      setUploadStatuses((prev) => ({
+        ...prev,
+        [id]: { progress: 0, state: "error", error: error.message || "Erreur de téléversement" }
+      }));
     } finally {
-      setUploadingId(null);
-      setUploadProgress((prev) => {
-        const copy = { ...prev };
-        delete copy[id];
-        return copy;
-      });
+      if (uploadingId === id) setUploadingId(null);
     }
   };
 
@@ -398,7 +426,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     };
 
     try {
-      await setDoc(doc(db, "system_media", id), rolledBackAsset);
+      await setDoc(doc(db, "media", id), rolledBackAsset);
       await logAudit(
         id,
         rolledBackAsset.title,
@@ -431,7 +459,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     };
 
     try {
-      await setDoc(doc(db, "system_media", editingAsset.id), updated);
+      await setDoc(doc(db, "media", editingAsset.id), updated);
       await logAudit(
         editingAsset.id,
         editTitle,
@@ -458,7 +486,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     };
 
     try {
-      await setDoc(doc(db, "system_media", id), updated);
+      await setDoc(doc(db, "media", id), updated);
       await logAudit(
         id,
         asset.title,
@@ -484,7 +512,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         setActivePreviewId(null);
       }
 
-      await deleteDoc(doc(db, "system_media", id));
+      await deleteDoc(doc(db, "media", id));
       await logAudit(
         id,
         asset.title,
@@ -825,8 +853,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {AUDIO_SPOTS.map((spot) => {
               const asset = mediaAssets[spot.id];
-              const isUploading = uploadingId === spot.id;
-              const progress = uploadProgress[spot.id] || 0;
+              const status = uploadStatuses[spot.id];
+              const isUploading = status?.state === 'uploading' || status?.state === 'waiting';
+              const progress = status?.progress || 0;
+              const hasError = status?.state === 'error';
+              const errorMessage = status?.error;
               const isEditing = editingAsset?.id === spot.id;
               const isPlaying = activePreviewId === spot.id;
 
@@ -1094,8 +1125,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {IMAGE_SPOTS.map((spot) => {
               const asset = mediaAssets[spot.id];
-              const isUploading = uploadingId === spot.id;
-              const progress = uploadProgress[spot.id] || 0;
+              const status = uploadStatuses[spot.id];
+              const isUploading = status?.state === 'uploading' || status?.state === 'waiting';
+              const progress = status?.progress || 0;
+              const hasError = status?.state === 'error';
+              const errorMessage = status?.error;
 
               return (
                 <div key={spot.id} className="p-4 bg-[#050505] border border-zinc-900 rounded-xl space-y-4 flex flex-col justify-between relative overflow-hidden group">
@@ -1152,6 +1186,21 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                           <Loader2 className="w-5 h-5 text-[#D4AF37] animate-spin mx-auto" />
                           <span className="text-[9px] font-mono text-zinc-550">Upload: {progress}%</span>
                         </div>
+                      ) : hasError ? (
+                        <div className="space-y-2">
+                          <span className="text-[10px] text-red-500 block">{errorMessage}</span>
+                          <label className="inline-flex px-3 py-1.5 bg-red-950/20 text-red-400 font-bold uppercase text-[9px] rounded-lg cursor-pointer transition-all border border-red-950/30 hover:bg-red-950/40">
+                            Réessayer
+                            <input
+                              type="file"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload(spot.id, file, "media");
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
                       ) : (
                         <label className="inline-flex px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-[#D4AF37]/40 font-bold uppercase text-[9px] rounded-lg cursor-pointer transition-all">
                           <UploadCloud className="w-3.5 h-3.5 mr-1" /> Uploader
@@ -1192,8 +1241,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {VIDEO_SPOTS.map((spot) => {
               const asset = mediaAssets[spot.id];
-              const isUploading = uploadingId === spot.id;
-              const progress = uploadProgress[spot.id] || 0;
+              const status = uploadStatuses[spot.id];
+              const isUploading = status?.state === 'uploading' || status?.state === 'waiting';
+              const progress = status?.progress || 0;
+              const hasError = status?.state === 'error';
+              const errorMessage = status?.error;
               const isEditing = editingAsset?.id === spot.id;
 
               return (
@@ -1281,6 +1333,21 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                         <div className="space-y-1">
                           <Loader2 className="w-5 h-5 text-[#D4AF37] animate-spin mx-auto" />
                           <span className="text-[9px] font-mono text-zinc-550">Upload: {progress}%</span>
+                        </div>
+                      ) : hasError ? (
+                        <div className="space-y-2">
+                          <span className="text-[10px] text-red-500 block">{errorMessage}</span>
+                          <label className="inline-flex px-3 py-1.5 bg-red-950/20 text-red-400 font-bold uppercase text-[9px] rounded-lg cursor-pointer transition-all border border-red-950/30 hover:bg-red-950/40">
+                            Réessayer
+                            <input
+                              type="file"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload(spot.id, file, "media");
+                              }}
+                              className="hidden"
+                            />
+                          </label>
                         </div>
                       ) : (
                         <label className="inline-flex px-3 py-1.5 bg-[#D4AF37] text-black font-black uppercase text-[9.5px] rounded-lg cursor-pointer transition-all">
@@ -1520,8 +1587,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PROMOTION_SPOTS.map((spot) => {
               const asset = mediaAssets[spot.id];
-              const isUploading = uploadingId === spot.id;
-              const progress = uploadProgress[spot.id] || 0;
+              const status = uploadStatuses[spot.id];
+              const isUploading = status?.state === 'uploading' || status?.state === 'waiting';
+              const progress = status?.progress || 0;
+              const hasError = status?.state === 'error';
+              const errorMessage = status?.error;
 
               return (
                 <div key={spot.id} className="p-4 bg-[#050505] border border-zinc-900 rounded-xl flex flex-col justify-between space-y-3 relative overflow-hidden group">
@@ -1568,6 +1638,21 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                         <div className="space-y-1">
                           <Loader2 className="w-4 h-4 text-[#D4AF37] animate-spin mx-auto" />
                           <span className="text-[9px] font-mono text-zinc-550">Upload: {progress}%</span>
+                        </div>
+                      ) : hasError ? (
+                        <div className="space-y-2">
+                          <span className="text-[10px] text-red-500 block">{errorMessage}</span>
+                          <label className="inline-flex px-3 py-1.5 bg-red-950/20 text-red-400 font-bold uppercase text-[9px] rounded-lg cursor-pointer transition-all border border-red-950/30 hover:bg-red-950/40">
+                            Réessayer
+                            <input
+                              type="file"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload(spot.id, file, "media");
+                              }}
+                              className="hidden"
+                            />
+                          </label>
                         </div>
                       ) : (
                         <label className="inline-flex px-3 py-1.5 bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 hover:bg-[#D4AF37]/30 font-bold uppercase text-[9px] rounded-lg cursor-pointer transition-all">

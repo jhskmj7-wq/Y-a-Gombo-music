@@ -553,7 +553,7 @@ export interface GomboSafeContract {
   commissionArtist?: number;
   totalClientPaid?: number;
   totalArtistReceives?: number;
-  status: "generated" | "accepted_client" | "accepted_artist" | "signed" | "payment_held" | "completed" | "disputed" | "archived" | "cancelled" | "en_attente" | "accepte" | "termine";
+  status: "generated" | "accepted_client" | "accepted_artist" | "signed" | "payment_held" | "completed" | "disputed" | "archived" | "cancelled" | "en_attente" | "accepte" | "termine" | "arrived" | "in_progress" | "completed_artist";
   clientSignedAt?: string;
   artistSignedAt?: string;
   clientValidation?: boolean;

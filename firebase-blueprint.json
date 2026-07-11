@@ -460,6 +460,86 @@
         "details": { "type": "string" }
       },
       "required": ["id", "mediaId", "action", "updatedBy", "timestamp"]
+    },
+    "Contract": {
+      "title": "Gombo Safe Contract",
+      "description": "Secure performance contract with escrow features",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "gomboId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "artistId": { "type": "string" },
+        "artistName": { "type": "string" },
+        "amount": { "type": "integer" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "clientId", "artistId", "amount", "status", "createdAt"]
+    },
+    "Escrow": {
+      "title": "Escrow Hold",
+      "description": "Funds secured in escrow during contract fulfillment",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "contractId": { "type": "string" },
+        "amount": { "type": "integer" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "contractId", "amount", "status", "createdAt"]
+    },
+    "Transaction": {
+      "title": "Financial Transaction",
+      "description": "Financial ledger record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "amount": { "type": "integer" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "type", "amount", "createdAt"]
+    },
+    "Withdrawal": {
+      "title": "Funds Withdrawal",
+      "description": "Artist payout request",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "integer" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "amount", "status", "createdAt"]
+    },
+    "Commission": {
+      "title": "System Commission",
+      "description": "AFRIGOMBO commission record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "contractId": { "type": "string" },
+        "amount": { "type": "integer" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "contractId", "amount", "createdAt"]
+    },
+    "Litige": {
+      "title": "Dispute Case",
+      "description": "Arbitration file for disputed contracts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "contractId": { "type": "string" },
+        "reason": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "contractId", "reason", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -530,6 +610,30 @@
     "/payments/{paymentId}": {
       "schema": "Payment",
       "description": "Payments records for verification and transaction audits"
+    },
+    "/contracts/{contractId}": {
+      "schema": "Contract",
+      "description": "Secure performance contracts with escrow features"
+    },
+    "/escrow/{escrowId}": {
+      "schema": "Escrow",
+      "description": "Funds secured in escrow during contract fulfillment"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Financial ledger record of all economic events"
+    },
+    "/withdrawals/{withdrawalId}": {
+      "schema": "Withdrawal",
+      "description": "Artist payout request transactions"
+    },
+    "/commissions/{commissionId}": {
+      "schema": "Commission",
+      "description": "AFRIGOMBO commission fee logs"
+    },
+    "/litiges/{litigeId}": {
+      "schema": "Litige",
+      "description": "Dossiers de litiges ouverts pour arbitrage"
     },
     "/boosts/{boostId}": {
       "schema": "Boost",

@@ -28,7 +28,7 @@ class AudioManager {
 
   private initializeMediaSync() {
     try {
-      const mediaCollection = collection(db, "system_media");
+      const mediaCollection = collection(db, "media");
       onSnapshot(
         mediaCollection,
         (snapshot) => {
@@ -131,6 +131,35 @@ class AudioManager {
     });
   }
 
+  public playSound(id: string, force = false) {
+    if (typeof window === "undefined") return;
+
+    const audio = this.mediaElements[id];
+    const data = this.mediaData[id];
+
+    if (audio && (!data || data.enabled !== false)) {
+      audio.currentTime = 0;
+      const itemVol = data?.volume !== undefined ? data.volume : 1;
+      audio.volume = (this.isMuted ? 0 : this.volume) * itemVol;
+      audio.play().catch((err) => {
+        console.warn(`Playback blocked or failed for ${id}:`, err);
+      });
+    } else {
+      console.info(`Media for ${id} is not loaded or has been disabled in the Multimedia Center`);
+    }
+  }
+
+  public stopSound(id: string) {
+    if (typeof window === "undefined") return;
+    const audio = this.mediaElements[id];
+    if (audio) {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+      } catch (_) {}
+    }
+  }
+
   public playIntro(force = false) {
     if (typeof window === "undefined") return;
 
@@ -142,20 +171,7 @@ class AudioManager {
     this.stopAll();
     this.currentPlaying = "intro";
     localStorage.setItem("gombo_intro_played", "true");
-
-    const audio = this.mediaElements["intro"];
-    const data = this.mediaData["intro"];
-
-    if (audio && (!data || data.enabled !== false)) {
-      audio.currentTime = 0;
-      const itemVol = data?.volume !== undefined ? data.volume : 1;
-      audio.volume = (this.isMuted ? 0 : this.volume) * itemVol;
-      audio.play().catch((err) => {
-        console.warn("Intro playback blocked or failed:", err);
-      });
-    } else {
-      console.info("Intro media is not loaded or has been disabled in the Multimedia Center");
-    }
+    this.playSound("intro", force);
   }
 
   public playHymne() {
@@ -163,20 +179,7 @@ class AudioManager {
 
     this.stopAll();
     this.currentPlaying = "hymne";
-
-    const audio = this.mediaElements["anthem"];
-    const data = this.mediaData["anthem"];
-
-    if (audio && (!data || data.enabled !== false)) {
-      audio.currentTime = 0;
-      const itemVol = data?.volume !== undefined ? data.volume : 1;
-      audio.volume = (this.isMuted ? 0 : this.volume) * itemVol;
-      audio.play().catch((err) => {
-        console.warn("Official anthem playback blocked or failed:", err);
-      });
-    } else {
-      console.info("Official anthem is not loaded or has been disabled in the Multimedia Center");
-    }
+    this.playSound("anthem", true);
   }
 }
 

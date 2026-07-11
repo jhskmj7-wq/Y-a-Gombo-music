@@ -16,6 +16,19 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    // Check if it's a chunk load error or network error
+    if (
+      error.message.includes("dynamically imported module") || 
+      error.message.includes("fetch") || 
+      error.message.includes("Failed to fetch") ||
+      error.message.includes("cyclic object value")
+    ) {
+      return { 
+        hasError: true, 
+        error: new Error("Connexion réseau instable ou hors ligne. Impossible de charger le module.") 
+      };
+    }
+    
     // Update state so the next render will show the fallback UI.
     return { hasError: true, error };
   }

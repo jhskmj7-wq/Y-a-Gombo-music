@@ -13,6 +13,7 @@ import CompleteProfile from "./components/CompleteProfile";
 import AuthPage from "./components/AuthPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import AfrigomboCinematicIntro from "./components/AfrigomboCinematicIntro";
+import PremiumLoader from "./components/PremiumLoader";
 
 // Lazy load the main Application Layer
 const AdminCentre = lazy(() => import("./components/AdminCentre"));
@@ -39,12 +40,7 @@ function CompleteProfileView() {
   const navigate = useNavigate();
   
   if (!profile) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 min-h-screen bg-[#050505] animate-pulse select-none">
-        <div className="w-12 h-12 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mb-4" />
-        <p className="text-xs font-mono tracking-widest text-[#D4AF37] uppercase">Chargement du Profil...</p>
-      </div>
-    );
+    return <PremiumLoader message="Chargement du Profil..." />;
   }
   
   return (
@@ -156,12 +152,7 @@ function App() {
   }
 
   if (authLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 min-h-screen bg-[#050505] animate-pulse select-none">
-        <div className="w-12 h-12 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mb-4" />
-        <p className="text-xs font-mono tracking-widest text-[#D4AF37] uppercase">Synchronisation AFRIGOMBO...</p>
-      </div>
-    );
+    return <PremiumLoader message="Connexion sécurisée..." />;
   }
 
   return (
@@ -320,7 +311,9 @@ function App() {
       
       {/* 3. PERSISTENT BACKGROUND MUSIC */}
       <BackgroundMusic />
-      <SuperFounderDebug />
+      {((typeof window !== "undefined" && window.location.search.includes("debug=true")) || import.meta.env.DEV) && (
+        <SuperFounderDebug />
+      )}
     </div>
   </ErrorBoundary>
 );
