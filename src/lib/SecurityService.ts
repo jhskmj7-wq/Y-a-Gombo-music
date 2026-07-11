@@ -70,7 +70,6 @@ export class SecurityService {
       console.error("Error adjusting trust score:", e);
     }
   }
-}
 
   static async analyzeMultiAccountRisk(userId: string): Promise<number> {
     try {
@@ -93,3 +92,4 @@ export class SecurityService {
     // Example rate limiting
     return { allowed: true };
   }
+}

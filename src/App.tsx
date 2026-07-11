@@ -38,6 +38,15 @@ function CompleteProfileView() {
   const { profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 min-h-screen bg-[#050505] animate-pulse select-none">
+        <div className="w-12 h-12 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mb-4" />
+        <p className="text-xs font-mono tracking-widest text-[#D4AF37] uppercase">Chargement du Profil...</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="w-full min-h-screen bg-[#0B0B0B] flex items-center justify-center py-6 overflow-y-auto px-4 font-sans select-none">
       <CompleteProfile 

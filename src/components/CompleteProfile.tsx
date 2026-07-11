@@ -76,7 +76,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
   const [collaborations, setCollaborations] = useState<string[]>([]);
 
   // STEP 5 STATES
-  const initialGdPhoto = currentUserProfile.photoURL || currentUserProfile.avatarUrl || "";
+  const initialGdPhoto = currentUserProfile?.photoURL || currentUserProfile?.avatarUrl || "";
   const [gdPhoto, setGdPhoto] = useState(initialGdPhoto);
   const [avatarUrl, setAvatarUrl] = useState(gdPhoto);
 

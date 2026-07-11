@@ -288,9 +288,8 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       onSuccess();
     } catch (err: any) {
       console.error("Google SSO Failure:", err);
-      // Ne plus masquer les erreurs Firebase. Afficher l'erreur brute et complète.
-      const rawError = `[Firebase Auth Error] Code: ${err.code || "N/A"} - Message: ${err.message || String(err)}`;
-      setErrorMSG(rawError);
+      // Log Firebase errors in console, show user-friendly message only
+      setErrorMSG("Connexion impossible. Veuillez réessayer.");
       setLoading(false);
     }
   };
@@ -493,10 +492,24 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="p-4 mb-6 bg-red-950/40 border border-red-500/30 rounded-xl text-red-200 text-xs font-semibold leading-relaxed text-left flex items-start gap-2"
+              className="p-4 mb-6 bg-red-950/40 border border-red-500/30 rounded-xl text-red-200 text-xs font-semibold leading-relaxed text-left flex flex-col gap-2"
             >
-              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-              <p>{errorMSG}</p>
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <p>{errorMSG}</p>
+              </div>
+              {errorMSG === "Connexion impossible. Veuillez réessayer." && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMSG("");
+                    handleGoogleLogin();
+                  }}
+                  className="mt-1 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer inline-block w-fit text-center"
+                >
+                  Réessayer
+                </button>
+              )}
             </motion.div>
           )}
 

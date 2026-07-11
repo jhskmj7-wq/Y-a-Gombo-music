@@ -31,18 +31,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log("Subscribing to gomboAuth.onAuthStateChanged");
     const unsubscribe = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
-      console.log("AUTH STATE:", firebaseUser);
-      setCurrentUser(firebaseUser || null);
-
+      console.log("Auth User:", firebaseUser ? { uid: firebaseUser.uid, email: firebaseUser.email } : "None");
+      
       if (firebaseUser) {
+        setAuthLoading(true);
+        setCurrentUser(firebaseUser);
         try {
-          const uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
+          let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
+          
+          if (!uProfile) {
+            console.log("Profile missing, creating automatically for uid:", firebaseUser.uid);
+            const names = firebaseUser.displayName ? firebaseUser.displayName.split(" ") : ["Artiste", "Afrigombo"];
+            uProfile = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || "",
+              firstName: names[0] || "",
+              lastName: names.slice(1).join(" ") || "",
+              displayName: firebaseUser.displayName || "",
+              photoURL: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+              avatarUrl: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+              role: "musicien",
+              provider: firebaseUser.providerData?.[0]?.providerId || "google.com",
+              isProfileComplete: false,
+              balance: 0,
+              totalRevenue: 0,
+              createdAt: new Date().toISOString()
+            };
+            
+            await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
+            console.log("Firestore Profile Created:", uProfile);
+          } else {
+            console.log("Firestore Profile Loaded:", uProfile);
+          }
+          
+          console.log("currentUserProfile:", uProfile);
           setProfile(uProfile);
         } catch (error) {
-          console.error("Error fetching user profile in auth state change:", error);
+          console.error("Error fetching/creating user profile in auth state change:", error);
         }
       } else {
+        setCurrentUser(null);
         setProfile(null);
+        console.log("currentUserProfile: null");
       }
 
       setAuthLoading(false);

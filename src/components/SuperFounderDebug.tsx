@@ -7,6 +7,7 @@ export default function SuperFounderDebug() {
   const { currentUser } = useAuth();
   const [redirectResult, setRedirectResult] = useState<any>(null);
   const [redirectError, setRedirectError] = useState<any>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (auth) {
@@ -18,12 +19,45 @@ export default function SuperFounderDebug() {
     }
   }, []);
 
+  useEffect(() => {
+    const isDev = import.meta.env.DEV || (typeof process !== "undefined" && process.env?.NODE_ENV !== "production");
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    if (isDev || search.includes("debug=true")) {
+      setIsOpen(true);
+    }
+  }, []);
+
+  const isSuperFounder = currentUser?.email === "jhs.kmj7@gmail.com";
   const search = typeof window !== "undefined" ? window.location.search : "";
-  if (currentUser?.email !== "jhs.kmj7@gmail.com" && !search.includes("debug=true")) return null;
+  const isDev = import.meta.env.DEV || (typeof process !== "undefined" && process.env?.NODE_ENV !== "production");
+  const shouldRenderAtAll = isSuperFounder || isDev || search.includes("debug=true");
+
+  if (!shouldRenderAtAll) return null;
+
+  if (!isOpen) {
+    // Hidden trigger button only visible to the Super Founder (or in dev)
+    return (
+      <button
+        type="button"
+        title="Sec"
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-0 right-0 w-2 h-2 bg-transparent hover:bg-red-500/20 border-0 outline-none z-[99999] cursor-default"
+      />
+    );
+  }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] p-4 bg-black/90 border-2 border-red-500 rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto font-mono text-[10px] text-red-400">
-      <h3 className="text-white font-bold mb-2 uppercase border-b border-red-500/30 pb-2">Diagnostic Super Fondateur</h3>
+    <div className="fixed bottom-4 right-4 z-[9999] p-4 bg-black/95 border-2 border-red-500 rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto font-mono text-[10px] text-red-400 shadow-2xl">
+      <div className="flex items-center justify-between border-b border-red-500/30 pb-2 mb-2">
+        <h3 className="text-white font-bold uppercase">Diagnostic Super Fondateur</h3>
+        <button
+          type="button"
+          onClick={() => setIsOpen(false)}
+          className="px-2 py-0.5 bg-red-950 hover:bg-red-900 border border-red-500 text-white rounded text-[9px] uppercase transition-colors"
+        >
+          Masquer
+        </button>
+      </div>
       
       <div className="space-y-2">
         <div><strong className="text-white">Date:</strong> {new Date().toLocaleString()}</div>

@@ -384,11 +384,15 @@ export const gomboDB = {
     if (db) {
       const q = query(
         collection(db, "conversations"),
-        where("participants", "array-contains", userId),
-        orderBy("lastMessageAt", "desc")
+        where("participants", "array-contains", userId)
       );
       return onSnapshot(q, (snapshot) => {
         const convos = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Conversation));
+        convos.sort((a, b) => {
+          const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+          const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+          return timeB - timeA;
+        });
         callback(convos);
       });
     }
@@ -407,11 +411,15 @@ export const gomboDB = {
     if (db) {
       const q = query(
         collection(db, "messages"),
-        where("conversationId", "==", convoId),
-        orderBy("createdAt", "asc")
+        where("conversationId", "==", convoId)
       );
       return onSnapshot(q, (snapshot) => {
         const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Message));
+        msgs.sort((a, b) => {
+          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return timeA - timeB;
+        });
         callback(msgs);
       });
     }
@@ -784,11 +792,16 @@ export const gomboDB = {
       const q = query(
         collection(db, "notifications"),
         where("userId", "==", userId),
-        orderBy("createdAt", "desc"),
-        limit(50)
+        limit(150)
       );
       return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GomboNotification)));
+        const notifs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GomboNotification));
+        notifs.sort((a, b) => {
+          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return timeB - timeA;
+        });
+        callback(notifs.slice(0, 50));
       });
     }
     return () => {};
@@ -864,9 +877,15 @@ export const gomboDB = {
 
   listenUserActivities(userId: string, callback: (acts: UserActivity[]) => void) {
     if (db) {
-      const q = query(collection(db, "user_activities"), where("userId", "==", userId), orderBy("timestamp", "desc"), limit(50));
+      const q = query(collection(db, "user_activities"), where("userId", "==", userId), limit(150));
       return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as UserActivity)));
+        const acts = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as UserActivity));
+        acts.sort((a, b) => {
+          const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          return timeB - timeA;
+        });
+        callback(acts.slice(0, 50));
       });
     }
     return () => {};
