@@ -1,9 +1,10 @@
 {
-  "projectId": "ya-gombo-music",
-  "appId": "1:953766968848:web:173a4b2ea336ecf50a9495",
-  "apiKey": "AIzaSyAMF-0VndIVU9BREb4IpFgMvjVdICzScBQ",
-  "authDomain": "ya-gombo-music.firebaseapp.com",
-  "storageBucket": "ya-gombo-music.firebasestorage.app",
-  "messagingSenderId": "953766968848",
-  "measurementId": ""
+  "apiKey": "AIzaSyC3eJm2GfUMxGUNGu7uZeIP9-rtcLRljNk",
+  "authDomain": "afrigombo.firebaseapp.com",
+  "databaseURL": "https://afrigombo-default-rtdb.firebaseio.com",
+  "projectId": "afrigombo",
+  "storageBucket": "afrigombo.firebasestorage.app",
+  "messagingSenderId": "558547758112",
+  "appId": "1:558547758112:web:d84cbcb8fb0e0670c5a045",
+  "measurementId": "G-27498CNQX0"
 }

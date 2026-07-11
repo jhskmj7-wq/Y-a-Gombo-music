@@ -18,7 +18,8 @@ export default function SuperFounderDebug() {
     }
   }, []);
 
-  if (currentUser?.email !== "jhs.kmj7@gmail.com") return null;
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  if (currentUser?.email !== "jhs.kmj7@gmail.com" && !search.includes("debug=true")) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999] p-4 bg-black/90 border-2 border-red-500 rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto font-mono text-[10px] text-red-400">

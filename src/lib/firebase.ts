@@ -1,29 +1,17 @@
-import {
-  initializeApp,
-  getApps,
-  getApp
-} from "firebase/app";
-
-import {
-  getAuth,
-  GoogleAuthProvider
-} from "firebase/auth";
-
-import {
-  initializeFirestore
-} from "firebase/firestore";
-
-import {
-  getStorage
-} from "firebase/storage";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { initializeFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyFakeKey_GomboMusik_Fallback",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "afrigombo-fallback.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "afrigombo-fallback",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "afrigombo-fallback.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1234567890",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1234567890:web:abcdef123456"
+  apiKey: "AIzaSyC3eJm2GfUMxGUNGu7uZeIP9-rtcLRljNk",
+  authDomain: "afrigombo.firebaseapp.com",
+  databaseURL: "https://afrigombo-default-rtdb.firebaseio.com",
+  projectId: "afrigombo",
+  storageBucket: "afrigombo.firebasestorage.app",
+  messagingSenderId: "558547758112",
+  appId: "1:558547758112:web:d84cbcb8fb0e0670c5a045",
+  measurementId: "G-27498CNQX0"
 };
 
 export const app = getApps().length
@@ -40,4 +28,4 @@ export const storage = getStorage(app);
 
 export const googleProvider = new GoogleAuthProvider();
 
-console.log("AUTH READY:", auth);
+console.log("AUTH READY (Afrigombo Default):", auth.app.options.projectId);
