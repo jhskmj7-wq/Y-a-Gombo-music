@@ -10,6 +10,7 @@ import {
   Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square
 } from "lucide-react";
 import { db } from "../../lib/firebase";
+import { useAuth } from "../../AuthContext";
 import { 
   collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDocs 
 } from "firebase/firestore";
@@ -69,6 +70,7 @@ export default function AdminFounderThrone({
   alerts = [],
   onExit
 }: AdminFounderThroneProps) {
+  const { currentUser, profile } = useAuth();
   // Navigation: null shows the 9 cards, string shows specific section view
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   
@@ -343,29 +345,42 @@ export default function AdminFounderThrone({
 
   const handleSendNotice = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("handleSendNotice: START");
+    
+    if (!currentUser || !profile) {
+      console.error("handleSendNotice: Auth missing");
+      setErrorMsg("Vous devez être connecté pour diffuser des décrets.");
+      return;
+    }
+    
     if (!isAuthorizedSuperFounder) {
+      console.error("handleSendNotice: Not authorized");
       setErrorMsg("Seul le Souverain Suprême peut diffuser des décrets impériaux.");
       return;
     }
     if (!noticeTitle.trim() || !noticeBody.trim()) {
+      console.warn("handleSendNotice: Missing title or body");
       setErrorMsg("Veuillez remplir le titre et le corps de votre décret.");
       return;
     }
     try {
+      console.log("handleSendNotice: Adding document to Firestore");
       await addDoc(collection(db, "broadcasts"), {
         title: noticeTitle.trim().toUpperCase(),
         body: noticeBody.trim(),
         category: noticeCategory,
-        author: "SUPER FOUNDER IMPÉRIAL",
+        author: profile.displayName || "SUPER FOUNDER IMPÉRIAL",
         timestamp: Date.now(),
         globalAlert: true
       });
+      console.log("handleSendNotice: Success");
       setNoticeTitle("");
       setNoticeBody("");
       setSuccessMsg("Le décret suprême a été soufflé à travers tout l'écosystème.");
       setTimeout(() => setSuccessMsg(""), 4000);
       try { audioSynth?.playTamTam(true); } catch (_) {}
     } catch (err: any) {
+      console.error("handleSendNotice: ERROR:", err);
       setErrorMsg(`Échec de la transmission : ${err.message}`);
     }
   };

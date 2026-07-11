@@ -27,6 +27,7 @@ const AdminSecurity = lazy(() => import("./admin/AdminSecurity"));
 const AdminFounderThrone = lazy(() => import("./admin/AdminFounderThrone"));
 const MultimediaCenter = lazy(() => import("./admin/MultimediaCenter"));
 import ThroneCinematicIntro from "./admin/ThroneCinematicIntro";
+
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
 import AuthScreen from "./AuthScreen";
@@ -1913,6 +1914,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   return (
     <div className={`flex h-screen w-full max-w-full box-border overflow-x-hidden ${darkMode ? "bg-[#050505] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#111]"} font-sans antialiased overflow-hidden uppercase-none`}>
+
       
       {(activeMenu === "super_admin" || activeMenu === "dashboard") && (
         <WakandaTechBackground />
@@ -6606,12 +6608,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   ---------------------------------------------------- */}
               {activeMenu === "notifications" && (
                 <Suspense fallback={<div className="p-10 text-center text-[#D4A017] font-mono animate-pulse">Chargement notifications...</div>}>
-                  <AdminNotifications
-                    onBroadcast={handleBroadcast}
-                    notificationsList={realNotifications}
-                    onDeleteNotification={handleDeleteNotification}
-                    audioSynth={audioSynth}
-                  />
+                  <AdminNotifications adminEmail={profile?.email || "Admin"} />
                 </Suspense>
               )}
 

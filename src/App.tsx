@@ -1,3 +1,4 @@
+import GlobalNotificationBanner from "./components/GlobalNotificationBanner";
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
@@ -25,6 +26,7 @@ const MainAppLayout = React.memo(function MainAppLayout({ darkMode, setDarkMode 
           <div className="w-16 h-16 rounded-full border-t-2 border-[#D4AF37] animate-spin"></div>
        </div>
     }>
+      <div className="fixed top-0 left-0 w-full z-[9999]"><GlobalNotificationBanner /></div>
       <LivingInteractions />
       <AdminCentre darkMode={darkMode} setDarkMode={setDarkMode} />
     </Suspense>
