@@ -728,10 +728,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   }, [adminEmail]);
   const [isSuperWelcomeOpen, setIsSuperWelcomeOpen] = useState<boolean>(false);
   const [showThroneCinematic, setShowThroneCinematic] = useState<boolean>(false);
+  const hasSeenThroneCinematic = useRef<boolean>(false);
 
   useEffect(() => {
-    if (activeMenu === "super_admin") {
+    if (activeMenu === "super_admin" && !hasSeenThroneCinematic.current) {
       setShowThroneCinematic(true);
+      hasSeenThroneCinematic.current = true;
     }
   }, [activeMenu]);
 
@@ -2233,179 +2235,181 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       >
         
         {/* ELITE UPPER STATUS BAR (AFRIGOMBO PREMIUM HEADER) */}
-        <header className="flex justify-between items-center px-4 sm:px-8 pt-6 pb-5 border-b border-[#D4AF37]/15 shrink-0 gap-2 w-full animate-fadeIn select-none">
-          {isHeaderSearchOpen ? (
-            <div className="flex-1 flex items-center gap-3">
-                {/* UPDATED SEARCH BAR */}
-                <div className="flex-1 flex items-center gap-2 bg-black border border-[#D4AF37]/45 rounded-xl px-3 py-2 w-full">
-                  <Search className="w-4 h-4 text-[#D4AF37]" />
-                  <input
-                    type="text"
-                    placeholder={dynamicPlaceholder}
-                    value={globalSearchTerm}
-                    onChange={(e) => setGlobalSearchTerm(e.target.value)}
-                    className="bg-transparent text-xs text-white focus:outline-none w-full font-mono placeholder:text-zinc-650"
-                    autoFocus
-                  />
-                </div>
-              <button
-                onClick={() => setIsHeaderSearchOpen(false)}
-                className="px-3.5 py-2 text-xs font-mono font-bold uppercase text-zinc-400 hover:text-white bg-[#111111] border border-white/5 rounded-xl cursor-pointer"
-              >
-                Fermer
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Left Side: Hamburger Trigger Button */}
-              <button
-                id="hamburger-trigger"
-                onClick={() => setIsSidebarOpen(true)}
-                className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-zinc-850 hover:border-[#D4AF37]/40 rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
-                title="Ouvrir le menu"
-              >
-                <Menu className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-              </button>
-
-              {/* Middle Brand Section */}
-              <div className="flex-1 flex items-center gap-1 text-left min-w-0 select-none shrink-0">
-                {/* Logo AFRIGOMBO */}
-                <motion.div
-                  animate={{
-                    scale: [1, 1.05, 1],
-                    boxShadow: [
-                      "0 0 12px rgba(212,175,55,0.25)",
-                      "0 0 22px rgba(212,175,55,0.6)",
-                      "0 0 12px rgba(212,175,55,0.25)"
-                    ]
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-black border border-[#D4AF37] overflow-hidden flex items-center justify-center select-none shrink-0 mr-1 cursor-pointer"
-                >
-                  <div className="w-full h-full flex items-center justify-center bg-black">
-                    <svg viewBox="0 0 40 40" className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 text-[#D4AF37]">
-                      <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                      <path d="M15 28 C 15 20, 25 20, 25 12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
-                      <circle cx="15" cy="28" r="2" fill="currentColor" />
-                      <circle cx="25" cy="12" r="2" fill="currentColor" />
-                    </svg>
+        {activeMenu !== "super_admin" && (
+          <header className="flex justify-between items-center px-4 sm:px-8 pt-6 pb-5 border-b border-[#D4AF37]/15 shrink-0 gap-2 w-full animate-fadeIn select-none">
+            {isHeaderSearchOpen ? (
+              <div className="flex-1 flex items-center gap-3">
+                  {/* UPDATED SEARCH BAR */}
+                  <div className="flex-1 flex items-center gap-2 bg-black border border-[#D4AF37]/45 rounded-xl px-3 py-2 w-full">
+                    <Search className="w-4 h-4 text-[#D4AF37]" />
+                    <input
+                      type="text"
+                      placeholder={dynamicPlaceholder}
+                      value={globalSearchTerm}
+                      onChange={(e) => setGlobalSearchTerm(e.target.value)}
+                      className="bg-transparent text-xs text-white focus:outline-none w-full font-mono placeholder:text-zinc-650"
+                      autoFocus
+                    />
                   </div>
-                </motion.div>
-                <div className="flex flex-col text-left min-w-0">
-                  <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-black tracking-[0.08em] text-white leading-none uppercase font-display truncate">
-                    AFRIGOMBO
-                  </span>
-                  <span className="text-[7.5px] xs:text-[8.5px] sm:text-[10px] font-sans font-black tracking-wider text-[#D4AF37] leading-none uppercase mt-0.5 sm:mt-1 truncate">
-                    Y'A GOMBO MUSIC
-                  </span>
-                </div>
-
-                {/* OPTIMIZATION & PERFORMANCE BADGES (INTELLIGENT MODE) */}
-                <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                  {isDataSaveActive && (
-                    <div 
-                      className="flex items-center gap-1 py-0.5 px-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-[8px] xs:text-[9px] font-black uppercase tracking-tight"
-                      title="Économie de données activée"
-                    >
-                      <span>📶 Économie activée</span>
-                    </div>
-                  )}
-                  {isBatterySaveActive && (
-                    <div 
-                      className="flex items-center gap-1 py-0.5 px-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 font-mono text-[8px] xs:text-[9px] font-black uppercase tracking-tight"
-                      title={isBatteryLow ? "Batterie faible (<20%) - mode léger actif" : "Mode léger automatique actif"}
-                    >
-                      <span>🔋 Batterie</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right Controls Row */}
-              <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 shrink-0">
-                {perspective === "admin" && (
-                  <button
-                    onClick={() => {
-                      setPerspective("user");
-                      setActiveMenu("user_terrain");
-                      addToTerminal("[INFO] Retour au Terrain d'Action.");
-                    }}
-                    className="hidden lg:flex items-center gap-1 px-3 py-1.5 text-[11px] font-mono font-bold uppercase text-[#D4AF37] hover:text-black hover:bg-[#D4AF37] border border-[#D4AF37]/30 rounded-lg transition-all cursor-pointer"
-                  >
-                    ← Retour
-                  </button>
-                )}
-
-                {/* --- 1. RECHERCHE --- */}
                 <button
-                  id="search-btn"
-                  onClick={() => {
-                    setIsHeaderSearchOpen(true);
-                    try { audioSynth.playValidationSuccess(); } catch (err) {}
-                  }}
-                  className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)]"
-                  title="Recherche"
+                  onClick={() => setIsHeaderSearchOpen(false)}
+                  className="px-3.5 py-2 text-xs font-mono font-bold uppercase text-zinc-400 hover:text-white bg-[#111111] border border-white/5 rounded-xl cursor-pointer"
                 >
-                  <Search className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
+                  Fermer
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Left Side: Hamburger Trigger Button */}
+                <button
+                  id="hamburger-trigger"
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-zinc-850 hover:border-[#D4AF37]/40 rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
+                  title="Ouvrir le menu"
+                >
+                  <Menu className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
                 </button>
 
-                {/* --- 2. NOTIFICATIONS --- */}
-                {activeMenu !== "user_edit_profile" && (
+                {/* Middle Brand Section */}
+                <div className="flex-1 flex items-center gap-1 text-left min-w-0 select-none shrink-0">
+                  {/* Logo AFRIGOMBO */}
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.05, 1],
+                      boxShadow: [
+                        "0 0 12px rgba(212,175,55,0.25)",
+                        "0 0 22px rgba(212,175,55,0.6)",
+                        "0 0 12px rgba(212,175,55,0.25)"
+                      ]
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-black border border-[#D4AF37] overflow-hidden flex items-center justify-center select-none shrink-0 mr-1 cursor-pointer"
+                  >
+                    <div className="w-full h-full flex items-center justify-center bg-black">
+                      <svg viewBox="0 0 40 40" className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 text-[#D4AF37]">
+                        <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M15 28 C 15 20, 25 20, 25 12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+                        <circle cx="15" cy="28" r="2" fill="currentColor" />
+                        <circle cx="25" cy="12" r="2" fill="currentColor" />
+                      </svg>
+                    </div>
+                  </motion.div>
+                  <div className="flex flex-col text-left min-w-0">
+                    <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-black tracking-[0.08em] text-white leading-none uppercase font-display truncate">
+                      AFRIGOMBO
+                    </span>
+                    <span className="text-[7.5px] xs:text-[8.5px] sm:text-[10px] font-sans font-black tracking-wider text-[#D4AF37] leading-none uppercase mt-0.5 sm:mt-1 truncate">
+                      Y'A GOMBO MUSIC
+                    </span>
+                  </div>
+
+                  {/* OPTIMIZATION & PERFORMANCE BADGES (INTELLIGENT MODE) */}
+                  <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                    {isDataSaveActive && (
+                      <div 
+                        className="flex items-center gap-1 py-0.5 px-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-[8px] xs:text-[9px] font-black uppercase tracking-tight"
+                        title="Économie de données activée"
+                      >
+                        <span>📶 Économie activée</span>
+                      </div>
+                    )}
+                    {isBatterySaveActive && (
+                      <div 
+                        className="flex items-center gap-1 py-0.5 px-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 font-mono text-[8px] xs:text-[9px] font-black uppercase tracking-tight"
+                        title={isBatteryLow ? "Batterie faible (<20%) - mode léger actif" : "Mode léger automatique actif"}
+                      >
+                        <span>🔋 Batterie</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Controls Row */}
+                <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 shrink-0">
+                  {perspective === "admin" && (
+                    <button
+                      onClick={() => {
+                        setPerspective("user");
+                        setActiveMenu("user_terrain");
+                        addToTerminal("[INFO] Retour au Terrain d'Action.");
+                      }}
+                      className="hidden lg:flex items-center gap-1 px-3 py-1.5 text-[11px] font-mono font-bold uppercase text-[#D4AF37] hover:text-black hover:bg-[#D4AF37] border border-[#D4AF37]/30 rounded-lg transition-all cursor-pointer"
+                    >
+                      ← Retour
+                    </button>
+                  )}
+
+                  {/* --- 1. RECHERCHE --- */}
                   <button
-                    id="bell-btn"
+                    id="search-btn"
                     onClick={() => {
-                      setActiveMenu("user_notifications");
-                      addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
+                      setIsHeaderSearchOpen(true);
+                      try { audioSynth.playValidationSuccess(); } catch (err) {}
                     }}
                     className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)]"
-                    title="Notifications"
+                    title="Recherche"
                   >
-                    <Bell className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
-                    {realNotifications.filter(n => !n.read).length > 0 && (
-                      <motion.span
-                        key={realNotifications.filter(n => !n.read).length}
-                        initial={{ scale: 1 }}
-                        animate={{ scale: [1, 1.3, 1] }}
-                        transition={{ duration: 0.3 }}
-                        className="absolute -top-0.5 -right-0.5 bg-[#D4AF37] text-black font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black select-none"
-                      >
-                        {realNotifications.filter(n => !n.read).length}
-                      </motion.span>
-                    )}
+                    <Search className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
                   </button>
-                )}
 
-                {/* --- 3. PROFIL --- */}
-                <div 
-                  id="profile-avatar"
-                  className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
-                  title="Profil Utilisateur" 
-                  onClick={() => { 
-                    if (!currentUser) {
-                      setShowHeritageLoginRequired(true);
-                    } else {
-                      setActiveMenu("user_heritage"); 
-                      setViewingGomboIdDetail(false); 
-                    }
-                  }}
-                >
-                  {profile?.avatarUrl || currentUser?.photoURL ? (
-                    <img src={profile?.avatarUrl || currentUser?.photoURL || ""} alt="User Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  ) : (
-                    <span className="text-[#D4AF37] font-sans text-[10px] xs:text-xs font-black uppercase">
-                      {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
-                    </span>
+                  {/* --- 2. NOTIFICATIONS --- */}
+                  {activeMenu !== "user_edit_profile" && (
+                    <button
+                      id="bell-btn"
+                      onClick={() => {
+                        setActiveMenu("user_notifications");
+                        addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
+                      }}
+                      className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+                      title="Notifications"
+                    >
+                      <Bell className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
+                      {realNotifications.filter(n => !n.read).length > 0 && (
+                        <motion.span
+                          key={realNotifications.filter(n => !n.read).length}
+                          initial={{ scale: 1 }}
+                          animate={{ scale: [1, 1.3, 1] }}
+                          transition={{ duration: 0.3 }}
+                          className="absolute -top-0.5 -right-0.5 bg-[#D4AF37] text-black font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black select-none"
+                        >
+                          {realNotifications.filter(n => !n.read).length}
+                        </motion.span>
+                      )}
+                    </button>
                   )}
-                  <span className="absolute bottom-0 right-0 w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 bg-emerald-500 rounded-full border border-black" />
+
+                  {/* --- 3. PROFIL --- */}
+                  <div 
+                    id="profile-avatar"
+                    className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
+                    title="Profil Utilisateur" 
+                    onClick={() => { 
+                      if (!currentUser) {
+                        setShowHeritageLoginRequired(true);
+                      } else {
+                        setActiveMenu("user_heritage"); 
+                        setViewingGomboIdDetail(false); 
+                      }
+                    }}
+                  >
+                    {profile?.avatarUrl || currentUser?.photoURL ? (
+                      <img src={profile?.avatarUrl || currentUser?.photoURL || ""} alt="User Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <span className="text-[#D4AF37] font-sans text-[10px] xs:text-xs font-black uppercase">
+                        {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
+                      </span>
+                    )}
+                    <span className="absolute bottom-0 right-0 w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 bg-emerald-500 rounded-full border border-black" />
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </header>
+              </>
+            )}
+          </header>
+        )}
 
         {isSlowConnection && (
           <div className="bg-cyan-950/80 text-cyan-400 border-b border-cyan-800/30 py-2 px-4 flex items-center justify-center gap-2 text-center text-[10px] sm:text-xs font-black animate-slideDown select-none shrink-0">
@@ -5793,6 +5797,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           posts={posts}
                           transactions={transactions}
                           alerts={alerts}
+                          onExit={() => {
+                            setActiveMenu("dashboard");
+                            try { audioSynth.playValidationSuccess(); } catch (_) {}
+                          }}
                         />
                       ) : (
                         <MultimediaCenter
@@ -7274,7 +7282,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       {/* =========================================================================
                                      ADMIN FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
-      {perspective === "admin" && (
+      {perspective === "admin" && activeMenu !== "super_admin" && (
         <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-black/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/35 p-2 px-4 sm:px-6 flex items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.2)] w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1 sm:gap-4 select-none">
           {/* 1. DASHBOARD */}
           <button

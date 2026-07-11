@@ -130,7 +130,7 @@ export default function ThroneCinematicIntro({ onComplete }: ThroneCinematicIntr
     }
 
     const particles: Particle[] = [];
-    const maxParticles = 140;
+    const maxParticles = 45;
 
     const createParticle = (centerX: number, centerY: number, isBurst = false): Particle => {
       const angle = Math.random() * Math.PI * 2;
@@ -147,7 +147,7 @@ export default function ThroneCinematicIntro({ onComplete }: ThroneCinematicIntr
     };
 
     // Initialize initial ambient gold dust
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 20; i++) {
       particles.push(createParticle(width / 2, height / 2));
     }
 
@@ -179,7 +179,7 @@ export default function ThroneCinematicIntro({ onComplete }: ThroneCinematicIntr
       ctx.fillRect(0, 0, width, height);
 
       // Add new particles periodically
-      if (particles.length < maxParticles && Math.random() < 0.3) {
+      if (particles.length < maxParticles && Math.random() < 0.2) {
         particles.push(createParticle(width / 2, height * 0.6));
       }
 
@@ -202,12 +202,10 @@ export default function ThroneCinematicIntro({ onComplete }: ThroneCinematicIntr
         const colorPrefix = isBrilliant ? "rgba(255, 215, 0, " : "rgba(212, 175, 55, ";
         ctx.fillStyle = `${colorPrefix}${p.opacity})`;
         
-        ctx.shadowBlur = p.size * 2.5;
-        ctx.shadowColor = "rgba(212, 175, 55, 0.7)";
+        // Removed heavy canvas shadowBlur to keep frame rates buttery smooth at 60 FPS on all devices
         ctx.fill();
       }
 
-      ctx.shadowBlur = 0; // reset
       animationFrameId = requestAnimationFrame(render);
     };
 
@@ -229,6 +227,16 @@ export default function ThroneCinematicIntro({ onComplete }: ThroneCinematicIntr
 
       {/* Geometric patterns overlay */}
       <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(#D4AF37_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
+
+      {/* Elegant discrete Skip button */}
+      <button
+        type="button"
+        onClick={onComplete}
+        className="absolute top-6 right-6 z-50 px-3 py-1.5 bg-black/60 hover:bg-black/90 border border-[#D4AF37]/30 hover:border-[#D4AF37] text-[#D4AF37] rounded-xl text-[10px] font-mono uppercase tracking-widest transition-all duration-300 cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(212,175,55,0.1)] hover:scale-105 active:scale-95"
+      >
+        <span>Passer</span>
+        <span className="opacity-60 text-[9px]">✕</span>
+      </button>
 
       <AnimatePresence mode="wait">
         {/* ----------------------------------------------------

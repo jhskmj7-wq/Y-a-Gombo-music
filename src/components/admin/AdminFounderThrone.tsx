@@ -26,6 +26,7 @@ interface AdminFounderThroneProps {
   posts?: any[];
   transactions?: any[];
   alerts?: any[];
+  onExit?: () => void;
 }
 
 interface GovernanceData {
@@ -65,7 +66,8 @@ export default function AdminFounderThrone({
   gombos = [],
   posts = [],
   transactions = [],
-  alerts = []
+  alerts = [],
+  onExit
 }: AdminFounderThroneProps) {
   // Navigation: null shows the 9 cards, string shows specific section view
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -2180,6 +2182,128 @@ export default function AdminFounderThrone({
           </motion.div>
         </div>
       )}
+
+      {/* =========================================================================
+                      SUPER FOUNDER FIXED BOTTOM NAVIGATION BAR
+         ========================================================================= */}
+      <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-black/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-2 px-4 sm:px-6 flex items-center z-45 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.35)] w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1 sm:gap-4 select-none">
+        {/* 1. TRÔNE */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedSection(null);
+            try { audioSynth?.playValidationSuccess(); } catch (_) {}
+          }}
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+            selectedSection === null ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          <Crown className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-mono uppercase tracking-wider">Le Trône</span>
+        </button>
+
+        {/* 2. VISION */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedSection("vision");
+            try { audioSynth?.playValidationSuccess(); } catch (_) {}
+          }}
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+            selectedSection === "vision" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          <Globe className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-mono uppercase tracking-wider">Vision</span>
+        </button>
+
+        {/* 3. UNIVERS */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedSection("univers");
+            try { audioSynth?.playValidationSuccess(); } catch (_) {}
+          }}
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+            selectedSection === "univers" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          <Landmark className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-mono uppercase tracking-wider">Univers</span>
+        </button>
+
+        {/* 4. BOUCLIER */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedSection("bouclier");
+            try { audioSynth?.playValidationSuccess(); } catch (_) {}
+          }}
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+            selectedSection === "bouclier" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          <ShieldCheck className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-mono uppercase tracking-wider">Bouclier</span>
+        </button>
+
+        {/* 5. REVENUS */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedSection("revenus");
+            try { audioSynth?.playValidationSuccess(); } catch (_) {}
+          }}
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+            selectedSection === "revenus" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          <Coins className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-mono uppercase tracking-wider">Revenus</span>
+        </button>
+
+        {/* 6. INTELLIGENCE */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedSection("intelligence");
+            try { audioSynth?.playValidationSuccess(); } catch (_) {}
+          }}
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+            selectedSection === "intelligence" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          <Brain className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-mono uppercase tracking-wider">Console</span>
+        </button>
+
+        {/* 7. JOURNAL */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedSection("journal");
+            try { audioSynth?.playValidationSuccess(); } catch (_) {}
+          }}
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+            selectedSection === "journal" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          <Scroll className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-mono uppercase tracking-wider">Journal</span>
+        </button>
+
+        {/* 8. QUITTER */}
+        <button
+          type="button"
+          onClick={() => {
+            if (onExit) onExit();
+          }}
+          className="flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-950/20"
+        >
+          <ArrowLeft className="w-4.5 h-4.5" />
+          <span className="text-[9px] font-mono uppercase tracking-wider">Quitter</span>
+        </button>
+      </div>
 
     </div>
   );
