@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { ShieldCheck, Terminal, Database, RefreshCw, Cpu, Activity, Play } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ShieldCheck, Terminal, Database, RefreshCw, Cpu, Activity, Play, AlertTriangle, ShieldAlert, Lock, Search } from "lucide-react";
+import { gomboDB } from "../../firebase";
 
 interface AdminSecurityProps {
   adminLogs: string[];
@@ -14,138 +15,208 @@ export default function AdminSecurity({
   onTriggerSystemScan,
   audioSynth
 }: AdminSecurityProps) {
-  const [terminalInput, setTerminalInput] = useState("");
-  const [customLogs, setCustomLogs] = useState<string[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [suspensions, setSuspensions] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"alerts" | "suspensions" | "logs" | "audit">("alerts");
 
-  const handleCommandSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!terminalInput.trim()) return;
+  useEffect(() => {
+    const unsubAlerts = gomboDB.listenSecurityAlerts(setAlerts);
+    const unsubSuspensions = gomboDB.listenSuspensions(setSuspensions);
+    const unsubActivities = gomboDB.listenAllUserActivities(setActivities);
+    
+    return () => {
+      unsubAlerts();
+      unsubSuspensions();
+      unsubActivities();
+    };
+  }, []);
 
-    const command = terminalInput.trim();
-    const newLog = `[SYSTEM@AFRIGOMBO] $ ${command}`;
-    let responseLog = "";
-
-    if (command.toLowerCase() === "help") {
-      responseLog = "Commandes autorisées: help, scan, clear, status, diagnostics";
-    } else if (command.toLowerCase() === "scan") {
-      if (onTriggerSystemScan) onTriggerSystemScan();
-      responseLog = "Démarrage du scan global d'analyse autonome...";
-    } else if (command.toLowerCase() === "clear") {
-      setCustomLogs([]);
-      setTerminalInput("");
-      return;
-    } else if (command.toLowerCase() === "status") {
-      responseLog = "Moteur IA: Opérationnel • Base de données Firestore: Synchronisée • Certifications Gombo ID: Stable";
-    } else if (command.toLowerCase() === "diagnostics") {
-      responseLog = "CPU: 1.4% • RAM: 182MB • Latence API: 14ms • Sécurité: Active (Niveau 3)";
-    } else {
-      responseLog = `Erreur: commande inconnue: "${command}". Tapez "help" pour voir les commandes.`;
-    }
-
-    setCustomLogs((prev) => [newLog, `> ${responseLog}`, ...prev]);
-    setTerminalInput("");
-    try { audioSynth?.playValidationSuccess(); } catch (_) {}
+  // Compute Audit stats
+  const auditStats = {
+    connections: activities.filter(a => a.type === "connexion").length,
+    publications: activities.filter(a => a.type === "gombo_created").length,
+    payments: activities.filter(a => a.type === "payment").length,
+    disputes: activities.filter(a => a.type === "litige_created").length,
+    frauds: alerts.filter(a => a.type === "fraud_attempt").length,
+    blocks: suspensions.filter(s => s.type === "perm_block" || s.type === "temp_block").length,
   };
-
-  const combinedLogs = [...customLogs, ...adminLogs];
 
   return (
     <div className="space-y-6 text-left pb-24 animate-fadeIn">
       {/* Header */}
       <div className="border-b border-white/5 pb-4">
         <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
-          <Terminal className="w-4 h-4 text-[#D4AF37]" />
-          Diagnostics, Journal de Sécurité & Terminal
+          <ShieldAlert className="w-4 h-4 text-[#D4AF37]" />
+          Centre de Sécurité & Audit
         </h3>
         <p className="text-xs text-zinc-400 mt-1">
-          Surveillez le moteur autonome d'AFRIGOMBO et exécutez des commandes système via le Terminal.
+          Surveillez le moteur autonome d'AFRIGOMBO, les tentatives de fraude, et les journaux système en temps réel.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Diagnostics Card */}
-        <div className="lg:col-span-1 p-6 bg-[#070707] border border-zinc-900 rounded-2xl flex flex-col justify-between">
-          <div className="space-y-4">
-            <h4 className="text-xs font-mono uppercase font-black tracking-wider text-white flex items-center gap-1.5">
-              <Cpu className="w-4 h-4 text-[#D4AF37]" />
-              Moteur d'Analyse Autonome
-            </h4>
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-2">
+        <button 
+          onClick={() => setActiveTab("audit")}
+          className={`px-4 py-2 text-xs font-mono font-bold uppercase rounded-xl transition-all border ${activeTab === "audit" ? "bg-purple-500/10 text-purple-400 border-purple-500/30" : "bg-black text-zinc-500 border-zinc-900 hover:text-white"}`}
+        >
+          <Database className="inline-block w-4 h-4 mr-2" />
+          Audit Global
+        </button>
+        <button 
+          onClick={() => setActiveTab("alerts")}
+          className={`px-4 py-2 text-xs font-mono font-bold uppercase rounded-xl transition-all border ${activeTab === "alerts" ? "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30" : "bg-black text-zinc-500 border-zinc-900 hover:text-white"}`}
+        >
+          <AlertTriangle className="inline-block w-4 h-4 mr-2" />
+          Alertes ({alerts.length})
+        </button>
+        <button 
+          onClick={() => setActiveTab("suspensions")}
+          className={`px-4 py-2 text-xs font-mono font-bold uppercase rounded-xl transition-all border ${activeTab === "suspensions" ? "bg-red-500/10 text-red-500 border-red-500/30" : "bg-black text-zinc-500 border-zinc-900 hover:text-white"}`}
+        >
+          <Lock className="inline-block w-4 h-4 mr-2" />
+          Comptes Bloqués ({suspensions.length})
+        </button>
+        <button 
+          onClick={() => setActiveTab("logs")}
+          className={`px-4 py-2 text-xs font-mono font-bold uppercase rounded-xl transition-all border ${activeTab === "logs" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-black text-zinc-500 border-zinc-900 hover:text-white"}`}
+        >
+          <Activity className="inline-block w-4 h-4 mr-2" />
+          Journaux d'Action ({activities.length})
+        </button>
+      </div>
 
-            <div className="p-4 bg-black border border-zinc-900 rounded-xl space-y-3.5 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-mono">Scan de Sécurité</span>
-                <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${
-                  scannerStatus === "scanning"
-                    ? "bg-yellow-500/15 text-yellow-400 border border-yellow-500/20"
-                    : scannerStatus === "completed"
-                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
-                    : "bg-zinc-800 text-zinc-400"
-                }`}>
-                  {scannerStatus === "scanning" ? "Scan en cours..." : scannerStatus === "completed" ? "Terminé" : "Inactif"}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-mono">Pare-feu d'Abidjan</span>
-                <span className="text-emerald-400 font-mono">ACTIVE (LVL 3)</span>
-              </div>
+      {/* Content */}
+      <div className="p-6 bg-[#070707] border border-zinc-900 rounded-2xl">
+        {activeTab === "audit" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h4 className="text-xs font-mono uppercase font-black text-white">Statistiques Globales</h4>
+              <button 
+                onClick={() => {
+                  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+                    activities, alerts, suspensions, exportDate: new Date().toISOString()
+                  }));
+                  const dlAnchorElem = document.createElement('a');
+                  dlAnchorElem.setAttribute("href", dataStr);
+                  dlAnchorElem.setAttribute("download", `afrigombo_backup_${new Date().getTime()}.json`);
+                  dlAnchorElem.click();
+                }}
+                className="px-3 py-1.5 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 rounded text-[10px] font-mono hover:bg-[#D4AF37]/20 transition-all"
+              >
+                Exporter Sauvegarde JSON
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-black border border-zinc-900 rounded-xl">
+              <div className="text-zinc-500 text-[10px] font-mono uppercase mb-1">Connexions</div>
+              <div className="text-2xl font-black text-white">{auditStats.connections}</div>
+            </div>
+            <div className="p-4 bg-black border border-zinc-900 rounded-xl">
+              <div className="text-zinc-500 text-[10px] font-mono uppercase mb-1">Publications</div>
+              <div className="text-2xl font-black text-white">{auditStats.publications}</div>
+            </div>
+            <div className="p-4 bg-black border border-zinc-900 rounded-xl">
+              <div className="text-zinc-500 text-[10px] font-mono uppercase mb-1">Paiements</div>
+              <div className="text-2xl font-black text-emerald-400">{auditStats.payments}</div>
+            </div>
+            <div className="p-4 bg-black border border-zinc-900 rounded-xl">
+              <div className="text-zinc-500 text-[10px] font-mono uppercase mb-1">Litiges</div>
+              <div className="text-2xl font-black text-yellow-500">{auditStats.disputes}</div>
+            </div>
+            <div className="p-4 bg-black border border-zinc-900 rounded-xl">
+              <div className="text-zinc-500 text-[10px] font-mono uppercase mb-1">Fraudes</div>
+              <div className="text-2xl font-black text-red-500">{auditStats.frauds}</div>
+            </div>
+            <div className="p-4 bg-black border border-zinc-900 rounded-xl">
+              <div className="text-zinc-500 text-[10px] font-mono uppercase mb-1">Blocages</div>
+              <div className="text-2xl font-black text-white">{auditStats.blocks}</div>
+            </div>
             </div>
           </div>
+        )}
 
-          <div className="pt-6 border-t border-zinc-900 mt-6">
-            <button
-              onClick={onTriggerSystemScan}
-              disabled={scannerStatus === "scanning"}
-              className="w-full py-2.5 rounded-xl bg-[#D4AF37] text-black font-black text-xs uppercase flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all cursor-pointer disabled:opacity-55"
-            >
-              <RefreshCw className={`w-4 h-4 ${scannerStatus === "scanning" ? "animate-spin" : ""}`} />
-              {scannerStatus === "scanning" ? "Analyse en cours..." : "Lancer un scan global"}
-            </button>
-          </div>
-        </div>
-
-        {/* Console / Terminal Terminal Card */}
-        <div className="lg:col-span-2 p-6 bg-[#030304] border border-[#D4AF37]/20 rounded-2xl flex flex-col h-96 relative overflow-hidden shadow-[0_0_20px_rgba(212,175,55,0.03)]">
-          <div className="flex justify-between items-center border-b border-zinc-900 pb-3 mb-4 shrink-0">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37] font-black flex items-center gap-1.5">
-              <Activity className="w-4 h-4" />
-              Terminal de Contrôle Central
-            </span>
-            <div className="flex gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-            </div>
-          </div>
-
-          {/* Logs feed scrolling box */}
-          <div className="flex-1 overflow-y-auto font-mono text-[10px] text-zinc-400 space-y-2 mb-4 scrollbar-none pr-2">
-            {combinedLogs.length === 0 ? (
-              <div className="text-zinc-600 italic">Prêt à recevoir les instructions. Tapez "help" pour commencer...</div>
+        {activeTab === "alerts" && (
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-none">
+            {alerts.length === 0 ? (
+              <div className="text-center p-8 text-zinc-500 text-xs font-mono">Aucune alerte de sécurité.</div>
             ) : (
-              combinedLogs.map((log, idx) => (
-                <div key={idx} className="leading-relaxed">
-                  {log}
+              alerts.map(a => (
+                <div key={a.id} className="p-4 bg-black border border-zinc-900 rounded-xl flex flex-col sm:flex-row gap-4 justify-between items-start">
+                  <div>
+                    <span className={`px-2 py-1 rounded text-[9px] font-mono font-bold uppercase mr-2 ${a.severity === 'high' ? 'bg-red-500/20 text-red-500' : 'bg-yellow-500/20 text-yellow-500'}`}>
+                      {a.severity}
+                    </span>
+                    <span className="text-xs font-bold text-white uppercase tracking-wide">{a.type}</span>
+                    <div className="text-[11px] text-zinc-400 mt-2">{a.details}</div>
+                    <div className="text-[10px] text-zinc-600 mt-2 font-mono">ID Utilisateur: {a.userId || "Système"} • {new Date(a.createdAt).toLocaleString()}</div>
+                  </div>
                 </div>
               ))
             )}
           </div>
+        )}
 
-          {/* Terminal Input Form */}
-          <form onSubmit={handleCommandSubmit} className="flex gap-2 border-t border-zinc-900 pt-3 shrink-0">
-            <span className="text-[#D4AF37] font-mono text-xs mt-2">$</span>
-            <input
-              type="text"
-              value={terminalInput}
-              onChange={(e) => setTerminalInput(e.target.value)}
-              placeholder="Saisissez une commande... (help, status, scan, clear)"
-              className="flex-1 bg-transparent border-none text-[#D4AF37] font-mono text-xs focus:outline-none placeholder-zinc-700"
-            />
-            <button type="submit" className="text-zinc-500 hover:text-[#D4AF37] transition-all">
-              <Play className="w-4 h-4 fill-current" />
-            </button>
-          </form>
-        </div>
+        {activeTab === "suspensions" && (
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-none">
+            {suspensions.length === 0 ? (
+              <div className="text-center p-8 text-zinc-500 text-xs font-mono">Aucun compte bloqué.</div>
+            ) : (
+              suspensions.map(s => (
+                <div key={s.id} className="p-4 bg-black border border-red-900/50 rounded-xl">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-red-500 uppercase">{s.type.replace('_', ' ')}</span>
+                    <span className="text-[10px] font-mono text-zinc-500">{new Date(s.createdAt).toLocaleString()}</span>
+                  </div>
+                  <div className="text-xs text-white">Utilisateur: {s.userId}</div>
+                  <div className="text-[11px] text-zinc-400 mt-1">Raison: {s.reason}</div>
+                  <div className="text-[10px] text-zinc-600 mt-2 font-mono">Créé par: {s.createdBy}</div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {activeTab === "logs" && (
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-none">
+            {activities.length === 0 ? (
+              <div className="text-center p-8 text-zinc-500 text-xs font-mono">Aucun journal.</div>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-zinc-800 text-[10px] uppercase font-mono text-zinc-500 tracking-wider">
+                    <th className="pb-3 pr-4 font-normal">Date</th>
+                    <th className="pb-3 pr-4 font-normal">Action</th>
+                    <th className="pb-3 pr-4 font-normal">Utilisateur</th>
+                    <th className="pb-3 pr-4 font-normal">Appareil/IP</th>
+                    <th className="pb-3 font-normal">Résultat</th>
+                  </tr>
+                </thead>
+                <tbody className="text-[11px] font-mono text-zinc-300">
+                  {activities.slice(0, 100).map(act => (
+                    <tr key={act.id} className="border-b border-zinc-900/50 hover:bg-zinc-900/20 transition-colors">
+                      <td className="py-3 pr-4 whitespace-nowrap text-zinc-500">{new Date(act.timestamp).toLocaleString()}</td>
+                      <td className="py-3 pr-4">
+                        <div className="text-white font-bold">{act.type}</div>
+                        <div className="text-zinc-500 text-[9px] truncate max-w-[200px]">{act.details}</div>
+                      </td>
+                      <td className="py-3 pr-4 text-zinc-400">{act.userId?.substring(0, 8)}...</td>
+                      <td className="py-3 pr-4 text-zinc-500">
+                        {act.device} / {act.browser} <br/> <span className="text-[9px]">{act.ip || "IP inconnue"}</span>
+                      </td>
+                      <td className="py-3">
+                        <span className={`px-2 py-0.5 rounded text-[9px] uppercase ${act.result === 'success' || !act.result ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-500'}`}>
+                          {act.result || "succès"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

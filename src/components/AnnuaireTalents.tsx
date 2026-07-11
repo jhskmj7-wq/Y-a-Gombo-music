@@ -188,7 +188,7 @@ export default function AnnuaireTalents({
         role: contactingTalent.role || "musicien"
       };
 
-      const convoId = await gomboDB.getOrCreateConversation(
+      const conversationObj = await gomboDB.getOrCreateConversation(
         currentUserProfile.uid,
         contactingTalent.uid,
         myDetails,
@@ -196,7 +196,7 @@ export default function AnnuaireTalents({
       );
 
       await gomboDB.sendMessage(
-        convoId,
+        conversationObj.id,
         currentUserProfile.uid,
         myDetails.name,
         contactMessage

@@ -1,3 +1,4 @@
+import BouclierAfrigombo from "./BouclierAfrigombo";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -1312,6 +1313,7 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "bouclier" && (
               <div className="space-y-6">
+                <BouclierAfrigombo />
                 <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <ShieldCheck className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5" />
                   <div className="text-xs text-zinc-300 leading-relaxed font-mono">

@@ -468,6 +468,10 @@ export interface UserActivity {
   type?: string;
   action?: string;
   details?: string;
+  device?: string;
+  browser?: string;
+  ip?: string;
+  result?: string;
   timestamp?: string;
   [key: string]: any;
 }
@@ -639,4 +643,27 @@ export interface EscrowPayment {
   autoReleaseAt: string | null;
   createdAt: string;
   [key: string]: any;
+}
+
+export interface SuspensionRecord {
+  id?: string;
+  userId: string;
+  type: "warning" | "restriction" | "temp_block" | "perm_block";
+  reason: string;
+  durationDays?: number; // Only for temp_block
+  status: "active" | "expired" | "lifted";
+  createdAt: string;
+  liftedAt?: string;
+  createdBy: string;
+}
+
+export interface SecurityAlert {
+  id?: string;
+  type: "unusual_activity" | "fraud_attempt" | "multi_login" | "suspicious_payment" | "spam_detected" | "content_detected";
+  severity: "low" | "medium" | "high" | "critical";
+  userId?: string;
+  details: string;
+  status: "open" | "investigating" | "resolved";
+  createdAt: string;
+  resolvedAt?: string;
 }

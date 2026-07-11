@@ -193,7 +193,7 @@ export default function GomboMusikEcosystem({
   // Accept Contract Trigger
   const handleAcceptContract = async (contractId: string, isCreator: boolean) => {
     if (!currentUserProfile) return;
-    await gomboDB.acceptSafeContract(contractId, isCreator);
+    await gomboDB.acceptSafeContract(contractId, currentUserProfile.uid, isCreator ? "client" : "artist");
     triggerPointsGrant(150, "Acceptation et sécurisation de contrat");
   };
 

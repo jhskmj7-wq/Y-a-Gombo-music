@@ -56,7 +56,8 @@ import {
   AdminBrief,
   GomboReview,
   UserPerformance,
-  Conversation
+  Conversation,
+  GomboSafeContract
 } from "../types";
 import GomboContractsDashboard from "./GomboContractsDashboard";
 import { audioSynth } from "../lib/audio";
@@ -589,7 +590,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [realNotifications, setRealNotifications] = useState<any[]>([]);
   useEffect(() => {
     if (currentUser?.uid) {
-      const unsubscribe = gomboDB.listenToNotifications(currentUser.uid, setRealNotifications);
+      const unsubscribe = gomboDB.listenNotifications(currentUser.uid, setRealNotifications);
       return () => unsubscribe();
     }
   }, [currentUser?.uid]);
@@ -1480,7 +1481,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
       setRenforts(prev => [newRenfort, ...prev]);
       await saveToFirestore("renforts", newRenfort.id, newRenfort);
-      gomboDB.applyForGombo(id, currentUser.uid, gombo.title);
+      gomboDB.applyToGombo(id, { musicianId: currentUser.uid, message: gombo.title });
       addToTerminal(`[🎤 CANDIDATURE] Félicitations ! Votre candidature pour "${gombo.title}" a été envoyée sur le réseau céleste.`);
     });
   };

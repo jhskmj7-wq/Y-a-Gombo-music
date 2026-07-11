@@ -288,19 +288,9 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       onSuccess();
     } catch (err: any) {
       console.error("Google SSO Failure:", err);
-      let message = "Erreur Firebase.";
-      if (err.code === "auth/popup-closed-by-user" || err.message?.includes("closed-by-user")) {
-        message = "Connexion annulée.";
-      } else if (err.code === "auth/popup-blocked" || err.message?.includes("popup-blocked")) {
-        message = "Pop-up bloqué par le navigateur.";
-      } else if (err.code === "auth/network-request-failed" || err.message?.includes("network")) {
-        message = "Connexion Internet indisponible.";
-      } else if (err.code === "auth/unauthorized-domain" || err.message?.includes("unauthorized-domain")) {
-        message = "Domaine Firebase non autorisé.";
-      } else if (err.message) {
-        message = err.message;
-      }
-      setErrorMSG(message);
+      // Ne plus masquer les erreurs Firebase. Afficher l'erreur brute et complète.
+      const rawError = `[Firebase Auth Error] Code: ${err.code || "N/A"} - Message: ${err.message || String(err)}`;
+      setErrorMSG(rawError);
       setLoading(false);
     }
   };

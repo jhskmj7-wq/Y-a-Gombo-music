@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { audioSynth } from "./lib/audio";
 import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
+import SuperFounderDebug from "./components/SuperFounderDebug";
 import { BackgroundMusic } from "./components/BackgroundMusic";
 import { LivingInteractions } from "./components/LivingInteractions";
 import { useAuth } from "./AuthContext";
@@ -310,6 +311,7 @@ function App() {
       
       {/* 3. PERSISTENT BACKGROUND MUSIC */}
       <BackgroundMusic />
+      <SuperFounderDebug />
     </div>
   </ErrorBoundary>
 );

@@ -339,8 +339,19 @@ export const gomboDB = {
   },
 
   // MESSAGING
-  async getOrCreateConversation(currentUserId: string, targetUserId: string, gomboId?: string, extraData?: any, somethingElse?: any): Promise<Conversation> {
+  async getOrCreateConversation(currentUserId: string, targetUserId: string, arg3?: any, arg4?: any, arg5?: any): Promise<Conversation> {
     if (db) {
+      let gomboId: string | undefined = undefined;
+      let extraData: any = {};
+
+      if (typeof arg3 === "string") {
+        gomboId = arg3;
+        extraData = { ...arg4, ...arg5 };
+      } else {
+        extraData = { myDetails: arg3, targetDetails: arg4, ...arg5 };
+        gomboId = typeof arg5 === "string" ? arg5 : undefined;
+      }
+
       // Find existing
       const q = query(
         collection(db, "conversations"),
@@ -361,8 +372,7 @@ export const gomboDB = {
         lastMessageAt: new Date().toISOString(),
         unreadCount: { [currentUserId]: 0, [targetUserId]: 0 },
         gomboId,
-        ...extraData,
-        ...somethingElse
+        ...extraData
       };
       const ref = await addDoc(collection(db, "conversations"), newConvo);
       return { id: ref.id, ...newConvo } as Conversation;
@@ -521,8 +531,17 @@ export const gomboDB = {
     }
   },
 
-  async applyToGombo(gomboId: string, application: Partial<Application>) {
+  async applyToGombo(gomboIdOrApp: any, optionalApp?: Partial<Application>) {
     if (db) {
+      let gomboId: string | undefined = undefined;
+      let application: Partial<Application> = {};
+      if (typeof gomboIdOrApp === "string" && optionalApp) {
+        gomboId = gomboIdOrApp;
+        application = optionalApp;
+      } else {
+        application = gomboIdOrApp;
+        gomboId = application.gomboId;
+      }
       const ref = await addDoc(collection(db, "applications"), {
         ...application,
         gomboId,
@@ -530,18 +549,28 @@ export const gomboDB = {
         createdAt: new Date().toISOString()
       });
       
-      await updateDoc(doc(db, "gombos", gomboId), {
-        applicantsCount: increment(1)
-      });
+      if (gomboId) {
+        await updateDoc(doc(db, "gombos", gomboId), {
+          applicantsCount: increment(1)
+        });
+      }
       return ref.id;
     }
   },
 
-  listenApplications(gomboId: string, callback: (apps: Application[]) => void) {
+  listenApplications(gomboIdOrCallback: string | ((apps: Application[]) => void), callback?: (apps: Application[]) => void) {
     if (db) {
-      const q = query(collection(db, "applications"), where("gomboId", "==", gomboId));
+      let q;
+      let finalCallback: (apps: Application[]) => void;
+      if (typeof gomboIdOrCallback === "function") {
+        q = query(collection(db, "applications"));
+        finalCallback = gomboIdOrCallback;
+      } else {
+        q = query(collection(db, "applications"), where("gomboId", "==", gomboIdOrCallback));
+        finalCallback = callback || (() => {});
+      }
       return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Application)));
+        finalCallback(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Application)));
       });
     }
     return () => {};
@@ -556,9 +585,15 @@ export const gomboDB = {
     return [];
   },
 
-  async updateApplicationStatus(gomboId: string, appId: string, status: string) {
+  async updateApplicationStatus(gomboIdOrAppId: string, appIdOrStatus: string, optionalStatus?: string) {
     if (db) {
-      await updateDoc(doc(db, "applications", appId), { status });
+      let finalAppId = gomboIdOrAppId;
+      let finalStatus = appIdOrStatus;
+      if (optionalStatus !== undefined) {
+        finalAppId = appIdOrStatus;
+        finalStatus = optionalStatus;
+      }
+      await updateDoc(doc(db, "applications", finalAppId), { status: finalStatus });
     }
   },
 
@@ -603,27 +638,38 @@ export const gomboDB = {
     }
   },
 
-  async applyToRenfort(renfortId: string, application: Partial<RenfortApplication>) {
+  async applyToRenfort(renfortIdOrData: any, application?: Partial<RenfortApplication>) {
     if (db) {
+      let payload: any = {};
+      if (typeof renfortIdOrData === "string" && application) {
+        payload = {
+          ...application,
+          renfortId: renfortIdOrData
+        };
+      } else {
+        payload = renfortIdOrData;
+      }
       await addDoc(collection(db, "renfort_applications"), {
-        ...application,
-        renfortId,
+        ...payload,
         status: "en_attente",
         createdAt: new Date().toISOString()
       });
     }
   },
 
-  listenRenfortApplications(renfortId: string, callback: (apps: RenfortApplication[]) => void) {
+  listenRenfortApplications(renfortIdOrCallback: string | ((apps: RenfortApplication[]) => void), callback?: (apps: RenfortApplication[]) => void) {
     if (db) {
       let q;
-      if (renfortId) {
-        q = query(collection(db, "renfort_applications"), where("renfortId", "==", renfortId));
-      } else {
+      let finalCallback: (apps: RenfortApplication[]) => void;
+      if (typeof renfortIdOrCallback === "function") {
         q = query(collection(db, "renfort_applications"));
+        finalCallback = renfortIdOrCallback;
+      } else {
+        q = query(collection(db, "renfort_applications"), where("renfortId", "==", renfortIdOrCallback));
+        finalCallback = callback || (() => {});
       }
       return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as RenfortApplication)));
+        finalCallback(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as RenfortApplication)));
       });
     }
     return () => {};
@@ -783,12 +829,36 @@ export const gomboDB = {
     }
   },
 
-  async logUserActivity(activity: Partial<UserActivity>) {
+  async logUserActivity(activityOrUserId: any, type?: string, details?: string) {
     if (db) {
-      await addDoc(collection(db, "user_activities"), {
-        ...activity,
-        timestamp: new Date().toISOString()
-      });
+      let payload: any = {};
+      const userAgent = navigator?.userAgent || "unknown";
+      let device = "Desktop";
+      if (/Mobi|Android/i.test(userAgent)) device = "Mobile";
+      let browser = "Unknown";
+      if (/Chrome/i.test(userAgent)) browser = "Chrome";
+      else if (/Firefox/i.test(userAgent)) browser = "Firefox";
+      else if (/Safari/i.test(userAgent)) browser = "Safari";
+
+      if (typeof activityOrUserId === "string") {
+        payload = {
+          userId: activityOrUserId,
+          type: type || "activity",
+          action: details || "",
+          details: details || "",
+          device,
+          browser,
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        payload = {
+          device,
+          browser,
+          ...activityOrUserId,
+          timestamp: new Date().toISOString()
+        };
+      }
+      await addDoc(collection(db, "user_activities"), payload);
     }
   },
 
@@ -829,10 +899,19 @@ export const gomboDB = {
     }
   },
 
-  async addStudioMarketReview(review: any) {
+  async addStudioMarketReview(studioIdOrReview: any, optionalReview?: any) {
     if (db) {
+      let payload: any = {};
+      if (typeof studioIdOrReview === "string" && optionalReview) {
+        payload = {
+          studioId: studioIdOrReview,
+          ...optionalReview
+        };
+      } else {
+        payload = studioIdOrReview;
+      }
       await addDoc(collection(db, "studio_market_reviews"), {
-        ...review,
+        ...payload,
         createdAt: new Date().toISOString()
       });
     }
@@ -848,19 +927,42 @@ export const gomboDB = {
     }
   },
 
-  async applyToCastingCall(castingId: string, application: any) {
+  async applyToCastingCall(castingId: string, userIdOrApp: any, userName?: string, phone?: string) {
     if (db) {
+      let payload: any = {};
+      if (typeof userIdOrApp === "string" && userName) {
+        payload = {
+          userId: userIdOrApp,
+          userName,
+          phone
+        };
+      } else {
+        payload = userIdOrApp;
+      }
       await addDoc(collection(db, "casting_applications"), {
-        ...application,
+        ...payload,
         castingId,
         createdAt: new Date().toISOString()
       });
     }
   },
 
-  async updateCastingApplicationStatus(appId: string, status: string) {
+  async updateCastingApplicationStatus(castingIdOrAppId: string, userIdOrStatus: string, optionalStatus?: string) {
     if (db) {
-      await updateDoc(doc(db, "casting_applications", appId), { status });
+      if (optionalStatus !== undefined) {
+        // Find the application by castingId and userId
+        const q = query(
+          collection(db, "casting_applications"), 
+          where("castingId", "==", castingIdOrAppId),
+          where("userId", "==", userIdOrStatus)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          await updateDoc(doc(db, "casting_applications", snap.docs[0].id), { status: optionalStatus });
+        }
+      } else {
+        await updateDoc(doc(db, "casting_applications", castingIdOrAppId), { status: userIdOrStatus });
+      }
     }
   },
 
@@ -882,16 +984,28 @@ export const gomboDB = {
   },
 
   // FILES
-  async uploadFile(file: File | string, path: string, metadata?: any): Promise<string> {
+  async uploadFile(fileOrPath: File | string, pathOrFile: string | File, metadata?: any): Promise<string> {
     if (storage) {
-      const storageRef = ref(storage, path);
-      if (typeof file === "string") {
+      let finalFile: File | string;
+      let finalPath: string;
+      if (typeof fileOrPath === "string" && (typeof pathOrFile !== "string")) {
+        // Called as uploadFile(path, file, callback)
+        finalPath = fileOrPath;
+        finalFile = pathOrFile;
+      } else {
+        // Called as uploadFile(file, path, metadata)
+        finalFile = fileOrPath;
+        finalPath = pathOrFile as string;
+      }
+
+      const storageRef = ref(storage, finalPath);
+      if (typeof finalFile === "string") {
         // Handle Base64
-        const response = await fetch(file);
+        const response = await fetch(finalFile);
         const blob = await response.blob();
         await uploadBytes(storageRef, blob, metadata);
       } else {
-        await uploadBytes(storageRef, file, metadata);
+        await uploadBytes(storageRef, finalFile, metadata);
       }
       return await getDownloadURL(storageRef);
     }
@@ -1326,12 +1440,20 @@ export const gomboDB = {
     }
   },
 
-  async purchaseTicket(userId: string, eventId: string, ticketData: any) {
+  async purchaseTicket(userIdOrData: any, eventId?: string, ticketData?: any) {
     if (db) {
+      let payload: any = {};
+      if (typeof userIdOrData === "string" && eventId && ticketData) {
+        payload = {
+          userId: userIdOrData,
+          eventId,
+          ...ticketData
+        };
+      } else {
+        payload = userIdOrData;
+      }
       await addDoc(collection(db, "purchased_tickets"), {
-        userId,
-        eventId,
-        ...ticketData,
+        ...payload,
         createdAt: new Date().toISOString()
       });
     }
@@ -1405,7 +1527,206 @@ export const gomboDB = {
         });
       }
     }
+  },
+
+  // --- ADDITIONAL HELPER METHODS TO SATISFY LINTER & ALL FUNCTIONALITIES ---
+  async publishCertificationRequest(req: any) {
+    if (db) {
+      await addDoc(collection(db, "certification_requests"), {
+        ...req,
+        status: "pending",
+        createdAt: new Date().toISOString()
+      });
+    }
+  },
+  async createVerificationRequest(req: any) {
+    if (db) {
+      await addDoc(collection(db, "verification_requests"), {
+        ...req,
+        status: "pending",
+        createdAt: new Date().toISOString()
+      });
+    }
+  },
+  async updateVerificationRequestStatus(id: string, status: string) {
+    if (db) {
+      await updateDoc(doc(db, "verification_requests", id), { status, updatedAt: new Date().toISOString() });
+    }
+  },
+  async publishBoost(boost: any) {
+    if (db) {
+      await addDoc(collection(db, "boosts"), {
+        ...boost,
+        createdAt: new Date().toISOString()
+      });
+    }
+  },
+  async updateCertificationRequestStatus(id: string, status: string) {
+    if (db) {
+      await updateDoc(doc(db, "certification_requests", id), { status, updatedAt: new Date().toISOString() });
+    }
+  },
+  async registerWaitingFeature(userId: string, email: string, featureId: string) {
+    if (db) {
+      await addDoc(collection(db, "waiting_features"), {
+        userId,
+        email,
+        featureId,
+        createdAt: new Date().toISOString()
+      });
+    }
+  },
+  async publishActivity(activity: any) {
+    if (db) {
+      await addDoc(collection(db, "user_activities"), {
+        ...activity,
+        timestamp: new Date().toISOString()
+      });
+    }
+  },
+  async getWaitingFeaturesCount(): Promise<any[]> {
+    if (db) {
+      const snap = await getDocs(collection(db, "waiting_features"));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+    return [];
+  },
+  listenToActivityFeed(callback: (acts: any[]) => void) {
+    if (db) {
+      const q = query(collection(db, "user_activities"), orderBy("timestamp", "desc"));
+      return onSnapshot(q, (snapshot) => {
+        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    }
+    return () => {};
+  },
+  async getAllGombos() {
+    return await this.getGombos();
+  },
+  async deleteGombo(id: string) {
+    if (db) {
+      await deleteDoc(doc(db, "gombos", id));
+    }
+  },
+  async confirmBooking(booking: any) {
+    if (db) {
+      await addDoc(collection(db, "reservations"), {
+        ...booking,
+        status: "confirmed",
+        createdAt: new Date().toISOString()
+      });
+    }
+  },
+  async getReservations(): Promise<any[]> {
+    if (db) {
+      const snap = await getDocs(collection(db, "reservations"));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+    return [];
+  },
+  async submitBetaFeedback(feedback: any) {
+    if (db) {
+      await addDoc(collection(db, "beta_feedback"), {
+        ...feedback,
+        createdAt: new Date().toISOString()
+      });
+    }
+  },
+  async getPayments(userId?: string): Promise<any[]> {
+    if (db) {
+      if (userId) {
+        const q = query(collection(db, "payments"), where("userId", "==", userId));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+      const snap = await getDocs(collection(db, "payments"));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+    return [];
+  },
+  async getCertificationRequests(userId: string): Promise<any[]> {
+    if (db) {
+      const q = query(collection(db, "certification_requests"), where("userId", "==", userId));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+    return [];
+  },
+  async getAllCertificationRequests(): Promise<any[]> {
+    if (db) {
+      const snap = await getDocs(collection(db, "certification_requests"));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+    return [];
+  },
+  async getVerificationRequestByUser(userId: string): Promise<any | null> {
+    if (db) {
+      const q = query(collection(db, "verification_requests"), where("userId", "==", userId));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        return { id: snap.docs[0].id, ...snap.docs[0].data() };
+      }
+    }
+    return null;
+  },
+  async getAllVerificationRequests(): Promise<any[]> {
+    if (db) {
+      const snap = await getDocs(collection(db, "verification_requests"));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+    return [];
+  },
+  async publishSecurityAlert(alert: any) {
+    if (db) {
+      await addDoc(collection(db, "security_alerts"), {
+        ...alert,
+        createdAt: new Date().toISOString()
+      });
+    }
+  },
+  listenSecurityAlerts(callback: (alerts: any[]) => void) {
+    if (db) {
+      const q = query(collection(db, "security_alerts"), orderBy("createdAt", "desc"));
+      return onSnapshot(q, (snapshot) => {
+        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    }
+    return () => {};
+  },
+  listenSuspensions(callback: (suspensions: any[]) => void) {
+    if (db) {
+      const q = query(collection(db, "suspensions"), orderBy("createdAt", "desc"));
+      return onSnapshot(q, (snapshot) => {
+        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    }
+    return () => {};
+  },
+  listenAllUserActivities(callback: (activities: any[]) => void) {
+    if (db) {
+      const q = query(collection(db, "user_activities"), orderBy("timestamp", "desc"));
+      return onSnapshot(q, (snapshot) => {
+        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    }
+    return () => {};
+  },
+  async createSuspension(suspension: any) {
+    if (db) {
+      await addDoc(collection(db, "suspensions"), {
+        ...suspension,
+        createdAt: new Date().toISOString()
+      });
+      // also update user profile status
+      if (suspension.userId) {
+        let userStatus = "active";
+        if (suspension.type === "temp_block" || suspension.type === "perm_block") userStatus = "suspended";
+        else if (suspension.type === "restriction" || suspension.type === "warning") userStatus = "suspect";
+        await updateDoc(doc(db, "users", suspension.userId), { status: userStatus });
+      }
+    }
   }
 };
 
 export { db, storage };
+
