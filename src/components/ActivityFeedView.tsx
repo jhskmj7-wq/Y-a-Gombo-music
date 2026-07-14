@@ -20,14 +20,12 @@ export default function ActivityFeedView({ currentUserProfile, onNavigateView }:
   // Hook real-time activity subscription (Phase 9 Rule 11)
   useEffect(() => {
     setLoading(true);
-    console.log("⚡ Subscribing to real-time public Activity Feed");
     const unsubscribe = gomboDB.listenToActivityFeed((newList) => {
       setActivities(newList);
       setLoading(false);
     });
 
     return () => {
-      console.log("⚡ Unsubscribing from real-time public Activity Feed");
       unsubscribe();
     };
   }, []);

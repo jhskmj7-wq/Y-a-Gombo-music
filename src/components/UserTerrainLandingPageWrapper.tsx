@@ -35,7 +35,6 @@ export default function UserTerrainLandingPageWrapper() {
   const [newNoticeBody, setNewNoticeBody] = useState("");
 
   const addToTerminal = (msg: string) => {
-    console.log("[LANDING TERMINAL]:", msg);
   };
 
   const requireAuthThen = (fn: () => void) => {
@@ -48,7 +47,6 @@ export default function UserTerrainLandingPageWrapper() {
 
   // Real-time Firestore Sync
   useEffect(() => {
-    console.log("⚡ [UserTerrainLandingPageWrapper] Starting Firestore subscriptions");
     
     // 1. Gombos
     const unsubscribeGombos = gomboDB.listenAllGombos((list) => {

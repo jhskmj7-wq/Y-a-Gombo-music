@@ -26,6 +26,9 @@ const AdminSettings = lazy(() => import("./admin/AdminSettings"));
 const AdminSecurity = lazy(() => import("./admin/AdminSecurity"));
 const AdminFounderThrone = lazy(() => import("./admin/AdminFounderThrone"));
 const MultimediaCenter = lazy(() => import("./admin/MultimediaCenter"));
+const AfrigomboEconomieDashboard = lazy(() => import("./AfrigomboEconomieDashboard"));
+const AfrigomboBuilders = lazy(() => import("./AfrigomboBuilders"));
+const AfrigomboBuildersAdminDashboard = lazy(() => import("./AfrigomboBuildersAdminDashboard"));
 import ThroneCinematicIntro from "./admin/ThroneCinematicIntro";
 
 import { useAuth } from "../AuthContext";
@@ -61,6 +64,7 @@ import {
   GomboSafeContract
 } from "../types";
 import GomboContractsDashboard from "./GomboContractsDashboard";
+import AfrigomboWalletDashboard from "./AfrigomboWalletDashboard";
 import { audioSynth } from "../lib/audio";
 import { interactionBus } from "./LivingInteractions";
 import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
@@ -220,8 +224,6 @@ function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: UserReelsVi
     ? allReels 
     : allReels.filter(r => r.category === selectedReelFilter || r.type === selectedReelFilter);
 
-  console.log("REELS RENDER");
-  console.log("VIDEOS:", filteredReels);
 
   return (
     <div className="space-y-6 pb-24 text-left animate-fadeIn">
@@ -389,7 +391,6 @@ interface AdminCentreProps {
 import WakandaTechBackground from "./WakandaTechBackground";
 
 export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
-  console.log("AdminCentre Hooks initialized");
   const dynamicPlaceholder = useDynamicPlaceholder([
     "Rechercher un artiste...",
     "Trouver une collaboration...",
@@ -408,7 +409,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
   // Mount log
   useEffect(() => {
-    console.log("AdminCentre Component mounted");
   }, []);
 
   const requireGoogleAuthThen = (action: () => void) => {
@@ -445,7 +445,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     setMenuHistory(prev => {
       if (prev[prev.length - 1] === menu) return prev;
       const rootMenus = [
-        "user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_contracts", "user_heritage",
+        "user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_contracts", "user_heritage", "user_wallet", "user_builders",
         "dashboard", "users", "posts", "gombos", "verifications", "admin_finances", "contracts",
         "notifications", "alertes", "reports", "revenue", "settings", "security", "super_admin"
       ];
@@ -680,6 +680,29 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [publishDraftDetected, setPublishDraftDetected] = useState<boolean>(false);
   const [showHeritageLoginRequired, setShowHeritageLoginRequired] = useState<boolean>(false);
   
+  // Draft restoration and auto-saving logic
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("gombo_publish_draft");
+      if (saved) {
+        const draft = JSON.parse(saved);
+        if (draft.title) setNewGomboTitle(draft.title);
+        if (draft.desc) setNewGomboDesc(draft.desc);
+        if (draft.price) setNewGomboPrice(draft.price);
+        if (draft.category) setNewGomboCategory(draft.category);
+        if (draft.city) setNewGomboCity(draft.city);
+        if (draft.quartier) setNewGomboQuartier(draft.quartier);
+        if (draft.lieuPrecis) setNewGomboLieuPrecis(draft.lieuPrecis);
+        if (draft.date) setNewGomboDate(draft.date);
+        if (draft.style) setNewGomboStyleMusical(draft.style);
+        if (draft.tenue) setNewGomboTenueExigee(draft.tenue);
+        if (draft.exp) setNewGomboExperienceSouhaitee(draft.exp);
+        setPublishDraftDetected(true);
+        setTimeout(() => setPublishDraftDetected(false), 5000);
+      }
+    } catch (_) {}
+  }, []);
+
   // Plus Menu overlay states
   const [isPlusMenuOpen, setIsPlusMenuOpen] = useState<boolean>(false);
   const [activePublishType, setActivePublishType] = useState<"gombo" | "reel" | "demo" | "renfort" | "recherche">("gombo");
@@ -835,7 +858,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [sonsEnabled, setSonsEnabled] = useState<boolean>(() => localStorage.getItem("afrigombo_sounds") !== "false");
   const [showDashboardIntro, setShowDashboardIntro] = useState<boolean>(true);
   const [dashboardStep, setDashboardStep] = useState<number>(1);
-  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "media">("throne");
+  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "media" | "economie" | "batisseurs">("throne");
 
   // --- STATE FOR ACTIONS RAPIDES AND RECHERCHE UNIVERSELLE ---
   const [universalSearchTerm, setUniversalSearchTerm] = useState("");
@@ -1134,6 +1157,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       "user_mes_gombos",
       "user_contracts",
       "user_heritage",
+      "user_wallet",
       "user_messages",
       "user_renforts",
       "notifications",
@@ -1152,7 +1176,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       "super_admin"
     ];
     if (protectedMenus.includes(activeMenu) && !currentUser) {
-      console.log(`[🛡️ SECURE] Accès anonyme interdit au menu ${activeMenu}. Redirection.`);
       setActiveMenu("user_terrain");
       setIsAuthModalOpen(true);
       addToTerminal(`[🛡️ SECURE] Tentative d'accès anonyme au menu ${activeMenu} bloquée.`);
@@ -2135,6 +2158,38 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
                               🌍 Univers AFRI
                             </span>
+                            {renderMenuItem("menu_builders_1", "Soutenir AFRIGOMBO", "❤️", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_builders");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/10 uppercase font-black">BÂTISSEURS</span>)}
+                            {renderMenuItem("menu_builders_2", "Construire le Temple du Gombo", "🌍", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_builders");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/10 uppercase font-black">IMPACT</span>)}
+                            {renderMenuItem("menu_builders_3", "Devenir Bâtisseur", "🪘", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_builders");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/10 uppercase font-black">ÉLITE</span>)}
+                            {renderMenuItem("menu_builders_4", "Participer à l'avenir", "🤲", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_builders");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-amber-500/10 text-amber-500 rounded border border-amber-500/10 uppercase font-black">DON</span>)}
                             {renderMenuItem("menu_afri_id", "AfriID", "🆔", () => {
                               addToTerminal("🌍 AFRIID : Identité centrale en préparation...");
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-blue-500/10 text-blue-400 rounded border border-blue-500/10 uppercase font-black">EN PRÉPARATION</span>)}
@@ -2981,6 +3036,26 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <div className="min-w-0">
                               <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Contrats Gombo</div>
                               <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Signature</span>
+                            </div>
+                          </button>
+
+                          {/* 10. Portefeuille AFRIGOMBO WALLET */}
+                          <button
+                            onClick={() => {
+                              requireAuthThen(() => {
+                                setActiveMenu("user_wallet");
+                                addToTerminal("[ACTIONS RAPIDES] Portefeuille AFRIGOMBO WALLET ouvert.");
+                                try { audioSynth.playKoraSuccess(); } catch (err) {}
+                              });
+                            }}
+                            className="bg-black/45 border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                          >
+                            <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
+                              <span className="text-xs">💳</span>
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Wallet Séquestre</div>
+                              <span className="text-[8px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-0.5">Bêta-Sécurisé</span>
                             </div>
                           </button>
                         </div>
@@ -4040,29 +4115,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
               {/* 3. USER PUBLISH VIEW */}
               {activeMenu === "user_publish" && (() => {
-                // Draft restoration and auto-saving logic
-                useEffect(() => {
-                  try {
-                    const saved = localStorage.getItem("gombo_publish_draft");
-                    if (saved) {
-                      const draft = JSON.parse(saved);
-                      if (draft.title) setNewGomboTitle(draft.title);
-                      if (draft.desc) setNewGomboDesc(draft.desc);
-                      if (draft.price) setNewGomboPrice(draft.price);
-                      if (draft.category) setNewGomboCategory(draft.category);
-                      if (draft.city) setNewGomboCity(draft.city);
-                      if (draft.quartier) setNewGomboQuartier(draft.quartier);
-                      if (draft.lieuPrecis) setNewGomboLieuPrecis(draft.lieuPrecis);
-                      if (draft.date) setNewGomboDate(draft.date);
-                      if (draft.style) setNewGomboStyleMusical(draft.style);
-                      if (draft.tenue) setNewGomboTenueExigee(draft.tenue);
-                      if (draft.exp) setNewGomboExperienceSouhaitee(draft.exp);
-                      setPublishDraftDetected(true);
-                      setTimeout(() => setPublishDraftDetected(false), 5000);
-                    }
-                  } catch (_) {}
-                }, []);
-
                 const saveDraft = (fields: any) => {
                   try {
                     const saved = localStorage.getItem("gombo_publish_draft");
@@ -4688,6 +4740,28 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               {activeMenu === "user_contracts" && (
                 <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
                   <GomboContractsDashboard currentUser={profile || (currentUser as any)} />
+                </div>
+              )}
+
+              {/* 7b. PORTESECURE / AFRIGOMBO WALLET (USER) */}
+              {activeMenu === "user_wallet" && (
+                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                  <AfrigomboWalletDashboard 
+                    currentUserProfile={profile || (currentUser as any)} 
+                    addToTerminal={addToTerminal}
+                    onBack={() => goBackMenu()}
+                  />
+                </div>
+              )}
+
+              {/* 7c. BÂTISSEURS (USER) */}
+              {activeMenu === "user_builders" && (
+                <div className="animate-fadeIn">
+                  <AfrigomboBuilders
+                    currentUser={profile || (currentUser as any)}
+                    onBack={() => goBackMenu()}
+                    audioSynth={audioSynth}
+                  />
                 </div>
               )}
 
@@ -5775,7 +5849,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               <div className="pb-24">
                 {activeMenu === "user_gombo_plus" && (
                   <div className="animate-fadeIn">
-                    <AfrigomboPlus onBack={() => goBackMenu()} />
+                    <AfrigomboPlus 
+                      onBack={() => goBackMenu()} 
+                      currentUserProfile={profile}
+                      onRefreshProfile={refreshProfile}
+                    />
                   </div>
                 )}
               </div>
@@ -5879,6 +5957,19 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       </button>
                       <button
                         onClick={() => {
+                          setSuperAdminTab("economie");
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        }}
+                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                          superAdminTab === "economie"
+                            ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37] font-black"
+                            : "bg-black/40 border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800"
+                        }`}
+                      >
+                        📊 Économie AFRIGOMBO
+                      </button>
+                      <button
+                        onClick={() => {
                           setSuperAdminTab("media");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
@@ -5889,6 +5980,19 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         }`}
                       >
                         🎵 Centre Multimédia
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSuperAdminTab("batisseurs");
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        }}
+                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                          superAdminTab === "batisseurs"
+                            ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37] font-black"
+                            : "bg-black/40 border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800"
+                        }`}
+                      >
+                        🏛 Bâtisseurs
                       </button>
                     </div>
 
@@ -5912,6 +6016,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             try { audioSynth.playValidationSuccess(); } catch (_) {}
                           }}
                         />
+                      ) : superAdminTab === "economie" ? (
+                        <AfrigomboEconomieDashboard 
+                          onBack={() => {
+                            setSuperAdminTab("throne");
+                            try { audioSynth.playValidationSuccess(); } catch (_) {}
+                          }}
+                        />
+                      ) : superAdminTab === "batisseurs" ? (
+                        <AfrigomboBuildersAdminDashboard />
                       ) : (
                         <MultimediaCenter
                           adminEmail={userEmail || ""}

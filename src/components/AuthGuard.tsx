@@ -12,7 +12,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!currentUser) {
-    console.log("🔒 [AuthGuard] No user detected, redirecting to /home and opening auth popup");
     setTimeout(() => {
       setShowAuthPopup(true);
     }, 100);

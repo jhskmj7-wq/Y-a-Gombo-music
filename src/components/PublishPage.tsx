@@ -13,7 +13,6 @@ export default function PublishPage() {
         <GomboPublish
           currentUserProfile={profile}
           onSuccess={() => {
-            console.log("Publish success!");
             navigate("/home");
           }}
           onCancel={() => {

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Settings, Save, Sliders, RefreshCw, CheckCircle } from "lucide-react";
 import { globalAudioManager } from "../../lib/audioManager";
 
+import AfrigomboGlobalSettings from "./AfrigomboGlobalSettings";
+
 interface AdminSettingsProps {
   systemCommissionRate: number;
   onUpdateCommissionRate?: (rate: number) => void;
@@ -50,11 +52,16 @@ export default function AdminSettings({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Global Settings Component */}
+        <div className="col-span-1 md:col-span-3">
+          <AfrigomboGlobalSettings audioSynth={audioSynth} />
+        </div>
+
         {/* Commission setting Card */}
         <div className="col-span-1 md:col-span-2 p-6 bg-[#070707] border border-zinc-900 rounded-2xl space-y-6 relative overflow-hidden">
           <h4 className="text-xs font-mono uppercase font-black tracking-wider text-[#D4AF37] flex items-center gap-1.5">
             <Sliders className="w-4 h-4" />
-            Règles Financières & Commissions
+            Règles Financières Globales
           </h4>
 
           <form onSubmit={handleSave} className="space-y-4">

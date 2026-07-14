@@ -94,7 +94,7 @@ export default function AnnuaireTalents({
     }
   });
 
-  // Simulated Views Count (persisted locally to show "Popular profiles / Talents en vue")
+  // Views Count (persisted locally to show "Popular profiles / Talents en vue")
   const [viewsCount, setViewsCount] = useState<Record<string, number>>(() => {
     try {
       const saved = localStorage.getItem("talent_page_views");

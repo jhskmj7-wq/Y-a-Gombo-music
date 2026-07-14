@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { Sparkles, Check, ChevronLeft, CreditCard, Award, Shield, Film, Music, BarChart3, Radio } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
+import { gomboDB } from "../firebase";
 
 interface AfrigomboPlusProps {
   onBack: () => void;
   audioVolume?: number;
+  currentUserProfile?: any;
+  onRefreshProfile?: () => void;
 }
 
-export default function AfrigomboPlus({ onBack }: AfrigomboPlusProps) {
+export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshProfile }: AfrigomboPlusProps) {
   const { t } = useLanguage();
   const [selectedPlan, setSelectedPlan] = useState<"free" | "pro" | "elite" | "legend">("elite");
   const [paymentOption, setPaymentOption] = useState<string | null>(null);
@@ -36,10 +39,13 @@ export default function AfrigomboPlus({ onBack }: AfrigomboPlusProps) {
         "Voir les gombos de base",
       ],
       disabledFeatures: [
-        "Portfolio Audio & Vidéo illimité",
-        "Badge certifié Gold Gombo",
-        "Statistiques détaillées d'audience",
-        "Opportunités exclusives (Cachets Premium)",
+        "👑 Pastille de Prestige Premium",
+        "⭐ Mise en avant dans les recherches",
+        "🚀 Priorité dans les Renforts Express",
+        "📈 Jusqu'à +150% de visibilité",
+        "🎖️ Profil recommandé d'office",
+        "📊 Statistiques d'audience avancées",
+        "💬 Priorité de mise en relation directe"
       ]
     },
     {
@@ -51,16 +57,18 @@ export default function AfrigomboPlus({ onBack }: AfrigomboPlusProps) {
       accentColor: "text-emerald-400",
       badge: "Populaire",
       features: [
-        "Profil artiste mis en avant (+40% de visibilité)",
+        "👑 Badge Premium Silver",
+        "⭐ Boost de recherche moyen (+40%)",
+        "📈 Plus de visibilité sur l'annuaire",
         "3 publications par jour",
         "Accès aux opportunités régionales",
-        "Badge PRO Argent sur le profil",
         "Portfolio: jusqu'à 3 audios & 3 vidéos",
       ],
       disabledFeatures: [
-        "Badge certifié Gold Gombo",
-        "Statistiques détaillées d'audience du profil",
-        "Opportunités exclusives (Accès Elite)",
+        "🚀 Priorité dans les Renforts Express",
+        "🎖️ Profil recommandé d'office",
+        "📊 Statistiques avancées complètes",
+        "💬 Priorité de mise en relation directe"
       ]
     },
     {
@@ -72,11 +80,14 @@ export default function AfrigomboPlus({ onBack }: AfrigomboPlusProps) {
       accentColor: "text-[#D4AF37]",
       badge: "Recommandé Elite",
       features: [
-        "Accès complet aux Statistiques Poussées (visiteurs, etc.)",
-        "Portfolio & Kit média illimités (Audios, Vidéos, Photos)",
+        "👑 Badge Premium Gold d'excellence",
+        "⭐ Mise en avant maximale dans l'annuaire",
+        "🚀 Priorité absolue dans les Renforts Express",
+        "📈 Visibilité boostée à 150%",
+        "🎖️ Profil recommandé d'office aux recruteurs",
+        "📊 Accès aux Statistiques Avancées",
+        "💬 Priorité absolue de mise en relation",
         "Candidatures illimitées aux cachets premium",
-        "Badge d'excellence Gold Gombo certifié",
-        "Mise en avant prioritaire dans l'annuaire des talents",
         "Création de groupes musicaux & co-promotions",
       ],
       disabledFeatures: []
@@ -115,7 +126,7 @@ export default function AfrigomboPlus({ onBack }: AfrigomboPlusProps) {
     setPaymentStep("idle");
   };
 
-  const processPayment = () => {
+  const processPayment = async () => {
     // Basic verification
     if (paymentOption !== "card" && !phonePayment) {
       alert("Veuillez saisir votre numéro mobile money pour l'autorisation.");
@@ -128,18 +139,50 @@ export default function AfrigomboPlus({ onBack }: AfrigomboPlusProps) {
       }
     } catch (_) {}
 
-    setTimeout(() => {
-      setPaymentStep("success");
-      const matchedPlan = plans.find(p => p.id === selectedPlan);
-      const subName = matchedPlan ? matchedPlan.name : "GOMBO ELITE";
-      localStorage.setItem("gombo_subscription", subName);
-      setSubscribedPlan(subName);
-
+    // Simulated transaction block with DB hook
+    setTimeout(async () => {
       try {
+        const matchedPlan = plans.find(p => p.id === selectedPlan);
+        const subName = matchedPlan ? matchedPlan.name : "GOMBO ELITE";
+        
+        // Publish real transaction record
+        if (currentUserProfile?.uid) {
+          await gomboDB.publishPayment({
+            userId: currentUserProfile.uid,
+            userName: currentUserProfile.name || currentUserProfile.artistName || "Membre Premium",
+            amount: selectedPlan === "pro" ? 1500 : 4000,
+            purpose: `💎 Abonnement ${subName} - Premium AFRIGOMBO`,
+            provider: paymentOption || "wave",
+            phoneNumber: phonePayment,
+            status: "success"
+          });
+
+          // Persistent database update of Premium profile flags
+          const currentBadges = currentUserProfile.badges || [];
+          const newBadges = Array.from(new Set([...currentBadges, "💎 Adhérent Premium"]));
+          await gomboDB.updateUserProfile(currentUserProfile.uid, {
+            isPremium: true,
+            badges: newBadges,
+            subscriptionPlan: subName
+          } as any);
+
+          if (onRefreshProfile) {
+            onRefreshProfile();
+          }
+        }
+
+        setPaymentStep("success");
+        localStorage.setItem("gombo_subscription", subName);
+        setSubscribedPlan(subName);
+
         if (window.dispatchEvent) {
           window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } }));
         }
-      } catch (_) {}
+      } catch (err) {
+        console.error("Error setting premium db profile:", err);
+        alert("Erreur lors de l'enregistrement de votre abonnement. Vos fonds ne sont pas perdus, contactez le support.");
+        setPaymentStep("idle");
+      }
     }, 2800);
   };
 

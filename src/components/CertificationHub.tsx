@@ -125,7 +125,7 @@ export default function CertificationHub({
     }
   }, [currentUserProfile]);
 
-  // Show live previews of mock uploaded media
+  // Show live previews of uploaded media
   const [showPreviewUrl, setShowPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -900,7 +900,7 @@ export default function CertificationHub({
                 🎨 Diversification des Sources de Revenus Artistiques
               </h3>
               <p className="text-gray-400 text-xs mt-0.5">
-                Simulez d'autres leviers financiers majeurs conçus pour le showbiz africain.
+                Découvrez d'autres leviers financiers majeurs conçus pour le showbiz africain.
               </p>
             </div>
 
@@ -1110,7 +1110,7 @@ export default function CertificationHub({
           <div className="bg-white dark:bg-[#15151c] border border-gray-100 dark:border-zinc-855 rounded-2xl overflow-hidden shadow-xs">
             <div className="p-5 border-b border-gray-100 dark:border-zinc-850 bg-gray-50/50 dark:bg-zinc-900/30">
               <h3 className="font-black text-xs uppercase tracking-wider text-gray-900 dark:text-white">
-                Historique de vos ordres de facturation à Abidjan (Simulé)
+                Historique de vos ordres de facturation à Abidjan 
               </h3>
             </div>
 
@@ -1575,7 +1575,7 @@ export default function CertificationHub({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500">Opérateur Mobile Money (Simulé)</label>
+                  <label className="text-xs font-bold text-gray-500">Opérateur Mobile Money </label>
                   <div className="grid grid-cols-4 gap-2">
                     {["Wave", "Orange Money", "MTN Momo", "Moov Money"].map((n) => (
                       <button
@@ -1607,7 +1607,7 @@ export default function CertificationHub({
                 </div>
 
                 <div className="p-3.5 bg-yellow-50 dark:bg-yellow-950/20 rounded-xl border border-dashed border-yellow-100 dark:border-yellow-900/50 flex justify-between items-center text-xs">
-                  <span className="font-bold text-yellow-950 dark:text-yellow-400">Total Facturé (Simulé) :</span>
+                  <span className="font-bold text-yellow-950 dark:text-yellow-400">Total Facturé  :</span>
                   <strong className="font-black text-yellow-600 dark:text-yellow-500 text-sm">
                     {getBoostPrice(selectedBoostDuration).toLocaleString("fr-FR")} FCFA
                   </strong>

@@ -59,12 +59,8 @@ function CompleteProfileView() {
 }
 
 function App() {
-  console.log("APP START");
   const { loading: authLoading, currentUser } = useAuth();
   const location = useLocation();
-  console.log("ROUTE:", location.pathname);
-  console.log("USER:", currentUser);
-  console.log("APP LOADED");
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search;
@@ -86,7 +82,6 @@ function App() {
 
   // Load theme and run splash sequence
   useEffect(() => {
-    console.log("App Component mounted");
 
     const root = window.document.documentElement;
     if (darkMode) {

@@ -474,7 +474,6 @@ export default function GomboProfile({
         try {
           const userDocRef = doc(db, "users", currentUserProfile.uid);
           await updateDoc(userDocRef, photoPayload);
-          console.log("✓ Profile photo URL successfully updated direct in user doc via updateDoc()");
         } catch (dbErr) {
           console.warn("Direct updateDoc of photoURL failed, calling gomboDB cache updater:", dbErr);
           await gomboDB.updateUserProfile(currentUserProfile.uid, photoPayload);
@@ -882,7 +881,6 @@ export default function GomboProfile({
       }
     };
 
-    console.log("💾 Activating profile update with fields:", updates);
 
     try {
       // 1. Save using updateDoc requested by guidelines if live db is online
@@ -890,7 +888,6 @@ export default function GomboProfile({
         try {
           const userDocRef = doc(db, "users", currentUserProfile.uid);
           await updateDoc(userDocRef, updates);
-          console.log("✓ Profile updated successfully via direct Firestore updateDoc()");
         } catch (error: any) {
           console.error("❌ Direct updateDoc() failed inside Firestore users collection:", error);
           // If we got missing doc or other errors, try fallback via setDoc with merge in updateUserProfile

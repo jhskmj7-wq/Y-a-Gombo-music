@@ -307,8 +307,24 @@ export const gomboDB = {
       const docSnap = await getDoc(doc(db, "users", uid));
       if (docSnap.exists()) {
         let profile = docSnap.data() as UserProfile;
+        let needsSync = false;
         if (!profile.afriId) {
           profile = await ensureAfriIdAndSync(profile);
+          needsSync = true;
+        }
+        if (!profile.wallet) {
+          profile.wallet = {
+            soldeDisponible: 250000,
+            soldeBloque: 0,
+            revenus: 0,
+            depots: 0,
+            retraits: 0,
+            gainsMensuels: 0
+          };
+          needsSync = true;
+        }
+        if (needsSync) {
+          await setDoc(doc(db, "users", uid), profile, { merge: true });
         }
         return profile;
       }
@@ -1018,53 +1034,156 @@ export const gomboDB = {
       }
 
       const storageRef = ref(storage, finalPath);
+      const bucketName = storage.app.options.storageBucket || "Inconnu";
+      const projectId = storage.app.options.projectId || "Inconnu";
+      const apiKey = storage.app.options.apiKey || "Inconnu";
+      
+      console.log("[FIREBASE STORAGE DIAGNOSTIC] Initiating upload to bucket:", bucketName, "Project:", projectId);
       
       return new Promise(async (resolve, reject) => {
         try {
           let fileToUpload: Blob | Uint8Array | ArrayBuffer;
+          let fileName = "Fichier binaire";
+          let fileSize = 0;
+          
           if (typeof finalFile === "string") {
-            // Handle Base64
+            console.log("[FIREBASE STORAGE DIAGNOSTIC] Fetching Base64 file string...");
             const response = await fetch(finalFile);
             fileToUpload = await response.blob();
+            fileSize = (fileToUpload as Blob).size;
           } else {
             fileToUpload = finalFile;
+            fileName = finalFile.name;
+            fileSize = finalFile.size;
           }
+
+          console.log("[FIREBASE STORAGE DIAGNOSTIC] File details:", { name: fileName, size: fileSize, path: finalPath });
 
           let metadata = typeof callbackOrMetadata === "object" ? callbackOrMetadata : undefined;
           let progressCallback = typeof callbackOrMetadata === "function" ? callbackOrMetadata : undefined;
 
-          // In case it's a legacy call with only file and path and no callback
+          // If there is no callback, do simple upload
           if (!metadata && !progressCallback) {
+            console.log("[FIREBASE STORAGE DIAGNOSTIC] No progress callback, doing simple uploadBytes...");
             await uploadBytes(storageRef, fileToUpload);
+            console.log("[FIREBASE STORAGE DIAGNOSTIC] uploadBytes completed, fetching URL...");
             const url = await getDownloadURL(storageRef);
+            console.log("[FIREBASE STORAGE DIAGNOSTIC] Simple upload completed. URL:", url);
             resolve(url);
             return;
           }
 
+          console.log("[FIREBASE STORAGE DIAGNOSTIC] Triggering uploadBytesResumable...");
           const uploadTask = uploadBytesResumable(storageRef, fileToUpload, metadata);
           
+          // Initial trigger
+          if (progressCallback) {
+            progressCallback(1, {
+              state: "uploading",
+              bucket: bucketName,
+              projectId: projectId,
+              apiKey: apiKey,
+              fileName: fileName,
+              fileSize: fileSize,
+              log: "Lancement de uploadBytesResumable..."
+            });
+          }
+
           uploadTask.on(
             "state_changed",
             (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              const formattedProgress = Math.max(1, Math.round(progress));
+              console.log(`[FIREBASE STORAGE DIAGNOSTIC] Progress update: ${formattedProgress}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes)`);
+              
               if (progressCallback) {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                progressCallback(progress);
+                progressCallback(formattedProgress, {
+                  state: "uploading",
+                  bucket: bucketName,
+                  projectId: projectId,
+                  apiKey: apiKey,
+                  fileName: fileName,
+                  fileSize: fileSize,
+                  bytesTransferred: snapshot.bytesTransferred,
+                  totalBytes: snapshot.totalBytes,
+                  log: `Progression : ${formattedProgress}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} octets)`
+                });
               }
             },
-            (error) => {
-              console.error("Upload error:", error);
+            (error: any) => {
+              console.error("[FIREBASE STORAGE DIAGNOSTIC] Upload error callback triggered:", error);
+              const errorDetails = {
+                code: error?.code || "Inconnu",
+                message: error?.message || "Pas de message d'erreur",
+                stack: error?.stack || "Pas de stacktrace available"
+              };
+              
+              if (progressCallback) {
+                progressCallback(0, {
+                  state: "error",
+                  bucket: bucketName,
+                  projectId: projectId,
+                  apiKey: apiKey,
+                  fileName: fileName,
+                  fileSize: fileSize,
+                  error: errorDetails,
+                  log: `ERREUR FIREBASE [${errorDetails.code}] : ${errorDetails.message}`
+                });
+              }
               reject(error);
             },
             async () => {
               try {
+                console.log("[FIREBASE STORAGE DIAGNOSTIC] Upload completed successfully, requesting download URL...");
+                if (progressCallback) {
+                  progressCallback(99, {
+                    state: "uploading",
+                    bucket: bucketName,
+                    projectId: projectId,
+                    apiKey: apiKey,
+                    fileName: fileName,
+                    fileSize: fileSize,
+                    log: "Génération du lien de téléchargement (getDownloadURL)..."
+                  });
+                }
                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                console.log("[FIREBASE STORAGE DIAGNOSTIC] Download URL obtained:", downloadURL);
+                if (progressCallback) {
+                  progressCallback(100, {
+                    state: "success",
+                    bucket: bucketName,
+                    projectId: projectId,
+                    apiKey: apiKey,
+                    fileName: fileName,
+                    fileSize: fileSize,
+                    log: "Fichier téléversé avec succès !"
+                  });
+                }
                 resolve(downloadURL);
-              } catch (err) {
+              } catch (err: any) {
+                console.error("[FIREBASE STORAGE DIAGNOSTIC] Failed to get download URL:", err);
+                if (progressCallback) {
+                  progressCallback(0, {
+                    state: "error",
+                    bucket: bucketName,
+                    projectId: projectId,
+                    apiKey: apiKey,
+                    fileName: fileName,
+                    fileSize: fileSize,
+                    error: {
+                      code: err?.code || "URL_ERROR",
+                      message: err?.message || "Impossible de récupérer l'URL de téléchargement",
+                      stack: err?.stack || ""
+                    },
+                    log: `Erreur obtention URL : ${err?.message}`
+                  });
+                }
                 reject(err);
               }
             }
           );
-        } catch (err) {
+        } catch (err: any) {
+          console.error("[FIREBASE STORAGE DIAGNOSTIC] Synchronous upload initialization error:", err);
           reject(err);
         }
       });
@@ -1217,21 +1336,54 @@ export const gomboDB = {
     if (db) {
       const id = contract.id || this.generateContractId();
       
-      // Calculate dynamic commission if not pre-calculated
+      let amount = contract.amount || 0;
       let commissionClient = contract.commissionClient;
       let commissionArtist = contract.commissionArtist;
       let totalClientPaid = contract.totalClientPaid;
       let totalArtistReceives = contract.totalArtistReceives;
-      let amount = contract.amount || 0;
+      let isClientPremium = contract.isClientPremium || false;
+      let isArtistPremium = contract.isArtistPremium || false;
+      let savingsClient = contract.savingsClient || 0;
+      let savingsArtist = contract.savingsArtist || 0;
+      let commissionClientRate = contract.commissionClientRate || 0.06;
+      let commissionArtistRate = contract.commissionArtistRate || 0.06;
 
-      if (amount > 0 && (commissionClient === undefined || commissionArtist === undefined)) {
-        const ratePercent = await this.getSystemCommissionRate(); // e.g. 10 for 10%
-        const totalCommission = amount * (ratePercent / 100);
-        // 50% split of the total commission
-        commissionClient = Math.round(totalCommission * 0.5);
-        commissionArtist = Math.round(totalCommission * 0.5);
+      if (amount > 0) {
+        if (contract.clientId) {
+          try {
+            const clientProfile = await this.getUserProfile(contract.clientId);
+            if (clientProfile) {
+              isClientPremium = !!(clientProfile.isPremium || clientProfile.badges?.includes("💎 Adhérent Premium"));
+            }
+          } catch (e) {
+            console.warn("Could not fetch client profile for premium check", e);
+          }
+        }
+        if (contract.artistId) {
+          try {
+            const artistProfile = await this.getUserProfile(contract.artistId);
+            if (artistProfile) {
+              isArtistPremium = !!(artistProfile.isPremium || artistProfile.badges?.includes("💎 Adhérent Premium"));
+            }
+          } catch (e) {
+            console.warn("Could not fetch artist profile for premium check", e);
+          }
+        }
+
+        // Apply Premium Economic Rules:
+        // Client rate: 4% if Premium, else 6%
+        // Artist rate: 4% if Premium, else 6%
+        commissionClientRate = isClientPremium ? 0.04 : 0.06;
+        commissionArtistRate = isArtistPremium ? 0.04 : 0.06;
+
+        commissionClient = Math.round(amount * commissionClientRate);
+        commissionArtist = Math.round(amount * commissionArtistRate);
         totalClientPaid = amount + commissionClient;
         totalArtistReceives = amount - commissionArtist;
+
+        // Premium savings compared to the standard 6% rate
+        savingsClient = isClientPremium ? Math.round(amount * 0.02) : 0;
+        savingsArtist = isArtistPremium ? Math.round(amount * 0.02) : 0;
       }
 
       const initialHistory = [
@@ -1249,8 +1401,14 @@ export const gomboDB = {
         amount,
         commissionClient: commissionClient || 0,
         commissionArtist: commissionArtist || 0,
+        commissionClientRate,
+        commissionArtistRate,
         totalClientPaid: totalClientPaid || amount,
         totalArtistReceives: totalArtistReceives || amount,
+        isClientPremium,
+        isArtistPremium,
+        savingsClient,
+        savingsArtist,
         status: contract.status || "generated",
         history: initialHistory,
         createdAt: new Date().toISOString(),
@@ -1827,10 +1985,41 @@ export const gomboDB = {
   async depositToEscrow(contractId: string, amount: number, creatorId: string, creatorName: string) {
     if (db) {
       const now = new Date().toISOString();
-      const commissionClient = Math.round(amount * 0.05);
-      const commissionArtist = Math.round(amount * 0.05);
-      const totalClientPaid = amount + commissionClient;
-      const totalArtistReceives = amount - commissionArtist;
+      
+      // Load the actual contract details first
+      const contractRef = doc(db, "contracts", contractId);
+      const contractSnap = await getDoc(contractRef);
+      if (!contractSnap.exists()) {
+        throw new Error("Contrat introuvable");
+      }
+      
+      const contractData = contractSnap.data();
+      const commissionClient = contractData.commissionClient ?? Math.round(amount * 0.06);
+      const commissionArtist = contractData.commissionArtist ?? Math.round(amount * 0.06);
+      const totalClientPaid = contractData.totalClientPaid ?? (amount + commissionClient);
+      const totalArtistReceives = contractData.totalArtistReceives ?? (amount - commissionArtist);
+      
+      // Update Client's wallet balances
+      const clientRef = doc(db, "users", creatorId);
+      const clientSnap = await getDoc(clientRef);
+      if (clientSnap.exists()) {
+        const clientData = clientSnap.data();
+        const currentDisponible = clientData.wallet?.soldeDisponible ?? 0;
+        const currentBloque = clientData.wallet?.soldeBloque ?? 0;
+        
+        if (currentDisponible < totalClientPaid) {
+          throw new Error(`Solde insuffisant dans votre Wallet AFRIGOMBO. Solde disponible : ${currentDisponible.toLocaleString()} FCFA. Requis : ${totalClientPaid.toLocaleString()} FCFA (Cachet + Commission). Veuillez recharger votre Wallet.`);
+        }
+        
+        await setDoc(clientRef, {
+          wallet: {
+            soldeDisponible: currentDisponible - totalClientPaid,
+            soldeBloque: currentBloque + totalClientPaid
+          }
+        }, { merge: true });
+      } else {
+        throw new Error("Compte client introuvable pour le prélèvement séquestre.");
+      }
 
       // 1. Create a record in payments
       await addDoc(collection(db, "payments"), {
@@ -1859,16 +2048,15 @@ export const gomboDB = {
       // 3. Create a record in transactions
       await addDoc(collection(db, "transactions"), {
         contractId,
-        type: "deposit",
+        type: "deposit_escrow",
         amount: totalClientPaid,
         userId: creatorId,
         userName: creatorName,
-        description: `Dépôt de garantie séquestre de ${totalClientPaid} FCFA pour le contrat ${contractId}`,
+        description: `Blocage séquestre de ${totalClientPaid.toLocaleString()} FCFA pour le contrat ${contractId}`,
         createdAt: now
       });
 
       // 4. Update the contract
-      const contractRef = doc(db, "contracts", contractId);
       await updateDoc(contractRef, {
         status: "payment_held",
         commissionClient,
@@ -1879,16 +2067,13 @@ export const gomboDB = {
       });
 
       // 5. Append to history
-      const snap = await getDoc(contractRef);
-      if (snap.exists()) {
-        const history = snap.data().history || [];
-        history.push({
-          action: "Paiement reçu. Argent bloqué. En attente de prestation (Coffre AFRIGOMBO)",
-          timestamp: now,
-          userId: creatorId
-        });
-        await updateDoc(contractRef, { history });
-      }
+      const history = contractData.history || [];
+      history.push({
+        action: `Paiement reçu. ${totalClientPaid.toLocaleString()} FCFA bloqués en séquestre. En attente de prestation (Coffre AFRIGOMBO)`,
+        timestamp: now,
+        userId: creatorId
+      });
+      await updateDoc(contractRef, { history });
     }
   },
 
@@ -1901,8 +2086,9 @@ export const gomboDB = {
 
       const escrowData = escrowSnap.data();
       const amount = escrowData.amount;
-      const totalCommission = escrowData.commissionClient + escrowData.commissionArtist;
-      const netToArtist = escrowData.amount - escrowData.commissionArtist;
+      const totalCommission = (escrowData.commissionClient || 0) + (escrowData.commissionArtist || 0);
+      const netToArtist = amount - (escrowData.commissionArtist || 0);
+      const totalLocked = escrowData.totalLocked || (amount + (escrowData.commissionClient || 0));
 
       // 1. Mark escrow as released
       await updateDoc(escrowRef, {
@@ -1914,32 +2100,83 @@ export const gomboDB = {
       await addDoc(collection(db, "commissions"), {
         contractId,
         amount: totalCommission,
-        rate: 10,
+        rate: Math.round((totalCommission / amount) * 100) || 10,
         createdAt: now
       });
+
+      let artistId = "";
+
+      // Load contract to update specific users' wallets
+      const contractRef = doc(db, "contracts", contractId);
+      const contractSnap = await getDoc(contractRef);
+      if (contractSnap.exists()) {
+        const contractData = contractSnap.data();
+        const clientId = contractData.clientId;
+        artistId = contractData.artistId;
+
+        // Deduct client's soldeBloque
+        if (clientId) {
+          const clientRef = doc(db, "users", clientId);
+          const clientSnap = await getDoc(clientRef);
+          if (clientSnap.exists()) {
+            const clientData = clientSnap.data();
+            const currentDisponible = clientData.wallet?.soldeDisponible ?? 0;
+            const currentBloque = clientData.wallet?.soldeBloque ?? 0;
+            await setDoc(clientRef, {
+              wallet: {
+                soldeDisponible: currentDisponible,
+                soldeBloque: Math.max(0, currentBloque - totalLocked)
+              }
+            }, { merge: true });
+          }
+        }
+
+        // Add to Artist's available wallet balance and revenue stats
+        if (artistId) {
+          const artistRef = doc(db, "users", artistId);
+          const artistSnap = await getDoc(artistRef);
+          if (artistSnap.exists()) {
+            const artistData = artistSnap.data();
+            const currentDisponible = artistData.wallet?.soldeDisponible ?? 0;
+            const currentBloque = artistData.wallet?.soldeBloque ?? 0;
+            const artistRevenue = artistData.revenue ?? 0;
+            const artistTotalRevenue = artistData.totalRevenue ?? 0;
+
+            await setDoc(artistRef, {
+              wallet: {
+                soldeDisponible: currentDisponible + netToArtist,
+                soldeBloque: currentBloque
+              },
+              balance: (artistData.balance ?? 0) + netToArtist,
+              revenue: artistRevenue + netToArtist,
+              totalRevenue: artistTotalRevenue + netToArtist,
+              gombosCompleted: (artistData.gombosCompleted ?? 0) + 1
+            }, { merge: true });
+          }
+        }
+      }
 
       // 3. Create release transaction
       await addDoc(collection(db, "transactions"), {
         contractId,
         type: "release",
         amount: netToArtist,
-        description: `Libération des fonds séquestres de ${netToArtist} FCFA pour l'artiste`,
+        userId: artistId,
+        description: `Libération des fonds séquestres de ${netToArtist.toLocaleString()} FCFA pour l'artiste`,
         createdAt: now
       });
 
       // 4. Update contract status to completed
-      const contractRef = doc(db, "contracts", contractId);
       await updateDoc(contractRef, {
         status: "completed",
         updatedAt: now
       });
 
       // 5. Append to history
-      const snap = await getDoc(contractRef);
-      if (snap.exists()) {
-        const history = snap.data().history || [];
+      if (contractSnap.exists()) {
+        const history = contractSnap.data().history || [];
         history.push({
-          action: "Validation finale : Fonds libérés à l'artiste (Coffre AFRIGOMBO)",
+          action: `Validation finale : Fonds libérés à l'artiste (Coffre AFRIGOMBO) [Artiste: +${netToArtist.toLocaleString()} FCFA | Plateforme: +${totalCommission.toLocaleString()} FCFA]`,
           timestamp: now,
           userId: "system"
         });
@@ -1948,9 +2185,206 @@ export const gomboDB = {
     }
   },
 
+  async cancelGomboContract(contractId: string, cancelledByUserId: string) {
+    if (db) {
+      const now = new Date().toISOString();
+      const contractRef = doc(db, "contracts", contractId);
+      const contractSnap = await getDoc(contractRef);
+      if (!contractSnap.exists()) {
+        throw new Error("Contrat introuvable");
+      }
+
+      const contractData = contractSnap.data();
+      const status = contractData.status;
+
+      if (status === "completed" || status === "cancelled") {
+        throw new Error("Ce contrat ne peut plus être annulé");
+      }
+
+      const clientId = contractData.clientId;
+      const artistId = contractData.artistId;
+      const clientName = contractData.clientName || "Annonceur";
+      const artistName = contractData.artistName || "Artiste";
+      const amount = contractData.amount || 0;
+      const totalClientPaid = contractData.totalClientPaid || amount;
+
+      const isClient = cancelledByUserId === clientId;
+      const isArtist = cancelledByUserId === artistId;
+      const cancelledByName = isClient ? clientName : (isArtist ? artistName : "Modérateur");
+
+      let refundToClient = 0;
+      let payToArtist = 0;
+      let appliedPenalty = 0;
+      let logMsg = "";
+
+      // Check if escrow is active (i.e. status was payment_held, in_progress, arrived, completed_artist, or disputed)
+      const isEscrowActive = ["payment_held", "arrived", "in_progress", "completed_artist", "disputed"].includes(status);
+
+      if (isEscrowActive) {
+        // We have active locked escrow funds!
+        const escrowRef = doc(db, "escrow", contractId);
+        const escrowSnap = await getDoc(escrowRef);
+
+        if (isClient) {
+          // Promoter cancels
+          // Check if both signed (contract.clientSigned && contract.artistSigned)
+          const isBothSigned = contractData.clientSigned && contractData.artistSigned;
+
+          if (!isBothSigned) {
+            // Promoter cancels BEFORE double signature -> 100% refund
+            refundToClient = totalClientPaid;
+            payToArtist = 0;
+            appliedPenalty = 0;
+            logMsg = `Annulation par le promoteur ${cancelledByName} avant signature mutuelle. Remboursement intégral de ${refundToClient.toLocaleString()} FCFA au promoteur.`;
+          } else {
+            // Promoter cancels AFTER double signature -> 10% penalty to artist, 90% refund to promoter
+            appliedPenalty = Math.round(amount * 0.10);
+            payToArtist = appliedPenalty;
+            refundToClient = totalClientPaid - appliedPenalty;
+            logMsg = `Annulation par le promoteur ${cancelledByName} après signature mutuelle. Pénalité de 10% (${appliedPenalty.toLocaleString()} FCFA) reversée à l'artiste. Solde restant (${refundToClient.toLocaleString()} FCFA) remboursé au promoteur.`;
+          }
+        } else if (isArtist) {
+          // Musician cancels -> 100% refund to promoter, 0 to artist
+          refundToClient = totalClientPaid;
+          payToArtist = 0;
+          appliedPenalty = 0;
+          logMsg = `Annulation par l'artiste ${cancelledByName}. Remboursement intégral de ${refundToClient.toLocaleString()} FCFA au promoteur.`;
+        } else {
+          // Admin/System cancels -> 100% refund
+          refundToClient = totalClientPaid;
+          payToArtist = 0;
+          appliedPenalty = 0;
+          logMsg = `Annulation administrative de sécurité. Remboursement intégral de ${refundToClient.toLocaleString()} FCFA au promoteur.`;
+        }
+
+        // Apply Wallet Updates
+        // 1. Client Wallet: Deduct from soldeBloque, add refund to soldeDisponible
+        if (clientId) {
+          const clientRef = doc(db, "users", clientId);
+          const clientSnap = await getDoc(clientRef);
+          if (clientSnap.exists()) {
+            const clientData = clientSnap.data();
+            const currentDisponible = clientData.wallet?.soldeDisponible ?? 0;
+            const currentBloque = clientData.wallet?.soldeBloque ?? 0;
+            await setDoc(clientRef, {
+              wallet: {
+                soldeDisponible: currentDisponible + refundToClient,
+                soldeBloque: Math.max(0, currentBloque - totalClientPaid)
+              }
+            }, { merge: true });
+          }
+        }
+
+        // 2. Artist Wallet: Add penalty if any to soldeDisponible
+        if (artistId && payToArtist > 0) {
+          const artistRef = doc(db, "users", artistId);
+          const artistSnap = await getDoc(artistRef);
+          if (artistSnap.exists()) {
+            const artistData = artistSnap.data();
+            const currentDisponible = artistData.wallet?.soldeDisponible ?? 0;
+            const currentBloque = artistData.wallet?.soldeBloque ?? 0;
+            const currentRevenus = artistData.wallet?.revenus ?? 0;
+            await setDoc(artistRef, {
+              wallet: {
+                soldeDisponible: currentDisponible + payToArtist,
+                soldeBloque: currentBloque,
+                revenus: currentRevenus + payToArtist
+              }
+            }, { merge: true });
+          }
+        }
+
+        // 3. Update Escrow status
+        if (escrowSnap.exists()) {
+          await updateDoc(escrowRef, {
+            status: "cancelled",
+            releasedAt: now,
+            refundToClient,
+            payToArtist,
+            appliedPenalty
+          });
+        }
+
+        // 4. Create transaction logs
+        if (refundToClient > 0) {
+          await addDoc(collection(db, "transactions"), {
+            contractId,
+            type: "refund",
+            amount: refundToClient,
+            userId: clientId,
+            userName: clientName,
+            description: `Remboursement suite annulation contrat ${contractId}: ${refundToClient.toLocaleString()} FCFA reversés.`,
+            createdAt: now
+          });
+        }
+
+        if (payToArtist > 0) {
+          await addDoc(collection(db, "transactions"), {
+            contractId,
+            type: "release",
+            amount: payToArtist,
+            userId: artistId,
+            userName: artistName,
+            description: `Dédommagement annulation contrat ${contractId}: ${payToArtist.toLocaleString()} FCFA perçus (Pénalité 10%).`,
+            createdAt: now
+          });
+        }
+      } else {
+        // Escrow not active (not paid yet)
+        logMsg = `Annulation du contrat ${contractId} par ${cancelledByName}. Aucun fonds n'était encore déposé en séquestre.`;
+      }
+
+      // Update Contract
+      await updateDoc(contractRef, {
+        status: "cancelled",
+        updatedAt: now
+      });
+
+      // Update Gombo status if needed
+      await this.updateGomboStatus(contractData.gomboId, "recrutement_ouvert");
+
+      // Append to contract history
+      const history = contractData.history || [];
+      history.push({
+        action: logMsg,
+        timestamp: now,
+        userId: cancelledByUserId
+      });
+      await updateDoc(contractRef, { history });
+
+      // Publish real-time security alert for Admin Command Center
+      await this.publishSecurityAlert({
+        type: "annulation_contrat",
+        title: `ANNULATION CONTRAT : ${contractId}`,
+        message: logMsg,
+        contractId,
+        openedBy: cancelledByUserId,
+        openedByName: cancelledByName,
+        severity: "medium",
+        status: "unresolved",
+        createdAt: now
+      });
+    }
+  },
+
   async openContractDispute(contractId: string, reason: string, openedById: string, openedByName: string) {
     if (db) {
       const now = new Date().toISOString();
+
+      // Get contract detail for info (amount, titles, names, etc)
+      const contractRef = doc(db, "contracts", contractId);
+      const contractSnap = await getDoc(contractRef);
+      let gomboTitle = "Prestation Artistique";
+      let amount = 0;
+      let clientId = "";
+      let artistId = "";
+      if (contractSnap.exists()) {
+        const cData = contractSnap.data();
+        gomboTitle = cData.gomboTitle || gomboTitle;
+        amount = cData.amount || 0;
+        clientId = cData.clientId || "";
+        artistId = cData.artistId || "";
+      }
 
       // 1. Create Litige dossier
       const litigeRef = await addDoc(collection(db, "litiges"), {
@@ -1959,6 +2393,8 @@ export const gomboDB = {
         openedByName,
         reason,
         status: "en_attente",
+        amount,
+        gomboTitle,
         createdAt: now
       });
 
@@ -1968,18 +2404,38 @@ export const gomboDB = {
       });
 
       // 3. Update contract status to disputed
-      const contractRef = doc(db, "contracts", contractId);
       await updateDoc(contractRef, {
         status: "disputed",
         updatedAt: now
       });
 
-      // 4. Append to history
-      const snap = await getDoc(contractRef);
-      if (snap.exists()) {
-        const history = snap.data().history || [];
+      // 4. Publish real-time security alert for Admin Centre Commandement
+      await this.publishSecurityAlert({
+        type: "litige_contrat",
+        title: `LITIGE COFFRE : Contrat ${contractId}`,
+        message: `Litige ouvert par ${openedByName} pour le Gombo "${gomboTitle}". Montant séquestré: ${amount.toLocaleString()} FCFA. Motif: ${reason}`,
+        contractId,
+        openedBy: openedById,
+        openedByName,
+        severity: "critical",
+        status: "unresolved",
+        createdAt: now
+      });
+
+      // 5. Send Notification to Founder/Admin profiles
+      await this.sendNotification({
+        userId: "admin",
+        type: "system",
+        title: "🚨 Alerte Litige Séquestre",
+        message: `Le contrat ${contractId} (${gomboTitle}) a été mis en litige par ${openedByName}.`,
+        createdAt: now
+      });
+
+      // 6. Append to history
+      if (contractSnap.exists()) {
+        const history = contractSnap.data().history || [];
         history.push({
-          action: `Litige ouvert par ${openedByName} : "${reason}" - Fonds bloqués dans le Coffre-fort`,
+          action: `Litige ouvert par ${openedByName} : "${reason}" - Fonds bloqués en séquestre. Alerte émise au Trône du Fondateur 🚨`,
           timestamp: now,
           userId: openedById
         });
@@ -2006,8 +2462,19 @@ export const gomboDB = {
 
       const escrowData = escrowSnap.data();
       const amount = escrowData.amount;
-      const totalCommission = escrowData.commissionClient + escrowData.commissionArtist;
-      const netToArtist = escrowData.amount - escrowData.commissionArtist;
+      const totalCommission = (escrowData.commissionClient || 0) + (escrowData.commissionArtist || 0);
+      const netToArtist = amount - (escrowData.commissionArtist || 0);
+      const totalLocked = escrowData.totalLocked || (amount + (escrowData.commissionClient || 0));
+
+      const contractRef = doc(db, "contracts", contractId);
+      const contractSnap = await getDoc(contractRef);
+      let clientId = "";
+      let artistId = "";
+      if (contractSnap.exists()) {
+        const cData = contractSnap.data();
+        clientId = cData.clientId || "";
+        artistId = cData.artistId || "";
+      }
 
       if (resolution === "release_to_artist") {
         // Option A: release to artist
@@ -2019,30 +2486,70 @@ export const gomboDB = {
         await addDoc(collection(db, "commissions"), {
           contractId,
           amount: totalCommission,
-          rate: 10,
+          rate: Math.round((totalCommission / amount) * 100) || 10,
           createdAt: now
         });
+
+        // Update Client's soldeBloque
+        if (clientId) {
+          const clientRef = doc(db, "users", clientId);
+          const clientSnap = await getDoc(clientRef);
+          if (clientSnap.exists()) {
+            const clientData = clientSnap.data();
+            const currentDisponible = clientData.wallet?.soldeDisponible ?? 0;
+            const currentBloque = clientData.wallet?.soldeBloque ?? 0;
+            await setDoc(clientRef, {
+              wallet: {
+                soldeDisponible: currentDisponible,
+                soldeBloque: Math.max(0, currentBloque - totalLocked)
+              }
+            }, { merge: true });
+          }
+        }
+
+        // Update Artist's soldeDisponible & stats
+        if (artistId) {
+          const artistRef = doc(db, "users", artistId);
+          const artistSnap = await getDoc(artistRef);
+          if (artistSnap.exists()) {
+            const artistData = artistSnap.data();
+            const currentDisponible = artistData.wallet?.soldeDisponible ?? 0;
+            const currentBloque = artistData.wallet?.soldeBloque ?? 0;
+            const artistRevenue = artistData.revenue ?? 0;
+            const artistTotalRevenue = artistData.totalRevenue ?? 0;
+
+            await setDoc(artistRef, {
+              wallet: {
+                soldeDisponible: currentDisponible + netToArtist,
+                soldeBloque: currentBloque
+              },
+              balance: (artistData.balance ?? 0) + netToArtist,
+              revenue: artistRevenue + netToArtist,
+              totalRevenue: artistTotalRevenue + netToArtist,
+              gombosCompleted: (artistData.gombosCompleted ?? 0) + 1
+            }, { merge: true });
+          }
+        }
 
         await addDoc(collection(db, "transactions"), {
           contractId,
           type: "release",
           amount: netToArtist,
-          description: `Arbitrage Admin : Libération des fonds de ${netToArtist} FCFA à l'artiste`,
+          userId: artistId,
+          description: `Arbitrage Admin : Libération des fonds de ${netToArtist.toLocaleString()} FCFA à l'artiste`,
           createdAt: now
         });
 
-        const contractRef = doc(db, "contracts", contractId);
         await updateDoc(contractRef, {
           status: "completed",
           updatedAt: now
         });
 
         // Update contract history
-        const snap = await getDoc(contractRef);
-        if (snap.exists()) {
-          const history = snap.data().history || [];
+        if (contractSnap.exists()) {
+          const history = contractSnap.data().history || [];
           history.push({
-            action: `Litige résolu par l'Administrateur : Fonds libérés à l'artiste`,
+            action: `Litige résolu par l'Administrateur : Fonds libérés à l'artiste (Arbitrage)`,
             timestamp: now,
             userId: adminId
           });
@@ -2055,26 +2562,41 @@ export const gomboDB = {
           releasedAt: now
         });
 
+        // Update Client's wallet: subtract from soldeBloque, add back to soldeDisponible
+        if (clientId) {
+          const clientRef = doc(db, "users", clientId);
+          const clientSnap = await getDoc(clientRef);
+          if (clientSnap.exists()) {
+            const clientData = clientSnap.data();
+            const currentDisponible = clientData.wallet?.soldeDisponible ?? 0;
+            const currentBloque = clientData.wallet?.soldeBloque ?? 0;
+            await setDoc(clientRef, {
+              wallet: {
+                soldeDisponible: currentDisponible + totalLocked,
+                soldeBloque: Math.max(0, currentBloque - totalLocked)
+              }
+            }, { merge: true });
+          }
+        }
+
         await addDoc(collection(db, "transactions"), {
           contractId,
           type: "refund",
-          amount: escrowData.totalLocked,
-          description: `Arbitrage Admin : Remboursement des fonds de ${escrowData.totalLocked} FCFA au créateur`,
+          amount: totalLocked,
+          description: `Arbitrage Admin : Remboursement des fonds de ${totalLocked.toLocaleString()} FCFA à l'annonceur`,
           createdAt: now
         });
 
-        const contractRef = doc(db, "contracts", contractId);
         await updateDoc(contractRef, {
           status: "cancelled",
           updatedAt: now
         });
 
         // Update contract history
-        const snap = await getDoc(contractRef);
-        if (snap.exists()) {
-          const history = snap.data().history || [];
+        if (contractSnap.exists()) {
+          const history = contractSnap.data().history || [];
           history.push({
-            action: `Litige résolu par l'Administrateur : Fonds remboursés à l'annonceur`,
+            action: `Litige résolu par l'Administrateur : Fonds remboursés à l'annonceur (Arbitrage)`,
             timestamp: now,
             userId: adminId
           });

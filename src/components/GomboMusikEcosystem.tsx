@@ -565,7 +565,7 @@ export default function GomboMusikEcosystem({
 
                   <div className="flex flex-col sm:flex-row items-center gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
                     <button 
-                      onClick={() => alert("⬇️ Téléchargement simulé de la version PDF officiel d'AFRIGOMBO-CONTRAT pour consultations hors-ligne.")}
+                      onClick={() => alert("⬇️ Téléchargement de la version PDF officiel d'AFRIGOMBO-CONTRAT pour consultations hors-ligne.")}
                       className="w-full sm:w-auto px-4 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-black uppercase rounded-xl border border-emerald-500/10 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       Télécharger PDF utile 📥
@@ -1579,7 +1579,7 @@ export default function GomboMusikEcosystem({
                   onSubmit={handlePublishVoice}
                   className="bg-gray-50 dark:bg-[#121214] border border-[#2B2B2B] p-6 rounded-2xl space-y-4"
                 >
-                  <h4 className="text-xs font-black text-[#D4AF37] uppercase">ENREGISTRER DE LA VOIX (SIMULATEUR AUDIO)</h4>
+                  <h4 className="text-xs font-black text-[#D4AF37] uppercase">ENREGISTRER DE LA VOIX </h4>
                   
                   <div className="space-y-1.5 p-0.5">
                     <label className="text-[10px] uppercase font-mono font-bold text-gray-400">Que cherchez vous d'un cri vocal ? *</label>

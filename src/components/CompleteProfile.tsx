@@ -388,7 +388,6 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
     };
 
     try {
-      console.log("🛠️ Saving musical profile to Firestore:", updates);
       await gomboDB.updateUserProfile(currentUserProfile.uid, updates);
 
       // Log actions in real-time user activity history

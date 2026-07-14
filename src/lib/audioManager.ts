@@ -7,6 +7,44 @@
 import { db } from "../firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 
+/**
+ * Intelligent client-side caching using the standard Cache Storage API.
+ * Intercepts network queries for media files, downloads and persists them locally,
+ * and streams them using direct Blob memory URLs to eliminate repetitive loading times.
+ */
+export async function getCachedAudioUrl(url: string): Promise<string> {
+  if (!url) return "";
+  try {
+    if (typeof window === "undefined" || !("caches" in window)) {
+      return url;
+    }
+    const cacheName = "afrigombo-audio-cache";
+    const cache = await caches.open(cacheName);
+    const cachedResponse = await cache.match(url);
+
+    if (cachedResponse) {
+      console.log(`[AUDIO CACHE] Cache HIT for URL: ${url}`);
+      const blob = await cachedResponse.blob();
+      return URL.createObjectURL(blob);
+    }
+
+    console.log(`[AUDIO CACHE] Cache MISS for URL: ${url}. Downloading and persisting...`);
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to download audio file: ${response.statusText}`);
+    }
+
+    // Put a clone of the response in the cache
+    await cache.put(url, response.clone());
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.warn(`[AUDIO CACHE] Cache operation failed for ${url}:`, error);
+    return url; // Safe fallback
+  }
+}
+
 class AudioManager {
   private isMuted: boolean = false;
   private volume: number = 0.7; // 0.0 to 1.0
@@ -32,7 +70,7 @@ class AudioManager {
       onSnapshot(
         mediaCollection,
         (snapshot) => {
-          snapshot.forEach((doc) => {
+          snapshot.forEach(async (doc) => {
             const data = doc.data();
             const id = doc.id; // "intro" or "anthem"
             this.mediaData[id] = data;
@@ -46,18 +84,33 @@ class AudioManager {
                     currentAudio.pause();
                   } catch (_) {}
                 }
-                const audioObj = new Audio(data.downloadURL);
-                audioObj.loop = !!data.loop;
-                audioObj.volume = (this.isMuted ? 0 : this.volume) * (data.volume !== undefined ? data.volume : 1);
-                
-                // Track ending to reset current playing status
-                audioObj.onended = () => {
-                  if (this.currentPlaying === id || (id === "anthem" && this.currentPlaying === "hymne")) {
-                    this.currentPlaying = "none";
-                  }
-                };
 
-                this.mediaElements[id] = audioObj;
+                try {
+                  const cachedUrl = await getCachedAudioUrl(data.downloadURL);
+                  const audioObj = new Audio(cachedUrl);
+                  audioObj.loop = !!data.loop;
+                  audioObj.volume = (this.isMuted ? 0 : this.volume) * (data.volume !== undefined ? data.volume : 1);
+                  
+                  // Track ending to reset current playing status
+                  audioObj.onended = () => {
+                    if (this.currentPlaying === id || (id === "anthem" && this.currentPlaying === "hymne")) {
+                      this.currentPlaying = "none";
+                    }
+                  };
+
+                  this.mediaElements[id] = audioObj;
+                } catch (err) {
+                  console.warn(`[AUDIO CACHE] Fallback to direct stream for ${id}:`, err);
+                  const audioObj = new Audio(data.downloadURL);
+                  audioObj.loop = !!data.loop;
+                  audioObj.volume = (this.isMuted ? 0 : this.volume) * (data.volume !== undefined ? data.volume : 1);
+                  audioObj.onended = () => {
+                    if (this.currentPlaying === id || (id === "anthem" && this.currentPlaying === "hymne")) {
+                      this.currentPlaying = "none";
+                    }
+                  };
+                  this.mediaElements[id] = audioObj;
+                }
               } else {
                 // Update volume and loop properties dynamically
                 currentAudio.loop = !!data.loop;

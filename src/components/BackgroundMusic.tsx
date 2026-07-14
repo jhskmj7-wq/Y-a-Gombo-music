@@ -2,60 +2,63 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Music, Volume2, VolumeX, SkipForward, SkipBack, Disc, RefreshCw, Shuffle, ListMusic, ChevronDown, Radio } from 'lucide-react';
 import { usePerformance } from '../services/performanceService';
+import { db } from '../firebase';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { getCachedAudioUrl } from '../lib/audioManager';
 
-// Tableau de la playlist d'ambiance Afrigombo (Saxophone, Piano, Kora, Afro-Jazz Instrumental)
-const PLAYLIST = [
-    {
-    id: 1,
+// Curated static fallback tracks for the ambient experience
+const DEFAULT_PLAYLIST = [
+  {
+    id: "default-1",
     title: "Lagos Night Chill",
     artist: "Eko Groove",
     url: "https://assets.mixkit.co/music/preview/mixkit-slow-trail-1217.mp3",
     category: "Lounge"
   },
   {
-    id: 2,
+    id: "default-2",
     title: "Mbombela (Classic African Jazz & Drums)",
     artist: "The African Jazz Pioneers",
     url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/The_African_Jazz_Pioneers/African_Jazz_Pioneers/The_African_Jazz_Pioneers_-_01_-_Mbombela.mp3",
     category: "Rythmé"
   },
   {
-    id: 3,
+    id: "default-3",
     title: "Prestige d'Afrique (Kora & Piano Akoustik)",
     artist: "Afrigombo Souverain",
     url: "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Ketsa/The_Lost_Files/Ketsa_-_04_-_Soul_Searching.mp3",
     category: "Lounge"
   },
   {
-    id: 4,
+    id: "default-4",
     title: "Rêve d'Ivoire (Harpe & Vent)",
     artist: "Symphonie d'Abidjan",
     url: "https://assets.mixkit.co/music/preview/mixkit-ethereal-dream-1250.mp3",
     category: "Calme"
   },
   {
-    id: 5,
+    id: "default-5",
     title: "Rythmes de la Terre (Percussions)",
     artist: "Tam-Tam Legend",
     url: "https://assets.mixkit.co/music/preview/mixkit-african-safari-loop-267.mp3",
     category: "Rythmé"
   },
   {
-    id: 6,
+    id: "default-6",
     title: "Sahel Sunset (Ambient Kora Meditation)",
     artist: "Mixkit Traditional",
     url: "https://assets.mixkit.co/music/preview/mixkit-tribal-rhythm-263.mp3",
     category: "Calme"
   },
   {
-    id: 7,
+    id: "default-7",
     title: "Soweto Wind Harmony (Piano Duo)",
     artist: "Traditional Free Archive",
     url: "https://assets.mixkit.co/music/preview/mixkit-serene-view-1216.mp3",
     category: "Lounge"
   },
   {
-    id: 8,
+    id: "default-8",
     title: "Vibe Harmonie (Saxophone & Piano Acoustique)",
     artist: "Afrigombo Melodies",
     url: "https://assets.mixkit.co/music/preview/mixkit-african-spirit-140.mp3",
@@ -65,17 +68,62 @@ const PLAYLIST = [
 
 export const BackgroundMusic: React.FC = () => {
   const { areSoundsReduced } = usePerformance();
-  const [isPlaying, setIsPlaying] = useState(false); // Default to false for better organization/control
-  const [currentIndex, setCurrentIndex] = useState(() => {
-    return Math.floor(Math.random() * PLAYLIST.length);
-  });
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playlist, setPlaylist] = useState<any[]>(DEFAULT_PLAYLIST);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
-  
-  // Auto-switch track if current one is not in new category
+
+  // Real-time Firestore sync of dynamic background tracks
+  useEffect(() => {
+    try {
+      const unsub = onSnapshot(
+        collection(db, "media"),
+        (snapshot) => {
+          const customList: any[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data.category === "audio" && data.enabled && data.downloadURL) {
+              customList.push({
+                id: docSnap.id,
+                title: data.title || "Musique d'ambiance",
+                artist: data.updatedBy ? data.updatedBy.split("@")[0] : "Afrigombo",
+                url: data.downloadURL,
+                category: "Lounge", // Categorize dynamically-uploaded files as general Lounge
+                volume: data.volume !== undefined ? data.volume : 0.8
+              });
+            }
+          });
+
+          if (customList.length > 0) {
+            setPlaylist(customList);
+          } else {
+            setPlaylist(DEFAULT_PLAYLIST);
+          }
+        },
+        (err) => {
+          console.warn("[BACKGROUND MUSIC] Failed to sync with Firestore 'media' collection:", err);
+          setPlaylist(DEFAULT_PLAYLIST);
+        }
+      );
+      return unsub;
+    } catch (e) {
+      console.warn("[BACKGROUND MUSIC] Sync error:", e);
+      setPlaylist(DEFAULT_PLAYLIST);
+    }
+  }, []);
+
+  // Ensure index remains bounded when playlist changes dynamically
+  useEffect(() => {
+    if (currentIndex >= playlist.length) {
+      setCurrentIndex(0);
+    }
+  }, [playlist, currentIndex]);
+
+  // Auto-switch track if current one is not in the new category
   useEffect(() => {
     if (selectedCategory === "Tous") return;
-    const currentIsInCategory = PLAYLIST[currentIndex].category === selectedCategory;
-    if (!currentIsInCategory) {
+    const currentTrack = playlist[currentIndex];
+    if (currentTrack && currentTrack.category !== selectedCategory) {
       handleNextTrack(true);
     }
   }, [selectedCategory]);
@@ -90,8 +138,8 @@ export const BackgroundMusic: React.FC = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isOpenDrawer, setIsOpenDrawer] = useState(false);
-  const [volume, setVolume] = useState(0.35); // volume stable et agréable
-  
+  const [volume, setVolume] = useState(0.35);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Sync volume with performance states
@@ -100,10 +148,11 @@ export const BackgroundMusic: React.FC = () => {
       audioRef.current.volume = areSoundsReduced ? volume * 0.4 : volume;
     }
   }, [volume, areSoundsReduced]);
-  const wasPlayingRef = useRef(false);
-  const transitionRef = useRef<boolean>(false); // prevent double track changes
 
-  const currentTrack = PLAYLIST[currentIndex];
+  const wasPlayingRef = useRef(false);
+  const transitionRef = useRef<boolean>(false);
+
+  const currentTrack = playlist[currentIndex] || DEFAULT_PLAYLIST[0];
 
   // Pause when the tab is hidden and resume if playing (user switches tabs / minimizes)
   useEffect(() => {
@@ -115,7 +164,7 @@ export const BackgroundMusic: React.FC = () => {
         }
       } else {
         if (wasPlayingRef.current && audioRef.current && isPlaying) {
-          audioRef.current.play().catch(err => console.log("Ambient Music resume blocked:", err));
+          audioRef.current.play().catch(err => { /* no-op */ });
           wasPlayingRef.current = false;
         }
       }
@@ -136,17 +185,16 @@ export const BackgroundMusic: React.FC = () => {
             const style = e.detail.style;
             let targetIndex = 0;
             if (style === "Afro Chill") targetIndex = 0;
-            else if (style === "Piano Lounge") targetIndex = 1;
-            else if (style === "Percussion Africaine") targetIndex = 2;
-            else if (style === "Studio Beat") targetIndex = 3;
-            else targetIndex = 4;
-            
-            if (targetIndex !== currentIndex) {
+            else if (style === "Piano Lounge") targetIndex = Math.min(1, playlist.length - 1);
+            else if (style === "Percussion Africaine") targetIndex = Math.min(2, playlist.length - 1);
+            else if (style === "Studio Beat") targetIndex = Math.min(3, playlist.length - 1);
+            else targetIndex = Math.min(4, playlist.length - 1);
+
+            if (targetIndex !== currentIndex && targetIndex >= 0) {
               setCurrentIndex(targetIndex);
             }
           }
-          
-          // Use setTimeout to ensure index switches before playing
+
           setTimeout(() => {
             if (audioRef.current) {
               audioRef.current.volume = volume;
@@ -170,58 +218,75 @@ export const BackgroundMusic: React.FC = () => {
 
     window.addEventListener('gombo_music_toggle', handleGlobalToggle);
     return () => window.removeEventListener('gombo_music_toggle', handleGlobalToggle);
-  }, [isPlaying, currentIndex, volume]);
+  }, [isPlaying, currentIndex, volume, playlist]);
 
-  // Audio setup and Crossfade transition logic
+  // Audio setup and Cache-backed load with Crossfade transition logic
   useEffect(() => {
+    let active = true;
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
-    
+
     transitionRef.current = false;
-    const audio = new Audio(currentTrack.url);
+
+    // Create persistent HTML5 Audio tag
+    const audio = new Audio();
     audio.loop = false;
-    audio.volume = isPlaying ? (areSoundsReduced ? volume * 0.4 : volume) : 0;
+    audio.volume = 0; // Starts at zero for smooth transition
+    audioRef.current = audio;
 
     const handleEnded = () => {
-       if (transitionRef.current) return;
-       transitionRef.current = true;
-       // Select next track
-       handleNextTrack(true); // crossfade transition on automatic end
+      if (transitionRef.current) return;
+      transitionRef.current = true;
+      handleNextTrack(true);
     };
 
     audio.addEventListener('ended', handleEnded);
-    audioRef.current = audio;
 
-    if (isPlaying) {
-      // Fade in effect
-      let currentFadeVol = 0;
-      audio.volume = 0;
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          const fadeInInterval = setInterval(() => {
-            const targetMaxVol = areSoundsReduced ? volume * 0.4 : volume;
-            currentFadeVol = Math.min(targetMaxVol, currentFadeVol + 0.05);
-            if (audioRef.current) {
-              audioRef.current.volume = currentFadeVol;
-            }
-            if (currentFadeVol >= targetMaxVol) {
-              clearInterval(fadeInInterval);
-            }
-          }, 80);
-        }).catch(() => {
-          setIsPlaying(false);
-        });
+    // Resolve URL from cache first to avoid repeating downloads
+    getCachedAudioUrl(currentTrack.url).then((cachedUrl) => {
+      if (!active) return;
+      audio.src = cachedUrl;
+      audio.volume = isPlaying ? (areSoundsReduced ? volume * 0.4 : volume) : 0;
+
+      if (isPlaying) {
+        let currentFadeVol = 0;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            const fadeInInterval = setInterval(() => {
+              if (!active || !audioRef.current) {
+                clearInterval(fadeInInterval);
+                return;
+              }
+              const targetMaxVol = areSoundsReduced ? volume * 0.4 : volume;
+              currentFadeVol = Math.min(targetMaxVol, currentFadeVol + 0.05);
+              audio.volume = currentFadeVol;
+              if (currentFadeVol >= targetMaxVol) {
+                clearInterval(fadeInInterval);
+              }
+            }, 80);
+          }).catch(() => {
+            setIsPlaying(false);
+          });
+        }
       }
-    }
+    }).catch((err) => {
+      console.warn("[BACKGROUND MUSIC] Cache load failed, playing direct stream:", err);
+      if (!active) return;
+      audio.src = currentTrack.url;
+      if (isPlaying) {
+        audio.play().catch(() => setIsPlaying(false));
+      }
+    });
 
     return () => {
+      active = false;
       audio.pause();
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [currentIndex]);
+  }, [currentIndex, currentTrack]);
 
   // Set local storage when shuffle state changes
   useEffect(() => {
@@ -237,7 +302,7 @@ export const BackgroundMusic: React.FC = () => {
 
   function togglePlay() {
     if (!audioRef.current) return;
-    
+
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
@@ -259,7 +324,6 @@ export const BackgroundMusic: React.FC = () => {
 
   function handleNextTrack(crossfade = false) {
     if (crossfade && audioRef.current) {
-      // Smooth fade-out before switching URL
       let currentFadeVol = audioRef.current.volume;
       const fadeOutInterval = setInterval(() => {
         currentFadeVol = Math.max(0, currentFadeVol - 0.05);
@@ -277,10 +341,10 @@ export const BackgroundMusic: React.FC = () => {
   }
 
   function switchTrackNext() {
-    const availableTracks = PLAYLIST.filter(t => selectedCategory === "Tous" || t.category === selectedCategory);
-    
+    const availableTracks = playlist.filter(t => selectedCategory === "Tous" || t.category === selectedCategory);
+
     if (availableTracks.length === 0) {
-      setCurrentIndex((prev) => (prev + 1) % PLAYLIST.length);
+      setCurrentIndex((prev) => (prev + 1) % playlist.length);
       transitionRef.current = false;
       triggerNotification();
       return;
@@ -294,34 +358,34 @@ export const BackgroundMusic: React.FC = () => {
         while (nextIdxInAvailable === currentInAvailableIdx) {
           nextIdxInAvailable = Math.floor(Math.random() * availableTracks.length);
         }
-        nextGlobalIdx = PLAYLIST.findIndex(t => t.id === availableTracks[nextIdxInAvailable].id);
+        nextGlobalIdx = playlist.findIndex(t => t.id === availableTracks[nextIdxInAvailable].id);
       } else {
-        nextGlobalIdx = PLAYLIST.findIndex(t => t.id === availableTracks[0].id);
+        nextGlobalIdx = playlist.findIndex(t => t.id === availableTracks[0].id);
       }
     } else {
       const currentInAvailableIdx = availableTracks.findIndex(t => t.id === currentTrack.id);
       const nextIdxInAvailable = (currentInAvailableIdx + 1) % availableTracks.length;
-      nextGlobalIdx = PLAYLIST.findIndex(t => t.id === availableTracks[nextIdxInAvailable].id);
+      nextGlobalIdx = playlist.findIndex(t => t.id === availableTracks[nextIdxInAvailable].id);
     }
 
-    setCurrentIndex(nextGlobalIdx);
+    setCurrentIndex(nextGlobalIdx >= 0 ? nextGlobalIdx : 0);
     transitionRef.current = false;
     triggerNotification();
   }
 
   function handlePrevTrack() {
-    const availableTracks = PLAYLIST.filter(t => selectedCategory === "Tous" || t.category === selectedCategory);
+    const availableTracks = playlist.filter(t => selectedCategory === "Tous" || t.category === selectedCategory);
     if (availableTracks.length === 0) {
-      setCurrentIndex((prev) => (prev - 1 + PLAYLIST.length) % PLAYLIST.length);
+      setCurrentIndex((prev) => (prev - 1 + playlist.length) % playlist.length);
       triggerNotification();
       return;
     }
 
     const currentInAvailableIdx = availableTracks.findIndex(t => t.id === currentTrack.id);
     const prevIdxInAvailable = (currentInAvailableIdx - 1 + availableTracks.length) % availableTracks.length;
-    const prevGlobalIdx = PLAYLIST.findIndex(t => t.id === availableTracks[prevIdxInAvailable].id);
-    
-    setCurrentIndex(prevGlobalIdx);
+    const prevGlobalIdx = playlist.findIndex(t => t.id === availableTracks[prevIdxInAvailable].id);
+
+    setCurrentIndex(prevGlobalIdx >= 0 ? prevGlobalIdx : 0);
     triggerNotification();
   }
 
@@ -337,7 +401,6 @@ export const BackgroundMusic: React.FC = () => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Mini control bubble */}
       <div className="flex items-center gap-2">
         <motion.button 
           whileHover={{ scale: 1.1 }}
@@ -398,7 +461,6 @@ export const BackgroundMusic: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* Interactive Playlist Drawer */}
       <AnimatePresence>
         {isOpenDrawer && (
           <motion.div
@@ -407,7 +469,6 @@ export const BackgroundMusic: React.FC = () => {
             exit={{ opacity: 0, y: 15, scale: 0.95 }}
             className="w-72 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-2xl p-4 shadow-[0_10px_35px_rgba(0,0,0,0.8)] overflow-hidden text-left relative mt-1"
           >
-            {/* Header */}
             <div className="flex justify-between items-center pb-2 border-b border-zinc-900 mb-3">
               <div className="flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5 text-[#D4AF37] animate-pulse" />
@@ -421,7 +482,6 @@ export const BackgroundMusic: React.FC = () => {
               </button>
             </div>
 
-            {/* Quick Controls */}
             <div className="flex items-center justify-between bg-zinc-900/60 p-2 rounded-xl mb-3 border border-zinc-900 gap-1.5">
               <button
                 onClick={() => setIsShuffle(!isShuffle)}
@@ -450,7 +510,6 @@ export const BackgroundMusic: React.FC = () => {
               </button>
             </div>
 
-            {/* Tracklist selection */}
             <div className="flex flex-wrap gap-1.5 mb-3 border-b border-zinc-900 pb-3">
               {["Tous", "Calme", "Lounge", "Rythmé"].map(cat => (
                 <button
@@ -468,14 +527,14 @@ export const BackgroundMusic: React.FC = () => {
             </div>
 
             <div className="space-y-1 max-h-[160px] overflow-y-auto pr-1 select-none">
-              {PLAYLIST.filter(t => selectedCategory === "Tous" || t.category === selectedCategory).map((track, idx) => {
-                const globalIdx = PLAYLIST.findIndex(p => p.id === track.id);
+              {playlist.filter(t => selectedCategory === "Tous" || t.category === selectedCategory).map((track, idx) => {
+                const globalIdx = playlist.findIndex(p => p.id === track.id);
                 const isActive = globalIdx === currentIndex;
                 return (
                   <div
                     key={track.id}
                     onClick={() => {
-                      setCurrentIndex(globalIdx);
+                      setCurrentIndex(globalIdx >= 0 ? globalIdx : 0);
                       setIsPlaying(true);
                     }}
                     className={`p-2 rounded-xl cursor-pointer transition-all flex items-center justify-between text-left group ${
@@ -485,10 +544,10 @@ export const BackgroundMusic: React.FC = () => {
                     }`}
                   >
                     <div className="flex flex-col min-w-0 flex-1 pr-2">
-                       <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5">
                         <span className="text-[10.5px] font-extrabold truncate leading-tight">{track.title}</span>
                         <span className="text-[7.5px] font-mono text-[#D4AF37] opacity-60">[{track.category}]</span>
-                       </div>
+                      </div>
                       <span className="text-[8px] font-mono text-zinc-500 mt-0.5">{track.artist}</span>
                     </div>
                     {isActive && isPlaying ? (
@@ -505,7 +564,6 @@ export const BackgroundMusic: React.FC = () => {
               })}
             </div>
 
-            {/* Volume slider */}
             <div className="mt-3 pt-2 border-t border-zinc-900 flex items-center gap-2 text-zinc-500">
               <VolumeX size={11} />
               <input

@@ -18,7 +18,6 @@ interface AuthScreenProps {
 }
 
 function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
-  console.log("AuthScreen Hooks initialized");
   const { loginWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
   
@@ -79,7 +78,6 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
   // Mount log
   React.useEffect(() => {
-    console.log("AuthScreen Component mounted");
   }, []);
 
   // Auto-redirect to app on transfer success
@@ -94,7 +92,6 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
   React.useEffect(() => {
     const handleSuccess = async (e: any) => {
-      console.log("🌟 [AuthScreen WebView Event] webViewAuthSuccess caught!", e.detail);
       setIsRedirectPending(false);
       setLoading(false);
       if (e.detail && e.detail.uid) {
@@ -109,7 +106,6 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
   const handlePostAuthSuccess = async (uid: string, userEmail: string) => {
     setLoading(true);
     try {
-      console.log("🛠️ [AuthScreen Debug] Syncing user profile data for", uid);
       let profile = null;
       try {
         profile = await gomboDB.getUserProfile(uid);
@@ -120,7 +116,6 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
       const userExistsInFirestore = !!profile;
 
       if (userExistsInFirestore) {
-        console.log("🎒 User already exists in Firestore. Entering application directly.");
         
         // Log connection activity
         try {
@@ -149,7 +144,6 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         }, 900);
 
       } else {
-        console.log("🆕 User inexistant. Creating automated onboarding user profile...");
         const now = new Date().toISOString();
         const names = userEmail ? userEmail.split("@")[0].split(".") : ["Artiste"];
         const computedDisplayName = names.join(" ");

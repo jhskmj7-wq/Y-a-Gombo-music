@@ -13,7 +13,6 @@ export default function HeritagePage() {
           onRefreshProfile={refreshProfile}
           onLogout={logout}
           onNavigateView={(view, tab) => {
-            console.log("Profile navigated to:", view, tab);
           }}
         />
       ) : (

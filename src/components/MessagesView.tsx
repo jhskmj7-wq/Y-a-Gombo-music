@@ -122,7 +122,6 @@ export default function MessagesView({
     const autoInitiateChat = async () => {
       setCreatingConvo(true);
       try {
-        console.log("💬 [Messagerie] Auto-initiating chat with user:", openConvoWithUserId);
         
         const existing = conversations.find(c => c.participants.includes(openConvoWithUserId));
         if (existing) {
@@ -193,7 +192,6 @@ export default function MessagesView({
       return;
     }
 
-    console.log("📡 [Messagerie] Synced to real-time message stream for ID:", activeConvo.id);
     const unsubscribe = gomboDB.listenMessages(activeConvo.id, (msgs) => {
       setMessages(msgs);
       gomboDB.markConversationAsRead(activeConvo.id, currentUser.uid);
@@ -435,7 +433,7 @@ export default function MessagesView({
     if (!otherUid) return defaultData;
 
     const details = convo.participantDetails?.[otherUid];
-    // Use consistent mock statuses or real status flags for high-end aesthetic
+    // Use consistent statuses or real status flags for high-end aesthetic
     const isEven = otherUid.charCodeAt(otherUid.length - 1) % 2 === 0;
     return {
       name: details?.name || defaultData.name,

@@ -27,6 +27,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
   const [disputeReason, setDisputeReason] = useState("");
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
 
   // Real-time listener for the individual contract
   useEffect(() => {
@@ -144,38 +145,80 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
     }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSpecificPhotoUpload = async (type: "presence" | "materiel" | "scene" | "finale", e: React.ChangeEvent<HTMLInputElement>) => {
     if (!contract || !e.target.files || processing) return;
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    const currentPhotos = contract.presencePhotos || [];
+    const fieldName = type === "presence" ? "presencePhotos" :
+                      type === "materiel" ? "materielPhotos" :
+                      type === "scene" ? "scenePhotos" : "finalePhotos";
+
+    const currentPhotos = contract[fieldName] || [];
     if (currentPhotos.length >= 3) {
-      alert("Maximum 3 photos de présence autorisées.");
+      alert(`Maximum 3 photos de type [${type.toUpperCase()}] autorisées.`);
       return;
     }
 
     setProcessing(true);
     try {
       const uploadPromises = files.slice(0, 3 - currentPhotos.length).map(async (file, idx) => {
-        const path = `contracts/${contract.id}/presence_${Date.now()}_${idx}.jpg`;
+        const path = `contracts/${contract.id}/${type}_${Date.now()}_${idx}.jpg`;
         return await gomboDB.uploadFile(file, path);
       });
 
       const urls = await Promise.all(uploadPromises);
       const updatedPhotos = [...currentPhotos, ...urls];
 
+      const updates: any = {};
+      updates[fieldName] = updatedPhotos;
+
       await gomboDB.updateContract(
         contract.id,
-        { presencePhotos: updatedPhotos },
+        updates,
         currentUser.uid!,
-        `📸 Preuve de présence ajoutée (${updatedPhotos.length}/3)`
+        `📸 Preuve [${type.toUpperCase()}] ajoutée (${updatedPhotos.length}/3)`
       );
 
       try { audioSynth.playValidationSuccess(); } catch(_) {}
       if (onUpdate) onUpdate();
     } catch (err) {
       console.error("Photo upload failed:", err);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    await handleSpecificPhotoUpload("presence", e);
+  };
+
+  const handleToggleProofRequest = async (proofType: string) => {
+    if (!contract || processing) return;
+    setProcessing(true);
+    try {
+      const currentRequests = contract.proofRequests || ["presence"];
+      let updatedRequests = [];
+      if (currentRequests.includes(proofType)) {
+        if (proofType === "presence") {
+          alert("La preuve de présence est obligatoire.");
+          setProcessing(false);
+          return;
+        }
+        updatedRequests = currentRequests.filter((r: string) => r !== proofType);
+      } else {
+        updatedRequests = [...currentRequests, proofType];
+      }
+      
+      await gomboDB.updateContract(
+        contract.id,
+        { proofRequests: updatedRequests },
+        currentUser.uid!,
+        `⚙️ Exigence de preuve modifiée : [${proofType.toUpperCase()}]`
+      );
+      if (onUpdate) onUpdate();
+    } catch (err) {
+      console.error("Failed to toggle proof request:", err);
     } finally {
       setProcessing(false);
     }
@@ -253,30 +296,36 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
     setProcessing(true);
     try {
       const updates: any = {};
-      const action = isValid ? "Validation de la prestation" : "Refus de validation (Litige)";
       
-      if (isClient) updates.clientValidation = isValid;
-      else updates.artistValidation = isValid;
-
       if (!isValid) {
         setShowDisputeModal(true);
         setProcessing(false);
         return;
       }
 
-      // If conforms, we release escrow automatically
+      // True Double Validation: Both must confirm before release
       if (isValid) {
         if (isClient) {
           updates.clientValidation = true;
-          updates.status = "completed";
           updates.clientConformedAt = new Date().toISOString();
-          
-          await gomboDB.releaseEscrow(contract.id);
-          await gomboDB.updateContract(contract.id, updates, currentUser.uid!, "Prestation validée par le client. Fonds libérés ! ✨");
-          await gomboDB.updateGomboStatus(contract.gomboId, "mission_terminee", { paymentStatus: "paid" });
         } else {
           updates.artistValidation = true;
-          await gomboDB.updateContract(contract.id, updates, currentUser.uid!, action);
+          updates.artistConformedAt = new Date().toISOString();
+        }
+
+        const isClientConformed = isClient ? true : !!contract.clientValidation;
+        const isArtistConformed = isArtist ? true : !!contract.artistValidation;
+
+        if (isClientConformed && isArtistConformed) {
+          // Automatic funds release on double confirmation
+          updates.status = "completed";
+          await gomboDB.releaseEscrow(contract.id);
+          await gomboDB.updateContract(contract.id, updates, currentUser.uid!, "Prestation validée par les deux parties. Fonds libérés automatiquement ! ✨");
+          await gomboDB.updateGomboStatus(contract.gomboId, "mission_terminee", { paymentStatus: "paid" });
+        } else {
+          // Record single confirmation and wait
+          const roleLabel = isClient ? "Le promoteur" : "L'artiste";
+          await gomboDB.updateContract(contract.id, updates, currentUser.uid!, `✔️ ${roleLabel} a validé la prestation. En attente de la confirmation de l'autre partie. ⏳`);
         }
       }
 
@@ -480,178 +529,340 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 PROTOCOLE DE SÉCURITÉ AFRIGOMBO (TIERS DE CONFIANCE)
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Geolocation & Arrival */}
-                <div className={`p-5 rounded-2xl border ${contract.arrivalTime ? "border-emerald-500/20 bg-emerald-500/5" : "border-zinc-800 bg-zinc-900/20"} space-y-3`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-white">1. Arrivée de l'artiste</span>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* LEFT SIDE: STEPS & STATUS TIMELINE */}
+                <div className="lg:col-span-1 space-y-6">
+                  {/* Geolocation & Arrival */}
+                  <div className={`p-5 rounded-2xl border ${contract.arrivalTime ? "border-emerald-500/20 bg-emerald-500/5" : "border-zinc-800 bg-zinc-900/20"} space-y-3`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-white">1. Arrivée de l'artiste</span>
+                      {contract.arrivalTime ? (
+                        <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded text-[9px] font-mono">ENREGISTRÉ</span>
+                      ) : (
+                        <span className="px-2 py-0.5 bg-zinc-800 text-zinc-500 rounded text-[9px] font-mono">ATTENTE</span>
+                      )}
+                    </div>
                     {contract.arrivalTime ? (
-                      <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded text-[9px] font-mono">ENREGISTRÉ</span>
+                      <div className="space-y-1.5 text-xs">
+                        <p className="text-zinc-300 font-bold">📍 Arrivé à : <span className="text-emerald-400 font-mono font-black">{contract.arrivalTime}</span></p>
+                        <p className="text-zinc-500 text-[10px] font-mono flex items-center gap-1">
+                          <Compass className="w-3.5 h-3.5 text-zinc-600" />
+                          {contract.arrivalGPS || "GPS Non activé"}
+                        </p>
+                      </div>
                     ) : (
-                      <span className="px-2 py-0.5 bg-zinc-800 text-zinc-500 rounded text-[9px] font-mono">ATTENTE</span>
+                      <div className="space-y-2">
+                        <p className="text-zinc-500 text-[10px]">L'artiste doit certifier sa présence une fois arrivé sur le lieu du Gombo.</p>
+                        {isArtist && (
+                          <button 
+                            onClick={handleArrival}
+                            disabled={processing}
+                            className="w-full py-2 bg-[#D4AF37] hover:bg-[#B8860B] text-black font-black uppercase text-[9px] tracking-wider rounded-xl transition-colors disabled:opacity-50"
+                          >
+                            📍 Je suis arrivé sur place
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
-                  {contract.arrivalTime ? (
-                    <div className="space-y-1.5 text-xs">
-                      <p className="text-zinc-300 font-bold">📍 Arrivé à : <span className="text-emerald-400 font-mono font-black">{contract.arrivalTime}</span></p>
-                      <p className="text-zinc-500 text-[10px] font-mono flex items-center gap-1">
-                        <Compass className="w-3.5 h-3.5 text-zinc-600" />
-                        {contract.arrivalGPS || "GPS Non activé"}
+
+                  {/* Prestation Status Timeline */}
+                  <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20 space-y-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-white">2. Exécution & Statut</span>
+                    <div className="space-y-2 text-xs">
+                      {contract.status === "payment_held" && (
+                        <div className="space-y-2">
+                          <p className="text-zinc-500 text-[10px]">Prestation prête. Une fois l'artiste arrivé, la prestation peut débuter.</p>
+                          {isArtist && contract.arrivalTime && (
+                            <button
+                              onClick={handleStartPrestation}
+                              disabled={processing}
+                              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[9px] tracking-widest rounded-xl transition-all"
+                            >
+                              🎬 Commencer la prestation
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {contract.status === "arrived" && (
+                        <div className="space-y-2">
+                          <p className="text-zinc-500 text-[10px]">Artiste arrivé sur les lieux. Cliquez pour démarrer la prestation.</p>
+                          {isArtist && (
+                            <button
+                              onClick={handleStartPrestation}
+                              disabled={processing}
+                              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[9px] tracking-widest rounded-xl transition-all animate-bounce"
+                            >
+                              🎬 Commencer la prestation
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {contract.status === "in_progress" && (
+                        <div className="space-y-2">
+                          <p className="text-[#D4AF37] font-bold text-[10px] animate-pulse">⚡ PRESTATION EN COURS EN CE MOMENT</p>
+                          {isArtist && (
+                            <button
+                              onClick={handleEndPrestation}
+                              disabled={processing}
+                              className="w-full py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-black uppercase text-[9px] tracking-widest rounded-xl transition-all"
+                            >
+                              ✨ Marquer comme terminée
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {["completed_artist", "completed", "disputed"].includes(contract.status) && (
+                        <div className="space-y-1 font-mono text-[10px]">
+                          {contract.artistFinishedAt && (
+                            <p className="text-zinc-400">🏁 Fin prestation : {new Date(contract.artistFinishedAt).toLocaleTimeString()}</p>
+                          )}
+                          {contract.clientConformedAt && (
+                            <p className="text-emerald-400">✅ Validation client : {new Date(contract.clientConformedAt).toLocaleTimeString()}</p>
+                          )}
+                          {contract.status === "completed" && <p className="text-emerald-500 font-bold uppercase">PAIEMENT LIBÉRÉ AVEC SUCCÈS</p>}
+                          {contract.status === "disputed" && <p className="text-red-500 font-bold uppercase">LITIGE EN COURS - BLOCAGE</p>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT SIDE: SECURE PROOFS PROTOCOL */}
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/10 space-y-6">
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-white mb-1">
+                        📸 PROTOCOLE DE PREUVES SÉCURISÉES (COFFRE-FORT)
+                      </h4>
+                      <p className="text-[10px] text-zinc-500 font-mono">
+                        Preuves visuelles d'exécution stockées sur Firebase Storage. Aucun lien externe ou téléphone.
                       </p>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <p className="text-zinc-500 text-[10px]">L'artiste doit certifier sa présence une fois arrivé sur le lieu du Gombo.</p>
-                      {isArtist && (
-                        <button 
-                          onClick={handleArrival}
-                          disabled={processing}
-                          className="w-full py-2 bg-[#D4AF37] hover:bg-[#B8860B] text-black font-black uppercase text-[9px] tracking-wider rounded-xl transition-colors disabled:opacity-50"
-                        >
-                          📍 Je suis arrivé sur place
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
 
-                {/* Proofs of Presence Photos */}
-                <div className={`p-5 rounded-2xl border ${contract.presencePhotos && contract.presencePhotos.length > 0 ? "border-emerald-500/20 bg-emerald-500/5" : "border-zinc-800 bg-zinc-900/20"} space-y-3`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-white">2. Preuves de présence (Photos)</span>
-                    <span className="px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded text-[9px] font-mono">
-                      {contract.presencePhotos?.length || 0}/3 MAX
-                    </span>
-                  </div>
-                  
-                  {/* Photo grid */}
-                  {contract.presencePhotos && contract.presencePhotos.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-2">
-                      {contract.presencePhotos.map((url, i) => (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="relative aspect-square rounded-lg overflow-hidden border border-zinc-800 block hover:border-[#D4AF37] transition-all">
-                          <img referrerPolicy="no-referrer" src={url} alt={`Preuve ${i+1}`} className="w-full h-full object-cover" />
-                        </a>
-                      ))}
-                      {isArtist && contract.presencePhotos.length < 3 && (
-                        <label className="aspect-square rounded-lg border-2 border-dashed border-zinc-800 hover:border-[#D4AF37]/50 flex items-center justify-center cursor-pointer transition-colors">
-                          <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={processing} />
-                          <Plus className="w-4 h-4 text-zinc-600" />
-                        </label>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <p className="text-zinc-500 text-[10px]">L'artiste doit uploader entre 1 et 3 photos réelles de l'événement.</p>
-                      {isArtist && contract.arrivalTime && (
-                        <label className="flex items-center justify-center gap-2 w-full py-2 bg-zinc-900 border border-zinc-800 hover:border-[#D4AF37]/35 text-zinc-300 font-bold uppercase text-[9px] tracking-wider rounded-xl cursor-pointer transition-all">
-                          <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={processing} />
-                          <Camera className="w-3.5 h-3.5 text-[#D4AF37]" />
-                          Prendre/Ajouter une photo
-                        </label>
-                      )}
-                    </div>
-                  )}
-                </div>
+                    {/* Promoter controls: demand custom proofs */}
+                    {isClient && (
+                      <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-900 space-y-3">
+                        <span className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-wider">
+                          🛠️ PREUVES EXIGÉES PAR LE PROMOTEUR
+                        </span>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { id: "presence", label: "📍 Présence locale", disabled: true },
+                            { id: "materiel", label: "🎸 Matériel & Balance", disabled: false },
+                            { id: "scene", label: "🎤 Show sur Scène", disabled: false },
+                            { id: "finale", label: "🏁 Clôture / Photo Finale", disabled: false }
+                          ].map(pt => {
+                            const isRequested = (contract.proofRequests || ["presence"]).includes(pt.id);
+                            return (
+                              <button
+                                key={pt.id}
+                                disabled={pt.disabled || processing}
+                                onClick={() => handleToggleProofRequest(pt.id)}
+                                className={`py-2 px-3 rounded-xl border text-[10px] font-mono font-bold uppercase text-left transition-all flex items-center justify-between ${
+                                  isRequested 
+                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                                    : "bg-black border-zinc-900 text-zinc-500 hover:border-zinc-800"
+                                } ${pt.disabled ? "opacity-75 cursor-not-allowed" : "cursor-pointer"}`}
+                              >
+                                <span>{pt.label}</span>
+                                <span className="text-[8px] font-mono px-1.5 py-0.5 bg-black/40 rounded">
+                                  {isRequested ? "REQUIS" : "FACULTATIF"}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
-                {/* Prestation Status Timeline */}
-                <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20 space-y-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-white">3. Exécution & Statut</span>
-                  <div className="space-y-2 text-xs">
-                    {contract.status === "payment_held" && (
-                      <div className="space-y-2">
-                        <p className="text-zinc-500 text-[10px]">Prestation prête. Une fois l'artiste arrivé, la prestation peut débuter.</p>
-                        {isArtist && contract.arrivalTime && (
-                          <button
-                            onClick={handleStartPrestation}
-                            disabled={processing}
-                            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[9px] tracking-widest rounded-xl transition-all"
+                    {/* Proof boxes for all active requests */}
+                    <div className="space-y-4">
+                      {[
+                        { id: "presence", label: "📍 Preuve de présence locale", field: "presencePhotos" },
+                        { id: "materiel", label: "🎸 Preuve d'installation Matériel", field: "materielPhotos" },
+                        { id: "scene", label: "🎤 Preuve du Show sur Scène", field: "scenePhotos" },
+                        { id: "finale", label: "🏁 Preuve de Clôture / Finale", field: "finalePhotos" }
+                      ].map(pt => {
+                        const isRequested = (contract.proofRequests || ["presence"]).includes(pt.id);
+                        if (!isRequested) return null;
+
+                        const photosList = contract[pt.field] || [];
+
+                        return (
+                          <div 
+                            key={pt.id} 
+                            className={`p-4 rounded-xl border ${photosList.length > 0 ? "border-emerald-500/10 bg-emerald-500/5" : "border-zinc-900 bg-black/20"} space-y-3`}
                           >
-                            🎬 Commencer la prestation
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    {contract.status === "arrived" && (
-                      <div className="space-y-2">
-                        <p className="text-zinc-500 text-[10px]">Artiste arrivé sur les lieux. Cliquez pour démarrer la prestation.</p>
-                        {isArtist && (
-                          <button
-                            onClick={handleStartPrestation}
-                            disabled={processing}
-                            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[9px] tracking-widest rounded-xl transition-all animate-bounce"
-                          >
-                            🎬 Commencer la prestation
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    {contract.status === "in_progress" && (
-                      <div className="space-y-2">
-                        <p className="text-[#D4AF37] font-bold text-[10px] animate-pulse">⚡ PRESTATION EN COURS EN CE MOMENT</p>
-                        {isArtist && (
-                          <button
-                            onClick={handleEndPrestation}
-                            disabled={processing}
-                            className="w-full py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-black uppercase text-[9px] tracking-widest rounded-xl transition-all"
-                          >
-                            ✨ Marquer comme terminée
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    {["completed_artist", "completed", "disputed"].includes(contract.status) && (
-                      <div className="space-y-1 font-mono text-[10px]">
-                        {contract.artistFinishedAt && (
-                          <p className="text-zinc-400">🏁 Fin prestation : {new Date(contract.artistFinishedAt).toLocaleTimeString()}</p>
-                        )}
-                        {contract.clientConformedAt && (
-                          <p className="text-emerald-400">✅ Validation client : {new Date(contract.clientConformedAt).toLocaleTimeString()}</p>
-                        )}
-                        {contract.status === "completed" && <p className="text-emerald-500 font-bold uppercase">PAIEMENT LIBÉRÉ AVEC SUCCÈS</p>}
-                        {contract.status === "disputed" && <p className="text-red-500 font-bold uppercase">LITIGE EN COURS - BLOCAGE</p>}
-                      </div>
-                    )}
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-mono font-black text-white uppercase tracking-wider">{pt.label}</span>
+                              <span className="text-[8px] font-mono bg-zinc-900 text-zinc-500 px-2 py-0.5 rounded-full font-bold">
+                                {photosList.length}/3 MAX
+                              </span>
+                            </div>
+
+                            {photosList.length > 0 ? (
+                              <div className="grid grid-cols-4 gap-2">
+                                {photosList.map((url: string, i: number) => (
+                                  <button 
+                                    key={i} 
+                                    onClick={() => setLocalPreviewUrl(url)} 
+                                    className="relative aspect-square rounded-lg overflow-hidden border border-zinc-800 block hover:border-[#D4AF37] transition-all"
+                                  >
+                                    <img referrerPolicy="no-referrer" src={url} alt={`Preuve ${i+1}`} className="w-full h-full object-cover" />
+                                  </button>
+                                ))}
+                                {isArtist && photosList.length < 3 && (
+                                  <label className="aspect-square rounded-lg border-2 border-dashed border-zinc-800 hover:border-[#D4AF37]/50 flex items-center justify-center cursor-pointer transition-colors">
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleSpecificPhotoUpload(pt.id as any, e)} disabled={processing} />
+                                    <Plus className="w-4 h-4 text-zinc-600" />
+                                  </label>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <p className="text-zinc-500 text-[9px] font-mono">
+                                  {isArtist ? "Vous devez uploader une photo pour attester de cette étape." : "En attente du dépôt de l'artiste..."}
+                                </p>
+                                {isArtist && (
+                                  <label className="flex items-center justify-center gap-2 w-full py-2 bg-zinc-950 border border-zinc-900 hover:border-[#D4AF37]/35 text-zinc-300 font-bold uppercase text-[9px] tracking-wider rounded-xl cursor-pointer transition-all">
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleSpecificPhotoUpload(pt.id as any, e)} disabled={processing} />
+                                    <Camera className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                    Uploader la photo
+                                  </label>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Financials */}
+          {/* Financials / Transparence Économique */}
           <div className="space-y-6">
-            <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">MODALITÉS FINANCIÈRES</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="p-6 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-3xl space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Cachet Artiste</span>
-                  <span className="text-white font-mono font-bold">{contract.amount.toLocaleString()} FCFA</span>
+            <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">
+              TRANSPARENCE ÉCONOMIQUE & FINANCIÈRE
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Transparency Card */}
+              <div className="lg:col-span-2 p-6 bg-zinc-950 border border-zinc-850 rounded-3xl space-y-5 shadow-inner">
+                <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-mono uppercase text-zinc-500 tracking-wider">Base de négociation</span>
+                    <span className="text-zinc-200 font-bold text-xs">Cachet de Prestation</span>
+                  </div>
+                  <span className="text-white font-mono text-base font-extrabold">{contract.amount.toLocaleString()} FCFA</span>
                 </div>
-                <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
-                  <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Commission {isClient ? "Client" : "Gombo"}</span>
-                  <span className="text-zinc-400 font-mono text-xs">{isClient ? contract.commissionClient.toLocaleString() : contract.commissionArtist.toLocaleString()} FCFA</span>
+
+                {/* Promoter details */}
+                <div className="flex items-center justify-between bg-zinc-900/40 p-3.5 rounded-2xl border border-zinc-900">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-zinc-300">Commission Promoteur (Client)</span>
+                      {contract.isClientPremium ? (
+                        <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase tracking-widest border border-[#D4AF37]/20">💎 Premium (4%)</span>
+                      ) : (
+                        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-widest">Standard (6%)</span>
+                      )}
+                    </div>
+                    <p className="text-[9px] text-zinc-500">Ajoutée au cachet de base</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-zinc-300 font-mono font-bold">+{contract.commissionClient.toLocaleString()} FCFA</span>
+                    {contract.savingsClient > 0 && (
+                      <p className="text-[8.5px] text-emerald-400 font-mono font-medium mt-0.5">Économie de {contract.savingsClient.toLocaleString()} FCFA incluse</p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center justify-between border-t border-[#D4AF37]/30 pt-4">
-                  <span className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest">{isClient ? "Total à Régler" : "Net à Recevoir"}</span>
-                  <span className="text-[#D4AF37] text-xl font-sans font-black tracking-tighter">
-                    {isClient ? contract.totalClientPaid.toLocaleString() : contract.totalArtistReceives.toLocaleString()} FCFA
+
+                {/* Musician details */}
+                <div className="flex items-center justify-between bg-zinc-900/40 p-3.5 rounded-2xl border border-zinc-900">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-zinc-300">Commission Musicien (Artiste)</span>
+                      {contract.isArtistPremium ? (
+                        <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase tracking-widest border border-[#D4AF37]/20">💎 Premium (4%)</span>
+                      ) : (
+                        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-widest">Standard (6%)</span>
+                      )}
+                    </div>
+                    <p className="text-[9px] text-zinc-500">Déduite du cachet de base</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-zinc-400 font-mono font-bold">-{contract.commissionArtist.toLocaleString()} FCFA</span>
+                    {contract.savingsArtist > 0 && (
+                      <p className="text-[8.5px] text-emerald-400 font-mono font-medium mt-0.5">Économie de {contract.savingsArtist.toLocaleString()} FCFA incluse</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Total AFRIGOMBO commission */}
+                <div className="flex items-center justify-between border-t border-zinc-900 pt-4 px-1">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-mono uppercase text-zinc-500 tracking-wider">Service de confiance sécurisé</span>
+                    <span className="text-zinc-400 text-xs">Commission totale AFRIGOMBO</span>
+                  </div>
+                  <span className="text-zinc-300 font-mono font-bold">
+                    {(contract.commissionClient + contract.commissionArtist).toLocaleString()} FCFA 
+                    <span className="text-[10px] text-zinc-500 ml-1.5 font-normal">
+                      ({Math.round(((contract.commissionClientRate || 0.06) + (contract.commissionArtistRate || 0.06)) * 100)}%)
+                    </span>
                   </span>
+                </div>
+
+                {/* Final amounts for each side */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-zinc-900 pt-4">
+                  <div className={`p-4 rounded-2xl border ${isClient ? 'bg-[#D4AF37]/5 border-[#D4AF37]/25' : 'bg-zinc-900/20 border-zinc-850'}`}>
+                    <p className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-widest leading-none mb-1">Montant Net Promoteur (À Régler)</p>
+                    <p className={`text-sm font-black font-sans tracking-tight ${isClient ? 'text-[#D4AF37]' : 'text-zinc-300'}`}>
+                      {contract.totalClientPaid.toLocaleString()} FCFA
+                    </p>
+                    <p className="text-[7.5px] text-zinc-500 mt-1">Cachet ({contract.amount.toLocaleString()}) + Comm ({contract.commissionClient.toLocaleString()})</p>
+                  </div>
+
+                  <div className={`p-4 rounded-2xl border ${isArtist ? 'bg-[#D4AF37]/5 border-[#D4AF37]/25' : 'bg-zinc-900/20 border-zinc-850'}`}>
+                    <p className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-widest leading-none mb-1">Montant Net Musicien (Reçu)</p>
+                    <p className={`text-sm font-black font-sans tracking-tight ${isArtist ? 'text-[#D4AF37]' : 'text-zinc-300'}`}>
+                      {contract.totalArtistReceives.toLocaleString()} FCFA
+                    </p>
+                    <p className="text-[7.5px] text-zinc-500 mt-1">Cachet ({contract.amount.toLocaleString()}) - Comm ({contract.commissionArtist.toLocaleString()})</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col justify-center space-y-4 text-xs">
-                <div className="flex items-start gap-3">
-                  <Lock className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-zinc-200 font-bold">Paiement Sécurisé par AFRIGOMBO</p>
-                    <p className="text-zinc-500 text-[10px] leading-relaxed">Les fonds sont bloqués dès le dépôt et ne sont libérés qu'après validation mutuelle de la prestation.</p>
+              {/* Trust block */}
+              <div className="p-6 bg-[#D4AF37]/5 border border-[#D4AF37]/15 rounded-3xl flex flex-col justify-between space-y-4 text-xs">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Lock className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-zinc-200 font-bold">Paiement Sécurisé par AFRIGOMBO</p>
+                      <p className="text-zinc-500 text-[10px] leading-relaxed">
+                        Les fonds sont bloqués dès le dépôt et ne sont libérés qu'après validation mutuelle de la prestation.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <BadgeCheck className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-zinc-200 font-bold">Garantie de Prestation</p>
+                      <p className="text-zinc-500 text-[10px] leading-relaxed">
+                        Le contrat fait foi en cas de litige. AFRIGOMBO intervient comme tiers de confiance souverain.
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <BadgeCheck className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-zinc-200 font-bold">Garantie de Prestation</p>
-                    <p className="text-zinc-500 text-[10px] leading-relaxed">Le contrat fait foi en cas de litige. AFRIGOMBO intervient comme tiers de confiance souverain.</p>
-                  </div>
+
+                <div className="bg-zinc-900/60 p-3 rounded-2xl border border-zinc-850 text-[9.5px] text-zinc-400">
+                  <p className="font-bold text-zinc-200 mb-1">💡 Avantage Économique Premium</p>
+                  <p className="leading-normal">
+                    Les membres Premium bénéficient d'un taux réduit à <span className="text-[#D4AF37] font-bold">4%</span> au lieu de 6%, économisant sur chaque gombo validé.
+                  </p>
                 </div>
               </div>
             </div>
@@ -812,6 +1023,38 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 </p>
               </div>
             ) : null}
+
+            {/* Section Annulation de Contrat - Règles de Séquestre AFRIGOMBO */}
+            {contract.status !== "completed" && contract.status !== "cancelled" && (
+              <div className="mt-8 pt-6 border-t border-zinc-900/60 flex flex-col items-center gap-2">
+                <button
+                  onClick={async () => {
+                    const confirmMsg = contract.clientSigned && contract.artistSigned
+                      ? "Attention: Les deux parties ont signé ce contrat. Conformément aux règles d'annulation d'AFRIGOMBO, une pénalité de 10% du cachet sera retenue et reversée à l'artiste à titre de dédommagement si le séquestre a été déposé. Voulez-vous continuer ?"
+                      : "Êtes-vous sûr de vouloir annuler ce contrat ? Comme les deux parties n'ont pas encore signé, le remboursement sera intégral.";
+                    if (window.confirm(confirmMsg)) {
+                      setProcessing(true);
+                      try {
+                        await gomboDB.cancelGomboContract(contract.id, currentUser.uid!);
+                        alert("Le contrat a été annulé avec succès. Les soldes de votre Wallet ont été ajustés en conséquence.");
+                        if (onUpdate) onUpdate();
+                      } catch (err: any) {
+                        alert(`Erreur d'annulation: ${err.message}`);
+                      } finally {
+                        setProcessing(false);
+                      }
+                    }
+                  }}
+                  disabled={processing}
+                  className="px-6 py-3 bg-zinc-950 hover:bg-red-950/20 text-zinc-500 hover:text-red-400 border border-zinc-900 hover:border-red-950/40 text-[9px] font-mono font-black uppercase tracking-widest rounded-xl transition-all duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  Annuler le contrat (Règles Séquestre)
+                </button>
+                <p className="text-[8px] font-mono text-zinc-600 max-w-xs text-center leading-relaxed">
+                  Avant signature : 100% remboursé. Après signature : Pénalité de 10% reversée à l'artiste. Annulation artiste : 100% remboursé au promoteur.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -897,6 +1140,21 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
               </button>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {/* Lightbox / Local Image Preview Overlay */}
+      {localPreviewUrl && (
+        <div className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
+          <div className="max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl border border-zinc-800">
+            <img referrerPolicy="no-referrer" src={localPreviewUrl} alt="Visualisation Preuve" className="w-full h-auto max-h-[80vh] object-contain" />
+          </div>
+          <button 
+            onClick={() => setLocalPreviewUrl(null)} 
+            className="mt-6 px-6 py-2.5 bg-zinc-900 border border-zinc-800 hover:border-[#D4AF37] text-white font-black uppercase text-xs tracking-widest rounded-full transition-all"
+          >
+            Fermer l'aperçu
+          </button>
         </div>
       )}
     </div>

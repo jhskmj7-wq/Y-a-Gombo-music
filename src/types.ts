@@ -101,6 +101,14 @@ export interface User {
   trustScore?: number;
   totalContracts?: number;
   cancelledContracts?: number;
+  builderData?: {
+    totalAmount: number;
+    count: number;
+    joinYear: number;
+    badge: string;
+    isMonthly?: boolean;
+    isAnonymous?: boolean;
+  };
   [key: string]: any;
 }
 

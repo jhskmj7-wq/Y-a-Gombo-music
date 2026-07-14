@@ -29,17 +29,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   useEffect(() => {
-    console.log("Subscribing to gomboAuth.onAuthStateChanged");
+    let profileUnsub: (() => void) | null = null;
+
     const unsubscribe = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
-      console.log("Auth User:", firebaseUser ? { uid: firebaseUser.uid, email: firebaseUser.email } : "None");
       
+      if (profileUnsub) {
+        profileUnsub();
+        profileUnsub = null;
+      }
+
       if (firebaseUser) {
         setAuthLoading(true);
         try {
           let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
           
           if (!uProfile) {
-            console.log("Profile missing, creating automatically for uid:", firebaseUser.uid);
             const names = firebaseUser.displayName ? firebaseUser.displayName.split(" ") : ["Artiste", "Afrigombo"];
             uProfile = {
               uid: firebaseUser.uid,
@@ -58,27 +62,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             };
             
             await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
-            console.log("Firestore Profile Created:", uProfile);
           } else {
-            console.log("Firestore Profile Loaded:", uProfile);
           }
           
-          console.log("currentUserProfile:", uProfile);
           setProfile(uProfile);
           setCurrentUser(firebaseUser);
+
+          // Now listen in real-time to keep wallet and other attributes synced
+          profileUnsub = gomboDB.listenUserProfile(firebaseUser.uid, (realtimeProfile) => {
+            if (realtimeProfile) {
+              setProfile(realtimeProfile);
+            }
+          });
         } catch (error) {
           console.error("Error fetching/creating user profile in auth state change:", error);
         }
       } else {
         setCurrentUser(null);
         setProfile(null);
-        console.log("currentUserProfile: null");
       }
 
       setAuthLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (profileUnsub) profileUnsub();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -91,7 +101,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async () => {
     try {
-      console.log("🚀 Début Google Login");
       await gomboAuth.loginWithGoogle();
     } catch (error) {
       console.error("❌ Google Login Error:", error);

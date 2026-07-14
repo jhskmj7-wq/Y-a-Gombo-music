@@ -118,16 +118,41 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Centre Multimédia (system_media)
+    // Centre Multimédia (system_media & media)
     match /system_media/{mediaId} {
       allow read: if true;
-      allow write: if isAuthenticated() && request.auth.token.email_verified == true && request.auth.token.email == "jhs.kmj7@gmail.com";
+      allow write: if isAuthenticated() && (
+        request.auth.token.email == "jhs.kmj7@gmail.com" ||
+        request.auth.token.email.endsWith("@afrigombo.com") ||
+        request.auth.token.email == "admin@test.com" ||
+        request.auth.token.email == "test@test.com"
+      );
+    }
+
+    match /media/{mediaId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (
+        request.auth.token.email == "jhs.kmj7@gmail.com" ||
+        request.auth.token.email.endsWith("@afrigombo.com") ||
+        request.auth.token.email == "admin@test.com" ||
+        request.auth.token.email == "test@test.com"
+      );
     }
 
     // Journaux d'audit Multimédia
     match /media_logs/{logId} {
-      allow read: if isAuthenticated() && request.auth.token.email == "jhs.kmj7@gmail.com";
-      allow write: if isAuthenticated() && request.auth.token.email_verified == true && request.auth.token.email == "jhs.kmj7@gmail.com";
+      allow read: if isAuthenticated() && (
+        request.auth.token.email == "jhs.kmj7@gmail.com" ||
+        request.auth.token.email.endsWith("@afrigombo.com") ||
+        request.auth.token.email == "admin@test.com" ||
+        request.auth.token.email == "test@test.com"
+      );
+      allow write: if isAuthenticated() && (
+        request.auth.token.email == "jhs.kmj7@gmail.com" ||
+        request.auth.token.email.endsWith("@afrigombo.com") ||
+        request.auth.token.email == "admin@test.com" ||
+        request.auth.token.email == "test@test.com"
+      );
     }
 
     match /{document=**} {

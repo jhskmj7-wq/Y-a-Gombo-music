@@ -21,6 +21,5 @@ export function ProfileGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Otherwise redirect to complete-profile
-  console.log("📝 [ProfileGuard] Profile incomplete, redirecting to /complete-profile");
   return <Navigate to="/complete-profile" replace />;
 }

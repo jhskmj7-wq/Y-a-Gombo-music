@@ -102,7 +102,6 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
           setAllGombos(gombos);
           // 2. Live Applications
           unsubApps = gomboDB.listenApplications(async (applications) => {
-            console.log("⚡ [Dashboard Sync] Live update triggered. Gombos:", gombos.length, "Apps:", applications.length);
             
             if (currentUserProfile.role === "client") {
               const clientGombos = gombos.filter(g => g.clientId === userUid);
@@ -1229,7 +1228,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
                         )}
                       </div>
 
-                      {/* PAYMENT ACTIONS AND SIMULATOR INLINE WIDGET */}
+                      {/* PAYMENT ACTIONS  */}
                       {currentUserProfile.role === "client" && (
                         <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800/80 space-y-3">
                           {res.status === "paye" ? (

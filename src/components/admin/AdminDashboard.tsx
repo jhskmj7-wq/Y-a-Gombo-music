@@ -282,8 +282,24 @@ export default function AdminDashboard({
           </motion.div>
 
           <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
-            <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Conversations / Msgs</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">En temps réel</strong>
+            <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Wallets & Revenus</span>
+            <strong className="text-xl font-display font-black text-emerald-400 block mt-2">
+              <AnimatedCounter value={transactions.reduce((acc, tx) => acc + (Number(tx.amount) || 0), 0)} /> <span className="text-xs text-zinc-500 font-sans">FCFA</span>
+            </strong>
+          </motion.div>
+
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+            <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Fichiers Média</span>
+            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+              <AnimatedCounter value={mediaStats.count} /> <span className="text-xs text-zinc-500 font-sans">Actifs</span>
+            </strong>
+          </motion.div>
+
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+            <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Stockage utilisé</span>
+            <strong className="text-xl font-display font-black text-[#FFFFFF] block mt-2">
+              <AnimatedCounter value={mediaStats.sizeMB} /> <span className="text-xs text-zinc-500 font-sans">MB</span>
+            </strong>
           </motion.div>
         </motion.div>
       </div>

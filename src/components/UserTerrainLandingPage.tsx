@@ -124,14 +124,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   setReelsVideoUrl = () => {},
   renforts = []
 }) => {
-  console.log("UserTerrainLandingPage Hooks initialized");
   const { t } = useLanguage();
   const { isDataSaveActive, areAnimationsReduced } = usePerformance();
   const searchStr = globalSearchTerm.toLowerCase();
 
   // Mount log
   useEffect(() => {
-    console.log("UserTerrainLandingPage Component mounted");
   }, []);
 
   // Internal local states for filters (only applied when clicking Valider)
@@ -1447,7 +1445,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           {/* Feed Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
-            {/* 1. MOCK INTEGRATED REELS (VIDEOS) */}
+            {/* Vues Vidéos */}
             {(reelsFilter === "all" || reelsFilter === "videos") && (
               <PremiumEmptyState 
                 message="Aucune vidéo disponible." 

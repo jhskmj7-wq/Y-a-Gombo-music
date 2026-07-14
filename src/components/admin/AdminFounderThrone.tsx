@@ -78,7 +78,7 @@ export default function AdminFounderThrone({
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Sub-tabs simulation state
+  // Satellite states from Firestore
   const [universeStates, setUniverseStates] = useState<Record<string, string>>({
     afriId: "DÉPLOYÉ & ACTIF",
     afriTrust: "DÉPLOYÉ & ACTIF",
@@ -86,27 +86,77 @@ export default function AdminFounderThrone({
     gomboMusik: "DÉPLOYÉ & ACTIF"
   });
 
-  const [betaChecklist, setBetaChecklist] = useState<Record<string, boolean>>(() => {
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(doc(db, "system_settings", "satellites"), (snap) => {
+      if (snap.exists()) {
+        setUniverseStates(snap.data() as Record<string, string>);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const handleToggleSatellite = async (servId: string) => {
+    const newState = universeStates[servId] === "DÉPLOYÉ & ACTIF" ? "EN MAINTENANCE" : "DÉPLOYÉ & ACTIF";
     try {
-      const saved = localStorage.getItem("afrigombo_beta_checklist");
-      if (saved) return JSON.parse(saved);
-    } catch (_) {}
-    return {
-      "Connexion Google": false,
-      "Déconnexion": false,
-      "Création publication": false,
-      "Modification profil": false,
-      "Upload image": false,
-      "Notifications": false,
-      "Navigation": false,
-      "Centre de Commandement": false,
-      "Trône": false,
-      "Responsive Android": false,
-      "Firebase": false,
-    };
+      await setDoc(doc(db, "system_settings", "satellites"), { ...universeStates, [servId]: newState }, { merge: true });
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err) {
+      console.error("Error toggling satellite", err);
+    }
+  };
+
+  const [betaChecklist, setBetaChecklist] = useState<Record<string, boolean>>({
+    "Connexion Google": false,
+    "Déconnexion": false,
+    "Création publication": false,
+    "Modification profil": false,
+    "Upload image": false,
+    "Notifications": false,
+    "Navigation": false,
+    "Centre de Commandement": false,
+    "Trône": false,
+    "Responsive Android": false,
+    "Firebase": false,
   });
 
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(doc(db, "system_settings", "beta_checklist"), (snap) => {
+      if (snap.exists()) {
+        setBetaChecklist(snap.data() as Record<string, boolean>);
+      }
+    });
+    return () => unsub();
+  }, []);
+
   const [economySettings, setEconomySettings] = useState<any>(null);
+  const [allContracts, setAllContracts] = useState<any[]>([]);
+  const [allPayments, setAllPayments] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, "contracts"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => {
+        list.push({ id: d.id, ...d.data() });
+      });
+      setAllContracts(list);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, "payments"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => {
+        list.push({ id: d.id, ...d.data() });
+      });
+      setAllPayments(list);
+    });
+    return () => unsub();
+  }, []);
   
   useEffect(() => {
     // Load economy settings if needed
@@ -119,12 +169,12 @@ export default function AdminFounderThrone({
     }
   }, [selectedSection]);
 
-  const toggleChecklist = (key: string) => {
+  const toggleChecklist = async (key: string) => {
     const updated = { ...betaChecklist, [key]: !betaChecklist[key] };
     setBetaChecklist(updated);
     try {
-      localStorage.setItem("afrigombo_beta_checklist", JSON.stringify(updated));
-    } catch (_) {}
+      await setDoc(doc(db, "system_settings", "beta_checklist"), updated, { merge: true });
+    } catch (e) { console.error(e); }
     try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
   };
 
@@ -345,7 +395,6 @@ export default function AdminFounderThrone({
 
   const handleSendNotice = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("handleSendNotice: START");
     
     if (!currentUser || !profile) {
       console.error("handleSendNotice: Auth missing");
@@ -364,7 +413,6 @@ export default function AdminFounderThrone({
       return;
     }
     try {
-      console.log("handleSendNotice: Adding document to Firestore");
       await addDoc(collection(db, "broadcasts"), {
         title: noticeTitle.trim().toUpperCase(),
         body: noticeBody.trim(),
@@ -373,7 +421,6 @@ export default function AdminFounderThrone({
         timestamp: Date.now(),
         globalAlert: true
       });
-      console.log("handleSendNotice: Success");
       setNoticeTitle("");
       setNoticeBody("");
       setSuccessMsg("Le décret suprême a été soufflé à travers tout l'écosystème.");
@@ -1290,13 +1337,7 @@ export default function AdminFounderThrone({
                               {universeStates[serv.id]}
                             </span>
                             <button
-                              onClick={() => {
-                                setUniverseStates(prev => ({
-                                  ...prev,
-                                  [serv.id]: prev[serv.id] === "DÉPLOYÉ & ACTIF" ? "EN MAINTENANCE" : "DÉPLOYÉ & ACTIF"
-                                }));
-                                try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                              }}
+                              onClick={() => handleToggleSatellite(serv.id)}
                               className="px-2.5 py-1.5 bg-zinc-900 hover:bg-[#D4AF37] text-zinc-400 hover:text-black font-mono font-black text-[9px] uppercase rounded-lg transition-all"
                             >
                               Alterner
@@ -2129,86 +2170,160 @@ export default function AdminFounderThrone({
               </div>
             )}
 
-            {selectedSection === "economy" && (
-              <div className="space-y-6">
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
-                  <Coins className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
-                    <strong>💰 GESTION ÉCONOMIQUE & COMMISSIONS :</strong> Configurez les paramètres monétaires, contrôlez les boosts et analysez les métriques d'activité financière de l'Empire.
-                  </div>
-                </div>
+            {selectedSection === "economy" && (() => {
+              // Real-time sovereign economic metrics calculation
+              const totalCommissions = allContracts.filter(c => c.status === "signed" || c.status === "validated" || c.status === "active" || c.status === "completed").reduce((acc, c) => acc + (c.commissionClient || 0) + (c.commissionArtist || 0), 0);
+              const totalPremiumRevenue = allPayments.filter(p => p.purpose?.includes("Premium") || p.purpose?.includes("ELITE") || p.purpose?.includes("PRO")).reduce((acc, p) => acc + (p.amount || 0), 0);
+              const totalArtists = (users || []).filter(u => u.role === "musician" || u.role === "artist" || !u.isAdmin).length || 1;
+              const premiumArtistsCount = (users || []).filter(u => (u.role === "musician" || u.role === "artist" || !u.isAdmin) && (u.isPremium || u.badges?.includes("💎 Adhérent Premium"))).length;
+              const penetrationRate = Math.round((premiumArtistsCount / totalArtists) * 100);
+              const signedContractsCount = allContracts.filter(c => c.status === "signed" || c.status === "completed" || c.status === "validated" || c.clientSignedAt || c.artistSignedAt).length;
+              const totalSavings = allContracts.reduce((acc, c) => acc + (c.savingsClient || 0) + (c.savingsArtist || 0), 0);
 
-                {/* Dashboard Economy Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-black border border-zinc-900 rounded-2xl p-4 text-center">
-                    <span className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">Total Contrats</span>
-                    <span className="text-xl font-black text-white">{gombos.length}</span>
+              return (
+                <div className="space-y-6">
+                  <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                    <Coins className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5" />
+                    <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                      <strong>💰 GESTION ÉCONOMIQUE SOUVERAINE :</strong> Configurez la commission universelle et surveillez en temps réel l'essor de la richesse partagée au sein du Temple du Gombo.
+                    </div>
                   </div>
-                  <div className="bg-black border border-zinc-900 rounded-2xl p-4 text-center">
-                    <span className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">Volume Financier</span>
-                    <span className="text-xl font-black text-[#D4AF37]">{gombos.reduce((acc, g) => acc + (g.budget || 0), 0).toLocaleString()} FCFA</span>
-                  </div>
-                  <div className="bg-black border border-zinc-900 rounded-2xl p-4 text-center">
-                    <span className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">Commissions</span>
-                    <span className="text-xl font-black text-emerald-400">~{Math.round(gombos.reduce((acc, g) => acc + (g.budget || 0), 0) * 0.10).toLocaleString()} FCFA</span>
-                  </div>
-                  <div className="bg-black border border-zinc-900 rounded-2xl p-4 text-center">
-                    <span className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">Boosts Actifs</span>
-                    <span className="text-xl font-black text-amber-500">{gombos.filter(g => g.isBoosted).length}</span>
-                  </div>
-                </div>
 
-                {/* Economy Settings Form */}
-                <div className="bg-black border border-zinc-900 rounded-3xl p-6 space-y-6">
-                  <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider border-b border-white/5 pb-2">
-                    Paramètres de Commission & Tarification (FCFA)
-                  </h3>
-                  
-                  {economySettings ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Taux Commission Standard (%)</label>
-                        <input type="number" value={economySettings.commissionRateStandard * 100} onChange={(e) => setEconomySettings({...economySettings, commissionRateStandard: Number(e.target.value) / 100})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                  {/* Real-time Sovereign Economic Health Dashboard */}
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-mono uppercase text-zinc-500 tracking-widest border-l-2 border-[#D4AF37] pl-3">
+                      SANTÉ ÉCONOMIQUE DE L'EMPIRE (TEMPS RÉEL)
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                      {/* 1. Commissions */}
+                      <div className="bg-zinc-950/90 border border-zinc-900 rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl"></div>
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Commissions</span>
+                            <Coins className="w-4 h-4 text-emerald-400" />
+                          </div>
+                          <span className="text-xl font-black text-emerald-400 tracking-tight block">
+                            {totalCommissions.toLocaleString()} FCFA
+                          </span>
+                        </div>
+                        <p className="text-[8.5px] text-zinc-500 mt-2">Frais de service (12% / 10% / 8%) perçus sur les contrats finalisés</p>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Taux Commission Premium (%)</label>
-                        <input type="number" value={economySettings.commissionRatePremium * 100} onChange={(e) => setEconomySettings({...economySettings, commissionRatePremium: Number(e.target.value) / 100})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+
+                      {/* 2. Premium subscriptions */}
+                      <div className="bg-zinc-950/90 border border-zinc-900 rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-[#D4AF37]/5 rounded-full blur-xl"></div>
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Revenus Premium</span>
+                            <Crown className="w-4 h-4 text-[#D4AF37]" />
+                          </div>
+                          <span className="text-xl font-black text-[#D4AF37] tracking-tight block">
+                            {totalPremiumRevenue.toLocaleString()} FCFA
+                          </span>
+                        </div>
+                        <p className="text-[8.5px] text-zinc-500 mt-2">Cumul des abonnements Gombo Pro et Elite encaissés</p>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Boost Standard</label>
-                        <input type="number" value={economySettings.boostPriceStandard} onChange={(e) => setEconomySettings({...economySettings, boostPriceStandard: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+
+                      {/* 3. Premium penetration rate */}
+                      <div className="bg-zinc-950/90 border border-zinc-900 rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full blur-xl"></div>
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Pénétration Premium</span>
+                            <Users className="w-4 h-4 text-blue-400" />
+                          </div>
+                          <span className="text-xl font-black text-blue-400 tracking-tight block">
+                            {penetrationRate}%
+                          </span>
+                        </div>
+                        <p className="text-[8.5px] text-zinc-500 mt-2">Taux d'artistes et promoteurs abonnés à l'offre payante</p>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Boost Premium</label>
-                        <input type="number" value={economySettings.boostPricePremium} onChange={(e) => setEconomySettings({...economySettings, boostPricePremium: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+
+                      {/* 4. Signed contracts */}
+                      <div className="bg-zinc-950/90 border border-zinc-900 rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full blur-xl"></div>
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Gombos Validés</span>
+                            <FileText className="w-4 h-4 text-purple-400" />
+                          </div>
+                          <span className="text-xl font-black text-purple-400 tracking-tight block">
+                            {signedContractsCount} / {allContracts.length}
+                          </span>
+                        </div>
+                        <p className="text-[8.5px] text-zinc-500 mt-2">Contrats signés numériquement par les deux parties</p>
                       </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Renfort Express</label>
-                        <input type="number" value={economySettings.renfortExpressPrice} onChange={(e) => setEconomySettings({...economySettings, renfortExpressPrice: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
-                      </div>
-                      <div className="md:col-span-2 flex justify-end mt-4">
-                        <button 
-                          onClick={() => {
-                            import("../../firebase").then(({ gomboDB }) => {
-                              gomboDB.updateEconomySettings(economySettings).then(() => {
-                                setSuccessMsg("Paramètres économiques mis à jour avec succès !");
-                                setTimeout(() => setSuccessMsg(""), 3000);
-                                try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
-                              });
-                            });
-                          }}
-                          className="bg-[#D4AF37] hover:bg-[#B48F17] text-black px-6 py-2.5 rounded-xl font-bold font-mono text-[10px] uppercase transition-colors"
-                        >
-                          Sauvegarder les Paramètres
-                        </button>
+
+                      {/* 5. Economic savings */}
+                      <div className="bg-zinc-950/90 border border-zinc-900 rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full blur-xl"></div>
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Économies Membres</span>
+                            <Sparkles className="w-4 h-4 text-amber-400" />
+                          </div>
+                          <span className="text-xl font-black text-amber-400 tracking-tight block">
+                            {totalSavings.toLocaleString()} FCFA
+                          </span>
+                        </div>
+                        <p className="text-[8.5px] text-zinc-500 mt-2">Frais économisés par les adhérents grâce aux taux Premium réduits (4%)</p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="text-zinc-500 font-mono text-xs animate-pulse">Chargement des paramètres...</div>
-                  )}
+                  </div>
+
+                  {/* Economy Settings Form */}
+                  <div className="bg-black border border-zinc-900 rounded-3xl p-6 space-y-6">
+                    <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider border-b border-white/5 pb-2">
+                      Paramètres de Commission & Tarification (FCFA)
+                    </h3>
+                    
+                    {economySettings ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase">Taux Commission Standard (%)</label>
+                          <input type="number" value={economySettings.commissionRateStandard * 100} onChange={(e) => setEconomySettings({...economySettings, commissionRateStandard: Number(e.target.value) / 100})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase">Taux Commission Premium (%)</label>
+                          <input type="number" value={economySettings.commissionRatePremium * 100} onChange={(e) => setEconomySettings({...economySettings, commissionRatePremium: Number(e.target.value) / 100})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Boost Standard</label>
+                          <input type="number" value={economySettings.boostPriceStandard} onChange={(e) => setEconomySettings({...economySettings, boostPriceStandard: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Boost Premium</label>
+                          <input type="number" value={economySettings.boostPricePremium} onChange={(e) => setEconomySettings({...economySettings, boostPricePremium: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Renfort Express</label>
+                          <input type="number" value={economySettings.renfortExpressPrice} onChange={(e) => setEconomySettings({...economySettings, renfortExpressPrice: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                        </div>
+                        <div className="md:col-span-2 flex justify-end mt-4">
+                          <button 
+                            onClick={() => {
+                              import("../../firebase").then(({ gomboDB }) => {
+                                gomboDB.updateEconomySettings(economySettings).then(() => {
+                                  setSuccessMsg("Paramètres économiques mis à jour avec succès !");
+                                  setTimeout(() => setSuccessMsg(""), 3000);
+                                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+                                });
+                              });
+                            }}
+                            className="bg-[#D4AF37] hover:bg-[#B48F17] text-black px-6 py-2.5 rounded-xl font-bold font-mono text-[10px] uppercase transition-colors"
+                          >
+                            Sauvegarder les Paramètres
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-zinc-500 font-mono text-xs animate-pulse">Chargement des paramètres...</div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
           </motion.div>
         )}

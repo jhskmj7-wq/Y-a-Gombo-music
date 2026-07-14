@@ -18,7 +18,6 @@ export default function VibesPage() {
         <AnnuaireTalents
           currentUserProfile={profile}
           onNavigateView={(view) => {
-            console.log("Vibes navigate:", view);
           }}
           selectedTalentUid={selectedTalentUid || undefined}
           onSelectTalent={(uid) => {
