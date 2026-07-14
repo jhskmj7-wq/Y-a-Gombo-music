@@ -3,10 +3,12 @@ import { motion } from "motion/react";
 import { 
   MessageSquare, Send, ArrowLeft, Image as ImageIcon, Mic, 
   CheckCheck, Volume2, ShieldAlert, BadgeCheck, AlertCircle, Loader2,
-  Search, Trash2, Copy, CornerUpLeft, X, Lock, Sparkles, Check
+  Search, Trash2, Copy, CornerUpLeft, X, Lock, Sparkles, Check,
+  CreditCard, ShieldCheck, Trophy, Target
 } from "lucide-react";
-import { gomboDB } from "../firebase";
-import { Conversation, Message } from "../types";
+import { gomboDB, db } from "../firebase";
+import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
+import { Conversation, Message, UserProfile } from "../types";
 
 interface MessagesViewProps {
   currentUser: any;
@@ -37,6 +39,64 @@ export default function MessagesView({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [securityError, setSecurityError] = useState<string | null>(null);
   
+  // Participant Extended Data
+  const [partnerProfile, setPartnerProfile] = useState<UserProfile | null>(null);
+  const [partnerContractsCount, setPartnerContractsCount] = useState(0);
+  const [partnerEscrowAmount, setPartnerEscrowAmount] = useState(0);
+  const [partnerLastPaymentDate, setPartnerLastPaymentDate] = useState<string | null>(null);
+
+  // 0. Listen to partner's extended data when activeConvo changes
+  useEffect(() => {
+    if (!activeConvo || !currentUser?.uid) {
+      setPartnerProfile(null);
+      return;
+    }
+
+    const otherUid = activeConvo.participants.find(id => id !== currentUser.uid);
+    if (!otherUid) return;
+
+    // Listen to partner's profile
+    const unsubProfile = onSnapshot(doc(db, "users", otherUid), (snap) => {
+      if (snap.exists()) {
+        setPartnerProfile({ id: snap.id, ...snap.data() } as UserProfile);
+      }
+    });
+
+    // Listen to contracts involving both
+    const qContracts = query(
+      collection(db, "contracts"),
+      where("participants", "array-contains", otherUid)
+    );
+    const unsubContracts = onSnapshot(qContracts, (snap) => {
+      let count = 0;
+      let escrow = 0;
+      let lastPay = null;
+
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data.participants?.includes(currentUser.uid)) {
+          count++;
+          if (data.status === "payment_held" || data.status === "arrived") {
+            escrow += (data.amount || 0);
+          }
+          if (data.status === "completed" || data.status === "termine") {
+            if (!lastPay || new Date(data.updatedAt) > new Date(lastPay)) {
+              lastPay = data.updatedAt;
+            }
+          }
+        }
+      });
+      setPartnerContractsCount(count);
+      setPartnerEscrowAmount(escrow);
+      setPartnerLastPaymentDate(lastPay);
+    });
+
+    return () => {
+      unsubProfile();
+      unsubContracts();
+    };
+  }, [activeConvo?.id, currentUser?.uid]);
+
   // Charter States
   const [showCharter, setShowCharter] = useState(false);
   const [charterAccepted, setCharterAccepted] = useState(false);
@@ -703,42 +763,76 @@ export default function MessagesView({
 
             return (
               <>
-                {/* Active Chat Header */}
-                <div className="p-4 bg-zinc-950 border-b border-zinc-900 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <button 
-                      onClick={() => setActiveConvo(null)}
-                      className="p-1.5 hover:bg-zinc-900 text-zinc-400 rounded-lg transition md:hidden"
-                    >
-                      <ArrowLeft className="w-5 h-5" />
-                    </button>
-                    <img 
-                      src={partner.avatarUrl} 
-                      alt="" 
-                      className="w-10 h-10 rounded-full object-cover border border-zinc-800 shrink-0"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="text-left">
-                      <p className="font-sans font-black text-xs text-white truncate uppercase tracking-wider flex items-center gap-1.5">
-                        {partner.name}
-                        <BadgeCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      </p>
-                      <span className="block text-[8px] font-mono font-bold uppercase text-[#D4AF37] tracking-wider">
-                        {partner.role || "Artiste"} • {partner.status === "online" ? "🟢 EN LIGNE" : "⚫ HORS LIGNE"}
-                      </span>
+                {/* Professional Participant Header */}
+                <div className="bg-zinc-950 border-b border-zinc-900 p-4 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                  
+                  <div className="relative z-10 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <button 
+                        onClick={() => setActiveConvo(null)}
+                        className="p-2 hover:bg-zinc-900 text-zinc-400 rounded-xl transition md:hidden"
+                      >
+                        <ArrowLeft className="w-5 h-5" />
+                      </button>
+                      <div className="relative">
+                        <img 
+                          src={partner.avatarUrl} 
+                          alt="" 
+                          className="w-14 h-14 rounded-2xl object-cover border-2 border-zinc-800 shadow-xl"
+                          referrerPolicy="no-referrer"
+                        />
+                        <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-zinc-950 ${partner.status === "online" ? "bg-emerald-500" : "bg-zinc-600"}`} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-black text-white uppercase tracking-wider">{partner.name}</h3>
+                          {partnerProfile?.isCertified && <BadgeCheck className="w-4 h-4 text-blue-400" />}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] font-mono font-black text-[#D4AF37] uppercase bg-[#D4AF37]/10 px-2 py-0.5 rounded border border-[#D4AF37]/20">
+                            {partnerProfile?.artisticName || partner.role}
+                          </span>
+                          <span className="text-[9px] font-mono text-zinc-500 uppercase">
+                            Niveau {partnerProfile?.performance?.level || 1}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                      <div className="flex-1 md:flex-none bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-2 min-w-[100px]">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <Target className="w-3 h-3 text-zinc-500" />
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-black">Contrats</span>
+                        </div>
+                        <p className="text-xs font-black text-white font-mono">{partnerContractsCount} communs</p>
+                      </div>
+                      <div className="flex-1 md:flex-none bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-2 min-w-[100px]">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-black">Séquestre</span>
+                        </div>
+                        <p className="text-xs font-black text-emerald-400 font-mono">{partnerEscrowAmount.toLocaleString()} F</p>
+                      </div>
+                      <div className="flex-1 md:flex-none bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-2 min-w-[100px]">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <CreditCard className="w-3 h-3 text-[#D4AF37]" />
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase font-black">Paiement</span>
+                        </div>
+                        <p className="text-[10px] font-black text-zinc-300 font-mono truncate">
+                          {partnerLastPaymentDate ? new Date(partnerLastPaymentDate).toLocaleDateString("fr-FR") : "Aucun"}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  
-                  <span className="hidden sm:flex items-center gap-1 text-[8.5px] font-mono font-black uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
-                    🛡️ CHAT SECURISE
-                  </span>
                 </div>
 
                 {/* Secure Contact Warning Badge */}
-                <div className="px-4 py-2.5 bg-[#D4AF37]/5 border-b border-zinc-900 text-left flex items-start gap-2 select-none">
-                  <AlertCircle className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-zinc-400 leading-normal font-medium font-sans">
-                    Pour votre sécurité, <b>conservez vos discussions, accords et promesses de cachets</b> dans la messagerie interne. Ne partagez vos coordonnées privées qu'après versement d'un acompte ou signature de contrat.
+                <div className="px-4 py-2.5 bg-black border-b border-zinc-900 text-left flex items-start gap-2 select-none">
+                  <Lock className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-zinc-500 leading-normal font-medium font-mono uppercase tracking-tight">
+                    🔒 Canalisé par le protocole <span className="text-[#D4AF37] font-black">AFRIGOMBO SÉCURITÉ</span> • Surveillance IA Active
                   </p>
                 </div>
 

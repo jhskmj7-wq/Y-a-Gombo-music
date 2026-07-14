@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  Bell, Check, Trash2, Settings, ShieldAlert, Wifi, Sparkles, 
-  Clock, Briefcase, Music, UserCheck, MessageSquare, ToggleLeft, ToggleRight,
-  Info, Activity, Heart, RefreshCw
+  Bell, Check, Trash2, ShieldAlert, 
+  Clock, Briefcase, Music, UserCheck, MessageSquare,
+  Info, Crown, Megaphone, Zap, Sparkles, AlertTriangle, BadgeCheck
 } from "lucide-react";
 import { gomboDB } from "../firebase";
-import { GomboNotification, UserProfile } from "../types";
+import { GomboNotification, UserProfile, AppNotification } from "../types";
 
 interface NotificationCenterProps {
   currentUserProfile: UserProfile;
-  notifications: GomboNotification[];
+  notifications: (GomboNotification | AppNotification)[];
   onRefreshProfile: () => void;
   onNavigateHome: () => void;
 }
@@ -21,76 +21,24 @@ export default function NotificationCenter({
   onRefreshProfile,
   onNavigateHome 
 }: NotificationCenterProps) {
-  const [activeTab, setActiveTab] = useState<"all" | "unread" | "settings">("all");
-  const [savingSettings, setSavingSettings] = useState(false);
-  const [localSettings, setLocalSettings] = useState({
-    gombos: true,
-    renforts: true,
-    messages: true,
-    certifications: true,
-    groupes: true
-  });
+  const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
 
-  const [simulatedLatency, setSimulatedLatency] = useState(18);
-  const [isMeasuring, setIsMeasuring] = useState(false);
-
-  // Initialize notification settings
-  useEffect(() => {
-    if (currentUserProfile.notificationSettings) {
-      setLocalSettings({
-        gombos: currentUserProfile.notificationSettings.gombos ?? true,
-        renforts: currentUserProfile.notificationSettings.renforts ?? true,
-        messages: currentUserProfile.notificationSettings.messages ?? true,
-        certifications: currentUserProfile.notificationSettings.certifications ?? true,
-        groupes: currentUserProfile.notificationSettings.groupes ?? true
-      });
-    }
-  }, [currentUserProfile]);
-
-  // Run a quick telemetry latency benchmark
-  const runLatencyTest = () => {
-    setIsMeasuring(true);
-    const start = performance.now();
-    setTimeout(() => {
-      const end = performance.now();
-      setSimulatedLatency(Math.round((end - start) / 5) + 8);
-      setIsMeasuring(false);
-    }, 400);
-  };
-
-  // Filter out notifications based on current checkboxes/switches configuration (Phase 9 Rule 8)
   const filteredNotifications = notifications.filter(notif => {
-    if (notif.type === "new_gombo" && !localSettings.gombos) return false;
-    if (notif.type === "new_renfort" && !localSettings.renforts) return false;
-    if (notif.type === "message" && !localSettings.messages) return false;
-    if (notif.type === "certification_approved" && !localSettings.certifications) return false;
-    if (notif.type === "new_follower" && !localSettings.groupes) return false;
-    
-    // Tab filters
-    if (activeTab === "unread") return !notif.read;
+    if (activeTab === "unread") {
+      // Handle both isRead (GomboNotification) and readCount (AppNotification - though readCount isn't per-user here)
+      // For AppNotification, we might need a local 'seen' state if we want to track per user without a backend update
+      // But for now, let's just use the 'isRead' property if it exists
+      return !(notif as any).isRead;
+    }
     return true;
   });
 
-  const handleToggleSetting = async (key: keyof typeof localSettings) => {
-    const updated = { ...localSettings, [key]: !localSettings[key] };
-    setLocalSettings(updated);
-    setSavingSettings(true);
-    try {
-      await gomboDB.updateUserProfile(currentUserProfile.uid, {
-        notificationSettings: updated
-      });
-      onRefreshProfile();
-    } catch (err) {
-      console.error("Failed saving notification settings:", err);
-    } finally {
-      setSavingSettings(false);
-    }
-  };
-
   const handleMarkAllRead = async () => {
-    const unread = notifications.filter(n => !n.read);
+    const unread = notifications.filter(n => !(n as any).isRead);
     for (const notif of unread) {
-      await gomboDB.markNotificationAsRead(notif.id);
+      if (notif.id) {
+        await gomboDB.markNotificationAsRead(notif.id);
+      }
     }
   };
 
@@ -104,107 +52,184 @@ export default function NotificationCenter({
 
   const getNotifIcon = (type: string) => {
     switch (type) {
-      case "new_gombo":
-        return <Briefcase className="w-4 h-4 text-orange-500" />;
-      case "new_renfort":
-        return <Sparkles className="w-4 h-4 text-amber-500" />;
+      // Global Types
+      case "INFO": return <Info className="w-5 h-5 text-blue-400" />;
+      case "GOMBO": return <Zap className="w-5 h-5 text-[#D4AF37]" />;
+      case "URGENT": return <AlertTriangle className="w-5 h-5 text-red-500" />;
+      case "ÉVÉNEMENT": return <Crown className="w-5 h-5 text-purple-400" />;
+      case "MISE À JOUR": return <RefreshCw className="w-5 h-5 text-emerald-400" />;
+      case "PREMIUM": return <Sparkles className="w-5 h-5 text-amber-400" />;
+      case "SÉCURITÉ": return <ShieldAlert className="w-5 h-5 text-rose-500" />;
+      
+      // Legacy/Personal Types
+      case "new_gombo": return <Briefcase className="w-5 h-5 text-orange-500" />;
+      case "new_renfort": return <Sparkles className="w-5 h-5 text-amber-500" />;
       case "new_application":
-      case "application_accepted":
-        return <UserCheck className="w-4 h-4 text-purple-500" />;
-      case "certification_approved":
-        return <Music className="w-4 h-4 text-green-500" />;
-      case "new_follower":
-        return <Heart className="w-4 h-4 text-rose-500" />;
-      case "message":
-        return <MessageSquare className="w-4 h-4 text-teal-500" />;
-      default:
-        return <Bell className="w-4 h-4 text-gray-500" />;
+      case "application_accepted": return <UserCheck className="w-5 h-5 text-purple-500" />;
+      case "certification_approved": return <Music className="w-5 h-5 text-green-500" />;
+      case "new_follower": return <BadgeCheck className="w-5 h-5 text-blue-500" />;
+      case "message": return <MessageSquare className="w-5 h-5 text-teal-500" />;
+      default: return <Bell className="w-5 h-5 text-gray-400" />;
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* 1.5. L'ÉCOSYSTÈME 2.0 - UNIVERSE OF RICH SERVICES (Simplified view) */}
-      <div className="space-y-6">
-        {/* Header of section */}
-        <div className="border-b border-gray-150 dark:border-gray-800 pb-4 mb-4 flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-black tracking-tight uppercase text-gray-900 dark:text-white">🔔 Notifications</h1>
-              <p className="text-xs text-gray-500 mt-1">Vos actualités en temps réel.</p>
-            </div>
-            {notifications.filter(n => !n.read).length > 0 && (
-              <button
-                onClick={handleMarkAllRead}
-                className="text-xs font-black text-purple-600 dark:text-purple-400 hover:underline uppercase tracking-wide flex items-center gap-1"
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 min-h-screen">
+      {/* IMPERIAL HEADER */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative p-8 rounded-3xl bg-black border border-[#D4AF37]/30 overflow-hidden shadow-2xl"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
               >
-                <Check className="w-4 h-4" /> Tout marquer comme lu
-              </button>
-            )}
+                <Bell className="w-8 h-8 text-[#D4AF37]" />
+              </motion.div>
+              <h1 className="text-3xl font-black tracking-tighter text-white uppercase italic">
+                Le Temple du Gombo
+              </h1>
+            </div>
+            <p className="text-[#D4AF37] font-medium tracking-widest text-[10px] uppercase ml-11">
+              Informe sa communauté impériale
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-4 bg-zinc-900/50 p-2 rounded-2xl border border-white/5">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                activeTab === "all" ? "bg-[#D4AF37] text-black shadow-lg" : "text-zinc-500 hover:text-white"
+              }`}
+            >
+              Toutes
+            </button>
+            <button
+              onClick={() => setActiveTab("unread")}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                activeTab === "unread" ? "bg-[#D4AF37] text-black shadow-lg" : "text-zinc-500 hover:text-white"
+              }`}
+            >
+              Non lues
+            </button>
+          </div>
         </div>
+      </motion.div>
 
-        {/* Content */}
-        <div className="space-y-4">
-            {notifications.length === 0 ? (
-                <div className="bg-white dark:bg-[#1e1e24] border border-gray-150 dark:border-gray-800/80 rounded-2xl p-10 text-center text-gray-450 dark:text-gray-500">
-                    <Bell className="w-10 h-10 mx-auto text-gray-300 dark:text-gray-700 mb-3" />
-                    <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">Aucune notification</h4>
-                    <p className="text-xs mt-1">Attendez qu'un événement survienne en temps réel !</p>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                {notifications.map((notif) => (
-                    <motion.div
-                    key={notif.id}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className={`p-4 bg-white dark:bg-[#1e1e24] border border-gray-150 dark:border-gray-800/80 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-start gap-4 ${
-                        !notif.read ? "ring-2 ring-purple-600/10 dark:ring-purple-400/10 border-purple-200" : ""
-                    }`}
-                    >
-                    {/* Type Icon Banner */}
-                    <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 shrink-0">
-                        {getNotifIcon(notif.type)}
+      {/* NOTIFICATIONS LIST */}
+      <div className="space-y-4">
+        {filteredNotifications.length === 0 ? (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="p-12 text-center bg-zinc-950 border border-zinc-900 rounded-3xl"
+          >
+            <Megaphone className="w-12 h-12 text-zinc-800 mx-auto mb-4" />
+            <h3 className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em]">Silence Impérial</h3>
+            <p className="text-zinc-700 text-xs mt-2 italic">Aucune annonce pour le moment.</p>
+          </motion.div>
+        ) : (
+          <div className="grid gap-4">
+            <AnimatePresence mode="popLayout">
+              {filteredNotifications.map((notif, idx) => (
+                <motion.div
+                  key={notif.id || idx}
+                  layout
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4, delay: idx * 0.05 }}
+                  className={`group relative p-5 rounded-2xl border transition-all duration-300 ${
+                    !(notif as any).isRead 
+                      ? "bg-zinc-900/80 border-[#D4AF37]/40 shadow-[0_0_15px_rgba(212,175,55,0.1)]" 
+                      : "bg-zinc-950/40 border-zinc-900 hover:border-zinc-800"
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`p-3 rounded-xl ${!(notif as any).isRead ? "bg-[#D4AF37]/10" : "bg-zinc-900"} border border-white/5`}>
+                      {getNotifIcon(notif.type || "")}
                     </div>
 
-                    {/* Text details */}
                     <div className="flex-1 min-w-0" onClick={async () => {
-                        if (!notif.read) {
+                      if (!(notif as any).isRead && notif.id) {
                         await gomboDB.markNotificationAsRead(notif.id);
-                        }
+                      }
                     }}>
-                        <div className="flex items-center gap-2">
-                        <span className="text-sm font-extrabold text-gray-900 dark:text-white block cursor-pointer">
-                            {notif.title}
-                        </span>
-                        {!notif.read && (
-                            <span className="h-2 w-2 rounded-full bg-red-500 inline-block shrink-0" />
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className={`text-sm font-bold uppercase tracking-tight ${!(notif as any).isRead ? "text-white" : "text-zinc-400"}`}>
+                          {(notif as any).title || "Notification"}
+                        </h4>
+                        {!(notif as any).isRead && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse shadow-[0_0_8px_#D4AF37]" />
                         )}
-                        </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
+                      </div>
+                      <p className="text-xs text-zinc-500 leading-relaxed group-hover:text-zinc-300 transition-colors">
                         {notif.message}
-                        </p>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {new Date(notif.createdAt).toLocaleString("fr-FR")}
-                        </span>
+                      </p>
+                      
+                      <div className="flex items-center gap-4 mt-3">
+                        <div className="flex items-center gap-1.5 text-[9px] font-mono text-zinc-600 uppercase tracking-tighter">
+                          <Clock className="w-3 h-3" />
+                          {new Date(notif.createdAt || "").toLocaleString("fr-FR")}
+                        </div>
+                        {(notif as any).audience && (
+                          <div className="flex items-center gap-1.5 text-[9px] font-mono text-[#D4AF37]/60 uppercase tracking-tighter border-l border-zinc-800 pl-4">
+                            <UserCheck className="w-3 h-3" />
+                            Audience: {(notif as any).audience}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Actions */}
-                    <button
-                        onClick={() => handleDeleteNotif(notif.id)}
-                        className="p-1.5 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20 text-gray-400 dark:text-gray-600 rounded-lg transition-colors shrink-0"
-                        title="Supprimer"
-                    >
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => notif.id && handleDeleteNotif(notif.id)}
+                        className="p-2 text-zinc-700 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                        title="Révoquer"
+                      >
                         <Trash2 className="w-4 h-4" />
-                    </button>
-                    </motion.div>
-                ))}
-                </div>
-            )}
-        </div>
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+
+      {/* FOOTER REFLECTION */}
+      <div className="pt-12 border-t border-zinc-900 text-center">
+        <p className="text-[9px] font-mono text-zinc-800 uppercase tracking-[0.5em]">
+          Espace de Communication Souveraine
+        </p>
       </div>
     </div>
   );
 }
+
+const RefreshCw = (props: any) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+    <path d="M21 3v5h-5" />
+    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+    <path d="M3 21v-5h5" />
+  </svg>
+);

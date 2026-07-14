@@ -44,7 +44,10 @@ export default function AfrigomboWalletDashboard({
     revenus: 0,
     depots: 0,
     retraits: 0,
-    gainsMensuels: 0
+    gainsMensuels: 0,
+    revenusMois: 0,
+    economiesPremium: 0,
+    niveauWallet: "Standard"
   });
   const [transactions, setTransactions] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
@@ -91,7 +94,10 @@ export default function AfrigomboWalletDashboard({
             revenus: uData.wallet.revenus || 0,
             depots: uData.wallet.depots || 0,
             retraits: uData.wallet.retraits || 0,
-            gainsMensuels: uData.wallet.gainsMensuels || 0
+            gainsMensuels: uData.wallet.gainsMensuels || 0,
+            revenusMois: uData.wallet.revenusMois || 0,
+            economiesPremium: uData.wallet.economiesPremium || 0,
+            niveauWallet: uData.wallet.niveauWallet || "Standard"
           });
         }
       }
@@ -386,123 +392,114 @@ export default function AfrigomboWalletDashboard({
       </div>
 
       {/* CORE WALLET BALANCE MODULES */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
-        {/* CARD A: SOLDE DISPONIBLE */}
-        <div className="bg-gradient-to-br from-zinc-950 to-zinc-900 border border-zinc-900 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl"></div>
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest font-black">
-                Solde Disponible
-              </span>
-              <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
-                <Coins className="w-4 h-4" />
+        {/* MAIN CARD: BALANCE */}
+        <div className="lg:col-span-2 bg-gradient-to-br from-zinc-950 to-zinc-900 border border-[#D4AF37]/30 rounded-[2rem] p-8 relative overflow-hidden shadow-2xl shadow-black/80 group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-[80px] -mr-32 -mt-32 transition-all group-hover:bg-[#D4AF37]/10"></div>
+          
+          <div className="relative z-10 flex flex-col h-full justify-between gap-8">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-[0.2em] font-black flex items-center gap-2">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Solde Souverain Disponible
+                </span>
+                <h3 className="text-5xl font-black text-white font-mono tracking-tighter">
+                  {wallet.soldeDisponible.toLocaleString()} <span className="text-xl text-zinc-500 font-sans font-normal uppercase">FCFA</span>
+                </h3>
+              </div>
+              <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] backdrop-blur-md">
+                <Wallet className="w-7 h-7" />
               </div>
             </div>
-            <span className="text-3xl font-black text-white font-mono tracking-tight block">
-              {wallet.soldeDisponible.toLocaleString()} <span className="text-[14px] text-zinc-400 font-sans font-normal">FCFA</span>
-            </span>
-            <p className="text-[10px] text-zinc-500 font-mono mt-2 leading-relaxed">
-              Fonds immédiatement utilisables pour financer des prestations ou retirables instantanément.
-            </p>
-          </div>
 
-          <div className="flex gap-3 mt-6">
-            <button 
-              onClick={openDeposit}
-              className="flex-1 py-3 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-black font-mono text-[9px] uppercase tracking-wider rounded-xl transition-all active:scale-98 flex items-center justify-center gap-1.5"
-            >
-              <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
-              Dépôt / Recharger
-            </button>
-            <button 
-              onClick={openWithdraw}
-              disabled={wallet.soldeDisponible <= 0}
-              className="flex-1 py-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-black font-mono text-[9px] uppercase tracking-wider rounded-xl transition-all active:scale-98 disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              <ArrowDownLeft className="w-3.5 h-3.5 stroke-[2.5]" />
-              Retirer
-            </button>
-          </div>
-        </div>
-
-        {/* CARD B: SOLDE BLOQUÉ COMPTE SÉQUESTRE */}
-        <div className="bg-gradient-to-br from-zinc-950 to-zinc-900 border border-zinc-900 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl"></div>
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest font-black">
-                Solde Séquestre (Bloqué)
-              </span>
-              <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                <Lock className="w-4 h-4" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 space-y-1">
+                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">🔒 En Séquestre</span>
+                <span className="text-lg font-black text-[#D4AF37] font-mono">{wallet.soldeBloque.toLocaleString()}</span>
+              </div>
+              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 space-y-1">
+                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">📈 Revenus Mois</span>
+                <span className="text-lg font-black text-emerald-400 font-mono">+{wallet.revenus?.toLocaleString()}</span>
+              </div>
+              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 space-y-1 col-span-2 sm:col-span-1">
+                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">🎁 Économies Premium</span>
+                <span className="text-lg font-black text-amber-400 font-mono">{wallet.economiesPremium?.toLocaleString() || "0"}</span>
               </div>
             </div>
-            <span className="text-3xl font-black text-[#D4AF37] font-mono tracking-tight block">
-              {wallet.soldeBloque.toLocaleString()} <span className="text-[14px] text-zinc-400 font-sans font-normal">FCFA</span>
-            </span>
-            <p className="text-[10px] text-zinc-500 font-mono mt-2 leading-relaxed">
-              Fonds gelés en toute sécurité pour vos contrats actifs. Libération automatique après prestation.
-            </p>
-          </div>
 
-          <div className="mt-6">
-            <div className="bg-black/50 border border-zinc-900/50 rounded-xl px-4 py-2.5 flex items-center gap-2 text-[10px] font-mono text-zinc-400">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>Garantie Souveraine de l'Empire</span>
+            <div className="flex flex-wrap gap-3">
+              <button 
+                onClick={openDeposit}
+                className="flex-1 min-w-[140px] py-4 bg-[#D4AF37] hover:bg-amber-400 text-black font-black font-mono text-[10px] uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-[#D4AF37]/20 flex items-center justify-center gap-2"
+              >
+                <ArrowUpRight className="w-4 h-4 stroke-[3]" />
+                Déposer
+              </button>
+              <button 
+                onClick={openWithdraw}
+                disabled={wallet.soldeDisponible <= 0}
+                className="flex-1 min-w-[140px] py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-black font-mono text-[10px] uppercase tracking-widest rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <ArrowDownLeft className="w-4 h-4 stroke-[3]" />
+                Retirer
+              </button>
             </div>
           </div>
         </div>
 
-        {/* CARD C: RÉSUMÉ D'ACTIVITÉ */}
-        <div className="bg-gradient-to-br from-zinc-950 to-zinc-900 border border-zinc-900 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl"></div>
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest font-black">
-                Fiche Métrique
-              </span>
-              <TrendingUp className="w-5 h-5 text-zinc-500" />
+        {/* SIDE CARD: LEVEL & STATS */}
+        <div className="bg-zinc-950 border border-zinc-900 rounded-[2rem] p-6 flex flex-col justify-between shadow-2xl">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest font-black">Niveau du Wallet</span>
+              <div className="px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded-full text-[10px] font-black uppercase font-mono">
+                {wallet.niveauWallet || "CLASSIQUE"}
+              </div>
             </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between items-center border-b border-zinc-900/50 pb-1.5">
-                <span className="text-[10px] font-mono text-zinc-400">Total Dépôts</span>
-                <span className="text-xs font-bold text-emerald-400 font-mono">
-                  +{wallet.depots?.toLocaleString() || "0"} FCFA
-                </span>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#D4AF37]">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase">Progrès Prochain Niveau</span>
+                    <span className="text-[10px] font-mono text-zinc-500">75%</span>
+                  </div>
+                  <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#D4AF37] w-3/4 shadow-[0_0_10px_#D4AF37]"></div>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between items-center border-b border-zinc-900/50 pb-1.5">
-                <span className="text-[10px] font-mono text-[#D4AF37]">Revenus de l'Artiste</span>
-                <span className="text-xs font-bold text-[#D4AF37] font-mono">
-                  +{wallet.revenus?.toLocaleString() || "0"} FCFA
-                </span>
-              </div>
-              <div className="flex justify-between items-center border-b border-zinc-900/50 pb-1.5">
-                <span className="text-[10px] font-mono text-zinc-400">Gains Mensuels (30j)</span>
-                <span className="text-xs font-bold text-blue-400 font-mono">
-                  +{wallet.gainsMensuels?.toLocaleString() || "0"} FCFA
-                </span>
-              </div>
-              <div className="flex justify-between items-center border-b border-zinc-900/50 pb-1.5">
-                <span className="text-[10px] font-mono text-zinc-400">Retraits Effectués</span>
-                <span className="text-xs font-bold text-amber-500 font-mono">
-                  -{wallet.retraits?.toLocaleString() || "0"} FCFA
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-mono text-zinc-400">Contrats Séquestrés</span>
-                <span className="text-xs font-bold text-white font-mono">
-                  {contracts.filter(c => c.status === "payment_held" || c.status === "in_progress" || c.status === "completed_artist" || c.status === "disputed").length} actif(s)
-                </span>
+
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <button 
+                  onClick={() => setActiveTab("contracts")}
+                  className="p-4 bg-zinc-900/50 border border-zinc-800/50 rounded-2xl text-left hover:border-[#D4AF37]/30 transition-all group"
+                >
+                  <FileText className="w-5 h-5 text-zinc-500 mb-2 group-hover:text-[#D4AF37]" />
+                  <span className="text-[10px] font-black text-white uppercase block">Mes Contrats</span>
+                  <span className="text-[9px] font-mono text-zinc-500 uppercase">{contracts.length} en cours</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab("all")}
+                  className="p-4 bg-zinc-900/50 border border-zinc-800/50 rounded-2xl text-left hover:border-[#D4AF37]/30 transition-all group"
+                >
+                  <History className="w-5 h-5 text-zinc-500 mb-2 group-hover:text-[#D4AF37]" />
+                  <span className="text-[10px] font-black text-white uppercase block">Historique</span>
+                  <span className="text-[9px] font-mono text-zinc-500 uppercase">Tout voir</span>
+                </button>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 pt-1.5 text-[8.5px] text-zinc-600 font-mono text-center">
-            Mise à jour en temps réel par Firebase
-          </div>
+          <button className="w-full mt-6 py-3 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white rounded-xl text-[10px] font-black uppercase font-mono tracking-widest transition-all flex items-center justify-center gap-2">
+            <TrendingUp className="w-4 h-4" />
+            Statistiques Détaillées
+          </button>
         </div>
 
       </div>

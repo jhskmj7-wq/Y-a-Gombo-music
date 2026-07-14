@@ -59,7 +59,13 @@ import {
   VoiceAnnouncement,
   SecureWaitlistEntry,
   AfrigomboSupport,
-  BetaUpdate
+  BetaUpdate,
+  SystemMedia,
+  SourceType,
+  AppNotification,
+  NotificationType,
+  NotificationAudience,
+  NotificationStatus
 } from "./types";
 
 // Setup and determine if using Real Firebase
@@ -336,6 +342,9 @@ export const gomboDB = {
           profile.wallet = {
             soldeDisponible: 250000,
             soldeBloque: 0,
+            revenusMois: 0,
+            economiesPremium: 0,
+            niveauWallet: "Standard",
             revenus: 0,
             depots: 0,
             retraits: 0,
@@ -823,7 +832,7 @@ export const gomboDB = {
     return await this.publishNotification(notif);
   },
 
-  listenNotifications(userId: string, callback: (notifs: GomboNotification[]) => void) {
+  listenUserNotifications(userId: string, callback: (notifs: GomboNotification[]) => void) {
     if (db) {
       const q = query(
         collection(db, "notifications"),
@@ -1038,6 +1047,240 @@ export const gomboDB = {
     }
   },
 
+  // STORAGE DIAGNOSTIC
+  async checkStorageStatus(): Promise<any> {
+    if (!storage) {
+      return {
+        isEnabled: false,
+        bucket: "Non configuré",
+        projectId: "Non configuré",
+        error: { code: "STORAGE_NOT_INITIALIZED", message: "Le SDK Storage n'est pas initialisé" },
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    const config = {
+      isEnabled: true,
+      bucket: storage.app.options.storageBucket || "Inconnu",
+      projectId: storage.app.options.projectId || "Inconnu",
+      apiKey: storage.app.options.apiKey ? "Présente" : "Manquante",
+      connectionOk: true,
+      writeTestOk: false,
+      resumableTestOk: false,
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      // 1. TEST UPLOAD SIMPLE (uploadBytes)
+      console.log("[DIAGNOSTIC] Test d'écriture Storage (Simple)...");
+      const testRef = ref(storage, "diagnostic/simple_test_" + Date.now() + ".txt");
+      const blob = new Blob(["Afrigombo Simple Storage Test"], { type: "text/plain" });
+      
+      let simpleError = null;
+      try {
+        await uploadBytes(testRef, blob);
+        console.log("[DIAGNOSTIC] Écriture simple réussie, vérification lecture...");
+        const url = await getDownloadURL(testRef);
+        console.log("[DIAGNOSTIC] Lecture simple réussie :", url);
+        config.writeTestOk = true;
+      } catch (err: any) {
+        console.error("[DIAGNOSTIC] Échec écriture/lecture simple :", err);
+        simpleError = err;
+      }
+
+      // 2. TEST UPLOAD RESUMABLE (uploadBytesResumable)
+      console.log("[DIAGNOSTIC] Test d'écriture Storage (Resumable)...");
+      const resRef = ref(storage, "diagnostic/resumable_test_" + Date.now() + ".txt");
+      const resBlob = new Blob(["Afrigombo Resumable Storage Test"], { type: "text/plain" });
+      
+      let resumableError = null;
+      try {
+        const task = uploadBytesResumable(resRef, resBlob);
+        await new Promise((resolve, reject) => {
+          task.on("state_changed", null, (err) => reject(err), () => resolve(true));
+        });
+        console.log("[DIAGNOSTIC] Écriture resumable réussie, vérification lecture...");
+        const resUrl = await getDownloadURL(resRef);
+        console.log("[DIAGNOSTIC] Lecture resumable réussie :", resUrl);
+        config.resumableTestOk = true;
+      } catch (err: any) {
+        console.error("[DIAGNOSTIC] Échec écriture/lecture resumable :", err);
+        resumableError = err;
+      }
+
+      if (config.writeTestOk && config.resumableTestOk) {
+        return { ...config, rulesValid: true };
+      } else {
+        return { 
+          ...config, 
+          rulesValid: false, 
+          error: simpleError || resumableError,
+          details: {
+            simple: simpleError ? simpleError.code : "OK",
+            resumable: resumableError ? resumableError.code : "OK"
+          }
+        };
+      }
+    } catch (err: any) {
+      return { ...config, connectionOk: false, error: { code: err.code, message: err.message } };
+    }
+  },
+
+  // FALLBACK MEDIA SYSTEM (FIRESTORE)
+  async getSystemMedia(): Promise<SystemMedia[]> {
+    if (db) {
+      const q = query(collection(db, "system_media"), orderBy("priority", "desc"), orderBy("updatedAt", "desc"));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() } as SystemMedia));
+    }
+    return [];
+  },
+
+  listenSystemMedia(callback: (media: SystemMedia[]) => void) {
+    if (db) {
+      const q = query(collection(db, "system_media"), orderBy("priority", "desc"), orderBy("updatedAt", "desc"));
+      return onSnapshot(q, (snap) => {
+        callback(snap.docs.map(d => ({ id: d.id, ...d.data() } as SystemMedia)));
+      });
+    }
+    return () => {};
+  },
+
+  async addSystemMedia(media: Partial<SystemMedia>) {
+    if (db) {
+      const user = auth?.currentUser;
+      const docRef = media.id ? doc(db, "system_media", media.id) : doc(collection(db, "system_media"));
+      await setDoc(docRef, {
+        title: "Sans titre",
+        description: "",
+        category: "audio",
+        sourceType: "FIREBASE",
+        firebaseUrl: "",
+        githubPath: "",
+        externalUrl: "",
+        volume: 1,
+        loop: false,
+        autoplay: false,
+        enabled: true,
+        priority: 0,
+        ...media,
+        id: docRef.id,
+        updatedAt: new Date().toISOString(),
+        updatedBy: user?.displayName || user?.email || "Admin"
+      });
+      return docRef.id;
+    }
+    throw new Error("Base de données non disponible");
+  },
+
+  async updateSystemMedia(id: string, updates: Partial<SystemMedia>) {
+    if (db) {
+      const user = auth?.currentUser;
+      await updateDoc(doc(db, "system_media", id), {
+        ...updates,
+        updatedAt: new Date().toISOString(),
+        updatedBy: user?.displayName || user?.email || "Admin"
+      });
+    }
+  },
+
+  async deleteSystemMedia(id: string) {
+    if (db) {
+      await deleteDoc(doc(db, "system_media", id));
+    }
+  },
+
+  // NOTIFICATION SYSTEM (IMPERIAL CENTER)
+  async getNotifications(): Promise<AppNotification[]> {
+    if (db) {
+      const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() } as AppNotification));
+    }
+    return [];
+  },
+
+  listenAdminNotifications(callback: (notifs: AppNotification[]) => void) {
+    if (db) {
+      const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
+      return onSnapshot(q, (snap) => {
+        callback(snap.docs.map(d => ({ id: d.id, ...d.data() } as AppNotification)));
+      });
+    }
+    return () => {};
+  },
+
+  async addNotification(notif: Partial<AppNotification>) {
+    if (db) {
+      const user = auth?.currentUser;
+      const docRef = doc(collection(db, "notifications"));
+      await setDoc(docRef, {
+        title: "Sans titre",
+        message: "",
+        type: "INFO",
+        audience: "Tous",
+        priority: 0,
+        scheduledAt: null,
+        status: "published",
+        readCount: 0,
+        clickCount: 0,
+        ...notif,
+        id: docRef.id,
+        createdAt: new Date().toISOString(),
+        createdBy: user?.displayName || user?.email || "Fondateur"
+      });
+      return docRef.id;
+    }
+    throw new Error("Base de données non disponible");
+  },
+
+  async updateNotification(id: string, updates: Partial<AppNotification>) {
+    if (db) {
+      await updateDoc(doc(db, "notifications", id), {
+        ...updates
+      });
+    }
+  },
+
+  async incrementNotificationStat(id: string, field: "readCount" | "clickCount") {
+    if (db) {
+      await updateDoc(doc(db, "notifications", id), {
+        [field]: increment(1)
+      });
+    }
+  },
+
+  resolveMediaSource(media: SystemMedia): string {
+    if (!media.enabled || media.sourceType === "DISABLED") return "";
+
+    // Priority 1: Firebase
+    if (media.sourceType === "FIREBASE" && media.firebaseUrl) {
+      return media.firebaseUrl;
+    }
+
+    // Priority 2: GitHub
+    if (media.githubPath) {
+      // Assuming a standard pattern for GitHub Raw if it's a public repo
+      // For now, if it's a path like public/..., we assume it's served by the app or we use a configurable base
+      if (media.githubPath.startsWith("http")) return media.githubPath;
+      
+      // If the user provided a relative path, we try to resolve it
+      // In development on Cloud Run, we might want to point to the actual repo or the public folder
+      return `/${media.githubPath.replace(/^\//, "")}`; 
+    }
+
+    // Priority 3: External URL
+    if (media.externalUrl) {
+      return media.externalUrl;
+    }
+
+    // Dynamic Fallback logic (Automatic switch)
+    if (media.firebaseUrl) return media.firebaseUrl;
+    if (media.externalUrl) return media.externalUrl;
+    
+    return "";
+  },
+
   // FILES
   async uploadFile(fileOrPath: File | string, pathOrFile: string | File, callbackOrMetadata?: any): Promise<string> {
     if (storage) {
@@ -1134,12 +1377,12 @@ export const gomboDB = {
             "state_changed",
             (snapshot) => {
               const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              const formattedProgress = Math.max(1, Math.round(progress));
-              console.log(`[FIREBASE STORAGE DIAGNOSTIC] Progress update: ${formattedProgress}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes)`);
+              const formattedProgress = Math.round(progress);
+              console.log(`[FIREBASE STORAGE DIAGNOSTIC] Progress update: ${formattedProgress}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes) State: ${snapshot.state}`);
               
               if (progressCallback) {
                 progressCallback(formattedProgress, {
-                  state: "uploading",
+                  state: snapshot.state === "running" ? "uploading" : snapshot.state,
                   bucket: bucketName,
                   projectId: projectId,
                   apiKey: apiKey,
@@ -1151,14 +1394,43 @@ export const gomboDB = {
                 });
               }
             },
-            (error: any) => {
+            async (error: any) => {
               console.error("[FIREBASE STORAGE DIAGNOSTIC] Upload error callback triggered:", error);
+              
+              // AUTO-RETRY WITH SIMPLE UPLOAD IF RESUMABLE FAILS
+              if (error?.code === "storage/retry-limit-exceeded") {
+                console.warn("[FIREBASE STORAGE DIAGNOSTIC] Resumable upload failed with retry limit. Attempting simple uploadBytes fallback...");
+                if (progressCallback) {
+                  progressCallback(1, {
+                    state: "uploading",
+                    log: "🔄 Échec du mode Resumable. Tentative en mode Simple (uploadBytes)..."
+                  });
+                }
+                
+                try {
+                  await uploadBytes(storageRef, fileToUpload);
+                  console.log("[FIREBASE STORAGE DIAGNOSTIC] Simple fallback upload succeeded!");
+                  const url = await getDownloadURL(storageRef);
+                  if (progressCallback) progressCallback(100, { state: "success", log: "✅ Téléversement réussi via mode de secours." });
+                  resolve(url);
+                  return;
+                } catch (fallbackErr: any) {
+                  console.error("[FIREBASE STORAGE DIAGNOSTIC] Fallback upload failed too:", fallbackErr);
+                  error = fallbackErr; // Use the fallback error if it also fails
+                }
+              }
+
               const errorDetails = {
                 code: error?.code || "Inconnu",
                 message: error?.message || "Pas de message d'erreur",
                 stack: error?.stack || "Pas de stacktrace available"
               };
               
+              let errorMessage = `ERREUR FIREBASE [${errorDetails.code}] : ${errorDetails.message}`;
+              if (errorDetails.code === "storage/retry-limit-exceeded") {
+                errorMessage = "ERREUR CRITIQUE : Limite de tentatives dépassée. Le service Firebase Storage semble bloqué par l'environnement ou non configuré.";
+              }
+
               if (progressCallback) {
                 progressCallback(0, {
                   state: "error",
@@ -1168,7 +1440,7 @@ export const gomboDB = {
                   fileName: fileName,
                   fileSize: fileSize,
                   error: errorDetails,
-                  log: `ERREUR FIREBASE [${errorDetails.code}] : ${errorDetails.message}`
+                  log: errorMessage
                 });
               }
               reject(error);

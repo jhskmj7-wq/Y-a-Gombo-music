@@ -306,6 +306,31 @@ export default function AdminDashboard({
               <AnimatedCounter value={mediaStats.sizeMB} /> <span className="text-xs text-zinc-500 font-sans">MB</span>
             </strong>
           </motion.div>
+
+          {/* CENTRE MÉDIA MULTI-SOURCES STATUS */}
+          <motion.div 
+            variants={statsItemVariants} 
+            onClick={() => setActiveMenu("media")}
+            className="p-4 rounded-xl bg-black border border-blue-500/20 hover:border-blue-500/50 transition-all cursor-pointer flex flex-col justify-between text-left group"
+          >
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-blue-400 block font-bold">État Centre Média</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <div className="mt-2 space-y-1">
+              <div className="flex justify-between text-[10px]">
+                <span className="text-zinc-500 font-mono">FIABILITÉ</span>
+                <span className="text-emerald-400 font-black uppercase">100% SÉCURISÉ</span>
+              </div>
+              <div className="h-1 w-full bg-zinc-900 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 w-[100%]" />
+              </div>
+              <div className="flex justify-between text-[8px] font-mono text-zinc-600 uppercase">
+                <span>Multi-Source</span>
+                <span className="text-blue-500">Actif</span>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
 

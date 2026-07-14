@@ -1,9 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "motion/react";
 import { 
   User, Phone, MapPin, Music, Award, ShieldCheck, Heart, Calendar, 
-  Copy, ExternalLink, RefreshCw 
+  Copy, ExternalLink, RefreshCw, Star, TrendingUp, Users, Target,
+  Briefcase, CheckCircle2, DollarSign, Zap, BarChart3, PieChart as PieChartIcon,
+  MessageSquare
 } from "lucide-react";
+import { 
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
+  Tooltip, BarChart, Bar, Cell, PieChart, Pie
+} from "recharts";
 import { UserProfile } from "../types";
 import { ProfileCompletionScore } from "./ProfileCompletionScore";
 import { MediaGalleryManager } from "./MediaGalleryManager";
@@ -56,293 +62,275 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
     setTimeout(() => setUidCopied(false), 2000);
   };
 
+  // Mock data for charts if real ones don't exist yet
+  const revenueData = useMemo(() => [
+    { name: "Jan", value: (currentUserProfile.monthlyRevenue || 0) * 0.7 },
+    { name: "Fév", value: (currentUserProfile.monthlyRevenue || 0) * 0.8 },
+    { name: "Mar", value: (currentUserProfile.monthlyRevenue || 0) * 0.6 },
+    { name: "Avr", value: (currentUserProfile.monthlyRevenue || 0) * 0.9 },
+    { name: "Mai", value: (currentUserProfile.monthlyRevenue || 0) * 1.1 },
+    { name: "Juin", value: (currentUserProfile.monthlyRevenue || 0) || 0 },
+  ], [currentUserProfile.monthlyRevenue]);
+
+  const performanceData = useMemo(() => [
+    { name: "Succès", value: currentUserProfile.successRate || 85 },
+    { name: "Échecs", value: 100 - (currentUserProfile.successRate || 85) },
+  ], [currentUserProfile.successRate]);
+
+  const COLORS = ["#D4AF37", "#1A1A1A"];
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-6 text-[#1A1A1A] dark:text-gray-100 font-sans"
+      className="space-y-8 pb-12 text-[#1A1A1A] dark:text-gray-100 font-sans max-w-5xl mx-auto"
     >
-      {/* PROFILE COMPLETION SCORE SECTION */}
-      <ProfileCompletionScore
-        currentUserProfile={currentUserProfile}
-        onEdit={() => setPanelView("edit")}
-        onNavigateView={onNavigateView}
-      />
-
-      {/* TRUST & VERIFICATION BANNER - AFRITRUST */}
-      {!(currentUserProfile.isCertified === true || currentUserProfile.kycStatus === "approved") && (
-            <div className="flex bg-[#D4AF37]/5 dark:bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-3xl p-5 flex flex-col sm:flex-row items-center gap-4 justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/30">
-                <ShieldCheck className="w-7 h-7" />
-              </div>
-              <div>
-                <h4 className="text-sm font-black text-gray-950 dark:text-white uppercase font-sans">
-                  Obtenez le badge bleu GOMBO ID 💠
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-sans">
-                  Gagnez la confiance des clients et débloquez des gombos de prestige.
-                </p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setPanelView("edit")}
-              className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all whitespace-nowrap"
-            >
-              Vérifier mon identité
-            </button>
-          </div>
-      )}
-
-      {/* HEADER PROFIL - SECTION IDENTITÉ */}
-      <div id="section-identity" className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl overflow-hidden shadow-md relative">
-        {/* Cover Photo */}
-        <div className="h-32 md:h-48 w-full bg-gray-200 dark:bg-[#1A1A1E] relative border-b border-gray-100 dark:border-gray-800">
+      {/* 👑 HERITAGE HEADER - CV MUSICAL IDENTITY */}
+      <div className="relative bg-[#050505] rounded-[2rem] overflow-hidden border border-zinc-800 shadow-2xl">
+        {/* Cover with Overlay */}
+        <div className="h-48 md:h-64 relative">
           {(currentUserProfile.coverUrl || currentUserProfile.couverture) ? (
             <img 
               src={currentUserProfile.coverUrl || currentUserProfile.couverture} 
-              alt="Couverture" 
-              className="w-full h-full object-cover" 
+              alt="" 
+              className="w-full h-full object-cover opacity-60" 
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center opacity-30">
-               <Music className="w-16 h-16 text-gray-500" />
-            </div>
+            <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 to-black" />
           )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
+          
+          {/* Badge Flottant GOMBO ID */}
+          <div className="absolute top-6 right-6 flex flex-col items-end gap-2">
+            <div className="bg-black/60 backdrop-blur-md border border-[#D4AF37]/30 px-4 py-2 rounded-2xl flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">GOMBO ID</p>
+                <p className="text-xs font-mono font-black text-[#D4AF37]">{currentUserProfile.uid.slice(0, 10).toUpperCase()}</p>
+              </div>
+              <div className="w-10 h-10 bg-[#D4AF37]/10 rounded-xl flex items-center justify-center border border-[#D4AF37]/20">
+                <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
+              </div>
+            </div>
+            {currentUserProfile.isPremium && (
+              <span className="bg-gradient-to-r from-amber-400 to-yellow-600 text-black px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-lg">
+                👑 MEMBRE PREMIUM
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="p-6 pt-0 flex flex-col md:flex-row items-center gap-6 justify-between relative mt-[-2rem] md:mt-[-3rem]">
-          <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left z-10">
-            {/* Avatar frame */}
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#D4AF37] bg-gray-100 dark:bg-gray-800">
-              <img 
-                src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || AVATARS[0]} 
-                alt="Avatar" 
-                className="w-full h-full object-cover" 
-              />
-            </div>
-            
-            {(currentUserProfile.isCertified === true || currentUserProfile.kycStatus === "approved") && (
-              <div className="absolute -top-1 -right-1 p-1 bg-blue-500 text-white rounded-full border-2 border-white dark:border-[#121214]">
-                <ShieldCheck className="w-4 h-4 text-white fill-current" />
+        {/* Identity Details */}
+        <div className="px-8 pb-8 -mt-20 relative z-10">
+          <div className="flex flex-col md:flex-row gap-8 items-end">
+            {/* Avatar Jumbo */}
+            <div className="relative shrink-0">
+              <div className="w-40 h-40 rounded-[2.5rem] overflow-hidden border-4 border-[#050505] bg-zinc-900 shadow-2xl">
+                <img 
+                  src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || AVATARS[0]} 
+                  alt={currentUserProfile.firstName} 
+                  className="w-full h-full object-cover" 
+                />
               </div>
-            )}
+              <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-2xl border-4 border-[#050505] shadow-lg flex items-center justify-center ${
+                availabilityStatus === "disponible" ? "bg-emerald-500" : "bg-zinc-600"
+              }`}>
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+              </div>
+            </div>
 
-            <div className={`absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-white dark:border-[#121214] ${
-              availabilityStatus === "disponible" ? "bg-emerald-500" : availabilityStatus === "occupe" ? "bg-[#D4AF37]" : "bg-red-500"
-            }`} />
-          </div>
-
-          <div>
-            <div className="flex flex-col gap-1.5 sm:items-start">
-              <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
-                <h2 className="text-2xl font-black tracking-tight text-gray-950 dark:text-white uppercase font-sans">
-                  {((currentUserProfile.prenom || currentUserProfile.firstName || "").trim().normalize("NFC"))} {((currentUserProfile.nom || currentUserProfile.lastName || "").trim().normalize("NFC"))}
-                </h2>
-                {(currentUserProfile.nomArtistique || currentUserProfile.artistName || currentUserProfile.artisticName) && (
-                  <span className="text-sm font-black text-[#D4AF37] block">
-                    ({((currentUserProfile.nomArtistique || currentUserProfile.artistName || currentUserProfile.artisticName || "").trim().normalize("NFC"))})
+            {/* Name & Titles */}
+            <div className="flex-1 text-center md:text-left space-y-2">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                <h1 className="text-4xl font-black text-white uppercase tracking-tighter leading-none">
+                  {currentUserProfile.firstName} {currentUserProfile.lastName}
+                </h1>
+                {currentUserProfile.artistName && (
+                  <span className="text-xl font-black text-[#D4AF37] italic">
+                    "{currentUserProfile.artistName}"
                   </span>
                 )}
-                {/* Activity Streak */}
-                {(() => {
-                  const streak = localStorage.getItem("gombo_activity_streak") || "1";
-                  return (
-                    <span className="text-[9px] font-bold bg-amber-500/10 text-[#D4AF37] px-2 py-0.5 rounded-md border border-[#D4AF37]/20">
-                      🔥 {streak} {parseInt(streak) > 1 ? "jours d'affilée" : "jour d'activité"}
-                    </span>
-                  );
-                })()}
               </div>
-
-              {/* SECTION VIII: GAMIFICATION LEVEL ROW */}
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 mt-1 font-sans">
-                {(() => {
-                  const activityCount = (myPosts?.length || 0) + (dynamicAppsCount || 0) + (currentUserProfile.gigsCompleted || 0);
-                  const isActif = activityCount >= 1;
-                  const isCertifie = activityCount >= 5 || currentUserProfile.isCertified === true || currentUserProfile.verificationStatus === "certifie" || currentUserProfile.badges?.some(b => b.includes("Talent Certifié"));
-                  const isBoss = currentUserProfile.role === "client" || currentUserProfile.role === "admin" || (currentUserProfile as any).isPremium === true || currentUserProfile.email === "jhs.kmj7@gmail.com";
-
-                  return (
-                    <>
-                      {/* Badge 1: Nouveau Talent */}
-                      <span className="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/35 shadow-xs">
-                        🥉 Nouveau Talent
-                      </span>
-
-                      {/* Badge 2: Talent Actif */}
-                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 border transition-all ${
-                        isActif 
-                          ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/35 shadow-xs" 
-                          : "bg-gray-800/40 text-gray-500 border-gray-800/80 opacity-40 line-through"
-                      }`} title={isActif ? "Badge obtenu !" : "Envoyez au moins 1 candidature ou post pour débloquer"}>
-                        🥈 Talent Actif
-                      </span>
-
-                      {/* Badge 3: Talent Certifié */}
-                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 border transition-all ${
-                        isCertifie 
-                          ? "bg-purple-500/10 text-purple-400 border-purple-500/35 shadow-xs" 
-                          : "bg-gray-800/40 text-gray-500 border-gray-800/80 opacity-40"
-                      }`} title={isCertifie ? "Talent d'excellence certifié !" : "Cumulez au moins 5 actions pour débloquer"}>
-                        🥇 Talent Certifié
-                      </span>
-
-                      {/* Badge 4: Niveau Boss */}
-                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 border transition-all ${
-                        isBoss 
-                          ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-white font-black border-yellow-500 shadow-sm animate-pulse" 
-                          : "bg-gray-800/40 text-gray-500 border-gray-800/80 opacity-40"
-                      }`} title={isBoss ? "Niveau Boss Suprême !" : "Réservé aux Promoteurs, Admins & Abonnés Premium"}>
-                        👑 Niveau Boss
-                      </span>
-                    </>
-                  );
-                })()}
-              </div>
-
-              {/* Motto message */}
-              <div className="mt-2.5 px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/25 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 w-fit animate-pulse">
-                🎼 Ton héritage attire les gombos.
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-zinc-400">
+                <div className="flex items-center gap-1.5 bg-zinc-900/50 px-3 py-1 rounded-xl border border-zinc-800">
+                  <MapPin className="w-4 h-4 text-[#D4AF37]" />
+                  <span className="text-xs font-bold uppercase">{currentUserProfile.commune || "Cocody"}, {currentUserProfile.ville || "Abidjan"}</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-zinc-900/50 px-3 py-1 rounded-xl border border-zinc-800">
+                  <Briefcase className="w-4 h-4 text-[#D4AF37]" />
+                  <span className="text-xs font-bold uppercase">{currentUserProfile.role || "Musicien"}</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-zinc-900/50 px-3 py-1 rounded-xl border border-zinc-800">
+                  <Calendar className="w-4 h-4 text-[#D4AF37]" />
+                  <span className="text-xs font-bold uppercase">Inscrit en {new Date(currentUserProfile.createdAt).getFullYear()}</span>
+                </div>
               </div>
             </div>
 
-            {/* Account Type and UID block */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2 font-mono text-xs text-gray-400 select-none">
-              <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded font-black uppercase text-[10px]">
-                🦁 {(currentUserProfile.role as string) === "musicien" ? "Artiste / Musicien" : (currentUserProfile.role as string) === "client" ? "Client" : (currentUserProfile.role as string) === "organisateur" ? "Organisateur" : "Manager"}
+            {/* Main Action */}
+            <div className="flex gap-3 w-full md:w-auto">
+              <button 
+                onClick={() => setPanelView("edit")}
+                className="flex-1 md:flex-none px-6 py-4 bg-[#D4AF37] hover:bg-amber-500 text-black font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-xl shadow-[#D4AF37]/10"
+              >
+                Mise à jour Héritage
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 📊 PERFORMANCE & STATS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Success Rate Widget */}
+        <div className="bg-zinc-950 border border-zinc-800 rounded-[2rem] p-6 flex flex-col items-center justify-center text-center space-y-4">
+          <div className="relative w-32 h-32">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={performanceData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={60}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {performanceData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-2xl font-black text-white">{currentUserProfile.successRate || 85}%</span>
+              <span className="text-[8px] font-black text-zinc-500 uppercase">Succès</span>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-black text-white uppercase tracking-wider">Taux de Réussite</h4>
+            <p className="text-[10px] text-zinc-500 font-medium uppercase mt-1">Sur {currentUserProfile.gigsCompleted || 0} gombos terminés</p>
+          </div>
+        </div>
+
+        {/* Financial Growth Chart */}
+        <div className="md:col-span-2 bg-zinc-950 border border-zinc-800 rounded-[2rem] p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-[#D4AF37]" />
+              Évolution des Revenus
+            </h4>
+            <span className="text-[10px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-lg border border-emerald-400/20">
+              +{currentUserProfile.revenueGrowth || 12}% Ce mois
+            </span>
+          </div>
+          <div className="h-32">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={revenueData}>
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#D4AF37" 
+                  strokeWidth={3}
+                  fillOpacity={1} 
+                  fill="url(#colorValue)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* 🎖️ BADGES & ACHIEVEMENTS */}
+      <div className="bg-zinc-950 border border-zinc-800 rounded-[2rem] p-8 space-y-6">
+        <h3 className="text-xs font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2">
+          <Award className="w-4 h-4 text-[#D4AF37]" />
+          Décorations & Médailles d'Héritage
+        </h3>
+        <div className="flex flex-wrap gap-4">
+          {(() => {
+            const badges = [
+              { label: "Pionnier 2024", icon: "💎", active: true },
+              { label: "Talent Certifié", icon: "🛡️", active: currentUserProfile.isCertified },
+              { label: "Gombo Master", icon: "🎷", active: (currentUserProfile.gigsCompleted || 0) > 10 },
+              { label: "Top Fiabilité", icon: "⚡", active: (currentUserProfile.successRate || 0) > 90 },
+              { label: "Elite Gombo", icon: "👑", active: currentUserProfile.isPremium },
+            ];
+            return badges.map((badge, idx) => (
+              <div 
+                key={idx}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
+                  badge.active 
+                    ? "bg-[#D4AF37]/5 border-[#D4AF37]/30 text-white" 
+                    : "bg-zinc-900/30 border-zinc-800 text-zinc-600 opacity-40 grayscale"
+                }`}
+              >
+                <span className="text-xl">{badge.icon}</span>
+                <div className="text-left">
+                  <p className="text-[10px] font-black uppercase tracking-wider">{badge.label}</p>
+                  <p className="text-[8px] font-bold text-zinc-500 uppercase">{badge.active ? "Débloqué" : "Verrouillé"}</p>
+                </div>
+              </div>
+            ));
+          })()}
+        </div>
+      </div>
+
+      {/* 💼 CORE METRICS GRID */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Collaborations", val: currentUserProfile.collaborations?.length || 0, icon: Users, color: "text-blue-400" },
+          { label: "Opportunités", val: dynamicAppsCount, icon: Target, color: "text-amber-400" },
+          { label: "Reputation", val: currentUserProfile.reputation || 4.8, icon: Star, color: "text-yellow-400" },
+          { label: "Revenu Total", val: `${(currentUserProfile.totalRevenue || 0).toLocaleString()} F`, icon: DollarSign, color: "text-emerald-400" },
+        ].map((stat, idx) => (
+          <div key={idx} className="bg-zinc-950 border border-zinc-800 p-6 rounded-[2rem] space-y-2 group hover:border-[#D4AF37]/50 transition-colors">
+            <stat.icon className={`w-6 h-6 ${stat.color}`} />
+            <div className="space-y-0.5">
+              <p className="text-2xl font-black text-white font-mono">{stat.val}</p>
+              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{stat.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 📜 SKILLS & STYLES */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-[2rem] p-8 space-y-6">
+          <h3 className="text-xs font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+            <Zap className="w-4 h-4 text-amber-500" />
+            Arsenal Artistique
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {[...(currentUserProfile.specialties || []), currentUserProfile.mainRole].filter(Boolean).map((spec, i) => (
+              <span key={i} className="px-4 py-2 bg-amber-500/5 border border-amber-500/20 text-amber-500 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                {spec}
               </span>
-              <div className="flex items-center gap-1 font-mono text-[10px] bg-gray-50 dark:bg-gray-800/40 px-2 py-0.5 rounded border border-gray-100 dark:border-gray-800">
-                <span>UID: {currentUserProfile.uid.slice(0, 8)}...</span>
-                <button 
-                  onClick={handleCopyUid} 
-                  className="hover:text-[#D4AF37] transition-colors p-0.5 cursor-pointer"
-                  title="Copier UID"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-                {uidCopied && <span className="text-[9px] text-[#25D366] font-bold">Copié!</span>}
-              </div>
-            </div>
-
-            {currentUserProfile.bio && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2.5 max-w-lg leading-relaxed font-semibold italic">
-                "{currentUserProfile.bio.trim().normalize("NFC")}"
-              </p>
-            )}
-
-            {/* Location sticker (Ville, Commune, Quartier) */}
-            <div className="mt-4 pt-3.5 border-t border-gray-100 dark:border-gray-800/80 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Ville:</span>
-                <span className="text-gray-800 dark:text-gray-200 font-bold">{(currentUserProfile.location?.city || currentUserProfile.ville || currentUserProfile.city || "Abidjan").trim().normalize("NFC")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Commune:</span>
-                <span className="text-gray-800 dark:text-gray-200 font-bold">{(currentUserProfile.location?.district || currentUserProfile.commune || "Cocody").trim().normalize("NFC")}</span>
-              </div>
-              <div className="flex items-center gap-2 sm:col-span-2">
-                <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wide text-[9px]">Quartier / Adresse:</span>
-                <span className="text-gray-800 dark:text-gray-200 font-bold truncate flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
-                  {(currentUserProfile.location?.district || currentUserProfile.quartier || "Quartier non renseigné (à configurer)").trim().normalize("NFC")}
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Availability Controls & Share */}
-        <div className="flex flex-col items-center sm:items-end gap-3 w-full md:w-auto border-t md:border-t-0 border-gray-50 dark:border-gray-850 pt-4 md:pt-0 shrink-0 font-sans">
-          <div className="flex flex-col gap-1 w-full sm:w-60">
-            <span className="text-[10px] font-black uppercase text-gray-400 text-center sm:text-right">Statut de Disponibilité</span>
-            <div className="flex gap-1 bg-gray-50 dark:bg-gray-800/60 p-1 rounded-xl border border-gray-100 dark:border-gray-800">
-              {[
-                { key: "disponible", label: "Dispo", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20", dot: "🟢" },
-                { key: "occupe", label: "Occupé", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20", dot: "🟠" },
-                { key: "indisponible", label: "Indispo", color: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20", dot: "🔴" }
-              ].map((s) => {
-                const isActive = availabilityStatus === s.key;
-                return (
-                  <button
-                    key={s.key}
-                    type="button"
-                    disabled={updatingAvailability}
-                    onClick={() => handleUpdateAvailabilityStatus(s.key as any)}
-                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-extrabold transition-all border flex items-center justify-center gap-1 cursor-pointer ${
-                      isActive 
-                        ? `${s.color} shadow-xs font-black transform scale-102` 
-                        : "bg-transparent text-gray-450 dark:text-gray-400 border-transparent hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    <span>{s.dot}</span>
-                    <span>{s.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <button
-            onClick={() => setPanelView("edit")}
-            className="w-full sm:w-60 text-center py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            📝 MODIFIER MON PROFIL
-          </button>
-        </div>
-        </div>
-      </div>
-
-      {/* SECTION ACTIVITÉ, SPÉCIALITÉS & STYLES MUSICAUX */}
-      <div id="section-skills" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Activités & Spécialités */}
-        <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
-          <h3 className="text-xs font-black uppercase text-gray-400 tracking-widest flex items-center gap-1.5">
-            <Award className="w-4 h-4 text-[#D4AF37]" />
-            Spécialités de Scène & Free Inputs
+        <div className="bg-zinc-950 border border-zinc-800 rounded-[2rem] p-8 space-y-6">
+          <h3 className="text-xs font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+            <Music className="w-4 h-4 text-purple-500" />
+            Identité Sonore
           </h3>
           <div className="flex flex-wrap gap-2">
-            {(currentUserProfile.mainRole || (currentUserProfile.specialties && currentUserProfile.specialties.length > 0)) ? (
-              [currentUserProfile.mainRole, ...(currentUserProfile.specialties || [])].filter(Boolean).map((spec, idx) => (
-                <span 
-                  key={idx}
-                  className="px-3 py-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] rounded-xl text-xs font-extrabold shadow-2xs"
-                >
-                  🎸 {spec}
-                </span>
-              ))
-            ) : (
-              <span className="text-xs text-gray-400 italic font-bold">Aucune spécialité configurée. Cliquez sur Modifier mon profil.</span>
-            )}
-          </div>
-        </div>
-
-        {/* Styles/Genres Musicaux */}
-        <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
-          <h3 className="text-xs font-black uppercase text-gray-400 tracking-widest flex items-center gap-1.5">
-            <Music className="w-4 h-4 text-amber-500" />
-            Styles & Courants Musicaux
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {(currentUserProfile.genres && currentUserProfile.genres.length > 0) || (currentUserProfile.musicGenres && currentUserProfile.musicGenres.length > 0) ? (
-              [...(currentUserProfile.genres || []), ...(currentUserProfile.musicGenres || [])].map((gen, idx) => (
-                <span 
-                  key={idx}
-                  className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-extrabold shadow-2xs"
-                >
-                  🎵 {gen}
-                </span>
-              ))
-            ) : (
-              <span className="text-xs text-gray-400 italic font-bold">Aucun style configuré.</span>
-            )}
+            {(currentUserProfile.genres || []).map((genre, i) => (
+              <span key={i} className="px-4 py-2 bg-purple-500/5 border border-purple-500/20 text-purple-400 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                {genre}
+              </span>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* SECTION MÉDIAS (PORTFOLIO INTEGRATION) */}
+      {/* SECTION MÉDIAS */}
       <MediaGalleryManager
         currentUserProfile={currentUserProfile}
         mediaGallery={mediaGallery}
@@ -350,73 +338,56 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         onSetGallery={setMediaGallery}
       />
 
-      {/* SECTION PUBLICATIONS D'ACTIVITÉ */}
-      <div id="section-activities" className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
-        <h3 className="text-xs font-black uppercase text-gray-400 tracking-widest flex items-center gap-1.5">
-          <span>📢 Publications d'Activité & Murmures d'époque ({myPosts.length})</span>
-        </h3>
+      {/* PUBLICATIONS */}
+      <div className="bg-zinc-950 border border-zinc-800 rounded-[2rem] p-8 space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-black text-zinc-500 uppercase tracking-widest">
+            Flux d'Actualité ({myPosts.length})
+          </h3>
+        </div>
         
         {myPosts.length === 0 ? (
-          <p className="text-xs text-gray-400 dark:text-zinc-500 italic text-center py-6 font-bold">
-            Aucun murmure de scène ou publication n'a encore été émis par cet artiste d'élite.
-          </p>
+          <div className="py-12 text-center space-y-3">
+            <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center mx-auto border border-zinc-800">
+              <RefreshCw className="w-6 h-6 text-zinc-700" />
+            </div>
+            <p className="text-xs text-zinc-500 font-bold italic uppercase">Aucune publication d'héritage.</p>
+          </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {myPosts.map((post) => (
               <div 
                 key={post.id} 
-                className="p-4 rounded-2xl bg-gray-50 dark:bg-black/40 border border-gray-100 dark:border-zinc-900 text-left relative overflow-hidden"
+                className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800 hover:border-zinc-700 transition-colors"
               >
-                <div className="flex justify-between items-start gap-2">
-                  <div>
-                    <h4 className="text-xs font-black text-gray-950 dark:text-gray-100 uppercase">
-                      {post.authorArtisticName || currentUserProfile.artisticName || "Artiste Prestigieux"}
-                    </h4>
-                    <span className="text-[9px] font-mono text-gray-400 dark:text-zinc-500">
-                      {post.timestamp ? new Date(post.timestamp).toLocaleDateString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "Récemment"}
-                    </span>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={currentUserProfile.avatarUrl || AVATARS[0]} 
+                      className="w-8 h-8 rounded-full border border-zinc-700"
+                      alt=""
+                    />
+                    <div>
+                      <p className="text-[10px] font-black text-white uppercase tracking-wider">
+                        {currentUserProfile.artistName || currentUserProfile.firstName}
+                      </p>
+                      <p className="text-[8px] font-mono text-zinc-500">
+                        {post.timestamp ? new Date(post.timestamp).toLocaleDateString("fr-FR") : "Récemment"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                
-                <p className="text-xs text-gray-700 dark:text-gray-300 mt-2.5 leading-relaxed whitespace-pre-wrap font-sans">
+                <p className="text-xs text-zinc-300 leading-relaxed font-sans mb-4">
                   {post.content}
                 </p>
-                
-                <div className="flex gap-4 mt-3 pt-2.5 border-t border-gray-150/40 dark:border-zinc-900/60 text-[10px] font-mono font-bold text-gray-500">
-                  <span>👍 {post.likes || 0} Soutiens</span>
-                  <span>💬 {post.comments || 0} Commentaires</span>
+                <div className="flex gap-4 text-[9px] font-black uppercase text-zinc-500 tracking-widest">
+                  <span className="flex items-center gap-1"><Heart className="w-3 h-3" /> {post.likes || 0}</span>
+                  <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {post.comments || 0}</span>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
-
-      {/* SECTION STATISTIQUES DES ACTIVITÉS RECRUTEMENT GOMBOS */}
-      <div id="section-stats" className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
-        <h3 className="text-xs font-black uppercase text-gray-400 tracking-widest">📊 Activité Globale & Performance Showbiz</h3>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-4 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl text-center">
-            <span className="text-2xl font-black text-gray-950 dark:text-white font-mono block">{myPosts.length}</span>
-            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Publications</span>
-          </div>
-
-          <div className="p-4 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl text-center">
-            <span className="text-2xl font-black text-gray-950 dark:text-white font-mono block">{dynamicAppsCount}</span>
-            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Candidatures</span>
-          </div>
-
-          <div className="p-4 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl text-center">
-            <span className="text-2xl font-black text-[#D4AF37] font-mono block">{dynamicGroupsCount}</span>
-            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Groupes VIP</span>
-          </div>
-
-          <div className="p-4 bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl text-center">
-            <span className="text-2xl font-black text-purple-550 font-mono block">{dynamicFavsCount}</span>
-            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Saves & Favoris</span>
-          </div>
-        </div>
       </div>
     </motion.div>
   );

@@ -101,6 +101,24 @@ export interface User {
   trustScore?: number;
   totalContracts?: number;
   cancelledContracts?: number;
+  successRate?: number;
+  monthlyRevenue?: number;
+  opportunitiesReceived?: number;
+  collaborationsCount?: number;
+  satisfiedOrganizersCount?: number;
+  musiciansRecruitedCount?: number;
+  monthlyEvolution?: { month: string; value: number }[];
+  wallet?: {
+    soldeDisponible: number;
+    soldeBloque: number;
+    revenusMois: number;
+    economiesPremium: number;
+    niveauWallet: string;
+    depots?: number;
+    retraits?: number;
+    revenus?: number;
+    gainsMensuels?: number;
+  };
   builderData?: {
     totalAmount: number;
     count: number;
@@ -671,6 +689,66 @@ export interface VoiceAnnouncement {
   title?: string;
   createdAt?: string;
   [key: string]: any;
+}
+
+export interface StorageDiagnostic {
+  isEnabled: boolean;
+  bucket: string;
+  projectId: string;
+  apiKey: string;
+  rulesValid: boolean;
+  connectionOk: boolean;
+  writeTestOk: boolean;
+  resumableTestOk?: boolean;
+  error?: {
+    code: string;
+    message: string;
+    details?: any;
+  };
+  timestamp: string;
+}
+
+export type SourceType = "FIREBASE" | "GITHUB" | "URL" | "DISABLED";
+
+export interface SystemMedia {
+  id: string;
+  title: string;
+  description?: string;
+  category: "audio" | "video" | "image" | string;
+  sourceType: SourceType;
+  firebaseUrl?: string;
+  githubPath?: string;
+  externalUrl?: string;
+  volume?: number;
+  loop?: boolean;
+  autoplay?: boolean;
+  enabled: boolean;
+  priority: number;
+  updatedAt: string;
+  updatedBy: string;
+  originalId?: string; // If migrated from legacy media collection
+}
+
+export type NotificationType = "INFO" | "GOMBO" | "URGENT" | "ÉVÉNEMENT" | "MISE À JOUR" | "PREMIUM" | "SÉCURITÉ";
+export type NotificationAudience = "Tous" | "Premium" | "Musiciens" | "Organisateurs" | "Administrateurs" | "Super Fondateur";
+export type NotificationStatus = "published" | "scheduled" | "draft" | "inactive";
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  audience: NotificationAudience;
+  image?: string;
+  action?: string; // Label for button
+  actionUrl?: string;
+  priority: number; // 0-10
+  scheduledAt: string | null;
+  createdAt: string;
+  createdBy: string;
+  status: NotificationStatus;
+  readCount: number;
+  clickCount: number;
 }
 
 export type ContractStatus = any;

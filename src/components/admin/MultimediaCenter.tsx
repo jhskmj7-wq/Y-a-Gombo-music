@@ -36,6 +36,7 @@ import {
   Maximize2
 } from "lucide-react";
 import { db, gomboDB } from "../../firebase";
+import { SystemMedia, SourceType } from "../../types";
 import {
   collection,
   onSnapshot,
@@ -62,18 +63,9 @@ interface MediaHistoryItem {
   fileSize?: string;
 }
 
-interface MediaAsset {
-  id: string;
-  title: string;
-  category: string;
+interface MediaAsset extends SystemMedia {
   storagePath: string;
-  downloadURL: string;
-  enabled: boolean;
-  autoplay: boolean;
-  loop: boolean;
-  volume: number;
-  updatedAt: string;
-  updatedBy: string;
+  downloadURL: string; // This will be the resolved/active URL
   fileSize?: string;
   fileType?: string;
   useCount?: number;
@@ -84,14 +76,12 @@ interface MediaAsset {
   content?: string;
   status?: "draft" | "published" | "archived";
 
-  // Spanish/French properties for direct sync
+  // Compatibility fields
   nom?: string;
   catégorie?: string;
   url?: string;
   ordre?: number;
   actif?: boolean;
-  createdAt?: string;
-  uploadedBy?: string;
 }
 
 interface AuditLog {
@@ -171,8 +161,15 @@ const SYSTEM_SPOTS = [
 export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder }: MultimediaCenterProps) {
   const [activeTab, setActiveTab] = useState<ActiveSection>("dashboard");
   const [mediaAssets, setMediaAssets] = useState<Record<string, MediaAsset>>({});
+  const [systemMedia, setSystemMedia] = useState<SystemMedia[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Source modification state
+  const [isChangingSource, setIsChangingSource] = useState<string | null>(null);
+  const [githubInput, setGithubInput] = useState("");
+  const [urlInput, setUrlInput] = useState("");
+  const [testingSource, setTestingSource] = useState(false);
 
   // Search, filter, and sort states
   const [searchQuery, setSearchQuery] = useState("");
@@ -250,14 +247,31 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         snapshot.forEach((doc) => {
           assets[doc.id] = doc.data() as MediaAsset;
         });
-        setMediaAssets(assets);
+        setMediaAssets(prev => ({ ...prev, ...assets }));
         setLoading(false);
       },
       (error) => {
-        console.error("Firestore loading error:", error);
-        setLoading(false);
+        console.error("Firestore loading error (media):", error);
       }
     );
+
+    // 1.b Listen to system_media (New Core Collection)
+    const unsubSystemMedia = gomboDB.listenSystemMedia((media) => {
+      setSystemMedia(media);
+      const assets: Record<string, MediaAsset> = {};
+      media.forEach((m) => {
+        // Map SystemMedia to MediaAsset for UI compatibility
+        assets[m.id] = {
+          ...m,
+          storagePath: m.firebaseUrl || "", // For internal tracking
+          downloadURL: gomboDB.resolveMediaSource(m),
+          nom: m.title,
+          url: gomboDB.resolveMediaSource(m),
+          actif: m.enabled
+        } as MediaAsset;
+      });
+      setMediaAssets(prev => ({ ...prev, ...assets }));
+    });
 
     // 2. Listen to audit logs
     const unsubLogs = onSnapshot(
@@ -439,18 +453,25 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         }
 
         const titleText = file.name.substring(0, file.name.lastIndexOf(".")) || file.name;
+        const spot = [...AUDIO_SPOTS, ...IMAGE_SPOTS, ...VIDEO_SPOTS, ...SOUND_SPOTS, ...NOTIFICATION_SPOTS, ...ANIMATION_SPOTS, ...SYSTEM_SPOTS].find(s => s.id === id);
         const currentOrder = getSpotOrder(id, sectionName);
 
         const newAsset: MediaAsset = {
           id,
           title: titleText,
+          description: spot?.desc || "",
           category: sectionName,
+          sourceType: "FIREBASE",
           storagePath,
           downloadURL,
+          firebaseUrl: downloadURL,
+          githubPath: "",
+          externalUrl: "",
           enabled: existingAsset?.enabled !== undefined ? existingAsset.enabled : true,
           autoplay: existingAsset?.autoplay || false,
           loop: existingAsset?.loop || false,
           volume: existingAsset?.volume !== undefined ? existingAsset.volume : 0.8,
+          priority: existingAsset?.priority || 0,
           updatedAt: new Date().toISOString(),
           updatedBy: adminEmail,
           fileSize: formattedSize,
@@ -467,11 +488,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           url: downloadURL,
           ordre: currentOrder,
           actif: existingAsset?.enabled !== undefined ? existingAsset.enabled : true,
-          createdAt: existingAsset?.createdAt || new Date().toISOString(),
-          uploadedBy: adminEmail
         };
 
+        // SAVE TO BOTH COLLECTIONS FOR INDEPENDENCE
         await setDoc(doc(db, "media", id), newAsset);
+        await gomboDB.addSystemMedia(newAsset);
         await logAudit(
           id,
           newAsset.title,
@@ -564,6 +585,88 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     } catch (err) {
       console.error("Rollback failed:", err);
       alert("Erreur de restauration.");
+    }
+  };
+
+  // IMPORT GITHUB
+  const handleGithubImport = async (id: string, path: string) => {
+    if (!isAuthorizedSuperFounder || !path) return;
+    setTestingSource(true);
+    try {
+      const asset = mediaAssets[id];
+      const spot = [...AUDIO_SPOTS, ...IMAGE_SPOTS, ...VIDEO_SPOTS, ...SOUND_SPOTS, ...NOTIFICATION_SPOTS, ...ANIMATION_SPOTS, ...SYSTEM_SPOTS].find(s => s.id === id);
+      
+      const update: Partial<MediaAsset> = {
+        githubPath: path,
+        sourceType: "GITHUB",
+        updatedAt: new Date().toISOString(),
+        updatedBy: adminEmail
+      };
+
+      if (asset) {
+        await gomboDB.updateSystemMedia(id, update);
+      } else {
+        await gomboDB.addSystemMedia({
+          id,
+          title: spot?.title || "Import GitHub",
+          category: "audio", // fallback
+          ...update
+        } as any);
+      }
+      
+      await logAudit(id, asset?.title || id, "Import GitHub", `Source GitHub configurée : ${path}`);
+      setIsChangingSource(null);
+      setGithubInput("");
+    } catch (err) {
+      console.error("Github import failed:", err);
+    } finally {
+      setTestingSource(false);
+    }
+  };
+
+  // IMPORT URL
+  const handleUrlImport = async (id: string, url: string) => {
+    if (!isAuthorizedSuperFounder || !url) return;
+    setTestingSource(true);
+    try {
+      const asset = mediaAssets[id];
+      const spot = [...AUDIO_SPOTS, ...IMAGE_SPOTS, ...VIDEO_SPOTS, ...SOUND_SPOTS, ...NOTIFICATION_SPOTS, ...ANIMATION_SPOTS, ...SYSTEM_SPOTS].find(s => s.id === id);
+      
+      const update: Partial<MediaAsset> = {
+        externalUrl: url,
+        sourceType: "URL",
+        updatedAt: new Date().toISOString(),
+        updatedBy: adminEmail
+      };
+
+      if (asset) {
+        await gomboDB.updateSystemMedia(id, update);
+      } else {
+        await gomboDB.addSystemMedia({
+          id,
+          title: spot?.title || "Import URL",
+          category: "audio",
+          ...update
+        } as any);
+      }
+      
+      await logAudit(id, asset?.title || id, "Import URL", `Source URL configurée : ${url}`);
+      setIsChangingSource(null);
+      setUrlInput("");
+    } catch (err) {
+      console.error("URL import failed:", err);
+    } finally {
+      setTestingSource(false);
+    }
+  };
+
+  const handleSourceChange = async (id: string, type: SourceType) => {
+    if (!isAuthorizedSuperFounder) return;
+    try {
+      await gomboDB.updateSystemMedia(id, { sourceType: type });
+      await logAudit(id, mediaAssets[id]?.title || id, "Changement de Source", `Source passée à ${type}`);
+    } catch (err) {
+      console.error("Source change failed:", err);
     }
   };
 
@@ -803,11 +906,55 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               key={spot.id}
               className="p-5 bg-gradient-to-b from-[#050505] to-[#020202] border border-zinc-900 rounded-xl space-y-4 flex flex-col justify-between relative overflow-hidden group"
             >
+              {hasError && (
+                <div className="absolute inset-0 z-50 bg-rose-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center space-y-4">
+                  <AlertTriangle className="w-10 h-10 text-rose-500 animate-bounce" />
+                  <div className="space-y-1">
+                    <h5 className="text-sm font-bold text-white">Échec du Transfert</h5>
+                    <p className="text-[10px] text-rose-200/70 line-clamp-2">{errorMessage}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        setUploadStatuses(prev => {
+                          const copy = { ...prev };
+                          delete copy[spot.id];
+                          return copy;
+                        });
+                      }}
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[9px] font-bold uppercase rounded-lg transition-all"
+                    >
+                      Réessayer
+                    </button>
+                    <button 
+                      onClick={() => {
+                        // We will trigger the global diagnostic modal from here
+                        // This requires passing a prop or using a custom event
+                        window.dispatchEvent(new CustomEvent('open-firebase-diagnostic'));
+                      }}
+                      className="px-4 py-2 bg-amber-500 text-black text-[9px] font-black uppercase rounded-lg transition-all"
+                    >
+                      Diagnostiquer
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-start">
-                  <span className="text-[8px] font-mono bg-zinc-900/80 text-[#D4AF37] px-2 py-0.5 rounded border border-zinc-800 uppercase font-bold tracking-widest">
-                    ID: {spot.id}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[8px] font-mono bg-zinc-900/80 text-[#D4AF37] px-2 py-0.5 rounded border border-zinc-800 uppercase font-bold tracking-widest">
+                      ID: {spot.id}
+                    </span>
+                    {asset?.sourceType && (
+                      <span className={`text-[8px] font-mono px-2 py-0.5 rounded border font-bold uppercase ${
+                        asset.sourceType === "FIREBASE" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+                        asset.sourceType === "GITHUB" ? "bg-purple-500/10 text-purple-400 border-purple-500/20" :
+                        "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                      }`}>
+                        {asset.sourceType}
+                      </span>
+                    )}
+                  </div>
                   {asset && (
                     <span className={`text-[8px] font-mono px-2 py-0.5 rounded border font-bold uppercase ${
                       asset.enabled
@@ -819,8 +966,27 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                   )}
                 </div>
                 <h4 className="text-xs font-black text-white group-hover:text-[#D4AF37] transition-all">{spot.title}</h4>
-                <p className="text-[10px] text-zinc-550 leading-relaxed">{spot.desc}</p>
+                <p className="text-[10px] text-zinc-550 leading-relaxed line-clamp-1">{spot.desc}</p>
               </div>
+
+              {/* SOURCE SELECTOR BAR */}
+              {isAuthorizedSuperFounder && asset && (
+                <div className="flex gap-1 p-1 bg-black/40 rounded-lg border border-zinc-900">
+                  {(["FIREBASE", "GITHUB", "URL", "DISABLED"] as SourceType[]).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => handleSourceChange(spot.id, type)}
+                      className={`flex-1 py-1 text-[7px] font-black uppercase rounded transition-all ${
+                        asset.sourceType === type 
+                          ? "bg-[#D4AF37] text-black" 
+                          : "bg-zinc-900 text-zinc-500 hover:text-white"
+                      }`}
+                    >
+                      {type === "FIREBASE" ? "Storage" : type}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {asset ? (
                 <div className="space-y-3 pt-3 border-t border-zinc-950">
@@ -969,6 +1135,10 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                         <span className="text-zinc-350">{asset.fileSize || "Inconnu"}</span>
                       </div>
                       <div className="flex justify-between">
+                        <span>Source :</span>
+                        <span className="text-zinc-400">{asset.sourceType || "FIREBASE"}</span>
+                      </div>
+                      <div className="flex justify-between">
                         <span>Éditeur :</span>
                         <span className="text-zinc-400 truncate max-w-[60%]">{asset.updatedBy}</span>
                       </div>
@@ -1002,7 +1172,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                       )}
 
                       {/* Management actions (Super Founder exclusive) */}
-                      <div className="flex gap-1.5 pt-2 border-t border-zinc-950">
+                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-zinc-950">
                         {isAuthorizedSuperFounder ? (
                           <>
                             <button
@@ -1016,12 +1186,12 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                                 setEditDuration(asset.duration || "");
                                 setEditResolution(asset.resolution || "");
                               }}
-                              className="flex-1 py-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 text-[9px] font-bold uppercase rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1"
+                              className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 text-[9px] font-bold uppercase rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1"
                             >
-                              <Edit3 className="w-3 h-3" /> Configurer
+                              <Edit3 className="w-3 h-3" /> Config
                             </button>
-                            <label className="px-2.5 py-1.5 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 hover:bg-[#D4AF37]/20 text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1">
-                              <UploadCloud className="w-3 h-3" /> Remplacer
+                            <label className="px-2.5 py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1">
+                              <UploadCloud className="w-3 h-3" /> Storage
                               <input
                                 type="file"
                                 accept={acceptType}
@@ -1033,12 +1203,52 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                               />
                             </label>
                             <button
+                              onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_github` ? null : `${spot.id}_github`)}
+                              className="px-2.5 py-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1"
+                            >
+                              <RefreshCw className={`w-3 h-3 ${isChangingSource === `${spot.id}_github` ? "animate-spin" : ""}`} /> GitHub
+                            </button>
+                            <button
+                              onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_url` ? null : `${spot.id}_url`)}
+                              className="px-2.5 py-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1"
+                            >
+                              <SlidersHorizontal className="w-3 h-3" /> URL
+                            </button>
+                            <button
                               onClick={() => handleDeleteMedia(spot.id)}
-                              className="p-1.5 bg-red-950/20 hover:bg-red-950/40 border border-red-950/30 text-red-400 rounded-lg cursor-pointer transition-all"
+                              className="p-1.5 bg-red-950/20 hover:bg-red-950/40 border border-red-950/30 text-red-400 rounded-lg cursor-pointer transition-all ml-auto"
                               title="Effacer le média"
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
+
+                            {/* Inline Inputs for existing assets */}
+                            <div className="w-full">
+                              {isChangingSource === `${spot.id}_github` && (
+                                <div className="mt-2 p-2 bg-purple-500/5 border border-purple-500/20 rounded-lg space-y-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Chemin GitHub..."
+                                    value={githubInput}
+                                    onChange={(e) => setGithubInput(e.target.value)}
+                                    className="w-full bg-black border border-purple-500/30 rounded p-1.5 text-[9px] text-white"
+                                  />
+                                  <button onClick={() => handleGithubImport(spot.id, githubInput)} className="w-full py-1.5 bg-purple-600 text-white text-[8px] font-black uppercase rounded">Importer GitHub</button>
+                                </div>
+                              )}
+                              {isChangingSource === `${spot.id}_url` && (
+                                <div className="mt-2 p-2 bg-amber-500/5 border border-amber-500/20 rounded-lg space-y-2">
+                                  <input
+                                    type="url"
+                                    placeholder="Lien URL..."
+                                    value={urlInput}
+                                    onChange={(e) => setUrlInput(e.target.value)}
+                                    className="w-full bg-black border border-amber-500/30 rounded p-1.5 text-[9px] text-white"
+                                  />
+                                  <button onClick={() => handleUrlImport(spot.id, urlInput)} className="w-full py-1.5 bg-amber-600 text-white text-[8px] font-black uppercase rounded">Importer URL</button>
+                                </div>
+                              )}
+                            </div>
                           </>
                         ) : (
                           <div className="w-full flex items-center justify-center gap-1 py-1 text-[8.5px] text-zinc-600 uppercase">
@@ -1050,50 +1260,80 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                   )}
                 </div>
               ) : (
-                <div className="py-8 bg-black/20 border border-dashed border-zinc-900 rounded-lg text-center mt-2 flex flex-col items-center justify-center space-y-2">
+                <div className="py-6 bg-black/20 border border-dashed border-zinc-900 rounded-xl text-center mt-2 flex flex-col items-center justify-center space-y-4">
                   {isUploading ? (
                     <div className="space-y-1.5">
                       <Loader2 className="w-5 h-5 text-[#D4AF37] animate-spin mx-auto" />
                       <span className="text-[9px] font-mono text-zinc-550">Progression : {progress}%</span>
                     </div>
-                  ) : hasError ? (
-                    <div className="space-y-2 px-3">
-                      <span className="text-[8.5px] text-red-500 block truncate" title={errorMessage}>{errorMessage || "Une erreur est survenue"}</span>
-                      {isAuthorizedSuperFounder && (
-                        <label className="inline-flex px-2.5 py-1 bg-red-950/20 text-red-400 font-bold uppercase text-[8.5px] rounded cursor-pointer transition-all border border-red-950/30 hover:bg-red-950/35">
-                          Réessayer
-                          <input
-                            type="file"
-                            accept={acceptType}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleFileUpload(spot.id, file, sectionName);
-                            }}
-                            className="hidden"
-                          />
-                        </label>
-                      )}
-                    </div>
                   ) : (
-                    <div className="space-y-2">
-                      <span className="text-[9px] text-zinc-600 block italic">Aucun média associé</span>
-                      {isAuthorizedSuperFounder ? (
-                        <label className="inline-flex items-center gap-1 px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-[#D4AF37] hover:border-[#D4AF37] font-bold uppercase text-[9px] rounded-lg cursor-pointer transition-all">
-                          <UploadCloud className="w-3.5 h-3.5" /> Importer
+                    <div className="w-full px-4 space-y-4">
+                      <div className="space-y-1">
+                        <UploadCloud className="w-6 h-6 text-zinc-800 mx-auto" />
+                        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest block">Aucun média</span>
+                      </div>
+
+                      {/* Multi-Source Import Grid */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <label className="flex-1">
                           <input
                             type="file"
                             accept={acceptType}
+                            className="hidden"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) handleFileUpload(spot.id, file, sectionName);
                             }}
-                            className="hidden"
+                            disabled={isUploading}
                           />
+                          <div className="h-10 flex flex-col items-center justify-center bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-850 rounded-xl cursor-pointer transition-all group/up">
+                            <UploadCloud className="w-4 h-4 text-zinc-500 group-hover/up:text-blue-400" />
+                            <span className="text-[6px] font-black uppercase text-zinc-600">Storage</span>
+                          </div>
                         </label>
-                      ) : (
-                        <span className="text-[8px] font-mono text-zinc-700 uppercase flex items-center gap-1">
-                          <Lock className="w-3.5 h-3.5" /> En attente d'import
-                        </span>
+
+                        <button
+                          onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_github` ? null : `${spot.id}_github`)}
+                          className="h-10 flex flex-col items-center justify-center bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-850 rounded-xl cursor-pointer transition-all group/git"
+                        >
+                          <RefreshCw className={`w-4 h-4 text-zinc-500 group-hover/git:text-purple-400 ${isChangingSource === `${spot.id}_github` ? "animate-spin" : ""}`} />
+                          <span className="text-[6px] font-black uppercase text-zinc-600">GitHub</span>
+                        </button>
+
+                        <button
+                          onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_url` ? null : `${spot.id}_url`)}
+                          className="h-10 flex flex-col items-center justify-center bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-850 rounded-xl cursor-pointer transition-all group/url"
+                        >
+                          <SlidersHorizontal className="w-4 h-4 text-zinc-500 group-hover/url:text-amber-400" />
+                          <span className="text-[6px] font-black uppercase text-zinc-600">URL</span>
+                        </button>
+                      </div>
+
+                      {/* Import Inputs */}
+                      {isChangingSource === `${spot.id}_github` && (
+                        <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-xl space-y-2 text-left">
+                          <input
+                            type="text"
+                            placeholder="Chemin GitHub..."
+                            value={githubInput}
+                            onChange={(e) => setGithubInput(e.target.value)}
+                            className="w-full bg-black border border-purple-500/30 rounded-lg p-2 text-[10px] text-white"
+                          />
+                          <button onClick={() => handleGithubImport(spot.id, githubInput)} className="w-full py-2 bg-purple-600 text-white text-[8px] font-black uppercase rounded-lg">Valider GitHub</button>
+                        </div>
+                      )}
+
+                      {isChangingSource === `${spot.id}_url` && (
+                        <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-2 text-left">
+                          <input
+                            type="url"
+                            placeholder="URL Directe..."
+                            value={urlInput}
+                            onChange={(e) => setUrlInput(e.target.value)}
+                            className="w-full bg-black border border-amber-500/30 rounded-lg p-2 text-[10px] text-white"
+                          />
+                          <button onClick={() => handleUrlImport(spot.id, urlInput)} className="w-full py-2 bg-amber-600 text-white text-[8px] font-black uppercase rounded-lg">Valider URL</button>
+                        </div>
                       )}
                     </div>
                   )}
@@ -1278,18 +1518,43 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               </div>
             </div>
 
-            <div className="p-4 bg-[#050505] border border-zinc-900 rounded-xl space-y-2">
-              <span className="text-[10px] font-mono text-zinc-550 uppercase tracking-wider block">Musique active</span>
-              <div className="space-y-0.5">
-                {currentActiveSong ? (
-                  <>
-                    <span className="text-[10.5px] font-bold text-amber-400 truncate block max-w-full" title={currentActiveSong.title}>
-                      🔊 {currentActiveSong.title}
-                    </span>
-                    <span className="text-[8px] font-mono text-zinc-500 block uppercase">Volume : {Math.round(currentActiveSong.volume * 100)}%</span>
-                  </>
-                ) : (
-                  <span className="text-[10px] text-zinc-600 italic">Aucune active</span>
+            {/* ÉTAT DU CENTRE MÉDIA (Bento Card) */}
+            <div className="p-4 bg-[#050505] border border-zinc-900 rounded-xl space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-mono text-zinc-550 uppercase tracking-wider block">État du Centre Média</span>
+                <div className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${
+                  Object.values(mediaAssets).some(m => !m.downloadURL && m.enabled) ? "bg-red-500/10 text-red-500" :
+                  Object.values(mediaAssets).some(m => m.sourceType !== "FIREBASE" && m.enabled) ? "bg-amber-500/10 text-amber-500" :
+                  "bg-emerald-500/10 text-emerald-500"
+                }`}>
+                  {Object.values(mediaAssets).some(m => !m.downloadURL && m.enabled) ? "🔴 Hors service" :
+                   Object.values(mediaAssets).some(m => m.sourceType !== "FIREBASE" && m.enabled) ? "🟡 Dégradé" :
+                   "🟢 Stable"}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                <div className="p-2 bg-black/40 rounded-lg border border-zinc-950 text-center">
+                  <span className="text-[8px] text-blue-400 font-bold uppercase block">Firebase</span>
+                  <span className="text-xs font-black text-white">{Object.values(mediaAssets).filter(m => m.sourceType === "FIREBASE").length}</span>
+                </div>
+                <div className="p-2 bg-black/40 rounded-lg border border-zinc-950 text-center">
+                  <span className="text-[8px] text-purple-400 font-bold uppercase block">GitHub</span>
+                  <span className="text-xs font-black text-white">{Object.values(mediaAssets).filter(m => m.sourceType === "GITHUB").length}</span>
+                </div>
+                <div className="p-2 bg-black/40 rounded-lg border border-zinc-950 text-center">
+                  <span className="text-[8px] text-amber-400 font-bold uppercase block">URL</span>
+                  <span className="text-xs font-black text-white">{Object.values(mediaAssets).filter(m => m.sourceType === "URL").length}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center text-[9px] font-mono border-t border-zinc-950 pt-2">
+                <div className="flex gap-3">
+                  <span className="text-emerald-500">Active: {activeMediaCount}</span>
+                  <span className="text-zinc-600">Désactivée: {totalAssets - activeMediaCount}</span>
+                </div>
+                {lastUploadItem && (
+                  <span className="text-zinc-650">{new Date(lastUploadItem.updatedAt).toLocaleDateString()}</span>
                 )}
               </div>
             </div>
@@ -1625,6 +1890,8 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                           autoplay: false,
                           loop: false,
                           volume: 1,
+                          sourceType: "FIREBASE",
+                          priority: 0,
                           storagePath: "",
                           downloadURL: "",
                           updatedAt: new Date().toISOString(),
