@@ -61,12 +61,25 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
             )}
 
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-6 py-2 border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black rounded-xl text-xs font-bold font-mono tracking-wider transition uppercase cursor-pointer"
-            >
-              Rafraîchir ⚡
-            </button>
+            <div className="flex flex-col gap-3 mt-6">
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full px-6 py-3 bg-[#D4AF37] text-black rounded-xl text-xs font-black font-mono tracking-widest transition uppercase cursor-pointer hover:bg-[#B8962D]"
+              >
+                Actualiser ⚡
+              </button>
+              
+              <button
+                onClick={() => window.location.href = "/"}
+                className="w-full px-6 py-2 border border-zinc-800 text-zinc-400 rounded-xl text-[10px] font-bold font-mono transition uppercase hover:bg-zinc-900"
+              >
+                Retour à l'accueil
+              </button>
+              
+              <p className="text-[9px] text-zinc-600 mt-4 italic">
+                Si le problème persiste, videz le cache de votre navigateur.
+              </p>
+            </div>
           </div>
         </div>
       );

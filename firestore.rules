@@ -1,162 +1,263 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // --- GLOBAL HELPERS ---
     
-    // Fonction d'aide pour vérifier l'authentification
-    function isAuthenticated() {
+    function isSignedIn() {
       return request.auth != null;
     }
     
-    // Utilisateurs (profils)
-    match /users/{userId} {
-      // Tout le monde peut lire les profils publics (pour l'annuaire, etc.)
-      allow read: if true;
-      // Seul l'utilisateur peut créer ou modifier son propre profil
-      allow create, update: if isAuthenticated() && request.auth.uid == userId;
-      // Pas de suppression de profil depuis le client (admin seulement)
-      allow delete: if false;
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
     }
 
-    // Opportunités (Gombos)
-    match /opportunities/{opportunityId} {
-      // Tout le monde peut voir les annonces
-      allow read: if true;
-      // Les utilisateurs connectés peuvent créer une annonce
-      allow create: if isAuthenticated();
-      // Seul l'auteur de l'annonce peut la modifier ou la supprimer
-      allow update, delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Applications (Candidatures aux Gombos)
-    match /applications/{applicationId} {
-      // L'auteur de l'application ou l'auteur de l'annonce peut lire
-      allow read: if isAuthenticated() && (
-        resource.data.applicantId == request.auth.uid || 
-        resource.data.authorId == request.auth.uid
-      );
-      // Seuls les connectés peuvent postuler
-      allow create: if isAuthenticated() && request.resource.data.applicantId == request.auth.uid;
-      allow update: if isAuthenticated(); // Simplifié pour permettre au créateur de l'annonce d'accepter/rejeter
-      allow delete: if isAuthenticated() && resource.data.applicantId == request.auth.uid;
+    function incoming() {
+      return request.resource.data;
     }
 
-    // Messages
-    match /messages/{messageId} {
-      allow read: if isAuthenticated(); // Simplifié: tous les connectés
-      allow create: if isAuthenticated();
-      allow update, delete: if false; // Les messages ne sont ni modifiés ni supprimés
-    }
-    
-    // Conversations
-    match /conversations/{convoId} {
-      allow read: if isAuthenticated() && request.auth.uid in resource.data.participants;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if false;
+    function existing() {
+      return resource.data;
     }
 
-    // Feed public (Posts/Activités)
-    match /activityFeed/{postId} {
-      allow read: if true;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    // Beta Feedbacks
-    match /beta_feedbacks/{feedbackId} {
-      allow read: if false; // Admin only
-      allow create: if true; // N'importe qui peut soumettre un feedback
-      allow update, delete: if false;
-    }
-
-    // Escrow / Transactions
-    match /transactions/{transactionId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
-    }
-
-    match /contracts/{contractId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
-    }
-
-    match /payments/{paymentId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
-    }
-
-    match /escrow/{escrowId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
-    }
-
-    match /withdrawals/{withdrawalId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
-    }
-
-    match /commissions/{commissionId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
-    }
-
-    match /litiges/{litigeId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
-    }
-
-    match /disputes/{disputeId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
-    }
-
-    // Centre Multimédia (system_media & media)
-    match /system_media/{mediaId} {
-      allow read: if true;
-      allow write: if isAuthenticated() && (
+    // Role-based Access Control
+    // Note: admins are identified by their email in the 'admins' collection or specific verified emails
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
         request.auth.token.email == "jhs.kmj7@gmail.com" ||
-        request.auth.token.email.endsWith("@afrigombo.com") ||
-        request.auth.token.email == "admin@test.com" ||
-        request.auth.token.email == "test@test.com"
+        request.auth.token.email.endsWith("@afrigombo.com")
       );
     }
 
-    match /media/{mediaId} {
-      allow read: if true;
-      allow write: if isAuthenticated() && (
-        request.auth.token.email == "jhs.kmj7@gmail.com" ||
-        request.auth.token.email.endsWith("@afrigombo.com") ||
-        request.auth.token.email == "admin@test.com" ||
-        request.auth.token.email == "test@test.com"
-      );
+    // --- VALIDATION HELPERS ---
+
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.email is string &&
+             data.role in ['client', 'musicien', 'admin', 'Artiste', 'Producteur', 'Beatmaker', 'Manager', 'Promoteur', 'Organisateur événement', 'Studio', 'Média', 'Passionné musique', 'Autre'] &&
+             data.createdAt == request.time;
     }
 
-    // Journaux d'audit Multimédia
-    match /media_logs/{logId} {
-      allow read: if isAuthenticated() && (
-        request.auth.token.email == "jhs.kmj7@gmail.com" ||
-        request.auth.token.email.endsWith("@afrigombo.com") ||
-        request.auth.token.email == "admin@test.com" ||
-        request.auth.token.email == "test@test.com"
-      );
-      allow write: if isAuthenticated() && (
-        request.auth.token.email == "jhs.kmj7@gmail.com" ||
-        request.auth.token.email.endsWith("@afrigombo.com") ||
-        request.auth.token.email == "admin@test.com" ||
-        request.auth.token.email == "test@test.com"
-      );
+    function isValidGombo(data) {
+      return data.title is string && data.title.size() <= 100 &&
+             data.createdBy == request.auth.uid &&
+             data.status in ["open", "closed", "publie", "reserve", "termine"] &&
+             data.createdAt == request.time;
     }
 
+    function isValidContract(data) {
+      return data.amount is int && data.amount > 0 &&
+             data.status in ["draft", "signed", "active", "completed", "cancelled", "payment_held", "arrived", "accepted_client", "accepted_artist"] &&
+             data.createdAt == request.time;
+    }
+
+    // --- COLLECTION RULES ---
+
+    // Default deny
     match /{document=**} {
       allow read, write: if false;
     }
+
+    // USERS
+    match /users/{userId} {
+      allow read: if true; 
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().isVerified == false;
+      allow update: if isOwner(userId) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'firstName', 'lastName', 'photoURL', 'avatarUrl', 'bio', 'phone', 'commune', 'orangeMoneyNumber', 'moovMoneyNumber', 'waveNumber', 'paymentMethods'])
+      ) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // GOMBOS (Opportunities)
+    match /gombos/{gomboId} {
+      allow read: if true;
+      allow create: if isEmailVerified() && isValidGombo(incoming());
+      allow update: if (isOwner(existing().createdBy) && incoming().createdBy == existing().createdBy && isValidGombo(incoming())) || isAdmin();
+      allow delete: if (isOwner(existing().createdBy)) || isAdmin();
+    }
+
+    // CONTRACTS
+    match /contracts/{contractId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.clientId || request.auth.uid == resource.data.artistId || isAdmin());
+      allow create: if isEmailVerified() && (request.auth.uid == incoming().clientId) && isValidContract(incoming());
+      allow update: if (
+        isSignedIn() && (request.auth.uid == existing().clientId || request.auth.uid == existing().artistId) &&
+        incoming().amount == existing().amount && 
+        incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+        !(existing().status in ['completed', 'cancelled'])
+      ) || isAdmin();
+    }
+
+    // ESCROW
+    match /escrow/{escrowId} {
+      allow read: if isSignedIn() && (
+        isAdmin() || 
+        get(/databases/$(database)/documents/contracts/$(resource.data.contractId)).data.clientId == request.auth.uid ||
+        get(/databases/$(database)/documents/contracts/$(resource.data.contractId)).data.artistId == request.auth.uid
+      );
+      allow write: if isAdmin();
+    }
+
+    // WALLETS / TRANSACTIONS / PAYMENTS
+    match /transactions/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /payments/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /withdrawals/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isEmailVerified() && incoming().userId == request.auth.uid && incoming().status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    // MESSAGING
+    match /conversations/{convoId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.participants;
+      allow create: if isSignedIn() && request.auth.uid in incoming().participants;
+      allow update: if isSignedIn() && request.auth.uid in resource.data.participants;
+    }
+    match /messages/{msgId} {
+      allow read: if isSignedIn() && (
+        get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participants.hasAny([request.auth.uid])
+      );
+      allow create: if isSignedIn() && incoming().senderId == request.auth.uid &&
+                    get(/databases/$(database)/documents/conversations/$(incoming().conversationId)).data.participants.hasAny([request.auth.uid]);
+    }
+
+    // SYSTEM MEDIA & ADMIN LOGS
+    match /system_media/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /admin_logs/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin(); // Should be triggered by administrative actions
+    }
+    match /security_logs/{id} {
+      allow read: if isAdmin();
+      allow create: if true; // Allow logging from app components
+    }
+
+    // APPLICATIONS
+    match /applications/{id} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        get(/databases/$(database)/documents/gombos/$(resource.data.gomboId)).data.createdBy == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isEmailVerified() && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        (resource.data.userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['message', 'mediaURL'])) ||
+        (get(/databases/$(database)/documents/gombos/$(resource.data.gomboId)).data.createdBy == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['status'])) ||
+        isAdmin()
+      );
+    }
+    
+    // LITIGES
+    match /litiges/{id} {
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/contracts/$(resource.data.contractId)).data.clientId == request.auth.uid ||
+        get(/databases/$(database)/documents/contracts/$(resource.data.contractId)).data.artistId == request.auth.uid
+      );
+      allow create: if isEmailVerified() && (
+        get(/databases/$(database)/documents/contracts/$(incoming().contractId)).data.clientId == request.auth.uid ||
+        get(/databases/$(database)/documents/contracts/$(incoming().contractId)).data.artistId == request.auth.uid
+      ) && incoming().status == 'actif';
+      allow update: if isAdmin();
+    }
+
+    // REPORTS
+    match /reports/{id} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && incoming().reportedBy == request.auth.uid;
+    }
+
+    // MUSIC GROUPS
+    match /music_groups/{id} {
+      allow read: if true;
+      allow create: if isEmailVerified() && incoming().creatorId == request.auth.uid;
+      allow update: if (isOwner(existing().creatorId) && incoming().creatorId == existing().creatorId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // COMMISSIONS
+    match /commissions/{id} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Waiting Features
+    match /waiting_features/{id} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+    }
+    
+    // Renforts
+    match /renforts/{id} {
+      allow read: if true;
+      allow create: if isEmailVerified() && incoming().userId == request.auth.uid;
+      allow update: if (isOwner(existing().userId)) || isAdmin();
+      allow delete: if (isOwner(existing().userId)) || isAdmin();
+    }
+    
+    // Renfort Applications
+    match /renfortApplications/{id} {
+      allow read: if isSignedIn() && (
+        resource.data.musicianId == request.auth.uid || 
+        get(/databases/$(database)/documents/renforts/$(resource.data.renfortId)).data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isEmailVerified() && incoming().musicianId == request.auth.uid;
+      allow update: if isAdmin() || (
+        get(/databases/$(database)/documents/renforts/$(resource.data.renfortId)).data.userId == request.auth.uid && 
+        incoming().diff(existing()).affectedKeys().hasOnly(['status'])
+      );
+    }
+    
+    // Subscriptions, Boosts, Certifications
+    match /subscriptions/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /boosts/{id} {
+      allow read: if true;
+      allow create: if isEmailVerified() && incoming().userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+    match /certifications/{id} {
+      allow read: if true;
+      allow create: if isEmailVerified() && incoming().userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+    match /certificationRequests/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isEmailVerified() && incoming().userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+    match /verificationRequests/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isEmailVerified() && incoming().userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // ADMISSIONS
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if false; // System/Console managed only
+    }
+
   }
 }

@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Calendar, Clock, DollarSign, MapPin, AlignLeft, Check, 
   Music, Sparkles, Image as ImageIcon, Briefcase, MessageSquare, 
-  Upload, X, AlertCircle, Award, Star, Radio
+  Upload, X, AlertCircle, Award, Star, Radio, Lock, ShieldCheck, Zap
 } from "lucide-react";
 import { gomboDB } from "../firebase";
 import { UserProfile, SocialPost } from "../types";
+import GomboSecureModal from "./GomboSecureModal";
 
 const ABIDJAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", "Abobo", 
@@ -30,6 +31,8 @@ interface GomboPublishProps {
 
 export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }: GomboPublishProps) {
   const [selectedType, setSelectedType] = useState("opportunite");
+  const [gomboCategory, setGomboCategory] = useState<"libre" | "securise">("libre");
+  const [showSecureModal, setShowSecureModal] = useState(false);
 
   // Requested fields
   const [title, setTitle] = useState("");
@@ -76,6 +79,12 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (gomboCategory === "securise") {
+      setShowSecureModal(true);
+      return;
+    }
+
     if (!title.trim() || !description.trim()) {
       setErrorMsg("Veuillez remplir le titre et la description !");
       return;
@@ -123,7 +132,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       const postTag = PUBLICATION_TYPES.find(t => t.id === selectedType)?.label || selectedType;
 
       // 2. Publish in system posts (Le Terrain)
-      const postPayload: Omit<SocialPost, "id" | "createdAt" | "likesCount" | "sharesCount" | "savesCount" | "likedBy" | "savedBy" | "comments"> = {
+      const postPayload: any = {
         userId: currentUserProfile.uid,
         userName: authorName,
         userAvatar: authorPhoto,
@@ -165,7 +174,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           budget: budget ? Number(budget) : 25000,
           eventType: selectedType === "renfort" ? "⚡ Renfort Express" : "💼 Contrat Gombo Pro",
           musiciansCount: 1,
-          urgent: selectedType === "renfort"
+          urgent: selectedType === "renfort",
+          type: gomboCategory
         });
       }
 
@@ -247,10 +257,51 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* CATEGORY SELECTION: LIBRE vs SECURISE */}
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              Catégorie de Gombo
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setGomboCategory("libre")}
+                className={`p-4 rounded-2xl border transition-all text-left space-y-1 relative group ${
+                  gomboCategory === "libre" 
+                    ? "bg-zinc-900/50 border-emerald-500/50 text-white" 
+                    : "bg-transparent border-zinc-900 text-zinc-500 hover:border-zinc-700"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-tighter">Gombo Libre</span>
+                  <Zap className={`w-3 h-3 ${gomboCategory === "libre" ? "text-emerald-500" : "text-zinc-700"}`} />
+                </div>
+                <p className="text-[8px] font-medium leading-tight opacity-70">Publication directe sans séquestre.</p>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setGomboCategory("securise")}
+                className={`p-4 rounded-2xl border transition-all text-left space-y-1 relative group overflow-hidden ${
+                  gomboCategory === "securise" 
+                    ? "bg-[#D4AF37]/5 border-[#D4AF37]/50 text-white" 
+                    : "bg-transparent border-zinc-900 text-zinc-500 hover:border-zinc-700"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-tighter">Gombo Sécurisé</span>
+                  <ShieldCheck className={`w-3 h-3 ${gomboCategory === "securise" ? "text-[#D4AF37]" : "text-zinc-700"}`} />
+                </div>
+                <p className="text-[8px] font-medium leading-tight opacity-70">Paiement garanti par AFRIGOMBO.</p>
+                <Lock className="absolute -bottom-1 -right-1 w-6 h-6 text-[#D4AF37]/10 -rotate-12 group-hover:scale-110 transition-transform" />
+              </button>
+            </div>
+          </div>
+
           {/* 1. SELECTION DU TYPE */}
           <div>
             <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">
-              Type de publication
+              Nature de la mission
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[#D4AF37]">
               {PUBLICATION_TYPES.map((t) => (
@@ -460,17 +511,29 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             <button
               type="submit"
               disabled={loading || uploadingState.image || uploadingState.audio}
-              className="flex-1 px-6 py-3.5 bg-[#D4AF37] hover:bg-[#b09028] font-extrabold text-[#0B0B0B] font-sans text-xs uppercase rounded-xl shadow-lg transition-all active:scale-97 cursor-pointer text-center font-black tracking-widest flex items-center justify-center gap-2"
+              className={`flex-1 px-6 py-3.5 font-extrabold text-[#0B0B0B] font-sans text-xs uppercase rounded-xl shadow-lg transition-all active:scale-97 cursor-pointer text-center font-black tracking-widest flex items-center justify-center gap-2 ${
+                gomboCategory === "securise" 
+                  ? "bg-[#D4AF37] animate-pulse shadow-[0_0_20px_rgba(212,175,55,0.4)]" 
+                  : "bg-emerald-500"
+              }`}
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-[#0B0B0B] border-t-transparent rounded-full animate-spin" />
               ) : (
-                <>🚀 Lancer le Gombo</>
+                <>
+                  {gomboCategory === "securise" ? <ShieldCheck className="w-4 h-4" /> : "🚀"}
+                  {gomboCategory === "securise" ? "Gombo Sécurisé (Bientôt)" : "Lancer Gombo Libre"}
+                </>
               )}
             </button>
           </div>
         </form>
       </motion.div>
+
+      <GomboSecureModal 
+        isOpen={showSecureModal} 
+        onClose={() => setShowSecureModal(false)} 
+      />
     </div>
   );
 }

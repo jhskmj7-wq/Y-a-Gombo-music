@@ -47,6 +47,9 @@ import { UserTerrainLandingPage } from "./UserTerrainLandingPage";
 import SettingsModal from "./SettingsModal";
 import AfrigomboPlus from "./AfrigomboPlus";
 import PremiumEmptyState from "./PremiumEmptyState";
+import AboutAfrigombo from "./AboutAfrigombo";
+import SupportAfrigombo from "./SupportAfrigombo";
+import WhatsNew from "./WhatsNew";
 import { gomboDB } from "../firebase";
 import { usePerformance } from "../services/performanceService";
 import {
@@ -5254,6 +5257,31 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       )}
                     </div>
 
+                    {/* NEW: Platform Info & Support Links */}
+                    <div className="grid grid-cols-3 gap-2 pt-2">
+                      <button 
+                        onClick={() => setActiveMenu("user_about")}
+                        className="flex flex-col items-center justify-center p-3 bg-zinc-950 border border-zinc-900 hover:border-indigo-500/30 rounded-xl transition-all group"
+                      >
+                        <Info className="w-4 h-4 text-indigo-400 mb-1 group-hover:scale-110 transition-transform" />
+                        <span className="text-[7px] font-mono uppercase text-zinc-500 group-hover:text-white">À propos</span>
+                      </button>
+                      <button 
+                        onClick={() => setActiveMenu("user_whats_new")}
+                        className="flex flex-col items-center justify-center p-3 bg-zinc-950 border border-zinc-900 hover:border-amber-500/30 rounded-xl transition-all group"
+                      >
+                        <Sparkles className="w-4 h-4 text-amber-400 mb-1 group-hover:scale-110 transition-transform" />
+                        <span className="text-[7px] font-mono uppercase text-zinc-500 group-hover:text-white">Nouveautés</span>
+                      </button>
+                      <button 
+                        onClick={() => setActiveMenu("user_support")}
+                        className="flex flex-col items-center justify-center p-3 bg-zinc-950 border border-zinc-900 hover:border-emerald-500/30 rounded-xl transition-all group"
+                      >
+                        <Heart className="w-4 h-4 text-emerald-400 mb-1 group-hover:scale-110 transition-transform" />
+                        <span className="text-[7px] font-mono uppercase text-zinc-500 group-hover:text-white">Soutenir</span>
+                      </button>
+                    </div>
+
                     {/* Shortcuts to edit and add media */}
                     <div className="flex gap-3 justify-center">
                       <button
@@ -5824,6 +5852,31 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   </div>
                 );
               })()}
+
+              {activeMenu === "user_about" && (
+                <div className="animate-fadeIn">
+                  <AboutAfrigombo 
+                    onBack={() => setActiveMenu("user_terrain")} 
+                    onSupport={() => setActiveMenu("user_support")}
+                  />
+                </div>
+              )}
+
+              {activeMenu === "user_support" && (
+                <div className="animate-fadeIn">
+                  <SupportAfrigombo 
+                    onBack={() => setActiveMenu("user_terrain")} 
+                  />
+                </div>
+              )}
+
+              {activeMenu === "user_whats_new" && (
+                <div className="animate-fadeIn">
+                  <WhatsNew 
+                    onBack={() => setActiveMenu("user_terrain")} 
+                  />
+                </div>
+              )}
 
               {activeMenu === "user_messages" && (() => {
                 const currentActiveUserForChat = currentUser ? { uid: currentUser.uid } : { uid: activeArtistId };

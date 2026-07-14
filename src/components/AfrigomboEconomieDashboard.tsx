@@ -30,9 +30,19 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
     revenusMois: 0,
     totalCommissions: 0,
     nombreContrats: 0,
+    contratsTermines: 0,
+    contratsActifs: 0,
+    contratsAnnules: 0,
     litigesActifs: 0,
     litigesResolus: 0,
-    premiumCount: 0
+    premiumCount: 0,
+    // New Launch Prep stats
+    totalUsers: 0,
+    secureWaitlistCount: 0,
+    totalSupports: 0,
+    totalSupportAmount: 0,
+    gombosLibresCount: 0,
+    betaProgression: 65 // Hardcoded for now or derived
   });
 
   const [escrowList, setEscrowList] = useState<any[]>([]);
@@ -106,7 +116,10 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
     const unsubContracts = onSnapshot(collection(db, "contracts"), (snap) => {
       setStats((prev) => ({
         ...prev,
-        nombreContrats: snap.size
+        nombreContrats: snap.size,
+        contratsTermines: snap.docs.filter(d => d.data().status === "completed").length,
+        contratsActifs: snap.docs.filter(d => ["in_progress", "arrived", "payment_held", "signed", "accepted_client", "accepted_artist"].includes(d.data().status)).length,
+        contratsAnnules: snap.docs.filter(d => d.data().status === "cancelled").length
       }));
     });
 
@@ -134,7 +147,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
       }));
     });
 
-    // 5. Listen to premium users
+    // 5. Listen to users & total users
     const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
       let count = 0;
       snap.forEach((doc) => {
@@ -145,9 +158,32 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
 
       setStats((prev) => ({
         ...prev,
-        premiumCount: count
+        premiumCount: count,
+        totalUsers: snap.size
       }));
       setLoading(false);
+    });
+
+    // 6. Listen to Secure Waitlist
+    const unsubWaitlist = onSnapshot(collection(db, "secure_waitlist"), (snap) => {
+      setStats((prev) => ({ ...prev, secureWaitlistCount: snap.size }));
+    });
+
+    // 7. Listen to Supports
+    const unsubSupports = onSnapshot(collection(db, "afrigombo_supports"), (snap) => {
+      let total = 0;
+      snap.forEach(d => total += (d.data().amount || 0));
+      setStats((prev) => ({ 
+        ...prev, 
+        totalSupports: snap.size,
+        totalSupportAmount: total
+      }));
+    });
+
+    // 8. Listen to Gombos Libres (from gombos collection where type is 'libre')
+    const unsubGombosLibres = onSnapshot(collection(db, "gombos"), (snap) => {
+      const libreCount = snap.docs.filter(d => d.data().type === "libre").length;
+      setStats((prev) => ({ ...prev, gombosLibresCount: libreCount }));
     });
 
     return () => {
@@ -156,6 +192,9 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
       unsubContracts();
       unsubLitiges();
       unsubUsers();
+      unsubWaitlist();
+      unsubSupports();
+      unsubGombosLibres();
     };
   }, []);
 
@@ -199,6 +238,56 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
           {/* Main Grid: Real-time Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
+            {/* NEW: Préparation du Lancement Card */}
+            <div className="bg-gradient-to-br from-indigo-950/40 to-zinc-900 border border-indigo-500/30 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg group hover:border-indigo-400/50 transition-all">
+              <div className="absolute -top-4 -right-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
+              <div className="space-y-4 relative z-10">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-mono text-indigo-400 uppercase tracking-wider font-black flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3" />
+                    Préparation du Lancement
+                  </span>
+                  <div className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-[8px] font-black text-indigo-300 uppercase">
+                    Bêta {stats.betaProgression}%
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-y-3 gap-x-2">
+                  <div className="space-y-0.5">
+                    <span className="text-[8px] text-zinc-500 font-mono uppercase block">Inscrits</span>
+                    <span className="text-sm font-black text-white font-mono">{stats.totalUsers}</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[8px] text-zinc-500 font-mono uppercase block">Attente Sécurisé</span>
+                    <span className="text-sm font-black text-[#D4AF37] font-mono">{stats.secureWaitlistCount}</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[8px] text-zinc-500 font-mono uppercase block">Soutiens</span>
+                    <span className="text-sm font-black text-emerald-400 font-mono">{stats.totalSupports}</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[8px] text-zinc-500 font-mono uppercase block">Gombos Libres</span>
+                    <span className="text-sm font-black text-indigo-400 font-mono">{stats.gombosLibresCount}</span>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[7px] font-mono text-zinc-500 uppercase">
+                    <span>Progression Bêta</span>
+                    <span>{stats.betaProgression}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${stats.betaProgression}%` }}
+                      className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Card 1: Argent Bloqué (Séquestre Actif) */}
             <div className="bg-gradient-to-br from-zinc-950 to-zinc-900 border border-zinc-900 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
               <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 rounded-full blur-2xl"></div>
@@ -321,6 +410,40 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                 <span className="text-[8px] font-mono text-zinc-600 block">Suivi automatique du BURIDA</span>
               </div>
             </div>
+
+            
+            
+            {/* Metric: Santé de la Plateforme */}
+            <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-6 flex flex-col gap-4 col-span-1 md:col-span-2 lg:col-span-1">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-500">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[9px] font-mono text-blue-500 uppercase tracking-wider block">SANTÉ DE LA PLATEFORME</span>
+                  <span className="text-lg font-black text-white font-mono">{(stats.argentBloque + stats.argentLibere).toLocaleString()} FCFA sécurisés</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="bg-black border border-zinc-800 p-2 rounded-lg text-center">
+                  <span className="block text-xs font-black text-emerald-500">{stats.contratsActifs}</span>
+                  <span className="block text-[8px] uppercase font-mono text-zinc-500">Actifs</span>
+                </div>
+                <div className="bg-black border border-zinc-800 p-2 rounded-lg text-center">
+                  <span className="block text-xs font-black text-[#D4AF37]">{stats.contratsTermines}</span>
+                  <span className="block text-[8px] uppercase font-mono text-zinc-500">Terminés</span>
+                </div>
+                <div className="bg-black border border-zinc-800 p-2 rounded-lg text-center">
+                  <span className="block text-xs font-black text-red-500">{stats.contratsAnnules}</span>
+                  <span className="block text-[8px] uppercase font-mono text-zinc-500">Annulés</span>
+                </div>
+                <div className="bg-black border border-zinc-800 p-2 rounded-lg text-center">
+                  <span className="block text-xs font-black text-blue-400">2.5h</span>
+                  <span className="block text-[8px] uppercase font-mono text-zinc-500">Validation (Moy.)</span>
+                </div>
+              </div>
+            </div>
+
 
             {/* Metric C: Litiges & Disputes */}
             <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 flex items-center gap-4">

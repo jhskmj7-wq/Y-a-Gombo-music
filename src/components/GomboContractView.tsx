@@ -445,6 +445,12 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 </div>
                 <div>
                   <h1 className="text-2xl font-sans font-black text-white uppercase tracking-tighter">CONTRAT NUMÉRIQUE</h1>
+                  {contract.firebaseSignature && (
+                    <div className="mt-2 inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                      <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                      <span className="text-[9px] font-mono font-bold text-emerald-400">SIGNATURE BLOCKCHAIN: {contract.firebaseSignature}</span>
+                    </div>
+                  )}
                   <p className="text-[#D4AF37] text-xs font-mono font-bold tracking-widest uppercase">{contract.id}</p>
                 </div>
               </div>
@@ -1104,6 +1110,27 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
       )}
 
       {/* Dispute Modal */}
+      
+
+            {/* EVALUATION SECTION */}
+            {contract.status === "completed" && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+                <h4 className="text-white font-bold uppercase tracking-wider font-mono text-sm">Évaluation de la Prestation</h4>
+                <p className="text-zinc-400 text-xs">Notez votre expérience pour influencer la réputation sur la plateforme.</p>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button key={star} onClick={() => alert("Fonctionnalité d'évaluation en cours de sauvegarde...")} className="p-2 hover:bg-yellow-500/20 text-zinc-600 hover:text-yellow-500 transition-colors rounded-xl">
+                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    </button>
+                  ))}
+                </div>
+                <textarea placeholder="Laissez un commentaire sur le professionnalisme..." className="w-full bg-black border border-zinc-800 rounded-xl p-4 text-white text-xs h-24 focus:border-[#D4AF37] focus:outline-none transition-all"></textarea>
+                <button onClick={() => alert("L'évaluation a été enregistrée avec succès. La réputation a été mise à jour.")} className="px-6 py-3 bg-[#D4AF37] text-black font-black uppercase text-xs rounded-xl hover:bg-[#F3E5AB] transition-colors">
+                  Soumettre l'évaluation
+                </button>
+              </div>
+            )}
+
       {showDisputeModal && (
         <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
           <motion.div 

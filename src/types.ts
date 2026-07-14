@@ -196,7 +196,42 @@ export interface Gombo {
   mediaUrl?: string;
   mediaURL?: string;
   createdAt?: string;
+  
+  // 2026 Beta: Gombo Types
+  type?: "libre" | "securise";
+  
   [key: string]: any;
+}
+
+export interface SecureWaitlistEntry {
+  id?: string;
+  uid: string;
+  email: string;
+  displayName: string;
+  country: string;
+  createdAt: string;
+}
+
+export interface AfrigomboSupport {
+  id?: string;
+  uid: string;
+  email: string;
+  displayName: string;
+  level: "ami" | "batisseur" | "protecteur" | "gardien" | "ambassadeur";
+  amount?: number;
+  badge: string;
+  message?: string;
+  isAnonymous?: boolean;
+  createdAt: string;
+}
+
+export interface BetaUpdate {
+  id?: string;
+  title: string;
+  content: string;
+  version: string;
+  date: string;
+  type: "feature" | "fix" | "security" | "design";
 }
 
 export interface Application {
@@ -568,7 +603,9 @@ export interface GomboSafeContract {
   artistValidation?: boolean;
   createdAt: string;
   updatedAt: string;
-  history?: { action: string; timestamp: string; userId: string }[];
+  history?: { action: string; timestamp: string; userId: string; label?: string }[];
+  proofs?: { url: string; type: string; uploadedBy: string; timestamp: string; label: string }[];
+  firebaseSignature?: string;
   creatorId?: string;
   creatorName?: string;
   partnerId?: string;

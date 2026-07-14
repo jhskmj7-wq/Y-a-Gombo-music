@@ -173,6 +173,11 @@ export default function AdminDashboard({
   const flaggedPosts = posts.filter(p => p.isFlagged);
   const recentSignups = [...users].slice(-5).reverse();
 
+  const mediaStats = {
+    count: users.reduce((acc: number, u: any) => acc + (u.portfolio?.length || 0), 0),
+    sizeMB: users.reduce((acc: number, u: any) => acc + (u.portfolio?.length || 0) * 1.5, 0)
+  };
+
   return (
     <div className="space-y-8 pb-24 animate-fadeIn text-left">
       {/* 1. ENTÊTE OPÉRATIONNELLE */}
