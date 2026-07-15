@@ -120,27 +120,27 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           ))}
         </div>
 
-        {/* 3. ACTIONS RAPIDES (GRILLE ÉLÉGANTE) */}
-        <div className="space-y-3">
+        {/* 3. ACTIONS RAPIDES (GRILLE COMPACTE) */}
+        <div className="space-y-2">
           <p className="afri-text-tiny px-1">Actions Rapides</p>
-          <div className="afri-grid-2">
+          <div className="grid grid-cols-3 gap-2">
             {[
-              { label: "Modifier Profil", icon: Edit3, action: () => setPanelView("edit") },
+              { label: "Modifier", icon: Edit3, action: () => setPanelView("edit") },
               { label: "Wallet", icon: Wallet, action: () => onNavigateView("wallet") },
               { label: "Contrats", icon: Briefcase, action: () => onNavigateView("contracts") },
               { label: "Calendrier", icon: Calendar, action: () => onNavigateView("calendar") },
-              { label: "Messagerie", icon: MessageSquare, action: () => onNavigateView("messages") },
+              { label: "Messages", icon: MessageSquare, action: () => onNavigateView("messages") },
               { label: "Support", icon: Phone, action: () => onNavigateView("help") },
             ].map((action, idx) => (
               <button 
                 key={idx}
                 onClick={action.action}
-                className="afri-card p-4 flex items-center gap-3 hover:bg-[#D4AF37]/5 active:scale-[0.98] transition-all group"
+                className="afri-card p-2 flex flex-col items-center justify-center gap-1.5 hover:bg-[#D4AF37]/5 active:scale-[0.98] transition-all group min-h-[70px]"
               >
-                <div className="afri-icon-wrapper group-hover:scale-110 transition-transform">
-                  <action.icon className="w-5 h-5" />
+                <div className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] group-hover:scale-110 transition-transform">
+                  <action.icon className="w-4 h-4" />
                 </div>
-                <span className="text-[11px] xs:text-xs font-bold text-zinc-300 uppercase tracking-tight text-left">
+                <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight text-center leading-none">
                   {action.label}
                 </span>
               </button>

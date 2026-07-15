@@ -2022,7 +2022,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 cursor-pointer pointer-events-auto"
+              className="fixed inset-0 bg-black/75 backdrop-blur-md z-[1000] cursor-pointer pointer-events-auto"
               onClick={() => setIsSidebarOpen(false)}
             />
 
@@ -2032,7 +2032,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="fixed inset-y-0 left-0 w-80 bg-[#09090A] border-r border-[#D4AF37]/30 flex flex-col justify-between z-50 shrink-0 h-screen overflow-y-auto pb-8"
+              className="fixed inset-y-0 left-0 w-80 bg-[#09090A] border-r border-[#D4AF37]/30 flex flex-col justify-between z-[1001] shrink-0 h-screen overflow-y-auto pb-8"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
               {/* SIDEBAR CONTAINER SCROLL */}
@@ -2195,10 +2195,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 actionOnSelect();
                               }
                             }}
-                            className="w-full flex items-center justify-between px-3.5 py-2 text-left rounded-xl text-xs font-sans font-bold transition-all text-zinc-300 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 cursor-pointer"
+                            className="w-full flex items-center justify-between px-3 py-1.5 text-left rounded-lg text-[10px] sm:text-xs font-sans font-bold transition-all text-zinc-300 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 cursor-pointer"
                           >
-                            <span className="flex items-center gap-3">
-                              <span className="text-sm shrink-0">{icon}</span>
+                            <span className="flex items-center gap-2">
+                              <span className="text-xs sm:text-sm shrink-0">{icon}</span>
                               <span>{label}</span>
                             </span>
                             {customBadge ? customBadge : (
@@ -2486,7 +2486,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </div>
             </header>
           ) : (
-            <header className="flex flex-col afri-container py-4 sm:py-6 min-h-[120px] sm:min-h-[160px] border-b border-[#D4AF37]/30 bg-black backdrop-blur-xl shrink-0 gap-4 sm:gap-6 w-full animate-fadeIn select-none shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(212,175,55,0.05)] rounded-b-[30px] sm:rounded-b-[50px] z-[100] relative">
+            <header className="flex flex-col afri-container py-4 sm:py-6 min-h-[120px] sm:min-h-[160px] border-b border-[#D4AF37]/40 bg-[#050505] shrink-0 gap-4 sm:gap-6 w-full animate-fadeIn select-none shadow-[0_15px_40px_rgba(0,0,0,0.9)] rounded-b-[30px] sm:rounded-b-[50px] z-[40] relative">
               {/* TOP ROW */}
               <div className="flex items-center justify-between w-full gap-2 sm:gap-4">
                 {/* Left: Menu & Logo Group */}
@@ -2500,9 +2500,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   </button>
 
                   <div className="flex flex-col">
-                    <h1 className="text-3xl sm:text-6xl font-black tracking-tighter text-[#D4AF37] leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-display" 
+                    <h1 className="text-3xl sm:text-6xl font-black tracking-tighter text-[#D4AF37] leading-none font-display" 
                         style={{ 
-                          textShadow: "1px 1px 0px #B48F17, 2px 2px 0px #946F07, 4px 4px 15px rgba(212,175,55,0.3)"
+                          textShadow: "1px 1px 0px #B48F17, 2px 2px 0px #946F07"
                         }}>
                       AFRIGOMBO
                     </h1>
@@ -2524,7 +2524,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                    >
                      <Bell className="w-5 h-5 sm:w-7 sm:h-7" />
                      {realNotifications.some(n => !n.read) && (
-                       <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-red-600 rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]" />
+                       <span className="absolute top-2 right-2 w-2.5 h-2.5 sm:w-3 bg-red-600 rounded-full border border-black shadow-[0_0_5px_rgba(220,38,38,0.5)]" />
                      )}
                    </button>
 
@@ -2546,7 +2546,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         if (!currentUser) {
                           setShowHeritageLoginRequired(true);
                         } else {
-                          setActiveMenu("user_heritage"); 
+                          setActiveMenu("user_edit_profile");
                           setViewingGomboIdDetail(false); 
                         }
                      }}
@@ -2570,9 +2570,9 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
               {/* BOTTOM ROW: STATS BAR */}
               <div className="w-full flex justify-center mt-1 sm:mt-2">
-                <div className="flex items-center justify-center gap-4 sm:gap-10 px-4 sm:px-10 py-2 sm:py-3.5 rounded-full bg-zinc-900/40 border border-zinc-800/60 backdrop-blur-md shadow-inner overflow-x-auto scrollbar-none max-w-full">
+                <div className="flex items-center justify-center gap-4 sm:gap-10 px-4 sm:px-10 py-2 sm:py-3.5 rounded-full bg-zinc-900 border border-zinc-800 shadow-xl overflow-x-auto scrollbar-none max-w-full">
                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse" />
+                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500" />
                      <span className="text-[9px] sm:text-sm font-medium text-zinc-400">
                        <strong className="text-white">{users.filter(u => u.status === 'active').length}</strong> artistes disponibles
                      </span>
@@ -2936,7 +2936,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           </span>
                         </div>
 
-                        {/* 8-GRID ACTIONS */}
+                        {/* 10-GRID ACTIONS COMPACTED */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 xs:gap-2.5 sm:gap-4">
                           {/* 1. Rechercher un membre */}
                           <button
@@ -2946,14 +2946,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Recherche de membre activée.");
                               try { audioSynth?.playTamTam?.(true); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/65 transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/65 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">👥</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Rechercher membre</div>
-                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Annuaire</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Rechercher membre</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Annuaire</span>
                             </div>
                           </button>
 
@@ -2966,14 +2966,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 try { audioSynth.playKoraSuccess(); } catch (_) {}
                               });
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500 transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">📢</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Créer annonce</div>
-                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Nouveau</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Créer annonce</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Nouveau</span>
                             </div>
                           </button>
 
@@ -2986,14 +2986,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Vérification GOMBO ID ouverte.");
                               try { audioSynth.playTamTam(true); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">🛡️</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Vérifier ID</div>
-                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Académie</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Vérifier ID</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Académie</span>
                             </div>
                           </button>
 
@@ -3004,14 +3004,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Alerte & Signalements ouverts.");
                               try { audioSynth.playTamTam(false); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500 transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">🚨</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Signalements</div>
-                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Sécurité</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Signalements</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Sécurité</span>
                             </div>
                           </button>
 
@@ -3024,14 +3024,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Rédaction de notification.");
                               try { audioSynth.playTamTam(true); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500 transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">🔔</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Notifier</div>
-                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Diffusion</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Notifier</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Diffusion</span>
                             </div>
                           </button>
 
@@ -3042,14 +3042,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Trône d'Or : Analyse de Performance ouverte.");
                               try { audioSynth.playKoraSuccess(); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 group-hover:border-yellow-500 transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 group-hover:border-yellow-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">📈</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Statistiques</div>
-                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Indicateurs</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Statistiques</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Indicateurs</span>
                             </div>
                           </button>
 
@@ -3060,14 +3060,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Caisse / Portefeuille d'or chargé.");
                               try { audioSynth.playKoraSuccess(); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500 transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">💰</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Revenus</div>
-                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Sécurisé</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Revenus</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Sécurisé</span>
                             </div>
                           </button>
 
@@ -3078,14 +3078,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Paramètres du terminal chargés.");
                               try { audioSynth.playTamTam(false); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-zinc-500/10 flex items-center justify-center border border-zinc-500/20 group-hover:border-zinc-500 transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-zinc-500/10 flex items-center justify-center border border-zinc-500/20 group-hover:border-zinc-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">⚙</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Paramètres</div>
-                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Système</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Paramètres</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Système</span>
                             </div>
                           </button>
 
@@ -3098,14 +3098,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 try { audioSynth.playValidationSuccess(); } catch (err) {}
                               });
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500 transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">✍️</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Contrats</div>
-                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Signature</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Contrats</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Signature</span>
                             </div>
                           </button>
 
@@ -3118,14 +3118,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 try { audioSynth.playKoraSuccess(); } catch (err) {}
                               });
                             }}
-                            className="bg-black/45 border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
+                            className="bg-black/45 border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">💳</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Wallet Séquestre</div>
-                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-0.5">Bêta-Sécurisé</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Wallet Séquestre</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-0.5">Bêta-Sécurisé</span>
                             </div>
                           </button>
                         </div>
