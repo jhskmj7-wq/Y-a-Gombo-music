@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { User, Check, Plus, Search, ChevronDown, Camera, Upload, Shield } from "lucide-react";
+import { 
+  User, Check, Plus, Search, ChevronDown, Camera, Upload, 
+  ShieldCheck, ArrowLeft, Save, X
+} from "lucide-react";
 
 interface GomboProfileEditViewProps {
   firstName: string;
@@ -54,14 +57,11 @@ interface GomboProfileEditViewProps {
   stopCamera: () => void;
   startCamera: () => void;
   handleFileUpload: (file: File) => void;
-  
-  // Cover Photo
   coverUrl: string;
   setCoverUrl: (val: string) => void;
   handleCoverUpload: (file: File) => void;
   coverUploading: boolean;
   coverUploadProgress: number;
-
   onSkip?: () => void;
   autoSaveStatus?: "idle" | "saving" | "saved" | "error";
   kycStatus?: "pending" | "approved" | "rejected" | "none" | "info_required";
@@ -110,13 +110,12 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
   orangeMoneyNumber, setOrangeMoneyNumber,
   editLoading, editError, editSuccess,
   onSubmit, onCancel,
-  avatarUrl, setAvatarUrl,
-  cameraActive, setCameraActive,
+  avatarUrl,
+  cameraActive,
   uploading, uploadProgress,
   capturePhoto, stopCamera, startCamera,
   handleFileUpload,
-  coverUrl, setCoverUrl, handleCoverUpload, coverUploading, coverUploadProgress,
-  onSkip,
+  coverUrl, handleCoverUpload, coverUploading, coverUploadProgress,
   autoSaveStatus = "idle",
   kycStatus = "none",
   onIdentityUpload,
@@ -134,627 +133,259 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="space-y-6 text-[#1A1A1A] dark:text-gray-100 font-sans"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="afri-scroll-safe afri-container"
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <h3 className="text-xl font-black text-white text-white uppercase flex items-center gap-2">
-            <User className="w-5.5 h-5.5 text-[#D4AF37]" />
-            Modifier mon Profil PRO
-          </h3>
-          {autoSaveStatus === "saving" && (
-            <span className="text-[10px] lowercase font-normal text-amber-500 flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full animate-pulse border border-amber-500/20 w-fit">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> auto-enregistrement...
-            </span>
-          )}
-          {autoSaveStatus === "saved" && (
-            <span className="text-[10px] lowercase font-normal text-emerald-500 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 w-fit">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> synchronisé !
-            </span>
-          )}
-          {autoSaveStatus === "error" && (
-            <span className="text-[10px] lowercase font-normal text-red-500 flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20 w-fit">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> échec de synchro
-            </span>
-          )}
+      <div className="afri-section">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between gap-4">
+          <button onClick={onCancel} className="afri-btn-ghost p-2">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h3 className="afri-title-md flex-1 text-center">Édition d'Héritage</h3>
+          <div className="w-9 h-9" /> {/* Spacer */}
         </div>
-        <button 
-          onClick={onCancel}
-          type="button"
-          className="text-xs font-black border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-1.5 cursor-pointer"
-        >
-          Annuler
-        </button>
-      </div>
 
-      <form onSubmit={onSubmit} className="space-y-6">
-        {editError && (
-          <div className="p-3 bg-red-55/10 border-l-4 border-red-500 rounded-r-xl text-red-650 text-xs font-bold leading-relaxed">
-            ⚠️ {editError}
-          </div>
-        )}
-        {editSuccess && (
-          <div className="p-3 bg-emerald-55/10 border-l-4 border-emerald-500 rounded-r-xl text-emerald-650 text-xs font-bold leading-relaxed">
-            🎉 Vos modifications ont été enregistrées avec succès et synchronisées !
-          </div>
-        )}
+        {/* STATUS BAR */}
+        <AnimatePresence>
+          {autoSaveStatus !== "idle" && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex justify-center"
+            >
+              <div className={`px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${
+                autoSaveStatus === "saving" ? "bg-amber-500/10 border-amber-500/30 text-amber-500 animate-pulse" :
+                autoSaveStatus === "saved" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" :
+                "bg-red-500/10 border-red-500/30 text-red-500"
+              }`}>
+                {autoSaveStatus === "saving" && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />}
+                {autoSaveStatus === "saving" ? "Sauvegarde automatique..." : 
+                 autoSaveStatus === "saved" ? "Profil synchronisé" : "Erreur de synchro"}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* 1. SECTION IDENTITÉ */}
-        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-4">
-          <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 1. Identité d’Artiste (Publique)</span>
+        <form onSubmit={onSubmit} className="space-y-6">
           
-          <div className="border border-[#D4AF37]/25 p-4.5 rounded-2xl bg-[#161616]/50 dark:bg-gray-850/20 space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold text-[#B9B9B9] dark:text-[#B9B9B9] uppercase tracking-wider">
-                Photo de Profil (Avatar)
-              </label>
-              {uploading && (
-                <span className="text-[10px] font-black tracking-wider text-[#D4AF37] uppercase animate-pulse">
-                  Chargement de la photo... {uploadProgress}%
-                </span>
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              {/* Cover Preview */}
-              <div className="w-full h-32 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 relative shadow-inner mb-4 border border-gray-200 dark:border-gray-700">
+          {/* 1. MÉDIAS (AVATAR & COVER) */}
+          <div className="afri-card p-6 space-y-6">
+            <div className="space-y-4">
+              <p className="afri-text-tiny">Couverture & Identité Visuelle</p>
+              
+              {/* Cover Card */}
+              <div className="relative h-32 xs:h-40 rounded-2xl overflow-hidden bg-zinc-900 border border-white/5">
                 {coverUrl ? (
-                  <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
+                  <img src={coverUrl} alt="" className="w-full h-full object-cover opacity-60" />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-[#B9B9B9]">
-                     <Camera className="w-6 h-6 mb-2 opacity-50" />
-                     <span className="text-[10px] uppercase font-bold tracking-wider">Bannière de couverture</span>
+                  <div className="w-full h-full flex items-center justify-center text-zinc-700">
+                    <Camera className="w-8 h-8 opacity-20" />
                   </div>
                 )}
-                
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                   <label className="px-4 py-2 bg-[#D4AF37] hover:bg-[#B8860B] text-black font-extrabold text-[10px] uppercase tracking-wider rounded-lg cursor-pointer">
-                      {coverUploading ? `Transfert... ${coverUploadProgress}%` : "Changer la couverture"}
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleCoverUpload(file);
-                      }} />
-                   </label>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <label className="afri-btn-primary w-auto py-2 px-4 text-[10px]">
+                    {coverUploading ? `${coverUploadProgress}%` : "Changer Bannière"}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleCoverUpload(file);
+                    }} />
+                  </label>
                 </div>
               </div>
 
-              {/* Current Preview or Camera active viewport */}
-              <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#D4AF37] bg-gray-100 dark:bg-gray-800 flex-shrink-0 flex items-center justify-center shadow-inner">
-                {cameraActive ? (
-                  <video
-                    id="webcam-preview"
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-cover scale-x-[-1]"
-                  />
-                ) : (
-                  <img src={avatarUrl} alt="Aperçu" className="w-full h-full object-cover" />
-                )}
-              </div>
-
-              <div className="flex flex-col gap-2 w-full sm:w-auto">
-                {cameraActive ? (
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={capturePhoto}
-                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
-                    >
-                      📸 Prendre la Photo
-                    </button>
-                    <button
-                      type="button"
-                      onClick={stopCamera}
-                      className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-750 text-[#B9B9B9] font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
-                    >
-                      Annuler
-                    </button>
+              {/* Avatar Jumbo */}
+              <div className="flex flex-col items-center gap-4 -mt-16 relative z-10">
+                <div className="relative">
+                  <div className="w-24 h-24 xs:w-28 xs:h-28 rounded-[2rem] overflow-hidden border-4 border-[#080808] bg-zinc-900 shadow-2xl">
+                    {cameraActive ? (
+                      <video id="webcam-preview" autoPlay playsInline className="w-full h-full object-cover scale-x-[-1]" />
+                    ) : (
+                      <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                    )}
                   </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {/* Choisir une photo button */}
-                    <label className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 text-gray-750 text-[#B9B9B9] font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-gray-200/50 dark:border-gray-750">
-                      <Upload className="w-3.5 h-3.5" />
-                      Choisir une photo
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
+                  {uploading && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-[2rem]">
+                      <span className="text-[10px] font-black text-[#D4AF37]">{uploadProgress}%</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  {cameraActive ? (
+                    <>
+                      <button type="button" onClick={capturePhoto} className="afri-btn-primary py-2 px-4 text-[10px]">Prendre</button>
+                      <button type="button" onClick={stopCamera} className="afri-btn-secondary py-2 px-4 text-[10px]">X</button>
+                    </>
+                  ) : (
+                    <>
+                      <label className="afri-btn-secondary w-auto py-2 px-4 text-[10px]">
+                        Album
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) handleFileUpload(file);
-                        }}
-                      />
-                    </label>
-
-                    {/* Prendre une photo button */}
-                    <button
-                      type="button"
-                      onClick={startCamera}
-                      className="px-3.5 py-2 bg-[#D4AF37] hover:bg-[#E06C00] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
-                    >
-                      <Camera className="w-3.5 h-3.5" />
-                      Prendre une photo
-                    </button>
-                  </div>
-                )}
-                <span className="text-[10px] text-[#B9B9B9] dark:text-[#B9B9B9] font-semibold">
-                  Pris en charge via Firebase Storage.
-                </span>
+                        }} />
+                      </label>
+                      <button type="button" onClick={startCamera} className="afri-btn-primary w-auto py-2 px-4 text-[10px]">Caméra</button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Prénom (Identité Google)</label>
-              <input
-                type="text"
-                required
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:ring-0 text-[#FFFFFF] placeholder-[#A9A9A9]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Nom (Identité Google)</label>
-              <input
-                type="text"
-                required
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:ring-0 text-[#FFFFFF] placeholder-[#A9A9A9]"
-              />
+
+          {/* 2. INFOS PERSONNELLES */}
+          <div className="afri-card p-6 space-y-6">
+            <p className="afri-text-tiny">Informations d'Artiste</p>
+            
+            <div className="space-y-4">
+              <div className="afri-grid-2">
+                <div className="space-y-1.5">
+                  <label className="afri-text-tiny text-zinc-400">Prénom</label>
+                  <input value={firstName} onChange={e => setFirstName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none focus:border-[#D4AF37]/40" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="afri-text-tiny text-zinc-400">Nom</label>
+                  <input value={lastName} onChange={e => setLastName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none focus:border-[#D4AF37]/40" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="afri-text-tiny text-zinc-400">Nom de Scène</label>
+                <input value={artistName} onChange={e => setArtistName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-black text-[#D4AF37] outline-none focus:border-[#D4AF37]/40" placeholder="Votre blaze..." />
+              </div>
+
+              <div className="afri-grid-2">
+                <div className="space-y-1.5">
+                  <label className="afri-text-tiny text-zinc-400">Téléphone</label>
+                  <input value={phone} onChange={e => setPhone(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none focus:border-[#D4AF37]/40" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="afri-text-tiny text-zinc-400">WhatsApp</label>
+                  <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none focus:border-[#D4AF37]/40" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="afri-text-tiny text-zinc-400">Ma Biographie</label>
+                <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className="afri-card-inset w-full p-3 text-xs font-medium text-zinc-300 outline-none focus:border-[#D4AF37]/40 resize-none" placeholder="Présentez-vous au showbiz..." />
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Nom Artistique (Surnom de scène)</label>
-              <input
-                type="text"
-                placeholder="Ex: Le Bateleur, King DJ..."
-                value={artistName}
-                onChange={(e) => setArtistName(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:ring-0 text-[#FFFFFF] placeholder-[#A9A9A9] font-bold"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Date de Naissance d'Artisme</label>
-              <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:ring-0 text-[#FFFFFF] placeholder-[#A9A9A9]"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Genre</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm text-[#FFFFFF] placeholder-[#A9A9A9]"
-              >
-                <option value="Homme">Homme</option>
-                <option value="Femme">Femme</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Téléphone de Contact</label>
-              <input
-                type="text"
-                required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm font-semibold text-[#FFFFFF] placeholder-[#A9A9A9]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Numéro WhatsApp PRO</label>
-              <input
-                type="text"
-                value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm font-semibold text-[#FFFFFF] placeholder-[#A9A9A9]"
-              />
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <label className="block text-xs font-bold text-[#B9B9B9] mb-1.5 uppercase">Ma présentation / Bio (Biographie)</label>
-            <textarea
-              value={bio}
-              rows={2}
-              onChange={(e) => setBio(e.target.value)}
-              className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] focus:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:ring-0 text-[#FFFFFF] placeholder-[#A9A9A9] font-semibold"
-              placeholder="Ex: Guitariste soliste chevronné, disponible pour des cachets et concerts..."
-            />
-          </div>
-        </div>
-
-        {/* 2. SECTION LOCALISATION */}
-        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-4">
-          <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 2. Localisation d'Abidjan & Zone Civ</span>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Ville</label>
-              <input
-                type="text"
-                required
-                value={ville}
-                onChange={(e) => setVille(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm text-[#FFFFFF] placeholder-[#A9A9A9] font-bold"
-              />
-            </div>
-
-            {/* Searchable Commune selector */}
-            <div className="relative">
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Commune</label>
-              <button
-                type="button"
-                onClick={() => setShowCommuneDropdown(!showCommuneDropdown)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm text-left flex items-center justify-between text-[#FFFFFF] placeholder-[#A9A9A9] font-bold"
-              >
-                <span>{commune || "Veuillez choisir"}</span>
-                <ChevronDown className="w-4 h-4 text-gray-450 shrink-0" />
-              </button>
-
-              {showCommuneDropdown && (
-                <div className="absolute z-20 left-0 right-0 mt-1 bg-[#050505] border border-[#D4AF37]/25 rounded-2xl shadow-xl p-3 space-y-2 animate-fadeIn">
-                  <div className="flex items-center gap-1.5 px-2 bg-[#161616] border border-[#D4AF37]/25 rounded-lg">
-                    <Search className="w-3.5 h-3.5 text-[#B9B9B9]" />
-                    <input
-                      type="text"
-                      placeholder="Rechercher Commune..."
-                      value={communeSearch}
-                      onChange={(e) => setCommuneSearch(e.target.value)}
-                      className="w-full py-1.5 focus:outline-none bg-transparent text-xs text-[#FFFFFF] placeholder-[#A9A9A9]"
-                    />
-                  </div>
-                  <div className="max-h-36 overflow-y-auto space-y-1">
-                    {filteredCommunes.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => {
-                          setCommune(c);
-                          setShowCommuneDropdown(false);
-                        }}
-                        className={`w-full text-left p-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                          commune === c 
-                            ? "bg-orange-500/10 text-[#D4AF37]" 
-                            : "hover:bg-[#161616] text-[#B9B9B9] text-[#B9B9B9]"
-                        }`}
-                      >
+          {/* 3. LOCALISATION */}
+          <div className="afri-card p-6 space-y-4">
+            <p className="afri-text-tiny">Zone d'Activité</p>
+            <div className="afri-grid-2">
+              <div className="space-y-1.5">
+                <label className="afri-text-tiny text-zinc-400">Ville</label>
+                <input value={ville} onChange={e => setVille(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none" />
+              </div>
+              <div className="relative space-y-1.5">
+                <label className="afri-text-tiny text-zinc-400">Commune</label>
+                <button type="button" onClick={() => setShowCommuneDropdown(!showCommuneDropdown)} className="afri-card-inset w-full p-3 text-xs font-black text-white flex items-center justify-between">
+                  <span>{commune || "Choisir"}</span>
+                  <ChevronDown className="w-4 h-4 text-[#D4AF37]" />
+                </button>
+                {showCommuneDropdown && (
+                  <div className="absolute z-20 left-0 right-0 mt-1 afri-card p-2 max-h-40 overflow-y-auto space-y-1">
+                    {filteredCommunes.map(c => (
+                      <button key={c} type="button" onClick={() => { setCommune(c); setShowCommuneDropdown(false); }} className="w-full text-left p-2 rounded-xl text-xs font-bold hover:bg-[#D4AF37]/10 text-zinc-400 hover:text-white">
                         {c}
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Quartier (Modification libre)</label>
-              <input
-                type="text"
-                placeholder="Ex: Deux-Plateaux Vallon, Angré..."
-                required
-                value={quartier}
-                onChange={(e) => setQuartier(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm text-[#FFFFFF] placeholder-[#A9A9A9] font-bold"
-              />
+            <div className="space-y-1.5">
+              <label className="afri-text-tiny text-zinc-400">Quartier</label>
+              <input value={quartier} onChange={e => setQuartier(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none" />
             </div>
           </div>
-        </div>
 
-        {/* 3. SECTION ACTIVITÉ & RÔLE */}
-        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-4">
-          <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 3. Activité du Label / Type de Compte</span>
-          
-          <div>
-            <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Je suis un :</label>
-            <select
-              value={accountRole}
-              onChange={(e) => setAccountRole(e.target.value)}
-              className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm font-bold text-[#FFFFFF] placeholder-[#A9A9A9]"
-            >
-              <option value="musicien">🎸 Artiste / Musicien</option>
-              <option value="organisateur">🎪 Organisateur de Spectacle</option>
-              <option value="client">🤵 Client Professionnel / Particulier</option>
-              <option value="manager">💼 Manager d'Artistes</option>
-              <option value="administrateur">👑 Administrateur</option>
-              <option value="superviseur">🛡️ Superviseur</option>
-            </select>
-          </div>
-        </div>
-
-        {/* 4. SECTION SPÉCIALITÉS & STYLES (Choix multiples + Saisie libre) */}
-        {(accountRole === "musicien" || accountRole === "administrateur" || accountRole === "superviseur" || accountRole === "manager") && (
-          <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-6">
-            <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 4. Spécialités & Préférences Musicales</span>
+          {/* 4. MUSIQUE & TALENTS */}
+          <div className="afri-card p-6 space-y-6">
+            <p className="afri-text-tiny">Identité Musicale</p>
             
-            <div className="space-y-3">
-              <label className="block text-xs font-bold text-[#B9B9B9] uppercase tracking-wider">🎸 Spécialités de scène (Choix multiples)</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {SPECIALTIES_LIST.map((spec) => {
-                  const selected = specialties.includes(spec);
-                  return (
-                    <button
-                      key={spec}
-                      type="button"
-                      onClick={() => {
-                        if (selected) {
-                          setSpecialties(specialties.filter(s => s !== spec));
-                        } else {
-                          setSpecialties([...specialties, spec]);
-                        }
-                      }}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold text-left border flex items-center justify-between gap-1 transition-all ${
-                        selected
-                          ? "bg-[#D4AF37] border-[#D4AF37] text-white"
-                          : "bg-[#161616] dark:bg-[#18181b] border-gray-200 dark:border-gray-800 text-[#B9B9B9] dark:text-gray-350"
-                      }`}
-                    >
-                      <span className="truncate">{spec}</span>
-                      {selected && <Check className="w-3 shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Free specialty input */}
-              <div className="flex gap-2 max-w-sm pt-1">
-                <input
-                  type="text"
-                  placeholder="Autre spécialité libre..."
-                  value={freeSpecialty}
-                  onChange={(e) => setFreeSpecialty(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-[#161616] border border-[#D4AF37]/25 rounded-lg text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (freeSpecialty.trim() && !specialties.includes(freeSpecialty.trim())) {
-                      setSpecialties([...specialties, freeSpecialty.trim()]);
-                      setFreeSpecialty("");
-                    }
-                  }}
-                  className="px-3 py-1.5 bg-[#D4AF37] text-black font-black uppercase cursor-pointer shrink-0 rounded-lg text-[10px]"
-                >
-                  Ajouter
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-4 border-t border-gray-50 dark:border-gray-850">
-              <label className="block text-xs font-bold text-[#B9B9B9] uppercase tracking-wider">🎶 Styles & Genres (Choix multiples)</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {GENRES_LIST.map((gen) => {
-                  const selected = musicGenres.includes(gen);
-                  return (
-                    <button
-                      key={gen}
-                      type="button"
-                      onClick={() => {
-                        if (selected) {
-                          setMusicGenres(musicGenres.filter(g => g !== gen));
-                        } else {
-                          setMusicGenres([...musicGenres, gen]);
-                        }
-                      }}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold text-left border flex items-center justify-between gap-1 transition-all ${
-                        selected
-                          ? "bg-amber-500 border-amber-500 text-white"
-                          : "bg-[#161616] dark:bg-[#18181b] border-gray-200 dark:border-gray-800 text-[#B9B9B9] dark:text-gray-350"
-                      }`}
-                    >
-                      <span className="truncate">{gen}</span>
-                      {selected && <Check className="w-3 shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Free genre input */}
-              <div className="flex gap-2 max-w-sm pt-1">
-                <input
-                  type="text"
-                  placeholder="Autre courant libre..."
-                  value={freeGenre}
-                  onChange={(e) => setFreeGenre(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-[#161616] border border-[#D4AF37]/25 rounded-lg text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (freeGenre.trim() && !musicGenres.includes(freeGenre.trim())) {
-                      setMusicGenres([...musicGenres, freeGenre.trim()]);
-                      setFreeGenre("");
-                    }
-                  }}
-                  className="px-3 py-1.5 bg-[#D4AF37] text-black font-black uppercase cursor-pointer shrink-0 rounded-lg text-[10px]"
-                >
-                  Ajouter
-                </button>
-              </div>
-            </div>
-
-            {/* Expérience */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-50 dark:border-gray-850 pt-4">
-              <div>
-                <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Niveau d'Expérience Scénique</label>
-                <select
-                  value={experience}
-                  onChange={(e) => setExperience(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-xs font-bold text-black"
-                >
-                  {EXPERIENCES.map(ex => (
-                    <option key={ex} value={ex}>{ex}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* General Availability days check list */}
-              <div>
-                <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Disponibilités Générales</label>
-                <div className="space-y-1 mt-1 border border-gray-105 p-3 rounded-xl max-h-36 overflow-y-auto">
-                  {["Semaine", "Week-end", "Journée", "Soirée", "Disponible immédiatement"].map((day) => {
-                    const checked = availabilities.includes(day);
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="afri-text-tiny text-zinc-400">Spécialités</label>
+                <div className="flex flex-wrap gap-2">
+                  {SPECIALTIES_LIST.map(spec => {
+                    const active = specialties.includes(spec);
                     return (
-                      <label key={day} className="flex items-center gap-2 text-xs font-bold text-[#B9B9B9] text-[#B9B9B9] cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => {
-                            if (checked) {
-                              setAvailabilities(availabilities.filter(d => d !== day));
-                            } else {
-                              setAvailabilities([...availabilities, day]);
-                            }
-                          }}
-                          className="accent-orange-500 text-[#D4AF37]"
-                        />
-                        <span>{day}</span>
-                      </label>
+                      <button key={spec} type="button" onClick={() => active ? setSpecialties(specialties.filter(s => s !== spec)) : setSpecialties([...specialties, spec])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-[#D4AF37] border-[#D4AF37] text-black" : "bg-white/5 border-white/10 text-zinc-500"}`}>
+                        {spec}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="afri-text-tiny text-zinc-400">Styles Musicaux</label>
+                <div className="flex flex-wrap gap-2">
+                  {GENRES_LIST.map(gen => {
+                    const active = musicGenres.includes(gen);
+                    return (
+                      <button key={gen} type="button" onClick={() => active ? setMusicGenres(musicGenres.filter(g => g !== gen)) : setMusicGenres([...musicGenres, gen])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-amber-500 border-amber-500 text-white" : "bg-white/5 border-white/10 text-zinc-500"}`}>
+                        {gen}
+                      </button>
                     );
                   })}
                 </div>
               </div>
             </div>
           </div>
-        )}
 
-        {/* 5. PAYMENTS MOBILE SYSTEMS */}
-        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-4">
-          <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 5. Cachets de Paiement & Canal Argent Mobile (Mobile Money)</span>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Numéro WAVE (Retrait direct)</label>
-              <input
-                type="text"
-                value={waveNumber}
-                onChange={(e) => setWaveNumber(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm font-semibold text-[#FFFFFF] placeholder-[#A9A9A9]"
-              />
+          {/* 5. VÉRIFICATION (KYC) */}
+          <div className="afri-card p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="afri-text-tiny">Sécurité Afritrust</p>
+              {kycStatus === "approved" && <div className="afri-badge afri-badge-gold">Vérifié</div>}
             </div>
-            <div>
-              <label className="block text-xs font-bold text-[#B9B9B9] mb-1">Numéro ORANGE MONEY (Retrait direct)</label>
-              <input
-                type="text"
-                value={orangeMoneyNumber}
-                onChange={(e) => setOrangeMoneyNumber(e.target.value)}
-                className="w-full px-4 py-3 bg-[#161616] border border-[#D4AF37]/25 rounded-xl text-sm font-semibold text-[#FFFFFF] placeholder-[#A9A9A9]"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 6. SECTION VÉRIFICATION D'IDENTITÉ (AFRITRUST) */}
-        <div className="bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-[10px] tracking-widest uppercase font-black text-[#B9B9B9] block">Section 6. Sécurité & Vérification (AFRITRUST)</span>
-              <h4 className="text-sm font-black text-white text-white uppercase flex items-center gap-2">
-                <Check className="w-4 h-4 text-[#D4AF37]" />
-                Obtenir le badge de confiance
-              </h4>
-            </div>
-            {kycStatus === "approved" && (
-              <span className="px-3 py-1 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5" />
-                Vérifié
-              </span>
-            )}
-            {kycStatus === "pending" && (
-              <span className="px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-[10px] font-black uppercase animate-pulse">
-                En attente ⏳
-              </span>
-            )}
-          </div>
-
-          <div className="p-4 bg-[#161616]/50 dark:bg-gray-850/40 border border-[#D4AF37]/25 rounded-2xl">
-            <p className="text-xs text-[#B9B9B9] dark:text-[#B9B9B9] leading-relaxed mb-4">
-              Pour obtenir le <b>badge bleu Africid/Afritrust</b> et accroître votre crédibilité auprès des clients nationaux et internationaux, veuillez télécharger une photo lisible de votre <b>CNI, Passeport ou Attestation d’Identité</b>.
-            </p>
-
-            {verifyingIdentity ? (
-              <div className="space-y-3 py-4">
-                <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${kycProgress}%` }}
-                    className="h-full bg-[#D4AF37]" 
-                  />
+            
+            <div className="afri-card-inset space-y-3">
+              <p className="text-[10px] text-zinc-400 leading-relaxed">Téléchargez une pièce d'identité pour certifier votre héritage musical.</p>
+              {verifyingIdentity ? (
+                <div className="space-y-2">
+                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#D4AF37]" style={{ width: `${kycProgress}%` }} />
+                  </div>
+                  <p className="text-[9px] font-black text-center text-[#D4AF37] animate-pulse">ENVOI EN COURS...</p>
                 </div>
-                <p className="text-[10px] font-black text-[#D4AF37] uppercase text-center animate-pulse">Envoi du document en cours... {kycProgress}%</p>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row gap-3">
-                <label className="flex-1 px-4 py-3 bg-[#111111] border border-dashed border-gray-300 dark:border-gray-700 hover:border-orange-500 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-xs font-black text-[#B9B9B9] hover:text-orange-500">
-                  <Upload className="w-4 h-4" />
-                  Télécharger ma pièce d'identité
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    className="hidden" 
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) onIdentityUpload(file);
-                    }}
-                  />
-                </label>
-                
-                <button
-                  type="button"
-                  onClick={() => startCamera()} 
-                  className="px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-750 text-[#B9B9B9] hover:bg-gray-200 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Camera className="w-4 h-4" />
-                  Prendre une photo
-                </button>
-              </div>
-            )}
+              ) : (
+                <div className="flex gap-2">
+                  <label className="afri-btn-secondary py-2 text-[10px] flex-1">
+                    <Upload className="w-3 h-3" />
+                    Album
+                    <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onIdentityUpload(f); }} />
+                  </label>
+                  <button type="button" onClick={startCamera} className="afri-btn-secondary py-2 text-[10px] flex-1">
+                    <Camera className="w-3 h-3" />
+                    Caméra
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Actions row */}
-        <div className="flex flex-col sm:flex-row gap-2 justify-end">
-          <button
-            type="button"
-            onClick={() => {
-              if (onSkip) onSkip();
-              else if (onCancel) onCancel();
-            }}
-            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-750 text-[#B9B9B9] font-bold rounded-xl text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
-          >
-            Compléter plus tard
-          </button>
-          
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-3 bg-[#111111] border border-zinc-200 dark:border-zinc-800 hover:bg-[#D4AF37]/10 text-white font-bold rounded-xl text-sm cursor-pointer transition-all"
-          >
-            Annuler
-          </button>
-          
-          <button
-            type="submit"
-            disabled={editLoading}
-            className="px-8 py-3 bg-[#D4AF37] hover:bg-orange-600 text-white font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer text-sm font-sans"
-          >
-            {editLoading ? "Sauvegarde en cours..." : "Enregistrer et Entrer"}
-          </button>
-        </div>
-      </form>
+          {/* ACTIONS FINAL */}
+          <div className="grid grid-cols-1 gap-3 pt-4">
+            <button type="submit" disabled={editLoading} className="afri-btn-primary py-4">
+              {editLoading ? "Synchronisation..." : "Enregistrer les modifications"}
+            </button>
+            <button type="button" onClick={onCancel} className="afri-btn-secondary py-4">
+              Fermer sans enregistrer
+            </button>
+          </div>
+
+        </form>
+      </div>
     </motion.div>
   );
 };

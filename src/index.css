@@ -1,10 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --breakpoint-xs: 375px;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Cinzel", serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-premium: "Outfit", sans-serif;
+  --font-heritage: "Cinzel", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-btn: "Montserrat", sans-serif;
   
@@ -33,43 +35,75 @@
 /* GLOBAL RESPONSIVE LAYER - AFRIGOMBO NATIVE-LIKE STRATEGY */
 @layer utilities {
   .afri-container {
-    @apply px-3 xs:px-4 sm:px-8;
+    @apply px-4 xs:px-5 sm:px-8 max-w-lg mx-auto w-full;
   }
   
   .afri-section {
-    @apply pt-4 pb-32 sm:pt-6 sm:pb-32;
+    @apply pt-6 pb-32 space-y-6;
   }
   
   .afri-card {
-    @apply rounded-xl xs:rounded-2xl sm:rounded-3xl border border-[#D4AF37]/20 bg-[#050505] shadow-sm;
+    @apply rounded-2xl xs:rounded-3xl border border-[#D4AF37]/15 bg-[#080808] shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all;
+  }
+
+  .afri-card-inset {
+    @apply rounded-2xl bg-black/40 border border-white/5 p-4;
   }
   
   .afri-title-xl {
-    @apply text-xl xs:text-2xl sm:text-4xl font-sans font-black tracking-tight uppercase;
+    @apply text-xl xs:text-2xl sm:text-3xl font-sans font-black tracking-tight uppercase text-white;
   }
   
   .afri-title-lg {
-    @apply text-lg xs:text-xl sm:text-2xl font-sans font-bold uppercase tracking-wide;
+    @apply text-base xs:text-lg sm:text-xl font-sans font-bold uppercase tracking-wide text-[#D4AF37];
   }
   
   .afri-title-md {
-    @apply text-sm xs:text-base sm:text-xl font-sans font-bold uppercase;
+    @apply text-sm xs:text-base sm:text-lg font-sans font-bold uppercase text-white/90;
   }
   
   .afri-text-body {
-    @apply text-[11px] xs:text-xs sm:text-base leading-relaxed text-zinc-300;
+    @apply text-[11px] xs:text-xs sm:text-sm leading-relaxed text-zinc-400;
   }
   
   .afri-text-tiny {
-    @apply text-[9px] xs:text-[10px] sm:text-xs font-mono uppercase tracking-widest text-zinc-500;
+    @apply text-[8px] xs:text-[9px] sm:text-xs font-mono uppercase tracking-[0.15em] text-zinc-500 font-bold;
   }
   
-  .afri-icon-btn {
-    @apply w-9 h-9 xs:w-10 xs:h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl transition-all active:scale-95;
+  .afri-btn-primary {
+    @apply w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-[#D4AF37] hover:bg-amber-500 text-black font-black uppercase text-[11px] xs:text-xs tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-[#D4AF37]/10;
+  }
+
+  .afri-btn-secondary {
+    @apply w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold uppercase text-[10px] xs:text-[11px] tracking-wider transition-all active:scale-[0.98];
+  }
+
+  .afri-btn-ghost {
+    @apply flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all text-[10px] uppercase font-black tracking-widest;
   }
   
-  .afri-grid-responsive {
-    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6;
+  .afri-icon-wrapper {
+    @apply w-10 h-10 xs:w-11 xs:h-11 flex items-center justify-center rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37];
+  }
+
+  .afri-badge {
+    @apply px-2 py-0.5 rounded-lg text-[8px] xs:text-[9px] font-black uppercase tracking-tighter border;
+  }
+
+  .afri-badge-gold {
+    @apply bg-[#D4AF37]/10 border-[#D4AF37]/30 text-[#D4AF37];
+  }
+  
+  .afri-grid-2 {
+    @apply grid grid-cols-2 gap-3 xs:gap-4;
+  }
+  
+  .afri-header-height {
+    @apply h-16 xs:h-20 sm:h-24;
+  }
+
+  .afri-scroll-safe {
+    @apply pb-24 xs:pb-32;
   }
   
   /* Prevent horizontal scroll issues on very small screens */

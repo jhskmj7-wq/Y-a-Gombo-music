@@ -159,7 +159,8 @@ import {
   History,
   Download,
   CreditCard,
-  ChevronRight
+  ChevronRight,
+  Handshake
 } from "lucide-react";
 import {
   AreaChart,
@@ -2485,150 +2486,111 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </div>
             </header>
           ) : (
-            <header className="flex flex-col afri-container py-2 sm:py-4 min-h-[70px] sm:min-h-[100px] border-b border-[#D4AF37]/40 bg-gradient-to-b from-[#030303] to-[#0a0800] backdrop-blur shrink-0 gap-1.5 sm:gap-3 w-full animate-fadeIn select-none shadow-[0_4px_30px_rgba(212,175,55,0.05)] rounded-b-xl sm:rounded-b-2xl">
+            <header className="flex flex-col afri-container py-4 sm:py-6 min-h-[120px] sm:min-h-[160px] border-b border-[#D4AF37]/30 bg-black backdrop-blur-xl shrink-0 gap-4 sm:gap-6 w-full animate-fadeIn select-none shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(212,175,55,0.05)] rounded-b-[30px] sm:rounded-b-[50px] z-[100] relative">
               {/* TOP ROW */}
-              <div className="flex justify-between items-center w-full gap-1 xs:gap-1.5 sm:gap-3">
-                {/* Left Side: Hamburger Trigger Button */}
-                <button
-                  id="hamburger-trigger"
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="afri-icon-btn text-[#D4AF37] hover:text-[#F1C40F] hover:bg-[#D4AF37]/10 border border-[#D4AF37]/30 hover:border-[#D4AF37]/60 rounded-lg sm:rounded-xl transition-all focus:outline-none bg-black/60 shrink-0 select-none shadow-[0_0_10px_rgba(212,175,55,0.1)] p-1.5 sm:p-2.5"
-                  title="Ouvrir le menu"
-                >
-                  <Menu className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2.5]" />
-                </button>
+              <div className="flex items-center justify-between w-full gap-2 sm:gap-4">
+                {/* Left: Menu & Logo Group */}
+                <div className="flex items-center gap-3 sm:gap-8">
+                  <button
+                    id="hamburger-trigger"
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-zinc-900/50 border border-zinc-800 text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all active:scale-95"
+                  >
+                    <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                  </button>
 
-                {/* Middle Brand Section */}
-                <div className="flex flex-col items-center justify-center text-center select-none flex-1 min-w-0">
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    {/* Logo AFRIGOMBO */}
-                    <motion.div
-                      animate={{
-                        scale: [1, 1.05, 1],
-                        boxShadow: [
-                          "0 0 10px rgba(212,175,55,0.2)",
-                          "0 0 20px rgba(212,175,55,0.5)",
-                          "0 0 10px rgba(212,175,55,0.2)"
-                        ]
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      className="w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 rounded-full bg-black border border-[#D4AF37] sm:border-2 overflow-hidden flex items-center justify-center select-none shrink-0 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                    >
-                      <div className="w-full h-full flex items-center justify-center bg-black">
-                        <img 
-                          src="/public/logo_afrigombo.png" 
-                          alt="AFRIGOMBO Logo" 
-                          className="w-full h-full object-contain"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                    </motion.div>
-                    <span className="text-[13px] xs:text-sm sm:text-2xl font-sans font-black tracking-tight sm:tracking-[0.1em] text-white leading-none uppercase font-display truncate" style={{ textShadow: "0 2px 8px rgba(212,175,55,0.4)" }}>
+                  <div className="flex flex-col">
+                    <h1 className="text-3xl sm:text-6xl font-black tracking-tighter text-[#D4AF37] leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-display" 
+                        style={{ 
+                          textShadow: "1px 1px 0px #B48F17, 2px 2px 0px #946F07, 4px 4px 15px rgba(212,175,55,0.3)"
+                        }}>
                       AFRIGOMBO
+                    </h1>
+                    <span className="text-[10px] sm:text-sm text-zinc-300/60 font-medium tracking-[0.2em] lowercase mt-0.5 sm:mt-1 font-premium">
+                      le temple du gombo musical
                     </span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="text-[7px] sm:text-[9px] font-mono tracking-widest text-[#D4AF37] mt-0.5 sm:mt-1 truncate w-full max-w-full uppercase font-black">
-                      le temple du Gombo musical
-                    </span>
-                    <div className="flex items-center gap-1 mt-0.5 opacity-80">
-                      <Lock className="w-[6px] sm:w-[8px] text-[#D4AF37]" />
-                      <span className="text-[5px] sm:text-[7px] font-mono tracking-wider text-zinc-400 uppercase font-bold">
-                        Vos cachets 100% sécurisés
-                      </span>
-                    </div>
                   </div>
                 </div>
 
-                {/* Right Controls Row */}
-                <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-4 shrink-0">
-                  {/* --- 1. NOTIFICATIONS --- */}
-                  {activeMenu !== "user_edit_profile" && (
-                    <button
-                      id="bell-btn"
-                      onClick={() => {
+                {/* Right: Actions */}
+                <div className="flex items-center gap-2 sm:gap-6">
+                   {/* Notification with Badge */}
+                   <button 
+                     onClick={() => {
                         setActiveMenu("user_notifications");
                         addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
-                      }}
-                      className="text-[#D4AF37] hover:text-[#F1C40F] transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none p-1 sm:p-0"
-                      title="Notifications"
-                    >
-                      <Bell className={`w-4 h-4 sm:w-6 sm:h-6 ${realNotifications.filter(n => !n.read).length > 0 ? "animate-pulse text-red-500" : ""}`} strokeWidth={2.5} />
-                      {realNotifications.filter(n => !n.read).length > 0 && (
-                        <motion.span
-                          key={realNotifications.filter(n => !n.read).length}
-                          initial={{ scale: 1 }}
-                          animate={{ scale: [1, 1.3, 1] }}
-                          transition={{ duration: 0.3 }}
-                          className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-600 text-white font-mono text-[6px] sm:text-[9px] font-black min-w-[12px] h-[12px] sm:min-w-[20px] sm:h-[20px] rounded-full flex items-center justify-center px-0.5 sm:px-1 border border-[#050505] shadow-sm"
-                        >
-                          {realNotifications.filter(n => !n.read).length > 99 ? '99+' : realNotifications.filter(n => !n.read).length}
-                        </motion.span>
-                      )}
-                    </button>
-                  )}
+                     }} 
+                     className="relative p-2 text-[#D4AF37] hover:scale-110 transition-transform cursor-pointer"
+                   >
+                     <Bell className="w-5 h-5 sm:w-7 sm:h-7" />
+                     {realNotifications.some(n => !n.read) && (
+                       <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-red-600 rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]" />
+                     )}
+                   </button>
 
-                  {/* --- 2. WALLET --- */}
-                  <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#D4AF37]/30 bg-black/40 shrink-0">
-                    <CreditCard className="w-3 h-3 sm:w-5 sm:h-5 text-[#D4AF37]" />
-                    <div className="flex flex-col">
-                      <span className="text-[8.5px] sm:text-sm font-black text-[#D4AF37] leading-none">{profile?.walletBalance?.toLocaleString('fr-FR') || 0} <span className="hidden xs:inline">FCFA</span><span className="inline xs:hidden">F</span></span>
-                    </div>
-                  </div>
+                   {/* Wallet */}
+                   <div 
+                     onClick={() => setActiveMenu("user_wallet")}
+                     className="hidden xs:flex items-center gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 bg-zinc-900/50 border border-zinc-800 rounded-xl sm:rounded-2xl cursor-pointer hover:border-[#D4AF37]/30 transition-colors"
+                   >
+                     <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4AF37]" />
+                     <div className="flex flex-col">
+                       <span className="text-[8px] sm:text-[10px] text-zinc-500 uppercase font-bold leading-none">💳 Wallet</span>
+                       <span className="text-xs sm:text-base font-black text-white">{(profile?.wallet?.soldeDisponible ?? profile?.balance ?? 0).toLocaleString('fr-FR')} <span className="text-[10px] sm:text-xs font-bold text-[#D4AF37]">FCFA</span></span>
+                     </div>
+                   </div>
 
-                  {/* --- 3. PROFIL --- */}
-                  <div className="flex items-center gap-1 sm:gap-3 shrink-0">
-                    <div 
-                      id="profile-avatar"
-                      className="w-7 h-7 xs:w-8 xs:h-8 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37] overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none relative shadow-[0_0_10px_rgba(212,175,55,0.2)] hover:border-[#F1C40F]" 
-                      title="Profil Utilisateur" 
-                      onClick={() => { 
+                   {/* Profile Avatar */}
+                   <div 
+                     onClick={() => { 
                         if (!currentUser) {
                           setShowHeritageLoginRequired(true);
                         } else {
                           setActiveMenu("user_heritage"); 
                           setViewingGomboIdDetail(false); 
                         }
-                      }}
-                    >
-                      {profile?.avatarUrl || currentUser?.photoURL ? (
-                        <img src={profile?.avatarUrl || currentUser?.photoURL || ""} alt="User Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      ) : (
-                        <span className="text-[#D4AF37] font-sans text-[10px] sm:text-sm font-black uppercase">
+                     }}
+                     className="w-9 h-9 sm:w-14 sm:h-14 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-zinc-900 cursor-pointer hover:scale-105 transition-transform shadow-[0_0_15px_rgba(212,175,55,0.2)] relative"
+                   >
+                     {profile?.avatarUrl || currentUser?.photoURL ? (
+                        <img src={profile?.avatarUrl || currentUser?.photoURL || ""} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                     ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[#D4AF37] font-black text-xs sm:text-base">
                           {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
-                        </span>
-                      )}
-                      {(profile?.isCertified || profile?.gomboIdNumber) && (
-                        <span className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-[#D4AF37] rounded-full border border-black flex items-center justify-center">
-                          <CheckCircle2 className="w-2 h-2 text-black" strokeWidth={5} />
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                        </div>
+                     )}
+                     {(profile?.isCertified || profile?.gomboIdNumber) && (
+                        <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-[#D4AF37] rounded-full border-2 border-black flex items-center justify-center">
+                          <CheckCircle2 className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-black stroke-[4]" />
+                        </div>
+                     )}
+                   </div>
                 </div>
               </div>
 
-              {/* BOTTOM ROW: DYNAMIC PILL */}
-              <div className="flex justify-center w-full mt-1 sm:mt-1.5 overflow-hidden">
-                <div className="flex flex-nowrap items-center justify-start sm:justify-center gap-x-3 sm:gap-x-5 px-3 py-1 sm:py-2 rounded-full border border-[#D4AF37]/30 bg-black/60 shadow-sm w-full max-w-full overflow-x-auto scrollbar-none snap-x">
-                  <span className="text-[8px] sm:text-xs font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
-                    <span className="text-emerald-500 mr-1">🟢</span>
-                    <strong className="text-[#D4AF37]">{users.filter(u => u.status === 'active').length}</strong> artistes
-                  </span>
-                  <span className="text-zinc-700 shrink-0">|</span>
-                  <span className="text-[8px] sm:text-xs font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
-                    <span className="text-[#D4AF37] mr-1">⚡</span>
-                    <strong className="text-[#D4AF37]">{renforts.filter(r => r.status === 'active').length}</strong> urgences
-                  </span>
-                  <span className="text-zinc-700 shrink-0">|</span>
-                  <span className="text-[8px] sm:text-xs font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
-                    <span className="text-[#D4AF37] mr-1">🤝</span>
-                    <strong className="text-[#D4AF37]">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats
-                  </span>
+              {/* BOTTOM ROW: STATS BAR */}
+              <div className="w-full flex justify-center mt-1 sm:mt-2">
+                <div className="flex items-center justify-center gap-4 sm:gap-10 px-4 sm:px-10 py-2 sm:py-3.5 rounded-full bg-zinc-900/40 border border-zinc-800/60 backdrop-blur-md shadow-inner overflow-x-auto scrollbar-none max-w-full">
+                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse" />
+                     <span className="text-[9px] sm:text-sm font-medium text-zinc-400">
+                       <strong className="text-white">{users.filter(u => u.status === 'active').length}</strong> artistes disponibles
+                     </span>
+                   </div>
+                   <div className="w-px h-3 sm:h-4 bg-zinc-800 shrink-0" />
+                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                     <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500" />
+                     <span className="text-[9px] sm:text-sm font-medium text-zinc-400">
+                       <strong className="text-white">{renforts.filter(r => r.status === 'active').length}</strong> renforts urgents
+                     </span>
+                   </div>
+                   <div className="w-px h-3 sm:h-4 bg-zinc-800 shrink-0" />
+                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                     <Handshake className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37]" />
+                     <span className="text-[9px] sm:text-sm font-medium text-zinc-400">
+                       <strong className="text-white">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats actifs
+                     </span>
+                   </div>
                 </div>
               </div>
             </header>
@@ -4898,6 +4860,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       if (view === "heritage") setActiveMenu("user_heritage");
                       else if (view === "home") setActiveMenu("user_terrain");
                       else if (view === "settings") setActiveMenu("settings");
+                      else if (view === "admin") {
+                        setPerspective("admin");
+                        setActiveMenu("dashboard");
+                        addToTerminal("[ADMIN] Entrée au Centre de Commandement.");
+                      }
                       else setActiveMenu(view);
                     }}
                     onLogout={() => logout()}
