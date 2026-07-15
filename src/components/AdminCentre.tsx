@@ -2489,22 +2489,22 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </div>
             </header>
           ) : (
-            <header className="flex flex-col px-4 sm:px-8 py-5 min-h-[110px] border-b border-[#D4AF37]/40 bg-gradient-to-b from-[#030303] to-[#0a0800] backdrop-blur shrink-0 gap-4 w-full animate-fadeIn select-none shadow-[0_4px_30px_rgba(212,175,55,0.05)] rounded-b-2xl">
+            <header className="flex flex-col px-2 xs:px-3 sm:px-8 py-3 sm:py-5 min-h-[80px] sm:min-h-[110px] border-b border-[#D4AF37]/40 bg-gradient-to-b from-[#030303] to-[#0a0800] backdrop-blur shrink-0 gap-2 sm:gap-4 w-full animate-fadeIn select-none shadow-[0_4px_30px_rgba(212,175,55,0.05)] rounded-b-2xl">
               {/* TOP ROW */}
-              <div className="flex justify-between items-center w-full gap-3">
+              <div className="flex justify-between items-center w-full gap-1.5 xs:gap-2 sm:gap-3">
                 {/* Left Side: Hamburger Trigger Button */}
                 <button
                   id="hamburger-trigger"
                   onClick={() => setIsSidebarOpen(true)}
-                  className="w-10 h-10 xs:w-11 xs:h-11 sm:w-12 sm:h-12 text-[#D4AF37] hover:text-[#F1C40F] hover:bg-[#D4AF37]/10 border-2 border-[#D4AF37]/30 hover:border-[#D4AF37]/60 rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+                  className="w-8 h-8 xs:w-9 xs:h-9 sm:w-12 sm:h-12 text-[#D4AF37] hover:text-[#F1C40F] hover:bg-[#D4AF37]/10 border-2 border-[#D4AF37]/30 hover:border-[#D4AF37]/60 rounded-lg sm:rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
                   title="Ouvrir le menu"
                 >
-                  <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                  <Menu className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2.5]" />
                 </button>
 
                 {/* Middle Brand Section */}
-                <div className="flex flex-col items-center justify-center text-center select-none flex-1">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col items-center justify-center text-center select-none flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 sm:gap-3">
                     {/* Logo AFRIGOMBO (A stylized with crown approximation) */}
                     <motion.div
                       animate={{
@@ -2520,26 +2520,26 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         repeat: Infinity,
                         ease: "easeInOut"
                       }}
-                      className="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 rounded-full bg-black border-2 border-[#D4AF37] overflow-hidden flex items-center justify-center select-none shrink-0 cursor-pointer"
+                      className="w-8 h-8 xs:w-9 xs:h-9 sm:w-14 sm:h-14 rounded-full bg-black border border-[#D4AF37] sm:border-2 overflow-hidden flex items-center justify-center select-none shrink-0 cursor-pointer"
                     >
                       <div className="w-full h-full flex items-center justify-center bg-black">
-                        <svg viewBox="0 0 40 40" className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 text-[#D4AF37]">
+                        <svg viewBox="0 0 40 40" className="w-4 h-4 xs:w-5 xs:h-5 sm:w-8 sm:h-8 text-[#D4AF37]">
                           <path d="M20 5 L10 35 L15 35 L20 20 L25 35 L30 35 Z" fill="currentColor" />
                           <path d="M14 12 L20 2 L26 12 Z" fill="currentColor" />
                         </svg>
                       </div>
                     </motion.div>
-                    <span className="text-xl xs:text-2xl sm:text-3xl font-sans font-black tracking-[0.1em] text-white leading-none uppercase font-display" style={{ textShadow: "0 2px 10px rgba(212,175,55,0.5)" }}>
+                    <span className="text-base xs:text-lg sm:text-3xl font-sans font-black tracking-[0.1em] text-white leading-none uppercase font-display truncate" style={{ textShadow: "0 2px 10px rgba(212,175,55,0.5)" }}>
                       AFRIGOMBO
                     </span>
                   </div>
-                  <span className="text-[10px] xs:text-[11px] sm:text-xs font-sans text-zinc-300 leading-tight mt-1 truncate">
+                  <span className="text-[7px] xs:text-[9px] sm:text-xs font-sans text-zinc-300 leading-tight mt-0.5 sm:mt-1 truncate w-full max-w-full">
                     le temple du Gombo musical
                   </span>
                 </div>
 
                 {/* Right Controls Row */}
-                <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 shrink-0">
+                <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-4 shrink-0">
                   {/* --- 1. NOTIFICATIONS --- */}
                   {activeMenu !== "user_edit_profile" && (
                     <button
@@ -2551,14 +2551,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       className="text-[#D4AF37] hover:text-[#F1C40F] transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none"
                       title="Notifications"
                     >
-                      <Bell className={`w-6 h-6 sm:w-7 sm:h-7 ${realNotifications.filter(n => !n.read).length > 0 ? "animate-pulse text-red-500" : ""}`} strokeWidth={2} />
+                      <Bell className={`w-5 h-5 sm:w-7 sm:h-7 ${realNotifications.filter(n => !n.read).length > 0 ? "animate-pulse text-red-500" : ""}`} strokeWidth={2} />
                       {realNotifications.filter(n => !n.read).length > 0 && (
                         <motion.span
                           key={realNotifications.filter(n => !n.read).length}
                           initial={{ scale: 1 }}
                           animate={{ scale: [1, 1.4, 1] }}
                           transition={{ duration: 0.3 }}
-                          className="absolute -top-1 -right-1 bg-red-600 text-white font-mono text-[9px] sm:text-[10px] font-black min-w-5 h-5 sm:min-w-6 sm:h-6 rounded-full flex items-center justify-center px-1 border-2 border-[#050505] shadow-sm"
+                          className="absolute -top-1 -right-1 bg-red-600 text-white font-mono text-[7px] sm:text-[10px] font-black min-w-3.5 h-3.5 sm:min-w-6 sm:h-6 rounded-full flex items-center justify-center px-0.5 sm:px-1 border border-[#050505] shadow-sm"
                         >
                           {realNotifications.filter(n => !n.read).length > 99 ? '99+' : realNotifications.filter(n => !n.read).length}
                         </motion.span>
@@ -2567,19 +2567,19 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   )}
 
                   {/* --- 2. WALLET (ALWAYS VISIBLE) --- */}
-                  <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5">
-                    <CreditCard className="w-5 h-5 text-[#D4AF37]" />
+                  <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 shrink-0">
+                    <CreditCard className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#D4AF37]" />
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-mono font-bold text-zinc-400 uppercase tracking-widest leading-none">Wallet</span>
-                      <span className="text-sm font-black text-[#D4AF37] leading-none mt-0.5">{profile?.walletBalance?.toLocaleString('fr-FR') || 0} FCFA</span>
+                      <span className="hidden sm:block text-[9px] font-mono font-bold text-zinc-400 uppercase tracking-widest leading-none">Wallet</span>
+                      <span className="text-[9px] xs:text-[10px] sm:text-sm font-black text-[#D4AF37] leading-none mt-0 sm:mt-0.5">{profile?.walletBalance?.toLocaleString('fr-FR') || 0} <span className="hidden xs:inline">FCFA</span><span className="inline xs:hidden">F</span></span>
                     </div>
                   </div>
 
                   {/* --- 3. PROFIL --- */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 sm:gap-3 shrink-0">
                     <div 
                       id="profile-avatar"
-                      className="w-10 h-10 xs:w-11 xs:h-11 sm:w-12 sm:h-12 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_15px_rgba(212,175,55,0.25)] hover:border-[#F1C40F] hover:shadow-[0_0_25px_rgba(212,175,55,0.4)]" 
+                      className="w-8 h-8 xs:w-9 xs:h-9 sm:w-12 sm:h-12 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none relative shadow-[0_0_15px_rgba(212,175,55,0.25)] hover:border-[#F1C40F] hover:shadow-[0_0_25px_rgba(212,175,55,0.4)]" 
                       title="Profil Utilisateur" 
                       onClick={() => { 
                         if (!currentUser) {
@@ -2608,21 +2608,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </div>
 
               {/* BOTTOM ROW: DYNAMIC PILL */}
-              <div className="flex justify-center w-full mt-2">
-                <div className="flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-6 gap-y-2 px-4 sm:px-8 py-2.5 rounded-full border border-[#D4AF37]/40 bg-black/60 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
-                  <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap">
+              <div className="flex justify-center w-full mt-1 sm:mt-2 overflow-hidden px-0 sm:px-2">
+                <div className="flex flex-nowrap items-center justify-start md:justify-center gap-x-4 sm:gap-x-6 px-4 py-1.5 sm:py-2.5 rounded-full border border-[#D4AF37]/40 bg-black/60 shadow-[0_0_15px_rgba(212,175,55,0.1)] w-full max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none] snap-x">
+                  <span className="text-[9px] xs:text-[10px] sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
                     <span className="text-emerald-500 mr-1.5">🟢</span>
-                    <strong className="text-[#D4AF37]">{users.filter(u => u.status === 'active').length}</strong> artistes disponibles aujourd'hui
+                    <strong className="text-[#D4AF37]">{users.filter(u => u.status === 'active').length}</strong> artistes
                   </span>
-                  <span className="text-zinc-600 hidden sm:inline">|</span>
-                  <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap">
+                  <span className="text-zinc-600 shrink-0">|</span>
+                  <span className="text-[9px] xs:text-[10px] sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
                     <span className="text-[#D4AF37] mr-1.5">⚡</span>
-                    <strong className="text-[#D4AF37]">{renforts.filter(r => r.status === 'active').length}</strong> Renforts urgents
+                    <strong className="text-[#D4AF37]">{renforts.filter(r => r.status === 'active').length}</strong> urgences
                   </span>
-                  <span className="text-zinc-600 hidden sm:inline">|</span>
-                  <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap">
+                  <span className="text-zinc-600 shrink-0">|</span>
+                  <span className="text-[9px] xs:text-[10px] sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
                     <span className="text-[#D4AF37] mr-1.5">🤝</span>
-                    <strong className="text-[#D4AF37]">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats en cours
+                    <strong className="text-[#D4AF37]">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats
                   </span>
                 </div>
               </div>

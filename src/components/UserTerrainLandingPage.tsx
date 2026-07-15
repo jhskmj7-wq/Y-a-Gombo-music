@@ -1065,28 +1065,28 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                    }}
                    whileTap={{ scale: 0.96 }}
                    onClick={action.action}
-                   className="aspect-square bg-[#050505] border-2 border-[#D4AF37]/35 shadow-[0_8px_30px_rgba(212,175,55,0.06)] rounded-3xl p-3 flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 hover:bg-[#D4AF37]/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0"
+                   className="aspect-square bg-[#050505] border-2 border-[#D4AF37]/35 shadow-[0_8px_30px_rgba(212,175,55,0.06)] rounded-[1.25rem] p-1.5 xs:p-2 sm:p-3 flex flex-col items-center justify-center gap-1 sm:gap-2.5 hover:bg-[#D4AF37]/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0"
                  >
                    {/* Top Badge */}
                    {action.badge !== undefined && (
-                     <span className={`absolute -top-1.5 -right-1.5 ${action.badgeColor} text-[8.5px] font-black w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border border-zinc-950 shadow-md z-10`}>
+                     <span className={`absolute -top-1.5 -right-1.5 ${action.badgeColor} text-[7.5px] xs:text-[8.5px] font-black w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border border-zinc-950 shadow-md z-10`}>
                        {action.badge}
                      </span>
                    )}
 
                    {/* Icon Wrapper */}
-                   <div className="w-11 h-11 sm:w-15 sm:h-15 rounded-full bg-[#D4AF37]/8 flex items-center justify-center border-2 border-[#D4AF37]/20 group-hover:border-[#D4AF37] group-hover:bg-[#D4AF37]/15 transition shrink-0 shadow-[0_4px_12px_rgba(212,175,55,0.05)]">
-                     <span className="text-xl sm:text-2xl font-bold leading-none select-none">{action.emoji}</span>
+                   <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-14 sm:h-14 rounded-full bg-[#D4AF37]/8 flex items-center justify-center border-2 border-[#D4AF37]/20 group-hover:border-[#D4AF37] group-hover:bg-[#D4AF37]/15 transition shrink-0 shadow-[0_4px_12px_rgba(212,175,55,0.05)]">
+                     <span className="text-[17px] xs:text-lg sm:text-2xl font-bold leading-none select-none">{action.emoji}</span>
                    </div>
 
                    {/* Label */}
-                   <span className="text-[9.5px] sm:text-[11px] text-[#F5F5F5]/90 group-hover:text-white font-sans font-black tracking-wider uppercase text-center leading-tight truncate w-full px-0.5 mt-0.5 sm:mt-1">
-                     {action.label}
+                   <span className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] text-[#F5F5F5]/90 group-hover:text-white font-sans font-black tracking-wider uppercase text-center leading-[1.1] w-full px-0 mt-0.5 sm:mt-1 break-words line-clamp-2">
+                     {action.label === "Renfort Express" ? "Renfort" : (action.label === "Mon GOMBO ID" ? "GOMBO ID" : action.label)}
                    </span>
 
                    {/* Bottom Badge for Wallet */}
                    {action.badgeBottom !== undefined && (
-                     <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-[#050505] border-2 border-[#D4AF37]/40 text-[#D4AF37] text-[7.5px] sm:text-[9px] font-mono font-black py-0.5 px-2.5 rounded-full whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.8)] z-10 group-hover:border-[#D4AF37]">
+                     <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-[#050505] border-2 border-[#D4AF37]/40 text-[#D4AF37] text-[6.5px] xs:text-[7.5px] sm:text-[9px] font-mono font-black py-0.5 px-2 rounded-full whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.8)] z-10 group-hover:border-[#D4AF37]">
                        {action.badgeBottom.toLocaleString("fr-FR")} F
                      </span>
                    )}
