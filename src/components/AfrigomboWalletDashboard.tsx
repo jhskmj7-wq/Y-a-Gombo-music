@@ -357,33 +357,33 @@ export default function AfrigomboWalletDashboard({
   });
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto px-4 pb-32 pt-2 text-left animate-fadeIn">
+    <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto afri-container afri-section text-left animate-fadeIn">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-900 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 border-b border-zinc-900 pb-3 sm:pb-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="py-0.5 px-2 bg-emerald-500/10 text-emerald-400 text-[9px] font-mono font-black uppercase tracking-widest rounded border border-emerald-500/20">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+            <span className="py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 text-[8px] xs:text-[9px] font-mono font-black uppercase tracking-widest rounded border border-emerald-500/20">
               SÉCURISÉ BÊTA
             </span>
             {onBack && (
               <button 
                 onClick={onBack}
-                className="text-[10px] font-mono text-zinc-500 hover:text-white transition-colors"
+                className="text-[9px] xs:text-[10px] font-mono text-zinc-500 hover:text-white transition-colors"
               >
-                &larr; Retour au hub
+                &larr; Retour
               </button>
             )}
           </div>
-          <h2 className="text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-            <Wallet className="w-6 h-6 text-[#D4AF37]" />
-            PORTEFEUILLE COFFRE-FORT AFRIGOMBO
+          <h2 className="afri-title-lg text-white flex items-center gap-2">
+            <Wallet className="w-5 h-5 xs:w-6 xs:h-6 text-[#D4AF37]" />
+            WALLET AFRIGOMBO
           </h2>
-          <p className="text-xs text-zinc-500 font-mono">
-            Solde souverain crypté d'Abidjan & gestion séquestre transparente de l'Empire
+          <p className="afri-text-tiny text-zinc-500">
+            Solde souverain crypté & gestion séquestre
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-3">
           <div className="flex items-center gap-2 bg-zinc-950 px-3 py-1.5 rounded-full border border-zinc-900 text-[10px] font-mono text-zinc-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             Tiers de Confiance
@@ -392,57 +392,57 @@ export default function AfrigomboWalletDashboard({
       </div>
 
       {/* CORE WALLET BALANCE MODULES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         
         {/* MAIN CARD: BALANCE */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-zinc-950 to-zinc-900 border border-[#D4AF37]/30 rounded-[2rem] p-8 relative overflow-hidden shadow-2xl shadow-black/80 group">
+        <div className="lg:col-span-2 afri-card p-5 xs:p-6 sm:p-8 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-[80px] -mr-32 -mt-32 transition-all group-hover:bg-[#D4AF37]/10"></div>
           
-          <div className="relative z-10 flex flex-col h-full justify-between gap-8">
+          <div className="relative z-10 flex flex-col h-full justify-between gap-6 sm:gap-8">
             <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-[0.2em] font-black flex items-center gap-2">
+              <div className="space-y-0.5 sm:space-y-1">
+                <span className="text-[9px] xs:text-[10px] font-mono text-[#D4AF37] uppercase tracking-[0.2em] font-black flex items-center gap-2">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  Solde Souverain Disponible
+                  Solde Disponible
                 </span>
-                <h3 className="text-5xl font-black text-white font-mono tracking-tighter">
-                  {wallet.soldeDisponible.toLocaleString()} <span className="text-xl text-zinc-500 font-sans font-normal uppercase">FCFA</span>
+                <h3 className="text-3xl xs:text-4xl sm:text-5xl font-black text-white font-mono tracking-tighter">
+                  {wallet.soldeDisponible.toLocaleString()} <span className="text-sm xs:text-base sm:text-xl text-zinc-500 font-sans font-normal uppercase">FCFA</span>
                 </h3>
               </div>
-              <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] backdrop-blur-md">
-                <Wallet className="w-7 h-7" />
+              <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] backdrop-blur-md">
+                <Wallet className="w-5 h-5 xs:w-6 xs:h-6 sm:w-7 sm:h-7" />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 space-y-1">
-                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">🔒 En Séquestre</span>
-                <span className="text-lg font-black text-[#D4AF37] font-mono">{wallet.soldeBloque.toLocaleString()}</span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-0.5 sm:space-y-1">
+                <span className="afri-text-tiny text-zinc-500 block">🔒 Séquestre</span>
+                <span className="text-sm xs:text-base sm:text-lg font-black text-[#D4AF37] font-mono">{wallet.soldeBloque.toLocaleString()}</span>
               </div>
-              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 space-y-1">
-                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">📈 Revenus Mois</span>
-                <span className="text-lg font-black text-emerald-400 font-mono">+{wallet.revenus?.toLocaleString()}</span>
+              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-0.5 sm:space-y-1">
+                <span className="afri-text-tiny text-zinc-500 block">📈 Revenus</span>
+                <span className="text-sm xs:text-base sm:text-lg font-black text-emerald-400 font-mono">+{wallet.revenus?.toLocaleString()}</span>
               </div>
-              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 space-y-1 col-span-2 sm:col-span-1">
-                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">🎁 Économies Premium</span>
-                <span className="text-lg font-black text-amber-400 font-mono">{wallet.economiesPremium?.toLocaleString() || "0"}</span>
+              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-0.5 sm:space-y-1 col-span-2 sm:col-span-1">
+                <span className="afri-text-tiny text-zinc-500 block">🎁 Premium</span>
+                <span className="text-sm xs:text-base sm:text-lg font-black text-amber-400 font-mono">{wallet.economiesPremium?.toLocaleString() || "0"}</span>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-row gap-2 sm:gap-3">
               <button 
                 onClick={openDeposit}
-                className="flex-1 min-w-[140px] py-4 bg-[#D4AF37] hover:bg-amber-400 text-black font-black font-mono text-[10px] uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-[#D4AF37]/20 flex items-center justify-center gap-2"
+                className="flex-1 py-3 sm:py-4 bg-[#D4AF37] hover:bg-amber-400 text-black font-black font-mono text-[9px] xs:text-[10px] uppercase tracking-widest rounded-xl xs:rounded-2xl transition-all shadow-xl shadow-[#D4AF37]/20 flex items-center justify-center gap-1.5 sm:gap-2"
               >
-                <ArrowUpRight className="w-4 h-4 stroke-[3]" />
+                <ArrowUpRight className="w-3.5 h-3.5 xs:w-4 xs:h-4 stroke-[3]" />
                 Déposer
               </button>
               <button 
                 onClick={openWithdraw}
                 disabled={wallet.soldeDisponible <= 0}
-                className="flex-1 min-w-[140px] py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-black font-mono text-[10px] uppercase tracking-widest rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-3 sm:py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-black font-mono text-[9px] xs:text-[10px] uppercase tracking-widest rounded-xl xs:rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
               >
-                <ArrowDownLeft className="w-4 h-4 stroke-[3]" />
+                <ArrowDownLeft className="w-3.5 h-3.5 xs:w-4 xs:h-4 stroke-[3]" />
                 Retirer
               </button>
             </div>
@@ -505,20 +505,20 @@ export default function AfrigomboWalletDashboard({
       </div>
 
       {/* DETAILED ACTIVE COMPTE SÉQUESTRE ESCROW ROSTER */}
-      <div className="bg-black border border-zinc-900 rounded-3xl p-6 space-y-4">
-        <div className="flex justify-between items-center border-b border-zinc-900 pb-4">
-          <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-black border border-zinc-900 rounded-2xl xs:rounded-3xl p-4 sm:p-6 space-y-4">
+        <div className="flex justify-between items-center border-b border-zinc-900 pb-3 sm:pb-4">
+          <h3 className="afri-title-md text-white flex items-center gap-2">
             <ShieldCheck className="w-4.5 h-4.5 text-emerald-400" />
-            SUIVI DE VOS CONTRATS EN SÉQUESTRE
+            VOS CONTRATS EN SÉQUESTRE
           </h3>
-          <span className="text-[10px] font-mono bg-zinc-900 text-zinc-400 px-2.5 py-1 rounded-full">
-            {contracts.length} contrats
+          <span className="afri-text-tiny bg-zinc-900 text-zinc-400 px-2 sm:px-2.5 py-1 rounded-full">
+            {contracts.length} <span className="hidden xs:inline">contrats</span>
           </span>
         </div>
 
         {contracts.length === 0 ? (
-          <div className="text-center py-12 text-zinc-600 font-mono text-xs">
-            Aucun contrat séquestré actif. Créez et scellez un Gombo pour engager le coffre-fort d'Abidjan.
+          <div className="text-center py-8 sm:py-12 text-zinc-600 font-mono text-[10px] xs:text-xs">
+            Aucun contrat séquestré actif. Créez un Gombo pour engager le coffre-fort.
           </div>
         ) : (
           <div className="space-y-3">
@@ -531,39 +531,36 @@ export default function AfrigomboWalletDashboard({
               return (
                 <div 
                   key={c.id} 
-                  className="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-zinc-800 transition-colors"
+                  className="bg-zinc-950 border border-zinc-900 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 hover:border-zinc-800 transition-colors"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-white uppercase">{c.gomboTitle || "Prestation Showbiz"}</span>
-                      <span className={`text-[8px] font-mono px-2 py-0.5 rounded-full font-black uppercase tracking-widest ${
+                  <div className="space-y-1 w-full sm:w-auto">
+                    <div className="flex items-center justify-between sm:justify-start gap-2">
+                      <span className="text-[11px] xs:text-xs font-bold text-white uppercase truncate max-w-[150px]">{c.gomboTitle || "Prestation Showbiz"}</span>
+                      <span className={`text-[7px] xs:text-[8px] font-mono px-1.5 xs:px-2 py-0.5 rounded-full font-black uppercase tracking-widest shrink-0 ${
                         currentGomboStatus === "payment_held" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
                         currentGomboStatus === "disputed" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
                         currentGomboStatus === "completed" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
                         "bg-zinc-900 text-zinc-400"
                       }`}>
-                        {currentGomboStatus === "payment_held" ? "Argent Bloqué" :
-                         currentGomboStatus === "disputed" ? "En Litige Bloqué" :
+                        {currentGomboStatus === "payment_held" ? "Bloqué" :
+                         currentGomboStatus === "disputed" ? "Litige" :
                          currentGomboStatus === "completed" ? "Libéré" : currentGomboStatus}
                       </span>
                     </div>
-                    <p className="text-[10px] text-zinc-400 font-mono">
-                      Contrat: <span className="text-white">{c.id}</span> | {isContractClient ? `Artiste: ${c.artistName}` : `Annonceur: ${c.clientName}`}
-                    </p>
-                    <p className="text-[9px] text-zinc-500 font-mono">
-                      Cachet Négocié: <span className="text-zinc-300 font-bold">{(c.amount || 0).toLocaleString()} FCFA</span> 
-                      {` | Votre Commission: `} 
-                      <span className="text-zinc-300">{(commissionValue || 0).toLocaleString()} FCFA</span>
+                    <p className="text-[9px] xs:text-[10px] text-zinc-400 font-mono flex items-center gap-1">
+                      <span className="hidden xs:inline">ID:</span> <span className="text-zinc-500 truncate max-w-[80px]">{c.id}</span>
+                      <span className="mx-1 opacity-20">|</span>
+                      <span className="text-white truncate">{isContractClient ? `${c.artistName}` : `${c.clientName}`}</span>
                     </p>
                   </div>
 
-                  <div className="text-right flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto">
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t border-zinc-900/50 sm:border-0">
                     <div className="text-left sm:text-right">
-                      <span className="text-[9px] font-mono text-zinc-500 block uppercase">
+                      <span className="afri-text-tiny text-zinc-500 block">
                         {isContractClient ? "Total Déposé" : "Net à Recevoir"}
                       </span>
-                      <span className={`text-sm font-black font-mono ${isContractClient ? 'text-amber-500' : 'text-emerald-400'}`}>
-                        {netValue?.toLocaleString()} FCFA
+                      <span className={`text-[11px] xs:text-sm font-black font-mono ${isContractClient ? 'text-amber-500' : 'text-emerald-400'}`}>
+                        {netValue?.toLocaleString()} <span className="text-[8px] xs:text-[10px]">FCFA</span>
                       </span>
                     </div>
                   </div>
@@ -575,29 +572,29 @@ export default function AfrigomboWalletDashboard({
       </div>
 
       {/* FILTERABLE LEDGER HISTORY & COMMISSIONS */}
-      <div className="bg-black border border-zinc-900 rounded-3xl p-6 space-y-6">
+      <div className="bg-black border border-zinc-900 rounded-2xl xs:rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-6">
         
         {/* TABS SELECTOR */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-900 pb-4">
+        <div className="flex flex-col gap-3 sm:gap-4 border-b border-zinc-900 pb-3 sm:pb-4">
           <div className="flex items-center gap-2">
             <History className="w-5 h-5 text-[#D4AF37]" />
-            <h3 className="text-sm font-black text-white uppercase tracking-wider">
-              JOURNAL DES TRANSACTIONS & COMMISSIONS
+            <h3 className="afri-title-md text-white">
+              JOURNAL DES TRANSACTIONS
             </h3>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {[
               { id: "all", label: "Tous" },
-              { id: "flows", label: "Dépôts & Retraits" },
-              { id: "contracts", label: "Séquestres / Contrats" },
-              { id: "commissions", label: "Commissions" },
-              { id: "disputes", label: "Litiges / Remboursements" }
+              { id: "flows", label: "Flux" },
+              { id: "contracts", label: "Séquestres" },
+              { id: "commissions", label: "Comms" },
+              { id: "disputes", label: "Litiges" }
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id as any); playSound("click"); }}
-                className={`py-1.5 px-3 rounded-full text-[10px] font-mono font-bold uppercase transition-all ${
+                className={`py-1.5 px-2.5 xs:px-3 rounded-full text-[8.5px] xs:text-[10px] font-mono font-bold uppercase transition-all ${
                   activeTab === tab.id 
                     ? "bg-[#D4AF37] text-black font-black" 
                     : "bg-zinc-950 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"

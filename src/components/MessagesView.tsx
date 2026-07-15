@@ -632,10 +632,10 @@ export default function MessagesView({
 
   if (loadingConvos) {
     return (
-      <div className="w-full max-w-6xl mx-auto min-h-[75vh] flex items-center justify-center bg-[#050505] rounded-3xl border border-zinc-800 shadow-2xl">
+      <div className="w-full h-full flex items-center justify-center bg-[#050505]">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37] mx-auto" />
-          <p className="text-xs text-zinc-500 font-mono font-bold uppercase tracking-wider animate-pulse">Synchronisation de la messagerie...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-[#D4AF37] mx-auto" />
+          <p className="afri-text-tiny text-zinc-500 animate-pulse">SYNCHRONISATION MESSAGERIE...</p>
         </div>
       </div>
     );
@@ -643,37 +643,33 @@ export default function MessagesView({
 
   if (conversations.length === 0) {
     return (
-      <div className="w-full max-w-4xl mx-auto my-8 p-6 sm:p-16 bg-[#050505] rounded-3xl border border-[#D4AF37]/20 shadow-[0_0_50px_rgba(212,175,55,0.05)] relative overflow-hidden flex flex-col items-center animate-fade-in text-center">
-        {/* Decorative background blur */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 blur-3xl rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#D4AF37]/5 blur-3xl rounded-full pointer-events-none" />
-         
-        <div className="relative z-10 w-full max-w-lg space-y-8">
-          <div className="w-24 h-24 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-3xl flex items-center justify-center mx-auto transform -rotate-3 shadow-lg shadow-[#D4AF37]/5">
-            <MessageSquare className="w-12 h-12 text-[#D4AF37]" />
+      <div className="afri-section py-8 xs:py-16 flex flex-col items-center animate-fade-in text-center h-full">
+        <div className="relative z-10 w-full max-w-lg space-y-6 xs:space-y-8">
+          <div className="w-20 h-20 xs:w-24 xs:h-24 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl xs:rounded-3xl flex items-center justify-center mx-auto transform -rotate-3 shadow-lg shadow-[#D4AF37]/5">
+            <MessageSquare className="w-10 h-10 xs:w-12 xs:h-12 text-[#D4AF37]" />
           </div>
           
-          <div className="space-y-4">
-            <h2 className="text-2xl sm:text-3xl font-sans font-black text-white uppercase tracking-tighter">
-              Bienvenue dans votre messagerie AFRIGOMBO.
+          <div className="space-y-3 xs:space-y-4 px-4">
+            <h2 className="afri-title-lg">
+              BIENVENUE DANS VOTRE MESSAGERIE.
             </h2>
-            <p className="text-zinc-400 text-sm font-medium leading-relaxed">
+            <p className="text-zinc-400 text-[11px] xs:text-sm font-medium leading-relaxed">
               Les conversations apparaîtront automatiquement après une candidature ou un contrat.
             </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full">
+          <div className="flex flex-col xs:flex-row items-center justify-center gap-3 xs:gap-4 pt-4 w-full px-4">
             <button 
               onClick={() => { if (onNavigateToSearch) onNavigateToSearch(); else onBack(); }}
-              className="w-full sm:w-1/2 py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-500 text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-md flex items-center justify-center gap-3 text-xs active:scale-95"
+              className="w-full xs:w-1/2 py-3.5 bg-zinc-900 border border-zinc-700 text-white font-black uppercase tracking-widest rounded-xl xs:rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 text-[10px] xs:text-xs active:scale-95 cursor-pointer"
             >
-              <Search className="w-4 h-4" /> Rechercher un Gombo
+              <Search className="w-3.5 h-3.5 xs:w-4 xs:h-4" /> Rechercher
             </button>
             <button 
               onClick={() => { if (onNavigateToPublish) onNavigateToPublish(); }}
-              className="w-full sm:w-1/2 py-4 bg-gradient-to-r from-[#D4AF37] to-[#F1C40F] hover:from-[#E06C00] hover:to-[#D4AF37] text-black font-black uppercase tracking-widest rounded-2xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] flex items-center justify-center gap-3 text-xs active:scale-95"
+              className="w-full xs:w-1/2 py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#F1C40F] text-black font-black uppercase tracking-widest rounded-xl xs:rounded-2xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] flex items-center justify-center gap-2 text-[10px] xs:text-xs active:scale-95 cursor-pointer"
             >
-              <Mic className="w-4 h-4" /> Publier un Gombo
+              <Mic className="w-3.5 h-3.5 xs:w-4 xs:h-4" /> Publier
             </button>
           </div>
         </div>
@@ -682,15 +678,15 @@ export default function MessagesView({
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto min-h-[75vh] flex flex-col md:flex-row bg-[#050505] rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl transition-all animate-fade-in mb-12 relative">
+    <div className="w-full h-full flex flex-col md:flex-row bg-[#050505] overflow-hidden transition-all animate-fade-in relative">
       
       {/* LEFT COLUMN: Conversation List */}
-      <div className={`w-full md:w-85 border-zinc-800 flex flex-col shrink-0 ${
-        activeConvo ? "hidden md:flex md:border-r" : "flex"
+      <div className={`w-full md:w-80 lg:w-96 border-zinc-800 flex flex-col shrink-0 ${
+        activeConvo ? "hidden md:flex md:border-r" : "flex h-full"
       }`}>
         
         {/* Header List */}
-        <div className="p-4 border-b border-zinc-900 bg-zinc-950/40 flex items-center justify-between">
+        <div className="afri-header flex items-center justify-between border-b border-zinc-900 bg-zinc-950/40">
           <div className="flex items-center gap-2">
             <button 
               onClick={onBack}
@@ -699,12 +695,12 @@ export default function MessagesView({
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
-            <h2 className="text-sm font-sans font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-1.5">
-              💬 MESSAGERIE PREMIUM
+            <h2 className="afri-title-sm text-[#D4AF37]">
+              MESSAGERIE
             </h2>
           </div>
           {conversations.length > 0 && (
-            <span className="text-[9px] font-mono font-black text-[#D4AF37] px-2 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+            <span className="afri-text-tiny font-black text-[#D4AF37] px-2 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20">
               {conversations.length} CONV
             </span>
           )}
@@ -718,7 +714,7 @@ export default function MessagesView({
               type="text"
               value={convoSearchQuery}
               onChange={(e) => setConvoSearchQuery(e.target.value)}
-              placeholder="Rechercher une conversation..."
+              placeholder="Rechercher..."
               className="w-full pl-9 pr-4 py-2 bg-zinc-900/60 border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#D4AF37] transition-colors"
             />
           </div>
@@ -896,7 +892,7 @@ export default function MessagesView({
                 </div>
 
                 {/* Message Body stream */}
-                <div className="flex-1 p-4 overflow-y-auto space-y-4 max-h-[480px] min-h-[350px] scrollbar-thin scrollbar-thumb-zinc-800">
+                <div className="flex-1 p-3 xs:p-4 overflow-y-auto space-y-3 xs:space-y-4 max-h-none h-full scrollbar-none">
                   {visibleMessages.length === 0 ? (
                     <div className="py-16 text-center text-zinc-550 space-y-2">
                       <ShieldAlert className="w-8 h-8 text-[#D4AF37]/50 mx-auto" />

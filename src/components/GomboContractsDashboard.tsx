@@ -253,10 +253,10 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 space-y-4">
           <Loader2 className="w-10 h-10 text-[#D4AF37] animate-spin" />
-          <p className="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">SÉCURISATION DU CENTRE DE SOUVERAINETÉ...</p>
+          <p className="afri-text-tiny text-zinc-600 uppercase">SÉCURISATION DU CENTRE...</p>
         </div>
       ) : filteredContracts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xs:gap-6">
           {filteredContracts.map((contract) => {
             const isClient = contract.clientId === currentUser.uid;
             const bInfo = getStatusBadge(contract.status);
@@ -265,41 +265,41 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
                 layout
                 key={contract.id}
                 onClick={() => setSelectedContractId(contract.id)}
-                className="group relative bg-[#080808] border border-zinc-800 rounded-3xl p-6 text-left hover:border-[#D4AF37]/50 transition-all active:scale-[0.98] overflow-hidden"
+                className="afri-card group relative p-4 xs:p-6 text-left hover:border-[#D4AF37]/50 transition-all active:scale-[0.98] overflow-hidden"
               >
                 {/* Background Decor */}
                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <Stamp className="w-24 h-24 rotate-12" />
+                  <ShieldCheck className="w-16 h-16 xs:w-24 xs:h-24 rotate-12" />
                 </div>
 
-                <div className="relative space-y-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <FileSignature className="w-4 h-4 text-[#D4AF37]" />
-                        <span className="text-[#D4AF37] text-[10px] font-mono font-bold tracking-widest uppercase">{contract.id}</span>
+                <div className="relative space-y-4 xs:space-y-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-1.5 xs:gap-2">
+                        <FileSignature className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#D4AF37]" />
+                        <span className="text-[#D4AF37] text-[9px] xs:text-[10px] font-mono font-bold tracking-widest uppercase truncate">#{contract.id.substring(0, 8)}</span>
                       </div>
-                      <h3 className="text-white font-sans font-black tracking-tighter group-hover:text-[#D4AF37] transition-colors line-clamp-1">{contract.title}</h3>
+                      <h3 className="text-sm xs:text-base text-white font-sans font-black tracking-tighter group-hover:text-[#D4AF37] transition-colors line-clamp-1">{contract.title}</h3>
                     </div>
-                    <div className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border shrink-0 ${bInfo.color}`}>
+                    <div className={`px-2 py-0.5 xs:px-2.5 xs:py-1 rounded-md text-[8px] xs:text-[9px] font-black uppercase tracking-widest border shrink-0 ${bInfo.color}`}>
                       {bInfo.label}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                    <div className="space-y-1">
-                      <p className="text-zinc-600 text-[8px] font-bold uppercase tracking-widest">Client</p>
-                      <p className="text-zinc-300 text-[11px] font-bold truncate max-w-[120px]">{contract.clientName}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <div className="space-y-0.5">
+                      <p className="afri-text-tiny text-zinc-600">Client</p>
+                      <p className="text-[10px] xs:text-[11px] text-zinc-300 font-bold truncate max-w-[100px] xs:max-w-[120px]">{contract.clientName}</p>
                     </div>
-                    <div className="h-6 w-px bg-zinc-850 hidden sm:block" />
-                    <div className="space-y-1">
-                      <p className="text-zinc-600 text-[8px] font-bold uppercase tracking-widest">Artiste</p>
-                      <p className="text-zinc-300 text-[11px] font-bold truncate max-w-[120px]">{contract.artistName}</p>
+                    <div className="h-4 xs:h-6 w-px bg-zinc-850" />
+                    <div className="space-y-0.5">
+                      <p className="afri-text-tiny text-zinc-600">Artiste</p>
+                      <p className="text-[10px] xs:text-[11px] text-zinc-300 font-bold truncate max-w-[100px] xs:max-w-[120px]">{contract.artistName}</p>
                     </div>
-                    <div className="h-6 w-px bg-zinc-850 hidden sm:block" />
-                    <div className="space-y-1">
-                      <p className="text-zinc-600 text-[8px] font-bold uppercase tracking-widest">Cachet Brut</p>
-                      <p className="text-white text-[11px] font-mono font-bold">{(contract.amount || 0).toLocaleString()} FCFA</p>
+                    <div className="h-4 xs:h-6 w-px bg-zinc-850" />
+                    <div className="space-y-0.5">
+                      <p className="afri-text-tiny text-zinc-600">Cachet</p>
+                      <p className="text-[10px] xs:text-[11px] text-white font-mono font-bold">{(contract.amount || 0).toLocaleString()} <span className="text-[8px]">FCFA</span></p>
                     </div>
                   </div>
 

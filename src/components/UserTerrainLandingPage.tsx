@@ -957,7 +957,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           {/* ==========================================
               2. ACTIONS RAPIDES (STYLE PREMIUM AFRIGOMBO)
              ========================================== */}
-      <div className={`bg-[#050505] border border-[#D4AF37]/30 rounded-3xl transition-all duration-300 shadow-[0_4px_25px_rgba(212,175,55,0.08)] ${isQuickActionsOpen ? "p-4 sm:p-5 space-y-4" : "py-2 px-4"}`}>
+      <div className={`afri-card transition-all duration-300 shadow-[0_4px_25px_rgba(212,175,55,0.08)] ${isQuickActionsOpen ? "p-3 sm:p-5 space-y-3 sm:space-y-4" : "py-2 px-3 sm:px-4"}`}>
         <button
           onClick={() => {
             setIsQuickActionsOpen(!isQuickActionsOpen);
@@ -965,17 +965,17 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           }}
           className="w-full flex justify-between items-center text-left focus:outline-none cursor-pointer hover:opacity-90 select-none"
         >
-          <h3 className="text-[11.5px] font-sans font-black tracking-widest text-white uppercase flex items-center gap-1.5">
-            <span>⚡ ACTIONS RAPIDES & COCKPIT</span>
+          <h3 className="afri-title-sm sm:afri-title-md text-white flex items-center gap-1.5">
+            <span>⚡ ACTIONS RAPIDES</span>
           </h3>
-          <span className="text-[11px] font-mono font-black text-[#D4AF37] bg-black border border-[#D4AF37]/20 w-6 h-6 rounded-lg flex items-center justify-center transition-all">
+          <span className="text-[8px] xs:text-[10px] font-mono font-black text-[#D4AF37] bg-black border border-[#D4AF37]/20 w-4.5 h-4.5 xs:w-5 xs:h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center transition-all">
             {isQuickActionsOpen ? "▲" : "▼"}
           </span>
         </button>
 
         <div
           className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${
-            isQuickActionsOpen ? "max-h-[600px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
+            isQuickActionsOpen ? "max-h-[800px] opacity-100 mt-1 sm:mt-2" : "max-h-0 opacity-0 pointer-events-none"
           }`}
         >
           <motion.div
@@ -984,13 +984,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               show: {
                 opacity: 1,
                 transition: {
-                  staggerChildren: 0.05
+                  staggerChildren: 0.04
                 }
               }
             }}
             initial="hidden"
             animate={isQuickActionsOpen ? "show" : "hidden"}
-            className="grid grid-cols-4 gap-2.5 sm:gap-4 w-full select-none"
+            className="grid grid-cols-4 gap-1.5 xs:gap-2 sm:gap-4 w-full select-none"
           >
              {[
                {
@@ -1065,7 +1065,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                    }}
                    whileTap={{ scale: 0.96 }}
                    onClick={action.action}
-                   className="aspect-square bg-[#050505] border-2 border-[#D4AF37]/35 shadow-[0_8px_30px_rgba(212,175,55,0.06)] rounded-[1.25rem] p-1.5 xs:p-2 sm:p-3 flex flex-col items-center justify-center gap-1 sm:gap-2.5 hover:bg-[#D4AF37]/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0"
+                   className="aspect-square bg-[#050505] border-2 border-[#D4AF37]/35 shadow-[0_8px_30px_rgba(212,175,55,0.06)] rounded-xl xs:rounded-2xl p-1 xs:p-1.5 sm:p-3 flex flex-col items-center justify-center gap-0.5 xs:gap-1 sm:gap-2.5 hover:bg-[#D4AF37]/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0"
                  >
                    {/* Top Badge */}
                    {action.badge !== undefined && (

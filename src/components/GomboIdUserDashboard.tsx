@@ -241,13 +241,13 @@ export default function GomboIdUserDashboard({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 afri-container afri-section">
       {/* =========================================================================
                                  GOMBO ID CARD (AFRITRUST TRUST ID STYLE)
          ========================================================================= */}
       <motion.div
         whileHover={{ scale: 1.01, y: -2 }}
-        className="relative overflow-hidden rounded-3xl border border-[#D4AF37]/35 bg-[#121214] p-6 sm:p-8 shadow-[0_0_30px_rgba(212,175,55,0.08)] transition-all duration-300"
+        className="relative overflow-hidden rounded-2xl xs:rounded-3xl border border-[#D4AF37]/35 bg-[#121214] p-4 xs:p-6 sm:p-8 shadow-[0_0_30px_rgba(212,175,55,0.08)] transition-all duration-300"
       >
         {/* Subtle decorative security grids in background */}
         <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none" />
@@ -272,13 +272,13 @@ export default function GomboIdUserDashboard({
           )}
         </div>
 
-        <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-4 xs:gap-6">
           
           {/* Main ID Details Block */}
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3 xs:gap-5">
             {/* Avatar section of Gombo ID card */}
             <div className="relative shrink-0">
-              <div className="w-20 h-20 rounded-full border-2 border-[#D4AF37] bg-[#0B0B0B] flex items-center justify-center font-bold text-3xl text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.25)] overflow-hidden">
+              <div className="w-16 h-16 xs:w-20 xs:h-20 rounded-full border-2 border-[#D4AF37] bg-[#0B0B0B] flex items-center justify-center font-bold text-2xl xs:text-3xl text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.25)] overflow-hidden">
                 {currentUser.avatarUrl ? (
                   <img src={currentUser.avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
@@ -286,54 +286,54 @@ export default function GomboIdUserDashboard({
                 )}
               </div>
               {currentUser.kycStatus === "approved" && (
-                <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#D4AF37] border-2 border-[#121214] flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.6)]">
-                  <Award className="w-3.5 h-3.5 text-black stroke-[3]" />
+                <div className="absolute bottom-0 right-0 w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-[#D4AF37] border-2 border-[#121214] flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.6)]">
+                  <Award className="w-3 xs:w-3.5 h-3 xs:h-3.5 text-black stroke-[3]" />
                 </div>
               )}
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-2xl font-display font-black text-white tracking-tight">
+            <div className="space-y-0.5 xs:space-y-1">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <h3 className="text-lg xs:text-xl font-display font-black text-white tracking-tight uppercase truncate max-w-[150px] xs:max-w-[200px]">
                   {currentUser.artisticName}
                 </h3>
                 {currentUser.kycStatus === "approved" && (
-                  <span className="inline-flex items-center gap-1 text-[9px] bg-[#D4AF37] text-black px-2 py-0.5 rounded font-black uppercase tracking-wider shadow">
-                    ★ ARTISTE CERTIFIÉ
+                  <span className="inline-flex items-center gap-1 text-[8px] xs:text-[9px] bg-[#D4AF37] text-black px-1.5 xs:px-2 py-0.5 rounded font-black uppercase tracking-wider shadow w-fit">
+                    ★ CERTIFIÉ
                   </span>
                 )}
               </div>
-              <p className="text-xs text-white/60 font-medium">Nom civil : {currentUser.name}</p>
+              <p className="afri-text-tiny text-white/60 font-medium">Nom : {currentUser.name}</p>
               
-              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 pt-1.5">
-                <span className="text-[10px] uppercase font-mono bg-white/5 border border-white/10 text-white/50 px-2 py-0.5 rounded">
-                  {currentUser.gomboIdNumber || "ID_ASSESSMENT_PENDING"}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1">
+                <span className="text-[9px] xs:text-[10px] uppercase font-mono bg-white/5 border border-white/10 text-white/50 px-1.5 xs:px-2 py-0.5 rounded">
+                  {currentUser.gomboIdNumber || "ID_PENDING"}
                 </span>
-                <span className="text-[#D4AF37] font-mono text-[10px]">📍 {currentUser.commune}</span>
-                <span className="text-white/30">•</span>
-                <span className="text-[10px] text-zinc-400 font-semibold">{currentUser.role === "admin" ? "Sénateur / Admin" : "Musicien Professionnel"}</span>
+                <span className="text-[#D4AF37] font-mono text-[9px] xs:text-[10px]">📍 {currentUser.commune}</span>
               </div>
             </div>
           </div>
 
           {/* Micro stats and certification badge */}
-          <div className="w-full md:w-auto flex flex-col sm:flex-row md:flex-col items-stretch md:items-end gap-3 bg-black/40 border border-white/5 p-4 rounded-2xl min-w-[220px]">
+          <div className="w-full md:w-auto flex flex-col sm:flex-row md:flex-col items-stretch md:items-end gap-3 bg-black/40 border border-white/5 p-3 xs:p-4 rounded-xl xs:rounded-2xl min-w-[200px] sm:min-w-[220px]">
             <div className="flex-1">
-              <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">STATUT DE L'EMPREINTE :</span>
-              <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-black tracking-wide uppercase border ${statusInfo.color}`}>
+              <span className="afri-text-tiny text-zinc-500 block">STATUT DE L'EMPREINTE :</span>
+              <span className={`inline-block mt-1 px-3 py-1 rounded-full text-[10px] xs:text-xs font-black tracking-wide uppercase border ${statusInfo.color}`}>
                 {statusInfo.label}
               </span>
             </div>
             
-            <div className="text-left md:text-right border-t md:border-t-0 sm:border-l md:border-l-0 border-white/5 pt-2 sm:pt-0 md:pt-2 sm:pl-3 md:pl-0">
-              <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">NIVEAU GOMBO ID :</span>
-              <strong className="text-lg font-sans font-black text-[#D4AF37] block mt-0.5">
+            <div className="text-left md:text-right border-t md:border-t-0 sm:border-l md:border-l-0 border-white/5 pt-2 sm:pt-0 md:pt-2 sm:pl-3 md:pl-0 flex flex-col items-start sm:items-end">
+              <span className="afri-text-tiny text-zinc-500 block">NIVEAU GOMBO ID :</span>
+              <strong className="text-base xs:text-lg font-sans font-black text-[#D4AF37] block mt-0.5">
                 NIVEAU {currentUser.gomboId?.niveau || 1}
               </strong>
-              <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold mt-2">SCORE CONFIANCE :</span>
-              <strong className="text-sm font-sans font-black text-emerald-400 block mt-0.5">
-                {currentUser.gomboId?.scoreConfiance || 0} / 100
-              </strong>
+              <div className="mt-2 flex flex-col items-start sm:items-end">
+                <span className="afri-text-tiny text-zinc-500 block uppercase font-bold">SCORE CONFIANCE :</span>
+                <strong className="text-xs xs:text-sm font-sans font-black text-emerald-400 block mt-0.5">
+                  {currentUser.gomboId?.scoreConfiance || 0} / 100
+                </strong>
+              </div>
             </div>
           </div>
 
@@ -342,25 +342,25 @@ export default function GomboIdUserDashboard({
         {/* =========================================================================
                  MASSIVE "TRUST ID" INTERACTIVE BANNER BUTTON (FULL WIDTH ACTUATOR)
            ========================================================================= */}
-        <div className="mt-8">
+        <div className="mt-6 sm:mt-8">
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={() => setIsOpen(true)}
-            className="w-full py-4 px-6 rounded-2xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] font-display font-black tracking-widest uppercase transition-all duration-300 shadow-[0_0_25px_rgba(212,175,55,0.25)] flex items-center justify-center gap-3 cursor-pointer text-center"
+            className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#0B0B0B] font-display font-black tracking-widest uppercase transition-all duration-300 shadow-[0_0_25px_rgba(212,175,55,0.25)] flex items-center justify-center gap-2 sm:gap-3 cursor-pointer text-center"
           >
-            <ShieldCheck className="w-6 h-6 text-[#0B0B0B] stroke-[2.5]" />
-            <span className="text-sm sm:text-base tracking-widest">
-              {currentUser.kycStatus === "none" ? "ACTIVER MON GOMBO ID (TRUST ID) 🛡️" : ""}
-              {currentUser.kycStatus === "pending" ? "GOMBO ID TRANSMIS • VOIR MON DOSSIER ⏳" : ""}
-              {currentUser.kycStatus === "approved" ? "GOMBO ID DE SOUVERAINETÉ CERTIFIÉ ★" : ""}
-              {currentUser.kycStatus === "rejected" ? "GOMBO ID REJETÉ • RETENTER L'IMPACT 🚫" : ""}
-              {currentUser.kycStatus === "info_required" ? "ACTION REQUISE • CORRIGER L'ID 🟡" : ""}
+            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-[#0B0B0B] stroke-[2.5]" />
+            <span className="text-[11px] xs:text-xs sm:text-base tracking-widest">
+              {currentUser.kycStatus === "none" ? "ACTIVER MON GOMBO ID 🛡️" : ""}
+              {currentUser.kycStatus === "pending" ? "DOSSIER TRANSMIS ⏳" : ""}
+              {currentUser.kycStatus === "approved" ? "GOMBO ID CERTIFIÉ ★" : ""}
+              {currentUser.kycStatus === "rejected" ? "REJETÉ • RETENTER 🚫" : ""}
+              {currentUser.kycStatus === "info_required" ? "ACTION REQUISE 🟡" : ""}
             </span>
           </motion.button>
           
-          <p className="text-center text-[10px] text-zinc-500 font-mono mt-3">
-            La clé d'excellence est régulée par le consortium souverain d'AFRIGOMBO Showbiz.
+          <p className="text-center afri-text-tiny text-zinc-500 mt-3">
+            La clé d'excellence est régulée par le consortium AFRIGOMBO.
           </p>
         </div>
 

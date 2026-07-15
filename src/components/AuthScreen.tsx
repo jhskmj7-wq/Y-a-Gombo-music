@@ -269,15 +269,26 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
         {/* Brand logo header */}
         <div className="mt-4 mb-8">
-          <div className="inline-flex items-center justify-center p-4 bg-[#D4AF37]/10 text-[#D4AF37] rounded-2xl mb-4 border border-[#D4AF37]/20 shadow-md">
-            <Flame className="w-10 h-10 fill-current" />
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-[#D4AF37]/5 text-[#D4AF37] rounded-full mb-4 border border-[#D4AF37]/20 shadow-lg overflow-hidden">
+            <img 
+              src="/public/logo_afrigombo.png" 
+              alt="AFRIGOMBO Logo" 
+              className="w-full h-full object-contain"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <h1 className="text-3xl font-black text-[#D4AF37] tracking-wider uppercase mb-1">
             AFRIGOMBO
           </h1>
-          <h2 className="text-sm font-bold text-gray-400 tracking-widest uppercase mb-4">
-            Y'A GOMBO MUSIC
+          <h2 className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-1">
+            LE TEMPLE DU GOMBO MUSICAL
           </h2>
+          <div className="flex items-center justify-center gap-1.5 mb-4">
+            <Lock className="w-3 h-3 text-[#D4AF37]" />
+            <span className="text-[9px] font-black text-[#D4AF37] uppercase tracking-[0.15em] font-mono">
+              Vos cachets 100% sécurisés
+            </span>
+          </div>
           <div className="h-[1px] w-1/3 bg-[#D4AF37]/20 mx-auto mb-4" />
           <p className="text-xs text-gray-300 font-sans font-bold leading-relaxed whitespace-pre-line max-w-sm mx-auto">
             {"Le Temple du Gombo :\nVos opportunités musicales certifiées,\nvos cachets sécurisés."}

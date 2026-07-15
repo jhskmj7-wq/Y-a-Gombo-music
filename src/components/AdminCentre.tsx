@@ -2416,65 +2416,61 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
         {/* ELITE UPPER STATUS BAR (AFRIGOMBO PREMIUM HEADER OR EXCLUSIVE ADMIN HEADER) */}
         {activeMenu !== "super_admin" && (
           perspective === "admin" ? (
-            <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center px-4 sm:px-8 py-5 border-b border-[#D4AF37]/35 bg-[#030303]/98 backdrop-blur shrink-0 gap-4 w-full select-none animate-fadeIn">
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 sm:px-8 py-3 sm:py-5 border-b border-[#D4AF37]/35 bg-[#030303]/98 backdrop-blur shrink-0 gap-2 sm:gap-4 w-full select-none animate-fadeIn">
               {/* Left Section: Title & Animated Shield */}
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/35 shadow-[0_0_15px_rgba(212,175,55,0.15)] relative">
-                  <ShieldCheck className="w-5.5 h-5.5 text-[#D4AF37] animate-pulse" />
-                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/35 shadow-[0_0_10px_rgba(212,175,55,0.1)] relative">
+                  <ShieldCheck className="w-4 h-4 sm:w-5.5 sm:h-5.5 text-[#D4AF37] animate-pulse" />
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
                 </div>
                 <div>
-                  <h1 className="text-sm font-sans font-black uppercase tracking-[0.2em] text-[#D4AF37] leading-none">
+                  <h1 className="text-[10px] sm:text-sm font-sans font-black uppercase tracking-widest sm:tracking-[0.2em] text-[#D4AF37] leading-none">
                     CENTRE DE COMMANDEMENT
                   </h1>
-                  <p className="text-[9px] font-mono tracking-wider text-white uppercase mt-1.5 opacity-85">
-                    ADMINISTRATION IMPÉRIALE - SÉCURISÉ
+                  <p className="text-[7px] sm:text-[9px] font-mono tracking-wider text-white uppercase mt-0.5 sm:mt-1.5 opacity-85">
+                    ADMINISTRATION IMPÉRIALE
                   </p>
                 </div>
               </div>
 
               {/* Right Section: Firebase State, Date/Time, Connections count */}
-              <div className="flex flex-wrap items-center gap-2 lg:gap-4 w-full lg:w-auto text-xs font-mono">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-4 w-full sm:w-auto text-[9px] sm:text-xs font-mono">
                 {/* Firebase Status Badge */}
-                <div className="flex items-center gap-2 bg-black border border-zinc-800/80 rounded-xl px-3 py-1.5 shadow-sm">
+                <div className="flex items-center gap-1.5 bg-black border border-zinc-800/80 rounded-lg sm:rounded-xl px-2 py-1 sm:px-3 sm:py-1.5 shadow-sm">
                   {firebaseSyncState === "synced" && (
                     <>
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[10px] text-zinc-300 font-bold uppercase tracking-wider">🟢 Synchronisé</span>
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[8px] sm:text-[10px] text-zinc-300 font-bold uppercase tracking-wider">Synchronisé</span>
                     </>
                   )}
                   {firebaseSyncState === "syncing" && (
                     <>
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                      <span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">🟠 Synchronisation...</span>
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      <span className="text-[8px] sm:text-[10px] text-amber-500 font-bold uppercase tracking-wider">Sync...</span>
                     </>
                   )}
                   {firebaseSyncState === "offline" && (
                     <>
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                      <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider">🔴 Hors ligne</span>
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-500 animate-pulse" />
+                      <span className="text-[8px] sm:text-[10px] text-red-500 font-bold uppercase tracking-wider">Hors ligne</span>
                     </>
                   )}
                 </div>
 
                 {/* Connections Count */}
-                <div className="flex items-center gap-1.5 bg-black border border-zinc-800/80 rounded-xl px-3 py-1.5">
-                  <Users className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase">
-                    Connexions: <span className="text-white">{connectionsCount}</span>
+                <div className="flex items-center gap-1.5 bg-black border border-zinc-800/80 rounded-lg sm:rounded-xl px-2 py-1 sm:px-3 sm:py-1.5">
+                  <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]" />
+                  <span className="text-[8px] sm:text-[10px] text-zinc-400 font-bold uppercase whitespace-nowrap">
+                    CONNS: <span className="text-white">{connectionsCount}</span>
                   </span>
                 </div>
 
                 {/* Date & Time */}
-                <div className="flex items-center gap-1.5 bg-black border border-zinc-800/80 rounded-xl px-3 py-1.5 text-zinc-400">
-                  <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  <span className="text-[10px] text-white font-bold">{liveAdminTime}</span>
+                <div className="flex items-center gap-1.5 bg-black border border-zinc-800/80 rounded-lg sm:rounded-xl px-2 py-1 sm:px-3 sm:py-1.5 text-zinc-400">
+                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]" />
+                  <span className="text-[8px] sm:text-[10px] text-white font-bold">{liveAdminTime}</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-black border border-zinc-800/80 rounded-xl px-3 py-1.5 text-zinc-400">
-                  <Calendar className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  <span className="text-[10px] text-white font-bold uppercase">{new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>
-                </div>
-
+                
                 {/* Quick exit to user view button */}
                 <button
                   onClick={() => {
@@ -2482,21 +2478,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     setActiveMenu("user_terrain");
                     addToTerminal("[INFO] Retour au Terrain d'Action.");
                   }}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-mono font-bold uppercase text-zinc-400 hover:text-[#D4AF37] bg-zinc-950 border border-zinc-800 hover:border-[#D4AF37]/35 rounded-xl transition-all cursor-pointer"
+                  className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 text-[8px] sm:text-[10px] font-mono font-bold uppercase text-zinc-400 hover:text-[#D4AF37] bg-zinc-950 border border-zinc-800 hover:border-[#D4AF37]/35 rounded-lg sm:rounded-xl transition-all cursor-pointer ml-auto sm:ml-0"
                 >
                   ← Terrain
                 </button>
               </div>
             </header>
           ) : (
-            <header className="flex flex-col px-2 xs:px-3 sm:px-8 py-3 sm:py-5 min-h-[80px] sm:min-h-[110px] border-b border-[#D4AF37]/40 bg-gradient-to-b from-[#030303] to-[#0a0800] backdrop-blur shrink-0 gap-2 sm:gap-4 w-full animate-fadeIn select-none shadow-[0_4px_30px_rgba(212,175,55,0.05)] rounded-b-2xl">
+            <header className="flex flex-col afri-container py-2 sm:py-4 min-h-[70px] sm:min-h-[100px] border-b border-[#D4AF37]/40 bg-gradient-to-b from-[#030303] to-[#0a0800] backdrop-blur shrink-0 gap-1.5 sm:gap-3 w-full animate-fadeIn select-none shadow-[0_4px_30px_rgba(212,175,55,0.05)] rounded-b-xl sm:rounded-b-2xl">
               {/* TOP ROW */}
-              <div className="flex justify-between items-center w-full gap-1.5 xs:gap-2 sm:gap-3">
+              <div className="flex justify-between items-center w-full gap-1 xs:gap-1.5 sm:gap-3">
                 {/* Left Side: Hamburger Trigger Button */}
                 <button
                   id="hamburger-trigger"
                   onClick={() => setIsSidebarOpen(true)}
-                  className="w-8 h-8 xs:w-9 xs:h-9 sm:w-12 sm:h-12 text-[#D4AF37] hover:text-[#F1C40F] hover:bg-[#D4AF37]/10 border-2 border-[#D4AF37]/30 hover:border-[#D4AF37]/60 rounded-lg sm:rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+                  className="afri-icon-btn text-[#D4AF37] hover:text-[#F1C40F] hover:bg-[#D4AF37]/10 border border-[#D4AF37]/30 hover:border-[#D4AF37]/60 rounded-lg sm:rounded-xl transition-all focus:outline-none bg-black/60 shrink-0 select-none shadow-[0_0_10px_rgba(212,175,55,0.1)] p-1.5 sm:p-2.5"
                   title="Ouvrir le menu"
                 >
                   <Menu className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2.5]" />
@@ -2504,15 +2500,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 {/* Middle Brand Section */}
                 <div className="flex flex-col items-center justify-center text-center select-none flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 sm:gap-3">
-                    {/* Logo AFRIGOMBO (A stylized with crown approximation) */}
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    {/* Logo AFRIGOMBO */}
                     <motion.div
                       animate={{
                         scale: [1, 1.05, 1],
                         boxShadow: [
-                          "0 0 15px rgba(212,175,55,0.3)",
-                          "0 0 25px rgba(212,175,55,0.7)",
-                          "0 0 15px rgba(212,175,55,0.3)"
+                          "0 0 10px rgba(212,175,55,0.2)",
+                          "0 0 20px rgba(212,175,55,0.5)",
+                          "0 0 10px rgba(212,175,55,0.2)"
                         ]
                       }}
                       transition={{
@@ -2520,26 +2516,36 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         repeat: Infinity,
                         ease: "easeInOut"
                       }}
-                      className="w-8 h-8 xs:w-9 xs:h-9 sm:w-14 sm:h-14 rounded-full bg-black border border-[#D4AF37] sm:border-2 overflow-hidden flex items-center justify-center select-none shrink-0 cursor-pointer"
+                      className="w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 rounded-full bg-black border border-[#D4AF37] sm:border-2 overflow-hidden flex items-center justify-center select-none shrink-0 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.3)]"
                     >
                       <div className="w-full h-full flex items-center justify-center bg-black">
-                        <svg viewBox="0 0 40 40" className="w-4 h-4 xs:w-5 xs:h-5 sm:w-8 sm:h-8 text-[#D4AF37]">
-                          <path d="M20 5 L10 35 L15 35 L20 20 L25 35 L30 35 Z" fill="currentColor" />
-                          <path d="M14 12 L20 2 L26 12 Z" fill="currentColor" />
-                        </svg>
+                        <img 
+                          src="/public/logo_afrigombo.png" 
+                          alt="AFRIGOMBO Logo" 
+                          className="w-full h-full object-contain"
+                          referrerPolicy="no-referrer"
+                        />
                       </div>
                     </motion.div>
-                    <span className="text-base xs:text-lg sm:text-3xl font-sans font-black tracking-[0.1em] text-white leading-none uppercase font-display truncate" style={{ textShadow: "0 2px 10px rgba(212,175,55,0.5)" }}>
+                    <span className="text-[13px] xs:text-sm sm:text-2xl font-sans font-black tracking-tight sm:tracking-[0.1em] text-white leading-none uppercase font-display truncate" style={{ textShadow: "0 2px 8px rgba(212,175,55,0.4)" }}>
                       AFRIGOMBO
                     </span>
                   </div>
-                  <span className="text-[7px] xs:text-[9px] sm:text-xs font-sans text-zinc-300 leading-tight mt-0.5 sm:mt-1 truncate w-full max-w-full">
-                    le temple du Gombo musical
-                  </span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[7px] sm:text-[9px] font-mono tracking-widest text-[#D4AF37] mt-0.5 sm:mt-1 truncate w-full max-w-full uppercase font-black">
+                      le temple du Gombo musical
+                    </span>
+                    <div className="flex items-center gap-1 mt-0.5 opacity-80">
+                      <Lock className="w-[6px] sm:w-[8px] text-[#D4AF37]" />
+                      <span className="text-[5px] sm:text-[7px] font-mono tracking-wider text-zinc-400 uppercase font-bold">
+                        Vos cachets 100% sécurisés
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Right Controls Row */}
-                <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-4 shrink-0">
+                <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-4 shrink-0">
                   {/* --- 1. NOTIFICATIONS --- */}
                   {activeMenu !== "user_edit_profile" && (
                     <button
@@ -2548,17 +2554,17 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         setActiveMenu("user_notifications");
                         addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
                       }}
-                      className="text-[#D4AF37] hover:text-[#F1C40F] transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none"
+                      className="text-[#D4AF37] hover:text-[#F1C40F] transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none p-1 sm:p-0"
                       title="Notifications"
                     >
-                      <Bell className={`w-5 h-5 sm:w-7 sm:h-7 ${realNotifications.filter(n => !n.read).length > 0 ? "animate-pulse text-red-500" : ""}`} strokeWidth={2} />
+                      <Bell className={`w-4 h-4 sm:w-6 sm:h-6 ${realNotifications.filter(n => !n.read).length > 0 ? "animate-pulse text-red-500" : ""}`} strokeWidth={2.5} />
                       {realNotifications.filter(n => !n.read).length > 0 && (
                         <motion.span
                           key={realNotifications.filter(n => !n.read).length}
                           initial={{ scale: 1 }}
-                          animate={{ scale: [1, 1.4, 1] }}
+                          animate={{ scale: [1, 1.3, 1] }}
                           transition={{ duration: 0.3 }}
-                          className="absolute -top-1 -right-1 bg-red-600 text-white font-mono text-[7px] sm:text-[10px] font-black min-w-3.5 h-3.5 sm:min-w-6 sm:h-6 rounded-full flex items-center justify-center px-0.5 sm:px-1 border border-[#050505] shadow-sm"
+                          className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-600 text-white font-mono text-[6px] sm:text-[9px] font-black min-w-[12px] h-[12px] sm:min-w-[20px] sm:h-[20px] rounded-full flex items-center justify-center px-0.5 sm:px-1 border border-[#050505] shadow-sm"
                         >
                           {realNotifications.filter(n => !n.read).length > 99 ? '99+' : realNotifications.filter(n => !n.read).length}
                         </motion.span>
@@ -2566,12 +2572,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     </button>
                   )}
 
-                  {/* --- 2. WALLET (ALWAYS VISIBLE) --- */}
-                  <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 shrink-0">
-                    <CreditCard className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#D4AF37]" />
+                  {/* --- 2. WALLET --- */}
+                  <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#D4AF37]/30 bg-black/40 shrink-0">
+                    <CreditCard className="w-3 h-3 sm:w-5 sm:h-5 text-[#D4AF37]" />
                     <div className="flex flex-col">
-                      <span className="hidden sm:block text-[9px] font-mono font-bold text-zinc-400 uppercase tracking-widest leading-none">Wallet</span>
-                      <span className="text-[9px] xs:text-[10px] sm:text-sm font-black text-[#D4AF37] leading-none mt-0 sm:mt-0.5">{profile?.walletBalance?.toLocaleString('fr-FR') || 0} <span className="hidden xs:inline">FCFA</span><span className="inline xs:hidden">F</span></span>
+                      <span className="text-[8.5px] sm:text-sm font-black text-[#D4AF37] leading-none">{profile?.walletBalance?.toLocaleString('fr-FR') || 0} <span className="hidden xs:inline">FCFA</span><span className="inline xs:hidden">F</span></span>
                     </div>
                   </div>
 
@@ -2579,7 +2584,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   <div className="flex items-center gap-1 sm:gap-3 shrink-0">
                     <div 
                       id="profile-avatar"
-                      className="w-8 h-8 xs:w-9 xs:h-9 sm:w-12 sm:h-12 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none relative shadow-[0_0_15px_rgba(212,175,55,0.25)] hover:border-[#F1C40F] hover:shadow-[0_0_25px_rgba(212,175,55,0.4)]" 
+                      className="w-7 h-7 xs:w-8 xs:h-8 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37] overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none relative shadow-[0_0_10px_rgba(212,175,55,0.2)] hover:border-[#F1C40F]" 
                       title="Profil Utilisateur" 
                       onClick={() => { 
                         if (!currentUser) {
@@ -2593,13 +2598,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       {profile?.avatarUrl || currentUser?.photoURL ? (
                         <img src={profile?.avatarUrl || currentUser?.photoURL || ""} alt="User Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
-                        <span className="text-[#D4AF37] font-sans text-xs sm:text-sm font-black uppercase">
+                        <span className="text-[#D4AF37] font-sans text-[10px] sm:text-sm font-black uppercase">
                           {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
                         </span>
                       )}
                       {(profile?.isCertified || profile?.gomboIdNumber) && (
-                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#D4AF37] rounded-full border-2 border-black flex items-center justify-center">
-                          <CheckCircle2 className="w-2 h-2 text-black" strokeWidth={4} />
+                        <span className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-[#D4AF37] rounded-full border border-black flex items-center justify-center">
+                          <CheckCircle2 className="w-2 h-2 text-black" strokeWidth={5} />
                         </span>
                       )}
                     </div>
@@ -2608,20 +2613,20 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </div>
 
               {/* BOTTOM ROW: DYNAMIC PILL */}
-              <div className="flex justify-center w-full mt-1 sm:mt-2 overflow-hidden px-0 sm:px-2">
-                <div className="flex flex-nowrap items-center justify-start md:justify-center gap-x-4 sm:gap-x-6 px-4 py-1.5 sm:py-2.5 rounded-full border border-[#D4AF37]/40 bg-black/60 shadow-[0_0_15px_rgba(212,175,55,0.1)] w-full max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none] snap-x">
-                  <span className="text-[9px] xs:text-[10px] sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
-                    <span className="text-emerald-500 mr-1.5">🟢</span>
+              <div className="flex justify-center w-full mt-1 sm:mt-1.5 overflow-hidden">
+                <div className="flex flex-nowrap items-center justify-start sm:justify-center gap-x-3 sm:gap-x-5 px-3 py-1 sm:py-2 rounded-full border border-[#D4AF37]/30 bg-black/60 shadow-sm w-full max-w-full overflow-x-auto scrollbar-none snap-x">
+                  <span className="text-[8px] sm:text-xs font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
+                    <span className="text-emerald-500 mr-1">🟢</span>
                     <strong className="text-[#D4AF37]">{users.filter(u => u.status === 'active').length}</strong> artistes
                   </span>
-                  <span className="text-zinc-600 shrink-0">|</span>
-                  <span className="text-[9px] xs:text-[10px] sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
-                    <span className="text-[#D4AF37] mr-1.5">⚡</span>
+                  <span className="text-zinc-700 shrink-0">|</span>
+                  <span className="text-[8px] sm:text-xs font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
+                    <span className="text-[#D4AF37] mr-1">⚡</span>
                     <strong className="text-[#D4AF37]">{renforts.filter(r => r.status === 'active').length}</strong> urgences
                   </span>
-                  <span className="text-zinc-600 shrink-0">|</span>
-                  <span className="text-[9px] xs:text-[10px] sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
-                    <span className="text-[#D4AF37] mr-1.5">🤝</span>
+                  <span className="text-zinc-700 shrink-0">|</span>
+                  <span className="text-[8px] sm:text-xs font-sans font-medium text-zinc-300 whitespace-nowrap snap-center shrink-0">
+                    <span className="text-[#D4AF37] mr-1">🤝</span>
                     <strong className="text-[#D4AF37]">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats
                   </span>
                 </div>
@@ -2683,7 +2688,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
             onScroll={(e) => {
               scrollPositionsRef.current["user_terrain"] = e.currentTarget.scrollTop;
             }}
-            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none animate-fadeIn text-left scroll-smooth [-webkit-overflow-scrolling:touch]" : "hidden"}
+            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overflow-x-hidden afri-container afri-section scrollbar-none animate-fadeIn text-left scroll-smooth [-webkit-overflow-scrolling:touch]" : "hidden"}
             style={{ overscrollBehaviorY: "contain" }}
           >
             <UserTerrainLandingPage
@@ -2771,7 +2776,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
-                className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none scroll-smooth [-webkit-overflow-scrolling:touch]"
+                className="h-full w-full overflow-y-auto overflow-x-hidden afri-container afri-section scrollbar-none scroll-smooth [-webkit-overflow-scrolling:touch]"
                 style={{ overscrollBehaviorY: "contain" }}
               >
                 
@@ -2821,68 +2826,64 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
                 // Toast status when applying
                 return (
-                  <div className="space-y-8 animate-fadeIn pb-24">
+                  <div className="afri-container space-y-6 xs:space-y-8 animate-fadeIn pb-24">
                     {/* STATISTIQUES PRESTIGE EN TEMPS RÉEL (STYLE IMAGE PARFAIT) */}
-                    <div className="grid grid-cols-4 divide-x divide-zinc-800/60 bg-black/40 border border-[#D4AF37]/15 rounded-2xl py-3 px-1 sm:p-4 select-none">
+                    <div className="grid grid-cols-4 divide-x divide-zinc-800/60 bg-black/40 border border-[#D4AF37]/15 rounded-xl xs:rounded-2xl py-1.5 xs:py-3 px-0.5 xs:px-1 sm:p-4 select-none mb-4 xs:mb-6">
                       {/* ARTISTES */}
-                      <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-3">
-                        <div className="p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
-                          <Users className="w-4 h-4 sm:w-5 h-5" />
+                      <div className="flex flex-col items-center xs:flex-row xs:items-center gap-0.5 xs:gap-2 sm:gap-3 pl-0.5 xs:pl-1 sm:pl-3 text-center xs:text-left">
+                        <div className="p-0.5 xs:p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                          <Users className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 h-5" />
                         </div>
-                        <div className="flex flex-col text-left">
-                          <span className="text-[7.5px] sm:text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block leading-none">ARTISTES</span>
-                          <strong className="text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
+                        <div className="flex flex-col">
+                          <span className="text-[5.5px] xs:text-[7.5px] sm:text-[9px] font-mono tracking-tighter xs:tracking-widest text-zinc-500 font-bold uppercase block leading-none">ARTISTES</span>
+                          <strong className="text-[9px] xs:text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
                             {(users.length + 12450).toLocaleString("fr-FR")}
                           </strong>
-                          <span className="text-[7.5px] sm:text-[9px] font-sans text-emerald-400 block leading-none mt-0.5 sm:mt-1">+142 ce mois</span>
                         </div>
                       </div>
 
                       {/* CACHETS */}
-                      <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-3">
-                        <div className="p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
-                          <Award className="w-4 h-4 sm:w-5 h-5" />
+                      <div className="flex flex-col items-center xs:flex-row xs:items-center gap-0.5 xs:gap-2 sm:gap-3 pl-0.5 xs:pl-1 sm:pl-3 text-center xs:text-left">
+                        <div className="p-0.5 xs:p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                          <Award className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 h-5" />
                         </div>
-                        <div className="flex flex-col text-left">
-                          <span className="text-[7.5px] sm:text-[9px] font-mono tracking-widest text-[#D4AF37]/95 font-bold uppercase block leading-none">CACHETS</span>
-                          <strong className="text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
+                        <div className="flex flex-col">
+                          <span className="text-[5.5px] xs:text-[7.5px] sm:text-[9px] font-mono tracking-tighter xs:tracking-widest text-[#D4AF37]/95 font-bold uppercase block leading-none">CACHETS</span>
+                          <strong className="text-[9px] xs:text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
                             {(gombos.length + 2840).toLocaleString("fr-FR")}
                           </strong>
-                          <span className="text-[7.5px] sm:text-[9px] font-sans text-emerald-400 block leading-none mt-0.5 sm:mt-1">+18% ce mois</span>
                         </div>
                       </div>
 
                       {/* OPPORTUNITÉS */}
-                      <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-3">
-                        <div className="p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
-                          <Music className="w-4 h-4 sm:w-5 h-5" />
+                      <div className="flex flex-col items-center xs:flex-row xs:items-center gap-0.5 xs:gap-2 sm:gap-3 pl-0.5 xs:pl-1 sm:pl-3 text-center xs:text-left">
+                        <div className="p-0.5 xs:p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                          <Music className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 h-5" />
                         </div>
-                        <div className="flex flex-col text-left">
-                          <span className="text-[7.5px] sm:text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block leading-none">OPPORTUNITÉS</span>
-                          <strong className="text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
+                        <div className="flex flex-col">
+                          <span className="text-[5.5px] xs:text-[7.5px] sm:text-[9px] font-mono tracking-tighter xs:tracking-widest text-zinc-500 font-bold uppercase block leading-none">OPPS</span>
+                          <strong className="text-[9px] xs:text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
                             {(gombos.length + posts.length + 360).toLocaleString("fr-FR")}
                           </strong>
-                          <span className="text-[7.5px] sm:text-[9px] font-sans text-emerald-400 block leading-none mt-0.5 sm:mt-1">En ligne</span>
                         </div>
                       </div>
 
                       {/* CERTIFIÉS */}
-                      <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-3">
-                        <div className="p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
-                          <ShieldCheck className="w-4 h-4 sm:w-5 h-5" />
+                      <div className="flex flex-col items-center xs:flex-row xs:items-center gap-0.5 xs:gap-2 sm:gap-3 pl-0.5 xs:pl-1 sm:pl-3 text-center xs:text-left">
+                        <div className="p-0.5 xs:p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                          <ShieldCheck className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 h-5" />
                         </div>
-                        <div className="flex flex-col text-left">
-                          <span className="text-[7.5px] sm:text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block leading-none">CERTIFIÉS</span>
-                          <strong className="text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
+                        <div className="flex flex-col">
+                          <span className="text-[5.5px] xs:text-[7.5px] sm:text-[9px] font-mono tracking-tighter xs:tracking-widest text-zinc-500 font-bold uppercase block leading-none">ID</span>
+                          <strong className="text-[9px] xs:text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
                             {(users.filter(u => u.kycStatus === "approved").length + 960).toLocaleString("fr-FR")}
                           </strong>
-                          <span className="text-[7.5px] sm:text-[9px] font-sans text-[#D4AF37] block leading-none mt-0.5 sm:mt-1 font-bold">GOMBO ID</span>
                         </div>
                       </div>
                     </div>
 
                     {/* BARRE D'ACTIONS RAPIDES */}
-                    <div className="grid grid-cols-4 gap-2 sm:gap-4 select-none">
+                    <div className="grid grid-cols-4 gap-1.5 xs:gap-2 sm:gap-4 select-none mb-6">
                       {/* LIVE */}
                       <button
                         onClick={() => {
@@ -2890,13 +2891,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           addToTerminal("[INTÉRACTIF] Filtre LIVE : tous les cachets et directs actifs.");
                           try { audioSynth.playTamTam(true); } catch (e) {}
                         }}
-                        className="p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-emerald-500 rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
+                        className="p-1.5 xs:p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-emerald-500 rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
                       >
                         <div className="flex items-center gap-1 sm:gap-1.5 w-full">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                          <span className="text-[8px] sm:text-[11px] font-mono font-black text-white tracking-widest uppercase">LIVE</span>
+                          <span className="w-1.5 h-1.5 xs:w-2 xs:h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                          <span className="text-[7px] xs:text-[8px] sm:text-[11px] font-mono font-black text-white tracking-tighter xs:tracking-widest uppercase">LIVE</span>
                         </div>
-                        <p className="text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-1 sm:mt-2 uppercase">En direct</p>
+                        <p className="text-[6px] xs:text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-0.5 sm:mt-2 uppercase">En direct</p>
                       </button>
 
                       {/* ACTUS */}
@@ -2906,13 +2907,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           addToTerminal("[INTÉRACTIF] Filtre ACTUS : échos d'artistes d'Abidjan.");
                           try { audioSynth.playTamTam(true); } catch (e) {}
                         }}
-                        className="p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-[#D4AF37] rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
+                        className="p-1.5 xs:p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-[#D4AF37] rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
                       >
                         <div className="flex items-center gap-1 sm:gap-1.5 w-full">
-                          <Award className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] shrink-0" />
-                          <span className="text-[8px] sm:text-[11px] font-mono font-black text-white tracking-widest uppercase">ACTUS</span>
+                          <Award className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 text-[#D4AF37] shrink-0" />
+                          <span className="text-[7px] xs:text-[8px] sm:text-[11px] font-mono font-black text-white tracking-tighter xs:tracking-widest uppercase">ACTUS</span>
                         </div>
-                        <p className="text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-1 sm:mt-2 uppercase">Voir les actus</p>
+                        <p className="text-[6px] xs:text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-0.5 sm:mt-2 uppercase">Échos</p>
                       </button>
 
                       {/* PUBLIER */}
@@ -2924,13 +2925,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             try { audioSynth.playValidationSuccess(); } catch (e) {}
                           });
                         }}
-                        className="p-2 sm:p-4 bg-[#D4AF37] hover:bg-[#B48F17] rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95 shadow-[0_4px_12px_rgba(212,175,55,0.2)]"
+                        className="p-1.5 xs:p-2 sm:p-4 bg-[#D4AF37] hover:bg-[#B48F17] rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95 shadow-[0_4px_12px_rgba(212,175,55,0.2)]"
                       >
                         <div className="flex items-center gap-1 sm:gap-1.5 w-full text-black">
-                          <Plus className="w-3 h-3 sm:w-4 sm:h-4 text-black stroke-[3] shrink-0" />
-                          <span className="text-[8px] sm:text-[11px] font-mono font-black tracking-widest uppercase">PUBLIER</span>
+                          <Plus className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 text-black stroke-[3] shrink-0" />
+                          <span className="text-[7px] xs:text-[8px] sm:text-[11px] font-mono font-black tracking-tighter xs:tracking-widest uppercase">POSTER</span>
                         </div>
-                        <p className="text-[7px] sm:text-[9px] text-zinc-950/70 font-mono mt-1 sm:mt-2 uppercase">Créer une opp.</p>
+                        <p className="text-[6px] xs:text-[7px] sm:text-[9px] text-zinc-950/70 font-mono mt-0.5 sm:mt-2 uppercase">Créer</p>
                       </button>
 
                       {/* MENU */}
@@ -2940,13 +2941,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           addToTerminal("[MENU] Ouverture de la sidebar.");
                           try { audioSynth.playTamTam(false); } catch (e) {}
                         }}
-                        className="p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-[#D4AF37]/45 rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
+                        className="p-1.5 xs:p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-[#D4AF37]/45 rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
                       >
                         <div className="flex items-center gap-1 sm:gap-1.5 w-full">
-                          <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] shrink-0" />
-                          <span className="text-[8px] sm:text-[11px] font-mono font-black text-white tracking-widest uppercase font-bold">MENU</span>
+                          <MoreVertical className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 text-[#D4AF37] shrink-0" />
+                          <span className="text-[7px] xs:text-[8px] sm:text-[11px] font-mono font-black text-white tracking-tighter xs:tracking-widest uppercase font-bold">MENU</span>
                         </div>
-                        <p className="text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-1 sm:mt-2 uppercase">Plus d'options</p>
+                        <p className="text-[6px] xs:text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-0.5 sm:mt-2 uppercase">Plus</p>
                       </button>
                     </div>
 
@@ -2974,23 +2975,23 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         </div>
 
                         {/* 8-GRID ACTIONS */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 xs:gap-2.5 sm:gap-4">
                           {/* 1. Rechercher un membre */}
                           <button
                             onClick={() => {
                               setSelectedSearchMember(null);
                               setActiveQuickActionModal("search_member");
                               addToTerminal("[ACTIONS RAPIDES] Recherche de membre activée.");
-                              try { audioSynth.playTamTam(true); } catch (_) {}
+                              try { audioSynth?.playTamTam?.(true); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/65 transition">
-                              <span className="text-xs">👥</span>
+                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/65 transition">
+                              <span className="text-[8px] xs:text-[10px] sm:text-xs">👥</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Rechercher un membre</div>
-                              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Annuaire</span>
+                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Rechercher membre</div>
+                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Annuaire</span>
                             </div>
                           </button>
 
@@ -3003,14 +3004,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 try { audioSynth.playKoraSuccess(); } catch (_) {}
                               });
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500 transition">
-                              <span className="text-xs">📢</span>
+                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500 transition">
+                              <span className="text-[8px] xs:text-[10px] sm:text-xs">📢</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Créer une annonce</div>
-                              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Nouveau</span>
+                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Créer annonce</div>
+                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Nouveau</span>
                             </div>
                           </button>
 
@@ -3023,14 +3024,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Vérification GOMBO ID ouverte.");
                               try { audioSynth.playTamTam(true); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
-                              <span className="text-xs">🛡️</span>
+                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
+                              <span className="text-[8px] xs:text-[10px] sm:text-xs">🛡️</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Vérifier GOMBO ID</div>
-                              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Académie</span>
+                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Vérifier ID</div>
+                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Académie</span>
                             </div>
                           </button>
 
@@ -3041,14 +3042,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Alerte & Signalements ouverts.");
                               try { audioSynth.playTamTam(false); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500 transition">
-                              <span className="text-xs">🚨</span>
+                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500 transition">
+                              <span className="text-[8px] xs:text-[10px] sm:text-xs">🚨</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Voir signalements</div>
-                              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Sécurité</span>
+                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Signalements</div>
+                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Sécurité</span>
                             </div>
                           </button>
 
@@ -3061,14 +3062,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Rédaction de notification.");
                               try { audioSynth.playTamTam(true); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500 transition">
-                              <span className="text-xs">🔔</span>
+                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500 transition">
+                              <span className="text-[8px] xs:text-[10px] sm:text-xs">🔔</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Envoyer une notification</div>
-                              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Diffusion</span>
+                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Notifier</div>
+                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Diffusion</span>
                             </div>
                           </button>
 
@@ -3079,14 +3080,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Trône d'Or : Analyse de Performance ouverte.");
                               try { audioSynth.playKoraSuccess(); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 group-hover:border-yellow-500 transition">
-                              <span className="text-xs">📈</span>
+                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 group-hover:border-yellow-500 transition">
+                              <span className="text-[8px] xs:text-[10px] sm:text-xs">📈</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Voir les statistiques</div>
-                              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Indicateurs</span>
+                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Statistiques</div>
+                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Indicateurs</span>
                             </div>
                           </button>
 
@@ -3097,14 +3098,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Caisse / Portefeuille d'or chargé.");
                               try { audioSynth.playKoraSuccess(); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500 transition">
-                              <span className="text-xs">💰</span>
+                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500 transition">
+                              <span className="text-[8px] xs:text-[10px] sm:text-xs">💰</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Revenus d'Or</div>
-                              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Sécurisé</span>
+                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Revenus</div>
+                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Sécurisé</span>
                             </div>
                           </button>
 
@@ -3115,14 +3116,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               addToTerminal("[ACTIONS RAPIDES] Paramètres du terminal chargés.");
                               try { audioSynth.playTamTam(false); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-zinc-500/10 flex items-center justify-center border border-zinc-500/20 group-hover:border-zinc-500 transition">
-                              <span className="text-xs">⚙</span>
+                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-zinc-500/10 flex items-center justify-center border border-zinc-500/20 group-hover:border-zinc-500 transition">
+                              <span className="text-[8px] xs:text-[10px] sm:text-xs">⚙</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Configuration</div>
-                              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Système</span>
+                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Paramètres</div>
+                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Système</span>
                             </div>
                           </button>
 
@@ -3135,14 +3136,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 try { audioSynth.playValidationSuccess(); } catch (err) {}
                               });
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500 transition">
-                              <span className="text-xs">✍️</span>
+                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500 transition">
+                              <span className="text-[8px] xs:text-[10px] sm:text-xs">✍️</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Contrats Gombo</div>
-                              <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Signature</span>
+                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Contrats</div>
+                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Signature</span>
                             </div>
                           </button>
 
@@ -3155,21 +3156,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 try { audioSynth.playKoraSuccess(); } catch (err) {}
                               });
                             }}
-                            className="bg-black/45 border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-2xl p-3 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-24 select-none min-w-0"
+                            className="bg-black/45 border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-xl xs:rounded-2xl p-2 xs:p-2.5 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-16 xs:h-20 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
-                              <span className="text-xs">💳</span>
+                            <div className="w-5 h-5 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
+                              <span className="text-[8px] xs:text-[10px] sm:text-xs">💳</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[10px] sm:text-[11px] font-sans font-black text-white tracking-wide truncate">Wallet Séquestre</div>
-                              <span className="text-[8px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-0.5">Bêta-Sécurisé</span>
+                              <div className="text-[8px] xs:text-[9px] sm:text-[11px] font-sans font-black text-white tracking-tight xs:tracking-wide truncate uppercase">Wallet Séquestre</div>
+                              <span className="text-[6px] xs:text-[7px] sm:text-[8px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-0.5">Bêta-Sécurisé</span>
                             </div>
                           </button>
                         </div>
                       </div>
                     {!!activeQuickActionModal && (
-                      <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto w-full max-w-full">
-                        <div className="bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-6 sm:p-8 w-full max-w-md my-8 relative overflow-hidden select-none shadow-[0_15px_50px_rgba(0,0,0,0.95)]">
+                      <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-2 xs:p-4 overflow-y-auto w-full max-w-full">
+                        <div className="bg-[#050505] border border-[#D4AF37]/35 rounded-2xl xs:rounded-3xl p-4 xs:p-6 sm:p-8 w-full max-w-md my-4 xs:my-8 relative overflow-hidden select-none shadow-[0_15px_50px_rgba(0,0,0,0.95)]">
                           <button
                             onClick={() => {
                               setActiveQuickActionModal(null);
@@ -4417,8 +4418,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 };
 
                 return (
-                  <div className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none">
-                    <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn pb-24 relative select-none">
+                  <div className="afri-container h-full w-full overflow-y-auto overflow-x-hidden pb-32 pt-4 xs:pt-6 scrollbar-none">
+                    <div className="max-w-2xl mx-auto space-y-4 xs:space-y-6 animate-fadeIn pb-24 relative select-none">
                     
                     {/* Draft restoration alert banner */}
                     {publishDraftDetected && (
@@ -4479,14 +4480,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     )}
 
                     {/* Form block */}
-                    <div className="bg-[#111111] border border-[#D4AF37]/20 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl text-left relative overflow-hidden">
+                    <div className="bg-[#111111] border border-[#D4AF37]/20 rounded-2xl xs:rounded-3xl p-4 xs:p-6 sm:p-8 space-y-4 xs:space-y-6 shadow-xl text-left relative overflow-hidden">
                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#D4AF37] to-amber-600 opacity-80" />
                       
-                      <div className="border-b border-white/5 pb-4 flex justify-between items-start">
+                      <div className="border-b border-white/5 pb-3 xs:pb-4 flex justify-between items-start">
                         <div>
-                          <span className="text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] font-bold">TRANSMETTEUR MULTI-RÉSEAUX</span>
-                          <h3 className="text-xl font-display font-black text-white uppercase tracking-tight mt-1">{getCategoryLabel()}</h3>
-                          <p className="text-xs text-zinc-400 mt-1">
+                          <span className="text-[7px] xs:text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] font-bold">TRANSMETTEUR MULTI-RÉSEAUX</span>
+                          <h3 className="text-lg xs:text-xl font-display font-black text-white uppercase tracking-tight mt-0.5 xs:mt-1">{getCategoryLabel()}</h3>
+                          <p className="text-[10px] xs:text-xs text-zinc-400 mt-1">
                             {activePublishType === "reel" 
                               ? "Partagez un moment musical fort en format vidéo vertical." 
                               : "Diffusez vos besoins ou démonstrations à toute la république musicale."}
@@ -4845,14 +4846,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
               {/* 7. CONTRATS AFRIGOMBO (USER) */}
               {activeMenu === "user_contracts" && (
-                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
                   <GomboContractsDashboard currentUser={profile || (currentUser as any)} />
                 </div>
               )}
 
               {/* 7b. PORTESECURE / AFRIGOMBO WALLET (USER) */}
               {activeMenu === "user_wallet" && (
-                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
                   <AfrigomboWalletDashboard 
                     currentUserProfile={profile || (currentUser as any)} 
                     addToTerminal={addToTerminal}
@@ -4863,7 +4864,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
 
               {/* 7d. ÉVÉNEMENTS (USER) */}
               {activeMenu === "user_events" && (
-                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
                   <EventsView 
                     onBack={() => goBackMenu()} 
                     addToTerminal={addToTerminal}
@@ -4872,14 +4873,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {activeMenu === "user_help_center" && (
-                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
                   <AfrigomboHelpCenter onClose={() => goBackMenu()} />
                 </div>
               )}
 
               {/* 7c. BÂTISSEURS (USER) */}
               {activeMenu === "user_builders" && (
-                <div className="animate-fadeIn">
+                <div className="afri-container animate-fadeIn py-4 xs:py-6">
                   <AfrigomboBuilders
                     currentUser={profile || (currentUser as any)}
                     onBack={() => goBackMenu()}
@@ -4889,7 +4890,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               )}
 
               {activeMenu === "user_heritage" && (
-                <div className="h-full overflow-y-auto px-4 pb-24 scrollbar-none animate-fadeIn">
+                <div className="afri-container h-full overflow-y-auto pb-24 scrollbar-none animate-fadeIn">
                   <GomboProfile 
                     currentUserProfile={profile || (currentUser as any)}
                     onRefreshProfile={() => refreshProfile()}
@@ -4962,12 +4963,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 };
 
                 return (
-                  <div className="p-6 rounded-2xl bg-[#050505] border border-white/5 space-y-6 animate-fadeIn">
-                    <div className="pb-3 border-b border-white/5">
-                      <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                  <div className="afri-container py-4 xs:py-6 space-y-4 xs:space-y-6 animate-fadeIn pb-32">
+                    <div className="pb-3 border-b border-white/5 px-1">
+                      <h3 className="text-[11px] xs:text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
                         💼 Cycle de Contrats & Prestations
                       </h3>
-                      <p className="text-xs text-zinc-400">Suivez vos gombos réservés, contrats signés et notez mutuellement vos collaborateurs.</p>
+                      <p className="text-[10px] xs:text-xs text-zinc-400">Suivez vos gombos réservés, contrats signés et notez mutuellement vos collaborateurs.</p>
                     </div>
 
                     {/* Prestations list */}
@@ -5407,7 +5408,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 const currentActiveUserForChat = currentUser ? { uid: currentUser.uid } : { uid: activeArtistId };
                 const currentProfileForChat = profile || (users.find(u => u.id === activeArtistId) || users[0]);
                 return (
-                  <div className="space-y-6 animate-fadeIn pb-24 text-left">
+                  <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left">
                     <MessagesView
                       currentUser={currentActiveUserForChat}
                       currentProfile={currentProfileForChat}
@@ -5888,14 +5889,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4 }}
-                            className={`rounded-3xl overflow-hidden bg-[#060606] border transition-all duration-300 shadow-[0_4px_30px_rgba(212,175,55,0.03)] hover:shadow-[0_8px_45px_rgba(212,175,55,0.09)] ${
+                            className={`rounded-2xl xs:rounded-3xl overflow-hidden bg-[#060606] border transition-all duration-300 shadow-[0_4px_30px_rgba(212,175,55,0.03)] hover:shadow-[0_8px_45px_rgba(212,175,55,0.09)] ${
                               g.isBoosted || g.isUrgent
                                 ? "border-[#D4AF37]/45"
                                 : "border-[#D4AF37]/15 hover:border-[#D4AF37]/40"
                             }`}
                           >
                             {/* Card Media Header */}
-                            <div className="relative h-48 w-full bg-cover bg-center overflow-hidden group" style={{ backgroundImage: `url(${g.imageUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'})` }}>
+                            <div className="relative h-32 xs:h-40 sm:h-48 w-full bg-cover bg-center overflow-hidden group" style={{ backgroundImage: `url(${g.imageUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'})` }}>
                               <div className="absolute inset-0 bg-gradient-to-t from-[#060606] via-[#060606]/40 to-transparent" />
                               
                               {/* Glowing Badges */}
@@ -5936,54 +5937,54 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             </div>
 
                             {/* Card Body */}
-                            <div className="p-6 space-y-4">
-                              <div className="space-y-1.5">
-                                <h5 className="font-display font-extrabold text-[#F5F5F5] text-lg tracking-tight hover:text-[#D4AF37] transition-all">
+                            <div className="p-3 xs:p-5 sm:p-6 space-y-3 xs:space-y-4">
+                              <div className="space-y-1 xs:space-y-1.5">
+                                <h5 className="font-display font-extrabold text-[#F5F5F5] text-sm xs:text-base sm:text-lg tracking-tight hover:text-[#D4AF37] transition-all">
                                   {g.title}
                                 </h5>
-                                <p className="text-xs text-[#F5F5F5]/70 leading-relaxed font-sans min-h-[40px]">
+                                <p className="text-[10px] xs:text-xs text-[#F5F5F5]/70 leading-relaxed font-sans min-h-[30px] line-clamp-2">
                                   {g.description}
                                 </p>
                               </div>
 
                               {/* Cachet Details */}
-                              <div className="py-3 px-4 rounded-xl bg-black/60 border border-[#D4AF37]/10 flex justify-between items-center text-xs">
+                              <div className="py-2 xs:py-3 px-3 xs:px-4 rounded-xl bg-black/60 border border-[#D4AF37]/10 flex justify-between items-center text-[10px] xs:text-xs">
                                 <div>
-                                  <span className="text-[9px] text-[#F5F5F5]/40 block uppercase font-mono tracking-widest">Cachet de Prestation</span>
-                                  <span className="text-md font-bold font-mono text-[#D4AF37] tracking-tight">
-                                    {g.budget.toLocaleString()} FCFA
+                                  <span className="text-[7px] xs:text-[9px] text-[#F5F5F5]/40 block uppercase font-mono tracking-tighter xs:tracking-widest">Cachet</span>
+                                  <span className="text-xs xs:text-sm font-bold font-mono text-[#D4AF37] tracking-tight">
+                                    {g.budget.toLocaleString()} F
                                   </span>
                                 </div>
                                 <div className="text-right">
-                                  <span className="text-[9px] text-[#F5F5F5]/40 block uppercase font-mono tracking-widest">Garantie Caisse (10%)</span>
-                                  <span className="text-xs font-bold font-mono text-[#10B981]">
-                                    {(g.budget * g.commissionRate).toLocaleString()} FCFA
+                                  <span className="text-[7px] xs:text-[9px] text-[#F5F5F5]/40 block uppercase font-mono tracking-tighter xs:tracking-widest">Garantie Caisse</span>
+                                  <span className="text-[10px] xs:text-xs font-bold font-mono text-[#10B981]">
+                                    {(g.budget * g.commissionRate).toLocaleString()} F
                                   </span>
                                 </div>
                               </div>
 
                               {/* Interactive Action Buttons Tray */}
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/5">
+                              <div className="grid grid-cols-4 gap-1 xs:gap-2 pt-2 border-t border-white/5">
                                 {/* Button: J'honore */}
                                 <motion.button
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => toggleHonorGombo(g.id)}
-                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all outline-none min-h-[36px] ${
+                                  className={`py-1.5 xs:py-2 px-0.5 xs:px-1 rounded-lg text-[7px] xs:text-[10px] font-bold uppercase tracking-tighter xs:tracking-wider flex items-center justify-center gap-0.5 xs:gap-1 transition-all outline-none min-h-[30px] xs:min-h-[36px] ${
                                     isHonored
                                       ? "bg-red-500/15 border border-red-500/30 text-red-400"
                                       : "bg-[#050505] border border-white/5 text-[#F5F5F5]/60 hover:text-red-400 hover:border-red-500/20"
                                   }`}
                                 >
-                                  <span>{isHonored ? "❤️ Honoré" : "❤️ J'honore"}</span>
+                                  <span>{isHonored ? "❤️" : "❤️"}</span>
                                 </motion.button>
 
                                 {/* Button: Palabrer */}
                                 <motion.button
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => requireAuthThen(() => setPalabreGombo(g))}
-                                  className="py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 bg-[#050505] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20 transition-all outline-none min-h-[36px]"
+                                  className="py-1.5 xs:py-2 px-0.5 xs:px-1 rounded-lg text-[7px] xs:text-[10px] font-bold uppercase tracking-tighter xs:tracking-wider flex items-center justify-center gap-0.5 xs:gap-1 bg-[#050505] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20 transition-all outline-none min-h-[30px] xs:min-h-[36px]"
                                 >
-                                  <span>🗣️ Palabrer</span>
+                                  <span>🗣️ Chat</span>
                                 </motion.button>
 
                                 {/* Button: Je postule */}
@@ -5991,26 +5992,26 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                   whileTap={hasApplied ? {} : { scale: 0.95 }}
                                   disabled={hasApplied}
                                   onClick={() => applyToGombo(g.id)}
-                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all outline-none min-h-[36px] ${
+                                  className={`py-1.5 xs:py-2 px-0.5 xs:px-1 rounded-lg text-[7px] xs:text-[10px] font-bold uppercase tracking-tighter xs:tracking-wider flex items-center justify-center gap-0.5 xs:gap-1 transition-all outline-none min-h-[30px] xs:min-h-[36px] ${
                                     hasApplied
                                       ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
                                       : "bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black hover:opacity-95 shadow-sm"
                                   }`}
                                 >
-                                  <span>{hasApplied ? "🎤 Postulé" : "🎤 Je postule"}</span>
+                                  <span>{hasApplied ? "🎤" : "🎤 Postule"}</span>
                                 </motion.button>
 
                                 {/* Button: Je garde */}
                                 <motion.button
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => toggleSaveGombo(g.id)}
-                                  className={`py-2 px-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all outline-none min-h-[36px] ${
+                                  className={`py-1.5 xs:py-2 px-0.5 xs:px-1 rounded-lg text-[7px] xs:text-[10px] font-bold uppercase tracking-tighter xs:tracking-wider flex items-center justify-center gap-0.5 xs:gap-1 transition-all outline-none min-h-[30px] xs:min-h-[36px] ${
                                     isSaved
                                       ? "bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37]"
                                       : "bg-[#050505] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20"
                                   }`}
                                 >
-                                  <span>{isSaved ? "📌 Gardé" : "📌 Je garde"}</span>
+                                  <span>{isSaved ? "📌" : "📌 Garde"}</span>
                                 </motion.button>
                               </div>
 
@@ -6026,13 +6027,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                     setReciprocalComment("");
                                     setEnableReciprocal(true);
                                   }}
-                                  className="w-full mt-3 py-2 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-black hover:border-transparent text-emerald-400 font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-[0_0_12px_rgba(16,185,129,0.1)]"
+                                  className="w-full mt-2 xs:mt-3 py-1.5 xs:py-2 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-black hover:border-transparent text-emerald-400 font-display font-black text-[9px] xs:text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 xs:gap-2 transition-all shadow-[0_0_12px_rgba(16,185,129,0.1)]"
                                 >
-                                  <span>🏆 Clôturer la prestation & Noter</span>
+                                  <span>🏆 Clôturer & Noter</span>
                                 </button>
                               ) : (
-                                <div className="w-full mt-3 py-2 px-3 rounded-xl bg-zinc-800/50 border border-zinc-700/60 text-zinc-500 font-mono text-[10px] uppercase flex items-center justify-center gap-2 tracking-wide font-bold">
-                                  <span>✅ Prestation Terminée & Évaluée</span>
+                                <div className="w-full mt-2 xs:mt-3 py-1.5 xs:py-2 px-3 rounded-xl bg-zinc-800/50 border border-zinc-700/60 text-zinc-500 font-mono text-[8px] xs:text-[10px] uppercase flex items-center justify-center gap-2 tracking-wide font-bold">
+                                  <span>✅ Prestation Terminée</span>
                                 </div>
                               )}
                             </div>
@@ -6052,7 +6053,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.95 }}
-                          className="w-full max-w-lg bg-[#060606] border border-[#D4AF37] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.2)] flex flex-col h-[520px] justify-between"
+                          className="w-full max-w-lg bg-[#060606] border border-[#D4AF37] rounded-2xl xs:rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.2)] flex flex-col h-[85vh] xs:h-[520px] justify-between"
                         >
                           {/* Chat Header */}
                           <div className="p-5 border-b border-[#D4AF37]/20 bg-gradient-to-r from-black to-[#060606] flex justify-between items-center shrink-0">
@@ -6367,8 +6368,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 VIEW: ANALYTICS & COURBES
                   ---------------------------------------------------- */}
               {activeMenu === "analytics" && (
-                <div className="space-y-6 animate-fadeIn pb-24 text-left">
-                  <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-4">
+                <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                  <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-4 px-1">
                     <h3 className="text-sm font-mono uppercase tracking-[0.2em] font-black text-[#D4A017]">
                       Intelligence & Data
                     </h3>
@@ -6383,8 +6384,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 VIEW: PLUS (PARAMÈTRES ET OUTILS ADMINISTRATIFS)
                   ---------------------------------------------------- */}
               {activeMenu === "plus" && (
-                <div className="space-y-6 animate-fadeIn pb-24">
-                  <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-white flex items-center gap-1.5 pb-2 border-b border-white/10">
+                <div className="afri-container space-y-6 animate-fadeIn pb-24 py-4 xs:py-6">
+                  <h3 className="text-[11px] xs:text-sm font-mono uppercase font-black tracking-[0.15em] text-white flex items-center gap-1.5 pb-2 border-b border-white/10 px-1">
                     <Settings className="w-5 h-5 text-zinc-400" />
                     Outils d'Administration & Système
                   </h3>
@@ -6549,7 +6550,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 ].sort((a,b) => b.count - a.count);
 
                 return (
-                  <div className="space-y-6">
+                  <div className="afri-container space-y-6 py-4 xs:py-6 pb-24">
                     {/* TOP DOCK OF NUMERICS */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-md">
@@ -6643,15 +6644,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={`w-full max-w-lg p-6 rounded-2xl border space-y-4 shadow-2xl transition-all ${
+            className={`w-full max-w-lg p-4 xs:p-6 rounded-2xl border space-y-3 xs:space-y-4 shadow-2xl transition-all ${
               darkMode ? "bg-[#0B0B0C] border-[#FF6600]/30" : "bg-white border-zinc-200 shadow-xl"
             }`}
           >
             <div className="flex justify-between items-center pb-2 border-b border-white/5">
               <div>
-                <span className="text-[10px] font-mono uppercase font-black text-[#FF6600]">Évaluation d'Excellence Gombo</span>
-                <h4 className={`text-md font-display font-extrabold ${darkMode ? "text-white" : "text-zinc-805"}`}>
-                  Clôturer Prestation : "{completingGombo.title}"
+                <span className="text-[8px] xs:text-[10px] font-mono uppercase font-black text-[#FF6600]">Évaluation d'Excellence Gombo</span>
+                <h4 className={`text-sm xs:text-base sm:text-md font-display font-extrabold ${darkMode ? "text-white" : "text-zinc-805"}`}>
+                  Clôturer : "{completingGombo.title}"
                 </h4>
               </div>
               <button 
@@ -6702,7 +6703,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       className="transition-all hover:scale-110"
                     >
                       <Star 
-                        className={`w-7 h-7 ${
+                        className={`w-6 h-6 xs:w-7 xs:h-7 ${
                           star <= reviewRating 
                             ? "text-amber-400 fill-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" 
                             : "text-zinc-550"
@@ -6830,14 +6831,19 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-[#060606]/95 backdrop-blur-md z-50 flex items-center justify-center p-4"
         >
-          <div className="max-w-md w-full bg-black border border-purple-500/30 rounded-3xl p-8 text-center space-y-6 shadow-[0_0_50px_rgba(168,85,247,0.15)]">
-            <div className="w-16 h-16 bg-gradient-to-tr from-purple-600 via-pink-600 to-[#FF6600] rounded-full flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(236,72,153,0.5)]">
-              <Crown className="w-8 h-8 text-white animate-bounce" />
+          <div className="max-w-md w-full bg-black border border-purple-500/30 rounded-2xl xs:rounded-3xl p-6 xs:p-8 text-center space-y-4 xs:space-y-6 shadow-[0_0_50px_rgba(168,85,247,0.15)]">
+            <div className="w-20 h-20 bg-gradient-to-tr from-purple-600 via-pink-600 to-[#FF6600] rounded-full flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(236,72,153,0.5)] overflow-hidden">
+              <img 
+                src="/public/logo_afrigombo.png" 
+                alt="AFRIGOMBO Logo" 
+                className="w-14 h-14 object-contain animate-pulse"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div className="space-y-2">
               <span className="text-[10px] font-mono uppercase tracking-widest text-purple-400 font-extrabold block">Décret Royal Activé</span>
-              <h3 className="text-2xl font-display font-black text-white">Salutations, Maître de l'Afrique Musicale</h3>
-              <p className="text-xs text-white/75 leading-relaxed font-sans">
+              <h3 className="text-xl xs:text-2xl font-display font-black text-white leading-tight">Salutations, Maître de l'Afrique Musicale</h3>
+              <p className="text-[10px] xs:text-xs text-white/75 leading-relaxed font-sans">
                 "L'Empire d'AFRIGOMBO est entièrement sous vos ordres souverains. Les cachets, les licences d'or et l'intégralité des talents nationaux reposent entre vos mains expertes."
               </p>
             </div>
@@ -7005,7 +7011,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                      FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED)
          ========================================================================= */}
       {perspective === "user" && ["user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_heritage"].includes(activeMenu) && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[425px] h-[72px] bg-[#050505]/95 backdrop-blur-xl border border-[#D4AF37]/22 p-1 px-3 sm:px-4 flex justify-between items-center z-40 rounded-[28px] shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none">
+        <div className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 w-[94%] xs:w-[92%] max-w-[425px] h-[64px] sm:h-[72px] bg-[#050505]/95 backdrop-blur-xl border border-[#D4AF37]/22 p-1 px-2 xs:px-3 sm:px-4 flex justify-between items-center z-40 rounded-[24px] sm:rounded-[28px] shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none">
           {/* 1. ACCUEIL */}
           <button
             id="user-nav-terrain"
@@ -7017,8 +7023,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               activeMenu === "user_terrain" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Home className="w-4.5 h-4.5" />
-            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Accueil</span>
+            <Home className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Accueil</span>
           </button>
 
           {/* 2. VIBES */}
@@ -7034,11 +7040,11 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               activeMenu === "user_vibes" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Music className="w-4.5 h-4.5" />
-            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Vibes</span>
+            <Music className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Vibes</span>
           </button>
 
-          {/* 3. PUBLIER (CENTRAL BUTTON, LARGER, NOT INDEPENDENTLY FLOATING/OVERLAPPING OVER BOUNDARY) */}
+          {/* 3. PUBLIER */}
           <button
             id="user-nav-publish"
             onClick={() => {
@@ -7047,13 +7053,13 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               });
             }}
-            className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-2 select-none shrink-0"
+            className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-1.5 xs:px-2 select-none shrink-0"
             title="Publier"
           >
-            <div className="w-11 h-11 flex items-center justify-center bg-gradient-to-tr from-[#D4AF37] to-[#F1C40F] text-[#050505] rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
-              <Plus className="w-5 h-5 stroke-[3.5]" />
+            <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center bg-gradient-to-tr from-[#D4AF37] to-[#F1C40F] text-[#050505] rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3.5]" />
             </div>
-            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5] mt-0.5">Publier</span>
+            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5] mt-0.5">Publier</span>
           </button>
 
           {/* 4. MES GOMBOS */}
@@ -7069,8 +7075,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               activeMenu === "user_mes_gombos" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Megaphone className="w-4.5 h-4.5" />
-            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Mes Gombos</span>
+            <Megaphone className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Gombos</span>
           </button>
 
           {/* 6. MON HÉRITAGE */}
@@ -7089,8 +7095,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               activeMenu === "user_heritage" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <UserIcon className="w-4.5 h-4.5" />
-            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Mon Héritage</span>
+            <UserIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Héritage</span>
           </button>
         </div>
       )}
@@ -7099,7 +7105,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                      ADMIN FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
       {perspective === "admin" && activeMenu !== "super_admin" && (
-        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-black/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/35 p-2 px-4 sm:px-6 flex items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.2)] w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1 sm:gap-4 select-none">
+        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-black/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/35 p-1.5 sm:p-2 px-2 xs:px-4 sm:px-6 flex items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.2)] w-full sm:w-auto min-w-[300px] xs:min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-0.5 xs:gap-1 sm:gap-4 select-none">
           {/* 1. DASHBOARD */}
           <button
             id="admin-nav-dashboard"
@@ -7107,12 +7113,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               setActiveMenu("dashboard");
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
-            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2 xs:px-3 sm:px-4 rounded-lg ${
               activeMenu === "dashboard" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Home className="w-4.5 h-4.5" />
-            <span className="text-[9px] font-mono uppercase tracking-wider">Dashboard</span>
+            <Home className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider">Dash</span>
           </button>
 
           {/* 2. UTILISATEURS */}

@@ -153,36 +153,17 @@ export default function AfrigomboCinematicIntro({ onComplete }: AfrigomboCinemat
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 2.5, ease: "easeOut" }}
-              className="relative w-40 h-40 flex items-center justify-center border border-[#D4AF37]/10 rounded-full bg-black/40 shadow-[0_0_60px_rgba(212,175,55,0.04)]"
+              className="relative w-48 h-48 flex items-center justify-center border border-[#D4AF37]/20 rounded-full bg-black/60 shadow-[0_0_60px_rgba(212,175,55,0.1)] overflow-hidden"
             >
               {/* Spinning sound-glow pattern */}
               <div className="absolute inset-2 border border-dashed border-[#D4AF37]/15 rounded-full animate-spin" style={{ animationDuration: "25s" }} />
 
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-24 h-24">
-                {/* Crown/Emblem of AFRIGOMBO */}
-                <path
-                  d="M 50 15 L 50 85 M 40 45 C 30 50, 20 60, 30 75 C 38 82, 62 82, 70 75 C 80 60, 70 50, 60 45"
-                  fill="none"
-                  stroke="#D4AF37"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M 32 75 L 38 88 L 62 88 L 68 75 Z"
-                  fill="none"
-                  stroke="#D4AF37"
-                  strokeWidth="2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M 42 28 L 50 20 L 58 28"
-                  fill="none"
-                  stroke="#D4AF37"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <circle cx="50" cy="65" r="8" fill="none" stroke="#D4AF37" strokeWidth="1" className="animate-pulse" />
-              </svg>
+              <img 
+                src="/public/logo_afrigombo.png" 
+                alt="AFRIGOMBO Logo" 
+                className="w-32 h-32 object-contain relative z-10"
+                referrerPolicy="no-referrer"
+              />
             </motion.div>
           )}
         </AnimatePresence>

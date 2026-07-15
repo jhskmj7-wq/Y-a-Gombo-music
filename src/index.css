@@ -30,6 +30,58 @@
   }
 }
 
+/* GLOBAL RESPONSIVE LAYER - AFRIGOMBO NATIVE-LIKE STRATEGY */
+@layer utilities {
+  .afri-container {
+    @apply px-3 xs:px-4 sm:px-8;
+  }
+  
+  .afri-section {
+    @apply pt-4 pb-32 sm:pt-6 sm:pb-32;
+  }
+  
+  .afri-card {
+    @apply rounded-xl xs:rounded-2xl sm:rounded-3xl border border-[#D4AF37]/20 bg-[#050505] shadow-sm;
+  }
+  
+  .afri-title-xl {
+    @apply text-xl xs:text-2xl sm:text-4xl font-sans font-black tracking-tight uppercase;
+  }
+  
+  .afri-title-lg {
+    @apply text-lg xs:text-xl sm:text-2xl font-sans font-bold uppercase tracking-wide;
+  }
+  
+  .afri-title-md {
+    @apply text-sm xs:text-base sm:text-xl font-sans font-bold uppercase;
+  }
+  
+  .afri-text-body {
+    @apply text-[11px] xs:text-xs sm:text-base leading-relaxed text-zinc-300;
+  }
+  
+  .afri-text-tiny {
+    @apply text-[9px] xs:text-[10px] sm:text-xs font-mono uppercase tracking-widest text-zinc-500;
+  }
+  
+  .afri-icon-btn {
+    @apply w-9 h-9 xs:w-10 xs:h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl transition-all active:scale-95;
+  }
+  
+  .afri-grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6;
+  }
+  
+  /* Prevent horizontal scroll issues on very small screens */
+  .afri-no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .afri-no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 html, body, #root {
   width: 100%;
   height: 100%;

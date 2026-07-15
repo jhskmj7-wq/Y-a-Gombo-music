@@ -32,27 +32,13 @@ export default function PremiumLoader({ message = "Connexion sécurisée..." }: 
         {/* Glowing aura */}
         <div className="absolute w-24 h-24 rounded-full bg-[#D4AF37]/5 blur-xl animate-pulse" />
 
-        {/* LOGO AFRIGOMBO (Compact SVG) */}
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-20 h-20 relative z-10">
-          <path
-            d="M 50 15 L 50 85 M 40 45 C 30 50, 20 60, 30 75 C 38 82, 62 82, 70 75 C 80 60, 70 50, 60 45"
-            fill="none"
-            stroke="#D4AF37"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            className="animate-pulse"
-          />
-          <path
-            d="M 32 75 L 38 88 L 62 88 L 68 75 Z"
-            fill="none"
-            stroke="#D4AF37"
-            strokeWidth="2"
-            strokeLinejoin="round"
-            className="opacity-90"
-          />
-          <circle cx="48" cy="40" r="2" fill="#FFEAA7" className="animate-ping" />
-          <circle cx="53" cy="52" r="1.5" fill="#FFEAA7" className="animate-pulse" />
-        </svg>
+        {/* LOGO AFRIGOMBO (Official Image) */}
+        <img 
+          src="/public/logo_afrigombo.png" 
+          alt="AFRIGOMBO Logo" 
+          className="w-24 h-24 relative z-10 object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]"
+          referrerPolicy="no-referrer"
+        />
       </div>
 
       {/* Loading message */}
