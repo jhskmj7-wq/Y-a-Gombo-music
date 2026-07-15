@@ -17,6 +17,8 @@ interface MessagesViewProps {
   setOpenConvoWithUserId: (uid: string | null) => void;
   openConvoWithGomboId?: string | null;
   setOpenConvoWithGomboId?: (gid: string | null) => void;
+  onNavigateToPublish?: () => void;
+  onNavigateToSearch?: () => void;
   onBack: () => void;
 }
 
@@ -27,6 +29,8 @@ export default function MessagesView({
   setOpenConvoWithUserId,
   openConvoWithGomboId,
   setOpenConvoWithGomboId,
+  onNavigateToPublish,
+  onNavigateToSearch,
   onBack
 }: MessagesViewProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -150,6 +154,119 @@ export default function MessagesView({
           <span className="inline-block px-4 py-2 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-mono font-extrabold uppercase animate-pulse">
             🔒 Connectez-vous pour accéder aux messages
           </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle accepting charter
+  const handleAcceptCharter = () => {
+    localStorage.setItem(`afrigombo_charter_accepted_${currentUser.uid}`, "true");
+    setHasReadCharter(true);
+    setShowCharter(false);
+    try { gomboDB.updateUserProfile(currentUser.uid, { charterAccepted: true }); } catch(_) {}
+  };
+
+  if (showCharter) {
+    return (
+      <div className="w-full max-w-4xl mx-auto my-8 p-6 sm:p-10 bg-[#050505] rounded-3xl border border-[#D4AF37]/20 shadow-[0_0_50px_rgba(212,175,55,0.08)] relative overflow-hidden flex flex-col items-center">
+        {/* Background Accent */}
+        <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#D4AF37]/10 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-[#D4AF37]/10 blur-3xl rounded-full pointer-events-none" />
+
+        <div className="relative w-full max-w-2xl space-y-10 z-10">
+          <div className="text-center space-y-3">
+            <div className="w-20 h-20 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-3xl flex items-center justify-center mx-auto mb-6 transform -rotate-3 shadow-lg shadow-[#D4AF37]/10">
+              <ShieldAlert className="w-10 h-10 text-[#D4AF37]" />
+            </div>
+            <h2 className="text-3xl font-sans font-black text-[#D4AF37] uppercase tracking-tighter">
+              Communication sécurisée AFRIGOMBO
+            </h2>
+            <div className="h-1 w-16 bg-[#D4AF37] mx-auto rounded-full mt-4" />
+          </div>
+
+          <div className="space-y-6 text-zinc-300">
+            <p className="text-sm font-medium leading-relaxed text-center px-4">
+              La messagerie AFRIGOMBO protège les artistes, les organisateurs, les contrats et les paiements. Notre priorité est de vous garantir une prestation et une transaction 100% sécurisées.
+            </p>
+
+            <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl space-y-4">
+              <h3 className="text-red-400 text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" /> RÈGLES DE COMMUNICATION
+              </h3>
+              <ul className="space-y-3 text-xs leading-relaxed font-medium">
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 shrink-0 mt-0.5">•</span>
+                  <span>Interdiction de partager un <strong>numéro de téléphone</strong>.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 shrink-0 mt-0.5">•</span>
+                  <span>Interdiction de partager un <strong>lien externe</strong> ou des <strong>réseaux sociaux</strong>.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 shrink-0 mt-0.5">•</span>
+                  <span>Interdiction de partager un <strong>email</strong>.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 shrink-0 mt-0.5">•</span>
+                  <span>Interdiction de tenter de <strong>contourner la plateforme</strong>.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-400 shrink-0 mt-0.5">✓</span>
+                  <span className="text-emerald-50">Toutes les transactions doivent obligatoirement <strong>rester sur AFRIGOMBO</strong>.</span>
+                </li>
+              </ul>
+              <div className="pt-2 border-t border-red-500/10">
+                <p className="text-red-400/80 text-[10px] font-bold italic">
+                  * Une surveillance IA est active. Des sanctions (suspension, baisse du score de confiance) peuvent être appliquées en cas de fraude.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 space-y-5 border-t border-zinc-900">
+            <label className="flex items-start gap-4 cursor-pointer group p-2 hover:bg-zinc-900/40 rounded-xl transition-colors">
+              <div className="relative mt-0.5 shrink-0">
+                <input 
+                  type="checkbox" 
+                  checked={hasReadCharter}
+                  onChange={(e) => setHasReadCharter(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <div className="w-6 h-6 border-2 border-zinc-700 rounded-md bg-zinc-900 peer-checked:bg-[#D4AF37] peer-checked:border-[#D4AF37] transition-all flex items-center justify-center">
+                  <Check className="w-4 h-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity" />
+                </div>
+              </div>
+              <span className="text-xs text-zinc-300 font-medium leading-relaxed pt-0.5 group-hover:text-white transition-colors">
+                J'ai lu les règles.
+              </span>
+            </label>
+            
+            <label className="flex items-start gap-4 cursor-pointer group p-2 hover:bg-zinc-900/40 rounded-xl transition-colors">
+              <div className="relative mt-0.5 shrink-0">
+                <input 
+                  type="checkbox" 
+                  checked={charterAccepted}
+                  onChange={(e) => setCharterAccepted(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <div className="w-6 h-6 border-2 border-zinc-700 rounded-md bg-zinc-900 peer-checked:bg-[#D4AF37] peer-checked:border-[#D4AF37] transition-all flex items-center justify-center">
+                  <Check className="w-4 h-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity" />
+                </div>
+              </div>
+              <span className="text-xs text-zinc-300 font-medium leading-relaxed pt-0.5 group-hover:text-white transition-colors">
+                J'accepte les conditions.
+              </span>
+            </label>
+
+            <button
+              onClick={handleAcceptCharter}
+              disabled={!charterAccepted || !hasReadCharter}
+              className="w-full py-5 mt-4 bg-gradient-to-r from-[#D4AF37] to-[#F1C40F] hover:from-[#E06C00] hover:to-[#D4AF37] disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-black font-black uppercase tracking-widest rounded-2xl transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] disabled:shadow-none active:scale-95 text-sm"
+            >
+              Continuer
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -513,118 +630,60 @@ export default function MessagesView({
     return partner.name.toLowerCase().includes(convoSearchQuery.toLowerCase());
   });
 
-  const handleAcceptCharter = () => {
-    if (!charterAccepted) return;
-    localStorage.setItem(`afrigombo_charter_accepted_${currentUser?.uid}`, "true");
-    setHasReadCharter(true);
-    setShowCharter(false);
-    try { gomboDB.updateUserProfile(currentUser.uid, { charterAccepted: true }); } catch(_) {}
-  };
+  if (loadingConvos) {
+    return (
+      <div className="w-full max-w-6xl mx-auto min-h-[75vh] flex items-center justify-center bg-[#050505] rounded-3xl border border-zinc-800 shadow-2xl">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37] mx-auto" />
+          <p className="text-xs text-zinc-500 font-mono font-bold uppercase tracking-wider animate-pulse">Synchronisation de la messagerie...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (conversations.length === 0) {
+    return (
+      <div className="w-full max-w-4xl mx-auto my-8 p-6 sm:p-16 bg-[#050505] rounded-3xl border border-[#D4AF37]/20 shadow-[0_0_50px_rgba(212,175,55,0.05)] relative overflow-hidden flex flex-col items-center animate-fade-in text-center">
+        {/* Decorative background blur */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#D4AF37]/5 blur-3xl rounded-full pointer-events-none" />
+         
+        <div className="relative z-10 w-full max-w-lg space-y-8">
+          <div className="w-24 h-24 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-3xl flex items-center justify-center mx-auto transform -rotate-3 shadow-lg shadow-[#D4AF37]/5">
+            <MessageSquare className="w-12 h-12 text-[#D4AF37]" />
+          </div>
+          
+          <div className="space-y-4">
+            <h2 className="text-2xl sm:text-3xl font-sans font-black text-white uppercase tracking-tighter">
+              Bienvenue dans votre messagerie AFRIGOMBO.
+            </h2>
+            <p className="text-zinc-400 text-sm font-medium leading-relaxed">
+              Les conversations apparaîtront automatiquement après une candidature ou un contrat.
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full">
+            <button 
+              onClick={() => { if (onNavigateToSearch) onNavigateToSearch(); else onBack(); }}
+              className="w-full sm:w-1/2 py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-500 text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-md flex items-center justify-center gap-3 text-xs active:scale-95"
+            >
+              <Search className="w-4 h-4" /> Rechercher un Gombo
+            </button>
+            <button 
+              onClick={() => { if (onNavigateToPublish) onNavigateToPublish(); }}
+              className="w-full sm:w-1/2 py-4 bg-gradient-to-r from-[#D4AF37] to-[#F1C40F] hover:from-[#E06C00] hover:to-[#D4AF37] text-black font-black uppercase tracking-widest rounded-2xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] flex items-center justify-center gap-3 text-xs active:scale-95"
+            >
+              <Mic className="w-4 h-4" /> Publier un Gombo
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-6xl mx-auto min-h-[75vh] flex flex-col md:flex-row bg-[#050505] rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl transition-all animate-fade-in mb-12 relative">
       
-      {/* CHARTER MODAL OVERLAY */}
-      {showCharter && (
-        <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-xl bg-[#050505] border border-[#D4AF37]/30 rounded-3xl p-8 shadow-[0_0_50px_rgba(212,175,55,0.15)] relative overflow-hidden"
-          >
-            {/* Background Accent */}
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#D4AF37]/10 blur-3xl rounded-full" />
-            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-[#D4AF37]/10 blur-3xl rounded-full" />
-
-            <div className="relative space-y-6">
-              <div className="text-center space-y-2">
-                <div className="w-16 h-16 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <ShieldAlert className="w-8 h-8 text-[#D4AF37]" />
-                </div>
-                <h2 className="text-2xl font-sans font-black text-[#D4AF37] uppercase tracking-tighter">
-                  🛡️ Messagerie sécurisée AFRIGOMBO
-                </h2>
-                <div className="h-0.5 w-12 bg-[#D4AF37] mx-auto rounded-full" />
-              </div>
-
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#D4AF37]/20">
-                <section className="space-y-2">
-                  <p className="text-white text-sm font-bold">Bienvenue dans la messagerie sécurisée AFRIGOMBO.</p>
-                  <p className="text-zinc-400 text-xs leading-relaxed">
-                    Cette messagerie protège les artistes, les organisateurs, les contrats et les paiements. Notre priorité est que chaque prestation reste sécurisée jusqu'à son paiement final.
-                  </p>
-                </section>
-
-                <section className="p-4 bg-red-500/5 border border-red-500/20 rounded-2xl space-y-2">
-                  <h3 className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                    <X className="w-3 h-3 text-red-500" /> RÈGLES STRICTES
-                  </h3>
-                  <p className="text-zinc-300 text-[10.5px] leading-relaxed">
-                    Il est <strong>strictement interdit</strong> de partager : numéros de téléphone, adresses e-mail, liens Internet, réseaux sociaux, QR Codes ou coordonnées bancaires.
-                  </p>
-                  <p className="text-red-400 text-[9px] font-bold italic">
-                    * Ces contenus seront automatiquement bloqués par notre système de surveillance IA.
-                  </p>
-                </section>
-
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-xl space-y-1">
-                    <h4 className="text-[#D4AF37] text-[9px] font-black uppercase">📸 PHOTOS & MÉDIAS</h4>
-                    <p className="text-zinc-400 text-[10px] leading-tight">
-                      Limitées à 3 photos après signature. Uniquement pour le lieu, la scène, le matériel ou l'accès. Analyse IA systématique.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-xl space-y-1">
-                    <h4 className="text-[#D4AF37] text-[9px] font-black uppercase">💬 MESSAGES & AUDIO</h4>
-                    <p className="text-zinc-400 text-[10px] leading-tight">
-                      Réponses prédéfinies avant contrat. Clavier libre après signature. Messages vocaux désactivés.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-xl space-y-1">
-                    <h4 className="text-[#D4AF37] text-[9px] font-black uppercase">💰 PAIEMENTS SÉCURISÉS</h4>
-                    <p className="text-zinc-400 text-[10px] leading-tight">
-                      Tous les paiements passent exclusivement par AFRIGOMBO. Le dépôt est sécurisé jusqu'à validation.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-xl space-y-1 border-l-[#D4AF37]">
-                    <h4 className="text-[#D4AF37] text-[9px] font-black uppercase">🎯 SCORE DE CONFIANCE</h4>
-                    <p className="text-zinc-400 text-[10px] leading-tight">
-                      Chaque utilisateur possède un indice de confiance. Les tentatives de contournement diminuent ce score.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 space-y-4">
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <div className="relative mt-0.5">
-                    <input 
-                      type="checkbox" 
-                      checked={charterAccepted}
-                      onChange={(e) => setCharterAccepted(e.target.checked)}
-                      className="peer sr-only"
-                    />
-                    <div className="w-5 h-5 border-2 border-zinc-700 rounded-md bg-zinc-900 peer-checked:bg-[#D4AF37] peer-checked:border-[#D4AF37] transition-all" />
-                    <Check className="absolute top-0.5 left-0.5 w-4 h-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity" />
-                  </div>
-                  <span className="text-[11px] text-zinc-400 font-medium leading-tight group-hover:text-zinc-200 transition-colors">
-                    J'ai lu et j'accepte les règles de la messagerie sécurisée AFRIGOMBO.
-                  </span>
-                </label>
-
-                <button
-                  onClick={handleAcceptCharter}
-                  disabled={!charterAccepted}
-                  className="w-full py-4 bg-[#D4AF37] hover:bg-[#E06C00] disabled:bg-zinc-800 disabled:text-zinc-600 text-black font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-[#D4AF37]/10 active:scale-95"
-                >
-                  Continuer
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
       {/* LEFT COLUMN: Conversation List */}
       <div className={`w-full md:w-85 border-zinc-800 flex flex-col shrink-0 ${
         activeConvo ? "hidden md:flex md:border-r" : "flex"
@@ -675,11 +734,11 @@ export default function MessagesView({
           ) : filteredConversations.length === 0 ? (
             <div className="p-8 text-center space-y-3">
               <div className="w-10 h-10 bg-[#D4AF37]/5 rounded-2xl flex items-center justify-center mx-auto border border-[#D4AF37]/10">
-                <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
+                <Search className="w-5 h-5 text-[#D4AF37]" />
               </div>
-              <p className="text-xs text-white font-black uppercase tracking-wider">Aucune conversation</p>
+              <p className="text-xs text-white font-black uppercase tracking-wider">Aucun résultat</p>
               <p className="text-[10.5px] text-zinc-500 leading-relaxed max-w-[200px] mx-auto font-sans">
-                Trouvez un artiste ou un organisateur dans <b>La Base</b> ou les Gombos et ouvrez un chat de confiance.
+                Aucune conversation ne correspond à votre recherche.
               </p>
             </div>
           ) : (

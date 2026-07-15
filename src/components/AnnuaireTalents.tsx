@@ -441,24 +441,30 @@ export default function AnnuaireTalents({
             </div>
 
             {/* Stats list */}
-            <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-55 dark:border-gray-850">
-              <div className="text-center p-3 bg-gray-50/50 dark:bg-[#17171c]/55 rounded-xl border border-gray-100 dark:border-gray-850">
-                <div className="text-base sm:text-lg font-black text-gray-950 dark:text-white">
-                  {selectedTalent.gigsCompleted || 0}
+            <div className="grid grid-cols-4 gap-2.5 pt-3 border-t border-gray-55 dark:border-gray-850">
+              <div className="text-center p-2 bg-gray-50/50 dark:bg-[#17171c]/55 rounded-xl border border-gray-100 dark:border-gray-850">
+                <div className="text-sm sm:text-base font-black text-gray-950 dark:text-white">
+                  {selectedTalent.gombosCompleted || selectedTalent.gigsCompleted || 0}
                 </div>
-                <div className="text-[9px] uppercase font-bold text-gray-400">Gombos Joués</div>
+                <div className="text-[8px] uppercase font-bold text-gray-400">Gombos</div>
               </div>
-              <div className="text-center p-3 bg-gray-50/50 dark:bg-[#17171c]/55 rounded-xl border border-gray-100 dark:border-gray-850">
-                <div className="text-base sm:text-lg font-black text-gray-950 dark:text-white">
-                  {selectedTalent.applicationsSent || 0}
+              <div className="text-center p-2 bg-gray-50/50 dark:bg-[#17171c]/55 rounded-xl border border-gray-100 dark:border-gray-850">
+                <div className="text-sm sm:text-base font-black text-emerald-500 font-mono">
+                  {selectedTalent.trustScore !== undefined ? selectedTalent.trustScore : 100}%
                 </div>
-                <div className="text-[9px] uppercase font-bold text-gray-400">Candidatures</div>
+                <div className="text-[8px] uppercase font-bold text-gray-400">Confiance</div>
               </div>
-              <div className="text-center p-3 bg-[#D4AF37]/5 rounded-xl border border-[#D4AF37]/10">
-                <div className="text-base sm:text-lg font-black text-[#D4AF37]">
+              <div className="text-center p-2 bg-gray-50/50 dark:bg-[#17171c]/55 rounded-xl border border-gray-100 dark:border-gray-850">
+                <div className="text-sm sm:text-base font-black text-yellow-600 dark:text-yellow-500 font-mono">
+                  ★{selectedTalent.averageRating !== undefined ? selectedTalent.averageRating : 4.5}
+                </div>
+                <div className="text-[8px] uppercase font-bold text-gray-400">Note ({selectedTalent.ratingCount || 0})</div>
+              </div>
+              <div className="text-center p-2 bg-[#D4AF37]/5 rounded-xl border border-[#D4AF37]/10">
+                <div className="text-sm sm:text-base font-black text-[#D4AF37]">
                   {viewsCount[selectedTalent.uid] || 32}
                 </div>
-                <div className="text-[9px] uppercase font-black text-gray-400">Vues Profil</div>
+                <div className="text-[8px] uppercase font-black text-gray-400">Vues</div>
               </div>
             </div>
 
@@ -781,41 +787,61 @@ export default function AnnuaireTalents({
                               <span className="text-[9px] font-black uppercase text-purple-650 bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded leading-none">
                                 {talent.specialty || "Musicien"}
                               </span>
-                              {talent.badges?.map((badge, idx) => {
-                                const isGoldNoir = badge.includes("Certifié") || badge.includes("Vérifié");
+                              {talent.kycStatus === "approved" && (
+                                <span className="text-[8px] font-black bg-[#D4AF37] text-black px-1.5 py-0.5 rounded leading-none border border-[#D4AF37]/10 flex items-center gap-0.5">
+                                  🎼 GOMBO ID
+                                </span>
+                              )}
+                              {talent.badge && talent.badge !== "Standard" && (
+                                <span className="text-[8.5px] font-black uppercase tracking-widest bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded leading-none border border-[#D4AF37]/20">
+                                  {talent.badge === "Référence AFRIGOMBO" && "👑 Référence"}
+                                  {talent.badge === "Artiste Premium" && "🏆 Premium"}
+                                  {talent.badge === "Excellence" && "🥇 Excellence"}
+                                  {talent.badge === "Très fiable" && "🥈 Très fiable"}
+                                  {talent.badge === "Fiable" && "🥉 Fiable"}
+                                </span>
+                              )}
+                              {talent.badges?.filter(b => b !== "Certifié" && b !== "Vérifié").map((badge, idx) => {
                                 return (
-                                  <span key={idx} className={`text-[8px] font-black px-1.5 py-0.5 rounded leading-none border ${
-                                    isGoldNoir 
-                                      ? "bg-[#D4AF37] text-[#0B0B0B] border-[#D4AF37]/10" 
-                                      : "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/15"
-                                  }`}>
+                                  <span key={idx} className="text-[8px] font-black px-1.5 py-0.5 rounded leading-none border bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700">
                                     {badge}
                                   </span>
                                 );
                               })}
                             </div>
                             
-                            <h3 className="text-sm font-black text-gray-950 dark:text-white truncate">
+                            <h3 className="text-sm font-black text-gray-950 dark:text-white truncate mt-1">
                               {talent.firstName} {talent.lastName} {talent.artistName && `(${talent.artistName})`}
                             </h3>
 
-                            <p className="text-[10px] text-gray-400 font-bold flex items-center gap-0.5">
-                              <MapPin className="w-3 h-3 text-orange-650" />
-                              <span className="truncate">{talent.commune || "Cocody"}, Abidjan</span>
-                            </p>
+                            <div className="flex items-center gap-2 flex-wrap text-[10px]">
+                              <p className="text-gray-400 font-bold flex items-center gap-0.5">
+                                <MapPin className="w-3 h-3 text-orange-650" />
+                                <span className="truncate">{talent.commune || "Cocody"}</span>
+                              </p>
+                              <span className="text-gray-300 dark:text-zinc-700">•</span>
+                              <p className="text-yellow-600 dark:text-yellow-500 font-mono font-black flex items-center gap-0.5">
+                                ★ {talent.averageRating !== undefined ? talent.averageRating : "4.5"}
+                                <span className="text-gray-400 font-normal">({talent.ratingCount || 0})</span>
+                              </p>
+                              <span className="text-gray-300 dark:text-zinc-700">•</span>
+                              <p className="text-emerald-500 font-mono font-black">
+                                📈 {talent.trustScore !== undefined ? talent.trustScore : "100"}%
+                              </p>
+                            </div>
                           </div>
                         </div>
 
                         {/* Bio teaser */}
                         <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                          {talent.bio || "Guitariste exceptionnel d'aventure scénique, actif dans le milieu cabaret à Côte d'ivoire."}
+                          {talent.bio || "Guitariste exceptionnel d'aventure scénique, actif dans le milieu de la musique live à Abidjan."}
                         </p>
                       </div>
 
                       {/* Card layout bottom controls */}
                       <div className="flex items-center justify-between pt-3 border-t border-gray-50 dark:border-[#1a1a1f] text-xs">
                         <span className="text-[9.5px] text-gray-400 font-bold">
-                          💼 {talent.gigsCompleted || (talent.experience === "Professionnel" ? 6 : 2)} gombos
+                          💼 {talent.gombosCompleted || talent.gigsCompleted || (talent.experience === "Professionnel" ? 6 : 2)} gombos
                         </span>
 
                         <div className="flex items-center gap-1.5 onClickPrevent">

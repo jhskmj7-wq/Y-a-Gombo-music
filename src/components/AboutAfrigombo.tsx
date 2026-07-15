@@ -64,14 +64,25 @@ export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProp
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-amber-500/20 to-transparent blur-3xl -z-10" />
         
         <div className="max-w-4xl mx-auto text-center space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-widest"
-          >
-            <Zap className="w-3 h-3" />
-            L'Évolution Musicale
-          </motion.div>
+          <div className="flex flex-col items-center gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-widest"
+            >
+              <Zap className="w-3 h-3" />
+              L'Évolution Musicale
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="inline-flex items-center px-2 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-md"
+            >
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Bêta Privée V2.0</span>
+            </motion.div>
+          </div>
           
           <motion.h1
             initial={{ opacity: 0, y: 20 }}

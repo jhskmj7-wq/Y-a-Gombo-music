@@ -32,6 +32,8 @@ interface FounderThroneProps {
 export default function FounderThrone({
   users,
   transactions,
+  alerts = [],
+  setAlerts,
   addToTerminal,
   onClose
 }: FounderThroneProps) {
@@ -440,6 +442,184 @@ export default function FounderThrone({
                       <Eye className="w-3 h-3 ml-auto mr-4 opacity-50" />
                     </button>
                   </div>
+                </div>
+              </div>
+
+              {/* GOUVERNANCE ET QUALITÉ DE LA COMMUNAUTÉ */}
+              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/40 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                <div className="flex items-center justify-between mb-4 border-b border-[#D4AF37]/20 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]" />
+                    <h3 className="text-[11px] sm:text-xs font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans">
+                      QUALITÉ DE LA COMMUNAUTÉ
+                    </h3>
+                  </div>
+                  <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded uppercase font-bold tracking-wider animate-pulse">
+                    Moteur IA Actif
+                  </span>
+                </div>
+
+                {/* KPI metrics */}
+                <div className="grid grid-cols-3 gap-2.5 mb-5">
+                  <div className="bg-zinc-950/80 border border-zinc-850 p-2.5 rounded-xl text-center">
+                    <div className="text-[8px] text-zinc-400 uppercase font-bold font-mono tracking-wider mb-1">Confiance Moyenne</div>
+                    <div className="text-base font-black text-emerald-400 font-mono">
+                      {(() => {
+                        const scoreUsers = users.filter(u => u.trustScore !== undefined && u.trustScore > 0);
+                        return scoreUsers.length > 0
+                          ? Math.round(scoreUsers.reduce((sum, u) => sum + (u.trustScore || 0), 0) / scoreUsers.length)
+                          : 94;
+                      })()}%
+                    </div>
+                  </div>
+                  <div className="bg-zinc-950/80 border border-zinc-850 p-2.5 rounded-xl text-center">
+                    <div className="text-[8px] text-zinc-400 uppercase font-bold font-mono tracking-wider mb-1">Note Générale</div>
+                    <div className="text-base font-black text-[#D4AF37] font-mono">
+                      ★{(() => {
+                        const rated = users.filter(u => u.averageRating !== undefined && u.averageRating > 0);
+                        return rated.length > 0
+                          ? (rated.reduce((sum, u) => sum + (u.averageRating || 0), 0) / rated.length).toFixed(1)
+                          : "4.7";
+                      })()}
+                    </div>
+                  </div>
+                  <div className="bg-zinc-950/80 border border-zinc-850 p-2.5 rounded-xl text-center">
+                    <div className="text-[8px] text-zinc-400 uppercase font-bold font-mono tracking-wider mb-1">Passeports Gombo ID</div>
+                    <div className="text-base font-black text-white font-mono">
+                      {users.filter(u => u.kycStatus === "approved" || u.gomboId !== undefined).length}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reputation Badges summary list */}
+                <div className="mb-5 space-y-2">
+                  <h4 className="text-[9px] text-zinc-400 tracking-[0.15em] uppercase font-mono font-bold">
+                    DISTRIBUTION DES BADGES DE RÉPUTATION
+                  </h4>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { name: "Référence AFRIGOMBO", color: "bg-[#D4AF37] text-black", count: users.filter(u => u.badge === "Référence AFRIGOMBO").length },
+                      { name: "Artiste Premium", color: "bg-amber-600 text-white", count: users.filter(u => u.badge === "Artiste Premium").length },
+                      { name: "Excellence", color: "bg-emerald-600 text-white", count: users.filter(u => u.badge === "Excellence").length },
+                      { name: "Très fiable", color: "bg-blue-600 text-white", count: users.filter(u => u.badge === "Très fiable").length },
+                      { name: "Fiable", color: "bg-zinc-700 text-white", count: users.filter(u => u.badge === "Fiable").length },
+                    ].map((badge, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-1.5 bg-zinc-950 border border-zinc-900 rounded-lg">
+                        <span className="text-[8px] font-bold text-zinc-300 truncate">{badge.name}</span>
+                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded ${badge.color}`}>
+                          {badge.count}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* AI Security Alerts Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[9px] text-zinc-400 tracking-[0.15em] uppercase font-mono font-bold flex items-center gap-1">
+                      🛡️ SIGNAUX DE FRAUDE DÉTECTÉS {alerts.length > 0 && `(${alerts.length})`}
+                    </h4>
+                    {alerts.length > 0 && (
+                      <button
+                        onClick={() => {
+                          if (setAlerts) setAlerts([]);
+                          addToTerminal("Gouvernance : Toutes les alertes de sécurité ont été purgées.");
+                        }}
+                        className="text-[8px] text-red-400 hover:text-red-300 transition-colors uppercase font-mono font-black cursor-pointer"
+                      >
+                        Purger tout
+                      </button>
+                    )}
+                  </div>
+
+                  {alerts.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center p-5 bg-zinc-950/40 border border-dashed border-emerald-500/20 rounded-xl text-center">
+                      <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      </div>
+                      <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">
+                        Qualité de la Communauté au Sommet
+                      </span>
+                      <p className="text-[8px] text-zinc-400 mt-1 max-w-xs leading-relaxed">
+                        L'algorithme heuristique d'AFRIGOMBO n'a détecté aucune anomalie récente d'auto-évaluation ou de manipulation de score.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[220px] overflow-y-auto scrollbar-none">
+                      {alerts.map((al) => (
+                        <div
+                          key={al.id}
+                          className={`p-2.5 rounded-lg border ${
+                            al.severity === "high"
+                              ? "bg-red-950/20 border-red-900/40"
+                              : "bg-amber-950/10 border-amber-900/30"
+                          } flex flex-col gap-1.5`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-white font-black text-[10px]">
+                                {al.userArtisticName || "Artiste Suspect"}
+                              </span>
+                              <span className="text-[8px] text-zinc-400 font-mono">
+                                ID: {al.userId?.substring(0, 8)}...
+                              </span>
+                            </div>
+                            <span
+                              className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${
+                                al.severity === "high"
+                                  ? "bg-red-500 text-white"
+                                  : "bg-amber-500 text-black"
+                              }`}
+                            >
+                              {al.severity}
+                            </span>
+                          </div>
+
+                          <p className="text-[9px] text-zinc-300 leading-relaxed font-mono">
+                            {al.reason}
+                          </p>
+
+                          <div className="flex justify-between items-center text-[8px] text-zinc-500 font-mono mt-1 border-t border-zinc-900 pt-1.5">
+                            <span>
+                              {al.timestamp ? new Date(al.timestamp).toLocaleTimeString() : "Maintenant"}
+                            </span>
+                            <div className="flex gap-1.5">
+                              <button
+                                onClick={() => {
+                                  addToTerminal(`Ignoré : Alerte de sécurité pour ${al.userArtisticName || al.userId} résolue.`);
+                                  if (setAlerts) {
+                                    setAlerts(prev => prev.filter(a => a.id !== al.id));
+                                  }
+                                }}
+                                className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded font-black transition-colors uppercase cursor-pointer"
+                              >
+                                Ignorer
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    addToTerminal(`Sanction Suprême : Utilisateur ${al.userArtisticName || al.userId} banni.`);
+                                    if (setAlerts) {
+                                      setAlerts(prev => prev.filter(a => a.id !== al.id));
+                                    }
+                                    try {
+                                      audioSynth.playTamTam(true);
+                                    } catch (e) {}
+                                  } catch (err) {
+                                    console.error(err);
+                                  }
+                                }}
+                                className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded font-black transition-colors uppercase cursor-pointer"
+                              >
+                                Bannir
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

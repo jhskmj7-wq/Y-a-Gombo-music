@@ -50,6 +50,7 @@ import PremiumEmptyState from "./PremiumEmptyState";
 import AboutAfrigombo from "./AboutAfrigombo";
 import SupportAfrigombo from "./SupportAfrigombo";
 import WhatsNew from "./WhatsNew";
+import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
 import FirebaseDiagnostic from "./FirebaseDiagnostic";
 import { gomboDB } from "../firebase";
 import { usePerformance } from "../services/performanceService";
@@ -69,6 +70,7 @@ import {
 } from "../types";
 import GomboContractsDashboard from "./GomboContractsDashboard";
 import AfrigomboWalletDashboard from "./AfrigomboWalletDashboard";
+import EventsView from "./EventsView";
 import { audioSynth } from "../lib/audio";
 import { interactionBus } from "./LivingInteractions";
 import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
@@ -149,12 +151,15 @@ import {
   Smartphone,
   Loader2,
   Check,
+  CheckCircle2,
   Info,
   Mic2,
   FileSignature,
   BadgeCheck,
   History,
-  Download
+  Download,
+  CreditCard,
+  ChevronRight
 } from "lucide-react";
 import {
   AreaChart,
@@ -512,6 +517,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isEventsModalOpen, setIsEventsModalOpen] = useState<boolean>(false);
   const [isAcademyModalOpen, setIsAcademyModalOpen] = useState<boolean>(false);
+  const [comingSoonFeatureKey, setComingSoonFeatureKey] = useState<string | null>(null);
   const { t, language: lang, setLanguage } = useLanguage();
   const { isBatteryLow, isSlowConnection, isDataSaveActive, isBatterySaveActive, areAnimationsReduced } = usePerformance();
 
@@ -521,6 +527,18 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [firebaseSyncState, setFirebaseSyncState] = useState<"synced" | "syncing" | "offline">("synced");
   const [connectionsCount, setConnectionsCount] = useState<number>(() => Math.floor(Math.random() * 8) + 14);
+
+  // Dynamic Header State
+  const [dynamicHeaderIndex, setDynamicHeaderIndex] = useState(0);
+  const [personalIndicatorIndex, setPersonalIndicatorIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDynamicHeaderIndex(prev => (prev + 1) % 5);
+      setPersonalIndicatorIndex(prev => (prev + 1) % 3);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -658,7 +676,14 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   useEffect(() => {
     if (currentUser?.uid) {
       const unsubscribeUser = gomboDB.listenUserNotifications(currentUser.uid, (userNotifs) => {
-        setRealNotifications(userNotifs);
+        setRealNotifications(prev => {
+          const newUnread = userNotifs.filter(n => !n.read).length;
+          const oldUnread = prev.filter(n => !n.read).length;
+          if (newUnread > oldUnread) {
+            try { if (navigator.vibrate) navigator.vibrate(200); } catch (e) {}
+          }
+          return userNotifs;
+        });
       });
       
       const unsubscribeGlobal = gomboDB.listenAdminNotifications((allGlobal) => {
@@ -2070,40 +2095,69 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         } : (users.find(u => u.id === activeArtistId) || users[0]);
 
                         return (
-                          <div className="bg-[#050505]/80 border border-[#D4AF37]/20 rounded-xl p-4 space-y-3 shadow-md">
-                            <div className="flex items-center gap-3">
-                              <div className="relative shrink-0">
-                                <div className="w-11 h-11 rounded-full border border-[#D4AF37]/60 overflow-hidden bg-[#D4AF37]/10 flex items-center justify-center font-display font-black">
-                                  {currentArtist && (currentArtist.avatarUrl || (currentArtist as any).photoURL) ? (
-                                    <img 
-                                      src={currentArtist.avatarUrl || (currentArtist as any).photoURL} 
-                                      alt={currentArtist.artisticName} 
-                                      className="w-full h-full object-cover"
-                                      referrerPolicy="no-referrer"
-                                    />
-                                  ) : (
-                                    <Music className="w-5 h-5 text-[#D4AF37]" />
-                                  )}
-                                </div>
-                                {currentArtist?.isCertified && (
-                                  <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border border-black flex items-center justify-center" title="Certifié">
-                                    <span className="text-[9px] text-white font-bold">✓</span>
+                          <div className="flex flex-col gap-3">
+                            <div className="bg-[#050505]/80 border border-[#D4AF37]/20 rounded-xl p-4 shadow-md flex flex-col relative overflow-hidden">
+                              <div className="flex items-center gap-4">
+                                <div className="relative shrink-0">
+                                  <div className="w-14 h-14 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-black flex items-center justify-center font-display font-black shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                                    {currentArtist && (currentArtist.avatarUrl || (currentArtist as any).photoURL) ? (
+                                      <img 
+                                        src={currentArtist.avatarUrl || (currentArtist as any).photoURL} 
+                                        alt={currentArtist.artisticName} 
+                                        className="w-full h-full object-cover"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    ) : (
+                                      <Music className="w-5 h-5 text-[#D4AF37]" />
+                                    )}
+                                  </div>
+                                  <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#D4AF37] rounded-full border-2 border-black flex items-center justify-center shadow-sm" title="Vérifié">
+                                    <CheckCircle2 className="w-3 h-3 text-black" strokeWidth={4} />
                                   </span>
-                                )}
+                                </div>
+                                
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="text-[15px] font-sans font-black text-white leading-tight truncate">
+                                    {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
+                                  </h3>
+                                  <p className="text-[10px] text-zinc-400 font-mono uppercase tracking-wide font-medium mt-1">
+                                    GOMBO ID: {profile?.gomboIdNumber ? profile.gomboIdNumber : "AG-0001258"}
+                                  </p>
+                                  <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                    <span className="px-1.5 py-0.5 rounded border border-[#D4AF37]/40 text-[#D4AF37] text-[9px] font-sans uppercase font-bold flex items-center gap-1">
+                                      ⭐ Niveau Professionnel
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
                               
-                              <div className="min-w-0">
-                                <h3 className="text-xs font-sans font-black text-white leading-tight truncate">
-                                  {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
-                                </h3>
-                                <p className="text-[9px] text-[#D4AF37] font-mono uppercase tracking-wide font-bold">
-                                  {currentArtist ? currentArtist.commune : "Abidjan"}, CI
-                                </p>
-                                <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase border border-[#D4AF37]/25 font-extrabold">
-                                  👑 {lang === "nouchi" ? "Vieux Môgô" : (lang === "en" ? "Elite Artist" : "Artiste Élite")}
-                                </span>
+                              <div className="mt-4 flex items-center justify-between">
+                                <span className="text-[11px] font-sans text-zinc-300 font-medium">Réputation</span>
+                                <div className="flex items-center gap-1.5">
+                                  <div className="flex text-[#D4AF37] text-[10px]">
+                                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                                  </div>
+                                  <span className="text-[11px] text-zinc-400 font-sans font-medium">(4.8)</span>
+                                </div>
                               </div>
                             </div>
+
+                            <button 
+                              onClick={() => {
+                                setIsSidebarOpen(false);
+                                setActiveMenu("user_wallet");
+                              }}
+                              className="bg-[#050505]/80 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/5 transition-colors rounded-xl p-4 shadow-md flex items-center justify-between cursor-pointer"
+                            >
+                              <div className="flex items-center gap-4">
+                                <CreditCard className="w-8 h-8 text-[#D4AF37]" strokeWidth={1.5} />
+                                <div className="flex flex-col text-left">
+                                  <span className="text-[11px] font-sans text-zinc-300 font-medium leading-none mb-1">Wallet</span>
+                                  <span className="text-lg font-black text-[#D4AF37] leading-none">{profile?.walletBalance?.toLocaleString('fr-FR') || "25 000"} FCFA</span>
+                                </div>
+                              </div>
+                              <ChevronRight className="w-5 h-5 text-[#D4AF37]" strokeWidth={2} />
+                            </button>
                           </div>
                         );
                       })()
@@ -2134,25 +2188,22 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             onClick={() => {
                               if (isInactive) {
                                 try { audioSynth.playTamTam(false); } catch (_) {}
-                                alert(`👑 Ce service "${label}" sera disponible lors du lancement de la version bêta publique AFRIGOMBO Elite !`);
+                                setComingSoonFeatureKey(key);
+                                setIsSidebarOpen(false);
                               } else {
                                 actionOnSelect();
                               }
                             }}
-                            className={`w-full flex items-center justify-between px-3.5 py-2 text-left rounded-xl text-xs font-sans font-bold transition-all ${
-                              isInactive 
-                                ? "text-zinc-600 hover:text-zinc-400 bg-transparent cursor-pointer"
-                                : "text-zinc-300 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 cursor-pointer"
-                            }`}
+                            className="w-full flex items-center justify-between px-3.5 py-2 text-left rounded-xl text-xs font-sans font-bold transition-all text-zinc-300 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 cursor-pointer"
                           >
                             <span className="flex items-center gap-3">
                               <span className="text-sm shrink-0">{icon}</span>
-                              <span className={isInactive ? "opacity-75" : ""}>{label}</span>
+                              <span>{label}</span>
                             </span>
                             {customBadge ? customBadge : (
                               isInactive ? (
-                                <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-[#111111] border border-zinc-800 text-[#D4AF37]/75 rounded uppercase font-black tracking-tighter">
-                                  Bientôt dispo
+                                <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/25 text-[#D4AF37] rounded uppercase font-black tracking-tighter">
+                                  Bientôt
                                 </span>
                               ) : null
                             )}
@@ -2163,24 +2214,17 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       return (
                         <div className="space-y-4">
                           
-                          {/* SECTION: Outils rapides */}
+                          {/* SECTION: ACTIONS RAPIDES */}
                           <div className="space-y-1">
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
-                              ⚡ {t('recherche')}
+                              ⚡ Actions Rapides
                             </span>
-                            {renderMenuItem("menu_events", "Événements", "📅", () => {
-                              setIsEventsModalOpen(true);
+                            {renderMenuItem("menu_events", "Événements (Calendrier)", "📅", () => {
+                              setPerspective("user");
+                              setActiveMenu("user_events");
                               setIsSidebarOpen(false);
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/10 uppercase font-black">LIVE</span>)}
-                            {renderMenuItem("menu_reels", "Vidéos Réelles", "🎥", () => {
-                              setPerspective("user");
-                              setActiveMenu("user_reels");
-                              setIsSidebarOpen(false);
-                              try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/10 uppercase font-black" style={{ contentVisibility: 'auto' }}>NEW</span>)}
-                            {renderMenuItem("menu_favorites", "Favoris", "⭐", () => {}, true)}
-                            {renderMenuItem("menu_history", "Historique", "🕓", () => {}, true)}
                             {renderMenuItem("menu_near_opports", "Opportunités proches", "📍", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
@@ -2189,71 +2233,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/10 uppercase font-black">DISPO</span>)}
-                            {renderMenuItem("menu_trends", "Tendances", "🏆", () => {}, true)}
-                            {renderMenuItem("menu_invites", "Invitations", "🎟", () => {}, true)}
-                          </div>
-
-                          {/* SEPARATOR */}
-                          <div className="border-t border-zinc-900 my-1" />
-
-                          {/* SECTION: Univers AFRI */}
-                          <div className="space-y-1">
-                            <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
-                              🌍 Univers AFRI
-                            </span>
-                            {renderMenuItem("menu_builders_1", "Soutenir AFRIGOMBO", "❤️", () => {
-                              requireAuthThen(() => {
-                                setPerspective("user");
-                                setActiveMenu("user_builders");
-                                setIsSidebarOpen(false);
-                                try { audioSynth.playValidationSuccess(); } catch (_) {}
-                              });
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/10 uppercase font-black">BÂTISSEURS</span>)}
-                            {renderMenuItem("menu_afri_id", "AfriID", "🆔", () => {
-                              addToTerminal("🌍 AFRIID : Identité centrale en préparation...");
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-blue-500/10 text-blue-400 rounded border border-blue-500/10 uppercase font-black">EN PRÉPARATION</span>)}
-                            {renderMenuItem("menu_wallet", "Wallet", "💳", () => {}, true)}
-                            {renderMenuItem("menu_afritrust", "AfriTrust", "🛡️", () => {
-                              addToTerminal("🛡️ AFRITRUST : Certification & Confiance en développement...");
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-green-500/10 text-green-400 rounded border border-green-500/10 uppercase font-black">DÉVELOPPEMENT</span>)}
-                            {renderMenuItem("menu_afrilivraison", "AfriLivraison", "🚚", () => {
-                              addToTerminal("🚚 AFRILIVRAISON : Logistique intelligente en développement...");
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-orange-500/10 text-orange-400 rounded border border-orange-500/10 uppercase font-black">DÉVELOPPEMENT</span>)}
-                          </div>
-
-                          {/* SEPARATOR */}
-                          <div className="border-t border-zinc-900 my-1" />
-
-                          {/* SECTION: Centre personnel */}
-                          <div className="space-y-1">
-                            <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-400 uppercase tracking-widest block mb-1">
-                              👑 Centre personnel
-                            </span>
-                            {renderMenuItem("menu_inventory", t('terrain'), "🗺️", () => {
-                              setPerspective("user");
-                              setActiveMenu("user_terrain");
-                              setIsSidebarOpen(false);
-                            }, false)}
-                            {renderMenuItem("menu_heritage", t('heritage'), "👑", () => {
-                              requireAuthThen(() => {
-                                setPerspective("user");
-                                setActiveMenu("user_edit_profile");
-                                setIsSidebarOpen(false);
-                              });
-                            }, false)}
-                            {renderMenuItem("menu_comms", t('commentaires'), "💬", () => {
-                              requireAuthThen(() => {
-                                setPerspective("user");
-                                setActiveMenu("user_notifications"); // or a specific comments view if exists
-                                setIsSidebarOpen(false);
-                              });
-                            }, false)}
-                            {renderMenuItem("menu_pubs", t('publications'), "📝", () => {
-                              setPerspective("user");
-                              setActiveMenu("user_terrain"); // showing personal posts
-                              setIsSidebarOpen(false);
-                            }, false)}
-                            {renderMenuItem("menu_msgs", t('messages'), "📩", () => {
+                            {renderMenuItem("menu_msgs", "Messages", "📩", () => {
                                requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_messages");
@@ -2264,11 +2244,82 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                 {totalUnreadMessages}
                               </span>
                             ) : undefined)}
-                            {renderMenuItem("menu_confidentiality", "Confidentialité", "🔒", () => {
+                            {renderMenuItem("menu_favorites", "Favoris", "⭐", () => {}, true)}
+                          </div>
+
+                          {/* SEPARATOR */}
+                          <div className="border-t border-zinc-900 my-1" />
+
+                          {/* SECTION: Univers AFRI */}
+                          <div className="space-y-1">
+                            <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
+                              🏛️ Univers AFRIGOMBO
+                            </span>
+                            {renderMenuItem("menu_builders_1", "Soutenir AFRIGOMBO ❤️", "❤️", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_builders");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_wallet", "Wallet", "💳", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_wallet");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_help", "Centre d'aide", "🛟", () => {
                               setPerspective("user");
-                              setActiveMenu("privacy");
+                              setActiveMenu("user_help_center");
                               setIsSidebarOpen(false);
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false)}
+                            {renderMenuItem("menu_gombo_id", "GOMBO ID", "🆔", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_gombo_id");
+                                setIsSidebarOpen(false);
+                                try { audioSynth.playValidationSuccess(); } catch (_) {}
+                              });
+                            }, false)}
+                          </div>
+
+                          {/* SEPARATOR */}
+                          <div className="border-t border-zinc-900 my-1" />
+
+                          {/* SECTION: Centre personnel */}
+                          <div className="space-y-1">
+                            <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-400 uppercase tracking-widest block mb-1">
+                              👤 Centre personnel
+                            </span>
+                            {renderMenuItem("menu_heritage", "Mon Héritage", "👑", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_heritage");
+                                setIsSidebarOpen(false);
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_profile", "Mon Profil", "👤", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_edit_profile");
+                                setIsSidebarOpen(false);
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_pubs", "Publications", "📝", () => {
+                              setPerspective("user");
+                              setActiveMenu("user_terrain");
+                              setIsSidebarOpen(false);
+                            }, false)}
+                            {renderMenuItem("menu_comms", "Commentaires", "💬", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_notifications");
+                                setIsSidebarOpen(false);
+                              });
                             }, false)}
                             {renderMenuItem("menu_settings", "Paramètres", "⚙", () => {
                               requireAuthThen(() => {
@@ -2298,9 +2349,16 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest block mb-1">
                               🛠 Système
                             </span>
+                            {renderMenuItem("menu_notifications", "Notifications", "🔔", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_notifications");
+                                setIsSidebarOpen(false);
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_history", "Historique", "🕓", () => {}, true)}
                             {renderMenuItem("menu_downloads", "Téléchargements", "📥", () => {}, true)}
                             {renderMenuItem("menu_backups", "Sauvegardes", "💾", () => {}, true)}
-                            {renderMenuItem("menu_statistics", "Statistiques", "📊", () => {}, true)}
                             
                             {currentUser && renderMenuItem("menu_logout", "Déconnexion", "🚪", async () => {
                               const confirmLogout = window.confirm(
@@ -2431,50 +2489,30 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </div>
             </header>
           ) : (
-            <header className="flex justify-between items-center px-4 sm:px-8 pt-6 pb-5 border-b border-[#D4AF37]/15 shrink-0 gap-2 w-full animate-fadeIn select-none">
-              {isHeaderSearchOpen ? (
-                <div className="flex-1 flex items-center gap-3">
-                    {/* UPDATED SEARCH BAR */}
-                    <div className="flex-1 flex items-center gap-2 bg-black border border-[#D4AF37]/45 rounded-xl px-3 py-2 w-full">
-                      <Search className="w-4 h-4 text-[#D4AF37]" />
-                      <input
-                        type="text"
-                        placeholder={dynamicPlaceholder}
-                        value={globalSearchTerm}
-                        onChange={(e) => setGlobalSearchTerm(e.target.value)}
-                        className="bg-transparent text-xs text-white focus:outline-none w-full font-mono placeholder:text-zinc-650"
-                        autoFocus
-                      />
-                    </div>
-                  <button
-                    onClick={() => setIsHeaderSearchOpen(false)}
-                    className="px-3.5 py-2 text-xs font-mono font-bold uppercase text-zinc-400 hover:text-white bg-[#111111] border border-white/5 rounded-xl cursor-pointer"
-                  >
-                    Fermer
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {/* Left Side: Hamburger Trigger Button */}
-                  <button
-                    id="hamburger-trigger"
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 border border-zinc-850 hover:border-[#D4AF37]/40 rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none"
-                    title="Ouvrir le menu"
-                  >
-                    <Menu className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-                  </button>
+            <header className="flex flex-col px-4 sm:px-8 py-5 min-h-[110px] border-b border-[#D4AF37]/40 bg-gradient-to-b from-[#030303] to-[#0a0800] backdrop-blur shrink-0 gap-4 w-full animate-fadeIn select-none shadow-[0_4px_30px_rgba(212,175,55,0.05)] rounded-b-2xl">
+              {/* TOP ROW */}
+              <div className="flex justify-between items-center w-full gap-3">
+                {/* Left Side: Hamburger Trigger Button */}
+                <button
+                  id="hamburger-trigger"
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="w-10 h-10 xs:w-11 xs:h-11 sm:w-12 sm:h-12 text-[#D4AF37] hover:text-[#F1C40F] hover:bg-[#D4AF37]/10 border-2 border-[#D4AF37]/30 hover:border-[#D4AF37]/60 rounded-xl transition-all focus:outline-none flex items-center justify-center cursor-pointer bg-black/60 shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+                  title="Ouvrir le menu"
+                >
+                  <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                </button>
 
-                  {/* Middle Brand Section */}
-                  <div className="flex-1 flex items-center gap-1 text-left min-w-0 select-none shrink-0">
-                    {/* Logo AFRIGOMBO */}
+                {/* Middle Brand Section */}
+                <div className="flex flex-col items-center justify-center text-center select-none flex-1">
+                  <div className="flex items-center gap-3">
+                    {/* Logo AFRIGOMBO (A stylized with crown approximation) */}
                     <motion.div
                       animate={{
                         scale: [1, 1.05, 1],
                         boxShadow: [
-                          "0 0 12px rgba(212,175,55,0.25)",
-                          "0 0 22px rgba(212,175,55,0.6)",
-                          "0 0 12px rgba(212,175,55,0.25)"
+                          "0 0 15px rgba(212,175,55,0.3)",
+                          "0 0 25px rgba(212,175,55,0.7)",
+                          "0 0 15px rgba(212,175,55,0.3)"
                         ]
                       }}
                       transition={{
@@ -2482,92 +2520,66 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         repeat: Infinity,
                         ease: "easeInOut"
                       }}
-                      className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-black border border-[#D4AF37] overflow-hidden flex items-center justify-center select-none shrink-0 mr-1 cursor-pointer"
+                      className="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 rounded-full bg-black border-2 border-[#D4AF37] overflow-hidden flex items-center justify-center select-none shrink-0 cursor-pointer"
                     >
                       <div className="w-full h-full flex items-center justify-center bg-black">
-                        <svg viewBox="0 0 40 40" className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 text-[#D4AF37]">
-                          <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                          <path d="M15 28 C 15 20, 25 20, 25 12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
-                          <circle cx="15" cy="28" r="2" fill="currentColor" />
-                          <circle cx="25" cy="12" r="2" fill="currentColor" />
+                        <svg viewBox="0 0 40 40" className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 text-[#D4AF37]">
+                          <path d="M20 5 L10 35 L15 35 L20 20 L25 35 L30 35 Z" fill="currentColor" />
+                          <path d="M14 12 L20 2 L26 12 Z" fill="currentColor" />
                         </svg>
                       </div>
                     </motion.div>
-                    <div className="flex flex-col text-left min-w-0">
-                      <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-black tracking-[0.08em] text-white leading-none uppercase font-display truncate">
-                        AFRIGOMBO
-                      </span>
-                      <span className="text-[7.5px] xs:text-[8.5px] sm:text-[10px] font-sans font-black tracking-wider text-[#D4AF37] leading-none uppercase mt-0.5 sm:mt-1 truncate">
-                        Y'A GOMBO MUSIC
-                      </span>
-                    </div>
+                    <span className="text-xl xs:text-2xl sm:text-3xl font-sans font-black tracking-[0.1em] text-white leading-none uppercase font-display" style={{ textShadow: "0 2px 10px rgba(212,175,55,0.5)" }}>
+                      AFRIGOMBO
+                    </span>
+                  </div>
+                  <span className="text-[10px] xs:text-[11px] sm:text-xs font-sans text-zinc-300 leading-tight mt-1 truncate">
+                    le temple du Gombo musical
+                  </span>
+                </div>
 
-                    {/* OPTIMIZATION & PERFORMANCE BADGES (INTELLIGENT MODE) */}
-                    <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                      {isDataSaveActive && (
-                        <div 
-                          className="flex items-center gap-1 py-0.5 px-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-[8px] xs:text-[9px] font-black uppercase tracking-tight"
-                          title="Économie de données activée"
+                {/* Right Controls Row */}
+                <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 shrink-0">
+                  {/* --- 1. NOTIFICATIONS --- */}
+                  {activeMenu !== "user_edit_profile" && (
+                    <button
+                      id="bell-btn"
+                      onClick={() => {
+                        setActiveMenu("user_notifications");
+                        addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
+                      }}
+                      className="text-[#D4AF37] hover:text-[#F1C40F] transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none"
+                      title="Notifications"
+                    >
+                      <Bell className={`w-6 h-6 sm:w-7 sm:h-7 ${realNotifications.filter(n => !n.read).length > 0 ? "animate-pulse text-red-500" : ""}`} strokeWidth={2} />
+                      {realNotifications.filter(n => !n.read).length > 0 && (
+                        <motion.span
+                          key={realNotifications.filter(n => !n.read).length}
+                          initial={{ scale: 1 }}
+                          animate={{ scale: [1, 1.4, 1] }}
+                          transition={{ duration: 0.3 }}
+                          className="absolute -top-1 -right-1 bg-red-600 text-white font-mono text-[9px] sm:text-[10px] font-black min-w-5 h-5 sm:min-w-6 sm:h-6 rounded-full flex items-center justify-center px-1 border-2 border-[#050505] shadow-sm"
                         >
-                          <span>📶 Économie activée</span>
-                        </div>
+                          {realNotifications.filter(n => !n.read).length > 99 ? '99+' : realNotifications.filter(n => !n.read).length}
+                        </motion.span>
                       )}
-                      {isBatterySaveActive && (
-                        <div 
-                          className="flex items-center gap-1 py-0.5 px-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 font-mono text-[8px] xs:text-[9px] font-black uppercase tracking-tight"
-                          title={isBatteryLow ? "Batterie faible (<20%) - mode léger actif" : "Mode léger automatique actif"}
-                        >
-                          <span>🔋 Batterie</span>
-                        </div>
-                      )}
+                    </button>
+                  )}
+
+                  {/* --- 2. WALLET (ALWAYS VISIBLE) --- */}
+                  <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5">
+                    <CreditCard className="w-5 h-5 text-[#D4AF37]" />
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-mono font-bold text-zinc-400 uppercase tracking-widest leading-none">Wallet</span>
+                      <span className="text-sm font-black text-[#D4AF37] leading-none mt-0.5">{profile?.walletBalance?.toLocaleString('fr-FR') || 0} FCFA</span>
                     </div>
                   </div>
 
-                  {/* Right Controls Row */}
-                  <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 shrink-0">
-                    {/* --- 1. RECHERCHE --- */}
-                    <button
-                      id="search-btn"
-                      onClick={() => {
-                        setIsHeaderSearchOpen(true);
-                        try { audioSynth.playValidationSuccess(); } catch (err) {}
-                      }}
-                      className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)]"
-                      title="Recherche"
-                    >
-                      <Search className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
-                    </button>
-
-                    {/* --- 2. NOTIFICATIONS --- */}
-                    {activeMenu !== "user_edit_profile" && (
-                      <button
-                        id="bell-btn"
-                        onClick={() => {
-                          setActiveMenu("user_notifications");
-                          addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
-                        }}
-                        className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 text-[#D4AF37] hover:text-white bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl transition-all flex items-center justify-center cursor-pointer relative shrink-0 select-none shadow-[0_0_15px_rgba(212,175,55,0.1)]"
-                        title="Notifications"
-                      >
-                        <Bell className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
-                        {realNotifications.filter(n => !n.read).length > 0 && (
-                          <motion.span
-                            key={realNotifications.filter(n => !n.read).length}
-                            initial={{ scale: 1 }}
-                            animate={{ scale: [1, 1.3, 1] }}
-                            transition={{ duration: 0.3 }}
-                            className="absolute -top-0.5 -right-0.5 bg-[#D4AF37] text-black font-mono text-[6.5px] xs:text-[7.5px] sm:text-[8px] font-black w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center border border-black select-none"
-                          >
-                            {realNotifications.filter(n => !n.read).length}
-                          </motion.span>
-                        )}
-                      </button>
-                    )}
-
-                    {/* --- 3. PROFIL --- */}
+                  {/* --- 3. PROFIL --- */}
+                  <div className="flex items-center gap-3">
                     <div 
                       id="profile-avatar"
-                      className="w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/50 overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]" 
+                      className="w-10 h-10 xs:w-11 xs:h-11 sm:w-12 sm:h-12 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-black flex items-center justify-center cursor-pointer transition-all select-none shrink-0 relative shadow-[0_0_15px_rgba(212,175,55,0.25)] hover:border-[#F1C40F] hover:shadow-[0_0_25px_rgba(212,175,55,0.4)]" 
                       title="Profil Utilisateur" 
                       onClick={() => { 
                         if (!currentUser) {
@@ -2581,15 +2593,39 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       {profile?.avatarUrl || currentUser?.photoURL ? (
                         <img src={profile?.avatarUrl || currentUser?.photoURL || ""} alt="User Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
-                        <span className="text-[#D4AF37] font-sans text-[10px] xs:text-xs font-black uppercase">
+                        <span className="text-[#D4AF37] font-sans text-xs sm:text-sm font-black uppercase">
                           {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
                         </span>
                       )}
-                      <span className="absolute bottom-0 right-0 w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 bg-emerald-500 rounded-full border border-black" />
+                      {(profile?.isCertified || profile?.gomboIdNumber) && (
+                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#D4AF37] rounded-full border-2 border-black flex items-center justify-center">
+                          <CheckCircle2 className="w-2 h-2 text-black" strokeWidth={4} />
+                        </span>
+                      )}
                     </div>
                   </div>
-                </>
-              )}
+                </div>
+              </div>
+
+              {/* BOTTOM ROW: DYNAMIC PILL */}
+              <div className="flex justify-center w-full mt-2">
+                <div className="flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-6 gap-y-2 px-4 sm:px-8 py-2.5 rounded-full border border-[#D4AF37]/40 bg-black/60 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+                  <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap">
+                    <span className="text-emerald-500 mr-1.5">🟢</span>
+                    <strong className="text-[#D4AF37]">{users.filter(u => u.status === 'active').length}</strong> artistes disponibles aujourd'hui
+                  </span>
+                  <span className="text-zinc-600 hidden sm:inline">|</span>
+                  <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap">
+                    <span className="text-[#D4AF37] mr-1.5">⚡</span>
+                    <strong className="text-[#D4AF37]">{renforts.filter(r => r.status === 'active').length}</strong> Renforts urgents
+                  </span>
+                  <span className="text-zinc-600 hidden sm:inline">|</span>
+                  <span className="text-[10px] xs:text-xs sm:text-sm font-sans font-medium text-zinc-300 whitespace-nowrap">
+                    <span className="text-[#D4AF37] mr-1.5">🤝</span>
+                    <strong className="text-[#D4AF37]">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats en cours
+                  </span>
+                </div>
+              </div>
             </header>
           )
         )}
@@ -2619,16 +2655,36 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           <div 
             ref={(el) => {
               if (el) {
-                const savedPos = scrollPositionsRef.current["user_terrain"] || 0;
+                const menuId = "user_terrain";
+                const savedPos = scrollPositionsRef.current[menuId] || 0;
                 if (el.scrollTop !== savedPos) {
                   el.scrollTop = savedPos;
                 }
+
+                // Clean up old observer
+                if ((el as any)._scrollObserver) {
+                  (el as any)._scrollObserver.disconnect();
+                }
+
+                // Setup ResizeObserver to restore scroll as dynamic elements render
+                const observer = new ResizeObserver(() => {
+                  const currentSaved = scrollPositionsRef.current[menuId] || 0;
+                  if (el.scrollTop !== currentSaved) {
+                    el.scrollTop = currentSaved;
+                  }
+                });
+                observer.observe(el);
+                if (el.firstElementChild) {
+                  observer.observe(el.firstElementChild);
+                }
+                (el as any)._scrollObserver = observer;
               }
             }}
             onScroll={(e) => {
               scrollPositionsRef.current["user_terrain"] = e.currentTarget.scrollTop;
             }}
-            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none animate-fadeIn text-left" : "hidden"}
+            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none animate-fadeIn text-left scroll-smooth [-webkit-overflow-scrolling:touch]" : "hidden"}
+            style={{ overscrollBehaviorY: "contain" }}
           >
             <UserTerrainLandingPage
               gombos={gombos}
@@ -2683,10 +2739,29 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 key={activeMenu}
                 ref={(el) => {
                   if (el) {
-                    const savedPos = scrollPositionsRef.current[activeMenu] || 0;
+                    const menuId = activeMenu;
+                    const savedPos = scrollPositionsRef.current[menuId] || 0;
                     if (el.scrollTop !== savedPos) {
                       el.scrollTop = savedPos;
                     }
+
+                    // Clean up old observer
+                    if ((el as any)._scrollObserver) {
+                      (el as any)._scrollObserver.disconnect();
+                    }
+
+                    // Setup ResizeObserver to restore scroll as dynamic elements render
+                    const observer = new ResizeObserver(() => {
+                      const currentSaved = scrollPositionsRef.current[menuId] || 0;
+                      if (el.scrollTop !== currentSaved) {
+                        el.scrollTop = currentSaved;
+                      }
+                    });
+                    observer.observe(el);
+                    if (el.firstElementChild) {
+                      observer.observe(el.firstElementChild);
+                    }
+                    (el as any)._scrollObserver = observer;
                   }
                 }}
                 onScroll={(e) => {
@@ -2696,12 +2771,25 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
-                className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none"
+                className="h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-8 pb-32 pt-6 scrollbar-none scroll-smooth [-webkit-overflow-scrolling:touch]"
+                style={{ overscrollBehaviorY: "contain" }}
               >
                 
                 {/* ----------------------------------------------------
                                   STEP I: TABLEAU UTILISATEUR (10 CORE SECTIONS)
                                     ---------------------------------------------------- */}
+
+                {perspective === "user" && ["user_publish", "user_contracts", "user_events", "user_messages", "user_wallet", "user_renforts", "user_gombo_id"].includes(activeMenu) && (
+                  <div className="mb-4">
+                    <button
+                      onClick={() => setActiveMenu("user_terrain")}
+                      className="inline-flex items-center gap-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition-all cursor-pointer"
+                    >
+                      <span>&larr;</span> Retour
+                    </button>
+                  </div>
+                )}
+
                 {/* ----------------------------------------------------
                                   NEW CORE EXPERIENCES FOR USER PERSPECTIVE
                                     ---------------------------------------------------- */}
@@ -4773,6 +4861,22 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                 </div>
               )}
 
+              {/* 7d. ÉVÉNEMENTS (USER) */}
+              {activeMenu === "user_events" && (
+                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                  <EventsView 
+                    onBack={() => goBackMenu()} 
+                    addToTerminal={addToTerminal}
+                  />
+                </div>
+              )}
+
+              {activeMenu === "user_help_center" && (
+                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                  <AfrigomboHelpCenter onClose={() => goBackMenu()} />
+                </div>
+              )}
+
               {/* 7c. BÂTISSEURS (USER) */}
               {activeMenu === "user_builders" && (
                 <div className="animate-fadeIn">
@@ -4970,6 +5074,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   </div>
                 );
               })()}
+
+              {activeMenu === "payments_to_verify" && (
+                <div className="p-6 rounded-2xl bg-[#050505] border border-[#D4AF37]/30 space-y-6 animate-fadeIn">
+                  <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                    Paiements à Vérifier (Bêta Manuelle)
+                  </h3>
+                  <p className="text-xs text-zinc-400">Validez manuellement les paiements reçus.</p>
+                </div>
+              )}
 
               {activeMenu === "user_mes_groupes" && (() => {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
@@ -5302,6 +5415,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       setOpenConvoWithUserId={setOpenConvoWithUserId}
                       openConvoWithGomboId={openConvoWithGomboId}
                       setOpenConvoWithGomboId={setOpenConvoWithGomboId}
+                      onNavigateToPublish={() => {
+                        setActiveMenu("user_publish");
+                      }}
+                      onNavigateToSearch={() => {
+                        setActiveMenu("user_terrain");
+                      }}
                       onBack={() => {
                         setActiveMenu("user_terrain");
                         try { audioSynth.playValidationSuccess(); } catch (err) {}
@@ -6885,7 +7004,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
       {/* =========================================================================
                                      FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED)
          ========================================================================= */}
-      {perspective === "user" && (
+      {perspective === "user" && ["user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_heritage"].includes(activeMenu) && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[425px] h-[72px] bg-[#050505]/95 backdrop-blur-xl border border-[#D4AF37]/22 p-1 px-3 sm:px-4 flex justify-between items-center z-40 rounded-[28px] shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none">
           {/* 1. ACCUEIL */}
           <button
@@ -7069,6 +7188,21 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           >
             <Coins className="w-4.5 h-4.5" />
             <span className="text-[9px] font-mono uppercase tracking-wider">Revenus</span>
+          </button>
+          
+          {/* 5.1 PAIEMENTS */}
+          <button
+            id="admin-nav-payments"
+            onClick={() => {
+              setActiveMenu("payments_to_verify");
+              try { audioSynth.playValidationSuccess(); } catch (err) {}
+            }}
+            className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+              activeMenu === "payments_to_verify" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <CreditCard className="w-4.5 h-4.5" />
+            <span className="text-[9px] font-mono uppercase tracking-wider">Paiements</span>
           </button>
 
           {/* 6. PARAMÈTRES */}
@@ -7295,6 +7429,126 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
           </motion.div>
         </div>
       )}
+
+      {/* =========================================================================
+                             COMING SOON EXPLANATORY MODAL
+         ========================================================================= */}
+      {comingSoonFeatureKey && (() => {
+        const details = {
+          menu_favorites: {
+            title: "Mes Favoris Élite",
+            badge: "Bientôt disponible",
+            description: "Ajoutez des artistes d'exception, des opportunités de gombos lucratives et des maquis ou scènes VIP à vos favoris pour les retrouver en un clic.",
+            incentive: "Idéal pour composer vos équipes de scène récurrentes !",
+            icon: "⭐",
+            color: "from-yellow-500 to-amber-600"
+          },
+          menu_history: {
+            title: "Historique Universel",
+            badge: "Bientôt disponible",
+            description: "Retrouvez l'historique de toutes vos actions de l'écosystème : candidatures envoyées, gombos complétés, dépôts, retraits et interactions d'Alliance.",
+            incentive: "Votre journal de bord artistique complet et infalsifiable.",
+            icon: "🕓",
+            color: "from-blue-500 to-indigo-600"
+          },
+          menu_downloads: {
+            title: "Coffre Téléchargements",
+            badge: "Bientôt disponible",
+            description: "Téléchargez instantanément vos contrats de prestation au format PDF officiel d'AFRIGOMBO, vos attestations de paiement et vos reçus BURIDA.",
+            incentive: "Générez des justificatifs officiels de vos revenus artistiques.",
+            icon: "📥",
+            color: "from-emerald-500 to-teal-600"
+          },
+          menu_backups: {
+            title: "Sauvegardes Souveraines",
+            badge: "Bientôt disponible",
+            description: "Exportez l'intégralité de vos données, de votre Gombo ID, de vos publications et de vos contrats dans une archive sécurisée et portable.",
+            incentive: "La garantie d'une souveraineté totale de vos données d'artiste.",
+            icon: "💾",
+            color: "from-purple-500 to-fuchsia-600"
+          }
+        }[comingSoonFeatureKey];
+
+        if (!details) return null;
+
+        return (
+          <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-md bg-[#09090A] border-2 border-[#D4AF37] p-6 rounded-3xl space-y-5 shadow-2xl relative overflow-hidden"
+            >
+              {/* Colorful top abstract blob */}
+              <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${details.color}`} />
+              
+              <div className="flex justify-between items-start pt-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{details.icon}</span>
+                  <div>
+                    <h4 className="text-md font-sans font-black uppercase text-[#D4AF37]">
+                      {details.title}
+                    </h4>
+                    <span className="text-[9px] font-mono py-0.5 px-2 bg-[#D4AF37]/10 text-[#D4AF37] rounded-full border border-[#D4AF37]/25 uppercase font-black tracking-wider">
+                      {details.badge}
+                    </span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setComingSoonFeatureKey(null)} 
+                  className="w-8 h-8 rounded-full border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-white hover:border-zinc-500 font-bold hover:bg-zinc-900 cursor-pointer"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div className="space-y-4 text-xs text-zinc-300 leading-relaxed">
+                <p>{details.description}</p>
+                <div className="p-3 bg-zinc-950 border border-zinc-900 rounded-xl flex items-start gap-2.5">
+                  <span className="text-emerald-400 mt-0.5 shrink-0">✨</span>
+                  <p className="text-[11px] text-zinc-400 italic">
+                    {details.incentive}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 pt-2 border-t border-zinc-900">
+                <button
+                  onClick={async () => {
+                    try {
+                      if (currentUser) {
+                        await addDoc(collection(db, "feature_waitlist"), {
+                          userId: currentUser.uid,
+                          email: currentUser.email,
+                          feature: comingSoonFeatureKey,
+                          timestamp: new Date().toISOString()
+                        });
+                        alert("Félicitations ! Vous êtes inscrit(e) sur la liste d'attente prioritaire de cette fonctionnalité. 🚀");
+                      } else {
+                        alert("Inscrit sur la liste d'attente locale ! Connectez-vous pour une synchronisation prioritaire.");
+                      }
+                      setComingSoonFeatureKey(null);
+                      try { audioSynth.playValidationSuccess(); } catch(_) {}
+                    } catch (e) {
+                      console.error(e);
+                      alert("Inscrit avec succès sur la liste d'attente locale d'AFRIGOMBO !");
+                      setComingSoonFeatureKey(null);
+                    }
+                  }}
+                  className="w-full py-2.5 bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] text-xs font-black uppercase tracking-wider rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                >
+                  M'inscrire sur la liste d'attente 🚀
+                </button>
+                <button
+                  onClick={() => setComingSoonFeatureKey(null)}
+                  className="w-full py-2.5 bg-transparent hover:bg-zinc-900 text-zinc-400 hover:text-white text-xs font-mono font-bold uppercase rounded-xl border border-zinc-900 hover:border-zinc-800 transition-all cursor-pointer"
+                >
+                  Fermer
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        );
+      })()}
 
       {/* =========================================================================
                                GOMBO ACADEMY MODAL (MASTERCLASSES)

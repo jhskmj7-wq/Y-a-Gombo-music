@@ -15,10 +15,23 @@ export type AdminMenu =
   | "analytics"
   | "monetisation"
   | "contracts"
+  | "payments_to_verify"
   | "super_admin";
 
 export type UserRole = "client" | "musicien" | "admin" | string;
-export type PaymentProvider = "orange" | "moov" | "wave" | string;
+export type PaymentProvider = "MANUAL_BETA" | "CINETPAY" | "WAVE" | "MTN" | "MOOV";
+
+export interface PaymentVerification {
+  id?: string;
+  contractId: string;
+  amount: number;
+  provider: PaymentProvider;
+  status: "pending_verification" | "confirmed" | "rejected" | "new_proof_needed";
+  proofUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  processedBy?: string;
+}
 
 export interface UserLocation {
   country?: string;
@@ -39,7 +52,6 @@ export interface UserPerformance {
 export interface User {
   id?: string;
   uid?: string;
-  afriId?: string;
   ecosystemApps?: {
     afrigombo?: boolean;
     afritrust?: boolean;
@@ -80,7 +92,7 @@ export interface User {
   gomboId?: {
     id: string;
     scoreConfiance: number;
-    niveau: string;
+    niveau: number | string; // 1-6 or string label
     prestationsTerminees: number;
     annulations: number;
     retards: number;

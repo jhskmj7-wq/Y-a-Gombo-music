@@ -35,7 +35,7 @@ const KNOWLEDGE_BASE = [
   {
     keywords: ["contacter le support", "support", "contacter assistance", "aide", "contact", "probleme technique"],
     question: "Comment contacter le support ?",
-    answer: "L'assistance d'élite d'AFRIGOMBO est à votre disposition permanente. Vous pouvez joindre un membre de notre équipe d'orchestre directement par courriel officiel à support@afrigombo.com."
+    answer: "L'assistance d'élite d'AFRIGOMBO est à votre disposition permanente. Vous pouvez joindre le Support AFRIGOMBO directement par WhatsApp officiel au +225 0503222712."
   },
   {
     keywords: ["certification", "certifie", "obtenir certification", "badge bleu", "artiste certifie"],

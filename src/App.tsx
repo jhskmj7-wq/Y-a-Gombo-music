@@ -157,13 +157,6 @@ function App() {
     <ErrorBoundary>
       <div className={`h-screen overflow-hidden font-sans antialiased transition-colors duration-300 ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#1F2937]"}`}>
         
-        {/* DISCRETE BETA BADGE */}
-        <div className="fixed top-2 right-2 z-[60] pointer-events-none">
-          <div className="px-2 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-md backdrop-blur-sm">
-            <span className="text-[8px] font-black uppercase tracking-widest text-indigo-400/80">Bêta Privée</span>
-          </div>
-        </div>
-
         {/* 1. PREMIUM SPLASH SCREEN */}
       <AnimatePresence>
         {showSplash && (

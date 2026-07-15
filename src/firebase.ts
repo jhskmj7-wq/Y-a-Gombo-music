@@ -67,6 +67,7 @@ import {
   NotificationAudience,
   NotificationStatus
 } from "./types";
+import { ReputationEngine } from "./lib/ReputationEngine";
 
 // Setup and determine if using Real Firebase
 export const isFirebaseMock = false; 
@@ -77,85 +78,8 @@ const FACEBOOK_PROVIDER = new FacebookAuthProvider();
 const GITHUB_PROVIDER = new GithubAuthProvider();
 
 // ========================================================
-// --- AFRI ID ECOSYSTEM FOUNDATION GENERATION & SYNC ---
-// ========================================================
-
-export function generateAfriId(): string {
-  const timestamp = Date.now();
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let random = "";
-  for (let i = 0; i < 4; i++) {
-    random += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `AFRI${timestamp}${random}`;
-}
-
-export async function ensureAfriIdAndSync(profile: UserProfile): Promise<UserProfile> {
-  let changed = false;
-  const updated = { ...profile };
-  
-  if (!updated.afriId) {
-    updated.afriId = generateAfriId();
-    changed = true;
-  }
-  
-  if (!updated.ecosystemApps) {
-    updated.ecosystemApps = {
-      afrigombo: true,
-      afritrust: false,
-      africoach: false
-    };
-    changed = true;
-  } else {
-    if (updated.ecosystemApps.afrigombo !== true) {
-      updated.ecosystemApps.afrigombo = true;
-      changed = true;
-    }
-  }
-
-  if (!updated.createdAt) {
-    updated.createdAt = new Date().toISOString();
-    changed = true;
-  }
-  if (!updated.lastLoginAt) {
-    updated.lastLoginAt = new Date().toISOString();
-    changed = true;
-  }
-
-  if (changed && db) {
-    try {
-      const userRef = doc(db, "users", profile.uid);
-      await setDoc(userRef, updated, { merge: true });
-
-      if (updated.afriId) {
-        const afriUserRef = doc(db, "afri_ids", updated.afriId);
-        await setDoc(afriUserRef, {
-          afriId: updated.afriId,
-          uid: updated.uid,
-          nom: updated.displayName || updated.firstName || "",
-          email: updated.email || "",
-          telephone: updated.phone || "",
-          avatar: updated.photoURL || updated.avatarUrl || "",
-          role: updated.role || "user",
-          applications: {
-            afrigombo: true,
-            afriTrust: updated.ecosystemApps?.afritrust || false,
-          },
-          createdAt: updated.createdAt || new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      }
-    } catch (err) {
-      console.warn("⚠️ [AFRI ID] Non-fatal auto-syncing of Afri ID failed:", err);
-    }
-  }
-  
-  return updated;
-}
-
-// ==========================================
 // --- Unified GomboAuth Engine ---
-// ==========================================
+// ========================================================
 export const gomboAuth = {
   get currentUser(): { uid: string; email: string; emailVerified: boolean } | null {
     if (auth?.currentUser) {
@@ -334,10 +258,7 @@ export const gomboDB = {
       if (docSnap.exists()) {
         let profile = docSnap.data() as UserProfile;
         let needsSync = false;
-        if (!profile.afriId) {
-          profile = await ensureAfriIdAndSync(profile);
-          needsSync = true;
-        }
+        
         if (!profile.wallet) {
           profile.wallet = {
             soldeDisponible: 250000,
@@ -375,6 +296,79 @@ export const gomboDB = {
     if (db) {
       await setDoc(doc(db, "users", uid), profile, { merge: true });
     }
+  },
+
+  async addContractReview(review: any) {
+    if (db) {
+      const ref = await addDoc(collection(db, "contract_reviews"), {
+        ...review,
+        createdAt: new Date().toISOString()
+      });
+
+      // Recalculate reputation for reviewee
+      try {
+        const reviewsSnap = await getDocs(
+          query(collection(db, "contract_reviews"), where("revieweeId", "==", review.revieweeId))
+        );
+        const reviews = reviewsSnap.docs.map(d => d.data());
+
+        const alertsSnap = await getDocs(
+          query(collection(db, "security_alerts"), where("userId", "==", review.revieweeId))
+        );
+        const alerts = alertsSnap.docs.map(d => d.data());
+
+        const contractsSnap = await getDocs(collection(db, "contracts"));
+        const userContracts = contractsSnap.docs
+          .map(d => d.data())
+          .filter((c: any) => c.clientId === review.revieweeId || c.artistId === review.revieweeId);
+
+        const userDoc = await getDoc(doc(db, "users", review.revieweeId));
+        if (userDoc.exists()) {
+          const user = { uid: review.revieweeId, ...userDoc.data() } as any;
+
+          const metrics = ReputationEngine.calculateReputation(user, reviews, alerts);
+
+          const antiFraudAlerts = ReputationEngine.runAntiFraudChecks(review, reviews, userContracts);
+          for (const fraudAlert of antiFraudAlerts) {
+            await this.publishSecurityAlert(fraudAlert);
+          }
+
+          await this.updateUserProfile(review.revieweeId, {
+            trustScore: metrics.trustScore,
+            averageRating: metrics.averageRating,
+            ratingCount: metrics.ratingCount,
+            badge: metrics.badge,
+            gombosCompleted: metrics.completedGombos,
+            cancelledContracts: metrics.cancelledGombos,
+            gomboId: {
+              id: user.gomboId?.id || "GID-" + Math.floor(100000 + Math.random() * 900000),
+              scoreConfiance: metrics.trustScore,
+              niveau: metrics.trustScore >= 95 ? 6 : metrics.trustScore >= 90 ? 5 : metrics.trustScore >= 80 ? 4 : metrics.trustScore >= 70 ? 3 : metrics.trustScore >= 50 ? 2 : 1,
+              prestationsTerminees: metrics.completedGombos,
+              annulations: metrics.cancelledGombos,
+              retards: user.gomboId?.retards || 0,
+              certifie: user.kycStatus === "approved",
+              createdAt: user.gomboId?.createdAt || new Date().toISOString()
+            }
+          });
+        }
+      } catch (e) {
+        console.error("Error recalculating reputation in addContractReview:", e);
+      }
+
+      return ref.id;
+    }
+    return null;
+  },
+
+  listenUserReviews(userId: string, callback: (reviews: any[]) => void) {
+    if (db) {
+      const q = query(collection(db, "contract_reviews"), where("revieweeId", "==", userId));
+      return onSnapshot(q, (snapshot) => {
+        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    }
+    return () => {};
   },
 
   async deleteUserProfile(uid: string) {

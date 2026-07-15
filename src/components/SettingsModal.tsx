@@ -8,6 +8,8 @@ import {
   ChevronRight, AlertTriangle, Play, HelpCircle as HelpIcon,
   Smartphone as PhoneIcon, Mail, Laptop
 } from "lucide-react";
+import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
+import { CGUContent, PrivacyContent } from "./LegalContent";
 import { useLanguage, Language } from "../LanguageContext";
 import { useAuth } from "../AuthContext";
 import { gomboDB } from "../firebase";
@@ -15,6 +17,7 @@ import { audioSynth } from "../lib/audio";
 import { playSound } from "../services/audioService";
 import { triggerSettingsSaved, usePerformance } from "../services/performanceService";
 import { globalAudioManager } from "../lib/audioManager";
+import { supportConfig } from "../supportConfig";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -142,10 +145,12 @@ export default function SettingsModal({
     e.preventDefault();
     if (!issueText.trim()) return;
     setIsClearing(true);
+    const textToReport = issueText;
     setTimeout(() => {
       setIssueSent(true);
       setIssueText("");
       setIsClearing(false);
+      supportConfig.openSupport("Signalement de problème technique : " + textToReport);
     }, 1000);
   };
 
@@ -204,20 +209,7 @@ export default function SettingsModal({
 
             <div className="flex-1 overflow-y-auto pr-1 text-xs space-y-4 text-zinc-400 leading-relaxed pb-20">
               {activeSupportPage === "help" && (
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-900 space-y-1.5">
-                    <h3 className="font-black text-white uppercase text-[11px]">❓ Comment fonctionne le cachet sécurisé ?</h3>
-                    <p>Pour chaque gombo, le recruteur dépose la somme sur le séquestre bloqué d'AFRIGOMBO. Dès la signature de votre présence numérique après la performance, la somme est libérée sur votre portefeuille Wave ou Orange Money.</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-900 space-y-1.5">
-                    <h3 className="font-black text-white uppercase text-[11px]">⭐ Comment être certifié Gombo d'Or ?</h3>
-                    <p>Votre profil doit être complet (photo réelle, bio claire, au moins 2 spécialités) et vous devez avoir complété avec succès au moins 3 gombos officiels avec une note moyenne supérieure à 4.5/5 étoiles.</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-900 space-y-1.5">
-                    <h3 className="font-black text-white uppercase text-[11px]">💬 Mes données de contact sont-elles visibles ?</h3>
-                    <p>Non, votre numéro de téléphone et adresse exacte restent masqués. Ils ne sont transmis qu'au promoteur agréé d'un concert pour lequel vous postulez ou collaborez officiellement.</p>
-                  </div>
-                </div>
+                <AfrigomboHelpCenter onClose={() => setActiveSupportPage("none")} />
               )}
 
               {activeSupportPage === "issue" && (
@@ -250,27 +242,9 @@ export default function SettingsModal({
                 </div>
               )}
 
-              {activeSupportPage === "terms" && (
-                <div className="space-y-4 text-[11px]">
-                  <h3 className="font-bold text-white uppercase">1. ACCEPTATION DES CONDITIONS</h3>
-                  <p>En accédant et utilisant l'écosystème AFRIGOMBO, vous acceptez d'être lié par les présentes conditions générales de services, conçues pour assainir et professionnaliser le milieu musical ivoirien.</p>
-                  <h3 className="font-bold text-white uppercase">2. ENGAGEMENTS & CACHETS</h3>
-                  <p>Tout accord scellé sur la plateforme implique le dépôt obligatoire des cachets par le recruteur. En cas de non-présentation, AFRIGOMBO se réserve le droit de bannir définitivement le membre et de rembourser l'organisateur.</p>
-                  <h3 className="font-bold text-white uppercase">3. DISCIPLINE & NOTATION</h3>
-                  <p>Les artistes et promoteurs s'engagent à faire preuve de rigueur et d'honnêteté. Les avis déposés sont souverains et ne peuvent être modifiés que par arbitrage de l'administration centrale.</p>
-                </div>
-              )}
+              {activeSupportPage === "terms" && <CGUContent />}
 
-              {activeSupportPage === "privacy_policy" && (
-                <div className="space-y-4 text-[11px]">
-                  <h3 className="font-bold text-white uppercase">1. GESTION DES DONNÉES</h3>
-                  <p>Nous ne collectons que les informations strictement nécessaires à la mise en relation showbiz (avatar, spécialités, commune de résidence, historique des concerts réalisés).</p>
-                  <h3 className="font-bold text-white uppercase">2. SÉCURISATION DES TRANSACTIONS</h3>
-                  <p>Toutes vos données financières (numéros Wave, Orange Money) sont cryptées à la source et ne servent qu'à effectuer les virements sécurisés des cachets.</p>
-                  <h3 className="font-bold text-white uppercase">3. DROIT DE SUPPRESSION</h3>
-                  <p>Vous disposez d'un contrôle total. Vous pouvez désactiver votre profil ou initier sa suppression complète et définitive à tout moment dans la section Compte.</p>
-                </div>
-              )}
+              {activeSupportPage === "privacy_policy" && <PrivacyContent />}
 
               {activeSupportPage === "about" && (
                 <div className="text-center space-y-5 py-6">

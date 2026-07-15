@@ -85,10 +85,11 @@ export default function GomboIdUserDashboard({
   const getStatusDisplay = () => {
     const status = currentUser.kycStatus;
     const type = currentUser.kycType;
+    const level = currentUser.gomboId?.niveau || 1;
 
     if (status === "approved") {
       return {
-        label: "✅ Talent Certifié",
+        label: `✅ Talent Certifié (Niveau ${level})`,
         color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
         desc: "Félicitations ! Votre compte est certifié d'excellence artistique."
       };
@@ -325,9 +326,13 @@ export default function GomboIdUserDashboard({
             </div>
             
             <div className="text-left md:text-right border-t md:border-t-0 sm:border-l md:border-l-0 border-white/5 pt-2 sm:pt-0 md:pt-2 sm:pl-3 md:pl-0">
-              <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">NIVEAU DE CONFIANCE :</span>
-              <strong className="text-sm font-sans font-black text-[#D4AF37] block mt-0.5">
-                {currentUser.kycStatus === "approved" ? "99.9% PRESTIGE MAX" : "SOUVERAINETÉ STANDARD"}
+              <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">NIVEAU GOMBO ID :</span>
+              <strong className="text-lg font-sans font-black text-[#D4AF37] block mt-0.5">
+                NIVEAU {currentUser.gomboId?.niveau || 1}
+              </strong>
+              <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold mt-2">SCORE CONFIANCE :</span>
+              <strong className="text-sm font-sans font-black text-emerald-400 block mt-0.5">
+                {currentUser.gomboId?.scoreConfiance || 0} / 100
               </strong>
             </div>
           </div>

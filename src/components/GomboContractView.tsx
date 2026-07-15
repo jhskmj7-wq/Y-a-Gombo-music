@@ -5,11 +5,13 @@ import {
   Clock, MapPin, Calendar, CreditCard, 
   FileSignature, Lock, AlertTriangle, ArrowLeft,
   Download, History, MessageSquare,
-  BadgeCheck, Info, Loader2, Camera, Compass, Plus
+  BadgeCheck, Info, Loader2, Camera, Compass, Plus, Star as LucideStar
 } from "lucide-react";
 import { gomboDB } from "../firebase";
 import { GomboSafeContract, UserProfile } from "../types";
 import { audioSynth } from "../lib/audio";
+import { db } from "../lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 interface GomboContractViewProps {
   contractId: string;
@@ -28,6 +30,18 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+
+  // Review & reputation states
+  const [evalRating, setEvalRating] = useState(5);
+  const [evalPunctuality, setEvalPunctuality] = useState(5);
+  const [evalProfessionalism, setEvalProfessionalism] = useState(5);
+  const [evalCommunication, setEvalCommunication] = useState(5);
+  const [evalQuality, setEvalQuality] = useState(5);
+  const [evalRepeat, setEvalRespect] = useState(5); // Respect
+  const [evalComment, setEvalComment] = useState("");
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [partnerProfile, setPartnerProfile] = useState<any | null>(null);
 
   // Real-time listener for the individual contract
   useEffect(() => {
@@ -48,6 +62,39 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
   const isClient = contract?.clientId === currentUser.uid;
   const isArtist = contract?.artistId === currentUser.uid;
   const isAdmin = currentUser.role === "admin" || currentUser.isAdmin;
+
+  // Check if already reviewed & load partner profile
+  useEffect(() => {
+    if (contractId && currentUser?.uid) {
+      const checkReview = async () => {
+        try {
+          const q = query(
+            collection(db, "contract_reviews"),
+            where("contractId", "==", contractId),
+            where("reviewerId", "==", currentUser.uid)
+          );
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            setAlreadyReviewed(true);
+          } else {
+            setAlreadyReviewed(false);
+          }
+        } catch (e) {
+          console.error("Error checking review state:", e);
+        }
+      };
+      checkReview();
+    }
+  }, [contractId, currentUser?.uid]);
+
+  useEffect(() => {
+    if (contract && currentUser) {
+      const partnerId = isClient ? contract.artistId : contract.clientId;
+      if (partnerId) {
+        gomboDB.getUserProfile(partnerId).then(setPartnerProfile);
+      }
+    }
+  }, [contract, currentUser, isClient]);
 
   const handleSign = async () => {
     if (!contract || processing) return;
@@ -1114,20 +1161,257 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
             {/* EVALUATION SECTION */}
             {contract.status === "completed" && (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
-                <h4 className="text-white font-bold uppercase tracking-wider font-mono text-sm">Évaluation de la Prestation</h4>
-                <p className="text-zinc-400 text-xs">Notez votre expérience pour influencer la réputation sur la plateforme.</p>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <button key={star} onClick={() => alert("Fonctionnalité d'évaluation en cours de sauvegarde...")} className="p-2 hover:bg-yellow-500/20 text-zinc-600 hover:text-yellow-500 transition-colors rounded-xl">
-                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    </button>
-                  ))}
+              <div className="space-y-6 animate-fadeIn mt-6">
+                {/* FICHE DE RÉPUTATION OF THE COUNTERPARTY */}
+                <div className="bg-black/80 backdrop-blur-md border border-[#D4AF37]/30 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-[0_8px_32px_rgba(212,175,55,0.05)]">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-2xl rounded-full pointer-events-none"></div>
+                  
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-zinc-800/60">
+                    <div className="flex items-center gap-4 text-left">
+                      <div className="w-16 h-16 rounded-2xl border-2 border-[#D4AF37]/50 overflow-hidden shrink-0 bg-zinc-950 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+                        <img 
+                          src={partnerProfile?.avatarUrl || partnerProfile?.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&fit=crop&q=80"} 
+                          alt={partnerProfile?.firstName || "Membre Afrigombo"} 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-md font-bold">
+                          Réputation Partenaire
+                        </span>
+                        <h4 className="text-white text-lg font-black mt-1.5 font-sans leading-none">
+                          {partnerProfile?.firstName} {partnerProfile?.lastName} {partnerProfile?.artistName && `(${partnerProfile.artistName})`}
+                        </h4>
+                        <p className="text-zinc-500 text-xs mt-1 font-mono">
+                          {partnerProfile?.specialty || partnerProfile?.role === "client" ? "Organisateur d'Événements" : "Artiste Professionnel"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-center md:text-right">
+                      <span className="text-[9px] uppercase font-mono text-zinc-500 block font-black tracking-widest">
+                        BADGE DE QUALITÉ :
+                      </span>
+                      <strong className="text-[#D4AF37] text-base font-black uppercase tracking-widest font-sans block mt-1 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">
+                        {partnerProfile?.badge === "Référence AFRIGOMBO" && "👑 Référence AFRIGOMBO"}
+                        {partnerProfile?.badge === "Artiste Premium" && "🏆 Artiste Premium"}
+                        {partnerProfile?.badge === "Excellence" && "🥇 Excellence"}
+                        {partnerProfile?.badge === "Très fiable" && "🥈 Très fiable"}
+                        {partnerProfile?.badge === "Fiable" && "🥉 Fiable"}
+                        {(!partnerProfile?.badge || partnerProfile?.badge === "Standard") && "⭐ Standard"}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
+                    <div className="bg-zinc-950/60 border border-zinc-900 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                      <span className="text-[8px] font-mono tracking-widest uppercase text-zinc-500 font-bold mb-1">⭐ Note Moyenne</span>
+                      <strong className="text-xl text-white font-sans font-black">
+                        {partnerProfile?.averageRating !== undefined ? partnerProfile.averageRating : "4.5"} / 5
+                      </strong>
+                      <span className="text-[8px] text-zinc-600 font-mono mt-1">({partnerProfile?.ratingCount || 0} avis reçus)</span>
+                    </div>
+
+                    <div className="bg-zinc-950/60 border border-zinc-900 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                      <span className="text-[8px] font-mono tracking-widest uppercase text-zinc-500 font-bold mb-1">📈 Indice Confiance</span>
+                      <strong className="text-xl text-emerald-400 font-sans font-black drop-shadow-[0_0_8px_rgba(52,211,153,0.2)]">
+                        {partnerProfile?.trustScore !== undefined ? partnerProfile.trustScore : "100"} %
+                      </strong>
+                      <span className="text-[8px] text-zinc-600 font-mono mt-1">AFRIGOMBO SECURE</span>
+                    </div>
+
+                    <div className="bg-zinc-950/60 border border-zinc-900 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                      <span className="text-[8px] font-mono tracking-widest uppercase text-zinc-500 font-bold mb-1">🎼 Gombos Réalisés</span>
+                      <strong className="text-xl text-white font-sans font-black">
+                        {partnerProfile?.gombosCompleted || partnerProfile?.gomboId?.prestationsTerminees || 0}
+                      </strong>
+                      <span className="text-[8px] text-zinc-600 font-mono mt-1">Missions validées</span>
+                    </div>
+
+                    <div className="bg-zinc-950/60 border border-zinc-900 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                      <span className="text-[8px] font-mono tracking-widest uppercase text-zinc-500 font-bold mb-1">❌ Annulations</span>
+                      <strong className="text-xl text-red-400 font-sans font-black">
+                        {partnerProfile?.cancelledContracts || partnerProfile?.gomboId?.annulations || 0}
+                      </strong>
+                      <span className="text-[8px] text-zinc-600 font-mono mt-1">Contrats annulés</span>
+                    </div>
+                  </div>
                 </div>
-                <textarea placeholder="Laissez un commentaire sur le professionnalisme..." className="w-full bg-black border border-zinc-800 rounded-xl p-4 text-white text-xs h-24 focus:border-[#D4AF37] focus:outline-none transition-all"></textarea>
-                <button onClick={() => alert("L'évaluation a été enregistrée avec succès. La réputation a été mise à jour.")} className="px-6 py-3 bg-[#D4AF37] text-black font-black uppercase text-xs rounded-xl hover:bg-[#F3E5AB] transition-colors">
-                  Soumettre l'évaluation
-                </button>
+
+                {/* DETAILED AVIS / EVALUATION FORM */}
+                <div className="bg-zinc-900 border border-zinc-850/80 rounded-3xl p-6 sm:p-8 space-y-6">
+                  <div>
+                    <h4 className="text-white font-black uppercase tracking-wider font-sans text-sm">
+                      Évaluer le Partenaire d'Excellence
+                    </h4>
+                    <p className="text-zinc-400 text-xs mt-1 leading-relaxed">
+                      Conformément aux directives d'Afrigombo, attribuez une note objective pour influencer en temps réel l'Indice de Confiance de votre partenaire. Aucune note n'est manipulable.
+                    </p>
+                  </div>
+
+                  {alreadyReviewed ? (
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 text-center space-y-2">
+                      <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+                      <h5 className="text-white font-black text-xs uppercase font-sans">ÉVALUATION ENREGISTRÉE AVEC SUCCÈS</h5>
+                      <p className="text-zinc-400 text-xs">
+                        Vous avez déjà évalué cette prestation d'excellence. Merci de contribuer à la sécurité et à la qualité d'AFRIGOMBO !
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6 text-left">
+                      {/* Global Rating & Star metric stack */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/40 border border-zinc-850 p-5 rounded-2xl">
+                        {/* Star global score */}
+                        <div className="space-y-2 flex flex-col justify-center">
+                          <label className="text-xs font-mono font-black text-zinc-300 uppercase tracking-wider">
+                            ⭐ Note globale d'expérience :
+                          </label>
+                          <div className="flex gap-1.5 mt-1">
+                            {[1, 2, 3, 4, 5].map(star => (
+                              <button 
+                                key={star} 
+                                type="button"
+                                onClick={() => setEvalRating(star)} 
+                                className={`p-1.5 rounded-lg transition-all ${
+                                  star <= evalRating ? "text-yellow-500 hover:scale-110" : "text-zinc-600 hover:text-yellow-500/50"
+                                }`}
+                              >
+                                <LucideStar className="w-7 h-7 fill-current" />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Criteria metrics */}
+                        <div className="space-y-4 font-mono">
+                          {/* Ponctualité */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">⏰ Ponctualité :</span>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <button key={star} type="button" onClick={() => setEvalPunctuality(star)} className={`p-0.5 text-xs transition ${star <= evalPunctuality ? "text-[#D4AF37]" : "text-zinc-700"}`}>
+                                  ★
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Professionnalisme */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">💼 Pro :</span>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <button key={star} type="button" onClick={() => setEvalProfessionalism(star)} className={`p-0.5 text-xs transition ${star <= evalProfessionalism ? "text-[#D4AF37]" : "text-zinc-700"}`}>
+                                  ★
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Communication */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">🗣️ Communication :</span>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <button key={star} type="button" onClick={() => setEvalCommunication(star)} className={`p-0.5 text-xs transition ${star <= evalCommunication ? "text-[#D4AF37]" : "text-zinc-700"}`}>
+                                  ★
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Qualité */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">🎵 Qualité Prestation :</span>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <button key={star} type="button" onClick={() => setEvalQuality(star)} className={`p-0.5 text-xs transition ${star <= evalQuality ? "text-[#D4AF37]" : "text-zinc-700"}`}>
+                                  ★
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Respect */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">🤝 Respect & Droits :</span>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <button key={star} type="button" onClick={() => setEvalRespect(star)} className={`p-0.5 text-xs transition ${star <= evalRepeat ? "text-[#D4AF37]" : "text-zinc-700"}`}>
+                                  ★
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Comment text */}
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-mono font-black text-zinc-400 uppercase tracking-widest">
+                          Commentaire sur l'expérience (Facultatif) :
+                        </label>
+                        <textarea 
+                          value={evalComment}
+                          onChange={(e) => setEvalComment(e.target.value)}
+                          placeholder="Parlez de l'ambiance, de la qualité scénique, du respect des horaires, etc. pour aider la communauté d'Abidjan..." 
+                          className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white text-xs h-24 focus:border-[#D4AF37] focus:outline-none transition-all resize-none"
+                        />
+                      </div>
+
+                      <button 
+                        onClick={async () => {
+                          if (reviewLoading) return;
+                          setReviewLoading(true);
+                          try {
+                            const reviewerId = currentUser.uid;
+                            const revieweeId = isClient ? contract.artistId : contract.clientId;
+                            if (!revieweeId) {
+                              alert("Erreur: Le destinataire de l'avis est introuvable.");
+                              return;
+                            }
+                            
+                            const payload = {
+                              contractId: contract.id,
+                              reviewerId,
+                              revieweeId,
+                              reviewerName: currentUser.displayName || currentUser.name || "Abonné AFRIGOMBO",
+                              rating: evalRating,
+                              punctuality: evalPunctuality,
+                              professionalism: evalProfessionalism,
+                              communication: evalCommunication,
+                              quality: evalQuality,
+                              respect: evalRepeat,
+                              comment: evalComment,
+                              role: isClient ? "client" : "artist"
+                            };
+
+                            await gomboDB.addContractReview(payload);
+                            setAlreadyReviewed(true);
+                            try { audioSynth.playValidationSuccess(); } catch(_) {}
+                            alert("⭐ Votre avis a été enregistré avec succès ! L'indice de confiance et la fiche de réputation ont été recalculés automatiquement.");
+                            if (onUpdate) onUpdate();
+                          } catch (err: any) {
+                            alert("Erreur: " + err.message);
+                          } finally {
+                            setReviewLoading(false);
+                          }
+                        }}
+                        disabled={reviewLoading}
+                        className="w-full py-4 bg-[#D4AF37] text-black font-black uppercase text-xs rounded-2xl hover:bg-[#F3E5AB] transition-colors shadow-lg shadow-[#D4AF37]/10 flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {reviewLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            SAUVEGARDE EN COURS...
+                          </>
+                        ) : (
+                          "Soumettre l'évaluation de confiance"
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

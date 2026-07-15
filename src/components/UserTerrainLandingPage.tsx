@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
   RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy,
@@ -12,6 +12,10 @@ import AnnuaireTalents from "./AnnuaireTalents";
 import { usePerformance } from "../services/performanceService";
 import { globalAudioManager } from "../lib/audioManager";
 import PremiumEmptyState from "./PremiumEmptyState";
+import { useAuth } from "../AuthContext";
+import { db } from "../lib/firebase";
+import { gomboDB } from "../firebase";
+import { collection, onSnapshot, addDoc } from "firebase/firestore";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -141,6 +145,128 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   // Collapsible regions states
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  // --- REAL-TIME PORT COCKPIT STATE & LISTENERS ---
+  const { currentUser, profile } = useAuth();
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(0);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState<number>(0);
+  const [activeContractsCount, setActiveContractsCount] = useState<number>(0);
+  const [todayEventsCount, setTodayEventsCount] = useState<number>(0);
+  const [isPlusMenuOpen, setIsPlusMenuOpen] = useState<boolean>(false);
+  const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState<boolean>(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
+  const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState<boolean>(false);
+  const [leaderboardSearch, setLeaderboardSearch] = useState<string>("");
+  const [localComingSoonKey, setLocalComingSoonKey] = useState<string | null>(null);
+  const [emailInput, setEmailInput] = useState<string>("");
+  const [waitlistStatus, setWaitlistStatus] = useState<"idle" | "loading" | "success">("idle");
+
+  // Helper to open details and save to local storage history
+  const handleOpenGomboDetails = (g: any) => {
+    if (!g) return;
+    setSelectedGomboDetails(g);
+    if (!g.id) return;
+    try {
+      const stored = localStorage.getItem("afrigombo_view_history");
+      let historyIds: string[] = stored ? JSON.parse(stored) : [];
+      historyIds = historyIds.filter(id => id !== g.id);
+      historyIds.unshift(g.id);
+      localStorage.setItem("afrigombo_view_history", JSON.stringify(historyIds.slice(0, 20)));
+    } catch (e) {
+      console.warn("History save error:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+
+    // 1. Messages unread count sync
+    let unsubscribeMessages = () => {};
+    try {
+      unsubscribeMessages = gomboDB.listenConversations(currentUser.uid, (convos) => {
+        let unread = 0;
+        convos.forEach((c) => {
+          unread += c.unreadCount?.[currentUser.uid] || 0;
+        });
+        setUnreadMessagesCount(unread);
+      });
+    } catch (e) {
+      console.warn("Messages listener error:", e);
+    }
+
+    // 2. User unread notifications count sync
+    let unsubscribeNotifications = () => {};
+    try {
+      unsubscribeNotifications = gomboDB.listenUserNotifications(currentUser.uid, (userNotifs) => {
+        const count = userNotifs.filter(n => !n.read).length;
+        setUnreadNotificationsCount(count);
+      });
+    } catch (e) {
+      console.warn("Notifications listener error:", e);
+    }
+
+    // 3. User active contracts count sync
+    let unsubscribeContracts = () => {};
+    try {
+      unsubscribeContracts = gomboDB.listenContractsForUser(currentUser.uid, (data) => {
+        const activeCount = data.filter(c => c.status !== "completed" && c.status !== "cancelled" && c.status !== "archived").length;
+        setActiveContractsCount(activeCount);
+      });
+    } catch (e) {
+      console.warn("Contracts listener error:", e);
+    }
+
+    // 4. Today's events count sync
+    let unsubscribeEvents = () => {};
+    try {
+      const eventsRef = collection(db, "events");
+      const todayStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      unsubscribeEvents = onSnapshot(eventsRef, (snapshot) => {
+        let count = 0;
+        snapshot.forEach((docSnap) => {
+          const evt = docSnap.data();
+          if (evt.date === todayStr) {
+            count++;
+          }
+        });
+        setTodayEventsCount(count);
+      }, (err) => {
+        console.warn("Events listener error:", err);
+      });
+    } catch (e) {
+      console.warn("Events query error:", e);
+    }
+
+    return () => {
+      unsubscribeMessages();
+      unsubscribeNotifications();
+      unsubscribeContracts();
+      unsubscribeEvents();
+    };
+  }, [currentUser?.uid]);
+
+  const handleJoinWaitlist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailInput) return;
+    setWaitlistStatus("loading");
+    try {
+      const waitlistRef = collection(db, "waitlist");
+      await addDoc(waitlistRef, {
+        email: emailInput,
+        feature: localComingSoonKey,
+        submittedAt: new Date().toISOString(),
+        userId: currentUser?.uid || "anonymous"
+      });
+      setWaitlistStatus("success");
+      setEmailInput("");
+      if (addToTerminal) {
+        addToTerminal(`[WAITLIST] Inscription réussie pour ${emailInput} sur la fonctionnalité ${localComingSoonKey}`);
+      }
+    } catch (err) {
+      console.error("Error joining waitlist:", err);
+      setWaitlistStatus("idle");
+    }
+  };
 
   // Advanced real filter states matching requested criteria
   const [filterCommune, setFilterCommune] = useState<string>("all");
@@ -762,7 +888,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               <div
                 key={g.id || i}
                 onClick={() => {
-                  setSelectedGomboDetails(g);
+                  handleOpenGomboDetails(g);
                   setGlobalSearchTerm("");
                 }}
                 className="p-2 hover:bg-zinc-900 rounded-xl cursor-pointer flex justify-between items-center transition"
@@ -831,7 +957,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           {/* ==========================================
               2. ACTIONS RAPIDES (STYLE PREMIUM AFRIGOMBO)
              ========================================== */}
-      <div className={`bg-[#111113]/30 border border-zinc-900 rounded-2xl transition-all duration-300 ${isQuickActionsOpen ? "p-3.5 space-y-3" : "py-2 px-3"}`}>
+      <div className={`bg-[#050505] border border-[#D4AF37]/30 rounded-3xl transition-all duration-300 shadow-[0_4px_25px_rgba(212,175,55,0.08)] ${isQuickActionsOpen ? "p-4 sm:p-5 space-y-4" : "py-2 px-4"}`}>
         <button
           onClick={() => {
             setIsQuickActionsOpen(!isQuickActionsOpen);
@@ -839,17 +965,17 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           }}
           className="w-full flex justify-between items-center text-left focus:outline-none cursor-pointer hover:opacity-90 select-none"
         >
-          <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase flex items-center gap-1.5">
-            <span>⚡ ACTIONS RAPIDES</span>
+          <h3 className="text-[11.5px] font-sans font-black tracking-widest text-white uppercase flex items-center gap-1.5">
+            <span>⚡ ACTIONS RAPIDES & COCKPIT</span>
           </h3>
-          <span className="text-[11px] font-mono font-black text-[#D4AF37] bg-zinc-950/80 border border-[#D4AF37]/20 w-6 h-6 rounded-lg flex items-center justify-center transition-all">
+          <span className="text-[11px] font-mono font-black text-[#D4AF37] bg-black border border-[#D4AF37]/20 w-6 h-6 rounded-lg flex items-center justify-center transition-all">
             {isQuickActionsOpen ? "▲" : "▼"}
           </span>
         </button>
 
         <div
           className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${
-            isQuickActionsOpen ? "max-h-[500px] opacity-100 mt-2.5" : "max-h-0 opacity-0 pointer-events-none"
+            isQuickActionsOpen ? "max-h-[600px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
           }`}
         >
           <motion.div
@@ -864,65 +990,109 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             }}
             initial="hidden"
             animate={isQuickActionsOpen ? "show" : "hidden"}
-            className="grid grid-cols-4 gap-1.5 w-full select-none"
+            className="grid grid-cols-4 gap-2.5 sm:gap-4 w-full select-none"
           >
              {[
-              { id: "publier", label: t('publier'), icon: PenTool, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "renfort", label: "Renfort", icon: ShieldCheck, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "contrats", label: "Contrats", icon: FileSignature, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_contracts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "messages", label: t('messages_tab'), icon: MessageCircle, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
-              { id: "booster", label: "Booster", icon: Zap, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_plus"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } })); } catch (_) {} }) },
-              { id: "portfolio", label: "Portfolio", icon: BarChart3, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_heritage"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'saxophone' } })); } catch (_) {} }) },
-              { id: "plus", label: "Plus", icon: Sparkles, isSoon: false, action: () => requireAuthThen(() => { setActiveMenu("user_gombo_plus"); try { if (window.dispatchEvent) window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } })); } catch (_) {} }) }
-            ].map(action => {
-              const Icon = action.icon;
-              if (action.isSoon) {
-                return (
-                  <motion.div
-                    key={action.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 15, scale: 0.95 },
-                      show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
-                    }}
-                    className="bg-[#050505] border border-[#D4AF37]/10 opacity-50 rounded-lg p-1.5 flex flex-col items-center justify-center gap-1 cursor-not-allowed relative group"
-                    title="Bientôt disponible"
-                  >
-                    {/* SOON Badge */}
-                    <span className="absolute top-0.5 right-0.5 text-[5.5px] font-bold bg-[#D4AF37] text-black px-1 rounded uppercase tracking-wider scale-95 origin-top-right">
-                      SOON
-                    </span>
-                    
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#D4AF37]/10 flex items-center justify-center bg-transparent shrink-0">
-                      <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]/40" strokeWidth={1.5} />
-                    </div>
-                    <span className="text-[6.5px] sm:text-[7.5px] text-[#F5F5F5]/60 font-bold tracking-wider text-center leading-none truncate w-full px-0.5">{action.label}</span>
-                  </motion.div>
-                );
-              }
-              
-              return (
-                <motion.div
-                  key={action.id}
-                  variants={{
-                    hidden: { opacity: 0, y: 15, scale: 0.95 },
-                    show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
-                  }}
-                  whileHover={{
-                    scale: 1.03,
-                    borderColor: "rgba(212,175,55,0.7)",
-                    boxShadow: "0 0 10px rgba(212,175,55,0.2)"
-                  }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={action.action}
-                  className="bg-[#050505] border border-[#D4AF37]/30 shadow-[0_2px_10px_rgba(212,175,55,0.05)] rounded-lg p-1.5 flex flex-col items-center justify-center gap-1 hover:bg-[#D4AF37]/5 transition-all cursor-pointer"
-                >
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#D4AF37]/30 flex items-center justify-center bg-transparent shrink-0">
-                    <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]" strokeWidth={1.5} />
-                  </div>
-                  <span className="text-[6.5px] sm:text-[7.5px] text-[#F5F5F5] font-bold tracking-wider text-center leading-none truncate w-full px-0.5">{action.label}</span>
-                </motion.div>
-              );
-            })}
+               {
+                 id: "publier",
+                 label: "Publier",
+                 emoji: "🎤",
+                 action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
+               },
+               {
+                 id: "contrats",
+                 label: "Contrats",
+                 emoji: "🤝",
+                 badge: activeContractsCount > 0 ? activeContractsCount : undefined,
+                 badgeColor: "bg-emerald-500 text-white",
+                 action: () => requireAuthThen(() => { setActiveMenu("user_contracts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
+               },
+               {
+                 id: "calendrier",
+                 label: "Calendrier",
+                 emoji: "📅",
+                 badge: todayEventsCount > 0 ? todayEventsCount : undefined,
+                 badgeColor: "bg-[#D4AF37] text-black",
+                 action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
+               },
+               {
+                 id: "messages",
+                 label: t('messages_tab') || "Messages",
+                 emoji: "💬",
+                 badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
+                 badgeColor: "bg-red-600 text-white animate-pulse",
+                 action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
+               },
+               {
+                 id: "wallet",
+                 label: "Wallet",
+                 emoji: "💼",
+                 badgeBottom: profile ? (profile.balance !== undefined ? profile.balance : 0) : 125000,
+                 action: () => requireAuthThen(() => { setActiveMenu("user_wallet"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
+               },
+               {
+                 id: "renfort",
+                 label: "Renfort Express",
+                 emoji: "⚡",
+                 action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
+               },
+               {
+                 id: "gombo_id",
+                 label: "Mon GOMBO ID",
+                 emoji: "🎼",
+                 action: () => requireAuthThen(() => { setActiveMenu("user_gombo_id"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
+               },
+               {
+                 id: "plus",
+                 label: "Plus",
+                 emoji: "➕",
+                 badge: unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined,
+                 badgeColor: "bg-amber-500 text-black",
+                 action: () => setIsPlusMenuOpen(true)
+               }
+             ].map(action => {
+               return (
+                 <motion.button
+                   key={action.id}
+                   variants={{
+                     hidden: { opacity: 0, y: 15, scale: 0.95 },
+                     show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
+                   }}
+                   whileHover={{
+                     scale: 1.04,
+                     borderColor: "rgba(212,175,55,0.75)",
+                     boxShadow: "0 6px 20px rgba(212,175,55,0.14)"
+                   }}
+                   whileTap={{ scale: 0.96 }}
+                   onClick={action.action}
+                   className="aspect-square bg-[#050505] border-2 border-[#D4AF37]/35 shadow-[0_8px_30px_rgba(212,175,55,0.06)] rounded-3xl p-3 flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 hover:bg-[#D4AF37]/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0"
+                 >
+                   {/* Top Badge */}
+                   {action.badge !== undefined && (
+                     <span className={`absolute -top-1.5 -right-1.5 ${action.badgeColor} text-[8.5px] font-black w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border border-zinc-950 shadow-md z-10`}>
+                       {action.badge}
+                     </span>
+                   )}
+
+                   {/* Icon Wrapper */}
+                   <div className="w-11 h-11 sm:w-15 sm:h-15 rounded-full bg-[#D4AF37]/8 flex items-center justify-center border-2 border-[#D4AF37]/20 group-hover:border-[#D4AF37] group-hover:bg-[#D4AF37]/15 transition shrink-0 shadow-[0_4px_12px_rgba(212,175,55,0.05)]">
+                     <span className="text-xl sm:text-2xl font-bold leading-none select-none">{action.emoji}</span>
+                   </div>
+
+                   {/* Label */}
+                   <span className="text-[9.5px] sm:text-[11px] text-[#F5F5F5]/90 group-hover:text-white font-sans font-black tracking-wider uppercase text-center leading-tight truncate w-full px-0.5 mt-0.5 sm:mt-1">
+                     {action.label}
+                   </span>
+
+                   {/* Bottom Badge for Wallet */}
+                   {action.badgeBottom !== undefined && (
+                     <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-[#050505] border-2 border-[#D4AF37]/40 text-[#D4AF37] text-[7.5px] sm:text-[9px] font-mono font-black py-0.5 px-2.5 rounded-full whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.8)] z-10 group-hover:border-[#D4AF37]">
+                       {action.badgeBottom.toLocaleString("fr-FR")} F
+                     </span>
+                   )}
+                 </motion.button>
+               );
+             })}
           </motion.div>
         </div>
       </div>
@@ -1092,7 +1262,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     onClick={() => {
                       try { audioSynth.playValidationSuccess(); } catch(_) {}
                       const matchingReal = gombos.find(g => g.id === "gombo_1") || gombos[0];
-                      setSelectedGomboDetails(matchingReal);
+                      handleOpenGomboDetails(matchingReal);
                     }}
                     className="px-3.5 py-1.5 border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black text-[9.5px] font-bold rounded-lg transition uppercase duration-150"
                   >
@@ -1166,7 +1336,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 onClick={() => {
                   try { audioSynth.playTamTam(false); } catch(_) {}
                   const foundReal = gombos.find(g => g.id === item.id) || gombos[0];
-                  setSelectedGomboDetails(foundReal);
+                  handleOpenGomboDetails(foundReal);
                 }}
                 className="flex bg-[#050505] border border-zinc-900 hover:border-[#D4AF37]/40 rounded-2xl p-3 items-center gap-3 transition-colors cursor-pointer relative group"
               >
@@ -1280,7 +1450,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   try { audioSynth.playTamTam(false); } catch(_) {}
                   const foundReal = gombos.find(g => g.id === item.id) || gombos[0];
                   if (foundReal) {
-                    setSelectedGomboDetails(foundReal);
+                    handleOpenGomboDetails(foundReal);
                   }
                 }}
                 className="bg-gradient-to-r from-red-950/15 to-amber-950/10 border border-red-900/40 rounded-2xl p-3.5 flex flex-col justify-between text-left cursor-pointer hover:border-red-500/50 transition-all relative overflow-hidden group"
@@ -1681,6 +1851,715 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </div>
         </div>
       )}
+
+      {/* ==========================================
+          BOTTOM SHEET PLUS (PREMIUM AFRIGOMBO)
+         ========================================== */}
+      <AnimatePresence>
+        {isPlusMenuOpen && (
+          <>
+            {/* Dark premium glass backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.75 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsPlusMenuOpen(false)}
+              className="fixed inset-0 bg-black/85 z-50 cursor-pointer backdrop-blur-md"
+            />
+
+            {/* Bottom Sheet wrapper */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 24, stiffness: 180 }}
+              className="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-[#030303] border-t-4 border-[#D4AF37] rounded-t-[2.5rem] z-50 p-6 sm:p-8 shadow-[0_-15px_45px_rgba(212,175,55,0.2)] flex flex-col space-y-6 select-none"
+            >
+              {/* Decorative premium grab handle */}
+              <div 
+                className="w-16 h-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-full mx-auto shrink-0 cursor-pointer transition-all mb-1" 
+                onClick={() => setIsPlusMenuOpen(false)} 
+              />
+
+              {/* Title Header */}
+              <div className="flex justify-between items-center border-b border-zinc-900 pb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🌟</span>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
+                      AFRIGOMBO PLUS COCKPIT
+                    </h3>
+                    <p className="text-[9px] font-mono text-zinc-550 uppercase tracking-wider mt-1.5 font-bold">Tableau des Commandes Avancées</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsPlusMenuOpen(false)}
+                  className="w-9 h-9 rounded-full bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Modern Grid containing 11 Items */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 overflow-y-auto max-h-[50vh] pb-8 pr-1">
+                {/* ⭐ Booster une annonce */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_gombo_plus");
+                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                    });
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
+                    <span className="text-sm">⭐</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Booster une annonce</div>
+                    <span className="text-[7.5px] font-mono text-amber-500 uppercase tracking-widest block leading-none mt-1 font-bold">GOMBO PLUS</span>
+                  </div>
+                </button>
+
+                {/* 🎼 Mon Portfolio */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_heritage");
+                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                    });
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500/55 transition">
+                    <span className="text-sm">🎼</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Mon Portfolio</div>
+                    <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">HÉRITAGE</span>
+                  </div>
+                </button>
+
+                {/* ❤️ Mes Favoris */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    setIsFavoritesModalOpen(true);
+                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500/55 transition">
+                    <span className="text-sm">❤️</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Mes Favoris</div>
+                    <span className="text-[7.5px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-1 font-bold">ENREGISTRÉS</span>
+                  </div>
+                </button>
+
+                {/* 🕓 Historique */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    setIsHistoryModalOpen(true);
+                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500/55 transition">
+                    <span className="text-sm">🕓</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Historique</div>
+                    <span className="text-[7.5px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-1 font-bold">MÉMOIRE</span>
+                  </div>
+                </button>
+
+                {/* 📢 Mes Publications */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_mes_gombos");
+                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                    });
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 group-hover:border-indigo-500/55 transition">
+                    <span className="text-sm">📢</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Mes Publications</div>
+                    <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">GOMBO ENGINE</span>
+                  </div>
+                </button>
+
+                {/* 🎥 Mes Réels */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_reels");
+                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                    });
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20 group-hover:border-pink-500/55 transition">
+                    <span className="text-sm">🎥</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Mes Réels</div>
+                    <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">DISPO</span>
+                  </div>
+                </button>
+
+                {/* 📍 Opportunités proches */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_opportunities");
+                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                    });
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500/55 transition">
+                    <span className="text-sm">📍</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Opportunités proches</div>
+                    <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">GEOLOC</span>
+                  </div>
+                </button>
+
+                {/* 🏆 Classements */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    setIsLeaderboardModalOpen(true);
+                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500/55 transition">
+                    <span className="text-sm">🏆</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Classements</div>
+                    <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">LEADERBOARD</span>
+                  </div>
+                </button>
+
+                {/* ❤️ Soutenir AFRIGOMBO */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_builders");
+                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                    });
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500/55 transition">
+                    <span className="text-sm">❤️</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Soutenir AFRIGOMBO</div>
+                    <span className="text-[7.5px] font-mono text-red-500 uppercase tracking-widest block leading-none mt-1 font-bold">BÂTISSEURS</span>
+                  </div>
+                </button>
+
+                {/* ⚙ Paramètres */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_settings");
+                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                    });
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-zinc-600/10 flex items-center justify-center border border-zinc-600/20 group-hover:border-zinc-600/55 transition">
+                    <span className="text-sm">⚙</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Paramètres</div>
+                    <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">PREFERENCES</span>
+                  </div>
+                </button>
+
+                {/* ❓ Centre d'aide */}
+                <button
+                  onClick={() => {
+                    setIsPlusMenuOpen(false);
+                    requireAuthThen(() => {
+                      setActiveMenu("user_help_center");
+                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                    });
+                  }}
+                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer col-span-2"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 group-hover:border-sky-500/55 transition">
+                    <span className="text-sm">❓</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Centre d'aide</div>
+                    <span className="text-[7.5px] font-mono text-sky-400 uppercase tracking-widest block leading-none mt-1 font-bold">SUPPORT CLIENT</span>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ==========================================
+          COMING SOON & WAITLIST MODAL (DURABLE FIRESTORE)
+         ========================================== */}
+      <AnimatePresence>
+        {localComingSoonKey && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.8 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setLocalComingSoonKey(null)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-md"
+            />
+
+            {/* Modal Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-[#050505] border-2 border-[#D4AF37] p-6 sm:p-8 rounded-[2rem] shadow-[0_15px_40px_rgba(212,175,55,0.25)] max-w-sm w-full relative z-10 text-center space-y-5"
+            >
+              {/* Header Badge */}
+              <div className="w-14 h-14 bg-[#D4AF37]/10 rounded-full flex items-center justify-center border border-[#D4AF37]/30 mx-auto">
+                <span className="text-2xl animate-bounce">
+                  {localComingSoonKey === "menu_favorites" ? "⭐" : localComingSoonKey === "menu_history" ? "🕓" : "🏆"}
+                </span>
+              </div>
+
+              {/* Title & Desc */}
+              <div className="space-y-2">
+                <h3 className="text-base font-sans font-black uppercase text-white tracking-widest">
+                  {localComingSoonKey === "menu_favorites" && "Favoris Élite 🌟"}
+                  {localComingSoonKey === "menu_history" && "Historique Complet 🕓"}
+                  {localComingSoonKey === "menu_classement" && "Classement d'Or 🏆"}
+                </h3>
+                <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                  {localComingSoonKey === "menu_favorites" && "Enregistrez vos artistes et opportunités préférées pour ne plus jamais manquer un Gombo en Or !"}
+                  {localComingSoonKey === "menu_history" && "Consultez l'historique de vos gombos, contrats, transactions et performances en un clin d'œil."}
+                  {localComingSoonKey === "menu_classement" && "Découvrez le Top 10 des meilleurs artistes et recruteurs du pays. Grimpez dans la hiérarchie !"}
+                </p>
+              </div>
+
+              {/* Inscription Form */}
+              {waitlistStatus === "success" ? (
+                <div className="bg-emerald-500/10 border border-emerald-500/25 p-4 rounded-2xl text-center space-y-1 animate-fadeIn">
+                  <span className="text-emerald-400 text-xs font-black block">✓ VIBRATION BIEN REÇUE</span>
+                  <p className="text-[10px] text-zinc-300 font-medium">Vous serez notifié en exclusivité dès l'ouverture de l'accès ! 🎉</p>
+                  <button
+                    onClick={() => setLocalComingSoonKey(null)}
+                    className="mt-3 text-[10px] font-bold text-[#D4AF37] hover:underline uppercase bg-transparent"
+                  >
+                    Fermer
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleJoinWaitlist} className="space-y-3">
+                  <p className="text-[9.5px] font-mono text-[#D4AF37] uppercase tracking-widest font-black">REJOINDRE LA COHORTE BÊTA</p>
+                  <input
+                    type="email"
+                    required
+                    placeholder="Entrez votre email d'or..."
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    className="w-full bg-black border border-zinc-900 rounded-xl px-3.5 py-2.5 text-xs text-white text-center font-bold focus:outline-none focus:border-[#D4AF37] placeholder-zinc-700"
+                  />
+                  <div className="flex gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setLocalComingSoonKey(null)}
+                      className="flex-1 py-2.5 bg-zinc-950 border border-zinc-900 hover:bg-zinc-900 rounded-xl text-zinc-400 font-bold text-xs uppercase transition tracking-wider"
+                    >
+                      Retour
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={waitlistStatus === "loading"}
+                      className="flex-1 py-2.5 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black text-xs rounded-xl uppercase transition tracking-wider flex items-center justify-center"
+                    >
+                      {waitlistStatus === "loading" ? "Envoi..." : "M'inscrire ⚡"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 1. REAL FAVORITES MODAL */}
+      <AnimatePresence>
+        {isFavoritesModalOpen && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-[0_20px_50px_rgba(212,175,55,0.12)] relative max-h-[85vh] flex flex-col"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center border-b border-zinc-900 pb-3 mb-4 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">❤️</span>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
+                      Mes Favoris
+                    </h3>
+                    <p className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-wider mt-1 font-bold">Vos opportunités enregistrées</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsFavoritesModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Favorites Content */}
+              <div className="overflow-y-auto flex-1 space-y-3.5 pr-1">
+                {likedGombos.length === 0 ? (
+                  <div className="py-12 px-4 text-center space-y-4">
+                    <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center mx-auto animate-pulse">
+                      <Heart className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37]" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-bold text-white uppercase tracking-wider">Aucun favori enregistré</p>
+                      <p className="text-[10px] text-zinc-500 max-w-xs mx-auto leading-relaxed">
+                        Enregistrez des opportunités en clicking sur l'icône de trophée/coeur de vos Gombos préférés pour les retrouver ici en un instant.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsFavoritesModalOpen(false);
+                        setSelectedCategory("all");
+                        setSelectedLocation("all");
+                        const feedEl = document.getElementById("gombos-feed-anchor");
+                        if (feedEl) {
+                          feedEl.scrollIntoView({ behavior: "smooth" });
+                        }
+                      }}
+                      className="px-4 py-2 bg-[#D4AF37] hover:bg-[#F3C43F] text-black text-[10px] font-black rounded-lg uppercase tracking-wider transition active:scale-95 mx-auto"
+                    >
+                      Parcourir les Gombos ⚡
+                    </button>
+                  </div>
+                ) : (
+                  gombos.filter(g => g.id && likedGombos.includes(g.id)).length === 0 ? (
+                    <div className="py-12 text-center text-zinc-500 text-xs font-mono">
+                      Aucune des opportunités aimées n'est disponible actuellement.
+                    </div>
+                  ) : (
+                    gombos
+                      .filter(g => g.id && likedGombos.includes(g.id))
+                      .map((g) => (
+                        <div
+                          key={g.id}
+                          onClick={() => {
+                            handleOpenGomboDetails(g);
+                            setIsFavoritesModalOpen(false);
+                          }}
+                          className="p-3 bg-zinc-950 border border-zinc-900 hover:border-[#D4AF37]/45 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition animate-fadeIn"
+                        >
+                          <div className="min-w-0 flex-1 text-left">
+                            <span className="text-[9.5px] font-mono text-[#D4AF37] uppercase tracking-wider block font-bold leading-none mb-1">
+                              📍 {g.location || "Abidjan"} • {g.category || "Général"}
+                            </span>
+                            <h4 className="text-xs text-white font-bold truncate leading-snug">{g.title}</h4>
+                            <p className="text-[10px] text-zinc-400 font-mono font-medium mt-1">
+                              {(g.budget || 0).toLocaleString("fr-FR")} FCFA
+                            </p>
+                          </div>
+                          <span className="text-[9px] font-mono text-zinc-550 shrink-0 uppercase font-bold hover:text-[#D4AF37]">
+                            Ouvrir →
+                          </span>
+                        </div>
+                      ))
+                  )
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 2. REAL HISTORY MODAL */}
+      <AnimatePresence>
+        {isHistoryModalOpen && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-[0_20px_50px_rgba(212,175,55,0.12)] relative max-h-[85vh] flex flex-col"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center border-b border-zinc-900 pb-3 mb-4 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">🕓</span>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
+                      Historique
+                    </h3>
+                    <p className="text-[8.5px] font-mono text-zinc-550 uppercase tracking-wider mt-1 font-bold">Vos récentes consultations</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsHistoryModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* History Content */}
+              <div className="overflow-y-auto flex-1 space-y-3.5 pr-1">
+                {(() => {
+                  let historyIds: string[] = [];
+                  try {
+                    const stored = localStorage.getItem("afrigombo_view_history");
+                    if (stored) historyIds = JSON.parse(stored);
+                  } catch(_) {}
+
+                  const viewedGombos = historyIds
+                    .map(id => gombos.find(g => g.id === id))
+                    .filter((g): g is Gombo => !!g);
+
+                  if (viewedGombos.length === 0) {
+                    return (
+                      <div className="py-12 px-4 text-center space-y-4">
+                        <div className="w-12 h-12 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto">
+                          <History className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <p className="text-xs font-bold text-white uppercase tracking-wider">Aucun historique disponible</p>
+                          <p className="text-[10px] text-zinc-500 max-w-xs mx-auto leading-relaxed">
+                            Les opportunités et Gombos que vous ouvrirez s'afficheront ici automatiquement pour vous permettre de les retrouver facilement.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setIsHistoryModalOpen(false);
+                            setSelectedCategory("all");
+                            setSelectedLocation("all");
+                            const feedEl = document.getElementById("gombos-feed-anchor");
+                            if (feedEl) {
+                              feedEl.scrollIntoView({ behavior: "smooth" });
+                            }
+                          }}
+                          className="px-4 py-2 bg-[#D4AF37] hover:bg-[#F3C43F] text-black text-[10px] font-black rounded-lg uppercase tracking-wider transition active:scale-95 mx-auto"
+                        >
+                          Explorer les Gombos ⚡
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return viewedGombos.map((g, idx) => (
+                    <div
+                      key={`${g.id}-${idx}`}
+                      onClick={() => {
+                        handleOpenGomboDetails(g);
+                        setIsHistoryModalOpen(false);
+                      }}
+                      className="p-3 bg-zinc-950 border border-zinc-900 hover:border-blue-500/35 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition text-left animate-fadeIn"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[9.5px] font-mono text-zinc-500 uppercase tracking-wider block font-bold leading-none mb-1">
+                          📍 {g.location || "Abidjan"} • consulté récemment
+                        </span>
+                        <h4 className="text-xs text-white font-bold truncate leading-snug">{g.title}</h4>
+                        <p className="text-[10px] text-[#D4AF37] font-mono font-medium mt-1">
+                          {(g.budget || 0).toLocaleString("fr-FR")} FCFA
+                        </p>
+                      </div>
+                      <span className="text-[9px] font-mono text-zinc-550 shrink-0 uppercase font-bold hover:text-[#D4AF37]">
+                        Ouvrir →
+                      </span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 3. REAL LEADERBOARD MODAL */}
+      <AnimatePresence>
+        {isLeaderboardModalOpen && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-[0_20px_50px_rgba(212,175,55,0.12)] relative max-h-[85vh] flex flex-col"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center border-b border-zinc-900 pb-3 mb-3 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">🏆</span>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
+                      Top Talents
+                    </h3>
+                    <p className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-wider mt-1 font-bold">Classements d'Or AFRIGOMBO</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsLeaderboardModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Leaderboard Inner Content */}
+              {(() => {
+                const processedUsers = [...(users || [])]
+                  .filter(u => u.artisticName || u.name)
+                  .map((u, i) => {
+                    const level = u.performance?.level || (u.isCertified ? 12 : 5);
+                    const score = u.performance?.score || (u.isCertified ? (95 - i) : (75 - i));
+                    const rating = u.performance?.rating || (u.isCertified ? 4.9 : 4.4);
+                    return { ...u, level, score, rating };
+                  })
+                  .sort((a, b) => b.score - a.score);
+
+                const filteredUsers = processedUsers.filter(u => {
+                  const query = leaderboardSearch.toLowerCase();
+                  const matchName = (u.name || "").toLowerCase().includes(query);
+                  const matchArtistic = (u.artisticName || "").toLowerCase().includes(query);
+                  const matchCommune = (u.commune || "").toLowerCase().includes(query);
+                  return matchName || matchArtistic || matchCommune;
+                });
+
+                return (
+                  <>
+                    {/* Search inside leaderboard */}
+                    <div className="relative mb-3.5 shrink-0">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Rechercher un talent, une commune..."
+                        value={leaderboardSearch}
+                        onChange={(e) => setLeaderboardSearch(e.target.value)}
+                        className="w-full bg-zinc-950 border border-zinc-900 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-700 font-bold focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+
+                    {/* Users list */}
+                    <div className="overflow-y-auto flex-1 space-y-2.5 pr-1">
+                      {filteredUsers.length === 0 ? (
+                        <div className="py-12 text-center text-zinc-600 text-xs font-mono">
+                          Aucun talent ne correspond à votre recherche.
+                        </div>
+                      ) : (
+                        filteredUsers.map((u, idx) => {
+                          const rankNum = idx + 1;
+                          
+                          let medalIcon = "";
+                          let rankBorder = "border-zinc-900";
+                          let bgClass = "bg-zinc-950/40";
+                          
+                          if (rankNum === 1) {
+                            medalIcon = "🥇";
+                            rankBorder = "border-[#D4AF37]/50";
+                            bgClass = "bg-gradient-to-r from-[#D4AF37]/5 to-transparent";
+                          } else if (rankNum === 2) {
+                            medalIcon = "🥈";
+                            rankBorder = "border-zinc-400/30";
+                          } else if (rankNum === 3) {
+                            medalIcon = "🥉";
+                            rankBorder = "border-amber-700/30";
+                          }
+
+                          const userAvatar = u.avatarUrl || u.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.id || idx}`;
+
+                          return (
+                            <div
+                              key={u.id || idx}
+                              className={`p-3 border rounded-2xl flex items-center justify-between gap-3 transition text-left ${rankBorder} ${bgClass}`}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                {/* Rank */}
+                                <div className="w-6 shrink-0 text-center font-mono text-xs font-black text-zinc-400">
+                                  {medalIcon || `#${rankNum}`}
+                                </div>
+
+                                {/* Avatar */}
+                                <img
+                                  src={userAvatar}
+                                  referrerPolicy="no-referrer"
+                                  className="w-9 h-9 rounded-xl object-cover border border-white/10 shrink-0"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/bottts/svg?seed=${idx}`;
+                                  }}
+                                  alt=""
+                                />
+
+                                {/* Info */}
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-sans font-black text-white truncate">
+                                      {u.artisticName || u.name}
+                                    </span>
+                                    {u.isCertified && (
+                                      <span className="text-[8px] bg-[#D4AF37]/15 text-[#D4AF37] px-1 py-0.5 rounded-md font-mono font-black border border-[#D4AF37]/25 shrink-0 uppercase tracking-widest leading-none">
+                                        PRO
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-[9.5px] text-zinc-500 font-mono font-bold leading-none mt-1">
+                                    📍 {u.commune || "Abidjan"} • Niv. {u.level}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Performance score / rating */}
+                              <div className="text-right shrink-0">
+                                <span className="text-xs font-mono font-black text-[#D4AF37] block leading-none">
+                                  {u.score} pts
+                                </span>
+                                <span className="text-[9px] font-mono text-zinc-500 block mt-1 font-bold">
+                                  ⭐ {u.rating.toFixed(1)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

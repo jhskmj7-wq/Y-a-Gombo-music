@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { gomboDB } from "../firebase";
 import { UserProfile } from "../types";
+import { supportConfig } from "../supportConfig";
 
 interface PublicPageProps {
   onBack: () => void;
@@ -116,23 +117,34 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
               Pour toute question sur la protection de votre vie privée ou pour exercer vos droits d'accès et d'opposition, vous pouvez joindre à tout moment nos experts showbiz au Plateau :
             </p>
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <a
-                href="mailto:support@gombo.ci"
-                className="flex items-center gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 text-xs font-bold rounded-xl border border-gray-150 dark:border-gray-800 text-gray-700 dark:text-white transition-all"
+              <button
+                onClick={() => supportConfig.openSupport("Confidentialité / Protection des données")}
+                className="flex items-center gap-2 px-4 py-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 text-xs font-bold rounded-xl border border-emerald-100/30 text-emerald-600 dark:text-emerald-400 transition-all cursor-pointer"
               >
-                <Mail className="w-4 h-4 text-[#D4AF37]" />
-                <span>support@gombo.ci</span>
-              </a>
-              <a
-                href="https://wa.me/2250503222712?text=Bonjour%20AFRIGOMBO,%20j'ai%20besoin%20d'assistance."
-                target="_blank"
-                rel="no-referrer"
-                className="flex items-center gap-2 px-4 py-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 text-xs font-bold rounded-xl border border-emerald-100/30 text-emerald-600 dark:text-emerald-400 transition-all"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Parler sur WhatsApp</span>
-              </a>
+                <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
+                <span>Contacter le Support Officiel ({supportConfig.phoneNumber})</span>
+              </button>
             </div>
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
+              <span className="text-[#D4AF37]">✓</span> 7. Assistance & Protection
+            </h2>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+              AFRIGOMBO met à votre disposition un Support Officiel accessible via le Centre d'Aide. 
+              Les utilisateurs peuvent contacter librement le Support Officiel AFRIGOMBO. 
+              En revanche, les échanges privés de numéros, WhatsApp, emails, liens, QR Codes ou réseaux sociaux entre utilisateurs sont strictement interdits lorsqu'ils visent à contourner la plateforme et ses sécurités de paiement.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
+              <span className="text-[#D4AF37]">✓</span> 8. Confidentialité & Coordonnées
+            </h2>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+              Les coordonnées personnelles (téléphone, email) sont utilisées uniquement pour le fonctionnement sécurisé de la plateforme. Elles ne sont jamais rendues publiques sans consentement explicite. Le numéro WhatsApp du Support Officiel est disponible dans le Centre d'Aide afin d'assister les utilisateurs.
+            </p>
           </div>
 
         </div>
@@ -239,6 +251,15 @@ export function TermsPage({ onBack }: PublicPageProps) {
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed text-red-600 dark:text-rose-400 font-bold">
               Y’A GOMBO MUSIC applique une politique de tolérance zéro face aux comportements frauduleux, abusifs ou trompeurs. L'utilisation d'identité d'artistes célèbres usurpés, la création de faux comptes recruteurs, la diffamation publique et le non-paiement répété des artistes mèneront à une suppression immédiate et sans préavis du compte ainsi qu'au blocage de votre adresse IP à Abidjan.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase flex items-center gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
+              <span className="text-[#D4AF37]">✓</span> 7. Mode Bêta Manuelle
+            </h2>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+              Pendant la phase Bêta, les paiements sont validés manuellement par AFRIGOMBO. L'utilisateur ne verra jamais de numéro personnel. L'affichage sera exclusivement "Paiement AFRIGOMBO" ou "Paiement en cours de vérification". Les fonctionnalités sont déployées progressivement.
             </p>
           </div>
 
@@ -515,22 +536,19 @@ export function SupportPage({ onBack }: PublicPageProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1 bg-white dark:bg-[#111111] border border-gray-100 dark:border-gray-800/80 rounded-3xl p-6 space-y-4">
-            <h3 className="text-xs font-black uppercase text-gray-900 dark:text-white tracking-wider">Nos Canaux Directs</h3>
+            <h3 className="text-xs font-black uppercase text-gray-900 dark:text-white tracking-wider">Canal de Support Officiel</h3>
             
             <div className="space-y-4 text-xs font-semibold">
               <div className="flex items-start gap-2 pt-1">
-                <span className="text-emerald-505 font-bold shrink-0">🟢 WhatsApp :</span>
+                <span className="text-emerald-550 font-bold shrink-0">🟢 WhatsApp :</span>
                 <div>
-                  <a href="https://wa.me/22507482910" target="_blank" rel="no-referrer" className="text-[#D4AF37] dark:text-[#F5D76E] hover:underline block font-bold">+225 07 48 29 10 20</a>
-                  <span className="text-[10px] text-gray-400 font-medium">Réponse rapide au maquis</span>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 pt-1">
-                <span className="text-blue-500 font-bold shrink-0">✉ Email :</span>
-                <div>
-                  <a href="mailto:support@yagombomusic.ci" className="text-[#D4AF37] dark:text-[#F5D76E] hover:underline block font-bold">support@yagombo.ci</a>
-                  <span className="text-[10px] text-gray-400 font-medium">Pour les partenariats importants</span>
+                  <button 
+                    onClick={() => supportConfig.openSupport("Centre d'Assistance")}
+                    className="text-[#D4AF37] dark:text-[#F5D76E] hover:underline block font-bold text-left cursor-pointer"
+                  >
+                    {supportConfig.phoneNumber}
+                  </button>
+                  <span className="text-[10px] text-gray-400 font-medium">Support direct 24h/7</span>
                 </div>
               </div>
             </div>

@@ -141,7 +141,7 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
   const currentBadge = getBadgeForAmount(userBuilderData?.totalAmount || 0);
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-y-auto pb-32">
+    <div className="w-full text-white pb-32">
       {/* Header / Hero */}
       <div className="relative pt-12 pb-16 px-6 overflow-hidden border-b border-[#D4AF37]/20">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF37]/20 via-black to-black opacity-60"></div>

@@ -16,6 +16,7 @@ import { ProfileCompletionScore } from "./ProfileCompletionScore";
 import { MediaGalleryManager } from "./MediaGalleryManager";
 import { GomboProfileMainView } from "./GomboProfileMainView";
 import { GomboProfileEditView } from "./GomboProfileEditView";
+import { supportConfig } from "../supportConfig";
 
 interface GomboProfileProps {
   currentUserProfile: UserProfile;
@@ -2427,26 +2428,24 @@ export default function GomboProfile({
           <div className="inline-flex p-3 bg-orange-100 dark:bg-orange-950 text-[#D4AF37] rounded-full">
             <HelpCircle className="w-10 h-10" />
           </div>
-          <h3 className="text-xl font-bold uppercase text-white text-white">SUPPORT ASSISTANCE GOMBO</h3>
-          <p className="text-xs text-[#B9B9B9] dark:text-[#B9B9B9] max-w-sm mx-auto leading-relaxed">
-            Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Nos administrateurs Showbiz basés au Plateau sont disponibles 24/7.
+          <h3 className="text-xl font-bold uppercase text-white">SUPPORT ASSISTANCE GOMBO</h3>
+          <p className="text-xs text-[#B9B9B9] max-w-sm mx-auto leading-relaxed">
+            Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO est disponible 24/7.
           </p>
           <div className="pt-2">
-            <a
-              href="https://wa.me/2250503222712?text=Bonjour%20AFRIGOMBO,%20j'ai%20besoin%20d'assistance."
-              target="_blank"
-              rel="no-referrer"
-              className="inline-flex px-6 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-extrabold rounded-xl uppercase tracking-wider gap-2 shadow-md"
+            <button
+              onClick={() => supportConfig.openSupport("Assistance Gombo")}
+              className="inline-flex px-6 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-extrabold rounded-xl uppercase tracking-wider gap-2 shadow-md cursor-pointer"
             >
               💬 Parler à un Admin sur WhatsApp
-            </a>
+            </button>
           </div>
-          <p className="text-[10px] text-[#B9B9B9] font-mono">Assistance AFRIGOMBO : +225 05 03 22 27 12</p>
+          <p className="text-[10px] text-[#B9B9B9] font-mono">Assistance AFRIGOMBO : {supportConfig.phoneNumber}</p>
 
           <div className="pt-4">
             <button
               onClick={() => setPanelView("main")}
-              className="text-xs font-bold text-[#B9B9B9] hover:underline"
+              className="text-xs font-bold text-[#B9B9B9] hover:underline cursor-pointer"
             >
               Retour à mon profil
             </button>
