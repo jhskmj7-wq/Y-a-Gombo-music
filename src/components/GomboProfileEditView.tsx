@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   User, Check, Plus, Search, ChevronDown, Camera, Upload, 
   ShieldCheck, ArrowLeft, Save, X

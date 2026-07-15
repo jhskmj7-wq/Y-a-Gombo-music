@@ -40,113 +40,126 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       animate={{ opacity: 1 }}
       className="afri-scroll-safe afri-container"
     >
-      <div className="afri-section">
+      <div className="afri-section space-y-6">
         
-        {/* 1. HEADER D'ÉLITE (COMPACT) */}
-        <div className="flex items-center gap-4 bg-gradient-to-r from-[#D4AF37]/5 to-transparent p-4 rounded-3xl border border-[#D4AF37]/10">
-          <div className="relative shrink-0">
-            <div className="w-20 h-20 xs:w-24 xs:h-24 rounded-2xl overflow-hidden border-2 border-[#D4AF37]/30 bg-zinc-900 shadow-xl">
-              <img 
-                src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || "/public/logo.png"} 
-                alt={currentUserProfile.firstName} 
-                className="w-full h-full object-cover" 
-              />
-            </div>
-            {currentUserProfile.isPremium && (
-              <div className="absolute -top-2 -right-2 bg-gradient-to-tr from-amber-500 to-yellow-300 p-1 rounded-lg shadow-lg">
-                <Crown className="w-3 h-3 text-black" />
+        {/* 1. BLOC PREMIUM (PHOTO, INFOS, GOMBO ID) */}
+        <div className="relative overflow-hidden rounded-[30px] border border-[#D4AF37]/20 bg-[#0A0A0A] shadow-2xl p-6 sm:p-8">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
+          
+          <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
+            <div className="relative shrink-0">
+              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-[#D4AF37] shadow-[0_0_25px_rgba(212,175,55,0.3)] bg-zinc-900">
+                <img 
+                  src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || "/public/logo.png"} 
+                  alt={currentUserProfile.firstName} 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer"
+                />
               </div>
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h1 className="text-lg xs:text-xl font-sans font-black text-white truncate max-w-[150px] xs:max-w-none">
-                {currentUserProfile.firstName} {currentUserProfile.lastName}
-              </h1>
               {currentUserProfile.isCertified && (
-                <ShieldCheck className="w-4 h-4 text-emerald-400 fill-emerald-400/10" />
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="afri-text-tiny text-[#D4AF37]">GOMBO ID:</span>
-              <span className="text-[10px] font-mono text-zinc-300 font-black tracking-widest truncate max-w-[100px]">
-                {currentUserProfile.uid.slice(0, 10).toUpperCase()}
-              </span>
-              
-              {/* HIDDEN ADMIN ACCESS */}
-              {currentUserProfile?.email && [
-                "johnsylvesterh@gmail.com",
-                "sylvestrehounkpevi777@gmail.com",
-                "jhs.kmj7@gmail.com"
-              ].includes(currentUserProfile.email.toLowerCase()) && (
-                <button 
-                  onClick={() => onNavigateView("admin")}
-                  className="p-1 bg-amber-500/10 rounded-md border border-amber-500/20 ml-auto"
-                  title="Centre de Commande"
-                >
-                  <Crown className="w-3 h-3 text-[#D4AF37]" />
-                </button>
+                <div className="absolute bottom-1 right-1 bg-[#D4AF37] p-1.5 rounded-full border-4 border-black shadow-lg">
+                  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-black stroke-[3]" />
+                </div>
               )}
             </div>
 
-            <div className="flex items-center gap-3 pt-1">
-              <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-lg border border-white/10">
-                <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                <span className="text-[10px] font-black text-white">{currentUserProfile.reputation || 4.8}</span>
+            <div className="flex-1 text-center sm:text-left space-y-3">
+              <div>
+                <h1 className="text-2xl sm:text-4xl font-sans font-black text-white tracking-tight">
+                  {currentUserProfile.artisticName || `${currentUserProfile.firstName} ${currentUserProfile.lastName}`}
+                </h1>
+                <p className="text-[#D4AF37] text-xs sm:text-sm font-mono font-bold tracking-[0.2em] uppercase mt-1">
+                  Artiste {currentUserProfile.speciality || "Elite"}
+                </p>
               </div>
-              <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-lg border border-white/10">
-                <Award className="w-3 h-3 text-[#D4AF37]" />
-                <span className="text-[9px] font-black text-zinc-300 uppercase">NV. {currentUserProfile.level || 1}</span>
+              
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 pt-2">
+                <div className="flex flex-col items-center sm:items-start">
+                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">GOMBO ID</span>
+                  <span className="text-sm font-mono text-zinc-200 font-black tracking-[0.2em]">
+                    {currentUserProfile.uid.slice(0, 12).toUpperCase()}
+                  </span>
+                </div>
+                
+                <div className="h-8 w-px bg-zinc-800 hidden sm:block" />
+
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Niveau</span>
+                    <div className="flex items-center gap-1.5">
+                      <Award className="w-4 h-4 text-amber-500" />
+                      <span className="text-base font-black text-white">{currentUserProfile.level || 1}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Réputation</span>
+                    <div className="flex items-center gap-1.5">
+                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      <span className="text-base font-black text-white">{currentUserProfile.reputation || 4.8}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 2. STATISTIQUES (2x2) */}
-        <div className="afri-grid-2">
+        {/* 2. STATISTIQUES D'OR (GRILLE 2x2 PREMIUM) */}
+        <div className="grid grid-cols-2 gap-4">
           {[
-            { label: "Contrats", val: currentUserProfile.gigsCompleted || 0, icon: Briefcase, color: "text-blue-400" },
-            { label: "Revenus", val: `${(currentUserProfile.totalRevenue || 0).toLocaleString()} F`, icon: DollarSign, color: "text-emerald-400" },
-            { label: "Réputation", val: `${currentUserProfile.reputation || 4.8}/5`, icon: Star, color: "text-yellow-400" },
-            { label: "Collabs", val: currentUserProfile.collaborations?.length || 0, icon: Users, color: "text-purple-400" },
+            { label: "Contrats", val: currentUserProfile.gigsCompleted || 0, icon: Briefcase, color: "text-blue-400", bg: "bg-blue-400/5", border: "border-blue-400/20" },
+            { label: "Portefeuille", val: `${(currentUserProfile.totalRevenue || 0).toLocaleString()} F`, icon: Wallet, color: "text-[#D4AF37]", bg: "bg-[#D4AF37]/5", border: "border-[#D4AF37]/20" },
+            { label: "Réputation", val: `${currentUserProfile.reputation || 4.8}/5`, icon: Star, color: "text-yellow-400", bg: "bg-yellow-400/5", border: "border-yellow-400/20" },
+            { label: "Collaborations", val: currentUserProfile.collaborations?.length || 0, icon: Users, color: "text-purple-400", bg: "bg-purple-400/5", border: "border-purple-400/20" },
           ].map((stat, idx) => (
-            <div key={idx} className="afri-card p-4 flex flex-col items-center justify-center text-center space-y-1">
-              <stat.icon className={`w-5 h-5 ${stat.color} opacity-80`} />
-              <p className="text-lg xs:text-xl font-sans font-black text-white">{stat.val}</p>
-              <p className="afri-text-tiny">{stat.label}</p>
+            <div 
+              key={idx} 
+              className={`relative overflow-hidden rounded-2xl border ${stat.border} ${stat.bg} p-5 flex flex-col items-center justify-center text-center space-y-2 shadow-lg group active:scale-95 transition-all`}
+            >
+              <div className={`p-2.5 rounded-xl ${stat.bg} border ${stat.border} group-hover:scale-110 transition-transform`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
+              <div>
+                <p className="text-lg sm:text-2xl font-sans font-black text-white leading-tight">{stat.val}</p>
+                <p className="text-[9px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest">{stat.label}</p>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* 3. ACTIONS RAPIDES (GRILLE COMPACTE) */}
-        <div className="space-y-2">
-          <p className="afri-text-tiny px-1">Actions Rapides</p>
-          <div className="grid grid-cols-3 gap-2">
+        {/* 3. ACTIONS RAPIDES (GRILLE UNIFORME) */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 px-2">
+            <div className="h-px flex-1 bg-zinc-800" />
+            <h2 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.3em]">Actions Rapides</h2>
+            <div className="h-px flex-1 bg-zinc-800" />
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
-              { label: "Modifier", icon: Edit3, action: () => setPanelView("edit") },
-              { label: "Wallet", icon: Wallet, action: () => onNavigateView("wallet") },
-              { label: "Contrats", icon: Briefcase, action: () => onNavigateView("contracts") },
-              { label: "Calendrier", icon: Calendar, action: () => onNavigateView("calendar") },
-              { label: "Messages", icon: MessageSquare, action: () => onNavigateView("messages") },
-              { label: "Support", icon: Phone, action: () => onNavigateView("help") },
+              { label: "Wallet Gombo", icon: Wallet, action: () => onNavigateView("wallet"), color: "text-amber-400" },
+              { label: "Mes Contrats", icon: Briefcase, action: () => onNavigateView("contracts"), color: "text-blue-400" },
+              { label: "Calendrier", icon: Calendar, action: () => onNavigateView("calendar"), color: "text-emerald-400" },
+              { label: "Messagerie", icon: MessageSquare, action: () => onNavigateView("messages"), color: "text-purple-400" },
+              { label: "Modifier Profil", icon: Edit3, action: () => setPanelView("edit"), color: "text-[#D4AF37]" },
+              { label: "Support Client", icon: Phone, action: () => onNavigateView("help"), color: "text-zinc-400" },
             ].map((action, idx) => (
               <button 
                 key={idx}
                 onClick={action.action}
-                className="afri-card p-2 flex flex-col items-center justify-center gap-1.5 hover:bg-[#D4AF37]/5 active:scale-[0.98] transition-all group min-h-[70px]"
+                className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/5 active:scale-95 transition-all group shadow-sm"
               >
-                <div className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] group-hover:scale-110 transition-transform">
-                  <action.icon className="w-4 h-4" />
+                <div className="p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 group-hover:border-[#D4AF37]/40 transition-colors">
+                  <action.icon className={`w-5 h-5 ${action.color}`} />
                 </div>
-                <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight text-center leading-none">
+                <span className="text-[10px] sm:text-xs font-black text-zinc-300 uppercase tracking-wider text-center">
                   {action.label}
                 </span>
               </button>
             ))}
           </div>
         </div>
+
 
         {/* 4. RÉPUTATION SUMMARY */}
         <div className="afri-card p-5 space-y-4">

@@ -6,7 +6,7 @@ import {
   Settings, ArrowUpRight, TrendingUp, HelpCircle, Bell, Eye, EyeOff,
   Moon, Sun, Globe, Smartphone, Shield, Lock, Trash2, Calendar,
   Camera, Upload, RefreshCw, MessageSquare, ChevronDown, Search,
-  Copy, Plus, Play, Pause, ExternalLink
+  Copy, Plus, Play, Pause, ExternalLink, ArrowLeft
 } from "lucide-react";
 import { UserProfile, PaymentProvider } from "../types";
 import { gomboDB, gomboAuth, db, isFirebaseMock } from "../firebase";
@@ -1205,7 +1205,7 @@ export default function GomboProfile({
             
             <div className="space-y-3">
               <a 
-                href={`https://wa.me/${supportConfig.whatsapp}?text=${encodeURIComponent("Bonjour Support Gombo, j'ai besoin d'aide.")}`} 
+                href={supportConfig.getLink("Aide générale")} 
                 target="_blank"
                 rel="noreferrer"
                 className="afri-btn-primary py-4 text-center bg-[#25D366] border-[#25D366] flex items-center justify-center gap-2"
@@ -1213,7 +1213,7 @@ export default function GomboProfile({
                 <MessageSquare className="w-4 h-4" /> Parler à un Admin sur WhatsApp
               </a>
               <div className="text-center pt-2">
-                <p className="text-[10px] text-[#B9B9B9] font-mono">Assistance AFRIGOMBO : {supportConfig.phone}</p>
+                <p className="text-[10px] text-[#B9B9B9] font-mono">Assistance AFRIGOMBO : {supportConfig.phoneNumber}</p>
               </div>
             </div>
           </div>

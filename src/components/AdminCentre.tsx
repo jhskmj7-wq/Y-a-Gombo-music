@@ -48,6 +48,7 @@ import SettingsModal from "./SettingsModal";
 import AfrigomboPlus from "./AfrigomboPlus";
 import PremiumEmptyState from "./PremiumEmptyState";
 import AboutAfrigombo from "./AboutAfrigombo";
+import { AfriGomboLogo } from "./AfriGomboLogo";
 import SupportAfrigombo from "./SupportAfrigombo";
 import WhatsNew from "./WhatsNew";
 import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
@@ -2187,13 +2188,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             transition={{ delay: currentIndex * 0.03, duration: 0.2 }}
                             type="button"
                             onClick={() => {
-                              if (isInactive) {
-                                try { audioSynth.playTamTam(false); } catch (_) {}
-                                setComingSoonFeatureKey(key);
-                                setIsSidebarOpen(false);
-                              } else {
-                                actionOnSelect();
-                              }
+                              setIsSidebarOpen(false);
+                              setTimeout(() => {
+                                if (isInactive) {
+                                  try { audioSynth.playTamTam(false); } catch (_) {}
+                                  setComingSoonFeatureKey(key);
+                                } else {
+                                  actionOnSelect();
+                                }
+                              }, 250);
                             }}
                             className="w-full flex items-center justify-between px-3 py-1.5 text-left rounded-lg text-[10px] sm:text-xs font-sans font-bold transition-all text-zinc-300 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 cursor-pointer"
                           >
@@ -2223,7 +2226,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             {renderMenuItem("menu_events", "Événements (Calendrier)", "📅", () => {
                               setPerspective("user");
                               setActiveMenu("user_events");
-                              setIsSidebarOpen(false);
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/10 uppercase font-black">LIVE</span>)}
                             {renderMenuItem("menu_near_opports", "Opportunités proches", "📍", () => {
@@ -2275,7 +2277,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             {renderMenuItem("menu_help", "Centre d'aide", "🛟", () => {
                               setPerspective("user");
                               setActiveMenu("user_help_center");
-                              setIsSidebarOpen(false);
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false)}
                             {renderMenuItem("menu_gombo_id", "GOMBO ID", "🆔", () => {
@@ -2313,7 +2314,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                             {renderMenuItem("menu_pubs", "Publications", "📝", () => {
                               setPerspective("user");
                               setActiveMenu("user_terrain");
-                              setIsSidebarOpen(false);
                             }, false)}
                             {renderMenuItem("menu_comms", "Commentaires", "💬", () => {
                               requireAuthThen(() => {
@@ -2486,57 +2486,60 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </div>
             </header>
           ) : (
-            <header className="flex flex-col afri-container py-4 sm:py-6 min-h-[120px] sm:min-h-[160px] border-b border-[#D4AF37]/40 bg-[#050505] shrink-0 gap-4 sm:gap-6 w-full animate-fadeIn select-none shadow-[0_15px_40px_rgba(0,0,0,0.9)] rounded-b-[30px] sm:rounded-b-[50px] z-[40] relative">
+            <header className="flex flex-col afri-container py-3 sm:py-5 min-h-[100px] sm:min-h-[140px] border-b border-[#D4AF37]/40 bg-[#050505] shrink-0 gap-3 sm:gap-5 w-full animate-fadeIn select-none shadow-[0_15px_40px_rgba(0,0,0,0.9)] rounded-b-[30px] sm:rounded-b-[50px] z-[40] relative">
               {/* TOP ROW */}
               <div className="flex items-center justify-between w-full gap-2 sm:gap-4">
                 {/* Left: Menu & Logo Group */}
-                <div className="flex items-center gap-3 sm:gap-8">
+                <div className="flex items-center gap-2 sm:gap-6">
                   <button
                     id="hamburger-trigger"
                     onClick={() => setIsSidebarOpen(true)}
-                    className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-zinc-900/50 border border-zinc-800 text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all active:scale-95"
+                    className="p-1.5 sm:p-3 rounded-xl sm:rounded-2xl bg-zinc-900/50 border border-zinc-800 text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all active:scale-95"
                   >
                     <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
                   </button>
 
-                  <div className="flex flex-col">
-                    <h1 className="text-3xl sm:text-6xl font-black tracking-tighter text-[#D4AF37] leading-none font-display" 
-                        style={{ 
-                          textShadow: "1px 1px 0px #B48F17, 2px 2px 0px #946F07"
-                        }}>
-                      AFRIGOMBO
-                    </h1>
-                    <span className="text-[10px] sm:text-sm text-zinc-300/60 font-medium tracking-[0.2em] lowercase mt-0.5 sm:mt-1 font-premium">
-                      le temple du gombo musical
-                    </span>
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <AfriGomboLogo className="w-10 h-10 sm:w-20 sm:h-20" />
+                    <div className="flex flex-col">
+                      <h1 className="text-2xl sm:text-6xl font-black tracking-tighter text-[#D4AF37] leading-none font-display" 
+                          style={{ 
+                            textShadow: "1px 1px 0px #B48F17, 2px 2px 0px #946F07"
+                          }}>
+                        AFRIGOMBO
+                      </h1>
+                      <span className="text-[9px] sm:text-sm text-zinc-300/40 font-medium tracking-[0.2em] lowercase mt-0.5 sm:mt-1 font-premium">
+                        le temple du gombo musical
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Right: Actions */}
-                <div className="flex items-center gap-2 sm:gap-6">
+                <div className="flex items-center gap-1.5 sm:gap-6">
                    {/* Notification with Badge */}
                    <button 
                      onClick={() => {
                         setActiveMenu("user_notifications");
                         addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
                      }} 
-                     className="relative p-2 text-[#D4AF37] hover:scale-110 transition-transform cursor-pointer"
+                     className="relative p-1.5 sm:p-2 text-[#D4AF37] hover:scale-110 transition-transform cursor-pointer"
                    >
                      <Bell className="w-5 h-5 sm:w-7 sm:h-7" />
                      {realNotifications.some(n => !n.read) && (
-                       <span className="absolute top-2 right-2 w-2.5 h-2.5 sm:w-3 bg-red-600 rounded-full border border-black shadow-[0_0_5px_rgba(220,38,38,0.5)]" />
+                       <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-2 h-2 sm:w-3 bg-red-600 rounded-full border border-black shadow-[0_0_5px_rgba(220,38,38,0.5)]" />
                      )}
                    </button>
 
                    {/* Wallet */}
                    <div 
                      onClick={() => setActiveMenu("user_wallet")}
-                     className="hidden xs:flex items-center gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 bg-zinc-900/50 border border-zinc-800 rounded-xl sm:rounded-2xl cursor-pointer hover:border-[#D4AF37]/30 transition-colors"
+                     className="hidden xs:flex items-center gap-2 px-2.5 sm:px-5 py-1 sm:py-2.5 bg-zinc-900/50 border border-zinc-800 rounded-xl sm:rounded-2xl cursor-pointer hover:border-[#D4AF37]/30 transition-colors"
                    >
-                     <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4AF37]" />
+                     <CreditCard className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#D4AF37]" />
                      <div className="flex flex-col">
-                       <span className="text-[8px] sm:text-[10px] text-zinc-500 uppercase font-bold leading-none">💳 Wallet</span>
-                       <span className="text-xs sm:text-base font-black text-white">{(profile?.wallet?.soldeDisponible ?? profile?.balance ?? 0).toLocaleString('fr-FR')} <span className="text-[10px] sm:text-xs font-bold text-[#D4AF37]">FCFA</span></span>
+                       <span className="text-[7px] sm:text-[10px] text-zinc-500 uppercase font-bold leading-none">Wallet</span>
+                       <span className="text-[10px] sm:text-base font-black text-white">{(profile?.wallet?.soldeDisponible ?? profile?.balance ?? 0).toLocaleString('fr-FR')} <span className="text-[8px] sm:text-xs font-bold text-[#D4AF37]">F</span></span>
                      </div>
                    </div>
 
@@ -2550,7 +2553,7 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                           setViewingGomboIdDetail(false); 
                         }
                      }}
-                     className="w-9 h-9 sm:w-14 sm:h-14 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-zinc-900 cursor-pointer hover:scale-105 transition-transform shadow-[0_0_15px_rgba(212,175,55,0.2)] relative"
+                     className="w-8 h-8 sm:w-14 sm:h-14 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-zinc-900 cursor-pointer hover:scale-105 transition-transform shadow-[0_0_15px_rgba(212,175,55,0.2)] relative"
                    >
                      {profile?.avatarUrl || currentUser?.photoURL ? (
                         <img src={profile?.avatarUrl || currentUser?.photoURL || ""} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -2560,8 +2563,8 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                         </div>
                      )}
                      {(profile?.isCertified || profile?.gomboIdNumber) && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-[#D4AF37] rounded-full border-2 border-black flex items-center justify-center">
-                          <CheckCircle2 className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-black stroke-[4]" />
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-4 sm:h-4 bg-[#D4AF37] rounded-full border border-black flex items-center justify-center">
+                          <CheckCircle2 className="w-1.5 sm:w-2.5 h-1.5 sm:h-2.5 text-black stroke-[4]" />
                         </div>
                      )}
                    </div>
@@ -2569,31 +2572,32 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
               </div>
 
               {/* BOTTOM ROW: STATS BAR */}
-              <div className="w-full flex justify-center mt-1 sm:mt-2">
-                <div className="flex items-center justify-center gap-4 sm:gap-10 px-4 sm:px-10 py-2 sm:py-3.5 rounded-full bg-zinc-900 border border-zinc-800 shadow-xl overflow-x-auto scrollbar-none max-w-full">
-                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500" />
-                     <span className="text-[9px] sm:text-sm font-medium text-zinc-400">
-                       <strong className="text-white">{users.filter(u => u.status === 'active').length}</strong> artistes disponibles
+              <div className="w-full flex justify-center mt-1">
+                <div className="flex items-center justify-center gap-3 sm:gap-10 px-3 sm:px-10 py-1.5 sm:py-3.5 rounded-full bg-zinc-900 border border-zinc-800 shadow-xl overflow-x-auto scrollbar-none max-w-full">
+                   <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                     <div className="w-1 h-1 sm:w-2 sm:h-2 rounded-full bg-emerald-500" />
+                     <span className="text-[8px] sm:text-sm font-medium text-zinc-400">
+                       <strong className="text-white">{users.filter(u => u.status === 'active').length}</strong> <span className="hidden sm:inline">artistes</span> dispos
                      </span>
                    </div>
-                   <div className="w-px h-3 sm:h-4 bg-zinc-800 shrink-0" />
-                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                     <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500" />
-                     <span className="text-[9px] sm:text-sm font-medium text-zinc-400">
-                       <strong className="text-white">{renforts.filter(r => r.status === 'active').length}</strong> renforts urgents
+                   <div className="w-px h-2 sm:h-4 bg-zinc-800 shrink-0" />
+                   <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                     <Zap className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-amber-500" />
+                     <span className="text-[8px] sm:text-sm font-medium text-zinc-400">
+                       <strong className="text-white">{renforts.filter(r => r.status === 'active').length}</strong> renforts
                      </span>
                    </div>
-                   <div className="w-px h-3 sm:h-4 bg-zinc-800 shrink-0" />
-                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                     <Handshake className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37]" />
-                     <span className="text-[9px] sm:text-sm font-medium text-zinc-400">
-                       <strong className="text-white">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats actifs
+                   <div className="w-px h-2 sm:h-4 bg-zinc-800 shrink-0" />
+                   <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                     <Handshake className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-[#D4AF37]" />
+                     <span className="text-[8px] sm:text-sm font-medium text-zinc-400">
+                       <strong className="text-white">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats
                      </span>
                    </div>
                 </div>
               </div>
             </header>
+
           )
         )}
 
