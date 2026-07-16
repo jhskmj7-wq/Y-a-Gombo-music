@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   ShieldCheck, Star, Briefcase, Wallet, Users, Target, Heart,
-  MessageSquare, Edit3, Share2, Crown, Award, Copy, QrCode, Check, X, ShieldAlert
+  MessageSquare, Edit3, Share2, Crown, Award, Copy, QrCode, Check, X, ShieldAlert,
+  Fingerprint, Flame, ChevronRight, Clock, Shield
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { audioSynth } from "../lib/audio";
@@ -11,7 +12,7 @@ interface GomboProfileMainViewProps {
   currentUserProfile: UserProfile;
   onRefreshProfile: () => void;
   onNavigateView: (view: string, tab?: any) => void;
-  setPanelView: (panel: "main" | "edit" | "settings" | "support") => void;
+  setPanelView: (panel: "main" | "edit" | "settings" | "support" | "certification") => void;
   availabilityStatus: string;
   handleUpdateAvailabilityStatus: (status: "disponible" | "occupe" | "indisponible") => void;
   updatingAvailability: boolean;
@@ -39,14 +40,23 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 }) => {
   const [copiedId, setCopiedId] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [showCertModal, setShowCertModal] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
 
   if (!currentUserProfile) return null;
 
-  const rawId = currentUserProfile.uid || currentUserProfile.id || "GOMBO-TALENT";
-  const gomboId = `GOMBO-${rawId.slice(0, 12).toUpperCase()}`;
+  const isKycApproved = currentUserProfile.kycStatus === "approved" || currentUserProfile.isCertified === true || currentUserProfile.isVerified === true;
+  
+  // Clean, trust-centric Gombo ID resolution
+  const gomboId = isKycApproved 
+    ? (currentUserProfile.gomboIdNumber || (typeof currentUserProfile.gomboId === "string" ? currentUserProfile.gomboId : currentUserProfile.gomboId?.id) || "GMB-ELITE-ID")
+    : "GOMBO ID non attribué";
 
   const handleCopyId = () => {
+    if (!isKycApproved) {
+      try { audioSynth.playKoraNote(220.00, 0, 0.1, 0.3); } catch (_) {}
+      return;
+    }
     try {
       navigator.clipboard.writeText(gomboId);
       setCopiedId(true);
@@ -83,7 +93,6 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
     }
   };
 
-  const isKycApproved = currentUserProfile.kycStatus === "approved" || currentUserProfile.isCertified;
   const isPremium = currentUserProfile.isPro || currentUserProfile.isVip || currentUserProfile.balance !== undefined;
 
   return (
@@ -91,144 +100,336 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="w-full max-w-xl mx-auto space-y-8 pb-32 pt-2 text-left"
+      className="w-full max-w-xl mx-auto space-y-6 pb-32 pt-2 text-left"
     >
       
-      {/* 1. GRANDE CARTE PROFIL PREMIUM */}
-      <div className="relative overflow-hidden rounded-[32px] border border-[#D4AF37]/25 bg-gradient-to-b from-[#0F0F0F] to-[#050505] shadow-[0_15px_40px_rgba(0,0,0,0.8)] p-6 sm:p-8">
-        {/* Glow Effects */}
-        <div className="absolute top-0 right-0 w-36 h-36 bg-[#D4AF37]/5 blur-[60px] rounded-full -translate-y-1/3 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-36 h-36 bg-[#D4AF37]/5 blur-[60px] rounded-full translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+      {/* 1. GRANDE CARTE PROFIL PREMIUM (SCREENSHOT STYLE) */}
+      <div className="relative overflow-hidden rounded-[28px] border-2 border-[#D4AF37]/35 bg-[#050505] shadow-[0_12px_35px_rgba(0,0,0,0.9)] p-5 xs:p-6 sm:p-7">
+        {/* Subtle interior gold light */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-[50px] rounded-full pointer-events-none" />
 
-        <div className="flex flex-col items-center text-center space-y-5">
-          {/* Large Premium Avatar Frame */}
-          <div className="relative">
-            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-[3px] border-[#D4AF37] p-1 bg-black/60 shadow-[0_0_25px_rgba(212,175,55,0.25)]">
-              <img 
-                src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
-                alt="Artist Avatar" 
-                className="w-full h-full object-cover rounded-full" 
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
-                }}
-              />
+        <div className="flex flex-row items-start gap-4 xs:gap-5 sm:gap-6">
+          {/* LEFT: Premium double-ring avatar frame */}
+          <div className="relative shrink-0 select-none">
+            <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 rounded-full border-2 border-[#D4AF37] p-1 bg-black">
+              <div className="w-full h-full rounded-full border border-[#D4AF37]/45 overflow-hidden bg-[#121214]">
+                <img 
+                  src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                  alt="Artist Avatar" 
+                  className="w-full h-full object-cover rounded-full" 
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
+                  }}
+                />
+              </div>
             </div>
-            {isKycApproved && (
-              <div className="absolute bottom-1 right-1 bg-[#D4AF37] p-1.5 rounded-full border-2 border-[#050505] shadow-md animate-pulse">
-                <ShieldCheck className="w-4 h-4 text-black stroke-[3]" />
+            {/* Crown Badge */}
+            <div className="absolute -top-1 -right-1 bg-gradient-to-br from-[#7e22ce] to-[#a855f7] border border-[#D4AF37] rounded-full w-6.5 h-6.5 flex items-center justify-center shadow-md">
+              <span className="text-[10px] leading-none">👑</span>
+            </div>
+          </div>
+
+          {/* RIGHT: Stacked Profile Fields */}
+          <div className="flex flex-col text-left space-y-2.5 w-full min-w-0">
+            {/* Artist Name & badges row */}
+            <div className="flex flex-wrap items-center gap-1.5 xs:gap-2">
+              <h2 className="text-[16px] xs:text-[18px] sm:text-[22px] font-serif font-black italic tracking-wide uppercase leading-none text-white truncate max-w-[140px] xs:max-w-[180px] sm:max-w-[220px]">
+                {currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}
+              </h2>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-950 text-[8px] font-bold text-zinc-400 font-mono shrink-0">
+                <Shield className="w-2.5 h-2.5 text-zinc-400" />
+                <span>STANDARD</span>
+              </span>
+              <span className="text-[8px] xs:text-[9px] font-bold font-mono text-[#D4AF37] tracking-tight shrink-0">
+                TRUST : {Math.round((currentUserProfile.reputation || 4.8) * 20)}/100 (ARGENT)
+              </span>
+              <Flame className="w-3 h-3 text-[#D4AF37]/80 shrink-0 ml-auto animate-pulse" />
+            </div>
+
+            {/* Elite Subtext */}
+            <div className="flex items-center gap-1 text-[9px] xs:text-[10px] font-black text-[#D4AF37] tracking-[0.15em] uppercase">
+              <span>★ ELITE</span>
+            </div>
+
+            {/* Gombo ID Display (Gold pill with black text) */}
+            {isKycApproved ? (
+              <div 
+                onClick={handleCopyId}
+                className="bg-gradient-to-r from-amber-500 via-[#D4AF37] to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[9px] xs:text-[10px] font-mono font-black tracking-widest px-3 py-1 rounded shadow-md uppercase inline-flex items-center gap-1.5 border border-amber-400/40 w-fit cursor-pointer"
+              >
+                <span>🎼 {gomboId}</span>
+              </div>
+            ) : (
+              <div 
+                onClick={handleCopyId}
+                className="bg-gradient-to-r from-amber-500 via-[#D4AF37] to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[9px] xs:text-[10px] font-mono font-black tracking-widest px-3 py-1 rounded shadow-md uppercase inline-flex items-center gap-1.5 border border-amber-400/40 w-fit cursor-pointer"
+              >
+                <span>ID NON ATTRIBUÉ</span>
               </div>
             )}
-          </div>
 
-          {/* Identity details */}
-          <div className="space-y-1.5 w-full">
-            <h2 className="text-2xl sm:text-3xl font-sans font-black text-white tracking-tight">
-              {currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}
-            </h2>
-            
-            <div className="flex items-center justify-center gap-2 text-zinc-400 text-xs font-mono">
-              <span className="inline-block w-1.5 h-1.5 bg-[#D4AF37] rounded-full" />
-              <span>{currentUserProfile.commune || "Cocody"}</span>
-              <span className="text-zinc-600">•</span>
-              <span className="px-2 py-0.5 rounded-full bg-zinc-900/60 border border-zinc-800 text-[10px] text-zinc-300">
-                {currentUserProfile.speciality || currentUserProfile.role || "Talent"}
+            {/* Subscription status */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-zinc-800/80 bg-[#0C0C0E] text-[8.5px] xs:text-[9.5px] text-zinc-400 font-bold tracking-wide uppercase w-fit">
+              <span className="text-amber-500">👑</span>
+              <span>ABONNEMENT : {isPremium ? "PREMIUM ELITE" : "STANDARD (GRATUIT)"}</span>
+            </div>
+
+            {/* KYC status badge */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-zinc-800/80 bg-[#0C0C0E] text-[8.5px] xs:text-[9.5px] text-zinc-400 font-bold tracking-wide uppercase w-fit">
+              <span className={isKycApproved ? "text-emerald-400" : "text-amber-500"}>🛡️</span>
+              <span>KYC : {isKycApproved ? "VÉRIFIÉ" : "NON VÉRIFIÉ"}</span>
+            </div>
+
+            {/* Timer status */}
+            <div className="flex items-center gap-1.5 text-[8.5px] font-mono font-bold text-zinc-500 tracking-wide uppercase">
+              <Clock className="w-2.5 h-2.5" />
+              <span>0M / 30M (EC)</span>
+            </div>
+
+            {/* Actions: BIO OK & DEVENIR ELITE */}
+            <div className="flex items-center gap-2 pt-1.5">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-[8.5px] xs:text-[9px] font-black text-emerald-400 uppercase tracking-wider">
+                ✓ BIO OK
               </span>
+              <button 
+                onClick={() => onNavigateView("user_publish")}
+                className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-[#D4AF37] hover:brightness-115 text-black text-[9px] xs:text-[10px] font-black uppercase tracking-wider shadow-md hover:scale-102 active:scale-98 transition-all cursor-pointer"
+              >
+                DEVENIR ELITE
+              </button>
             </div>
-          </div>
-
-          {/* Under informations: GOMBO ID Showcase immediately */}
-          <div className="w-full bg-[#030303]/90 border border-white/5 rounded-2xl p-4 space-y-3 shadow-inner">
-            <div className="flex items-center justify-center gap-1.5 text-[11px] font-mono tracking-[0.2em] text-[#D4AF37] uppercase">
-              <span>🎼 GOMBO ID</span>
-            </div>
-            
-            <div className="text-xl sm:text-2xl font-mono font-black tracking-widest text-[#D4AF37] select-all">
-              {gomboId}
-            </div>
-
-            <button 
-              onClick={handleCopyId}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-amber-600 to-[#D4AF37] hover:from-amber-500 hover:to-amber-400 active:scale-98 transition-all duration-200 text-black font-mono font-bold text-xs rounded-xl shadow-lg"
-            >
-              {copiedId ? (
-                <>
-                  <Check className="w-4 h-4 stroke-[3]" />
-                  <span>Copié avec succès !</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4 stroke-[2.5]" />
-                  <span>Copier mon GOMBO ID</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
       </div>
 
-      {/* 2. UNIFIED BADGES (EXACTLY SAME STYLE GRAPHIC) */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        {[
-          { 
-            label: "KYC", 
-            val: isKycApproved ? "Validé" : "En attente", 
-            icon: ShieldCheck, 
-            color: isKycApproved ? "text-emerald-400" : "text-amber-500",
-            bg: "bg-zinc-900/50"
-          },
-          { 
-            label: "Réputation", 
-            val: `${currentUserProfile.reputation || 4.8} / 5`, 
-            icon: Star, 
-            color: "text-amber-400",
-            bg: "bg-zinc-900/50"
-          },
-          { 
-            label: "Niveau", 
-            val: `Niveau ${currentUserProfile.level || 1}`, 
-            icon: Award, 
-            color: "text-blue-400",
-            bg: "bg-zinc-900/50"
-          },
-          { 
-            label: "Abonnement", 
-            val: isPremium ? "Premium Elite" : "Standard", 
-            icon: Crown, 
-            color: "text-purple-400",
-            bg: "bg-zinc-900/50"
-          },
-        ].map((badge, idx) => (
-          <div 
-            key={idx} 
-            className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 shadow-md h-16"
-          >
-            <div className="p-2 rounded-xl bg-black/60 border border-white/5 flex items-center justify-center shrink-0">
-              <badge.icon className={`w-5 h-5 ${badge.color}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{badge.label}</p>
-              <p className={`text-xs font-mono font-black truncate ${badge.color}`}>{badge.val}</p>
-            </div>
-          </div>
-        ))}
+      {/* 2. THREE STATS COLUMNS SIDE-BY-SIDE (SCREENSHOT STYLE) */}
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
+        <div className="bg-[#050505] border border-zinc-900/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
+          <span className="text-[17px] xs:text-[20px] sm:text-[24px] font-serif font-black text-[#D4AF37] tracking-tight leading-none">
+            {currentUserProfile.followersCount || currentUserProfile.followers?.length || 142}
+          </span>
+          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest mt-1">
+            ABONNÉS
+          </span>
+        </div>
+        <div className="bg-[#050505] border border-zinc-900/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
+          <span className="text-[17px] xs:text-[20px] sm:text-[24px] font-serif font-black text-[#D4AF37] tracking-tight leading-none">
+            {myPosts.length || 12}
+          </span>
+          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest mt-1">
+            POSTS
+          </span>
+        </div>
+        <div className="bg-[#050505] border border-zinc-900/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
+          <span className="text-[17px] xs:text-[20px] sm:text-[24px] font-serif font-black text-[#D4AF37] tracking-tight leading-none">
+            {currentUserProfile.engagementRate || "12.4%"}
+          </span>
+          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest mt-1">
+            ENGAGEMENT
+          </span>
+        </div>
       </div>
 
-      {/* 3. ACTIONS RAPIDES (GRILLE COMPLETEMENT UNIFORME & LARGES) */}
-      <div className="space-y-4">
+      {/* 3. CENTERED SUBTITLE TEXT */}
+      <div className="text-center py-1">
+        <p className="text-zinc-500 font-sans text-xs italic">
+          Membre Elite de la famille AFRIGOMBO
+        </p>
+      </div>
+
+      {/* 4. GÉRER MON ABONNEMENT BUTTON (SCREENSHOT STYLE) */}
+      <button 
+        onClick={() => setPanelView("settings")}
+        className="w-full max-w-sm mx-auto flex items-center justify-between py-2.5 px-5 bg-[#050505] border border-zinc-900 hover:border-[#D4AF37]/30 text-zinc-400 font-mono font-black text-[9.5px] uppercase tracking-widest rounded-full shadow-md hover:text-white transition-all active:scale-98 cursor-pointer"
+      >
+        <span />
+        <span className="text-center flex-1">GÉRER MON ABONNEMENT</span>
+        <ChevronRight className="w-3.5 h-3.5 text-[#D4AF37] stroke-[3.5]" />
+      </button>
+
+      {/* 5. GRANDE CARTE PREMIUM GOMBO ID */}
+      {!isKycApproved ? (
+        currentUserProfile.kycStatus === "pending" ? (
+          /* Demande en cours d'analyse */
+          <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-[#050505] border-2 border-amber-500/30 shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center space-y-4">
+            <div className="absolute inset-0 bg-[#D4AF37]/2 opacity-[0.03] pointer-events-none" />
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center animate-pulse">
+              <Clock className="w-7 h-7 text-amber-400 stroke-[1.8]" />
+            </div>
+            <div className="space-y-1">
+              <span className="text-[9px] font-mono font-black text-amber-400 uppercase tracking-[0.2em] block">Dossier Transmis</span>
+              <h3 className="text-[17px] xs:text-[19px] font-sans font-black text-white tracking-wide uppercase">
+                DEMANDE EN COURS D'ANALYSE
+              </h3>
+            </div>
+            <p className="text-[10px] xs:text-[11px] text-zinc-400 max-w-[320px] mx-auto leading-relaxed font-sans">
+              Votre demande est en cours d'évaluation par le comité artistique AFRIGOMBO. Notre équipe procède à la vérification de vos pièces.
+            </p>
+            <div className="pt-2">
+              <button 
+                onClick={() => setPanelView("certification")}
+                className="w-full xs:w-auto px-6 py-2.5 bg-zinc-900 border border-zinc-800 hover:border-amber-500/30 text-zinc-300 font-mono text-[10px] uppercase font-black tracking-widest rounded-xl transition-all active:scale-98 cursor-pointer"
+              >
+                Suivre ma certification ({[0, 1, 2, 3, 4, 5, 6].filter(idx => {
+                  switch (idx) {
+                    case 0: return (currentUserProfile.firstName && currentUserProfile.lastName && currentUserProfile.phone && currentUserProfile.birthDate && currentUserProfile.commune);
+                    case 1: return (currentUserProfile.artisticName || currentUserProfile.artistName);
+                    case 2: return !!currentUserProfile.avatarUrl;
+                    case 3: return (currentUserProfile.kycDocs?.identityCardUrl || currentUserProfile.kycDocUrl);
+                    case 4: return !!currentUserProfile.kycDocs?.selfieUrl;
+                    case 5: return (currentUserProfile.role && currentUserProfile.experience && currentUserProfile.specialties?.length > 0 && currentUserProfile.bio);
+                    case 6: return (currentUserProfile.instagram || currentUserProfile.youtube || currentUserProfile.facebook || currentUserProfile.skippedSocials);
+                    default: return false;
+                  }
+                }).length}/7)
+              </button>
+            </div>
+            <p className="text-[9px] text-zinc-500 font-mono uppercase tracking-wider">
+              ⏱️ Temps de réponse moyen : &lt; 24 heures
+            </p>
+          </div>
+        ) : (
+          /* OBTENIR MON GOMBO ID */
+          <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-[#050505] border-2 border-[#D4AF37] shadow-[0_15px_30px_rgba(212,175,55,0.08)] text-center space-y-4">
+            {/* Elegant glowing lights in margins */}
+            <div className="absolute -top-10 -right-10 w-28 h-28 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
+            
+            {/* 🛡️ Icon */}
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-[#D4AF37]/25 flex items-center justify-center shadow-inner">
+              <Shield className="w-7 h-7 text-[#D4AF37] stroke-[1.8]" />
+            </div>
+
+            {/* Title & Subtitle */}
+            <div className="space-y-1">
+              <h3 className="text-[18px] xs:text-[20px] font-sans font-black text-white tracking-[0.1em] uppercase">
+                OBTENIR MON GOMBO ID
+              </h3>
+              <p className="text-[9.5px] xs:text-[10.5px] font-mono font-black text-[#D4AF37] uppercase tracking-widest">
+                "Votre identité musicale certifiée"
+              </p>
+            </div>
+
+            {/* Text details */}
+            <p className="text-[10px] xs:text-[11px] text-zinc-400 max-w-[340px] mx-auto leading-relaxed font-sans">
+              Le GOMBO ID est attribué uniquement après vérification complète de votre identité et de votre activité musicale.
+            </p>
+
+            {/* Main Action button */}
+            <div className="pt-2">
+              <button 
+                onClick={() => {
+                  setPanelView("certification");
+                  try { audioSynth.playTamTam(true); } catch (_) {}
+                }}
+                className="w-full xs:w-auto px-8 py-3 bg-[#D4AF37] hover:brightness-110 text-black font-sans font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg hover:scale-101 active:scale-98 transition-all cursor-pointer"
+              >
+                COMMENCER LA CERTIFICATION
+              </button>
+            </div>
+          </div>
+        )
+      ) : (
+        /* VERIFIED / CERTIFIED GOMBO ID CARD */
+        <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-[#050505] border-2 border-emerald-500/35 shadow-[0_15px_30px_rgba(16,185,129,0.08)] text-center space-y-4">
+          <div className="absolute inset-0 bg-emerald-500/[0.01] pointer-events-none" />
+          
+          {/* Golden Shield & Verified Badge */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+              <ShieldCheck className="w-7 h-7 text-emerald-400" />
+            </div>
+            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded-full text-[8.5px] font-mono font-black uppercase tracking-widest">
+              ✓ VÉRIFIÉ ELITE
+            </span>
+          </div>
+
+          {/* Title and ID */}
+          <div className="space-y-1">
+            <h3 className="text-xs font-mono font-black text-zinc-500 uppercase tracking-[0.2em]">🎼 GOMBO ID OFFICIAL</h3>
+            <p className="text-xl xs:text-2xl font-serif font-black text-[#D4AF37] tracking-widest uppercase italic">
+              {gomboId}
+            </p>
+          </div>
+
+          {/* Buttons: Copier, Partager, Afficher QR Code, Voir mon certificat */}
+          <div className="grid grid-cols-2 xs:flex xs:flex-row items-center justify-center gap-2 pt-2">
+            <button 
+              onClick={handleCopyId}
+              className="py-2 px-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-zinc-300 font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
+            >
+              <Copy className="w-3 h-3 text-[#D4AF37]" />
+              <span>{copiedId ? "Copié !" : "Copier"}</span>
+            </button>
+            <button 
+              onClick={handleShareProfile}
+              className="py-2 px-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-zinc-300 font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
+            >
+              <Share2 className="w-3 h-3 text-[#D4AF37]" />
+              <span>Partager</span>
+            </button>
+            <button 
+              onClick={() => {
+                setShowQrModal(true);
+                try { audioSynth.playKoraNote(392.00, 0, 0.05, 0.3); } catch (_) {}
+              }}
+              className="py-2 px-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-zinc-300 font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
+            >
+              <QrCode className="w-3 h-3 text-[#D4AF37]" />
+              <span>QR Code</span>
+            </button>
+            <button 
+              onClick={() => {
+                setShowCertModal(true);
+                try { audioSynth.playKoraNote(523.25, 0, 0.1, 0.5); } catch (_) {}
+              }}
+              className="col-span-2 xs:col-span-1 py-2 px-3 bg-gradient-to-r from-amber-500/10 to-[#D4AF37]/10 hover:from-amber-500/20 hover:to-[#D4AF37]/20 border border-[#D4AF37]/25 text-[#D4AF37] font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
+            >
+              <Award className="w-3 h-3" />
+              <span>Certificat</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 5b. AVANTAGES SECTION */}
+      <div className="bg-[#050505] border border-zinc-900 rounded-[28px] p-5 xs:p-6 shadow-md space-y-3">
+        <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-[0.2em]">🛡️ Avantages GOMBO ID</h4>
+        <div className="space-y-2">
+          {[
+            { title: "Profil certifié", desc: "Badge officiel de confiance auprès de tout l'écosystème musical." },
+            { title: "Contrats sécurisés", desc: "Signature légale protégée sur tous vos engagements et cachets." },
+            { title: "Priorité dans les recherches", desc: "Algorithme boosté pour apparaître en haut des recruteurs." },
+            { title: "Plus de visibilité", desc: "Mise en avant sur l'accueil et les suggestions d'artistes." },
+            { title: "Confiance renforcée", desc: "Accès exclusif aux gombos d'or et de haut calibre." }
+          ].map((item, idx) => (
+            <div key={idx} className="flex gap-2.5 text-left">
+              <span className="text-emerald-400 font-bold shrink-0">✓</span>
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-white uppercase tracking-wide block">{item.title}</span>
+                <p className="text-[10px] text-zinc-500 leading-normal">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 6. EXPANDABLE / SCROLLABLE TOOLS (PRESERVING APP RICH FEATURES) */}
+      <div className="pt-6 border-t border-zinc-900/60 space-y-4">
         <h3 className="text-xs font-mono uppercase font-black text-zinc-500 tracking-[0.25em] px-1">
-          ⚙️ Actions Rapides
+          🛠️ Espace de Gestion & Créativité
         </h3>
-        
-        <div className="grid grid-cols-2 gap-4">
+
+        {/* Rapid Actions Grid */}
+        <div className="grid grid-cols-2 gap-3.5">
           {[
             { 
               label: "Modifier mon héritage", 
               desc: "Éditer votre profil", 
               icon: Edit3, 
               action: () => setPanelView("edit"), 
-              color: "text-blue-400",
-              border: "hover:border-blue-400/30"
+              color: "text-amber-400/90",
+              border: "hover:border-amber-400/25"
             },
             { 
               label: "Messagerie", 
@@ -236,7 +437,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               icon: MessageSquare, 
               action: () => onNavigateView("user_messages"), 
               color: "text-purple-400",
-              border: "hover:border-purple-400/30"
+              border: "hover:border-purple-400/25"
             },
             { 
               label: "Coffre-fort", 
@@ -244,7 +445,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               icon: Wallet, 
               action: () => onNavigateView("user_wallet"), 
               color: "text-amber-400",
-              border: "hover:border-amber-400/30"
+              border: "hover:border-[#D4AF37]/25"
             },
             { 
               label: "Partager mon profil", 
@@ -252,257 +453,146 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               icon: Share2, 
               action: handleShareProfile, 
               color: "text-emerald-400",
-              border: "hover:border-emerald-400/30"
+              border: "hover:border-emerald-400/25"
             },
           ].map((item, idx) => (
             <button 
               key={idx}
               onClick={item.action}
-              className={`flex flex-col items-start p-5 rounded-2xl bg-zinc-900/35 border border-zinc-800/70 hover:bg-zinc-900/60 ${item.border} active:scale-97 transition-all duration-200 text-left h-36 justify-between shadow-md`}
+              className={`flex flex-col items-start p-4 rounded-2xl bg-zinc-900/25 border border-zinc-850/60 hover:bg-zinc-900/50 ${item.border} active:scale-[0.98] transition-all duration-200 text-left h-32 justify-between shadow-sm`}
             >
-              <div className="p-3 rounded-xl bg-black border border-white/5">
-                <item.icon className={`w-6 h-6 ${item.color}`} />
+              <div className="p-2.5 rounded-xl bg-black border border-white/5">
+                <item.icon className={`w-5 h-5 ${item.color}`} />
               </div>
               <div>
-                <p className="text-xs font-black text-zinc-100 uppercase tracking-wide leading-tight">{item.label}</p>
-                <p className="text-[10px] text-zinc-500 mt-1">{item.desc}</p>
+                <p className="text-[10.5px] font-black text-zinc-100 uppercase tracking-wide leading-tight">{item.label}</p>
+                <p className="text-[9.5px] text-zinc-500 mt-1">{item.desc}</p>
               </div>
             </button>
           ))}
         </div>
+
         {shareSuccess && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-3 bg-emerald-950/80 border border-emerald-800 rounded-xl text-center text-xs text-emerald-200 font-mono"
+            className="p-3 bg-emerald-950/40 border border-emerald-900/50 rounded-xl text-center text-xs text-emerald-300 font-mono"
           >
             ✓ Lien du profil copié ! Vous pouvez maintenant le coller.
           </motion.div>
         )}
-      </div>
 
-      {/* 4. TABLEAU CRÉATEUR (VERY LARGE PREMIUM CARD) */}
-      <div className="relative overflow-hidden rounded-[24px] border border-white/5 bg-[#070707] p-6 shadow-xl space-y-5">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 blur-[40px] rounded-full pointer-events-none" />
-        
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
-            <Target className="w-5 h-5 text-purple-400" />
-          </div>
-          <div>
-            <h4 className="text-sm font-black text-white uppercase tracking-wider">📊 Tableau de bord créateur</h4>
-            <p className="text-[10px] text-zinc-500 font-mono">Pilotez votre prestige & opportunités</p>
-          </div>
-        </div>
-
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-black/40 p-4 rounded-xl border border-white/5">
-          <div className="text-center">
-            <span className="text-xs text-zinc-500 block uppercase font-mono font-bold">Publications</span>
-            <span className="text-lg font-black text-white font-mono">{myPosts.length}</span>
-          </div>
-          <div className="text-center border-l border-zinc-800">
-            <span className="text-xs text-zinc-500 block uppercase font-mono font-bold">Revenus</span>
-            <span className="text-lg font-black text-amber-400 font-mono">{(currentUserProfile.totalRevenue || 0).toLocaleString()} F</span>
-          </div>
-          <div className="text-center border-l border-zinc-800">
-            <span className="text-xs text-zinc-500 block uppercase font-mono font-bold">Opportunités</span>
-            <span className="text-lg font-black text-emerald-400 font-mono">{dynamicAppsCount}</span>
-          </div>
-          <div className="text-center border-l border-zinc-800">
-            <span className="text-xs text-zinc-500 block uppercase font-mono font-bold">Candidatures</span>
-            <span className="text-lg font-black text-purple-400 font-mono">{currentUserProfile.applicationsSent || 0}</span>
-          </div>
-        </div>
-
-        <button 
-          onClick={() => onNavigateView("user_publish")}
-          className="w-full py-3 px-4 bg-zinc-900 hover:bg-zinc-800 text-white font-sans font-black text-xs uppercase tracking-widest rounded-xl border border-zinc-800/80 active:scale-98 transition-all duration-200"
-        >
-          Ouvrir le Tableau Créateur
-        </button>
-      </div>
-
-      {/* 5. SECTON GOMBO ID UNIQUE */}
-      <div className="rounded-[24px] border border-[#D4AF37]/15 bg-black p-6 shadow-lg space-y-5">
-        <div className="space-y-1">
-          <h4 className="text-xs font-mono uppercase font-black text-[#D4AF37] tracking-[0.2em]">Votre identité musicale officielle</h4>
-          <div className="text-xl font-mono font-black tracking-widest text-white">{gomboId}</div>
-        </div>
-
-        <div className="space-y-3 pt-1 border-t border-zinc-900">
-          <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-            Le <strong className="text-[#D4AF37]">GOMBO ID</strong> est votre identité musicale unique et vérifiée au sein du Temple de l'Académie.
-          </p>
-          <div className="space-y-2 text-xs text-zinc-400">
-            <div className="flex items-start gap-2.5">
-              <span className="text-[#D4AF37] mt-0.5">•</span>
-              <span>Permet d'être recruté instantanément par les organisateurs.</span>
-            </div>
-            <div className="flex items-start gap-2.5">
-              <span className="text-[#D4AF37] mt-0.5">•</span>
-              <span>Garantit la réception de propositions et contrats sécurisés.</span>
-            </div>
-            <div className="flex items-start gap-2.5">
-              <span className="text-[#D4AF37] mt-0.5">•</span>
-              <span>Certifie votre profil artistique auprès de toute la communauté.</span>
-            </div>
-            <div className="flex items-start gap-2.5">
-              <span className="text-[#D4AF37] mt-0.5">•</span>
-              <span>Participe au versement de vos cachets garantis sous séquestre.</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-3 gap-2.5 pt-2">
-          <button 
-            onClick={handleCopyId}
-            className="flex flex-col items-center justify-center p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 hover:border-[#D4AF37]/30 text-center gap-1.5 active:scale-95 transition-all"
-          >
-            <Copy className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-[9px] font-mono uppercase font-black text-zinc-300">Copier</span>
-          </button>
+        {/* TABLEAU CRÉATEUR (LARGE PREMIUM CARD) */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#070707] p-5 shadow-xl space-y-4">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/5 blur-[35px] rounded-full pointer-events-none" />
           
-          <button 
-            onClick={handleShareProfile}
-            className="flex flex-col items-center justify-center p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 hover:border-[#D4AF37]/30 text-center gap-1.5 active:scale-95 transition-all"
-          >
-            <Share2 className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-[9px] font-mono uppercase font-black text-zinc-300">Partager</span>
-          </button>
-          
-          <button 
-            onClick={() => {
-              setShowQrModal(true);
-              try { audioSynth.playKoraNote(659.25, 0, 0.1, 0.4); } catch (_) {}
-            }}
-            className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 text-center gap-1.5 active:scale-95 transition-all"
-          >
-            <QrCode className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-[9px] font-mono uppercase font-black text-[#D4AF37]">QR Code</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 6. KYC BLOC MODERNE */}
-      <div className={`rounded-[24px] border p-6 shadow-md space-y-4 ${
-        isKycApproved 
-          ? "bg-emerald-950/20 border-emerald-500/20" 
-          : "bg-amber-950/10 border-amber-500/20"
-      }`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className={`p-2 rounded-xl bg-black ${isKycApproved ? "border-emerald-500/30" : "border-amber-500/30"}`}>
-              <ShieldCheck className={`w-5 h-5 ${isKycApproved ? "text-emerald-400" : "text-amber-400"}`} />
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+              <Target className="w-4.5 h-4.5 text-purple-400" />
             </div>
             <div>
-              <h4 className="text-xs font-mono uppercase font-black text-white tracking-widest">🛡️ Validation KYC</h4>
-              <p className="text-[10px] text-zinc-500 font-mono">Conformité légale & Sécurité de vos paiements</p>
+              <h4 className="text-[11px] font-mono uppercase font-black text-white tracking-widest">📊 Tableau de bord créateur</h4>
+              <p className="text-[9.5px] text-zinc-500 font-mono">Pilotez votre prestige & opportunités</p>
             </div>
           </div>
 
-          <div>
-            {isKycApproved ? (
-              <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-black uppercase rounded-full">
-                ✓ KYC Validé
-              </span>
-            ) : (
-              <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-mono font-black uppercase rounded-full">
-                KYC en attente
-              </span>
-            )}
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-black/40 p-3 rounded-xl border border-white/5">
+            <div className="text-center">
+              <span className="text-[8.5px] text-zinc-500 block uppercase font-mono font-bold">Publications</span>
+              <span className="text-base font-black text-white font-mono">{myPosts.length}</span>
+            </div>
+            <div className="text-center border-l border-zinc-900">
+              <span className="text-[8.5px] text-zinc-500 block uppercase font-mono font-bold">Revenus</span>
+              <span className="text-base font-black text-amber-400 font-mono">{(currentUserProfile.totalRevenue || 0).toLocaleString()} F</span>
+            </div>
+            <div className="text-center border-l border-zinc-900">
+              <span className="text-[8.5px] text-zinc-500 block uppercase font-mono font-bold">Opportunités</span>
+              <span className="text-base font-black text-emerald-400 font-mono">{dynamicAppsCount}</span>
+            </div>
+            <div className="text-center border-l border-zinc-900">
+              <span className="text-[8.5px] text-zinc-500 block uppercase font-mono font-bold">Candidatures</span>
+              <span className="text-base font-black text-purple-400 font-mono">{currentUserProfile.applicationsSent || 0}</span>
+            </div>
           </div>
+
+          <button 
+            onClick={() => onNavigateView("user_publish")}
+            className="w-full py-2.5 px-4 bg-zinc-900 hover:bg-zinc-850 text-white font-sans font-black text-[10px] uppercase tracking-widest rounded-xl border border-zinc-800/80 active:scale-98 transition-all duration-200"
+          >
+            Ouvrir le Tableau Créateur
+          </button>
         </div>
 
-        {/* KYC Interactive action */}
-        {!isKycApproved ? (
-          <div className="bg-black/50 p-4 rounded-xl border border-white/5 space-y-3.5">
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Pour débloquer vos virements mobiles, vous devez envoyer une photo de votre pièce d'identité officielle (CNI ou Passeport).
-            </p>
-            
-            <div className="relative">
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleKycFileChange}
-                disabled={verifyingIdentity}
-                id="kyc-file-picker" 
-                className="hidden" 
-              />
-              <label 
-                htmlFor="kyc-file-picker"
-                className="w-full py-3 px-4 bg-[#D4AF37] hover:bg-[#B48F17] disabled:opacity-50 text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl active:scale-98 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
-              >
-                {verifyingIdentity ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                    <span>Envoi... {kycProgress}%</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Compléter mon KYC</span>
-                  </>
-                )}
-              </label>
+        {/* KYC SECTION */}
+        <div className={`rounded-2xl border p-5 shadow-md space-y-4 ${
+          isKycApproved 
+            ? "bg-emerald-950/10 border-emerald-500/20" 
+            : "bg-amber-950/5 border-amber-500/20"
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className={`p-2 rounded-xl bg-black ${isKycApproved ? "border-emerald-500/20" : "border-amber-500/20"}`}>
+                <ShieldCheck className={`w-4.5 h-4.5 ${isKycApproved ? "text-emerald-400" : "text-amber-400"}`} />
+              </div>
+              <div>
+                <h4 className="text-[11px] font-mono uppercase font-black text-white tracking-widest">🛡️ Validation KYC</h4>
+                <p className="text-[9px] text-zinc-500 font-mono">Conformité légale & Sécurité de vos paiements</p>
+              </div>
+            </div>
+
+            <div>
+              {isKycApproved ? (
+                <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[8.5px] font-mono font-black uppercase rounded-full">
+                  ✓ KYC Validé
+                </span>
+              ) : (
+                <span className="px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[8.5px] font-mono font-black uppercase rounded-full">
+                  En attente
+                </span>
+              )}
             </div>
           </div>
-        ) : (
-          <div className="bg-black/50 p-4 rounded-xl border border-white/5 text-xs text-zinc-400 leading-relaxed flex items-center gap-3">
-            <span className="text-emerald-400 text-base">🛡️</span>
-            <span>Félicitations, votre identité a été validée par nos administrateurs à Abidjan. Votre profil est certifié.</span>
-          </div>
-        )}
-      </div>
 
-      {/* 7. REAL STATS GRID SYNCHRONIZED WITH FIRESTORE */}
-      <div className="space-y-4">
-        <h3 className="text-xs font-mono uppercase font-black text-zinc-500 tracking-[0.25em] px-1">
-          📊 Vos Statistiques Officielles
-        </h3>
-
-        <div className="grid grid-cols-2 gap-4">
-          {[
-            { 
-              label: "👥 Abonnés", 
-              val: currentUserProfile.followersCount || currentUserProfile.followers?.length || 142, 
-              color: "text-blue-400" 
-            },
-            { 
-              label: "🎵 Publications", 
-              val: myPosts.length, 
-              color: "text-purple-400" 
-            },
-            { 
-              label: "🤝 Collaborations", 
-              val: currentUserProfile.gigsCompleted || (currentUserProfile.role === "musicien" ? 3 : 0), 
-              color: "text-[#D4AF37]" 
-            },
-            { 
-              label: "🎯 Opportunités", 
-              val: dynamicAppsCount, 
-              color: "text-emerald-400" 
-            },
-            { 
-              label: "❤️ Mentions \"J'honore\"", 
-              val: currentUserProfile.likedGombos?.length || 18, 
-              color: "text-red-400" 
-            },
-            { 
-              label: "⭐ Réputation", 
-              val: `${currentUserProfile.reputation || 4.8} / 5`, 
-              color: "text-amber-400" 
-            },
-          ].map((stat, idx) => (
-            <div 
-              key={idx} 
-              className="p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 shadow-md flex flex-col justify-between h-28"
-            >
-              <span className="text-[10px] text-zinc-500 font-mono font-bold uppercase tracking-wider">{stat.label}</span>
-              <span className={`text-xl sm:text-2xl font-mono font-black ${stat.color}`}>{stat.val}</span>
+          {/* KYC Interactive action */}
+          {!isKycApproved ? (
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5 space-y-3">
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Pour débloquer vos virements mobiles, vous devez envoyer une photo de votre pièce d'identité officielle (CNI ou Passeport).
+              </p>
+              
+              <div className="relative">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleKycFileChange}
+                  disabled={verifyingIdentity}
+                  id="kyc-file-picker" 
+                  className="hidden" 
+                />
+                <label 
+                  htmlFor="kyc-file-picker"
+                  className="w-full py-2.5 px-4 bg-[#D4AF37] hover:bg-[#B48F17] disabled:opacity-50 text-black font-sans font-black text-[10px] uppercase tracking-widest rounded-xl active:scale-98 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {verifyingIdentity ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      <span>Envoi... {kycProgress}%</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Compléter mon KYC</span>
+                    </>
+                  )}
+                </label>
+              </div>
             </div>
-          ))}
+          ) : (
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5 text-[11px] text-zinc-400 leading-relaxed flex items-center gap-3">
+              <span className="text-emerald-400 text-sm">🛡️</span>
+              <span>Félicitations, votre identité a été validée par nos administrateurs à Abidjan. Votre profil est certifié.</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -594,6 +684,100 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               >
                 Copier GOMBO ID & Fermer
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Interactive Certificate Modal */}
+      <AnimatePresence>
+        {showCertModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/95 backdrop-blur-md z-[99999] flex items-center justify-center p-4 overflow-y-auto"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="w-full max-w-lg rounded-[36px] border-2 border-[#D4AF37] bg-gradient-to-b from-[#0F0E0A] to-[#030303] p-6 sm:p-8 text-center relative shadow-2xl overflow-hidden my-8"
+            >
+              {/* Background watermark style elements */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.04)_0%,transparent_70%)] pointer-events-none" />
+              
+              <button 
+                onClick={() => {
+                  setShowCertModal(false);
+                  try { audioSynth.playKoraNote(392.00, 0, 0.1, 0.4); } catch (_) {}
+                }}
+                className="absolute top-4 right-4 text-zinc-500 hover:text-white bg-zinc-900/60 p-1.5 rounded-full border border-white/5 transition-colors cursor-pointer z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Holographic Security Border and Header */}
+              <div className="border border-[#D4AF37]/30 rounded-2xl p-6 sm:p-8 space-y-6 relative bg-black/40 text-left">
+                {/* Vintage gold stamp */}
+                <div className="absolute top-3 right-4 w-12 h-12 rounded-full border border-[#D4AF37]/25 flex items-center justify-center rotate-12 opacity-85 pointer-events-none select-none">
+                  <span className="text-[7.5px] font-mono font-black text-[#D4AF37]/80 text-center leading-none">AFRIGOMBO<br/>OFFICIAL<br/>SEAL</span>
+                </div>
+
+                <div className="space-y-1 text-center">
+                  <div className="flex justify-center gap-1 text-[#D4AF37] mb-2">
+                    <Star className="w-4 h-4 fill-[#D4AF37]" />
+                    <Star className="w-4 h-4 fill-[#D4AF37]" />
+                    <Star className="w-4 h-4 fill-[#D4AF37]" />
+                  </div>
+                  <span className="text-[#D4AF37] text-[10px] font-mono uppercase tracking-[0.25em] block leading-none">TEMPLE DE LA SOUVERAINETÉ</span>
+                  <h3 className="text-xl sm:text-2xl font-serif font-black italic tracking-wider text-white uppercase leading-tight">CERTIFICAT D'EXCELLENCE</h3>
+                  <span className="text-zinc-500 text-[8px] font-mono uppercase tracking-[0.15em] block pt-1">NUMÉRO D'ENREGISTREMENT UNIQUE</span>
+                </div>
+
+                <div className="py-2 border-y border-zinc-900/80 my-4 space-y-1 text-center">
+                  <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block">IDENTIFIANT ATTRIBUÉ</span>
+                  <span className="text-2xl font-serif font-black text-[#D4AF37] tracking-widest block uppercase italic select-all">{gomboId}</span>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-[11px] text-zinc-400 font-sans leading-relaxed max-w-[340px] mx-auto italic text-center">
+                    « Par ce présent certificat, l'équipe artistique et le comité de souveraineté d'AFRIGOMBO certifient l'artiste ci-dessous comme membre agréé de l'élite musicale ivoirienne. »
+                  </p>
+
+                  <div className="space-y-1.5 text-center">
+                    <p className="text-zinc-400 text-[10px] font-mono uppercase tracking-widest">ARTISTE TITULAIRE</p>
+                    <p className="text-lg font-sans font-black text-white uppercase tracking-wider">{currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}</p>
+                    <p className="text-xs font-mono font-bold text-zinc-500 uppercase">{currentUserProfile.commune || "Cocody"}, Abidjan</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-900/60 text-left text-[9px] font-mono text-zinc-500">
+                  <div>
+                    <span className="block text-[8px] text-zinc-600 uppercase tracking-wider">Date d'approbation</span>
+                    <span className="text-[#D4AF37] font-black uppercase">{currentUserProfile.kycApprovedDate || currentUserProfile.verificationDate || new Date().toLocaleDateString("fr-FR")}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-[8px] text-zinc-600 uppercase tracking-wider">Signé par</span>
+                    <span className="text-white font-black uppercase">Le Grand Conseil Artistique</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex flex-col xs:flex-row gap-2 justify-center">
+                <button 
+                  onClick={handleCopyId}
+                  className="py-2 px-4 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 font-mono text-xs uppercase rounded-xl border border-zinc-800 cursor-pointer transition-all active:scale-98"
+                >
+                  Copier GOMBO ID
+                </button>
+                <button 
+                  onClick={() => setShowCertModal(false)}
+                  className="py-2 px-4 bg-[#D4AF37] text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl cursor-pointer hover:brightness-110 transition-all active:scale-98"
+                >
+                  Fermer
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

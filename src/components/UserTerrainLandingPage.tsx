@@ -4,7 +4,7 @@ import {
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
   RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy,
   PenTool, UserCheck, MessageCircle, History, Headphones, HelpCircle, Video,
-  Sparkles, BarChart3, FileSignature, Zap
+  Sparkles, BarChart3, FileSignature, Zap, Play
 } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { Gombo, User, Post, Renfort } from "../types";
@@ -1051,6 +1051,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                  action: () => setIsPlusMenuOpen(true)
                }
              ].map(action => {
+               const isVerified = profile?.isCertified || profile?.kycStatus === "approved";
+               const isWallet = action.id === "wallet";
                return (
                  <motion.button
                    key={action.id}
@@ -1060,12 +1062,16 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                    }}
                    whileHover={{
                      scale: 1.04,
-                     borderColor: "rgba(212,175,55,0.75)",
-                     boxShadow: "0 6px 20px rgba(212,175,55,0.14)"
+                     borderColor: isWallet ? "rgba(212,175,55,0.95)" : "rgba(212,175,55,0.75)",
+                     boxShadow: isWallet ? "0 8px 24px rgba(212,175,55,0.18)" : "0 6px 20px rgba(212,175,55,0.12)"
                    }}
-                   whileTap={{ scale: 0.96 }}
+                   whileTap={{ scale: 0.92, y: 1 }}
                    onClick={action.action}
-                   className="aspect-square bg-[#050505] border-2 border-[#D4AF37]/35 shadow-[0_8px_30px_rgba(212,175,55,0.06)] rounded-xl xs:rounded-2xl p-1 xs:p-1.5 sm:p-3 flex flex-col items-center justify-center gap-0.5 xs:gap-1 sm:gap-2.5 hover:bg-[#D4AF37]/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0"
+                   className={`aspect-square ${
+                     isWallet 
+                       ? "bg-gradient-to-br from-[#121214] via-[#08080a] to-[#040405] border-[#D4AF37]/50 shadow-[0_8px_32px_rgba(212,175,55,0.12)]" 
+                       : "bg-[#050505] border-[#D4AF37]/25 shadow-[0_8px_30px_rgba(0,0,0,0.85)]"
+                   } border rounded-xl xs:rounded-2xl p-1 xs:p-1.5 sm:p-3 flex flex-col items-center justify-center gap-0.5 xs:gap-1 sm:gap-2.5 hover:bg-[#D4AF37]/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0`}
                  >
                    {/* Top Badge */}
                    {action.badge !== undefined && (
@@ -1074,8 +1080,15 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                      </span>
                    )}
 
+                   {/* Verified GOMBO ID Badge */}
+                   {action.id === "gombo_id" && isVerified && (
+                     <span className="absolute -top-1 -right-1 bg-[#D4AF37] text-black w-4.5 h-4.5 xs:w-5 xs:h-5 rounded-full flex items-center justify-center border border-zinc-950 shadow-[0_0_8px_rgba(212,175,55,0.6)] z-10 animate-fadeIn">
+                       <ShieldCheck className="w-2.5 h-2.5 xs:w-3 xs:h-3 text-black stroke-[3.5]" />
+                     </span>
+                   )}
+
                    {/* Icon Wrapper */}
-                   <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-14 sm:h-14 rounded-full bg-[#D4AF37]/8 flex items-center justify-center border-2 border-[#D4AF37]/20 group-hover:border-[#D4AF37] group-hover:bg-[#D4AF37]/15 transition shrink-0 shadow-[0_4px_12px_rgba(212,175,55,0.05)]">
+                   <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-14 sm:h-14 rounded-full bg-[#D4AF37]/8 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] group-hover:bg-[#D4AF37]/15 transition shrink-0 shadow-[0_4px_12px_rgba(212,175,55,0.05)]">
                      <span className="text-[17px] xs:text-lg sm:text-2xl font-bold leading-none select-none">{action.emoji}</span>
                    </div>
 
@@ -1103,13 +1116,18 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           onClick={() => {
             globalAudioManager.playHymne();
           }}
-          className="w-full flex items-center justify-between p-3.5 bg-zinc-950/90 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-xl text-xs font-bold text-white shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+          className="w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-zinc-950 to-zinc-900 border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 rounded-xl text-xs font-bold text-white shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer group"
         >
-          <div className="flex items-center gap-2">
-            <span className="text-[#D4AF37] animate-pulse">👑</span>
-            <span className="font-extrabold uppercase tracking-wide">▶ Hymne officiel AFRIGOMBO</span>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/30 group-hover:bg-[#D4AF37]/20 transition-colors shrink-0">
+              <Play className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37] ml-0.5" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-black text-[13px] sm:text-[14.5px] text-[#F2F2F2] tracking-tight group-hover:text-[#D4AF37] transition-colors leading-none">Hymne officiel AFRIGOMBO</span>
+              <span className="text-[9.5px] font-normal text-zinc-400 mt-1.5">Écouter l’hymne officiel d’AFRIGOMBO</span>
+            </div>
           </div>
-          <span className="text-[8px] font-mono text-[#D4AF37] border border-[#D4AF37]/20 px-2 py-0.5 rounded-md uppercase font-black tracking-widest bg-[#D4AF37]/5">
+          <span className="text-[7.5px] font-mono text-zinc-500 border border-zinc-800/80 px-1.5 py-0.5 rounded uppercase font-bold tracking-widest bg-zinc-900/40">
             SOUVERAINETÉ
           </span>
         </button>

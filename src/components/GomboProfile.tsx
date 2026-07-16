@@ -16,6 +16,7 @@ import { ProfileCompletionScore } from "./ProfileCompletionScore";
 import { MediaGalleryManager } from "./MediaGalleryManager";
 import { GomboProfileMainView } from "./GomboProfileMainView";
 import { GomboProfileEditView } from "./GomboProfileEditView";
+import { GomboCertificationFlow } from "./GomboCertificationFlow";
 import { supportConfig } from "../supportConfig";
 
 interface GomboProfileProps {
@@ -25,7 +26,7 @@ interface GomboProfileProps {
   onLogout?: () => void;
   darkMode?: boolean;
   setDarkMode?: (val: boolean) => void;
-  initialPanelView?: "main" | "edit" | "settings" | "support";
+  initialPanelView?: "main" | "edit" | "settings" | "support" | "certification";
 }
 
 const ABIDJAN_COMMUNES = [
@@ -73,8 +74,8 @@ export default function GomboProfile({
   setDarkMode,
   initialPanelView = "main"
 }: GomboProfileProps) {
-  // Current Panel view: "main" | "edit" | "settings" | "support"
-  const [panelView, setPanelView] = useState<"main" | "edit" | "settings" | "support">(initialPanelView);
+  // Current Panel view: "main" | "edit" | "settings" | "support" | "certification"
+  const [panelView, setPanelView] = useState<"main" | "edit" | "settings" | "support" | "certification">(initialPanelView);
 
   // States for KYC/Identity validation
   // (Removed redundant declarations as they exist below)
@@ -1108,6 +1109,18 @@ export default function GomboProfile({
         kycProgress={kycProgress}
         handleIdentityVerifyUpload={handleIdentityVerifyUpload}
       />
+    );
+  }
+
+  if (panelView === "certification") {
+    return (
+      <div className="afri-scroll-safe afri-container">
+        <GomboCertificationFlow
+          currentUserProfile={currentUserProfile}
+          onRefreshProfile={onRefreshProfile}
+          onBack={() => setPanelView("main")}
+        />
+      </div>
     );
   }
 
