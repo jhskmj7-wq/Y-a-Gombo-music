@@ -1104,6 +1104,9 @@ export default function GomboProfile({
         myPosts={myPosts}
         mediaGallery={mediaGallery}
         setMediaGallery={setMediaGallery}
+        verifyingIdentity={verifyingIdentity}
+        kycProgress={kycProgress}
+        handleIdentityVerifyUpload={handleIdentityVerifyUpload}
       />
     );
   }

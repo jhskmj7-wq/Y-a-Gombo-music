@@ -8142,11 +8142,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 </span>
               </button>
 
-              {/* Afri ID (Bientôt disponible) */}
+              {/* GOMBO ID (Bientôt disponible) */}
               <div className="w-full py-3 px-4 rounded-xl bg-[#050505] border border-zinc-900 text-zinc-500 font-sans font-bold text-sm uppercase tracking-wider flex items-center justify-between gap-2 select-none opacity-60">
                 <div className="flex items-center gap-2">
                   <span className="text-base">🆔</span>
-                  <span>Continuer avec Afri ID</span>
+                  <span>Continuer avec GOMBO ID</span>
                 </div>
                 <span className="text-[9px] font-mono font-black bg-[#111111] border border-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded uppercase tracking-widest">
                   bientôt

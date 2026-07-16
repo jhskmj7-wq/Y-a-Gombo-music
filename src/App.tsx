@@ -62,7 +62,7 @@ function CompleteProfileView() {
 }
 
 function App() {
-  const { loading: authLoading, currentUser } = useAuth();
+  const { loading: authLoading } = useAuth();
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search;
@@ -76,28 +76,48 @@ function App() {
     }
     return false;
   });
-  const [splashStep, setSplashStep] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [logoUrl, setLogoUrl] = useState<string>(() => localStorage.getItem("custom_app_logo") || "/public/logo_afrigombo.png");
 
   useEffect(() => {
-    // Splash steps timing
-    const t0 = setTimeout(() => setSplashStep(1), 100);    // Step 1: Draw silhouette & gold notes
-    const t1 = setTimeout(() => setSplashStep(2), 1200);   // Step 2: Draw AFRIGOMBO and Taglines
-    const t2 = setTimeout(() => {
-      // Small success sound before entering
-      try {
-        audioSynth.playKoraNote(523.25, 0, 0.12, 0.6); // High pitch d'or
-      } catch (err) {
-        console.warn("Audio Context startup play blocked or unsupported:", err);
-      }
-      setShowSplash(false);
-    }, 3200);
-
-    return () => {
-      clearTimeout(t0);
-      clearTimeout(t1);
-      clearTimeout(t2);
+    const handleLogoUpdate = () => {
+      setLogoUrl(localStorage.getItem("custom_app_logo") || "/public/logo_afrigombo.png");
     };
+    window.addEventListener("custom-logo-updated", handleLogoUpdate);
+    return () => window.removeEventListener("custom-logo-updated", handleLogoUpdate);
   }, []);
+
+  useEffect(() => {
+    if (!showSplash) return;
+    
+    let startTimestamp = Date.now();
+    const duration = 2500; // 2.5 seconds total
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTimestamp;
+      let calculatedProgress = Math.min((elapsed / duration) * 100, 100);
+
+      // Cap progress at 95% if Firebase authentication is still loading
+      if (authLoading && calculatedProgress >= 95) {
+        calculatedProgress = 95;
+      }
+
+      setProgress(calculatedProgress);
+
+      if (calculatedProgress >= 100 && !authLoading) {
+        clearInterval(interval);
+        // Play success kora sound
+        try {
+          audioSynth.playKoraNote(523.25, 0, 0.12, 0.6);
+        } catch (err) {
+          console.warn("Audio Context startup play blocked or unsupported:", err);
+        }
+        setShowSplash(false);
+      }
+    }, 30);
+
+    return () => clearInterval(interval);
+  }, [authLoading, showSplash]);
 
   if (showCinematicIntro) {
     return (
@@ -112,140 +132,150 @@ function App() {
     );
   }
 
-  if (authLoading) {
-    return <PremiumLoader message="Connexion sécurisée..." />;
-  }
-
   return (
     <ThemeProvider>
     <ErrorBoundary>
       <div className="h-screen overflow-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text">
         
-        {/* 1. PREMIUM SPLASH SCREEN */}
-      <AnimatePresence>
-        {showSplash && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.65, ease: "easeInOut" }}
-            className="fixed inset-0 bg-[#030303] z-[9999] flex flex-col items-center justify-center text-center p-6 select-none overflow-hidden"
-          >
-            {/* Ambient Gold Dust / Particles */}
-            <div className="absolute inset-0 pointer-events-none z-0">
-              {Array.from({ length: 20 }).map((_, idx) => (
-                <div
-                  key={idx}
-                  className="absolute rounded-full bg-gradient-to-tr from-[#D4AF37] to-amber-100/30 opacity-30 animate-pulse"
-                  style={{
-                    width: `${Math.random() * 4 + 1.5}px`,
-                    height: `${Math.random() * 4 + 1.5}px`,
-                    top: `${Math.random() * 100}%`,
-                    left: `${Math.random() * 100}%`,
-                    animationDuration: `${Math.random() * 4 + 2}s`,
-                    animationDelay: `${Math.random() * 4}s`
+        {/* Main application layer, rendered in background once auth is ready */}
+        {!authLoading && (
+          <Routes>
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route 
+              path="/home" 
+              element={
+                <ProfileGuard>
+                  <MainAppLayout />
+                </ProfileGuard>
+              } 
+            />
+            <Route 
+              path="/complete-profile" 
+              element={
+                <AuthGuard>
+                  <CompleteProfileView />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/auth" 
+              element={<AuthPage />} 
+            />
+            <Route path="*" element={<Navigate to="/home" replace />} />
+          </Routes>
+        )}
+
+        {/* 1. PREMIUM UNIFIED SPLASH SCREEN */}
+        <AnimatePresence>
+          {showSplash && (
+            <motion.div
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.65, ease: "easeInOut" }}
+              className="fixed inset-0 bg-[#000000] z-[9999] flex flex-col items-center justify-center text-center p-4 xs:p-6 select-none overflow-y-auto sm:overflow-hidden"
+            >
+              {/* Ambient Gold Dust / Particles */}
+              <div className="absolute inset-0 pointer-events-none z-0">
+                {Array.from({ length: 18 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="absolute rounded-full bg-gradient-to-tr from-[#D4AF37] to-amber-200/40 opacity-40 animate-pulse"
+                    style={{
+                      width: `${Math.random() * 2.5 + 1}px`,
+                      height: `${Math.random() * 2.5 + 1}px`,
+                      top: `${Math.random() * 100}%`,
+                      left: `${Math.random() * 100}%`,
+                      animationDuration: `${Math.random() * 3 + 2}s`,
+                      animationDelay: `${Math.random() * 2}s`
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Logo Frame with Golden Halo */}
+              <div className="relative w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center mb-6 rounded-full bg-black/80 border border-[#D4AF37]/20 shadow-[0_0_50px_rgba(212,175,55,0.08)] z-10 shrink-0">
+                <div className="absolute inset-2 rounded-full bg-[#D4AF37]/10 blur-2xl animate-pulse pointer-events-none" />
+                <div className="absolute inset-1.5 border border-dashed border-[#D4AF37]/15 rounded-full animate-spin" style={{ animationDuration: "24s" }} />
+
+                <img
+                  src={logoUrl}
+                  alt="AFRIGOMBO LOGO"
+                  className="w-32 h-32 sm:w-38 sm:h-38 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+                  onError={(e) => {
+                     (e.currentTarget as HTMLImageElement).src = "/public/logo_afrigombo.png";
                   }}
                 />
-              ))}
-            </div>
+              </div>
 
-            {/* Floatings note-shapes */}
-            <div className="absolute inset-x-0 bottom-1/4 top-1/4 pointer-events-none z-0 flex justify-around">
-              <span className="text-[#D4AF37]/25 text-3xl select-none animate-bounce delay-100">♩</span>
-              <span className="text-[#D4AF37]/20 text-4xl select-none animate-pulse delay-500">🪘</span>
-              <span className="text-[#D4AF37]/30 text-2xl select-none animate-bounce delay-300">♪</span>
-              <span className="text-[#D4AF37]/15 text-5xl select-none animate-pulse delay-1000">🎸</span>
-              <span className="text-[#D4AF37]/25 text-3xl select-none animate-bounce delay-700">♫</span>
-            </div>
+              {/* Majestic Typography */}
+              <div className="space-y-1.5 z-10 shrink-0">
+                <span className="text-[#D4AF37] text-[10px] sm:text-[11px] tracking-[0.25em] font-mono font-black uppercase block">
+                  Y'A GOMBO MUSIC
+                </span>
+                <h1 className="text-3xl sm:text-4xl font-sans font-black tracking-wider text-white uppercase">
+                  AFRIGOMBO
+                </h1>
+                <p className="text-xs sm:text-sm font-mono text-zinc-100 tracking-wide font-medium mt-1">
+                  "Le Temple du Gombo Musical"
+                </p>
+              </div>
 
-            {/* SILHOUETTE ANIMÉE D'OR D'AFRIQUE DE L'OUEST */}
-            <div className="relative w-44 h-44 flex items-center justify-center mb-8 border border-[#D4AF37]/15 rounded-full bg-black/60 shadow-[0_0_50px_rgba(212,175,55,0.06)] z-10">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-28 h-28">
-                {/* Stylized African Guitar/Kora silhouette in glowing gold lines */}
-                <path
-                  d="M 50 15 L 50 85 M 40 45 C 30 50, 20 60, 30 75 C 38 82, 62 82, 70 75 C 80 60, 70 50, 60 45"
-                  fill="none"
-                  stroke="#D4AF37"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  className="animate-pulse"
+              {/* Elegant Gold Progress Bar */}
+              <div className="w-48 sm:w-56 h-1 bg-zinc-900 rounded-full overflow-hidden mx-auto my-6 relative z-10 shrink-0">
+                <div 
+                  className="h-full bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-400 transition-all duration-100 ease-out"
+                  style={{ width: `${progress}%` }}
                 />
-                {/* African Tam-tam silhouette */}
-                <path
-                  d="M 32 75 L 38 88 L 62 88 L 68 75 Z"
-                  fill="none"
-                  stroke="#D4AF37"
-                  strokeWidth="2"
-                  strokeLinejoin="round"
-                  className="opacity-90"
-                />
-                {/* Sound waves emitting */}
-                <circle
-                  cx="50"
-                  cy="65"
-                  r="12"
-                  fill="none"
-                  stroke="#D4AF37"
-                  strokeWidth="1"
-                  strokeDasharray="4, 4"
-                  className="animate-spin"
-                  style={{ animationDuration: "12s" }}
-                />
-                {/* Musicians hands abstract notes plucking */}
-                <circle cx="48" cy="40" r="2.5" fill="#FFEAA7" className="animate-ping" />
-                <circle cx="53" cy="52" r="2" fill="#FFEAA7" className="animate-pulse" />
-              </svg>
-            </div>
+              </div>
 
-            {/* MAJESTIC TYPOGRAPHY APPEARANCE */}
-            <div className="space-y-4 max-w-lg z-10">
-              <AnimatePresence>
-                {splashStep >= 1 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="space-y-1.5"
-                  >
-                    <span className="text-[#D4AF37] text-[10px] tracking-[0.25em] font-mono font-black uppercase block">
-                      Y'A GOMBO MUSIC
-                    </span>
-                    <h1 className="text-4xl md:text-5xl font-sans font-black tracking-tight text-white uppercase bg-clip-text bg-gradient-to-b from-white via-white to-neutral-400">
-                      AFRIGOMBO
-                    </h1>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Progress steps logs */}
+              {(() => {
+                const steps = [
+                  "Initialisation...",
+                  "Vérification Firebase...",
+                  "Chargement des ressources...",
+                  "Synchronisation...",
+                  "Bienvenue."
+                ];
+                const currentStepIndex = 
+                  progress < 20 ? 0 :
+                  progress < 45 ? 1 :
+                  progress < 70 ? 2 :
+                  progress < 90 ? 3 : 4;
 
-              <AnimatePresence>
-                {splashStep >= 2 && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.9, delay: 0.1 }}
-                    className="space-y-3 px-4 pt-2"
-                  >
-                    <div className="w-12 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto" />
-                    <p className="text-xs font-mono text-zinc-400 tracking-wide font-medium">
-                      "Le Temple du Gombo"
-                    </p>
-                    <p className="text-[11px] font-sans text-zinc-550 leading-relaxed max-w-xs mx-auto">
-                      Vos opportunités musicales certifiées,<br />
-                      vos cachets sécurisés en Côte d'Ivoire.
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                return (
+                  <div className="space-y-1.5 text-left inline-block font-mono text-[10px] sm:text-[11px] max-w-xs mx-auto z-10 shrink-0">
+                    {steps.map((stepText, idx) => {
+                      const isCompleted = currentStepIndex > idx;
+                      const isActive = currentStepIndex === idx;
+                      
+                      let icon = "○";
+                      let textColor = "text-zinc-500 opacity-40";
+                      
+                      if (isCompleted) {
+                        icon = "✓";
+                        textColor = "text-[#D4AF37] font-bold";
+                      } else if (isActive) {
+                        icon = "●";
+                        textColor = "text-white font-bold animate-pulse";
+                      }
+                      
+                      return (
+                        <div key={idx} className={`flex items-center gap-2 transition-all duration-300 ${textColor}`}>
+                          <span className="w-3 text-center">{icon}</span>
+                          <span>{stepText}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
-            {/* Bottom Credit of Prestige */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[9px] font-mono uppercase tracking-[0.3em] text-[#D4AF37]/50 max-w-xs">
-              Académie Impériale d'Abidjan
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* 2. MAIN APPLICATION LAYER */}
+        {/* 2. MAIN APPLICATION LAYER */}
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route 
