@@ -3,11 +3,13 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { Megaphone, X, Info, AlertTriangle, Activity, Calendar, Settings, Plus } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 export default function GlobalNotificationBanner() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [dismissed, setDismissed] = useState<string[]>([]);
   const { currentUser, profile } = useAuth();
+  const { notificationsEnabled } = useTheme();
 
   useEffect(() => {
     // Check local storage for dismissed notifications
@@ -66,7 +68,7 @@ export default function GlobalNotificationBanner() {
     return false;
   });
 
-  if (visibleNotifs.length === 0) return null;
+  if (!notificationsEnabled || visibleNotifs.length === 0) return null;
 
   // Show the most recent one (or highest priority)
   // Let's sort by priority: Urgente > Importante > Normale

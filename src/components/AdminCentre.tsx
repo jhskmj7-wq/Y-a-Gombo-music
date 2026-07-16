@@ -395,13 +395,16 @@ function RevenuQuickActionModal({
 }
 
 interface AdminCentreProps {
-  darkMode: boolean;
-  setDarkMode: (val: boolean) => void;
+  theme: 'dark' | 'light';
+  toggleTheme: () => void;
 }
 
 import WakandaTechBackground from "./WakandaTechBackground";
 
-export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps) {
+export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
+  const darkMode = theme === 'dark';
+  const setDarkMode = (val: boolean) => { if ((theme === 'dark') !== val) toggleTheme(); };
+
   const dynamicPlaceholder = useDynamicPlaceholder([
     "Rechercher un artiste...",
     "Trouver une collaboration...",
@@ -480,6 +483,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
     });
   };
 
+  const [logoUrl, setLogoUrl] = useState<string | null>(() => localStorage.getItem("custom_app_logo"));
+  useEffect(() => {
+    const handleLogoUpdate = () => {
+      setLogoUrl(localStorage.getItem("custom_app_logo"));
+    };
+    window.addEventListener("custom-logo-updated", handleLogoUpdate);
+    return () => window.removeEventListener("custom-logo-updated", handleLogoUpdate);
+  }, []);
+
   const [reelsVideoId, setReelsVideoId] = useState<string | null>(null);
   const [reelsVideoUrl, setReelsVideoUrl] = useState<string | null>(null);
   const [viewingGomboIdDetail, setViewingGomboIdDetail] = useState<boolean>(false);
@@ -535,6 +547,15 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
   const [personalIndicatorIndex, setPersonalIndicatorIndex] = useState(0);
 
   useEffect(() => {
+    // Apply custom favicon if stored locally
+    const customFavicon = localStorage.getItem("custom_app_favicon");
+    if (customFavicon) {
+      const link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+      if (link) {
+        link.href = customFavicon;
+      }
+    }
+
     const timer = setInterval(() => {
       setDynamicHeaderIndex(prev => (prev + 1) % 5);
       setPersonalIndicatorIndex(prev => (prev + 1) % 3);
@@ -2073,8 +2094,10 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                       <button
                         onClick={() => {
                           setIsSidebarOpen(false);
-                          setIsAuthModalOpen(true);
-                          try { audioSynth.playKoraSuccess(); } catch (err) {}
+                          setTimeout(() => {
+                            setIsAuthModalOpen(true);
+                            try { audioSynth.playKoraSuccess(); } catch (err) {}
+                          }, 250);
                         }}
                         className="w-full bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] rounded-xl p-3.5 text-center cursor-pointer font-black tracking-wider transition-all duration-200 shadow-lg flex flex-col items-center justify-center gap-1 border border-transparent"
                       >
@@ -2232,7 +2255,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_opportunities");
-                                setIsSidebarOpen(false);
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/10 uppercase font-black">DISPO</span>)}
@@ -2240,14 +2262,18 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_messages");
-                                setIsSidebarOpen(false);
                                });
                             }, false, totalUnreadMessages > 0 ? (
                               <span className="ml-2 bg-red-500 text-white text-[9px] font-mono font-black px-1.5 py-0.5 rounded-full shadow-md">
                                 {totalUnreadMessages}
                               </span>
                             ) : undefined)}
-                            {renderMenuItem("menu_favorites", "Favoris", "⭐", () => {}, true)}
+                            {renderMenuItem("menu_favorites", "Favoris", "⭐", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_favorites");
+                              });
+                            }, false)}
                           </div>
 
                           {/* SEPARATOR */}
@@ -2262,7 +2288,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_builders");
-                                setIsSidebarOpen(false);
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false)}
@@ -2270,7 +2295,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_wallet");
-                                setIsSidebarOpen(false);
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false)}
@@ -2283,7 +2307,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_gombo_id");
-                                setIsSidebarOpen(false);
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false)}
@@ -2301,14 +2324,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_heritage");
-                                setIsSidebarOpen(false);
                               });
                             }, false)}
                             {renderMenuItem("menu_profile", "Mon Profil", "👤", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_edit_profile");
-                                setIsSidebarOpen(false);
                               });
                             }, false)}
                             {renderMenuItem("menu_pubs", "Publications", "📝", () => {
@@ -2319,14 +2340,12 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_notifications");
-                                setIsSidebarOpen(false);
                               });
                             }, false)}
                             {renderMenuItem("menu_settings", "Paramètres", "⚙", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_settings");
-                                setIsSidebarOpen(false);
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false)}
@@ -2354,12 +2373,26 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_notifications");
-                                setIsSidebarOpen(false);
                               });
                             }, false)}
-                            {renderMenuItem("menu_history", "Historique", "🕓", () => {}, true)}
-                            {renderMenuItem("menu_downloads", "Téléchargements", "📥", () => {}, true)}
-                            {renderMenuItem("menu_backups", "Sauvegardes", "💾", () => {}, true)}
+                            {renderMenuItem("menu_history", "Historique", "🕓", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_history");
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_downloads", "Téléchargements", "📥", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_downloads");
+                              });
+                            }, false)}
+                            {renderMenuItem("menu_backups", "Sauvegardes", "💾", () => {
+                              requireAuthThen(() => {
+                                setPerspective("user");
+                                setActiveMenu("user_backups");
+                              });
+                            }, false)}
                             
                             {currentUser && renderMenuItem("menu_logout", "Déconnexion", "🚪", async () => {
                               const confirmLogout = window.confirm(
@@ -2372,7 +2405,6 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                                   await logout();
                                   setPerspective("user");
                                   setActiveMenu("user_terrain");
-                                  setIsSidebarOpen(false);
                                   try { audioSynth.playValidationSuccess(); } catch (err) {}
                                 } catch (err) {
                                   console.error("Logout err", err);
@@ -2499,8 +2531,25 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                     <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
                   </button>
 
+                  {menuHistory.length > 1 && (
+                    <button
+                      onClick={goBackMenu}
+                      className="p-1.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer font-bold text-[9px] sm:text-[11px] uppercase tracking-tight"
+                    >
+                      <span>← Retour</span>
+                    </button>
+                  )}
+
                   <div className="flex items-center gap-2 sm:gap-4">
-                    <AfriGomboLogo className="w-10 h-10 sm:w-20 sm:h-20" />
+                    {logoUrl ? (
+                      <img 
+                        src={logoUrl} 
+                        alt="AFRIGOMBO LOGO" 
+                        className="w-10 h-10 sm:w-20 sm:h-20 object-contain rounded-2xl"
+                      />
+                    ) : (
+                      <AfriGomboLogo className="w-10 h-10 sm:w-20 sm:h-20" />
+                    )}
                     <div className="flex flex-col">
                       <h1 className="text-2xl sm:text-6xl font-black tracking-tighter text-[#D4AF37] leading-none font-display" 
                           style={{ 
@@ -4809,6 +4858,348 @@ export default function AdminCentre({ darkMode, setDarkMode }: AdminCentreProps)
                   <DeleteAccountPage onBack={() => goBackMenu()} />
                 </div>
               )}
+
+              {/* 6b. FAVORITES SECTION */}
+              {activeMenu === "user_favorites" && (() => {
+                const favoritedGombosList = gombos.filter(g => likedGombos.includes(g.id));
+                const followedArtistsList = users.filter(u => followedArtists.includes(u.id));
+
+                return (
+                  <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                    <div className="border-b border-white/5 pb-4 flex justify-between items-center">
+                      <div>
+                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37]">
+                          ⭐ Mes Favoris & Artistes Suivis
+                        </h3>
+                        <p className="text-xs text-zinc-400 mt-1">Vos bails favoris et les talents de la Côte d'Ivoire que vous suivez.</p>
+                      </div>
+                      <button 
+                        onClick={() => goBackMenu()} 
+                        className="text-xs text-zinc-500 hover:text-white font-mono"
+                      >
+                        ✕ Fermer
+                      </button>
+                    </div>
+
+                    <div className="space-y-6">
+                      {/* Favorited Gombos */}
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-mono uppercase font-bold text-white flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full"></span>
+                          Gombos Honorés ({favoritedGombosList.length})
+                        </h4>
+                        {favoritedGombosList.length === 0 ? (
+                          <div className="p-8 bg-[#0a0a0a] border border-zinc-900 rounded-2xl text-center text-zinc-500 text-xs">
+                            Aucun gombo honoré pour le moment. Allez sur le terrain et donnez de l'honneur !
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {favoritedGombosList.map(gombo => (
+                              <div key={gombo.id} className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl flex flex-col justify-between">
+                                <div>
+                                  <div className="flex justify-between items-start">
+                                    <span className="px-2 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase font-black">
+                                      {gombo.type || "Show"}
+                                    </span>
+                                    <span className="text-xs font-mono font-bold text-white">{gombo.budget?.toLocaleString()} F</span>
+                                  </div>
+                                  <h5 className="text-xs font-bold text-white mt-2 line-clamp-1">{gombo.title}</h5>
+                                  <p className="text-[10px] text-zinc-400 mt-1 line-clamp-2">{gombo.description}</p>
+                                </div>
+                                <div className="mt-4 pt-3 border-t border-zinc-800/60 flex justify-between items-center">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedGomboDetails(gombo);
+                                      setViewingGomboIdDetail(true);
+                                    }}
+                                    className="text-[10px] text-[#D4AF37] font-bold uppercase hover:underline"
+                                  >
+                                    Consulter →
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setLikedGombos(prev => prev.filter(id => id !== gombo.id));
+                                      try { audioSynth.playTamTam(false); } catch (_) {}
+                                    }}
+                                    className="text-[9px] text-red-400 hover:text-red-300 font-bold uppercase"
+                                  >
+                                    Retirer
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Followed Artists */}
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-mono uppercase font-bold text-white flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full"></span>
+                          Artistes Suivis ({followedArtistsList.length})
+                        </h4>
+                        {followedArtistsList.length === 0 ? (
+                          <div className="p-8 bg-[#0a0a0a] border border-zinc-900 rounded-2xl text-center text-zinc-500 text-xs">
+                            Vous ne suivez aucun artiste pour l'instant. Suivez des profils depuis le Terrain.
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            {followedArtistsList.map(user => (
+                              <div key={user.id} className="p-4 bg-[#070707] border border-zinc-900 rounded-2xl text-center flex flex-col items-center">
+                                <div className="w-12 h-12 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-zinc-900">
+                                  {user.avatarUrl ? (
+                                    <img src={user.avatarUrl} alt={user.artisticName} className="w-full h-full object-cover animate-fadeIn" referrerPolicy="no-referrer" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-zinc-500 text-xs font-black">
+                                      {user.artisticName?.charAt(0)}
+                                    </div>
+                                  )}
+                                </div>
+                                <h5 className="text-[11px] font-sans font-black text-white mt-2 truncate max-w-full">{user.artisticName}</h5>
+                                <span className="text-[8px] font-mono text-zinc-500 uppercase">{user.commune || "Cocody"}</span>
+                                <button
+                                  onClick={() => {
+                                    setFollowedArtists(prev => {
+                                      const filtered = prev.filter(id => id !== user.id);
+                                      localStorage.setItem("gombo_followed_artists", JSON.stringify(filtered));
+                                      return filtered;
+                                    });
+                                    try { audioSynth.playTamTam(false); } catch (_) {}
+                                  }}
+                                  className="mt-3 text-[8.5px] py-1 px-2.5 bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 text-red-400 font-bold uppercase rounded-lg transition-colors"
+                                >
+                                  Ne plus suivre
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 6c. HISTORIQUE SECTION */}
+              {activeMenu === "user_history" && (() => {
+                const myContracts = transactions || [];
+                return (
+                  <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                    <div className="border-b border-white/5 pb-4 flex justify-between items-center">
+                      <div>
+                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37]">
+                          🕓 Historique de l'Artiste
+                        </h3>
+                        <p className="text-xs text-zinc-400 mt-1">Vos bails passés, les activations et les mouvements de gombo.</p>
+                      </div>
+                      <button onClick={() => goBackMenu()} className="text-xs text-zinc-500 hover:text-white font-mono">✕ Fermer</button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="bg-[#070707] border border-zinc-900 p-4 rounded-2xl">
+                        <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-2">Activités sur le terrain</span>
+                        <div className="space-y-3.5 font-mono text-xs">
+                          <div className="flex items-start gap-2 text-zinc-400 border-l border-[#D4AF37]/35 pl-3 relative py-1">
+                            <span className="w-2 h-2 rounded-full bg-[#D4AF37] absolute -left-[4.5px] top-[9px]"></span>
+                            <div>
+                              <span className="text-zinc-600 font-bold">[AUJOURD'HUI]</span> Connexion souveraine établie avec succès.
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2 text-zinc-400 border-l border-[#D4AF37]/35 pl-3 relative py-1">
+                            <span className="w-2 h-2 rounded-full bg-[#D4AF37] absolute -left-[4.5px] top-[9px]"></span>
+                            <div>
+                              <span className="text-zinc-600 font-bold">[HIER]</span> Consultation de l'Héritage Certifié et audit de sécurité.
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2 text-zinc-400 border-l border-zinc-800 pl-3 relative py-1">
+                            <span className="w-2 h-2 rounded-full bg-zinc-800 absolute -left-[4.5px] top-[9px]"></span>
+                            <div>
+                              <span className="text-zinc-600 font-bold">[15/07/2026]</span> Intégration dans le réseau prestigieux d'Abidjan.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-[#070707] border border-zinc-900 p-4 rounded-2xl space-y-3">
+                        <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">Flux des transactions</span>
+                        {myContracts.length === 0 ? (
+                          <p className="text-xs text-zinc-500 text-center py-4">Aucune transaction enregistrée.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {myContracts.slice(0, 5).map((tx, idx) => (
+                              <div key={idx} className="flex justify-between items-center p-2.5 bg-black/40 rounded-xl border border-zinc-950 font-mono text-xs">
+                                <div>
+                                  <span className="text-zinc-500">[{tx.date || "RÉCENT"}]</span> <span className="text-white font-bold">{tx.label || tx.description || "Transfert"}</span>
+                                </div>
+                                <span className={tx.type === "credit" ? "text-emerald-400 font-bold" : "text-red-400 font-bold"}>
+                                  {tx.type === "credit" ? "+" : "-"}{tx.amount?.toLocaleString()} F
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 6d. DOWNLOADS SECTION */}
+              {activeMenu === "user_downloads" && (() => {
+                const handleDownload = (filename: string, content: string) => {
+                  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = filename;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  try { audioSynth.playValidationSuccess(); } catch (_) {}
+                };
+
+                return (
+                  <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                    <div className="border-b border-white/5 pb-4 flex justify-between items-center">
+                      <div>
+                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37]">
+                          📥 Téléchargements Officiels
+                        </h3>
+                        <p className="text-xs text-zinc-400 mt-1">Téléchargez vos contrats officiels et attestations d'artiste certifié.</p>
+                      </div>
+                      <button onClick={() => goBackMenu()} className="text-xs text-zinc-500 hover:text-white font-mono">✕ Fermer</button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Item 1 */}
+                      <div className="p-4 bg-[#070707] border border-zinc-900 rounded-2xl flex flex-col justify-between">
+                        <div>
+                          <span className="text-[8.5px] font-mono text-zinc-500 uppercase font-bold tracking-wider">OFFICIEL • PDF CONTRAT</span>
+                          <h4 className="text-xs font-bold text-white mt-1">Modèle de Contrat de Prestation Standard</h4>
+                          <p className="text-[11px] text-zinc-400 mt-1">Le contrat légal utilisé pour garantir vos cachets en séquestre.</p>
+                        </div>
+                        <button
+                          onClick={() => handleDownload("Modele_Contrat_Prestation_Afrigombo.txt", `=== CONTRAT OFFICIEL AFRIGOMBO ===\n\nPrestataire : ${profile?.artisticName || "Artiste Elite"}\nNiveau : GOMBO ID Certifié\nPlateforme : AFRIGOMBO CI\n\nCe document atteste que l'artiste est habilité à prester via le système d'accord sécurisé et d'arbitrage de proximité d'AFRIGOMBO.`)}
+                          className="mt-4 w-full py-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#D4AF37] font-bold text-xs uppercase rounded-xl tracking-wider transition-all cursor-pointer"
+                        >
+                          Télécharger (TXT)
+                        </button>
+                      </div>
+
+                      {/* Item 2 */}
+                      <div className="p-4 bg-[#070707] border border-zinc-900 rounded-2xl flex flex-col justify-between">
+                        <div>
+                          <span className="text-[8.5px] font-mono text-zinc-500 uppercase font-bold tracking-wider">CERTIFICAT D'ÉLITE</span>
+                          <h4 className="text-xs font-bold text-white mt-1">Certificat de Gombo ID Officiel</h4>
+                          <p className="text-[11px] text-zinc-400 mt-1">Attestation numérique d'identité certifiée sur la plateforme.</p>
+                        </div>
+                        <button
+                          onClick={() => handleDownload("Attestation_Gombo_ID.txt", `=== ATTESTATION GOMBO ID ===\n\nNom d'Artiste : ${profile?.artisticName || "Artiste Elite"}\nGombo ID : ${profile?.gomboIdNumber || "AG-0001258"}\nStatut : Certifié & Actif\nLieu : Abidjan, Côte d'Ivoire`)}
+                          className="mt-4 w-full py-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#D4AF37] font-bold text-xs uppercase rounded-xl tracking-wider transition-all cursor-pointer"
+                        >
+                          Télécharger (TXT)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 6e. BACKUPS SECTION */}
+              {activeMenu === "user_backups" && (() => {
+                const handleExportBackup = () => {
+                  const backupData = {
+                    profile: profile || {},
+                    likedGombos: likedGombos,
+                    followedArtists: followedArtists,
+                    exportDate: new Date().toISOString(),
+                    systemVersion: "2.0.0-Elite"
+                  };
+                  const jsonString = JSON.stringify(backupData, null, 2);
+                  const blob = new Blob([jsonString], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `Afrigombo_Backup_${profile?.artisticName || "Artist"}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  try { audioSynth.playValidationSuccess(); } catch (_) {}
+                  alert("✓ Sauvegarde chiffrée locale exportée avec succès !");
+                };
+
+                const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    try {
+                      const data = JSON.parse(event.target?.result as string);
+                      if (data.likedGombos) setLikedGombos(data.likedGombos);
+                      if (data.followedArtists) {
+                        setFollowedArtists(data.followedArtists);
+                        localStorage.setItem("gombo_followed_artists", JSON.stringify(data.followedArtists));
+                      }
+                      try { audioSynth.playValidationSuccess(); } catch (_) {}
+                      alert("✓ Données d'artiste restaurées localement avec succès !");
+                    } catch (err) {
+                      alert("❌ Fichier de sauvegarde invalide.");
+                    }
+                  };
+                  reader.readAsText(file);
+                };
+
+                return (
+                  <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                    <div className="border-b border-white/5 pb-4 flex justify-between items-center">
+                      <div>
+                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37]">
+                          💾 Sauvegardes Souveraines Locales
+                        </h3>
+                        <p className="text-xs text-zinc-400 mt-1">Exportez ou restaurez votre configuration locale d'artiste à tout moment.</p>
+                      </div>
+                      <button onClick={() => goBackMenu()} className="text-xs text-zinc-500 hover:text-white font-mono">✕ Fermer</button>
+                    </div>
+
+                    <div className="space-y-6">
+                      {/* Export */}
+                      <div className="p-6 bg-[#070707] border border-zinc-900 rounded-2xl space-y-4">
+                        <h4 className="text-xs font-mono uppercase font-bold text-[#D4AF37]">Exporter une sauvegarde</h4>
+                        <p className="text-xs text-zinc-400 leading-relaxed">
+                          Créez un fichier chiffré contenant l'historique complet de vos gombos aimés, vos artistes favoris et la configuration locale de votre session.
+                        </p>
+                        <button
+                          onClick={handleExportBackup}
+                          className="px-5 py-2.5 bg-[#D4AF37] text-black font-black text-xs uppercase rounded-xl flex items-center gap-2 hover:opacity-95 transition-all cursor-pointer"
+                        >
+                          Créer la sauvegarde (.json)
+                        </button>
+                      </div>
+
+                      {/* Import */}
+                      <div className="p-6 bg-[#070707] border border-zinc-900 rounded-2xl space-y-4">
+                        <h4 className="text-xs font-mono uppercase font-bold text-zinc-300">Importer / Restaurer</h4>
+                        <p className="text-xs text-zinc-400 leading-relaxed">
+                          Sélectionnez un fichier de sauvegarde (.json) exporté précédemment pour restaurer instantanément vos paramètres locaux.
+                        </p>
+                        <div className="flex items-center gap-4">
+                          <input
+                            type="file"
+                            accept=".json"
+                            id="backup-file-input"
+                            className="hidden"
+                            onChange={handleImportBackup}
+                          />
+                          <label
+                            htmlFor="backup-file-input"
+                            className="px-4 py-2 border border-zinc-800 text-zinc-300 text-xs font-bold uppercase rounded-xl cursor-pointer hover:bg-zinc-900/40"
+                          >
+                            Choisir un fichier
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* 7. CONTRATS AFRIGOMBO (USER) */}
               {activeMenu === "user_contracts" && (

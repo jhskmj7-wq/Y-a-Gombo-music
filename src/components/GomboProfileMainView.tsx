@@ -137,12 +137,14 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
-              { label: "Wallet Gombo", icon: Wallet, action: () => onNavigateView("wallet"), color: "text-amber-400" },
-              { label: "Mes Contrats", icon: Briefcase, action: () => onNavigateView("contracts"), color: "text-blue-400" },
+              { label: "Wallet", icon: Wallet, action: () => onNavigateView("wallet"), color: "text-amber-400" },
+              { label: "Gombo ID", icon: ShieldCheck, action: () => onNavigateView("gombo_id"), color: "text-[#D4AF37]" },
+              { label: "Contrats", icon: Briefcase, action: () => onNavigateView("contracts"), color: "text-blue-400" },
               { label: "Calendrier", icon: Calendar, action: () => onNavigateView("calendar"), color: "text-emerald-400" },
-              { label: "Messagerie", icon: MessageSquare, action: () => onNavigateView("messages"), color: "text-purple-400" },
-              { label: "Modifier Profil", icon: Edit3, action: () => setPanelView("edit"), color: "text-[#D4AF37]" },
-              { label: "Support Client", icon: Phone, action: () => onNavigateView("help"), color: "text-zinc-400" },
+              { label: "Messages", icon: MessageSquare, action: () => onNavigateView("messages"), color: "text-purple-400" },
+              { label: "Favoris", icon: Heart, action: () => onNavigateView("favorites"), color: "text-red-400" },
+              { label: "Assistance", icon: Phone, action: () => onNavigateView("help"), color: "text-zinc-400" },
+              { label: "Construire le Temple", icon: Crown, action: () => onNavigateView("build"), color: "text-amber-500" },
             ].map((action, idx) => (
               <button 
                 key={idx}

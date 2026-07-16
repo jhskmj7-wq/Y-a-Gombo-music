@@ -1,6 +1,37 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+:root {
+  --afri-gold: #D4AF37;
+  --afri-gold-light: #FFD95A;
+}
+
+.dark {
+  --afri-bg: #050505;
+  --afri-bg-sec: #111111;
+  --afri-text: #FFFFFF;
+  --afri-text-sec: #B9B9B9;
+  --afri-border: rgba(212, 175, 55, 0.2);
+}
+
+.light {
+  --afri-bg: #F7F5EF;
+  --afri-bg-sec: #FFFFFF;
+  --afri-text: #1F1F1F;
+  --afri-text-sec: #666666;
+  --afri-border: #E5E5E5;
+}
+
+html.text-size-petit {
+  font-size: 13px !important;
+}
+html.text-size-moyen {
+  font-size: 15px !important;
+}
+html.text-size-grand {
+  font-size: 17px !important;
+}
+
 @theme {
   --breakpoint-xs: 375px;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -10,13 +41,13 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-btn: "Montserrat", sans-serif;
   
-  --color-afri-bg: #050505;
-  --color-afri-bg-sec: #111111;
-  --color-afri-gold: #D4AF37;
-  --color-afri-gold-light: #FFD95A;
-  --color-afri-text: #FFFFFF;
-  --color-afri-text-sec: #B9B9B9;
-  --color-afri-border: rgba(212, 175, 55, 0.2);
+  --color-afri-bg: var(--afri-bg);
+  --color-afri-bg-sec: var(--afri-bg-sec);
+  --color-afri-gold: var(--afri-gold);
+  --color-afri-gold-light: var(--afri-gold-light);
+  --color-afri-text: var(--afri-text);
+  --color-afri-text-sec: var(--afri-text-sec);
+  --color-afri-border: var(--afri-border);
 
   --animate-fadeIn: fadeIn 0.25s ease-out forwards;
   
@@ -43,47 +74,47 @@
   }
   
   .afri-card {
-    @apply rounded-2xl xs:rounded-3xl border border-[#D4AF37]/15 bg-[#080808] shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all;
+    @apply rounded-2xl xs:rounded-3xl border border-afri-border bg-afri-bg-sec shadow-lg transition-all;
   }
 
   .afri-card-inset {
-    @apply rounded-2xl bg-black/40 border border-white/5 p-4;
+    @apply rounded-2xl bg-afri-bg/40 border border-afri-border p-4;
   }
   
   .afri-title-xl {
-    @apply text-xl xs:text-2xl sm:text-3xl font-sans font-black tracking-tight uppercase text-white;
+    @apply text-xl xs:text-2xl sm:text-3xl font-sans font-black tracking-tight uppercase text-afri-text;
   }
   
   .afri-title-lg {
-    @apply text-base xs:text-lg sm:text-xl font-sans font-bold uppercase tracking-wide text-[#D4AF37];
+    @apply text-base xs:text-lg sm:text-xl font-sans font-bold uppercase tracking-wide text-afri-gold;
   }
   
   .afri-title-md {
-    @apply text-sm xs:text-base sm:text-lg font-sans font-bold uppercase text-white/90;
+    @apply text-sm xs:text-base sm:text-lg font-sans font-bold uppercase text-afri-text/90;
   }
   
   .afri-text-body {
-    @apply text-[11px] xs:text-xs sm:text-sm leading-relaxed text-zinc-400;
+    @apply text-[11px] xs:text-xs sm:text-sm leading-relaxed text-afri-text-sec;
   }
   
   .afri-text-tiny {
-    @apply text-[8px] xs:text-[9px] sm:text-xs font-mono uppercase tracking-[0.15em] text-zinc-500 font-bold;
+    @apply text-[8px] xs:text-[9px] sm:text-xs font-mono uppercase tracking-[0.15em] text-afri-text-sec font-bold;
   }
   
   .afri-btn-primary {
-    @apply w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-[#D4AF37] hover:bg-amber-500 text-black font-black uppercase text-[11px] xs:text-xs tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-[#D4AF37]/10;
+    @apply w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-afri-gold hover:bg-afri-gold-light text-black font-black uppercase text-[11px] xs:text-xs tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-afri-gold/10;
   }
 
   .afri-btn-secondary {
-    @apply w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold uppercase text-[10px] xs:text-[11px] tracking-wider transition-all active:scale-[0.98];
+    @apply w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-afri-text/5 border border-afri-border hover:bg-afri-text/10 text-afri-text font-bold uppercase text-[10px] xs:text-[11px] tracking-wider transition-all active:scale-[0.98];
   }
 
   .afri-btn-ghost {
-    @apply flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all text-[10px] uppercase font-black tracking-widest;
+    @apply flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-afri-text-sec hover:text-afri-text hover:bg-afri-text/5 transition-all text-[10px] uppercase font-black tracking-widest;
   }
   
   .afri-icon-wrapper {
-    @apply w-10 h-10 xs:w-11 xs:h-11 flex items-center justify-center rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37];
+    @apply w-10 h-10 xs:w-11 xs:h-11 flex items-center justify-center rounded-2xl bg-afri-gold/10 border border-afri-gold/20 text-afri-gold;
   }
 
   .afri-badge {
@@ -91,7 +122,7 @@
   }
 
   .afri-badge-gold {
-    @apply bg-[#D4AF37]/10 border-[#D4AF37]/30 text-[#D4AF37];
+    @apply bg-afri-gold/10 border-afri-gold/30 text-afri-gold;
   }
   
   .afri-grid-2 {
@@ -155,3 +186,91 @@ img {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-afri-gold-light);
 }
+
+/* Premium Light Mode Overrides */
+.light,
+.light body,
+.light #root {
+  background-color: var(--afri-bg) !important;
+  color: var(--afri-text) !important;
+}
+
+.light .bg-black,
+.light .bg-\[\#030303\],
+.light .bg-\[\#050505\],
+.light .bg-\[\#09090A\],
+.light .bg-zinc-950,
+.light .bg-zinc-900\/90,
+.light .bg-zinc-950\/90,
+.light .bg-\[\#050505\]\/95,
+.light .bg-neutral-950 {
+  background-color: var(--afri-bg) !important;
+}
+
+.light .bg-\[\#0A0A0A\],
+.light .bg-\[\#111111\],
+.light .bg-\[\#141414\],
+.light .bg-\[\#181818\],
+.light .bg-\[\#1a1a1a\],
+.light .bg-\[\#0B0B0C\],
+.light .bg-\[\#060606\],
+.light .bg-zinc-900,
+.light .bg-zinc-850,
+.light .bg-zinc-800,
+.light .bg-neutral-900,
+.light .bg-[#0A0A0A] {
+  background-color: var(--afri-bg-sec) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+}
+
+.light .text-white,
+.light .text-zinc-100,
+.light .text-zinc-200,
+.light .text-zinc-300,
+.light .text-neutral-200,
+.light .text-neutral-100,
+.light .text-\[\#F5F5F5\],
+.light .text-\[\#f5f5f5\] {
+  color: var(--afri-text) !important;
+}
+
+.light .text-zinc-400,
+.light .text-zinc-500,
+.light .text-neutral-400,
+.light .text-neutral-500 {
+  color: var(--afri-text-sec) !important;
+}
+
+.light .border-zinc-900,
+.light .border-zinc-850,
+.light .border-zinc-800,
+.light .border-zinc-700,
+.light .border-neutral-900,
+.light .border-neutral-800,
+.light .border-white\/5,
+.light .border-white\/10 {
+  border-color: var(--afri-border) !important;
+}
+
+.light .bg-black\/40,
+.light .bg-black\/50,
+.light .bg-zinc-950\/50,
+.light .bg-black\/60,
+.light .bg-black\/80 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: var(--afri-border) !important;
+}
+
+.light input,
+.light select,
+.light textarea {
+  background-color: var(--afri-bg-sec) !important;
+  color: var(--afri-text) !important;
+  border-color: var(--afri-border) !important;
+}
+
+.light aside {
+  background-color: var(--afri-bg-sec) !important;
+  border-color: var(--afri-border) !important;
+}
+

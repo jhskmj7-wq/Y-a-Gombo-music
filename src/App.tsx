@@ -16,20 +16,22 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import AfrigomboCinematicIntro from "./components/AfrigomboCinematicIntro";
 import PremiumLoader from "./components/PremiumLoader";
 import PWAHandler from "./components/PWAHandler";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
 
 // Lazy load the main Application Layer
 const AdminCentre = lazy(() => import("./components/AdminCentre"));
 
-const MainAppLayout = React.memo(function MainAppLayout({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (d: boolean) => void }) {
+const MainAppLayout = React.memo(function MainAppLayout() {
+  const { theme, toggleTheme } = useTheme();
   return (
     <Suspense fallback={
-       <div className="flex h-screen items-center justify-center bg-[#050505]">
-          <div className="w-16 h-16 rounded-full border-t-2 border-[#D4AF37] animate-spin"></div>
+       <div className="flex h-screen items-center justify-center bg-afri-bg">
+          <div className="w-16 h-16 rounded-full border-t-2 border-afri-gold animate-spin"></div>
        </div>
     }>
       <div className="fixed top-0 left-0 w-full z-[9999]"><GlobalNotificationBanner /></div>
       <LivingInteractions />
-      <AdminCentre darkMode={darkMode} setDarkMode={setDarkMode} />
+      <AdminCentre theme={theme} toggleTheme={toggleTheme} />
     </Suspense>
   );
 });
@@ -47,7 +49,7 @@ function CompleteProfileView() {
   }
   
   return (
-    <div className="w-full min-h-screen bg-[#0B0B0B] flex items-center justify-center py-6 overflow-y-auto px-4 font-sans select-none">
+    <div className="w-full min-h-screen bg-afri-bg flex items-center justify-center py-6 overflow-y-auto px-4 font-sans select-none">
       <CompleteProfile 
         currentUserProfile={profile} 
         onComplete={async () => {
@@ -61,7 +63,6 @@ function CompleteProfileView() {
 
 function App() {
   const { loading: authLoading, currentUser } = useAuth();
-  const location = useLocation();
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search;
@@ -76,33 +77,6 @@ function App() {
     return false;
   });
   const [splashStep, setSplashStep] = useState(0);
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem("gombo_theme");
-    return saved === "dark"; // Default is light mode
-  });
-
-  // Load theme and run splash sequence
-  useEffect(() => {
-
-    const root = window.document.documentElement;
-    if (darkMode) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, [darkMode]);
-
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem("gombo_theme", newDarkMode ? "dark" : "light");
-    const root = window.document.documentElement;
-    if (newDarkMode) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  };
 
   useEffect(() => {
     // Splash steps timing
@@ -125,17 +99,6 @@ function App() {
     };
   }, []);
 
-  const setDarkModeWrapped = (val: boolean) => {
-    localStorage.setItem("gombo_theme", val ? "dark" : "light");
-    const root = window.document.documentElement;
-    if (val) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-    setDarkMode(val);
-  };
-
   if (showCinematicIntro) {
     return (
       <ErrorBoundary>
@@ -154,8 +117,9 @@ function App() {
   }
 
   return (
+    <ThemeProvider>
     <ErrorBoundary>
-      <div className={`h-screen overflow-hidden font-sans antialiased transition-colors duration-300 ${darkMode ? "bg-[#0B0B0B] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#1F2937]"}`}>
+      <div className="h-screen overflow-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text">
         
         {/* 1. PREMIUM SPLASH SCREEN */}
       <AnimatePresence>
@@ -288,7 +252,7 @@ function App() {
           path="/home" 
           element={
             <ProfileGuard>
-              <MainAppLayout darkMode={darkMode} setDarkMode={setDarkModeWrapped} />
+              <MainAppLayout />
             </ProfileGuard>
           } 
         />
@@ -313,8 +277,9 @@ function App() {
       {((typeof window !== "undefined" && window.location.search.includes("debug=true")) || import.meta.env.DEV) && (
         <SuperFounderDebug />
       )}
-    </div>
-  </ErrorBoundary>
+      </div>
+    </ErrorBoundary>
+    </ThemeProvider>
 );
 }
 
