@@ -29,12 +29,18 @@ service cloud.firestore {
     }
 
     // Role-based Access Control
-    // Note: admins are identified by their email in the 'admins' collection or specific verified emails
+    function isFounder() {
+      return isSignedIn() && 
+             request.auth.token.email == "jhs.kmj7@gmail.com" &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isFounder == true;
+    }
+
     function isAdmin() {
-      return isSignedIn() && (
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-        request.auth.token.email == "jhs.kmj7@gmail.com" ||
-        request.auth.token.email.endsWith("@afrigombo.com")
+      return isFounder() || (
+        isSignedIn() && (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+          request.auth.token.email.endsWith("@afrigombo.com")
+        )
       );
     }
 
@@ -69,12 +75,12 @@ service cloud.firestore {
 
     // USERS
     match /users/{userId} {
-      allow read: if true; 
+      allow read: if isSignedIn(); // Allow users to see each other's basic profile
       allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().isVerified == false;
-      allow update: if isOwner(userId) && (
+      allow update: if (isOwner(userId) && (
         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'firstName', 'lastName', 'photoURL', 'avatarUrl', 'bio', 'phone', 'commune', 'orangeMoneyNumber', 'moovMoneyNumber', 'waveNumber', 'paymentMethods'])
-      ) || isAdmin();
-      allow delete: if isAdmin();
+      )) || isFounder();
+      allow delete: if isFounder();
     }
 
     // GOMBOS (Opportunities)
@@ -109,17 +115,17 @@ service cloud.firestore {
 
     // WALLETS / TRANSACTIONS / PAYMENTS
     match /transactions/{id} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow write: if isAdmin();
+      allow read: if isOwner(resource.data.userId) || isFounder();
+      allow write: if isFounder();
     }
     match /payments/{id} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow write: if isAdmin();
+      allow read: if isOwner(resource.data.userId) || isFounder();
+      allow write: if isFounder();
     }
     match /withdrawals/{id} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isOwner(resource.data.userId) || isFounder();
       allow create: if isEmailVerified() && incoming().userId == request.auth.uid && incoming().status == 'pending';
-      allow update, delete: if isAdmin();
+      allow update, delete: if isFounder();
     }
 
     // MESSAGING
@@ -181,7 +187,7 @@ service cloud.firestore {
 
     // REPORTS
     match /reports/{id} {
-      allow read: if isAdmin();
+      allow read: if isFounder();
       allow create: if isSignedIn() && incoming().reportedBy == request.auth.uid;
     }
 
@@ -248,15 +254,28 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
     match /verificationRequests/{id} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isOwner(resource.data.userId) || isFounder();
       allow create: if isEmailVerified() && incoming().userId == request.auth.uid;
-      allow update, delete: if isAdmin();
+      allow update, delete: if isFounder();
+    }
+
+    // SETTINGS & ANALYTICS & KYC
+    match /settings/{id} {
+      allow read: if isSignedIn();
+      allow write: if isFounder();
+    }
+    match /analytics/{id} {
+      allow read, write: if isFounder();
+    }
+    match /kyc/{id} {
+      allow read: if isOwner(resource.data.userId) || isFounder();
+      allow write: if isFounder();
     }
 
     // ADMISSIONS
     match /admins/{adminId} {
-      allow read: if isSignedIn();
-      allow write: if false; // System/Console managed only
+      allow read: if isFounder();
+      allow write: if isFounder();
     }
 
   }

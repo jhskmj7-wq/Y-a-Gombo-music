@@ -175,6 +175,7 @@ export default function SettingsModal({
 
   // Account Level
   const accountLevel = profile?.isCertified || profile?.isVerified ? "⭐ ARTISTE CERTIFIÉ GOMBO" : "🎵 COMPTE CLASSIQUE";
+  const isPremium = profile?.isPro || profile?.isVip || (profile?.balance !== undefined && profile.balance > 0);
   
   // Detect Auth Provider
   let authProvider = "Email";
@@ -607,26 +608,48 @@ export default function SettingsModal({
               <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">{mt("theme_label")}</span>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { id: "imperial", label: "Thème Impérial" },
-                  { id: "light", label: "Thème Clair" }
+                  { id: "imperial", label: "Noir Impérial", premium: false, icon: "🌑" },
+                  { id: "light", label: "Blanc Ivoire", premium: false, icon: "☀️" },
+                  { id: "royal", label: "Or Royal", premium: true, icon: "👑" },
+                  { id: "saphir", label: "Bleu Saphir", premium: true, icon: "💎" },
+                  { id: "emeraude", label: "Vert Émeraude", premium: true, icon: "🌿" },
+                  { id: "studio", label: "Violet Impérial", premium: true, icon: "🌌" },
+                  { id: "rouge", label: "Rouge Prestige", premium: true, icon: "❤️" }
                 ].map((th) => {
                   const isSelected = theme === th.id;
+                  const locked = th.premium && !isPremium;
                   return (
                     <button
                       key={th.id}
                       type="button"
                       onClick={() => {
+                        if (locked) {
+                          alert("Ouvrez AFRIGOMBO Premium pour débloquer ce thème.");
+                          return;
+                        }
                         setTheme(th.id as any);
                         try { audioSynth.playValidationSuccess(); } catch (_) {}
                       }}
-                      className={`flex items-center justify-center gap-2 p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
+                      className={`flex items-center justify-between gap-2 p-3 rounded-xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
                         isSelected 
                           ? "bg-afri-gold/10 border-afri-gold text-afri-gold font-black" 
-                          : "bg-afri-bg border-afri-border text-zinc-500 hover:text-zinc-300"
-                      }`}
+                          : "bg-afri-bg border-afri-border text-zinc-500 hover:text-zinc-350"
+                      } ${locked ? "opacity-60" : ""}`}
                     >
-                      <span className="text-xs">{isSelected ? "●" : "○"}</span>
-                      <span className="text-[10px] uppercase tracking-tight">{th.label}</span>
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <span className="text-xs shrink-0">{th.icon}</span>
+                        <span className="text-[9px] uppercase tracking-tighter truncate">{th.label}</span>
+                      </div>
+                      
+                      {locked ? (
+                        <Lock className="w-3 h-3 text-zinc-600 shrink-0" />
+                      ) : (
+                        isSelected && <Check className="w-3 h-3 text-afri-gold shrink-0" />
+                      )}
+
+                      {isSelected && (
+                        <div className="absolute top-0 left-0 w-1 h-full bg-afri-gold" />
+                      )}
                     </button>
                   );
                 })}

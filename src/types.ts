@@ -87,6 +87,8 @@ export interface User {
   gombosCompleted?: number;
   flagsCount?: number;
   role?: UserRole;
+  isFounder?: boolean;
+  permissions?: string[];
   isVip?: boolean;
   isPro?: boolean;
   gomboIdNumber?: string;
@@ -106,6 +108,7 @@ export interface User {
   kycComplementaryInfo?: string;
   kycDocs?: {
     identityCardUrl?: string;
+    identityCardBackUrl?: string;
     selfieUrl?: string;
     activityUrl?: string;
   };

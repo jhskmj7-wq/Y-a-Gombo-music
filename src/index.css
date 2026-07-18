@@ -17,9 +17,11 @@
 .light {
   --afri-bg: #F8F6F1;
   --afri-bg-sec: #FFFFFF;
-  --afri-text: #1C1C1C;
+  --afri-bg-ter: #F2EFE8;
+  --afri-text: #111111;
   --afri-text-sec: #555555;
-  --afri-border: rgba(212, 175, 55, 0.15); /* or discret */
+  --afri-text-muted: #777777;
+  --afri-border: rgba(0, 0, 0, 0.08);
 }
 
 /* Smooth 250-300ms transitions for colors, backgrounds, borders and shadows when theme is changed */
@@ -48,10 +50,12 @@ html.text-size-grand {
   
   --color-afri-bg: var(--afri-bg);
   --color-afri-bg-sec: var(--afri-bg-sec);
+  --color-afri-bg-ter: var(--afri-bg-ter);
   --color-afri-gold: var(--afri-gold);
   --color-afri-gold-light: var(--afri-gold-light);
   --color-afri-text: var(--afri-text);
   --color-afri-text-sec: var(--afri-text-sec);
+  --color-afri-text-muted: var(--afri-text-muted);
   --color-afri-border: var(--afri-border);
 
   --animate-fadeIn: fadeIn 0.25s ease-out forwards;
@@ -200,6 +204,19 @@ img {
   color: var(--afri-text) !important;
 }
 
+/* Base text overrides for light mode to ensure no gray-on-white */
+.light p, .light span, .light div, .light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
+  color: var(--afri-text);
+}
+
+.light .text-zinc-500, .light .text-zinc-400, .light .text-gray-500, .light .text-neutral-500 {
+  color: var(--afri-text-sec) !important;
+}
+
+.light .text-zinc-600, .light .text-gray-600 {
+  color: var(--afri-text) !important;
+}
+
 .light .bg-black,
 .light .bg-\[\#030303\],
 .light .bg-\[\#050505\],
@@ -225,7 +242,8 @@ img {
 .light .bg-neutral-900,
 .light .bg-[#0A0A0A] {
   background-color: var(--afri-bg-sec) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08) !important;
+  border-color: var(--afri-border) !important;
 }
 
 .light .text-white,
@@ -237,13 +255,6 @@ img {
 .light .text-\[\#F5F5F5\],
 .light .text-\[\#f5f5f5\] {
   color: var(--afri-text) !important;
-}
-
-.light .text-zinc-400,
-.light .text-zinc-500,
-.light .text-neutral-400,
-.light .text-neutral-500 {
-  color: var(--afri-text-sec) !important;
 }
 
 .light .border-zinc-900,
@@ -264,6 +275,7 @@ img {
 .light .bg-black\/80 {
   background-color: rgba(255, 255, 255, 0.8) !important;
   border-color: var(--afri-border) !important;
+  backdrop-filter: blur(12px);
 }
 
 .light input,
@@ -277,5 +289,13 @@ img {
 .light aside {
   background-color: var(--afri-bg-sec) !important;
   border-color: var(--afri-border) !important;
+}
+
+.light .afri-card {
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+}
+
+.light .afri-card-inset {
+  background-color: var(--afri-bg-ter) !important;
 }
 

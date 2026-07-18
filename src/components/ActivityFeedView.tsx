@@ -99,7 +99,7 @@ export default function ActivityFeedView({ currentUserProfile, onNavigateView }:
           className={`px-4 py-2.5 rounded-xl border transition-all ${
             activeFilter === "all"
               ? "bg-[#7C3AED] text-white border-[#7C3AED] shadow-sm"
-              : "bg-white dark:bg-[#1e1e24] border-gray-150 dark:border-gray-800 text-gray-500 hover:text-gray-900 dark:hover:text-white"
+              : "bg-afri-bg-sec border-afri-border text-afri-text-muted hover:text-afri-text"
           }`}
         >
           👀 Tout
@@ -109,7 +109,7 @@ export default function ActivityFeedView({ currentUserProfile, onNavigateView }:
           className={`px-4 py-2.5 rounded-xl border transition-all flex items-center gap-1.5 ${
             activeFilter === "talent"
               ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-              : "bg-white dark:bg-[#1e1e24] border-gray-150 dark:border-gray-800 text-gray-500 hover:text-emerald-600"
+              : "bg-afri-bg-sec border-afri-border text-afri-text-muted hover:text-emerald-600"
           }`}
         >
           <UserPlus className="w-3.5 h-3.5" /> Talents

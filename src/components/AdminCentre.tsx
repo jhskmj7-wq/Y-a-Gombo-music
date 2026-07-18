@@ -29,14 +29,14 @@ const MultimediaCenter = lazy(() => import("./admin/MultimediaCenter"));
 const AfrigomboEconomieDashboard = lazy(() => import("./AfrigomboEconomieDashboard"));
 const AfrigomboBuilders = lazy(() => import("./AfrigomboBuilders"));
 const AfrigomboBuildersAdminDashboard = lazy(() => import("./AfrigomboBuildersAdminDashboard"));
-import ThroneCinematicIntro from "./admin/ThroneCinematicIntro";
+const ThroneCinematicIntro = lazy(() => import("./admin/ThroneCinematicIntro"));
 
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
 import AuthScreen from "./AuthScreen";
 import CompleteProfile from "./CompleteProfile";
 import GomboIdUserDashboard from "./GomboIdUserDashboard";
-import GomboProfile from "./GomboProfile";
+import HeritagePage from "./HeritagePage";
 import GomboMusikEcosystem from "./GomboMusikEcosystem";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
 import FounderThrone from "./FounderThrone";
@@ -241,12 +241,12 @@ function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: UserReelsVi
 
   return (
     <div className="space-y-6 pb-24 text-left animate-fadeIn">
-      <div className="bg-gradient-to-r from-zinc-900 via-zinc-950 to-black p-6 rounded-3xl border border-[#D4AF37]/30 shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-zinc-900 via-zinc-950 to-black p-6 rounded-3xl border border-afri-gold/30 shadow-2xl relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-[30%] opacity-25 flex items-center justify-center">
-          <Video className="w-40 h-40 text-[#D4AF37] animate-pulse" />
+          <Video className="w-40 h-40 text-afri-gold animate-pulse" />
         </div>
         <div className="relative z-10 max-w-xl">
-          <span className="text-[9px] font-mono tracking-widest text-[#D4AF37] font-black uppercase bg-[#D4AF37]/10 px-2.5 py-1 rounded-full border border-[#D4AF37]/20">
+          <span className="text-[9px] font-mono tracking-widest text-afri-gold font-black uppercase bg-afri-gold/10 px-2.5 py-1 rounded-full border border-afri-gold/20">
             PROUVER VOTRE TALENT
           </span>
           <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight mt-3">
@@ -258,9 +258,9 @@ function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: UserReelsVi
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center p-12 bg-[#050505]/40 border border-zinc-800 rounded-3xl text-center min-h-[300px]">
-        <div className="w-16 h-16 rounded-full bg-[#D4AF37]/10 flex items-center justify-center mb-4 border border-[#D4AF37]/30">
-          <span className="text-[#D4AF37] text-2xl">🎥</span>
+      <div className="flex flex-col items-center justify-center p-12 bg-afri-bg/40 border border-zinc-800 rounded-3xl text-center min-h-[300px]">
+        <div className="w-16 h-16 rounded-full bg-afri-gold/10 flex items-center justify-center mb-4 border border-afri-gold/30">
+          <span className="text-afri-gold text-2xl">🎥</span>
         </div>
         <h3 className="text-sm font-bold text-white tracking-wide uppercase font-sans">Vidéos Réelles</h3>
         <p className="text-xs text-zinc-400 mt-2 max-w-xs">Bientôt disponible dans votre espace d'élite.</p>
@@ -304,9 +304,9 @@ function RevenuQuickActionModal({
         <p className="text-[11px] text-zinc-400">Suivi comptable en temps réel lié à l'Académie Afrigombo.</p>
       </div>
 
-      <div className="p-4 bg-gradient-to-r from-zinc-950 to-black border border-[#D4AF37]/35 rounded-2xl select-none flex justify-between items-center text-left">
+      <div className="p-4 bg-gradient-to-r from-zinc-950 to-black border border-afri-gold/35 rounded-2xl select-none flex justify-between items-center text-left">
         <div>
-          <span className="text-[8px] font-mono text-[#D4AF37] block uppercase font-black">SOLDE DISPONIBLE</span>
+          <span className="text-[8px] font-mono text-afri-gold block uppercase font-black">SOLDE DISPONIBLE</span>
           <strong className="text-xl font-display font-black text-white block mt-1">{balanceValue.toLocaleString("fr-FR")} FCFA</strong>
         </div>
         <div className="text-[8.5px] font-mono py-1 px-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg shrink-0">
@@ -316,7 +316,7 @@ function RevenuQuickActionModal({
 
       {/* MOBILE MONEY WITHDRAW FORMS */}
       <div className="p-3.5 bg-black border border-zinc-900 rounded-2xl space-y-2.5">
-        <span className="text-[9.5px] font-mono text-[#D4AF37] uppercase block font-bold leading-none">DEMANDE DE RETRAIT INSTANTANÉ</span>
+        <span className="text-[9.5px] font-mono text-afri-gold uppercase block font-bold leading-none">DEMANDE DE RETRAIT INSTANTANÉ</span>
         <div className="space-y-2">
           <div className="grid grid-cols-3 gap-1">
             {["Orange Money", "MTN MoMo", "Wave"].map(op => (
@@ -324,7 +324,7 @@ function RevenuQuickActionModal({
                 key={op}
                 type="button"
                 onClick={() => setWithdrawCarrier(op)}
-                className={`py-1 rounded text-[8px] font-mono font-bold uppercase border transition ${withdrawCarrier === op ? "bg-[#D4AF37] text-black border-[#D4AF37]" : "bg-[#050505] border-zinc-900 text-zinc-400 hover:text-white"}`}
+                className={`py-1 rounded text-[8px] font-mono font-bold uppercase border transition ${withdrawCarrier === op ? "bg-afri-gold text-black border-afri-gold" : "bg-afri-bg border-zinc-900 text-zinc-400 hover:text-white"}`}
               >
                 {op}
               </button>
@@ -335,14 +335,14 @@ function RevenuQuickActionModal({
             placeholder="Ex: 10000 (FCFA)"
             value={withdrawAmount}
             onChange={(e) => setWithdrawAmount(e.target.value)}
-            className="w-full bg-[#050505] border border-zinc-800 text-xs text-white p-2 rounded-lg font-mono focus:outline-none"
+            className="w-full bg-afri-bg border border-zinc-800 text-xs text-white p-2 rounded-lg font-mono focus:outline-none"
           />
           <input
             type="tel"
             placeholder="N° de téléphone du destinataire..."
             value={withdrawNumber}
             onChange={(e) => setWithdrawNumber(e.target.value)}
-            className="w-full bg-[#050505] border border-zinc-800 text-xs text-white p-2 rounded-lg font-mono focus:outline-none"
+            className="w-full bg-afri-bg border border-zinc-800 text-xs text-white p-2 rounded-lg font-mono focus:outline-none"
           />
           <button
             onClick={async () => {
@@ -387,7 +387,7 @@ function RevenuQuickActionModal({
                 alert(`💸 Retrait réussi de ${cash.toLocaleString("fr-FR")} FCFA vers votre compte ${withdrawCarrier} !`);
               } catch (_) {}
             }}
-            className="w-full py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-mono font-black text-[10.5px] uppercase rounded-lg transition"
+            className="w-full py-2 bg-afri-gold hover:bg-[#B48F17] text-black font-mono font-black text-[10.5px] uppercase rounded-lg transition"
           >
             ORDONNER LE TRANSFERT ⚡
           </button>
@@ -685,14 +685,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [autoSaveActive, setAutoSaveActive] = useState<boolean>(false);
 
   const AUTHORIZED_ADMIN_EMAILS = [
-    "johnsylvesterh@gmail.com",
-    "sylvestrehounkpevi777@gmail.com",
     "jhs.kmj7@gmail.com"
   ];
 
   const userEmail = currentUser?.email?.toLowerCase() || "";
-  const isAuthorizedAdmin = !!(currentUser && AUTHORIZED_ADMIN_EMAILS.includes(userEmail));
-  const isAuthorizedSuperFounder = !!(currentUser && userEmail === "jhs.kmj7@gmail.com");
+  const isAuthorizedAdmin = !!(currentUser && (AUTHORIZED_ADMIN_EMAILS.includes(userEmail) || profile?.role === "founder" || profile?.isFounder));
+  const isAuthorizedSuperFounder = !!(currentUser && (userEmail === "jhs.kmj7@gmail.com" || profile?.isFounder));
 
   const [realNotifications, setRealNotifications] = useState<any[]>([]);
   const [globalNotifications, setGlobalNotifications] = useState<any[]>([]);
@@ -1225,7 +1223,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       if (!isAuthorizedAdmin) {
         setPerspective("user");
         setActiveMenu("user_terrain");
-        alert("🔒 ACCÈS DÉFENDU\n\nVotre compte Gmail d'artiste ne possède pas les accréditations requises pour administrer AFRIGOMBO.");
+        alert("🔒 ACCÈS DÉFENDU\n\nAccès refusé. Cette zone est réservée au Fondateur AFRIGOMBO.");
         addToTerminal(`[🛡️ SECURE] Accès administratif bloqué pour l'adresse ${currentUser.email}.`);
         return;
       }
@@ -2079,11 +2077,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   {/* BRAND HEADER LINE */}
                   <div className="p-5 border-b border-afri-border bg-afri-bg/60 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/50 flex items-center justify-center animate-pulse">
-                        <Flame className="text-[#D4AF37] w-4.5 h-4.5" />
+                      <div className="w-8 h-8 rounded-full bg-afri-gold/10 border border-afri-gold/50 flex items-center justify-center animate-pulse">
+                        <Flame className="text-afri-gold w-4.5 h-4.5" />
                       </div>
                       <div>
-                        <h2 className="text-sm font-sans font-black tracking-widest text-[#D4AF37] uppercase">
+                        <h2 className="text-sm font-sans font-black tracking-widest text-afri-gold uppercase">
                           ═══ AFRIGOMBO ═══
                         </h2>
                         <span className="text-[8px] font-mono tracking-widest text-zinc-400 block -mt-0.5">
@@ -2095,7 +2093,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {/* OUTLET CLOSE */}
                     <button
                       onClick={() => setIsSidebarOpen(false)}
-                      className="p-1.5 rounded-lg border border-[#D4AF37]/35 text-[#D4AF37] hover:text-white hover:bg-[#D4AF37]/10 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg border border-afri-gold/35 text-afri-gold hover:text-white hover:bg-afri-gold/10 transition-colors cursor-pointer"
                       title="Fermer le menu"
                     >
                       <X className="w-4 h-4" />
@@ -2113,13 +2111,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             try { audioSynth.playKoraSuccess(); } catch (err) {}
                           }, 250);
                         }}
-                        className="w-full bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] rounded-xl p-3.5 text-center cursor-pointer font-black tracking-wider transition-all duration-200 shadow-lg flex flex-col items-center justify-center gap-1 border border-transparent"
+                        className="w-full bg-afri-gold hover:bg-[#B48F17] text-[#050505] rounded-xl p-3.5 text-center cursor-pointer font-black tracking-wider transition-all duration-200 shadow-lg flex flex-col items-center justify-center gap-1 border border-transparent"
                       >
                         <Flame className="w-5 h-5 fill-current text-[#050505]" />
                         <div className="text-[10px] uppercase font-bold leading-tight text-[#050505]">
                           ACCÈS PRESTIGE ELITE
                         </div>
-                        <div className="text-[9px] uppercase font-mono font-extrabold bg-[#050505] text-[#D4AF37] px-2 py-0.5 rounded">
+                        <div className="text-[9px] uppercase font-mono font-extrabold bg-afri-bg text-afri-gold px-2 py-0.5 rounded">
                           SE CONNECTER
                         </div>
                       </button>
@@ -2135,10 +2133,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                         return (
                           <div className="flex flex-col gap-3">
-                            <div className="bg-[#050505]/80 border border-[#D4AF37]/20 rounded-xl p-4 shadow-md flex flex-col relative overflow-hidden">
+                            <div className="bg-afri-bg/80 border border-afri-gold/20 rounded-xl p-4 shadow-md flex flex-col relative overflow-hidden">
                               <div className="flex items-center gap-4">
                                 <div className="relative shrink-0">
-                                  <div className="w-14 h-14 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-black flex items-center justify-center font-display font-black shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                                  <div className="w-14 h-14 rounded-full border-2 border-afri-gold overflow-hidden bg-afri-bg-sec flex items-center justify-center font-display font-black shadow-[0_0_15px_rgba(212,175,55,0.2)]">
                                     {currentArtist && (currentArtist.avatarUrl || (currentArtist as any).photoURL) ? (
                                       <img 
                                         src={currentArtist.avatarUrl || (currentArtist as any).photoURL} 
@@ -2147,23 +2145,23 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                         referrerPolicy="no-referrer"
                                       />
                                     ) : (
-                                      <Music className="w-5 h-5 text-[#D4AF37]" />
+                                      <Music className="w-5 h-5 text-afri-gold" />
                                     )}
                                   </div>
-                                  <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#D4AF37] rounded-full border-2 border-black flex items-center justify-center shadow-sm" title="Vérifié">
+                                  <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-afri-gold rounded-full border-2 border-black flex items-center justify-center shadow-sm" title="Vérifié">
                                     <CheckCircle2 className="w-3 h-3 text-black" strokeWidth={4} />
                                   </span>
                                 </div>
                                 
                                 <div className="min-w-0 flex-1">
-                                  <h3 className="text-[15px] font-sans font-black text-white leading-tight truncate">
+                                  <h3 className="text-[15px] font-sans font-black text-afri-text leading-tight truncate">
                                     {currentArtist ? currentArtist.artisticName : "Artiste Invité"}
                                   </h3>
-                                  <p className="text-[10px] text-zinc-400 font-mono uppercase tracking-wide font-medium mt-1">
+                                  <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-wide font-medium mt-1">
                                     GOMBO ID: {profile?.gomboIdNumber ? profile.gomboIdNumber : "AG-0001258"}
                                   </p>
                                   <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                    <span className="px-1.5 py-0.5 rounded border border-[#D4AF37]/40 text-[#D4AF37] text-[9px] font-sans uppercase font-bold flex items-center gap-1">
+                                    <span className="px-1.5 py-0.5 rounded border border-afri-gold/40 text-afri-gold text-[9px] font-sans uppercase font-bold flex items-center gap-1">
                                       ⭐ Niveau Professionnel
                                     </span>
                                   </div>
@@ -2171,9 +2169,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               </div>
                               
                               <div className="mt-4 flex items-center justify-between">
-                                <span className="text-[11px] font-sans text-zinc-300 font-medium">Réputation</span>
+                                <span className="text-[11px] font-sans text-afri-text font-medium">Réputation</span>
                                 <div className="flex items-center gap-1.5">
-                                  <div className="flex text-[#D4AF37] text-[10px]">
+                                  <div className="flex text-afri-gold text-[10px]">
                                     <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
                                   </div>
                                   <span className="text-[11px] text-zinc-400 font-sans font-medium">(4.8)</span>
@@ -2186,16 +2184,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 setIsSidebarOpen(false);
                                 setActiveMenu("user_wallet");
                               }}
-                              className="bg-[#050505]/80 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/5 transition-colors rounded-xl p-4 shadow-md flex items-center justify-between cursor-pointer"
+                              className="bg-afri-bg-sec border border-afri-border hover:bg-afri-gold/5 transition-colors rounded-xl p-4 shadow-md flex items-center justify-between cursor-pointer"
                             >
                               <div className="flex items-center gap-4">
-                                <CreditCard className="w-8 h-8 text-[#D4AF37]" strokeWidth={1.5} />
+                                <CreditCard className="w-8 h-8 text-afri-gold" strokeWidth={1.5} />
                                 <div className="flex flex-col text-left">
-                                  <span className="text-[11px] font-sans text-zinc-300 font-medium leading-none mb-1">Wallet</span>
-                                  <span className="text-lg font-black text-[#D4AF37] leading-none">{profile?.walletBalance?.toLocaleString('fr-FR') || "25 000"} FCFA</span>
+                                  <span className="text-[11px] font-sans text-afri-text font-medium leading-none mb-1">Wallet</span>
+                                  <span className="text-lg font-black text-afri-gold leading-none">{profile?.walletBalance?.toLocaleString('fr-FR') || "25 000"} FCFA</span>
                                 </div>
                               </div>
-                              <ChevronRight className="w-5 h-5 text-[#D4AF37]" strokeWidth={2} />
+                              <ChevronRight className="w-5 h-5 text-afri-gold" strokeWidth={2} />
                             </button>
                           </div>
                         );
@@ -2235,7 +2233,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 }
                               }, 250);
                             }}
-                            className="w-full flex items-center justify-between px-3 py-1.5 text-left rounded-lg text-[10px] sm:text-xs font-sans font-bold transition-all text-zinc-300 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 cursor-pointer"
+                            className="w-full flex items-center justify-between px-3 py-1.5 text-left rounded-lg text-[10px] sm:text-xs font-sans font-bold transition-all text-afri-text hover:text-afri-gold hover:bg-afri-gold/5 cursor-pointer"
                           >
                             <span className="flex items-center gap-2">
                               <span className="text-xs sm:text-sm shrink-0">{icon}</span>
@@ -2243,7 +2241,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             </span>
                             {customBadge ? customBadge : (
                               isInactive ? (
-                                <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/25 text-[#D4AF37] rounded uppercase font-black tracking-tighter">
+                                <span className="text-[7.5px] font-mono py-0.5 px-1.5 bg-afri-gold/10 border border-afri-gold/25 text-afri-gold rounded uppercase font-black tracking-tighter">
                                   Bientôt
                                 </span>
                               ) : null
@@ -2264,7 +2262,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               setPerspective("user");
                               setActiveMenu("user_events");
                               try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/10 uppercase font-black">LIVE</span>)}
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-afri-gold/10 text-afri-gold rounded border border-afri-gold/10 uppercase font-black">LIVE</span>)}
                             {renderMenuItem("menu_near_opports", "Opportunités proches", "📍", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
@@ -2438,8 +2436,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 </div>
 
                 {/* SIDEBAR FOOTER METRICS */}
-                <div className="p-5 bg-black/40 border-t border-[#D4AF37]/15 text-center space-y-1 font-mono">
-                  <p className="text-[8.5px] text-[#D4AF37] font-bold uppercase tracking-widest">
+                <div className="p-5 bg-black/40 border-t border-afri-gold/15 text-center space-y-1 font-mono">
+                  <p className="text-[8.5px] text-afri-gold font-bold uppercase tracking-widest">
                     AFRIGOMBO ELITE V2.0
                   </p>
                   <p className="text-[7.5px] text-zinc-500">
@@ -2457,21 +2455,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                ZONE B : WORKSPACE CENTRAL (MIDDLE)
          ========================================================================= */}
       <main 
-        className="flex-1 min-w-0 w-full max-w-full bg-[#050505] flex flex-col overflow-hidden"
+        className="flex-1 min-w-0 w-full max-w-full bg-afri-bg flex flex-col overflow-hidden"
       >
         
         {/* ELITE UPPER STATUS BAR (AFRIGOMBO PREMIUM HEADER OR EXCLUSIVE ADMIN HEADER) */}
         {activeMenu !== "super_admin" && (
           perspective === "admin" ? (
-            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 sm:px-8 py-3 sm:py-5 border-b border-[#D4AF37]/35 bg-[#030303]/98 backdrop-blur shrink-0 gap-2 sm:gap-4 w-full select-none animate-fadeIn">
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 sm:px-8 py-3 sm:py-5 border-b border-afri-gold/35 bg-afri-bg-sec/98 backdrop-blur shrink-0 gap-2 sm:gap-4 w-full select-none animate-fadeIn">
               {/* Left Section: Title & Animated Shield */}
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/35 shadow-[0_0_10px_rgba(212,175,55,0.1)] relative">
-                  <ShieldCheck className="w-4 h-4 sm:w-5.5 sm:h-5.5 text-[#D4AF37] animate-pulse" />
+                <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-afri-gold/10 border border-afri-gold/35 shadow-[0_0_10px_rgba(212,175,55,0.1)] relative">
+                  <ShieldCheck className="w-4 h-4 sm:w-5.5 sm:h-5.5 text-afri-gold animate-pulse" />
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
                 </div>
                 <div>
-                  <h1 className="text-[10px] sm:text-sm font-sans font-black uppercase tracking-widest sm:tracking-[0.2em] text-[#D4AF37] leading-none">
+                  <h1 className="text-[10px] sm:text-sm font-sans font-black uppercase tracking-widest sm:tracking-[0.2em] text-afri-gold leading-none">
                     CENTRE DE COMMANDEMENT
                   </h1>
                   <p className="text-[7px] sm:text-[9px] font-mono tracking-wider text-white uppercase mt-0.5 sm:mt-1.5 opacity-85">
@@ -2506,7 +2504,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                 {/* Connections Count */}
                 <div className="flex items-center gap-1.5 bg-black border border-zinc-800/80 rounded-lg sm:rounded-xl px-2 py-1 sm:px-3 sm:py-1.5">
-                  <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]" />
+                  <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-afri-gold" />
                   <span className="text-[8px] sm:text-[10px] text-zinc-400 font-bold uppercase whitespace-nowrap">
                     CONNS: <span className="text-white">{connectionsCount}</span>
                   </span>
@@ -2514,7 +2512,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                 {/* Date & Time */}
                 <div className="flex items-center gap-1.5 bg-black border border-zinc-800/80 rounded-lg sm:rounded-xl px-2 py-1 sm:px-3 sm:py-1.5 text-zinc-400">
-                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37]" />
+                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-afri-gold" />
                   <span className="text-[8px] sm:text-[10px] text-white font-bold">{liveAdminTime}</span>
                 </div>
                 
@@ -2525,7 +2523,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     setActiveMenu("user_terrain");
                     addToTerminal("[INFO] Retour au Terrain d'Action.");
                   }}
-                  className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 text-[8px] sm:text-[10px] font-mono font-bold uppercase text-zinc-400 hover:text-[#D4AF37] bg-zinc-950 border border-zinc-800 hover:border-[#D4AF37]/35 rounded-lg sm:rounded-xl transition-all cursor-pointer ml-auto sm:ml-0"
+                  className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 text-[8px] sm:text-[10px] font-mono font-bold uppercase text-zinc-400 hover:text-afri-gold bg-zinc-950 border border-zinc-800 hover:border-afri-gold/35 rounded-lg sm:rounded-xl transition-all cursor-pointer ml-auto sm:ml-0"
                 >
                   ← Terrain
                 </button>
@@ -2533,7 +2531,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </header>
           ) : (
             activeMenu === "user_terrain" ? (
-              <header className="flex flex-col afri-container py-2 sm:py-3 border-b border-[#D4AF37]/30 bg-[#050505] shrink-0 gap-2 sm:gap-3.5 w-full animate-fadeIn select-none shadow-[0_10px_35px_rgba(0,0,0,0.85)] rounded-b-[24px] sm:rounded-b-[40px] z-[40] relative">
+              <header className="flex flex-col afri-container py-2 sm:py-3 border-b border-afri-gold/30 bg-afri-bg shrink-0 gap-2 sm:gap-3.5 w-full animate-fadeIn select-none shadow-[0_10px_35px_rgba(0,0,0,0.85)] rounded-b-[24px] sm:rounded-b-[40px] z-[40] relative">
                 {/* TOP ROW */}
                 <div className="flex items-center justify-between w-full gap-2 sm:gap-4 px-1 sm:px-4">
                   {/* Left: Menu & Logo Group */}
@@ -2541,7 +2539,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <button
                       id="hamburger-trigger"
                       onClick={() => setIsSidebarOpen(true)}
-                      className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-zinc-900/40 border border-zinc-800/80 text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all active:scale-95 shrink-0"
+                      className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-zinc-900/40 border border-zinc-800/80 text-afri-gold hover:bg-afri-gold/10 transition-all active:scale-95 shrink-0"
                     >
                       <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
                     </button>
@@ -2549,7 +2547,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {menuHistory.length > 1 && (
                       <button
                         onClick={goBackMenu}
-                        className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer font-bold text-[9px] sm:text-[11px] uppercase tracking-tight shrink-0"
+                        className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-afri-gold/10 hover:bg-afri-gold/20 border border-afri-gold/40 text-afri-gold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer font-bold text-[9px] sm:text-[11px] uppercase tracking-tight shrink-0"
                       >
                         <span>← Retour</span>
                       </button>
@@ -2566,7 +2564,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <AfriGomboLogo className="w-10 h-10 sm:w-16 sm:h-16 shrink-0" />
                       )}
                       <div className="flex flex-col justify-center">
-                        <h1 className="text-2xl sm:text-5xl font-black tracking-tighter text-[#D4AF37] leading-none font-display antialiased subpixel-antialiased" 
+                        <h1 className="text-2xl sm:text-5xl font-black tracking-tighter text-afri-gold leading-none font-display antialiased subpixel-antialiased" 
                             style={{ 
                               textShadow: "1px 1px 0px #B48F17"
                             }}>
@@ -2587,7 +2585,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           setActiveMenu("user_notifications");
                           addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
                        }} 
-                       className="relative p-1.5 sm:p-2 text-[#D4AF37] hover:scale-110 transition-transform cursor-pointer shrink-0"
+                       className="relative p-1.5 sm:p-2 text-afri-gold hover:scale-110 transition-transform cursor-pointer shrink-0"
                      >
                        <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
                        {realNotifications.some(n => !n.read) && (
@@ -2598,12 +2596,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                      {/* Wallet */}
                      <div 
                        onClick={() => setActiveMenu("user_wallet")}
-                       className="hidden xs:flex items-center gap-2 px-2.5 sm:px-4 py-1 sm:py-2 bg-zinc-900/40 border border-zinc-800/80 rounded-xl sm:rounded-2xl cursor-pointer hover:border-[#D4AF37]/30 transition-colors shrink-0"
+                       className="hidden xs:flex items-center gap-2 px-2.5 sm:px-4 py-1 sm:py-2 bg-zinc-900/40 border border-zinc-800/80 rounded-xl sm:rounded-2xl cursor-pointer hover:border-afri-gold/30 transition-colors shrink-0"
                      >
-                       <CreditCard className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-[#D4AF37]" />
+                       <CreditCard className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-afri-gold" />
                        <div className="flex flex-col">
                          <span className="text-[7px] sm:text-[9px] text-zinc-500 uppercase font-bold leading-none">Wallet</span>
-                         <span className="text-[10px] sm:text-sm font-black text-white">{(profile?.wallet?.soldeDisponible ?? profile?.balance ?? 0).toLocaleString('fr-FR')} <span className="text-[8px] sm:text-xs font-bold text-[#D4AF37]">F</span></span>
+                         <span className="text-[10px] sm:text-sm font-black text-white">{(profile?.wallet?.soldeDisponible ?? profile?.balance ?? 0).toLocaleString('fr-FR')} <span className="text-[8px] sm:text-xs font-bold text-afri-gold">F</span></span>
                        </div>
                      </div>
 
@@ -2617,17 +2615,17 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             setViewingGomboIdDetail(false); 
                           }
                        }}
-                       className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-zinc-900 cursor-pointer hover:scale-105 transition-transform shadow-[0_0_12px_rgba(212,175,55,0.2)] relative shrink-0"
+                       className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-afri-gold overflow-hidden bg-zinc-900 cursor-pointer hover:scale-105 transition-transform shadow-[0_0_12px_rgba(212,175,55,0.2)] relative shrink-0"
                      >
                        {profile?.avatarUrl || currentUser?.photoURL ? (
                           <img src={profile?.avatarUrl || currentUser?.photoURL || ""} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[#D4AF37] font-black text-xs sm:text-base">
+                          <div className="w-full h-full flex items-center justify-center text-afri-gold font-black text-xs sm:text-base">
                             {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
                           </div>
                        )}
                        {(profile?.isCertified || profile?.gomboIdNumber) && (
-                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-[#D4AF37] rounded-full border border-black flex items-center justify-center">
+                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-afri-gold rounded-full border border-black flex items-center justify-center">
                             <CheckCircle2 className="w-1.5 sm:w-2 h-1.5 sm:h-2 text-black stroke-[4]" />
                           </div>
                        )}
@@ -2639,21 +2637,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <div className="w-full flex justify-center mt-0.5 px-3">
                   <div className="flex items-center justify-center gap-3.5 sm:gap-8 px-4 sm:px-8 py-1.5 sm:py-2.5 rounded-full bg-[#0d0d0f] border border-zinc-900/90 shadow-2xl overflow-x-auto scrollbar-none max-w-full">
                      <div className="flex items-center gap-1.5 shrink-0">
-                       <Users className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] stroke-[2.5]" />
+                       <Users className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
                        <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-zinc-500 uppercase tracking-wider">
                          <strong className="text-[#F2F2F2] font-mono font-black">{users.filter(u => u.status === 'active').length}</strong> dispos
                        </span>
                      </div>
                      <div className="w-[0.5px] h-2.5 sm:h-4 bg-zinc-800/40 shrink-0" />
                      <div className="flex items-center gap-1.5 shrink-0">
-                       <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] stroke-[2.5]" />
+                       <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
                        <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-zinc-500 uppercase tracking-wider">
                          <strong className="text-[#F2F2F2] font-mono font-black">{renforts.filter(r => r.status === 'active').length}</strong> renforts
                        </span>
                      </div>
                      <div className="w-[0.5px] h-2.5 sm:h-4 bg-zinc-800/40 shrink-0" />
                      <div className="flex items-center gap-1.5 shrink-0">
-                       <Handshake className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] stroke-[2.5]" />
+                       <Handshake className="w-3 h-3 sm:w-4 sm:h-4 text-afri-gold stroke-[2.5]" />
                        <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-zinc-500 uppercase tracking-wider">
                          <strong className="text-[#F2F2F2] font-mono font-black">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats
                        </span>
@@ -2662,7 +2660,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 </div>
               </header>
             ) : (
-              <header className="flex items-center justify-between px-4 py-3 bg-[#050505] border-b border-zinc-900/50 z-[40] relative shrink-0 shadow-md">
+              <header className="flex items-center justify-between px-4 py-3 bg-afri-bg border-b border-zinc-900/50 z-[40] relative shrink-0 shadow-md">
                 <div className="flex items-center gap-3">
                   <button 
                     onClick={goBackMenu} 
@@ -2726,12 +2724,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         setViewingGomboIdDetail(false); 
                       }
                    }}
-                   className="w-8 h-8 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-zinc-900 cursor-pointer hover:scale-105 transition-transform"
+                   className="w-8 h-8 rounded-full border-2 border-afri-gold overflow-hidden bg-zinc-900 cursor-pointer hover:scale-105 transition-transform"
                  >
                    {profile?.avatarUrl || currentUser?.photoURL ? (
                       <img src={profile?.avatarUrl || currentUser?.photoURL || ""} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#D4AF37] font-black text-xs">
+                      <div className="w-full h-full flex items-center justify-center text-afri-gold font-black text-xs">
                         {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
                       </div>
                    )}
@@ -2934,10 +2932,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 return (
                   <div className="afri-container space-y-6 xs:space-y-8 animate-fadeIn pb-24">
                     {/* STATISTIQUES PRESTIGE EN TEMPS RÉEL (STYLE IMAGE PARFAIT) */}
-                    <div className="grid grid-cols-4 divide-x divide-zinc-800/60 bg-black/40 border border-[#D4AF37]/15 rounded-xl xs:rounded-2xl py-1.5 xs:py-3 px-0.5 xs:px-1 sm:p-4 select-none mb-4 xs:mb-6">
+                    <div className="grid grid-cols-4 divide-x divide-zinc-800/60 bg-black/40 border border-afri-gold/15 rounded-xl xs:rounded-2xl py-1.5 xs:py-3 px-0.5 xs:px-1 sm:p-4 select-none mb-4 xs:mb-6">
                       {/* ARTISTES */}
                       <div className="flex flex-col items-center xs:flex-row xs:items-center gap-0.5 xs:gap-2 sm:gap-3 pl-0.5 xs:pl-1 sm:pl-3 text-center xs:text-left">
-                        <div className="p-0.5 xs:p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                        <div className="p-0.5 xs:p-1 rounded-lg bg-afri-gold/5 text-afri-gold shrink-0">
                           <Users className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 h-5" />
                         </div>
                         <div className="flex flex-col">
@@ -2950,11 +2948,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                       {/* CACHETS */}
                       <div className="flex flex-col items-center xs:flex-row xs:items-center gap-0.5 xs:gap-2 sm:gap-3 pl-0.5 xs:pl-1 sm:pl-3 text-center xs:text-left">
-                        <div className="p-0.5 xs:p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                        <div className="p-0.5 xs:p-1 rounded-lg bg-afri-gold/5 text-afri-gold shrink-0">
                           <Award className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 h-5" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[5.5px] xs:text-[7.5px] sm:text-[9px] font-mono tracking-tighter xs:tracking-widest text-[#D4AF37]/95 font-bold uppercase block leading-none">CACHETS</span>
+                          <span className="text-[5.5px] xs:text-[7.5px] sm:text-[9px] font-mono tracking-tighter xs:tracking-widest text-afri-gold/95 font-bold uppercase block leading-none">CACHETS</span>
                           <strong className="text-[9px] xs:text-xs sm:text-base font-display font-black text-white block mt-0.5 sm:mt-1">
                             {(gombos.length + 2840).toLocaleString("fr-FR")}
                           </strong>
@@ -2963,7 +2961,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                       {/* OPPORTUNITÉS */}
                       <div className="flex flex-col items-center xs:flex-row xs:items-center gap-0.5 xs:gap-2 sm:gap-3 pl-0.5 xs:pl-1 sm:pl-3 text-center xs:text-left">
-                        <div className="p-0.5 xs:p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                        <div className="p-0.5 xs:p-1 rounded-lg bg-afri-gold/5 text-afri-gold shrink-0">
                           <Music className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 h-5" />
                         </div>
                         <div className="flex flex-col">
@@ -2976,7 +2974,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                       {/* CERTIFIÉS */}
                       <div className="flex flex-col items-center xs:flex-row xs:items-center gap-0.5 xs:gap-2 sm:gap-3 pl-0.5 xs:pl-1 sm:pl-3 text-center xs:text-left">
-                        <div className="p-0.5 xs:p-1 rounded-lg bg-[#D4AF37]/5 text-[#D4AF37] shrink-0">
+                        <div className="p-0.5 xs:p-1 rounded-lg bg-afri-gold/5 text-afri-gold shrink-0">
                           <ShieldCheck className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 h-5" />
                         </div>
                         <div className="flex flex-col">
@@ -2997,11 +2995,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           addToTerminal("[INTÉRACTIF] Filtre LIVE : tous les cachets et directs actifs.");
                           try { audioSynth.playTamTam(true); } catch (e) {}
                         }}
-                        className="p-1.5 xs:p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-emerald-500 rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
+                        className="p-1.5 xs:p-2 sm:p-4 bg-afri-bg-sec border border-afri-border hover:border-emerald-500 rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
                       >
                         <div className="flex items-center gap-1 sm:gap-1.5 w-full">
                           <span className="w-1.5 h-1.5 xs:w-2 xs:h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                          <span className="text-[7px] xs:text-[8px] sm:text-[11px] font-mono font-black text-white tracking-tighter xs:tracking-widest uppercase">LIVE</span>
+                          <span className="text-[7px] xs:text-[8px] sm:text-[11px] font-mono font-black text-afri-text tracking-tighter xs:tracking-widest uppercase">LIVE</span>
                         </div>
                         <p className="text-[6px] xs:text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-0.5 sm:mt-2 uppercase">En direct</p>
                       </button>
@@ -3013,11 +3011,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           addToTerminal("[INTÉRACTIF] Filtre ACTUS : échos d'artistes d'Abidjan.");
                           try { audioSynth.playTamTam(true); } catch (e) {}
                         }}
-                        className="p-1.5 xs:p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-[#D4AF37] rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
+                        className="p-1.5 xs:p-2 sm:p-4 bg-afri-bg-sec border border-afri-border hover:border-afri-gold rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
                       >
                         <div className="flex items-center gap-1 sm:gap-1.5 w-full">
-                          <Award className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 text-[#D4AF37] shrink-0" />
-                          <span className="text-[7px] xs:text-[8px] sm:text-[11px] font-mono font-black text-white tracking-tighter xs:tracking-widest uppercase">ACTUS</span>
+                          <Award className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 text-afri-gold shrink-0" />
+                          <span className="text-[7px] xs:text-[8px] sm:text-[11px] font-mono font-black text-afri-text tracking-tighter xs:tracking-widest uppercase">ACTUS</span>
                         </div>
                         <p className="text-[6px] xs:text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-0.5 sm:mt-2 uppercase">Échos</p>
                       </button>
@@ -3031,7 +3029,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             try { audioSynth.playValidationSuccess(); } catch (e) {}
                           });
                         }}
-                        className="p-1.5 xs:p-2 sm:p-4 bg-[#D4AF37] hover:bg-[#B48F17] rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95 shadow-[0_4px_12px_rgba(212,175,55,0.2)]"
+                        className="p-1.5 xs:p-2 sm:p-4 bg-afri-gold hover:bg-[#B48F17] rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95 shadow-[0_4px_12px_rgba(212,175,55,0.2)]"
                       >
                         <div className="flex items-center gap-1 sm:gap-1.5 w-full text-black">
                           <Plus className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 text-black stroke-[3] shrink-0" />
@@ -3047,11 +3045,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           addToTerminal("[MENU] Ouverture de la sidebar.");
                           try { audioSynth.playTamTam(false); } catch (e) {}
                         }}
-                        className="p-1.5 xs:p-2 sm:p-4 bg-black/60 border border-[#D4AF37]/15 hover:border-[#D4AF37]/45 rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
+                        className="p-1.5 xs:p-2 sm:p-4 bg-afri-bg-sec border border-afri-border hover:border-afri-gold/45 rounded-lg xs:rounded-xl cursor-pointer transition-all flex flex-col justify-between text-left group active:scale-95"
                       >
                         <div className="flex items-center gap-1 sm:gap-1.5 w-full">
-                          <MoreVertical className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 text-[#D4AF37] shrink-0" />
-                          <span className="text-[7px] xs:text-[8px] sm:text-[11px] font-mono font-black text-white tracking-tighter xs:tracking-widest uppercase font-bold">MENU</span>
+                          <MoreVertical className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 text-afri-gold shrink-0" />
+                          <span className="text-[7px] xs:text-[8px] sm:text-[11px] font-mono font-black text-afri-text tracking-tighter xs:tracking-widest uppercase font-bold">MENU</span>
                         </div>
                         <p className="text-[6px] xs:text-[7px] sm:text-[9px] text-zinc-500 font-mono mt-0.5 sm:mt-2 uppercase">Plus</p>
                       </button>
@@ -3064,18 +3062,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       {/* BARRE DE RECHERCHE UNIVERSELLE REMOVED AS REQUESTED */}
 
                       {/* SECTION ACTIONS RAPIDES */}
-                      <div className="bg-gradient-to-b from-zinc-950 to-black border border-[#D4AF37]/20 hover:border-[#D4AF37]/35 rounded-3xl p-5 sm:p-7 shadow-[0_10px_35px_rgba(0,0,0,0.85)] relative overflow-hidden transition-all">
+                      <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 sm:p-7 shadow-[0_10px_35px_rgba(0,0,0,0.05)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.85)] relative overflow-hidden transition-all">
                         {/* Golden backdrop ambient flare */}
-                        <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+                        <div className="absolute -top-12 -right-12 w-32 h-32 bg-afri-gold/5 rounded-full blur-3xl pointer-events-none" />
 
-                        <div className="flex justify-between items-center pb-3 border-b border-zinc-900 mb-4 select-none">
+                        <div className="flex justify-between items-center pb-3 border-b border-afri-border mb-4 select-none">
                           <div className="flex items-center gap-2">
                             <span className="text-sm">⚡</span>
-                            <h3 className="text-sm font-display font-black text-white uppercase tracking-widest leading-none">
+                            <h3 className="text-sm font-display font-black text-afri-text uppercase tracking-widest leading-none">
                               ACTIONS RAPIDES
                             </h3>
                           </div>
-                          <span className="text-[7.5px] font-mono text-zinc-550 border border-zinc-900 bg-black py-0.5 px-2 rounded-lg font-bold">
+                          <span className="text-[7.5px] font-mono text-zinc-500 border border-afri-border bg-afri-bg py-0.5 px-2 rounded-lg font-bold">
                             DIRECT CONSOLE
                           </span>
                         </div>
@@ -3090,13 +3088,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               addToTerminal("[ACTIONS RAPIDES] Recherche de membre activée.");
                               try { audioSynth?.playTamTam?.(true); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/65 transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-afri-gold/10 flex items-center justify-center border border-afri-gold/20 group-hover:border-afri-gold/65 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">👥</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Rechercher membre</div>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Rechercher membre</div>
                               <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Annuaire</span>
                             </div>
                           </button>
@@ -3110,13 +3108,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 try { audioSynth.playKoraSuccess(); } catch (_) {}
                               });
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
                             <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">📢</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Créer annonce</div>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Créer annonce</div>
                               <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Nouveau</span>
                             </div>
                           </button>
@@ -3130,13 +3128,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               addToTerminal("[ACTIONS RAPIDES] Vérification GOMBO ID ouverte.");
                               try { audioSynth.playTamTam(true); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-afri-gold/10 flex items-center justify-center border border-afri-gold/20 group-hover:border-afri-gold transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">🛡️</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Vérifier ID</div>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Vérifier ID</div>
                               <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Académie</span>
                             </div>
                           </button>
@@ -3148,13 +3146,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               addToTerminal("[ACTIONS RAPIDES] Alerte & Signalements ouverts.");
                               try { audioSynth.playTamTam(false); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
                             <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">🚨</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Signalements</div>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Signalements</div>
                               <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Sécurité</span>
                             </div>
                           </button>
@@ -3168,13 +3166,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               addToTerminal("[ACTIONS RAPIDES] Rédaction de notification.");
                               try { audioSynth.playTamTam(true); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
                             <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">🔔</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Notifier</div>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Notifier</div>
                               <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Diffusion</span>
                             </div>
                           </button>
@@ -3186,13 +3184,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               addToTerminal("[ACTIONS RAPIDES] Trône d'Or : Analyse de Performance ouverte.");
                               try { audioSynth.playKoraSuccess(); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
                             <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 group-hover:border-yellow-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">📈</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Statistiques</div>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Statistiques</div>
                               <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Indicateurs</span>
                             </div>
                           </button>
@@ -3204,13 +3202,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               addToTerminal("[ACTIONS RAPIDES] Caisse / Portefeuille d'or chargé.");
                               try { audioSynth.playKoraSuccess(); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
                             <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">💰</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Revenus</div>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Revenus</div>
                               <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Sécurisé</span>
                             </div>
                           </button>
@@ -3222,13 +3220,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               addToTerminal("[ACTIONS RAPIDES] Paramètres du terminal chargés.");
                               try { audioSynth.playTamTam(false); } catch (_) {}
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
                             <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-zinc-500/10 flex items-center justify-center border border-zinc-500/20 group-hover:border-zinc-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">⚙</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Paramètres</div>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Paramètres</div>
                               <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Système</span>
                             </div>
                           </button>
@@ -3242,13 +3240,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 try { audioSynth.playValidationSuccess(); } catch (err) {}
                               });
                             }}
-                            className="bg-black/45 border border-zinc-900/80 hover:border-[#D4AF37]/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            className="bg-afri-bg border border-afri-border hover:border-afri-gold/35 rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
                             <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500 transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">✍️</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Contrats</div>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Contrats</div>
                               <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-0.5">Signature</span>
                             </div>
                           </button>
@@ -3262,27 +3260,27 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 try { audioSynth.playKoraSuccess(); } catch (err) {}
                               });
                             }}
-                            className="bg-black/45 border border-[#D4AF37]/20 hover:border-[#D4AF37] rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-[#D4AF37]/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
+                            className="bg-afri-bg border border-afri-border hover:border-afri-gold rounded-xl xs:rounded-2xl p-2 sm:p-4 hover:bg-afri-gold/5 cursor-pointer text-left transition duration-200 flex flex-col justify-between group h-14 xs:h-16 sm:h-24 select-none min-w-0"
                           >
-                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition">
+                            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-afri-gold/10 flex items-center justify-center border border-afri-gold/20 group-hover:border-afri-gold transition">
                               <span className="text-[8px] xs:text-[10px] sm:text-xs">💳</span>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-white tracking-tight sm:tracking-wide truncate uppercase">Wallet Séquestre</div>
-                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-0.5">Bêta-Sécurisé</span>
+                              <div className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-sans font-black text-afri-text tracking-tight sm:tracking-wide truncate uppercase">Wallet Séquestre</div>
+                              <span className="text-[5.5px] xs:text-[6.5px] sm:text-[8px] font-mono text-afri-gold uppercase tracking-widest block leading-none mt-0.5">Bêta-Sécurisé</span>
                             </div>
                           </button>
                         </div>
                       </div>
                     {!!activeQuickActionModal && (
-                      <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-2 xs:p-4 overflow-y-auto w-full max-w-full">
-                        <div className="bg-[#050505] border border-[#D4AF37]/35 rounded-2xl xs:rounded-3xl p-4 xs:p-6 sm:p-8 w-full max-w-md my-4 xs:my-8 relative overflow-hidden select-none shadow-[0_15px_50px_rgba(0,0,0,0.95)]">
+                      <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-2 xs:p-4 overflow-y-auto w-full max-w-full">
+                        <div className="bg-afri-bg border border-afri-border rounded-2xl xs:rounded-3xl p-4 xs:p-6 sm:p-8 w-full max-w-md my-4 xs:my-8 relative overflow-hidden select-none shadow-[0_15px_50px_rgba(0,0,0,0.1)]">
                           <button
                             onClick={() => {
                               setActiveQuickActionModal(null);
                               try { audioSynth.playTamTam(false); } catch (_) {}
                             }}
-                            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#111111] hover:bg-zinc-800 text-[#D4AF37] hover:text-white border border-white/5 flex items-center justify-center cursor-pointer transition focus:outline-none"
+                            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-afri-bg-sec hover:bg-afri-bg text-afri-gold hover:text-white border border-afri-border flex items-center justify-center cursor-pointer transition focus:outline-none"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -3291,21 +3289,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           {activeQuickActionModal === "verify_gombo_id" && (
                             <div className="space-y-4 text-left">
                               <div className="space-y-1">
-                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                <h3 className="text-sm font-display font-black text-afri-text uppercase tracking-widest flex items-center gap-2">
                                   <span>🛡️</span> RECHERCHER & CERTIFIER UN GOMBO ID
                                 </h3>
-                                <p className="text-[11px] text-zinc-400">Contrôlez le passeport numérique d'un membre de l'Académie.</p>
+                                <p className="text-[11px] text-zinc-500">Contrôlez le passeport numérique d'un membre de l'Académie.</p>
                               </div>
 
-                              <div className="space-y-2 pt-1 border-t border-zinc-900">
-                                <label className="text-[9px] font-mono text-[#D4AF37] uppercase block font-bold">RECHERCHE DE CERTIFICATION</label>
+                              <div className="space-y-2 pt-1 border-t border-afri-border">
+                                <label className="text-[9px] font-mono text-afri-gold uppercase block font-bold">RECHERCHE DE CERTIFICATION</label>
                                 <div className="flex gap-2">
                                   <input
                                     type="text"
                                     placeholder="Saisir nom de l'artiste ou ID..."
                                     value={verifyGomboIdInput}
                                     onChange={(e) => setVerifyGomboIdInput(e.target.value)}
-                                    className="flex-1 bg-black border border-zinc-800 focus:border-[#D4AF37] text-xs text-white p-2.5 rounded-xl font-mono focus:outline-none"
+                                    className="flex-1 bg-afri-bg-sec border border-afri-border focus:border-afri-gold text-xs text-afri-text p-2.5 rounded-xl font-mono focus:outline-none"
                                   />
                                   <button
                                     onClick={() => {
@@ -3320,7 +3318,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       addToTerminal(`[SCANNER] Gombo ID scanner de sécurité interrogé pour: ${verifyGomboIdInput}`);
                                       try { audioSynth.playKoraSuccess(); } catch(_) {}
                                     }}
-                                    className="px-4 py-2 bg-[#D4AF37] text-black hover:bg-[#B48F17] text-xs font-mono font-black uppercase rounded-xl transition cursor-pointer"
+                                    className="px-4 py-2 bg-afri-gold text-black hover:bg-[#B48F17] text-xs font-mono font-black uppercase rounded-xl transition cursor-pointer"
                                   >
                                     VÉRIFIER
                                   </button>
@@ -3329,32 +3327,32 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                               {/* RESULTS CONTAINER */}
                               {verifyGomboIdResult && (
-                                <div className="p-4 bg-black border border-zinc-900 rounded-2xl animate-fadeIn space-y-3">
+                                <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-2xl animate-fadeIn space-y-3">
                                   {verifyGomboIdResult === "not_found" ? (
-                                    <div className="space-y-2 text-center text-zinc-400 py-2">
+                                    <div className="space-y-2 text-center text-zinc-500 py-2">
                                       <span className="text-xl block">❌</span>
                                       <p className="text-xs font-mono">Aucun artiste ne possède cet identifiant.</p>
                                     </div>
                                   ) : (
                                     <div className="space-y-3">
                                       <div className="flex items-center gap-3">
-                                        <img src={verifyGomboIdResult.avatar} alt="Avatar" className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/35" />
+                                        <img src={verifyGomboIdResult.avatar} alt="Avatar" className="w-10 h-10 rounded-full object-cover border border-afri-gold/35" />
                                         <div>
-                                          <strong className="text-xs text-white uppercase block leading-none font-bold">{verifyGomboIdResult.artisticName}</strong>
+                                          <strong className="text-xs text-afri-text uppercase block leading-none font-bold">{verifyGomboIdResult.artisticName}</strong>
                                           <span className="text-[9px] font-mono text-zinc-500 block mt-1">{verifyGomboIdResult.commune} • ID: {verifyGomboIdResult.id}</span>
                                         </div>
                                       </div>
 
-                                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-900 select-none text-left">
-                                        <div className="p-2 bg-[#050505] rounded-xl">
-                                          <span className="text-[8px] font-mono text-zinc-550 block uppercase leading-none">Statut KYC</span>
+                                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-afri-border select-none text-left">
+                                        <div className="p-2 bg-afri-bg rounded-xl">
+                                          <span className="text-[8px] font-mono text-zinc-500 block uppercase leading-none">Statut KYC</span>
                                           <span className={`text-[10px] font-mono font-black uppercase mt-1 block leading-none ${verifyGomboIdResult.kycStatus === "approved" ? "text-emerald-400" : "text-amber-500"}`}>
                                             {verifyGomboIdResult.kycStatus === "approved" ? "🛡️ CERTIFIÉ ELITE" : "⏳ EN ATTENTE"}
                                           </span>
                                         </div>
-                                        <div className="p-2 bg-[#050505] rounded-xl">
-                                          <span className="text-[8px] font-mono text-zinc-550 block uppercase leading-none">Rang d'Honneur</span>
-                                          <span className="text-[10px] font-mono font-black text-[#D4AF37] mt-1 block leading-none uppercase">
+                                        <div className="p-2 bg-afri-bg rounded-xl">
+                                          <span className="text-[8px] font-mono text-zinc-500 block uppercase leading-none">Rang d'Honneur</span>
+                                          <span className="text-[10px] font-mono font-black text-afri-gold mt-1 block leading-none uppercase">
                                             {verifyGomboIdResult.performanceScore >= 95 ? "🌟 Impérial" : "Accordeur"}
                                           </span>
                                         </div>
@@ -3387,29 +3385,29 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           {activeQuickActionModal === "signalements" && (
                             <div className="space-y-4 text-left">
                               <div className="space-y-1">
-                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                <h3 className="text-sm font-display font-black text-afri-text uppercase tracking-widest flex items-center gap-2">
                                   <span>🚨</span> CONTRÔLE DES SIGNALEMENTS & LITIGES
                                 </h3>
-                                <p className="text-[11px] text-zinc-400">Assurez l'étanchéité de la caisse et la probité des orchestres.</p>
+                                <p className="text-[11px] text-zinc-500">Assurez l'étanchéité de la caisse et la probité des orchestres.</p>
                               </div>
 
                               {/* NEW SIGNALEMENT FORM */}
-                              <div className="p-3.5 bg-black border border-zinc-900 rounded-2xl space-y-2.5">
-                                <span className="text-[9px] font-mono text-red-400 uppercase tracking-wider block font-bold leading-none">SIGNIALER UN FAUX PROFIL</span>
+                              <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-2.5">
+                                <span className="text-[9px] font-mono text-red-500 uppercase tracking-wider block font-bold leading-none">SIGNIALER UN FAUX PROFIL</span>
                                 <div className="space-y-2">
                                   <input
                                     type="text"
                                     placeholder="Nom ou pseudo du contrevenant..."
                                     value={customReportUser}
                                     onChange={(e) => setCustomReportUser(e.target.value)}
-                                    className="w-full bg-[#050505] border border-zinc-800 text-xs text-white p-2 rounded-lg font-mono focus:outline-none"
+                                    className="w-full bg-afri-bg border border-afri-border text-xs text-afri-text p-2 rounded-lg font-mono focus:outline-none"
                                   />
                                   <input
                                     type="text"
                                     placeholder="Raison (ex: faux cachet, absence d'orchestre)..."
                                     value={customReportReason}
                                     onChange={(e) => setCustomReportReason(e.target.value)}
-                                    className="w-full bg-[#050505] border border-zinc-800 text-xs text-white p-2 rounded-lg font-mono focus:outline-none"
+                                    className="w-full bg-afri-bg border border-afri-border text-xs text-afri-text p-2 rounded-lg font-mono focus:outline-none"
                                   />
                                   <button
                                     onClick={async () => {
@@ -3485,14 +3483,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                               <div className="space-y-3 pt-1 border-t border-zinc-900">
                                 <div className="space-y-1">
-                                  <label className="text-[9px] font-mono text-[#D4AF37] uppercase block font-bold">Catégorie d'écho</label>
+                                  <label className="text-[9px] font-mono text-afri-gold uppercase block font-bold">Catégorie d'écho</label>
                                   <div className="grid grid-cols-4 gap-1.5">
                                     {["INFO", "CACHET", "ZOUGLOU", "ALERT"].map(cat => (
                                       <button
                                         key={cat}
                                         type="button"
                                         onClick={() => setNewNoticeCategory(cat)}
-                                        className={`py-1 text-[8px] font-mono font-bold uppercase rounded-lg border transition ${newNoticeCategory === cat ? "bg-[#D4AF37] border-[#D4AF37] text-black" : "bg-black border-zinc-800 text-zinc-400 hover:text-white"}`}
+                                        className={`py-1 text-[8px] font-mono font-bold uppercase rounded-lg border transition ${newNoticeCategory === cat ? "bg-afri-gold border-afri-gold text-black" : "bg-black border-zinc-800 text-zinc-400 hover:text-white"}`}
                                       >
                                         {cat}
                                       </button>
@@ -3507,7 +3505,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     placeholder="ex: Concours National Zouglou..."
                                     value={newNoticeTitle}
                                     onChange={(e) => setNewNoticeTitle(e.target.value)}
-                                    className="w-full bg-black border border-zinc-900 text-xs text-white p-2.5 rounded-xl font-mono focus:outline-none focus:border-[#D4AF37]"
+                                    className="w-full bg-black border border-zinc-900 text-xs text-white p-2.5 rounded-xl font-mono focus:outline-none focus:border-afri-gold"
                                   />
                                 </div>
 
@@ -3518,7 +3516,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     value={newNoticeBody}
                                     onChange={(e) => setNewNoticeBody(e.target.value)}
                                     rows={3}
-                                    className="w-full bg-black border border-zinc-900 text-xs text-white p-2.5 rounded-xl font-mono focus:outline-none focus:border-[#D4AF37]"
+                                    className="w-full bg-black border border-zinc-900 text-xs text-white p-2.5 rounded-xl font-mono focus:outline-none focus:border-afri-gold"
                                   />
                                 </div>
 
@@ -3550,7 +3548,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       alert("📢 Message diffusé en temps réel sur la Base !");
                                     } catch (_) {}
                                   }}
-                                  className="w-full h-11 bg-gradient-to-r from-[#D4AF37] to-amber-400 text-black font-sans font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                                  className="w-full h-11 bg-gradient-to-r from-afri-gold to-amber-400 text-black font-sans font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer shadow-lg active:scale-95 flex items-center justify-center gap-2"
                                 >
                                   DIFFUSER LE TAMBOUR 🪘
                                 </button>
@@ -3571,7 +3569,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <div className="grid grid-cols-2 gap-2 text-left pt-2 border-t border-zinc-900 select-none">
                                 <div className="p-3 bg-black border border-zinc-900 rounded-2xl">
                                   <span className="text-[8px] font-mono text-zinc-550 block uppercase">FLUX CACHETS</span>
-                                  <strong className="text-sm font-display font-black text-[#D4AF37] block mt-1">2 840 000 F</strong>
+                                  <strong className="text-sm font-display font-black text-afri-gold block mt-1">2 840 000 F</strong>
                                   <span className="text-[7.5px] font-mono text-emerald-400 block mt-0.5">+14% ce mois</span>
                                 </div>
                                 <div className="p-3 bg-black border border-zinc-900 rounded-2xl">
@@ -3629,7 +3627,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {/* CARTE HÉRO PRINCIPALE PREMIUM (CARROUSEL) */}
                     <Carousel
                       items={[
-                        <div className="relative overflow-hidden rounded-3xl bg-[#050505] border border-[#D4AF37]/25 p-5 sm:p-7 shadow-xl h-[280px] sm:h-auto flex flex-col justify-between">
+                        <div className="relative overflow-hidden rounded-3xl bg-afri-bg border border-afri-gold/25 p-5 sm:p-7 shadow-xl h-[280px] sm:h-auto flex flex-col justify-between">
                           <div className="absolute right-0 top-0 bottom-0 w-[42%] h-full z-0 overflow-hidden">
                             <img 
                               src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=360" 
@@ -3642,12 +3640,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                           <div className="relative z-10 flex flex-col justify-center h-full max-w-[62%] text-left space-y-4">
                             <div>
-                              <span className="text-[10px] sm:text-xs uppercase font-mono text-[#D4AF37] tracking-[0.2em] block font-extrabold mb-1">
+                              <span className="text-[10px] sm:text-xs uppercase font-mono text-afri-gold tracking-[0.2em] block font-extrabold mb-1">
                                 AFRIGOMBO PORTAL
                               </span>
                               <h2 className="text-2xl sm:text-4xl font-display font-black tracking-tight leading-none uppercase">
                                 <span className="text-white block mb-1">LE TERRAIN</span>
-                                <span className="text-[#D4AF37]">D'INTELLIGENCE</span>
+                                <span className="text-afri-gold">D'INTELLIGENCE</span>
                               </h2>
                               <p className="text-[11px] sm:text-xs text-zinc-400 mt-2 max-w-md leading-relaxed">
                                 Consultez l'actu bouillante du showbiz à Abidjan, décrochez des cachets d'or ou postez de nouvelles alliances.
@@ -3662,7 +3660,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     audioSynth.playValidationSuccess();
                                   });
                                 }}
-                                className="px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95"
+                                className="px-5 py-2.5 rounded-xl bg-afri-gold hover:bg-[#B48F17] text-[#050505] text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-[0_4px_15px_rgba(212,175,55,0.3)] active:scale-95"
                               >
                                 <Plus className="w-4 h-4 stroke-[3]" />
                                 PUBLIER UNE OPPORTUNITÉ
@@ -3670,7 +3668,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             </div>
                           </div>
                         </div>,
-                        <div className="relative overflow-hidden rounded-3xl bg-[#050505] border border-[#D4AF37]/25 p-5 sm:p-7 shadow-xl h-[280px] sm:h-auto flex flex-col justify-between">
+                        <div className="relative overflow-hidden rounded-3xl bg-afri-bg border border-afri-gold/25 p-5 sm:p-7 shadow-xl h-[280px] sm:h-auto flex flex-col justify-between">
                           <div className="absolute right-0 top-0 bottom-0 w-[42%] h-full z-0 overflow-hidden">
                             <img 
                               src="https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&q=80&w=360" 
@@ -3683,12 +3681,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                           <div className="relative z-10 flex flex-col justify-center h-full max-w-[62%] text-left space-y-4">
                             <div>
-                              <span className="text-[10px] sm:text-xs uppercase font-mono text-[#D4AF37] tracking-[0.2em] block font-extrabold mb-1">
+                              <span className="text-[10px] sm:text-xs uppercase font-mono text-afri-gold tracking-[0.2em] block font-extrabold mb-1">
                                 TENDANCE ABIDJAN
                               </span>
                               <h2 className="text-2xl sm:text-4xl font-display font-black tracking-tight leading-none uppercase">
                                 <span className="text-white block mb-1">LIVE & VIBES</span>
-                                <span className="text-[#D4AF37]">NOUVEAUTÉS</span>
+                                <span className="text-afri-gold">NOUVEAUTÉS</span>
                               </h2>
                               <p className="text-[11px] sm:text-xs text-zinc-400 mt-2 max-w-md leading-relaxed">
                                 Découvrez les nouveaux talents et les tendances musicales qui font vibrer les nuits d'Abidjan.
@@ -3708,13 +3706,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         }}
                         className={`p-1.5 sm:p-2.5 rounded-xl border text-left cursor-pointer transition-all flex items-center gap-1.5 sm:gap-2.5 ${
                           terrainTab === "musicien" 
-                            ? "bg-[#D4AF37]/10 border-[#D4AF37] text-white" 
-                            : "bg-black/35 border-white/5 hover:border-[#D4AF37]/40 text-white/90"
+                            ? "bg-afri-gold/10 border-afri-gold text-white" 
+                            : "bg-black/35 border-white/5 hover:border-afri-gold/40 text-white/90"
                         }`}
                       >
                         <span className="text-sm sm:text-lg shrink-0">🎵</span>
                         <div className="min-w-0">
-                          <h4 className="text-[8.5px] sm:text-[10.5px] font-display font-black uppercase text-[#D4AF37] truncate leading-none">ÉCHOS</h4>
+                          <h4 className="text-[8.5px] sm:text-[10.5px] font-display font-black uppercase text-afri-gold truncate leading-none">ÉCHOS</h4>
                           <p className="text-[7.5px] sm:text-[8px] text-zinc-500 font-mono mt-0.5 truncate leading-none">Actus & Buzz</p>
                         </div>
                       </button>
@@ -3726,13 +3724,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         }}
                         className={`p-1.5 sm:p-2.5 rounded-xl border text-left cursor-pointer transition-all flex items-center gap-1.5 sm:gap-2.5 ${
                           terrainTab === "contrat" 
-                            ? "bg-[#D4AF37]/10 border-[#D4AF37] text-white" 
-                            : "bg-black/35 border-white/5 hover:border-[#D4AF37]/40 text-white/90"
+                            ? "bg-afri-gold/10 border-afri-gold text-white" 
+                            : "bg-black/35 border-white/5 hover:border-afri-gold/40 text-white/90"
                         }`}
                       >
                         <span className="text-sm sm:text-lg shrink-0">💰</span>
                         <div className="min-w-0">
-                          <h4 className="text-[8.5px] sm:text-[10.5px] font-display font-black uppercase text-[#D4AF37] truncate leading-none">CACHETS</h4>
+                          <h4 className="text-[8.5px] sm:text-[10.5px] font-display font-black uppercase text-afri-gold truncate leading-none">CACHETS</h4>
                           <p className="text-[7.5px] sm:text-[8px] text-zinc-500 font-mono mt-0.5 truncate leading-none">Offres & Dem.</p>
                         </div>
                       </button>
@@ -3743,11 +3741,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           addToTerminal("[FILTRE] Tendances d'Abidjan activées sur le Terrain.");
                           try { audioSynth.playValidationSuccess(); } catch (e) {}
                         }}
-                        className="p-1.5 sm:p-2.5 rounded-xl bg-black/35 border border-white/5 hover:border-[#D4AF37]/40 text-left cursor-pointer transition-all text-white/90 flex items-center gap-1.5 sm:gap-2.5"
+                        className="p-1.5 sm:p-2.5 rounded-xl bg-black/35 border border-white/5 hover:border-afri-gold/40 text-left cursor-pointer transition-all text-white/90 flex items-center gap-1.5 sm:gap-2.5"
                       >
                         <span className="text-sm sm:text-lg shrink-0">📈</span>
                         <div className="min-w-0">
-                          <h4 className="text-[8.5px] sm:text-[10.5px] font-display font-black uppercase text-[#D4AF37] truncate leading-none">TENDANCES</h4>
+                          <h4 className="text-[8.5px] sm:text-[10.5px] font-display font-black uppercase text-afri-gold truncate leading-none">TENDANCES</h4>
                           <p className="text-[7.5px] sm:text-[8px] text-zinc-500 font-mono mt-0.5 truncate leading-none">Abidjan Mix</p>
                         </div>
                       </button>
@@ -3758,11 +3756,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           alert("📅 Évènements d'Or : Retrouvez l'agenda complet des concerts live d'Abidjan sur le canal d'Actu !");
                           try { audioSynth.playTamTam(false); } catch (e) {}
                         }}
-                        className="p-1.5 sm:p-2.5 rounded-xl bg-black/35 border border-white/5 hover:border-[#D4AF37]/40 text-left cursor-pointer transition-all text-white/90 flex items-center gap-1.5 sm:gap-2.5"
+                        className="p-1.5 sm:p-2.5 rounded-xl bg-black/35 border border-white/5 hover:border-afri-gold/40 text-left cursor-pointer transition-all text-white/90 flex items-center gap-1.5 sm:gap-2.5"
                       >
                         <span className="text-sm sm:text-lg shrink-0">📅</span>
                         <div className="min-w-0">
-                          <h4 className="text-[8.5px] sm:text-[10.5px] font-display font-black uppercase text-[#D4AF37] truncate leading-none">ÉVÉNEMENTS</h4>
+                          <h4 className="text-[8.5px] sm:text-[10.5px] font-display font-black uppercase text-afri-gold truncate leading-none">ÉVÉNEMENTS</h4>
                           <p className="text-[7.5px] sm:text-[8px] text-zinc-500 font-mono mt-0.5 truncate leading-none">Spectacles</p>
                         </div>
                       </button>
@@ -3770,11 +3768,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                     {/* Navigation Tabs filter within Le Terrain */}
                     <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
-                      <div className="flex items-center gap-2 bg-[#050505] border border-zinc-800 p-1 rounded-xl">
+                      <div className="flex items-center gap-2 bg-afri-bg border border-zinc-800 p-1 rounded-xl">
                         <button
                           onClick={() => setTerrainTab("all")}
                           className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase transition-all whitespace-nowrap cursor-pointer ${
-                            terrainTab === "all" ? "bg-[#D4AF37] text-[#050505]" : "text-zinc-400 hover:text-white"
+                            terrainTab === "all" ? "bg-afri-gold text-[#050505]" : "text-zinc-400 hover:text-white"
                           }`}
                         >
                           Tout l'Écran
@@ -3782,7 +3780,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <button
                           onClick={() => setTerrainTab("musicien")}
                           className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase transition-all whitespace-nowrap cursor-pointer ${
-                            terrainTab === "musicien" ? "bg-[#D4AF37] text-[#050505]" : "text-zinc-400 hover:text-white"
+                            terrainTab === "musicien" ? "bg-afri-gold text-[#050505]" : "text-zinc-400 hover:text-white"
                           }`}
                         >
                           Échos d'Artistes
@@ -3790,7 +3788,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <button
                           onClick={() => setTerrainTab("contrat")}
                           className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase transition-all whitespace-nowrap cursor-pointer ${
-                            terrainTab === "contrat" ? "bg-[#D4AF37] text-[#050505]" : "text-zinc-400 hover:text-white"
+                            terrainTab === "contrat" ? "bg-afri-gold text-[#050505]" : "text-zinc-400 hover:text-white"
                           }`}
                         >
                           Les Cachets
@@ -3809,14 +3807,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       {(terrainTab === "all" || terrainTab === "contrat") && (
                         <div className={`${terrainTab === "contrat" ? "lg:col-span-12" : "lg:col-span-7"} space-y-5`}>
                           <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-3 bg-[#D4AF37] rounded-full" />
+                            <span className="w-1.5 h-3 bg-afri-gold rounded-full" />
                             <h3 className="text-sm font-sans font-black text-white uppercase tracking-wider">
                               Les Cachets d'Or Disponibles
                             </h3>
                           </div>
 
                           {GombosToRender.length === 0 ? (
-                            <div className="p-10 text-center rounded-2xl bg-[#111111] border border-white/5 text-zinc-500 text-xs font-mono">
+                            <div className="p-10 text-center rounded-2xl bg-afri-bg-sec border border-white/5 text-zinc-500 text-xs font-mono">
                               Aucun contrat (Gombo) ne correspond à vos filtres actuels.
                             </div>
                           ) : (
@@ -3827,16 +3825,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   <motion.div
                                     key={g.id}
                                     whileHover={{ scale: 1.01, y: -3 }}
-                                    className="relative overflow-hidden rounded-3xl bg-[#111111] border border-[#D4AF37]/15 p-5 transition-all duration-300 flex flex-col sm:flex-row gap-5 items-stretch shadow-lg"
+                                    className="relative overflow-hidden rounded-3xl bg-afri-bg-sec border border-afri-gold/15 p-5 transition-all duration-300 flex flex-col sm:flex-row gap-5 items-stretch shadow-lg"
                                   >
                                     {g.isBoosted && (
-                                      <div className="absolute top-0 right-0 bg-[#D4AF37] text-[#050505] text-[8px] font-mono font-extrabold uppercase px-3 py-1 rounded-bl-xl shadow flex items-center gap-1 z-20">
+                                      <div className="absolute top-0 right-0 bg-afri-gold text-[#050505] text-[8px] font-mono font-extrabold uppercase px-3 py-1 rounded-bl-xl shadow flex items-center gap-1 z-20">
                                         <Zap className="w-3 h-3 fill-current animate-pulse" /> PREMIUM BOOST
                                       </div>
                                     )}
 
                                     {/* Left illustration wrapper */}
-                                    <div className="w-full sm:w-40 h-28 rounded-2xl overflow-hidden relative shrink-0 border border-white/5 bg-[#050505]">
+                                    <div className="w-full sm:w-40 h-28 rounded-2xl overflow-hidden relative shrink-0 border border-white/5 bg-afri-bg">
                                       <img
                                         src={
                                           g.id.includes("1") || g.id.includes("a")
@@ -3851,7 +3849,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                         className="w-full h-full object-cover opacity-90 hover:scale-105 transition-all duration-500"
                                       />
                                       <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
-                                      <span className="absolute bottom-2 left-2 text-[8px] font-mono font-black uppercase text-[#D4AF37] bg-[#111111]/95 px-2 py-0.5 rounded border border-[#D4AF37]/20">
+                                      <span className="absolute bottom-2 left-2 text-[8px] font-mono font-black uppercase text-afri-gold bg-afri-bg-sec/95 px-2 py-0.5 rounded border border-afri-gold/20">
                                         {g.type || "Live Showcase"}
                                       </span>
                                     </div>
@@ -3868,7 +3866,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                           <span className="text-[10px] text-zinc-400 font-mono">{g.date || "Date Récente"}</span>
                                         </div>
 
-                                        <h4 className="text-md sm:text-lg font-sans font-black text-white hover:text-[#D4AF37] transition-all">
+                                        <h4 className="text-md sm:text-lg font-sans font-black text-white hover:text-afri-gold transition-all">
                                           {g.title}
                                         </h4>
                                         <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-1">
@@ -3880,7 +3878,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       <div className="border-t border-white/5 pt-3 mt-4 flex items-center justify-between flex-wrap gap-4">
                                         <div>
                                           <span className="text-[8px] uppercase font-mono text-zinc-500 block font-bold">MONTANT GARANTI</span>
-                                          <strong className="text-xl font-sans font-black text-[#D4AF37] tracking-tight">
+                                          <strong className="text-xl font-sans font-black text-afri-gold tracking-tight">
                                             {(g.budget || 250000).toLocaleString("fr-FR")} <span className="text-xs font-mono text-zinc-400 font-bold">FCFA</span>
                                           </strong>
                                         </div>
@@ -3891,7 +3889,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                               setSelectedGomboDetails(g);
                                               try { audioSynth.playValidationSuccess(); } catch (err) {}
                                             }}
-                                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-zinc-900 to-zinc-950 border border-[#D4AF37]/35 hover:border-[#D4AF37] text-white text-[10px] font-mono font-black uppercase tracking-wider hover:shadow-[0_0_15px_rgba(212,175,55,0.15)] cursor-pointer transition-all active:scale-95 whitespace-nowrap"
+                                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-zinc-900 to-zinc-950 border border-afri-gold/35 hover:border-afri-gold text-white text-[10px] font-mono font-black uppercase tracking-wider hover:shadow-[0_0_15px_rgba(212,175,55,0.15)] cursor-pointer transition-all active:scale-95 whitespace-nowrap"
                                           >
                                             VOIR DÉTAILS
                                           </button>
@@ -3910,14 +3908,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       {(terrainTab === "all" || terrainTab === "musicien") && (
                         <div className={`${terrainTab === "musicien" ? "lg:col-span-12" : "lg:col-span-5"} space-y-5`}>
                           <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-3 bg-[#D4AF37] rounded-full" />
+                            <span className="w-1.5 h-3 bg-afri-gold rounded-full" />
                             <h3 className="text-sm font-sans font-black text-white uppercase tracking-wider">
                               Murmures & Alliances Showbiz
                             </h3>
                           </div>
 
                           {filteredFeedPosts.length === 0 ? (
-                            <div className="p-10 text-center rounded-2xl bg-[#111111] border border-white/5 text-zinc-500 text-xs font-mono">
+                            <div className="p-10 text-center rounded-2xl bg-afri-bg-sec border border-white/5 text-zinc-500 text-xs font-mono">
                               Aucune mise à jour trouvée sur Le Terrain.
                             </div>
                           ) : (
@@ -3937,7 +3935,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 }) : "Aujourd'hui";
 
                                 // Determine category badge styling
-                                let categoryColor = "border-amber-500/30 text-[#D4AF37] bg-amber-500/5";
+                                let categoryColor = "border-amber-500/30 text-afri-gold bg-amber-500/5";
                                 if (p.category === "Événement") {
                                   categoryColor = "border-emerald-500/30 text-emerald-400 bg-emerald-500/5";
                                 } else if (p.category === "Recherche") {
@@ -3949,11 +3947,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 }
 
                                 return (
-                                  <div key={p.id} className="bg-[#111111] border border-zinc-800/80 rounded-2xl p-4.5 space-y-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:border-zinc-700/60 transition-all duration-300">
+                                  <div key={p.id} className="bg-afri-bg-sec border border-zinc-800/80 rounded-2xl p-4.5 space-y-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:border-zinc-700/60 transition-all duration-300">
                                     {/* HEADER: User info + location + time */}
                                     <div className="flex justify-between items-start gap-2">
                                       <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-[#050505] border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] font-black text-xs font-mono shadow-inner shrink-0 relative">
+                                        <div className="w-10 h-10 rounded-full bg-afri-bg border border-afri-gold/30 flex items-center justify-center text-afri-gold font-black text-xs font-mono shadow-inner shrink-0 relative">
                                           {p.authorArtisticName?.charAt(0)}
                                           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#111111]" />
                                         </div>
@@ -3962,7 +3960,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                             <h5 className="text-[12px] font-sans font-black text-white uppercase tracking-wide leading-tight">
                                               {p.authorArtisticName}
                                             </h5>
-                                            <span className="text-[7.5px] px-1.5 py-0.5 rounded bg-[#111111] border border-zinc-800 text-zinc-400 font-mono font-bold leading-none shrink-0">
+                                            <span className="text-[7.5px] px-1.5 py-0.5 rounded bg-afri-bg-sec border border-zinc-800 text-zinc-400 font-mono font-bold leading-none shrink-0">
                                               PRO
                                             </span>
                                           </div>
@@ -3973,7 +3971,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       </div>
                                       
                                       <div className="text-right flex flex-col items-end shrink-0">
-                                        <span className="text-[9px] font-mono font-bold text-[#D4AF37] flex items-center gap-1">
+                                        <span className="text-[9px] font-mono font-bold text-afri-gold flex items-center gap-1">
                                           📍 {authorCommune}
                                         </span>
                                         <span className="text-[7.5px] font-mono text-zinc-500 mt-0.5">
@@ -3984,21 +3982,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                                     {/* POST MEDIA IMAGE (IF PRESENT) */}
                                     {p.mediaUrl && (
-                                      <div className="relative rounded-xl overflow-hidden border border-zinc-800/60 bg-[#050505] aspect-[16/9] group">
+                                      <div className="relative rounded-xl overflow-hidden border border-zinc-800/60 bg-afri-bg aspect-[16/9] group">
                                         <img
                                           src={p.mediaUrl}
                                           alt="Illustration"
                                           referrerPolicy="no-referrer"
                                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
-                                        <span className="absolute bottom-2 right-2 text-[8px] bg-black/80 backdrop-blur-md text-[#D4AF37] font-bold border border-[#D4AF37]/20 px-2 py-0.5 rounded-md font-mono tracking-wider uppercase">
+                                        <span className="absolute bottom-2 right-2 text-[8px] bg-black/80 backdrop-blur-md text-afri-gold font-bold border border-afri-gold/20 px-2 py-0.5 rounded-md font-mono tracking-wider uppercase">
                                           ÉCHO PREMIUM
                                         </span>
                                       </div>
                                     )}
 
                                     {/* DESCRIPTION */}
-                                    <p className="text-[11.5px] font-sans text-zinc-200 leading-relaxed bg-[#050505]/60 p-3 rounded-xl border border-white/[0.03]">
+                                    <p className="text-[11.5px] font-sans text-zinc-200 leading-relaxed bg-afri-bg/60 p-3 rounded-xl border border-white/[0.03]">
                                       {p.content}
                                     </p>
 
@@ -4019,7 +4017,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       {p.tags && p.tags.length > 0 && (
                                         <div className="flex flex-wrap gap-1">
                                           {p.tags.map(tag => (
-                                            <span key={tag} className="text-[9.5px] font-mono text-[#D4AF37]/70 font-semibold hover:text-[#D4AF37] transition-all cursor-pointer">
+                                            <span key={tag} className="text-[9.5px] font-mono text-afri-gold/70 font-semibold hover:text-afri-gold transition-all cursor-pointer">
                                               {tag}
                                             </span>
                                           ))}
@@ -4044,7 +4042,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                               }
                                             });
                                           }}
-                                          className={`flex items-center gap-1.5 transition-colors hover:text-[#D4AF37] cursor-pointer ${isLiked ? "text-[#D4AF37] font-bold" : ""}`}
+                                          className={`flex items-center gap-1.5 transition-colors hover:text-afri-gold cursor-pointer ${isLiked ? "text-afri-gold font-bold" : ""}`}
                                         >
                                           <span className="text-[12px]">{isLiked ? "🪘" : "🪘"}</span> 
                                           <span>{p.likes + (isLiked ? 1 : 0)} honneurs reçus</span>
@@ -4075,7 +4073,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                               addToTerminal(`[EXPÉDITION] Écho de ${p.authorArtisticName} prêt à l'envoi.`);
                                             }
                                           }}
-                                          className="text-[9.5px] px-2.5 py-1.5 rounded-lg font-bold border border-[#D4AF37]/30 hover:border-[#D4AF37]/80 hover:bg-[#D4AF37]/5 text-[#D4AF37] transition-all cursor-pointer flex items-center gap-1"
+                                          className="text-[9.5px] px-2.5 py-1.5 rounded-lg font-bold border border-afri-gold/30 hover:border-afri-gold/80 hover:bg-afri-gold/5 text-afri-gold transition-all cursor-pointer flex items-center gap-1"
                                         >
                                           <span>Partager</span>
                                         </button>
@@ -4087,7 +4085,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       {/* Existing comments */}
                                       {postComments[p.id]?.map(c => (
                                         <div key={c.id} className="text-[10.5px] p-2 bg-black rounded border border-white/5 text-left font-sans">
-                                          <strong className="text-[#D4AF37] uppercase text-[9px] font-mono mr-1">{c.writerName} :</strong>
+                                          <strong className="text-afri-gold uppercase text-[9px] font-mono mr-1">{c.writerName} :</strong>
                                           <span className="text-zinc-300">{c.content}</span>
                                         </div>
                                       ))}
@@ -4120,7 +4118,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                               addToTerminal(`[PARLER] Parler ajouté par ${writerName} sur le post ${p.id}`);
                                             }
                                           }}
-                                          className="flex-1 bg-[#1A1A1D] border border-zinc-800 rounded-xl p-2 px-3 text-[10.5px] text-white focus:outline-none focus:border-[#D4AF37] placeholder:text-zinc-650"
+                                          className="flex-1 bg-[#1A1A1D] border border-zinc-800 rounded-xl p-2 px-3 text-[10.5px] text-white focus:outline-none focus:border-afri-gold placeholder:text-zinc-650"
                                         />
                                       </div>
                                     </div>
@@ -4140,12 +4138,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <footer className="mt-16 border-t border-zinc-800 bg-[#070708] rounded-3xl p-6 sm:p-8 space-y-6">
                       <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-zinc-900">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center">
-                            <Flame className="text-[#D4AF37] w-5 h-5 animate-bounce" />
+                          <div className="w-8 h-8 rounded-full bg-afri-gold/10 flex items-center justify-center">
+                            <Flame className="text-afri-gold w-5 h-5 animate-bounce" />
                           </div>
                           <div>
                             <span className="text-xs font-sans font-black text-white uppercase tracking-widest block leading-tight">Y'A GOMBO MUSIC</span>
-                            <span className="text-[7.5px] uppercase font-mono tracking-widest text-[#D4AF37]/75 font-black block">Elite Sovereignty Consortium</span>
+                            <span className="text-[7.5px] uppercase font-mono tracking-widest text-afri-gold/75 font-black block">Elite Sovereignty Consortium</span>
                           </div>
                         </div>
 
@@ -4154,7 +4152,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             onClick={() => {
                               setActiveMenu("terms");
                             }}
-                            className="hover:text-[#D4AF37] transition-all cursor-pointer font-bold"
+                            className="hover:text-afri-gold transition-all cursor-pointer font-bold"
                           >
                             CGU
                           </button>
@@ -4163,7 +4161,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             onClick={() => {
                               setActiveMenu("privacy");
                             }}
-                            className="hover:text-[#D4AF37] transition-all cursor-pointer font-bold"
+                            className="hover:text-afri-gold transition-all cursor-pointer font-bold"
                           >
                             CONFIDENTIALITÉ
                           </button>
@@ -4197,16 +4195,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_ecosystem" && (() => {
                 return (
                   <div className="space-y-6 animate-fadeIn pb-24 text-left">
-                    <div className="border-b border-[#D4AF37]/20 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="border-b border-afri-gold/20 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
-                        <h3 className="text-xl font-display font-black text-[#D4AF37] uppercase flex items-center gap-2">
+                        <h3 className="text-xl font-display font-black text-afri-gold uppercase flex items-center gap-2">
                           <span>🌟 Écosystème 2.0</span>
                         </h3>
                         <p className="text-zinc-500 text-xs mt-1">L'univers prestige complet de services d'alliance et d'outils pour l'élite d'Abidjan.</p>
                       </div>
                       <button
                         onClick={() => setActiveMenu("user_terrain")}
-                        className="bg-[#050505]/80 border border-zinc-900 rounded-xl px-4 py-2 text-xs font-mono text-[#D4AF37] hover:text-white"
+                        className="bg-afri-bg/80 border border-zinc-900 rounded-xl px-4 py-2 text-xs font-mono text-afri-gold hover:text-white"
                       >
                         Retour au Terrain 🎯
                       </button>
@@ -4237,7 +4235,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                 return (
                   <div className="space-y-6 animate-fadeIn pb-24">
-                    <div className="p-5 rounded-2xl bg-[#111111] border border-[#D4AF37]/15 relative overflow-hidden">
+                    <div className="p-5 rounded-2xl bg-afri-bg-sec border border-afri-gold/15 relative overflow-hidden">
                       <div className="relative z-10">
                         <h3 className="text-md font-sans font-black text-white uppercase tracking-wide">
                           🔍 Les Vibes : Moteur de Recherche d'Alliances
@@ -4263,11 +4261,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           <motion.div
                             key={artist.id}
                             whileHover={{ scale: 1.015, y: -3 }}
-                            className="bg-[#111111] rounded-2xl border border-zinc-800/80 p-5 space-y-4 flex flex-col justify-between"
+                            className="bg-afri-bg-sec rounded-2xl border border-zinc-800/80 p-5 space-y-4 flex flex-col justify-between"
                           >
                           <div className="space-y-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-full border border-[#D4AF37]/25 overflow-hidden bg-black flex items-center justify-center font-bold font-mono text-md text-[#D4AF37]">
+                              <div className="w-12 h-12 rounded-full border border-afri-gold/25 overflow-hidden bg-black flex items-center justify-center font-bold font-mono text-md text-afri-gold">
                                 {artist.avatarUrl ? (
                                   <img src={artist.avatarUrl} alt={artist.artisticName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                 ) : (
@@ -4295,7 +4293,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               </div>
                             </div>
 
-                            <p className="text-[10px] text-zinc-400 leading-snug italic bg-[#050505] p-2.5 rounded-lg border border-white/5">
+                            <p className="text-[10px] text-zinc-400 leading-snug italic bg-afri-bg p-2.5 rounded-lg border border-white/5">
                               "{artist.bio || "Ce virtuose de scène cultive l'excellence sans fard à Abidjan."}"
                             </p>
                           </div>
@@ -4303,7 +4301,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           <div className="border-t border-zinc-950 pt-3.5 flex items-center justify-between">
                             <div className="text-left">
                               <span className="text-[8px] uppercase font-mono text-zinc-500 block">SCORE ACADÉMIE :</span>
-                              <span className="text-xs font-mono font-bold text-[#D4AF37]">
+                              <span className="text-xs font-mono font-bold text-afri-gold">
                                 Rang {artist.performance?.level || "3"} / 5
                               </span>
                             </div>
@@ -4314,7 +4312,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 addToTerminal(`[🎼 ALLIANCE] Proposition de raccordement d'or envoyée à : ${artist.artisticName}`);
                                 alert(`Demande d'alliance d'or notifiée ! Notre transmetteur a fait vibrer les tambours de ${artist.artisticName}.`);
                               }}
-                              className="px-3 py-1.5 rounded-lg bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-[#050505] text-[10px] font-mono font-black border border-[#D4AF37]/35 uppercase tracking-wider transition-all cursor-pointer"
+                              className="px-3 py-1.5 rounded-lg bg-afri-gold/10 hover:bg-afri-gold text-afri-gold hover:text-[#050505] text-[10px] font-mono font-black border border-afri-gold/35 uppercase tracking-wider transition-all cursor-pointer"
                             >
                               Proposer une Alliance 🤝
                             </button>
@@ -4529,14 +4527,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     
                     {/* Draft restoration alert banner */}
                     {publishDraftDetected && (
-                      <div className="bg-[#D4AF37]/15 border border-[#D4AF37]/30 rounded-2xl p-4 text-xs text-zinc-300 flex items-center justify-between animate-slideDown">
+                      <div className="bg-afri-gold/15 border border-afri-gold/30 rounded-2xl p-4 text-xs text-zinc-300 flex items-center justify-between animate-slideDown">
                         <span className="flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                          <Sparkles className="w-4 h-4 text-afri-gold shrink-0" />
                           ⚡ Brouillon restauré automatiquement
                         </span>
                         <button 
                           onClick={clearDraft}
-                          className="px-2.5 py-1 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] font-mono rounded-lg text-[10px] uppercase font-bold"
+                          className="px-2.5 py-1 bg-afri-gold/10 hover:bg-afri-gold/20 text-afri-gold font-mono rounded-lg text-[10px] uppercase font-bold"
                         >
                           Effacer
                         </button>
@@ -4545,14 +4543,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                     {/* Progress Bar Display */}
                     {activePublishType !== "reel" && (
-                      <div className="bg-[#111111] border border-zinc-900 rounded-2xl p-4 space-y-2">
+                      <div className="bg-afri-bg-sec border border-zinc-900 rounded-2xl p-4 space-y-2">
                         <div className="flex justify-between text-[10px] font-mono uppercase tracking-wider">
                           <span className="text-zinc-550">PROGRESSION DE PUBLICATION :</span>
-                          <span className="text-[#D4AF37] font-bold">{currentProgress}%</span>
+                          <span className="text-afri-gold font-bold">{currentProgress}%</span>
                         </div>
                         <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-zinc-850">
                           <div 
-                            className="bg-gradient-to-r from-[#D4AF37] to-amber-500 h-full transition-all duration-500 ease-out"
+                            className="bg-gradient-to-r from-afri-gold to-amber-500 h-full transition-all duration-500 ease-out"
                             style={{ width: `${currentProgress}%` }}
                           />
                         </div>
@@ -4562,7 +4560,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {/* Loading Overlay spinner */}
                     {publishLoading && (
                       <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[999] flex flex-col items-center justify-center space-y-4">
-                        <Loader2 className="w-12 h-12 animate-spin text-[#D4AF37]" />
+                        <Loader2 className="w-12 h-12 animate-spin text-afri-gold" />
                         <h3 className="text-base font-mono font-black uppercase tracking-widest text-white animate-pulse">
                           {activePublishType === "reel" ? "Préparation publication..." : "Publication en cours..."}
                         </h3>
@@ -4586,12 +4584,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     )}
 
                     {/* Form block */}
-                    <div className="bg-[#111111] border border-[#D4AF37]/20 rounded-2xl xs:rounded-3xl p-4 xs:p-6 sm:p-8 space-y-4 xs:space-y-6 shadow-xl text-left relative overflow-hidden">
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#D4AF37] to-amber-600 opacity-80" />
+                    <div className="bg-afri-bg-sec border border-afri-gold/20 rounded-2xl xs:rounded-3xl p-4 xs:p-6 sm:p-8 space-y-4 xs:space-y-6 shadow-xl text-left relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-afri-gold to-amber-600 opacity-80" />
                       
                       <div className="border-b border-white/5 pb-3 xs:pb-4 flex justify-between items-start">
                         <div>
-                          <span className="text-[7px] xs:text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] font-bold">TRANSMETTEUR MULTI-RÉSEAUX</span>
+                          <span className="text-[7px] xs:text-[9px] uppercase font-mono tracking-widest text-afri-gold font-bold">TRANSMETTEUR MULTI-RÉSEAUX</span>
                           <h3 className="text-lg xs:text-xl font-display font-black text-white uppercase tracking-tight mt-0.5 xs:mt-1">{getCategoryLabel()}</h3>
                           <p className="text-[10px] xs:text-xs text-zinc-400 mt-1">
                             {activePublishType === "reel" 
@@ -4601,7 +4599,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         </div>
                         <button
                           onClick={() => setShowHowWorksPopup(true)}
-                          className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-colors shrink-0"
+                          className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-afri-gold hover:border-afri-gold/50 transition-colors shrink-0"
                           title="Comment fonctionne AFRIGOMBO ?"
                         >
                           <Info className="w-4 h-4" />
@@ -4615,7 +4613,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             {/* REEL FORM */}
                             <div className="space-y-2">
                               <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">UPLOADER VOTRE VIDÉO (MP4, MOV) :</label>
-                              <div className="border-2 border-dashed border-zinc-800 rounded-2xl p-8 bg-black/40 text-center hover:border-[#D4AF37] transition-all cursor-pointer">
+                              <div className="border-2 border-dashed border-zinc-800 rounded-2xl p-8 bg-black/40 text-center hover:border-afri-gold transition-all cursor-pointer">
                                 {publishAudio ? (
                                   <div className="space-y-3">
                                     <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-400">
@@ -4661,7 +4659,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 value={newGomboDesc}
                                 onChange={(e) => setNewGomboDesc(e.target.value)}
                                 placeholder="Ajoutez un contexte, des hashtags, ou mentionnez vos collaborateurs..."
-                                className="w-full h-24 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-xs text-white placeholder-zinc-650 focus:outline-none transition-all resize-none font-sans"
+                                className="w-full h-24 bg-black border border-zinc-800 focus:border-afri-gold rounded-xl p-3 text-xs text-white placeholder-zinc-650 focus:outline-none transition-all resize-none font-sans"
                               />
                             </div>
                           </>
@@ -4678,7 +4676,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   saveDraft({ title: e.target.value });
                                 }}
                                 placeholder="ex. Recherche bassiste soliste pour maquis chic ce soir..."
-                                className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none placeholder-zinc-650 font-sans"
+                                className="w-full bg-black border border-zinc-800 focus:border-afri-gold rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none placeholder-zinc-650 font-sans"
                               />
                             </div>
 
@@ -4691,7 +4689,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   saveDraft({ desc: e.target.value });
                                 }}
                                 placeholder="Décrivez votre déroulé artistique, matériel requis, style musical d'honneur exigé..."
-                                className="w-full h-24 bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl p-3 text-xs text-white placeholder-zinc-650 focus:outline-none transition-all resize-none font-sans"
+                                className="w-full h-24 bg-black border border-zinc-800 focus:border-afri-gold rounded-xl p-3 text-xs text-white placeholder-zinc-650 focus:outline-none transition-all resize-none font-sans"
                               />
                             </div>
 
@@ -4699,7 +4697,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             <div className="space-y-2 text-left">
                               <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold flex justify-between">
                                 <span>TAGS RECHERCHÉS (MAX 5) :</span>
-                                <span className="text-[#D4AF37]">{selectedPublishTags.length}/5</span>
+                                <span className="text-afri-gold">{selectedPublishTags.length}/5</span>
                               </label>
                               <div className="flex flex-wrap gap-2">
                                 {["Pianiste", "Bassiste", "Choriste", "Soliste", "Percussionniste", "Beatmaker", "Ingénieur Son", "Acoustique", "Live", "Urbain"].map(tag => (
@@ -4709,7 +4707,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     onClick={() => handleTagToggle(tag)}
                                     className={`px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all border ${
                                       selectedPublishTags.includes(tag) 
-                                        ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]" 
+                                        ? "bg-afri-gold/20 border-afri-gold text-afri-gold" 
                                         : "bg-black border-zinc-800 text-zinc-400 hover:border-zinc-600"
                                     }`}
                                   >
@@ -4721,14 +4719,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-2">
-                                <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">COMMUNE / QUARTIER :</label>
+                                <label className="text-[10px] font-mono uppercase text-afri-gold block font-bold">COMMUNE / QUARTIER :</label>
                                 <select
                                   value={newGomboQuartier}
                                   onChange={(e) => {
                                     setNewGomboQuartier(e.target.value);
                                     saveDraft({ quartier: e.target.value });
                                   }}
-                                  className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-sans cursor-pointer"
+                                  className="w-full bg-black border border-zinc-800 focus:border-afri-gold rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-sans cursor-pointer"
                                 >
                                   <option value="">Choisir la commune...</option>
                                   {["Cocody", "Marcory", "Plateau", "Treichville", "Yopougon", "Koumassi", "Abobo", "Adjamé", "Port-Bouët", "Bingerville", "Grand-Bassam"].map(c => (
@@ -4746,14 +4744,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     setNewGomboDate(e.target.value);
                                     saveDraft({ date: e.target.value });
                                   }}
-                                  className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                                  className="w-full bg-black border border-zinc-800 focus:border-afri-gold rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
                                 />
                               </div>
                             </div>
 
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">
-                                <label className="text-[10px] font-mono uppercase text-[#D4AF37] block font-bold">BUDGET CACHET PRÉVU (FCFA) :</label>
+                                <label className="text-[10px] font-mono uppercase text-afri-gold block font-bold">BUDGET CACHET PRÉVU (FCFA) :</label>
                                 <span className="text-[8px] font-mono text-zinc-550">RÈGLEMENTATION MINIMALE : 15 000 FCFA</span>
                               </div>
                               <input
@@ -4766,7 +4764,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   saveDraft({ price: val });
                                 }}
                                 className={`w-full bg-black border rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none transition-all ${
-                                  newGomboPrice < 15000 ? "border-red-500/50 text-red-400 focus:border-red-500" : "border-zinc-800 focus:border-[#D4AF37]"
+                                  newGomboPrice < 15000 ? "border-red-500/50 text-red-400 focus:border-red-500" : "border-zinc-800 focus:border-afri-gold"
                                 }`}
                               />
                               {newGomboPrice < 15000 && (
@@ -4780,12 +4778,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             <div className="space-y-2">
                               <label className="text-[10px] font-mono uppercase text-zinc-400 block font-bold flex justify-between">
                                 <span>PHOTOS ILLUSTRATIVES (OPTIONNEL) :</span>
-                                <span className="text-[#D4AF37]">{multiplePublishPhotos.length}/4</span>
+                                <span className="text-afri-gold">{multiplePublishPhotos.length}/4</span>
                               </label>
                               
                               <div className="grid grid-cols-4 gap-2">
                                 {multiplePublishPhotos.map((photo, idx) => (
-                                  <div key={idx} className="aspect-square relative rounded-xl overflow-hidden border border-[#D4AF37]/30 bg-black group">
+                                  <div key={idx} className="aspect-square relative rounded-xl overflow-hidden border border-afri-gold/30 bg-black group">
                                     <img src={photo} alt="Upload preview" className="w-full h-full object-cover" />
                                     <button
                                       type="button"
@@ -4798,7 +4796,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 ))}
                                 
                                 {multiplePublishPhotos.length < 4 && (
-                                  <label className="aspect-square border border-dashed border-zinc-800 rounded-xl bg-black/40 flex flex-col items-center justify-center cursor-pointer hover:border-[#D4AF37] transition-all text-zinc-500 hover:text-[#D4AF37]">
+                                  <label className="aspect-square border border-dashed border-zinc-800 rounded-xl bg-black/40 flex flex-col items-center justify-center cursor-pointer hover:border-afri-gold transition-all text-zinc-500 hover:text-afri-gold">
                                     <Plus className="w-5 h-5 mb-1" />
                                     <span className="text-[8px] font-mono uppercase">Ajouter</span>
                                     <input 
@@ -4916,7 +4914,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             onClick={triggerPubSubmit}
                             disabled={publishLoading}
                             className={`w-2/3 py-3 px-4 text-xs font-display font-black uppercase rounded-xl transition-all shadow-lg text-black ${
-                              publishLoading ? "bg-zinc-600 cursor-not-allowed opacity-50" : "bg-gradient-to-r from-[#D4AF37] to-[#F1C40F] hover:opacity-90 active:scale-[0.98]"
+                              publishLoading ? "bg-zinc-600 cursor-not-allowed opacity-50" : "bg-gradient-to-r from-afri-gold to-[#F1C40F] hover:opacity-90 active:scale-[0.98]"
                             }`}
                           >
                             {publishLoading ? "En cours..." : "Publier"}
@@ -4959,7 +4957,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
                     <div className="border-b border-white/5 pb-4 flex justify-between items-center">
                       <div>
-                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37]">
+                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
                           ⭐ Mes Favoris & Artistes Suivis
                         </h3>
                         <p className="text-xs text-zinc-400 mt-1">Vos bails favoris et les talents de la Côte d'Ivoire que vous suivez.</p>
@@ -4976,7 +4974,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       {/* Favorited Gombos */}
                       <div className="space-y-3">
                         <h4 className="text-xs font-mono uppercase font-bold text-white flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full"></span>
+                          <span className="w-1.5 h-1.5 bg-afri-gold rounded-full"></span>
                           Gombos Honorés ({favoritedGombosList.length})
                         </h4>
                         {favoritedGombosList.length === 0 ? (
@@ -4989,7 +4987,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <div key={gombo.id} className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl flex flex-col justify-between">
                                 <div>
                                   <div className="flex justify-between items-start">
-                                    <span className="px-2 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-mono uppercase font-black">
+                                    <span className="px-2 py-0.5 rounded bg-afri-gold/10 text-afri-gold text-[8px] font-mono uppercase font-black">
                                       {gombo.type || "Show"}
                                     </span>
                                     <span className="text-xs font-mono font-bold text-white">{gombo.budget?.toLocaleString()} F</span>
@@ -5003,7 +5001,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                       setSelectedGomboDetails(gombo);
                                       setViewingGomboIdDetail(true);
                                     }}
-                                    className="text-[10px] text-[#D4AF37] font-bold uppercase hover:underline"
+                                    className="text-[10px] text-afri-gold font-bold uppercase hover:underline"
                                   >
                                     Consulter →
                                   </button>
@@ -5026,7 +5024,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       {/* Followed Artists */}
                       <div className="space-y-3">
                         <h4 className="text-xs font-mono uppercase font-bold text-white flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full"></span>
+                          <span className="w-1.5 h-1.5 bg-afri-gold rounded-full"></span>
                           Artistes Suivis ({followedArtistsList.length})
                         </h4>
                         {followedArtistsList.length === 0 ? (
@@ -5036,8 +5034,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         ) : (
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             {followedArtistsList.map(user => (
-                              <div key={user.id} className="p-4 bg-[#070707] border border-zinc-900 rounded-2xl text-center flex flex-col items-center">
-                                <div className="w-12 h-12 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-zinc-900">
+                              <div key={user.id} className="p-4 bg-afri-bg border border-zinc-900 rounded-2xl text-center flex flex-col items-center">
+                                <div className="w-12 h-12 rounded-full border-2 border-afri-gold overflow-hidden bg-zinc-900">
                                   {user.avatarUrl ? (
                                     <img src={user.avatarUrl} alt={user.artisticName} className="w-full h-full object-cover animate-fadeIn" referrerPolicy="no-referrer" />
                                   ) : (
@@ -5078,7 +5076,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
                     <div className="border-b border-white/5 pb-4 flex justify-between items-center">
                       <div>
-                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37]">
+                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
                           🕓 Historique de l'Artiste
                         </h3>
                         <p className="text-xs text-zinc-400 mt-1">Vos bails passés, les activations et les mouvements de gombo.</p>
@@ -5087,17 +5085,17 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     </div>
 
                     <div className="space-y-4">
-                      <div className="bg-[#070707] border border-zinc-900 p-4 rounded-2xl">
+                      <div className="bg-afri-bg border border-zinc-900 p-4 rounded-2xl">
                         <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-2">Activités sur le terrain</span>
                         <div className="space-y-3.5 font-mono text-xs">
-                          <div className="flex items-start gap-2 text-zinc-400 border-l border-[#D4AF37]/35 pl-3 relative py-1">
-                            <span className="w-2 h-2 rounded-full bg-[#D4AF37] absolute -left-[4.5px] top-[9px]"></span>
+                          <div className="flex items-start gap-2 text-zinc-400 border-l border-afri-gold/35 pl-3 relative py-1">
+                            <span className="w-2 h-2 rounded-full bg-afri-gold absolute -left-[4.5px] top-[9px]"></span>
                             <div>
                               <span className="text-zinc-600 font-bold">[AUJOURD'HUI]</span> Connexion souveraine établie avec succès.
                             </div>
                           </div>
-                          <div className="flex items-start gap-2 text-zinc-400 border-l border-[#D4AF37]/35 pl-3 relative py-1">
-                            <span className="w-2 h-2 rounded-full bg-[#D4AF37] absolute -left-[4.5px] top-[9px]"></span>
+                          <div className="flex items-start gap-2 text-zinc-400 border-l border-afri-gold/35 pl-3 relative py-1">
+                            <span className="w-2 h-2 rounded-full bg-afri-gold absolute -left-[4.5px] top-[9px]"></span>
                             <div>
                               <span className="text-zinc-600 font-bold">[HIER]</span> Consultation de l'Héritage Certifié et audit de sécurité.
                             </div>
@@ -5111,7 +5109,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         </div>
                       </div>
 
-                      <div className="bg-[#070707] border border-zinc-900 p-4 rounded-2xl space-y-3">
+                      <div className="bg-afri-bg border border-zinc-900 p-4 rounded-2xl space-y-3">
                         <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">Flux des transactions</span>
                         {myContracts.length === 0 ? (
                           <p className="text-xs text-zinc-500 text-center py-4">Aucune transaction enregistrée.</p>
@@ -5152,7 +5150,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
                     <div className="border-b border-white/5 pb-4 flex justify-between items-center">
                       <div>
-                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37]">
+                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
                           📥 Téléchargements Officiels
                         </h3>
                         <p className="text-xs text-zinc-400 mt-1">Téléchargez vos contrats officiels et attestations d'artiste certifié.</p>
@@ -5162,7 +5160,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Item 1 */}
-                      <div className="p-4 bg-[#070707] border border-zinc-900 rounded-2xl flex flex-col justify-between">
+                      <div className="p-4 bg-afri-bg border border-zinc-900 rounded-2xl flex flex-col justify-between">
                         <div>
                           <span className="text-[8.5px] font-mono text-zinc-500 uppercase font-bold tracking-wider">OFFICIEL • PDF CONTRAT</span>
                           <h4 className="text-xs font-bold text-white mt-1">Modèle de Contrat de Prestation Standard</h4>
@@ -5170,14 +5168,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         </div>
                         <button
                           onClick={() => handleDownload("Modele_Contrat_Prestation_Afrigombo.txt", `=== CONTRAT OFFICIEL AFRIGOMBO ===\n\nPrestataire : ${profile?.artisticName || "Artiste Elite"}\nNiveau : GOMBO ID Certifié\nPlateforme : AFRIGOMBO CI\n\nCe document atteste que l'artiste est habilité à prester via le système d'accord sécurisé et d'arbitrage de proximité d'AFRIGOMBO.`)}
-                          className="mt-4 w-full py-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#D4AF37] font-bold text-xs uppercase rounded-xl tracking-wider transition-all cursor-pointer"
+                          className="mt-4 w-full py-2 bg-afri-gold/10 hover:bg-afri-gold/15 border border-afri-gold/35 text-afri-gold font-bold text-xs uppercase rounded-xl tracking-wider transition-all cursor-pointer"
                         >
                           Télécharger (TXT)
                         </button>
                       </div>
 
                       {/* Item 2 */}
-                      <div className="p-4 bg-[#070707] border border-zinc-900 rounded-2xl flex flex-col justify-between">
+                      <div className="p-4 bg-afri-bg border border-zinc-900 rounded-2xl flex flex-col justify-between">
                         <div>
                           <span className="text-[8.5px] font-mono text-zinc-500 uppercase font-bold tracking-wider">CERTIFICAT D'ÉLITE</span>
                           <h4 className="text-xs font-bold text-white mt-1">Certificat de Gombo ID Officiel</h4>
@@ -5185,7 +5183,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         </div>
                         <button
                           onClick={() => handleDownload("Attestation_Gombo_ID.txt", `=== ATTESTATION GOMBO ID ===\n\nNom d'Artiste : ${profile?.artisticName || "Artiste Elite"}\nGombo ID : ${profile?.gomboIdNumber || "AG-0001258"}\nStatut : Certifié & Actif\nLieu : Abidjan, Côte d'Ivoire`)}
-                          className="mt-4 w-full py-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#D4AF37] font-bold text-xs uppercase rounded-xl tracking-wider transition-all cursor-pointer"
+                          className="mt-4 w-full py-2 bg-afri-gold/10 hover:bg-afri-gold/15 border border-afri-gold/35 text-afri-gold font-bold text-xs uppercase rounded-xl tracking-wider transition-all cursor-pointer"
                         >
                           Télécharger (TXT)
                         </button>
@@ -5242,7 +5240,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
                     <div className="border-b border-white/5 pb-4 flex justify-between items-center">
                       <div>
-                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37]">
+                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
                           💾 Sauvegardes Souveraines Locales
                         </h3>
                         <p className="text-xs text-zinc-400 mt-1">Exportez ou restaurez votre configuration locale d'artiste à tout moment.</p>
@@ -5252,21 +5250,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                     <div className="space-y-6">
                       {/* Export */}
-                      <div className="p-6 bg-[#070707] border border-zinc-900 rounded-2xl space-y-4">
-                        <h4 className="text-xs font-mono uppercase font-bold text-[#D4AF37]">Exporter une sauvegarde</h4>
+                      <div className="p-6 bg-afri-bg border border-zinc-900 rounded-2xl space-y-4">
+                        <h4 className="text-xs font-mono uppercase font-bold text-afri-gold">Exporter une sauvegarde</h4>
                         <p className="text-xs text-zinc-400 leading-relaxed">
                           Créez un fichier chiffré contenant l'historique complet de vos gombos aimés, vos artistes favoris et la configuration locale de votre session.
                         </p>
                         <button
                           onClick={handleExportBackup}
-                          className="px-5 py-2.5 bg-[#D4AF37] text-black font-black text-xs uppercase rounded-xl flex items-center gap-2 hover:opacity-95 transition-all cursor-pointer"
+                          className="px-5 py-2.5 bg-afri-gold text-black font-black text-xs uppercase rounded-xl flex items-center gap-2 hover:opacity-95 transition-all cursor-pointer"
                         >
                           Créer la sauvegarde (.json)
                         </button>
                       </div>
 
                       {/* Import */}
-                      <div className="p-6 bg-[#070707] border border-zinc-900 rounded-2xl space-y-4">
+                      <div className="p-6 bg-afri-bg border border-zinc-900 rounded-2xl space-y-4">
                         <h4 className="text-xs font-mono uppercase font-bold text-zinc-300">Importer / Restaurer</h4>
                         <p className="text-xs text-zinc-400 leading-relaxed">
                           Sélectionnez un fichier de sauvegarde (.json) exporté précédemment pour restaurer instantanément vos paramètres locaux.
@@ -5339,21 +5337,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {activeMenu === "user_heritage" && (
                 <div className="afri-container h-full overflow-y-auto pb-24 scrollbar-none animate-fadeIn">
-                  <GomboProfile 
-                    currentUserProfile={profile || (currentUser as any)}
-                    onRefreshProfile={() => refreshProfile()}
+                  <HeritagePage 
                     onNavigateView={(view, tab) => {
                       if (view === "heritage") setActiveMenu("user_heritage");
                       else if (view === "home") setActiveMenu("user_terrain");
                       else if (view === "settings") setActiveMenu("settings");
-                      else if (view === "admin") {
+                      else if (view === "admin" || view === "admin_centre") {
                         setPerspective("admin");
                         setActiveMenu("dashboard");
                         addToTerminal("[ADMIN] Entrée au Centre de Commandement.");
                       }
                       else setActiveMenu(view);
                     }}
-                    onLogout={() => logout()}
                     darkMode={darkMode}
                     setDarkMode={setDarkMode}
                   />
@@ -5418,7 +5413,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 return (
                   <div className="afri-container py-4 xs:py-6 space-y-4 xs:space-y-6 animate-fadeIn pb-32">
                     <div className="pb-3 border-b border-white/5 px-1">
-                      <h3 className="text-[11px] xs:text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                      <h3 className="text-[11px] xs:text-sm font-display font-black uppercase text-afri-gold tracking-widest">
                         💼 Cycle de Contrats & Prestations
                       </h3>
                       <p className="text-[10px] xs:text-xs text-zinc-400">Suivez vos gombos réservés, contrats signés et notez mutuellement vos collaborateurs.</p>
@@ -5441,7 +5436,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <span className="text-[10px] text-zinc-500 font-mono">Organisé par : {gombo.organizerName} • {gombo.location}</span>
                             </div>
                             <div className="flex flex-col items-end gap-1">
-                              <span className="px-2.5 py-1 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] font-bold uppercase">
+                              <span className="px-2.5 py-1 rounded bg-afri-gold/10 text-afri-gold text-[10px] font-bold uppercase">
                                 Cachet : {gombo.budget ? gombo.budget.toLocaleString() : "À DÉBATTRE"} FCFA
                               </span>
                               <span className="text-[9px] font-mono uppercase bg-zinc-900 text-zinc-300 px-1.5 py-0.5 rounded">
@@ -5453,7 +5448,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           {/* Action Buttons if user is organizer or selected talent */}
                           <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
                             {gombo.organizerId === currentArtist.id && gombo.status === "publie" && (
-                              <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "artiste_selectionne")} className="px-3 py-1.5 bg-[#D4AF37] text-black text-[9px] font-bold uppercase rounded hover:bg-[#B48F17]">
+                              <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "artiste_selectionne")} className="px-3 py-1.5 bg-afri-gold text-black text-[9px] font-bold uppercase rounded hover:bg-[#B48F17]">
                                 Sélectionner un Candidat
                               </button>
                             )}
@@ -5488,18 +5483,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                  }} 
                                  className="px-3 py-1.5 bg-zinc-800 text-zinc-300 text-[9px] font-bold uppercase rounded hover:bg-zinc-700 flex items-center gap-1.5"
                                >
-                                 <MessageSquare className="w-3.5 h-3.5 text-[#D4AF37]" /> Discuter
+                                 <MessageSquare className="w-3.5 h-3.5 text-afri-gold" /> Discuter
                                </button>
                              )}
                           </div>
 
                           {/* Reciprocal feedback review trigger (only when mission completed) */}
                           {(gombo.status === "mission_terminee" || gombo.status === "paiement_effectue") && (
-                            <div className="p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded-lg space-y-2 mt-2">
-                              <span className="text-[10px] uppercase font-mono text-[#D4AF37] block font-bold">✍️ Évaluation Réciproque :</span>
+                            <div className="p-3 bg-afri-gold/5 border border-afri-gold/10 rounded-lg space-y-2 mt-2">
+                              <span className="text-[10px] uppercase font-mono text-afri-gold block font-bold">✍️ Évaluation Réciproque :</span>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-zinc-300">Note Accordée :</span>
-                                <div className="flex gap-1 text-[#D4AF37]">
+                                <div className="flex gap-1 text-afri-gold">
                                   {[1, 2, 3, 4, 5].map(n => (
                                     <Star key={n} className="w-3.5 h-3.5 fill-current cursor-pointer" />
                                   ))}
@@ -5508,14 +5503,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               <textarea
                                 rows={2}
                                 placeholder="Avis sur la collaboration..."
-                                className="w-full bg-black border border-white/10 rounded-lg p-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                                className="w-full bg-black border border-white/10 rounded-lg p-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-afri-gold"
                               />
                               <button
                                 onClick={() => {
                                   addToTerminal(`[ÉVALUATION] Évaluation transmise pour Gombo ${gombo.id}`);
                                   alert("⭐ Votre avis a été enregistré avec succès !");
                                 }}
-                                className="px-4 py-1.5 bg-[#D4AF37] hover:bg-[#B48F17] text-black text-[10px] font-mono font-bold uppercase rounded transition-all"
+                                className="px-4 py-1.5 bg-afri-gold hover:bg-[#B48F17] text-black text-[10px] font-mono font-bold uppercase rounded transition-all"
                               >
                                 Soumettre l'avis
                               </button>
@@ -5530,8 +5525,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               })()}
 
               {activeMenu === "payments_to_verify" && (
-                <div className="p-6 rounded-2xl bg-[#050505] border border-[#D4AF37]/30 space-y-6 animate-fadeIn">
-                  <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                <div className="p-6 rounded-2xl bg-afri-bg border border-afri-gold/30 space-y-6 animate-fadeIn">
+                  <h3 className="text-sm font-display font-black uppercase text-afri-gold tracking-widest">
                     Paiements à Vérifier (Bêta Manuelle)
                   </h3>
                   <p className="text-xs text-zinc-400">Validez manuellement les paiements reçus.</p>
@@ -5542,10 +5537,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
                 return (
-                  <div className="p-6 rounded-2xl bg-[#050505] border border-white/5 space-y-6 animate-fadeIn">
+                  <div className="p-6 rounded-2xl bg-afri-bg border border-white/5 space-y-6 animate-fadeIn">
                     <div className="pb-3 border-b border-white/5 flex justify-between items-center">
                       <div>
-                        <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                        <h3 className="text-sm font-display font-black uppercase text-afri-gold tracking-widest">
                           👥 Mes Orchestres & Alliances Régionales
                         </h3>
                         <p className="text-xs text-zinc-400">Affiliez-vous à des groupings pour briguer les Gombos VIP d'Abidjan.</p>
@@ -5561,8 +5556,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         </div>
                       ) : (
                         currentArtist.groups.map(group => (
-                          <div key={group} className="p-4 bg-black border border-[#D4AF37]/30 rounded-xl space-y-2">
-                            <strong className="text-xs uppercase font-mono tracking-wider text-[#D4AF37] block">🎼 {group}</strong>
+                          <div key={group} className="p-4 bg-black border border-afri-gold/30 rounded-xl space-y-2">
+                            <strong className="text-xs uppercase font-mono tracking-wider text-afri-gold block">🎼 {group}</strong>
                             <span className="text-[10px] text-zinc-500 font-mono block">Rôle : Membre / Musicien</span>
                             <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold font-mono">Affiliation Active</span>
                           </div>
@@ -5575,7 +5570,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <input
                           type="text"
                           placeholder="Nom de l'orchestre / grouping..."
-                          className="w-full bg-[#111111] border border-white/10 rounded-lg p-2 text-xs focus:outline-none focus:border-[#D4AF37]"
+                          className="w-full bg-afri-bg-sec border border-white/10 rounded-lg p-2 text-xs focus:outline-none focus:border-afri-gold"
                           onKeyDown={async (e: any) => {
                             if (e.key === "Enter" && e.target.value.trim()) {
                               const v = e.target.value.trim();
@@ -5599,9 +5594,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
                 return (
-                  <div className="p-6 rounded-2xl bg-[#050505] border border-white/5 space-y-6 animate-fadeIn">
+                  <div className="p-6 rounded-2xl bg-afri-bg border border-white/5 space-y-6 animate-fadeIn">
                     <div className="pb-3 border-b border-white/5">
-                      <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                      <h3 className="text-sm font-display font-black uppercase text-afri-gold tracking-widest">
                         ⚡ Module de Renfort Scénique Express
                       </h3>
                       <p className="text-xs text-zinc-400">Recherchez d'urgence un instrumentiste ou un choriste sur scène à Abidjan.</p>
@@ -5610,11 +5605,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Form launch dynamic backup */}
                       <div className="p-5 bg-black border border-white/5 rounded-xl space-y-4">
-                        <span className="text-xs font-bold font-mono text-[#D4AF37] uppercase block border-b border-white/5 pb-2">🎯 Dispatcher une Alerte de Renfort</span>
+                        <span className="text-xs font-bold font-mono text-afri-gold uppercase block border-b border-white/5 pb-2">🎯 Dispatcher une Alerte de Renfort</span>
                         
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Instrument ou Backup requis :</label>
-                          <select className="w-full bg-[#111111] border border-white/10 rounded-lg p-2 text-xs focus:outline-none">
+                          <select className="w-full bg-afri-bg-sec border border-white/10 rounded-lg p-2 text-xs focus:outline-none">
                             <option>Bassiste Zouglou d'élite</option>
                             <option>Percussionniste Sabar en urgence</option>
                             <option>Duo de Backup Singers (Chœur)</option>
@@ -5624,14 +5619,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Commune du Concert :</label>
-                          <select className="w-full bg-[#111111] border border-white/10 rounded-lg p-2 text-xs focus:outline-none">
+                          <select className="w-full bg-afri-bg-sec border border-white/10 rounded-lg p-2 text-xs focus:outline-none">
                             {IVORIAN_COMMUNES.map(c => <option key={c}>{c}</option>)}
                           </select>
                         </div>
 
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Budget et Urgence :</label>
-                          <select className="w-full bg-[#111111] border border-white/10 rounded-lg p-2 text-xs focus:outline-none">
+                          <select className="w-full bg-afri-bg-sec border border-white/10 rounded-lg p-2 text-xs focus:outline-none">
                             <option>Urgent - Prestation ce soir (50 000 FCFA)</option>
                             <option>Normal - Ce week-end (35 000 FCFA)</option>
                             <option>Elite - Tournée Nationale (120 005 FCFA)</option>
@@ -5654,7 +5649,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             addToTerminal(`[RENFORT EXPRESS] Alerte de renfort envoyée vers tous les terminaux de la commune !`);
                             alert("📣 Alerte de Renfort Express envoyée aux talents à proximité !");
                           }}
-                          className="w-full py-2 bg-[#D4AF37] hover:bg-[#B48F17] text-black text-xs font-mono font-black uppercase rounded-lg transition-all"
+                          className="w-full py-2 bg-afri-gold hover:bg-[#B48F17] text-black text-xs font-mono font-black uppercase rounded-lg transition-all"
                         >
                           Lancer le Renfort Scénique ⚡
                         </button>
@@ -5692,9 +5687,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-zinc-500">Aucun artiste disponible.</p>;
                 return (
-                  <div className="p-6 rounded-2xl bg-[#050505] border border-white/5 space-y-6 animate-fadeIn">
+                  <div className="p-6 rounded-2xl bg-afri-bg border border-white/5 space-y-6 animate-fadeIn">
                     <div className="pb-3 border-b border-white/5">
-                      <h3 className="text-sm font-display font-black uppercase text-[#D4AF37] tracking-widest">
+                      <h3 className="text-sm font-display font-black uppercase text-afri-gold tracking-widest">
                         🌍 Le Bulletin d'Or des Opportunités
                       </h3>
                       <p className="text-xs text-zinc-400">Postulez en un clic sur des contrats d'excellence certifiés.</p>
@@ -5702,12 +5697,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {gombos.map(gombo => (
-                        <div key={gombo.id} className="p-4 bg-black border border-white/5 hover:border-[#D4AF37]/30 rounded-xl space-y-3 transition-all flex flex-col justify-between">
+                        <div key={gombo.id} className="p-4 bg-black border border-white/5 hover:border-afri-gold/30 rounded-xl space-y-3 transition-all flex flex-col justify-between">
                           <div>
                             <div className="flex justify-between items-start">
-                              <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-wider">{gombo.location}</span>
+                              <span className="text-[10px] font-mono text-afri-gold uppercase tracking-wider">{gombo.location}</span>
                               {gombo.isBoosted && (
-                                <span className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] font-mono text-[9px] px-1.5 py-0.5 rounded font-bold animate-pulse">
+                                <span className="bg-afri-gold/10 border border-afri-gold/30 text-afri-gold font-mono text-[9px] px-1.5 py-0.5 rounded font-bold animate-pulse">
                                   CONTRAT D'ACCORD DE SOUVERAINETÉ (BOOSTED)
                                 </span>
                               )}
@@ -5717,7 +5712,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           </div>
 
                           <div className="pt-4 flex justify-between items-center border-t border-white/5 mt-3">
-                            <strong className="text-sm font-mono text-[#D4AF37]">{gombo.budget.toLocaleString()} FCFA</strong>
+                            <strong className="text-sm font-mono text-afri-gold">{gombo.budget.toLocaleString()} FCFA</strong>
                             <button
                               onClick={async () => {
                                 const appId = "app_" + Date.now();
@@ -5733,7 +5728,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 addToTerminal(`[CANDIDATURE] Candidature officielle de ${currentArtist.artisticName} pour ${gombo.title}`);
                                 alert(`🎯 Candidature scellée sur "${gombo.title}" ! L'organisateur a été notifié.`);
                               }}
-                              className="px-4 py-1.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37] border border-[#D4AF37]/30 hover:border-transparent rounded-lg text-xs font-mono font-bold text-[#D4AF37] hover:text-black transition-all"
+                              className="px-4 py-1.5 bg-afri-gold/15 hover:bg-afri-gold border border-afri-gold/30 hover:border-transparent rounded-lg text-xs font-mono font-bold text-afri-gold hover:text-black transition-all"
                             >
                               Postuler Direct 🎯
                             </button>
@@ -5758,8 +5753,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 if (!currentUser) {
                   return (
                     <div className="max-w-md mx-auto px-4 py-16 text-center animate-fadeIn select-none">
-                      <div className="w-16 h-16 bg-[#D4AF37]/10 border border-[#D4AF37]/35 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_15px_rgba(212,175,55,0.15)] animate-pulse">
-                        <Bell className="w-8 h-8 text-[#D4AF37]" />
+                      <div className="w-16 h-16 bg-afri-gold/10 border border-afri-gold/35 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_15px_rgba(212,175,55,0.15)] animate-pulse">
+                        <Bell className="w-8 h-8 text-afri-gold" />
                       </div>
                       <h2 className="text-xl font-display font-black text-white uppercase tracking-wider mb-2">
                         Accès Réservé 🔒
@@ -5794,7 +5789,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           onClick={() => {
                             setIsAuthModalOpen(true);
                           }}
-                          className="w-full py-3 px-6 rounded-2xl bg-[#111111] hover:bg-zinc-850 text-white text-xs font-mono font-bold uppercase tracking-widest border border-zinc-800 hover:border-zinc-750 transition-all cursor-pointer select-none"
+                          className="w-full py-3 px-6 rounded-2xl bg-afri-bg-sec hover:bg-zinc-850 text-white text-xs font-mono font-bold uppercase tracking-widest border border-zinc-800 hover:border-zinc-750 transition-all cursor-pointer select-none"
                         >
                           Se connecter par email alternative
                         </button>
@@ -5895,11 +5890,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_edit_profile" && (
                 <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md overflow-y-auto">
                   <div className="min-h-screen flex items-end sm:items-center justify-center p-0 sm:p-4">
-                    <div className="w-full max-w-2xl bg-[#050505] rounded-t-3xl sm:rounded-2xl border border-[#D4AF37]/20 p-6 shadow-2xl relative">
+                    <div className="w-full max-w-2xl bg-afri-bg rounded-t-3xl sm:rounded-2xl border border-afri-gold/20 p-6 shadow-2xl relative">
                       {profile ? (
-                        <GomboProfile 
-                          currentUserProfile={profile} 
-                          onRefreshProfile={refreshProfile}
+                        <HeritagePage 
                           onNavigateView={(view) => {
                             setActiveMenu("user_heritage"); // Always return to heritage after edit
                           }}
@@ -5910,7 +5903,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           <p className="text-zinc-500 font-mono">Profil non chargé...</p>
                           <button 
                             onClick={() => setActiveMenu("user_heritage")}
-                            className="px-6 py-2 bg-[#D4AF37] text-black font-black uppercase rounded-xl"
+                            className="px-6 py-2 bg-afri-gold text-black font-black uppercase rounded-xl"
                           >
                             Retour
                           </button>
@@ -5925,7 +5918,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 VIEW: DASHBOARD & SCAN (CENTRE DE COMMANDE)
                   ---------------------------------------------------- */}
               {activeMenu === "dashboard" && (
-                <Suspense fallback={<div className="p-12 text-center text-[#D4AF37] font-mono animate-pulse">Chargement de la Console...</div>}>
+                <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement de la Console...</div>}>
                   <AdminDashboard
                     users={users}
                     gombos={gombos}
@@ -5971,7 +5964,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   ---------------------------------------------------- */}
               {activeMenu === "super_admin" && (
                 showThroneCinematic ? (
-                  <ThroneCinematicIntro onComplete={() => setShowThroneCinematic(false)} />
+                  <Suspense fallback={<div className="fixed inset-0 bg-black" />}>
+                    <ThroneCinematicIntro onComplete={() => setShowThroneCinematic(false)} />
+                  </Suspense>
                 ) : (
                   <div className="space-y-6">
                     {/* Tab Switcher for Super Founder */}
@@ -5983,7 +5978,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         }}
                         className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
                           superAdminTab === "throne"
-                            ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37] font-black"
+                            ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
                             : "bg-black/40 border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800"
                         }`}
                       >
@@ -5996,7 +5991,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         }}
                         className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
                           superAdminTab === "economie"
-                            ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37] font-black"
+                            ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
                             : "bg-black/40 border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800"
                         }`}
                       >
@@ -6009,7 +6004,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         }}
                         className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
                           superAdminTab === "media"
-                            ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37] font-black"
+                            ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
                             : "bg-black/40 border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800"
                         }`}
                       >
@@ -6022,7 +6017,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         }}
                         className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
                           superAdminTab === "batisseurs"
-                            ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37] font-black"
+                            ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
                             : "bg-black/40 border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800"
                         }`}
                       >
@@ -6044,7 +6039,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       </button>
                     </div>
 
-                    <Suspense fallback={<div className="p-12 text-center text-[#D4AF37] font-mono animate-pulse">Chargement de la Console...</div>}>
+                    <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement de la Console...</div>}>
                       {superAdminTab === "throne" ? (
                         <AdminFounderThrone
                           founders={dynamicFounders}
@@ -6109,11 +6104,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         return (
                           <motion.div
                             whileHover={{ y: -4 }}
-                            className="bg-[#060606] border border-[#D4AF37]/40 rounded-2xl overflow-hidden shadow-[0_4px_25px_rgba(212,175,55,0.06)] flex flex-col justify-between"
+                            className="bg-[#060606] border border-afri-gold/40 rounded-2xl overflow-hidden shadow-[0_4px_25px_rgba(212,175,55,0.06)] flex flex-col justify-between"
                           >
                             <div className="relative h-28 w-full bg-cover bg-center" style={{ backgroundImage: `url(${best.imageUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80'})` }}>
                               <div className="absolute inset-0 bg-gradient-to-t from-[#060606] to-transparent" />
-                              <span className="absolute top-3 left-3 bg-[#D4AF37] text-[#050505] text-[9px] uppercase font-mono font-black px-2.5 py-0.5 rounded-full shadow-lg">
+                              <span className="absolute top-3 left-3 bg-afri-gold text-[#050505] text-[9px] uppercase font-mono font-black px-2.5 py-0.5 rounded-full shadow-lg">
                                 👑 Sommet d'Élite
                               </span>
                             </div>
@@ -6122,9 +6117,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 <h5 className="font-display font-bold text-sm text-[#F5F5F5] truncate">{best.title}</h5>
                                 <p className="text-[11px] text-[#F5F5F5]/60 line-clamp-1 mt-1">{best.description}</p>
                               </div>
-                              <div className="flex justify-between items-center pt-2 border-t border-[#D4AF37]/10">
+                              <div className="flex justify-between items-center pt-2 border-t border-afri-gold/10">
                                 <span className="text-[10px] font-mono text-[#F5F5F5]/40">{best.location}</span>
-                                <span className="text-sm font-mono font-bold text-[#D4AF37]">{best.budget.toLocaleString()} FCFA</span>
+                                <span className="text-sm font-mono font-bold text-afri-gold">{best.budget.toLocaleString()} FCFA</span>
                               </div>
                             </div>
                           </motion.div>
@@ -6151,7 +6146,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 <h5 className="font-display font-bold text-sm text-[#F5F5F5] truncate">{urgent.title}</h5>
                                 <p className="text-[11px] text-[#F5F5F5]/60 line-clamp-1 mt-1">{urgent.description}</p>
                               </div>
-                              <div className="flex justify-between items-center pt-2 border-t border-[#D4AF37]/10">
+                              <div className="flex justify-between items-center pt-2 border-t border-afri-gold/10">
                                 <span className="text-[10px] font-mono text-[#F5F5F5]/40">{urgent.location}</span>
                                 <span className="text-sm font-mono font-bold text-[#EF4444]">{urgent.budget.toLocaleString()} FCFA</span>
                               </div>
@@ -6180,7 +6175,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 <h5 className="font-display font-bold text-sm text-[#F5F5F5] truncate">{popular.title}</h5>
                                 <p className="text-[11px] text-[#F5F5F5]/60 line-clamp-1 mt-1">{popular.description}</p>
                               </div>
-                              <div className="flex justify-between items-center pt-2 border-t border-[#D4AF37]/10">
+                              <div className="flex justify-between items-center pt-2 border-t border-afri-gold/10">
                                 <span className="text-[10px] font-mono text-[#F5F5F5]/40">{popular.applicantsCount} prétendants</span>
                                 <span className="text-sm font-mono font-bold text-cyan-400">{popular.budget.toLocaleString()} FCFA</span>
                               </div>
@@ -6194,19 +6189,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   {/* TAM-TAM Daily highlights section */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
                     {/* Fire Gombo du Jour */}
-                    <div className="p-5 rounded-2xl bg-gradient-to-br from-[#060606] to-[#D4AF37]/5 border border-[#D4AF37]/30 shadow-[0_4px_25px_rgba(212,175,55,0.06)] relative overflow-hidden flex flex-col justify-between">
-                      <span className="text-[9px] uppercase font-mono bg-[#D4AF37] text-black px-2 py-0.5 rounded-full font-bold w-fit mb-3">
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-[#060606] to-afri-gold/5 border border-afri-gold/30 shadow-[0_4px_25px_rgba(212,175,55,0.06)] relative overflow-hidden flex flex-col justify-between">
+                      <span className="text-[9px] uppercase font-mono bg-afri-gold text-black px-2 py-0.5 rounded-full font-bold w-fit mb-3">
                         🔥 Gombo du Jour
                       </span>
                       <div>
                         <h4 className="text-xs font-display font-bold text-[#F5F5F5] line-clamp-1">Grand Réveillon Select</h4>
-                        <p className="text-[11px] text-[#D4AF37] mt-1 font-mono">450 000 FCFA</p>
+                        <p className="text-[11px] text-afri-gold mt-1 font-mono">450 000 FCFA</p>
                       </div>
                     </div>
 
                     {/* Talent du Jour */}
-                    <div className="p-5 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 shadow-sm flex flex-col justify-between">
-                      <span className="text-[9px] uppercase font-mono bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 px-2 py-0.5 rounded-full font-bold w-fit mb-3">
+                    <div className="p-5 rounded-2xl bg-[#060606] border border-afri-gold/20 shadow-sm flex flex-col justify-between">
+                      <span className="text-[9px] uppercase font-mono bg-afri-gold/10 text-afri-gold border border-afri-gold/20 px-2 py-0.5 rounded-full font-bold w-fit mb-3">
                         👑 Chef du Réseau
                       </span>
                       <div>
@@ -6216,18 +6211,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     </div>
 
                     {/* Defi du Jour */}
-                    <div className="p-5 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 shadow-sm flex flex-col justify-between">
+                    <div className="p-5 rounded-2xl bg-[#060606] border border-afri-gold/20 shadow-sm flex flex-col justify-between">
                       <span className="text-[9px] uppercase font-mono bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20 px-2 py-0.5 rounded-full font-bold w-fit mb-3">
                         🎯 Défi Hebdo
                       </span>
                       <div>
                         <h4 className="text-xs font-display font-bold text-[#F5F5F5]">Zouglou Keyboard Solo</h4>
-                        <p className="text-[11px] text-[#D4AF37] mt-1 font-mono">Récompense : Gombo ID Or</p>
+                        <p className="text-[11px] text-afri-gold mt-1 font-mono">Récompense : Gombo ID Or</p>
                       </div>
                     </div>
 
                     {/* Gombos pres de moi (Location highlights) */}
-                    <div className="p-5 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 shadow-sm flex flex-col justify-between">
+                    <div className="p-5 rounded-2xl bg-[#060606] border border-afri-gold/20 shadow-sm flex flex-col justify-between">
                       <span className="text-[9px] uppercase font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold w-fit mb-3">
                         🌍 Autour de moi
                       </span>
@@ -6239,8 +6234,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   </div>
 
                   {/* FORM TO PUBLISH NEW GOMBO */}
-                  <div className="p-6 rounded-2xl bg-[#060606] border border-[#D4AF37]/20 shadow-md">
-                    <h4 className="text-xs uppercase font-mono font-bold tracking-wider text-[#D4AF37] mb-4 flex items-center gap-2">
+                  <div className="p-6 rounded-2xl bg-[#060606] border border-afri-gold/20 shadow-md">
+                    <h4 className="text-xs uppercase font-mono font-bold tracking-wider text-afri-gold mb-4 flex items-center gap-2">
                       <span>🎼</span> Publier un Nouveau Gombo sur le Réseau
                     </h4>
                     <form onSubmit={handleCreateGombo} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -6252,7 +6247,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           placeholder="Ex: Bassiste recherché pour cabaret..."
                           value={newGombo.title}
                           onChange={(e) => setNewGombo(prev => ({ ...prev, title: e.target.value }))}
-                          className="w-full bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs focus:outline-none focus:border-[#D4AF37] text-white"
+                          className="w-full bg-afri-bg border border-afri-gold/20 rounded p-2 text-xs focus:outline-none focus:border-afri-gold text-white"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -6264,7 +6259,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             placeholder="Ex: 250000"
                             value={newGombo.budget}
                             onChange={(e) => setNewGombo(prev => ({ ...prev, budget: e.target.value }))}
-                            className="w-full bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs focus:outline-none focus:border-[#D4AF37] text-white font-mono"
+                            className="w-full bg-afri-bg border border-afri-gold/20 rounded p-2 text-xs focus:outline-none focus:border-afri-gold text-white font-mono"
                           />
                         </div>
                         <div className="space-y-1">
@@ -6272,7 +6267,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           <select
                             value={newGombo.commissionRate}
                             onChange={(e) => setNewGombo(prev => ({ ...prev, commissionRate: e.target.value }))}
-                            className="w-full bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs focus:outline-none focus:border-[#D4AF37] text-white font-mono"
+                            className="w-full bg-afri-bg border border-afri-gold/20 rounded p-2 text-xs focus:outline-none focus:border-afri-gold text-white font-mono"
                           >
                             <option value="5">5 %</option>
                             <option value="10">10 % (Standard)</option>
@@ -6288,7 +6283,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           <select
                             value={newGombo.location}
                             onChange={(e) => setNewGombo(prev => ({ ...prev, location: e.target.value }))}
-                            className="w-full bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs focus:outline-none focus:border-[#D4AF37] text-white font-mono"
+                            className="w-full bg-afri-bg border border-afri-gold/20 rounded p-2 text-xs focus:outline-none focus:border-afri-gold text-white font-mono"
                           >
                             {IVORIAN_COMMUNES.map(com => (
                               <option key={com} value={com}>{com}</option>
@@ -6304,13 +6299,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           value={newGombo.description}
                           onChange={(e) => setNewGombo(prev => ({ ...prev, description: e.target.value }))}
                           rows={2}
-                          className="w-full bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs focus:outline-none focus:border-[#D4AF37] text-white leading-normal"
+                          className="w-full bg-afri-bg border border-afri-gold/20 rounded p-2 text-xs focus:outline-none focus:border-afri-gold text-white leading-normal"
                         />
                       </div>
 
                       <button
                         type="submit"
-                        className="py-2.5 bg-[#D4AF37] text-[#050505] hover:bg-[#B48F17] transition-all rounded-lg font-display font-extrabold uppercase text-xs tracking-widest shadow-[0_0_15px_rgba(212,175,55,0.2)] md:col-span-2 mt-2"
+                        className="py-2.5 bg-afri-gold text-[#050505] hover:bg-[#B48F17] transition-all rounded-lg font-display font-extrabold uppercase text-xs tracking-widest shadow-[0_0_15px_rgba(212,175,55,0.2)] md:col-span-2 mt-2"
                       >
                         Enregistrer et publier sur le Tam-Tam
                       </button>
@@ -6320,7 +6315,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   {/* GOMBOS VITRINE DIRECTORY */}
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
-                      <h4 className="text-sm uppercase font-mono font-bold tracking-widest text-[#D4AF37]">
+                      <h4 className="text-sm uppercase font-mono font-bold tracking-widest text-afri-gold">
                         ✨ Vitrine Merveilleuse — Gombos Actifs
                       </h4>
                       <span className="text-xs text-[#F5F5F5]/50 font-mono">{gombos.length} opportunités disponibles</span>
@@ -6340,8 +6335,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             transition={{ duration: 0.4 }}
                             className={`rounded-2xl xs:rounded-3xl overflow-hidden bg-[#060606] border transition-all duration-300 shadow-[0_4px_30px_rgba(212,175,55,0.03)] hover:shadow-[0_8px_45px_rgba(212,175,55,0.09)] ${
                               g.isBoosted || g.isUrgent
-                                ? "border-[#D4AF37]/45"
-                                : "border-[#D4AF37]/15 hover:border-[#D4AF37]/40"
+                                ? "border-afri-gold/45"
+                                : "border-afri-gold/15 hover:border-afri-gold/40"
                             }`}
                           >
                             {/* Card Media Header */}
@@ -6351,7 +6346,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               {/* Glowing Badges */}
                               <div className="absolute top-4 left-4 flex gap-2 flex-wrap items-center">
                                 {g.isBoosted && (
-                                  <span className="text-[8px] bg-gradient-to-r from-[#D4AF37] to-amber-500 text-black px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-lg">
+                                  <span className="text-[8px] bg-gradient-to-r from-afri-gold to-amber-500 text-black px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-lg">
                                     🔥 En Vedette
                                   </span>
                                 )}
@@ -6362,7 +6357,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 )}
                               </div>
 
-                              <span className="absolute top-4 right-4 text-[9px] bg-black/60 backdrop-blur-md text-[#D4AF37] px-3 py-1 rounded-full font-mono border border-[#D4AF37]/20">
+                              <span className="absolute top-4 right-4 text-[9px] bg-black/60 backdrop-blur-md text-afri-gold px-3 py-1 rounded-full font-mono border border-afri-gold/20">
                                 Abidjan, {g.location}
                               </span>
 
@@ -6372,13 +6367,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   <span className="text-[9px] text-[#F5F5F5]/50 block uppercase font-mono tracking-widest">Promoteur</span>
                                   <span className="text-xs font-bold text-white flex items-center gap-1">
                                     {g.organizerName}
-                                    <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                    <ShieldCheck className="w-3.5 h-3.5 text-afri-gold" />
                                   </span>
                                 </div>
                                 <div className="text-right">
                                   <span className="text-[9px] text-[#F5F5F5]/50 block uppercase font-mono tracking-widest">Date Clé</span>
                                   <span className="text-xs font-bold text-white flex items-center gap-1 justify-end font-mono">
-                                    <Calendar className="w-3 h-3 text-[#D4AF37]" />
+                                    <Calendar className="w-3 h-3 text-afri-gold" />
                                     {g.date || "15 Juin 2026"}
                                   </span>
                                 </div>
@@ -6388,7 +6383,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             {/* Card Body */}
                             <div className="p-3 xs:p-5 sm:p-6 space-y-3 xs:space-y-4">
                               <div className="space-y-1 xs:space-y-1.5">
-                                <h5 className="font-display font-extrabold text-[#F5F5F5] text-sm xs:text-base sm:text-lg tracking-tight hover:text-[#D4AF37] transition-all">
+                                <h5 className="font-display font-extrabold text-[#F5F5F5] text-sm xs:text-base sm:text-lg tracking-tight hover:text-afri-gold transition-all">
                                   {g.title}
                                 </h5>
                                 <p className="text-[10px] xs:text-xs text-[#F5F5F5]/70 leading-relaxed font-sans min-h-[30px] line-clamp-2">
@@ -6397,10 +6392,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               </div>
 
                               {/* Cachet Details */}
-                              <div className="py-2 xs:py-3 px-3 xs:px-4 rounded-xl bg-black/60 border border-[#D4AF37]/10 flex justify-between items-center text-[10px] xs:text-xs">
+                              <div className="py-2 xs:py-3 px-3 xs:px-4 rounded-xl bg-black/60 border border-afri-gold/10 flex justify-between items-center text-[10px] xs:text-xs">
                                 <div>
                                   <span className="text-[7px] xs:text-[9px] text-[#F5F5F5]/40 block uppercase font-mono tracking-tighter xs:tracking-widest">Cachet</span>
-                                  <span className="text-xs xs:text-sm font-bold font-mono text-[#D4AF37] tracking-tight">
+                                  <span className="text-xs xs:text-sm font-bold font-mono text-afri-gold tracking-tight">
                                     {g.budget.toLocaleString()} F
                                   </span>
                                 </div>
@@ -6421,7 +6416,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   className={`py-1.5 xs:py-2 px-0.5 xs:px-1 rounded-lg text-[7px] xs:text-[10px] font-bold uppercase tracking-tighter xs:tracking-wider flex items-center justify-center gap-0.5 xs:gap-1 transition-all outline-none min-h-[30px] xs:min-h-[36px] ${
                                     isHonored
                                       ? "bg-red-500/15 border border-red-500/30 text-red-400"
-                                      : "bg-[#050505] border border-white/5 text-[#F5F5F5]/60 hover:text-red-400 hover:border-red-500/20"
+                                      : "bg-afri-bg border border-white/5 text-[#F5F5F5]/60 hover:text-red-400 hover:border-red-500/20"
                                   }`}
                                 >
                                   <span>{isHonored ? "❤️" : "❤️"}</span>
@@ -6431,7 +6426,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 <motion.button
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => requireAuthThen(() => setPalabreGombo(g))}
-                                  className="py-1.5 xs:py-2 px-0.5 xs:px-1 rounded-lg text-[7px] xs:text-[10px] font-bold uppercase tracking-tighter xs:tracking-wider flex items-center justify-center gap-0.5 xs:gap-1 bg-[#050505] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20 transition-all outline-none min-h-[30px] xs:min-h-[36px]"
+                                  className="py-1.5 xs:py-2 px-0.5 xs:px-1 rounded-lg text-[7px] xs:text-[10px] font-bold uppercase tracking-tighter xs:tracking-wider flex items-center justify-center gap-0.5 xs:gap-1 bg-afri-bg border border-white/5 text-[#F5F5F5]/60 hover:text-afri-gold hover:border-afri-gold/20 transition-all outline-none min-h-[30px] xs:min-h-[36px]"
                                 >
                                   <span>🗣️ Chat</span>
                                 </motion.button>
@@ -6444,7 +6439,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   className={`py-1.5 xs:py-2 px-0.5 xs:px-1 rounded-lg text-[7px] xs:text-[10px] font-bold uppercase tracking-tighter xs:tracking-wider flex items-center justify-center gap-0.5 xs:gap-1 transition-all outline-none min-h-[30px] xs:min-h-[36px] ${
                                     hasApplied
                                       ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                                      : "bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black hover:opacity-95 shadow-sm"
+                                      : "bg-gradient-to-r from-afri-gold to-[#B48F17] text-black hover:opacity-95 shadow-sm"
                                   }`}
                                 >
                                   <span>{hasApplied ? "🎤" : "🎤 Postule"}</span>
@@ -6456,8 +6451,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   onClick={() => toggleSaveGombo(g.id)}
                                   className={`py-1.5 xs:py-2 px-0.5 xs:px-1 rounded-lg text-[7px] xs:text-[10px] font-bold uppercase tracking-tighter xs:tracking-wider flex items-center justify-center gap-0.5 xs:gap-1 transition-all outline-none min-h-[30px] xs:min-h-[36px] ${
                                     isSaved
-                                      ? "bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37]"
-                                      : "bg-[#050505] border border-white/5 text-[#F5F5F5]/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/20"
+                                      ? "bg-afri-gold/15 border border-afri-gold/40 text-afri-gold"
+                                      : "bg-afri-bg border border-white/5 text-[#F5F5F5]/60 hover:text-afri-gold hover:border-afri-gold/20"
                                   }`}
                                 >
                                   <span>{isSaved ? "📌" : "📌 Garde"}</span>
@@ -6502,12 +6497,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.95 }}
-                          className="w-full max-w-lg bg-[#060606] border border-[#D4AF37] rounded-2xl xs:rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.2)] flex flex-col h-[85vh] xs:h-[520px] justify-between"
+                          className="w-full max-w-lg bg-[#060606] border border-afri-gold rounded-2xl xs:rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.2)] flex flex-col h-[85vh] xs:h-[520px] justify-between"
                         >
                           {/* Chat Header */}
-                          <div className="p-5 border-b border-[#D4AF37]/20 bg-gradient-to-r from-black to-[#060606] flex justify-between items-center shrink-0">
+                          <div className="p-5 border-b border-afri-gold/20 bg-gradient-to-r from-black to-[#060606] flex justify-between items-center shrink-0">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full overflow-hidden bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center font-bold text-[#D4AF37]">
+                              <div className="w-10 h-10 rounded-full overflow-hidden bg-afri-gold/10 border border-afri-gold/30 flex items-center justify-center font-bold text-afri-gold">
                                 {palabreGombo.organizerName.charAt(0)}
                               </div>
                               <div>
@@ -6532,7 +6527,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           {/* Chat Messages */}
                           <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-black/50">
                             {/* Static Info Indicator */}
-                            <div className="p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded-xl text-[10px] text-center text-[#D4AF37]/80 leading-relaxed font-mono">
+                            <div className="p-3 bg-afri-gold/5 border border-afri-gold/10 rounded-xl text-[10px] text-center text-afri-gold/80 leading-relaxed font-mono">
                               🤝 Palabrer — Négociez le cachet ou posez vos questions d'organisation directement avec le promoteur agréé d'Abidjan.
                             </div>
 
@@ -6554,7 +6549,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                     <div
                                       className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
                                         isArtiste
-                                          ? "bg-[#D4AF37] text-black font-semibold rounded-br-none"
+                                          ? "bg-afri-gold text-black font-semibold rounded-br-none"
                                           : "bg-white/10 text-white rounded-bl-none"
                                       }`}
                                     >
@@ -6579,13 +6574,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 if (e.key === "Enter") submitPalabreMessage(palabreGombo.id);
                               }}
                               placeholder="Palabrer : négocier budget, horaires, transport..."
-                              className="flex-1 bg-[#050505] border border-white/10 rounded-xl p-2.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-all"
+                              className="flex-1 bg-afri-bg border border-white/10 rounded-xl p-2.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-afri-gold transition-all"
                             />
                             
                             <motion.button
                               whileTap={{ scale: 0.9 }}
                               onClick={() => submitPalabreMessage(palabreGombo.id)}
-                              className="w-10 h-10 rounded-xl bg-[#D4AF37] text-black flex items-center justify-center hover:opacity-90 transition-all outline-none shrink-0"
+                              className="w-10 h-10 rounded-xl bg-afri-gold text-black flex items-center justify-center hover:opacity-90 transition-all outline-none shrink-0"
                             >
                               <Send className="w-4 h-4" />
                             </motion.button>
@@ -6603,15 +6598,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   ---------------------------------------------------- */}
               {activeMenu === "renforts" && (
                 <div className="space-y-4">
-                  <div className="p-4 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-lg text-xs leading-relaxed">
+                  <div className="p-4 bg-afri-gold/5 border border-afri-gold/20 rounded-lg text-xs leading-relaxed">
                     Les renforts sont des artistes postulant pour combler un Gombo en manque de musiciens/compétences précises.
                   </div>
 
                   <div className="space-y-3">
                     {renforts.map(renfort => (
-                      <div key={renfort.id} className={`p-5 rounded-lg border transition-all flex justify-between items-center ${renfort.isExpress ? "border-cyan-500/40 bg-gradient-to-r from-[#00171d] to-[#050505] shadow-[0_0_12px_rgba(6,182,212,0.12)]" : "border-[#D4AF37]/15 bg-[#050505] hover:border-[#D4AF37]/45"}`}>
+                      <div key={renfort.id} className={`p-5 rounded-lg border transition-all flex justify-between items-center ${renfort.isExpress ? "border-cyan-500/40 bg-gradient-to-r from-[#00171d] to-[#050505] shadow-[0_0_12px_rgba(6,182,212,0.12)]" : "border-afri-gold/15 bg-afri-bg hover:border-afri-gold/45"}`}>
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-[#D4AF37]/5 border border-[#D4AF37]/30 flex items-center justify-center font-bold text-[#D4AF37]">
+                          <div className="w-10 h-10 rounded-full bg-afri-gold/5 border border-afri-gold/30 flex items-center justify-center font-bold text-afri-gold">
                             {renfort.applicantArtisticName.charAt(0)}
                           </div>
                           <div>
@@ -6626,7 +6621,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             <span className="text-xs text-[#F5F5F5]/60">
                               Postule pour le rôle de <strong className="text-white">{renfort.instrument}</strong> sur :
                             </span>
-                            <span className="text-xs text-[#D4AF37] block mt-0.5 italic">
+                            <span className="text-xs text-afri-gold block mt-0.5 italic">
                               "{renfort.gomboTitle}"
                             </span>
                           </div>
@@ -6663,7 +6658,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 VIEW: COMPTES UTILISATEURS & VERIFICATIONS GOMBO ID
                   ---------------------------------------------------- */}
               {(activeMenu === "kyc" || activeMenu === "users") && (
-                <Suspense fallback={<div className="p-12 text-center text-[#D4AF37] font-mono animate-pulse">Chargement de la Gestion des Utilisateurs...</div>}>
+                <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement de la Gestion des Utilisateurs...</div>}>
                   <AdminUsers
                     activeMenu={activeMenu}
                     users={users}
@@ -6699,13 +6694,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   ---------------------------------------------------- */}
               {activeMenu === "revision" && (
                 <div className="space-y-4">
-                  <div className="p-4 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-lg text-xs leading-relaxed">
+                  <div className="p-4 bg-afri-gold/5 border border-afri-gold/20 rounded-lg text-xs leading-relaxed">
                     Ce module rassemble les publications signalées par les utilisateurs ou flagged automatiquement par notre routine autonome pour spam ou contournement financière.
                   </div>
 
                   <div className="space-y-3">
                     {posts.filter(p => p.isFlagged).map(post => (
-                      <div key={post.id} className="p-5 rounded-lg border border-[#D4AF37]/15 bg-[#050505] space-y-4">
+                      <div key={post.id} className="p-5 rounded-lg border border-afri-gold/15 bg-afri-bg space-y-4">
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-3">
                             <ShieldAlert className="text-red-500 w-5 h-5 shrink-0" />
@@ -6733,14 +6728,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           </div>
                         </div>
 
-                        <p className="p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded text-xs italic text-[#F5F5F5]/80">
+                        <p className="p-3 bg-afri-gold/5 border border-afri-gold/10 rounded text-xs italic text-[#F5F5F5]/80">
                           "{post.content}"
                         </p>
                       </div>
                     ))}
 
                     {posts.filter(p => p.isFlagged).length === 0 && (
-                      <div className="text-center p-8 border border-dashed border-[#D4AF37]/20 rounded-lg text-xs text-[#F5F5F5]/40">
+                      <div className="text-center p-8 border border-dashed border-afri-gold/20 rounded-lg text-xs text-[#F5F5F5]/40">
                         Aucun signalement en attente de vérification. Tout est paisible.
                       </div>
                     )}
@@ -6843,9 +6838,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {/* Logs Système */}
                     <button 
                       onClick={() => setActiveMenu("logs")}
-                      className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group"
+                      className="p-4 bg-afri-bg-sec hover:bg-afri-gold/5 border border-white/5 hover:border-afri-gold/20 rounded-xl flex items-start gap-4 text-left transition-all group"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
+                      <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center border border-white/5 group-hover:border-afri-gold/30">
                         <Terminal className="w-5 h-5 text-cyan-400" />
                       </div>
                       <div>
@@ -6857,9 +6852,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {/* Paramètres */}
                     <button 
                       onClick={() => setActiveMenu("settings")}
-                      className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
+                      className="p-4 bg-afri-bg-sec hover:bg-afri-gold/5 border border-white/5 hover:border-afri-gold/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
+                      <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center border border-white/5 group-hover:border-afri-gold/30">
                         <Settings className="w-5 h-5 text-zinc-300" />
                       </div>
                       <div>
@@ -6871,9 +6866,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {/* Sauvegardes */}
                     <button 
                       onClick={() => setActiveMenu("analytics")}
-                      className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
+                      className="p-4 bg-afri-bg-sec hover:bg-afri-gold/5 border border-white/5 hover:border-afri-gold/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
+                      <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center border border-white/5 group-hover:border-afri-gold/30">
                         <Database className="w-5 h-5 text-emerald-400" />
                       </div>
                       <div>
@@ -6885,9 +6880,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {/* Audit sécurité */}
                     <button 
                       onClick={() => setActiveMenu("security")}
-                      className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
+                      className="p-4 bg-afri-bg-sec hover:bg-afri-gold/5 border border-white/5 hover:border-afri-gold/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
+                      <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center border border-white/5 group-hover:border-afri-gold/30">
                         <ShieldAlert className="w-5 h-5 text-red-400" />
                       </div>
                       <div>
@@ -6901,7 +6896,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       onClick={() => { setActiveMenu("security"); addToTerminal("[IA] Accès à la configuration du moteur de recommandation."); }}
                       className="p-4 bg-[#0A0A0C] hover:bg-purple-500/5 border border-purple-500/10 hover:border-purple-500/30 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500/50">
+                      <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500/50">
                         <Brain className="w-5 h-5 text-purple-400" />
                       </div>
                       <div>
@@ -6913,9 +6908,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     {/* Centre d'aide */}
                     <button 
                       onClick={() => { setActiveMenu("dashboard"); addToTerminal("[SUPPORT] Accès au centre d'aide."); }}
-                      className="p-4 bg-[#111111] hover:bg-[#D4AF37]/5 border border-white/5 hover:border-[#D4AF37]/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
+                      className="p-4 bg-afri-bg-sec hover:bg-afri-gold/5 border border-white/5 hover:border-afri-gold/20 rounded-xl flex items-start gap-4 text-left transition-all group cursor-pointer"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center border border-white/5 group-hover:border-[#D4AF37]/30">
+                      <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center border border-white/5 group-hover:border-afri-gold/30">
                         <LifeBuoy className="w-5 h-5 text-amber-400" />
                       </div>
                       <div>
@@ -6934,9 +6929,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           addToTerminal("👑 [SOUVERAINETÉ] Entrée dans le Trône demandée.");
                           try { audioSynth.playTamTam(true); } catch (err) {}
                         }}
-                        className="group w-full max-w-sm p-4 bg-black border border-[#D4AF37]/20 hover:border-[#D4AF37] text-[#D4AF37] font-display font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-500 flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.05)] hover:shadow-[0_0_30px_rgba(212,175,55,0.2)]"
+                        className="group w-full max-w-sm p-4 bg-black border border-afri-gold/20 hover:border-afri-gold text-afri-gold font-display font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-500 flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.05)] hover:shadow-[0_0_30px_rgba(212,175,55,0.2)]"
                       >
-                        <Crown className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+                        <Crown className="w-4 h-4 text-afri-gold animate-pulse" />
                         👑 Entrer dans le Trône
                       </button>
                     </div>
@@ -6949,7 +6944,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   ---------------------------------------------------- */}
               {activeMenu === "logs" && (
                 <div className="h-[75vh] flex flex-col bg-black border border-[rgba(212,160,23,0.25)] rounded-xl overflow-hidden relative shadow-[0_4px_20px_rgba(212,160,23,0.05)]">
-                  <div className="bg-[#0A0A0A] border-b border-[rgba(212,160,23,0.15)] p-3 flex justify-between items-center">
+                  <div className="bg-afri-bg-sec border-b border-[rgba(212,160,23,0.15)] p-3 flex justify-between items-center">
                     <h4 className="text-[10px] font-mono uppercase text-[#D4A017] font-bold flex items-center gap-2">
                       <Terminal className="w-4 h-4" />
                       Historique des Actions
@@ -6963,7 +6958,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
                             <span className="text-zinc-500 leading-none">{new Date(log.timestamp).toLocaleString()}</span>
-                            <span className="text-[8px] bg-[#111111] px-1.5 py-0.5 rounded text-[#D4A017]">{log.adminId}</span>
+                            <span className="text-[8px] bg-afri-bg-sec px-1.5 py-0.5 rounded text-[#D4A017]">{log.adminId}</span>
                             <span className="text-[8px] border border-cyan-900/50 px-1.5 py-0.5 rounded text-cyan-400">{log.action}</span>
                           </div>
                           <span className="text-[#F5F5F5] mt-1">
@@ -7002,15 +6997,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <div className="afri-container space-y-6 py-4 xs:py-6 pb-24">
                     {/* TOP DOCK OF NUMERICS */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-md">
+                      <div className="p-5 rounded-lg border border-afri-gold/20 bg-black/40 shadow-md">
                         <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Nombre d'achats Premium</span>
-                        <span className="text-2xl font-display font-bold text-[#D4AF37] block mt-1 font-mono">
+                        <span className="text-2xl font-display font-bold text-afri-gold block mt-1 font-mono">
                           {countPremiumSales} <span className="text-xs font-sans text-[#F5F5F5]/40 font-normal">transactions</span>
                         </span>
                         <span className="text-[9px] text-[#10B981] font-mono block mt-1.5">✓ 100% Synchronisé avec Firestore</span>
                       </div>
 
-                      <div className="p-5 rounded-lg border border-[#D4AF37]/20 bg-black/40 shadow-md">
+                      <div className="p-5 rounded-lg border border-afri-gold/20 bg-black/40 shadow-md">
                         <span className="text-[10px] uppercase font-mono text-[#F5F5F5]/50 block">Revenus Premium cumulés</span>
                         <span className="text-2xl font-display font-bold text-emerald-400 block mt-1 font-mono">
                           {totalPremiumRevenues.toLocaleString()} <span className="text-sm font-sans text-emerald-500 font-normal">FCFA</span>
@@ -7018,20 +7013,20 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <span className="text-[9px] text-zinc-400 font-mono block mt-1.5">Souverains, hors commissions</span>
                       </div>
 
-                      <div className="p-5 rounded-lg border border-[#D4AF37] bg-[#D4AF37]/5 shadow-md">
-                        <span className="text-[10px] uppercase font-mono text-[#D4AF37] font-semibold block">Produit Étoile (Leader)</span>
+                      <div className="p-5 rounded-lg border border-afri-gold bg-afri-gold/5 shadow-md">
+                        <span className="text-[10px] uppercase font-mono text-afri-gold font-semibold block">Produit Étoile (Leader)</span>
                         <span className="text-xl font-display font-extrabold text-[#F5F5F5] block mt-1 truncate">
                           {sortedProducts[0]?.count > 0 ? sortedProducts[0].name.split("(")[0] : "Aucun achat encore"}
                         </span>
-                        <span className="text-[9px] text-[#D4AF37] font-mono block mt-1">
+                        <span className="text-[9px] text-afri-gold font-mono block mt-1">
                           {sortedProducts[0]?.count > 0 ? `${sortedProducts[0].count} activations enregistrées` : "Preneur en attente"}
                         </span>
                       </div>
                     </div>
 
                     {/* DOCK OF DETAILED PRICINGS & RULES */}
-                    <div className="p-6 rounded-lg bg-[#D4AF37]/5 border border-[#D4AF37]/10">
-                      <h4 className="text-xs uppercase font-mono font-bold tracking-widest text-[#D4AF37] mb-4 flex items-center gap-1.5">
+                    <div className="p-6 rounded-lg bg-afri-gold/5 border border-afri-gold/10">
+                      <h4 className="text-xs uppercase font-mono font-bold tracking-widest text-afri-gold mb-4 flex items-center gap-1.5">
                         <ShieldCheck className="w-4 h-4" />
                         Charte d'Éthique & Solidarité Artistique
                       </h4>
@@ -7042,22 +7037,22 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       </p>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs">
-                        <div className="p-4 rounded bg-black/40 border border-[#D4AF37]/10">
-                          <span className="font-bold text-[#D4AF37] block text-xs">⚡ Cert Express</span>
+                        <div className="p-4 rounded bg-black/40 border border-afri-gold/10">
+                          <span className="font-bold text-afri-gold block text-xs">⚡ Cert Express</span>
                           <span className="font-mono text-xs font-bold text-white block mt-1">500 FCFA</span>
                           <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Traitement KYC express sous 24h-72h.</p>
                         </div>
-                        <div className="p-4 rounded bg-black/40 border border-[#D4AF37]/10">
+                        <div className="p-4 rounded bg-black/40 border border-afri-gold/10">
                           <span className="font-bold text-purple-400 block text-xs">✨ Gombo VIP</span>
                           <span className="font-mono text-xs font-bold text-white block mt-1">1 000 FCFA/m</span>
                           <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Badge VIP, profil propulsé et publications épinglées.</p>
                         </div>
-                        <div className="p-4 rounded bg-black/40 border border-[#D4AF37]/10">
-                          <span className="font-bold text-[#D4AF37] block text-xs">🔥 Boost Gombo</span>
+                        <div className="p-4 rounded bg-black/40 border border-afri-gold/10">
+                          <span className="font-bold text-afri-gold block text-xs">🔥 Boost Gombo</span>
                           <span className="font-mono text-xs font-bold text-white block mt-1">500 - 2k FCFA</span>
                           <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Bannière de distinction En vedette sur les tam-tams.</p>
                         </div>
-                        <div className="p-4 rounded bg-black/40 border border-[#D4AF37]/10">
+                        <div className="p-4 rounded bg-black/40 border border-afri-gold/10">
                           <span className="font-bold text-cyan-400 block text-xs">⚡ Renfort Express</span>
                           <span className="font-mono text-xs font-bold text-white block mt-1">500 FCFA</span>
                           <p className="text-[10px] text-[#F5F5F5]/40 mt-1">Marquage d'urgence immédiat sur les renforts.</p>
@@ -7309,7 +7304,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             <div className="space-y-1.5">
               <div className="flex justify-between text-[10px] font-mono text-white/40">
                 <span>Synchronisation des pouvoirs suprêmes</span>
-                <span className="text-[#D4AF37] font-bold">100%</span>
+                <span className="text-afri-gold font-bold">100%</span>
               </div>
               <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
                 <motion.div
@@ -7349,7 +7344,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-md bg-[#0a0a0c] border-t border-x border-[#D4AF37]/20 sm:rounded-3xl sm:border-b p-6 pb-12 shadow-[0_-15px_40px_rgba(0,0,0,0.8)] overflow-hidden"
+            className="relative w-full max-w-md bg-[#0a0a0c] border-t border-x border-afri-gold/20 sm:rounded-3xl sm:border-b p-6 pb-12 shadow-[0_-15px_40px_rgba(0,0,0,0.8)] overflow-hidden"
           >
             <div className="absolute top-0 right-0 p-4">
               <button 
@@ -7369,9 +7364,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   setActiveMenu("user_publish");
                   setIsPlusMenuOpen(false);
                 }}
-                className="w-full flex items-center gap-4 bg-gradient-to-r from-[#D4AF37]/10 to-transparent hover:from-[#D4AF37]/20 border border-[#D4AF37]/20 rounded-2xl p-4 text-left transition-all group"
+                className="w-full flex items-center gap-4 bg-gradient-to-r from-afri-gold/10 to-transparent hover:from-afri-gold/20 border border-afri-gold/20 rounded-2xl p-4 text-left transition-all group"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#D4AF37] to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-afri-gold to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
                   <Megaphone className="w-6 h-6" />
                 </div>
                 <div>
@@ -7443,10 +7438,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-sm bg-[#111113] border border-[#D4AF37]/30 rounded-2xl p-6 shadow-2xl"
+            className="w-full max-w-sm bg-[#111113] border border-afri-gold/30 rounded-2xl p-6 shadow-2xl"
           >
-            <div className="w-12 h-12 rounded-full bg-[#D4AF37]/20 flex items-center justify-center mb-4">
-              <Info className="w-6 h-6 text-[#D4AF37]" />
+            <div className="w-12 h-12 rounded-full bg-afri-gold/20 flex items-center justify-center mb-4">
+              <Info className="w-6 h-6 text-afri-gold" />
             </div>
             <h3 className="text-lg font-display font-black text-white mb-2">Comment fonctionne AFRIGOMBO ?</h3>
             <p className="text-xs text-zinc-300 font-sans leading-relaxed mb-6">
@@ -7456,7 +7451,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             </p>
             <button 
               onClick={() => setShowHowWorksPopup(false)}
-              className="w-full py-3 bg-gradient-to-r from-[#D4AF37] to-[#F1C40F] text-black font-bold uppercase tracking-wider text-xs rounded-xl hover:opacity-90 transition-all"
+              className="w-full py-3 bg-gradient-to-r from-afri-gold to-[#F1C40F] text-black font-bold uppercase tracking-wider text-xs rounded-xl hover:opacity-90 transition-all"
             >
               J'ai compris
             </button>
@@ -7468,7 +7463,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                      FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED)
          ========================================================================= */}
       {perspective === "user" && ["user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_heritage"].includes(activeMenu) && (
-        <div className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 w-[94%] xs:w-[92%] max-w-[425px] h-[64px] sm:h-[72px] bg-[#050505]/95 backdrop-blur-xl border border-[#D4AF37]/22 p-1 px-2 xs:px-3 sm:px-4 flex justify-between items-center z-40 rounded-[24px] sm:rounded-[28px] shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none">
+        <div className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 w-[94%] xs:w-[92%] max-w-[425px] h-[64px] sm:h-[72px] bg-afri-bg-sec/95 backdrop-blur-xl border border-afri-border p-1 px-2 xs:px-3 sm:px-4 flex justify-between items-center z-40 rounded-[24px] sm:rounded-[28px] shadow-[0_12px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none">
           {/* 1. ACCUEIL */}
           <button
             id="user-nav-terrain"
@@ -7477,12 +7472,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_terrain" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "user_terrain" ? "text-afri-gold scale-102" : "text-zinc-500 hover:text-zinc-350"
             }`}
           >
             <Home className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Accueil</span>
+            <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_terrain" ? "text-afri-gold" : "text-afri-text"}`}>Accueil</span>
           </button>
+
 
           {/* 2. VIBES */}
           <button
@@ -7494,11 +7490,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               });
             }}
             className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_vibes" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "user_vibes" ? "text-afri-gold scale-102" : "text-zinc-500 hover:text-zinc-350"
             }`}
           >
             <Music className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Vibes</span>
+            <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_vibes" ? "text-afri-gold" : "text-afri-text"}`}>Vibes</span>
           </button>
 
           {/* 3. PUBLIER */}
@@ -7513,10 +7509,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-1.5 xs:px-2 select-none shrink-0"
             title="Publier"
           >
-            <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center bg-gradient-to-tr from-[#D4AF37] to-[#F1C40F] text-[#050505] rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center bg-gradient-to-tr from-afri-gold to-[#F1C40F] text-black rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
               <Plus className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3.5]" />
             </div>
-            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5] mt-0.5">Publier</span>
+            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-afri-text mt-0.5">Publier</span>
           </button>
 
           {/* 4. MES GOMBOS */}
@@ -7529,11 +7525,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               });
             }}
             className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_mes_gombos" ? "text-[#D4AF37] scale-102" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "user_mes_gombos" ? "text-afri-gold scale-102" : "text-zinc-500 hover:text-zinc-350"
             }`}
           >
             <Megaphone className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-[#F5F5F5]">Gombos</span>
+            <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_mes_gombos" ? "text-afri-gold" : "text-afri-text"}`}>Gombos</span>
           </button>
 
           {/* 6. MON HÉRITAGE */}
@@ -7549,18 +7545,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               }
             }}
             className={`flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_heritage" ? "scale-105" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "user_heritage" ? "scale-105" : "text-zinc-500 hover:text-zinc-350"
             }`}
           >
             {activeMenu === "user_heritage" ? (
-              <div className="w-10 h-10 rounded-full bg-[#D4AF37] text-black flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.55)] border border-zinc-950 transition-all duration-300 -mt-2">
+              <div className="w-10 h-10 rounded-full bg-afri-gold text-black flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.55)] border border-afri-bg transition-all duration-300 -mt-2">
                 <UserIcon className="w-5 h-5 text-black stroke-[2.5]" />
               </div>
             ) : (
-              <UserIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-zinc-500 hover:text-zinc-300 transition-colors" />
+              <UserIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-zinc-500 hover:text-zinc-350 transition-colors" />
             )}
             <span className={`text-[6.5px] xs:text-[7px] font-mono font-black uppercase tracking-widest mt-1 ${
-              activeMenu === "user_heritage" ? "text-[#D4AF37]" : "text-zinc-400"
+              activeMenu === "user_heritage" ? "text-afri-gold" : "text-afri-text"
             }`}>
               MON HÉRITAGE
             </span>
@@ -7572,7 +7568,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                      ADMIN FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
       {perspective === "admin" && activeMenu !== "super_admin" && (
-        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-black/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/35 p-1.5 sm:p-2 px-2 xs:px-4 sm:px-6 flex items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.2)] w-full sm:w-auto min-w-[300px] xs:min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-0.5 xs:gap-1 sm:gap-4 select-none">
+        <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-black/95 backdrop-blur-md border-t sm:border border-afri-gold/35 p-1.5 sm:p-2 px-2 xs:px-4 sm:px-6 flex items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.2)] w-full sm:w-auto min-w-[300px] xs:min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-0.5 xs:gap-1 sm:gap-4 select-none">
           {/* 1. DASHBOARD */}
           <button
             id="admin-nav-dashboard"
@@ -7581,7 +7577,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2 xs:px-3 sm:px-4 rounded-lg ${
-              activeMenu === "dashboard" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "dashboard" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Home className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
@@ -7596,7 +7592,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-              activeMenu === "users" || activeMenu === "kyc" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "users" || activeMenu === "kyc" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Users className="w-4.5 h-4.5" />
@@ -7611,7 +7607,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-              activeMenu === "notifications" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "notifications" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Megaphone className="w-4.5 h-4.5" />
@@ -7626,7 +7622,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-              activeMenu === "contracts" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "contracts" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <FileSignature className="w-4.5 h-4.5" />
@@ -7641,7 +7637,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-              activeMenu === "reports" || activeMenu === "alertes" || activeMenu === "revision" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "reports" || activeMenu === "alertes" || activeMenu === "revision" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <ShieldAlert className="w-4.5 h-4.5" />
@@ -7656,7 +7652,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-              activeMenu === "revenue" || activeMenu === "caisse" || activeMenu === "finances" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "revenue" || activeMenu === "caisse" || activeMenu === "finances" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Coins className="w-4.5 h-4.5" />
@@ -7671,7 +7667,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-              activeMenu === "payments_to_verify" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "payments_to_verify" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <CreditCard className="w-4.5 h-4.5" />
@@ -7686,7 +7682,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-              activeMenu === "settings" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "settings" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Settings className="w-4.5 h-4.5" />
@@ -7701,7 +7697,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               try { audioSynth.playValidationSuccess(); } catch (err) {}
             }}
             className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-              activeMenu === "security" || activeMenu === "logs" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+              activeMenu === "security" || activeMenu === "logs" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <ShieldCheck className="w-4.5 h-4.5" />
@@ -7717,7 +7713,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
               }}
               className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-                activeMenu === "super_admin" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/5 font-black" : "text-zinc-500 hover:text-zinc-300"
+                activeMenu === "super_admin" ? "text-afri-gold scale-105 bg-afri-gold/5 font-black" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
               <Crown className="w-4.5 h-4.5" />
@@ -7735,10 +7731,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md bg-[#050505] border border-[#D4AF37] p-6 rounded-lg space-y-4 shadow-2xl"
+            className="w-full max-w-md bg-afri-bg border border-afri-gold p-6 rounded-lg space-y-4 shadow-2xl"
           >
             <div className="flex justify-between items-center">
-              <h4 className="text-sm font-display font-bold uppercase tracking-wider text-[#D4AF37]">
+              <h4 className="text-sm font-display font-bold uppercase tracking-wider text-afri-gold">
                 Diffuser un Mégaphone Bulletin
               </h4>
               <button onClick={() => setIsBroadcastModalOpen(false)} className="text-white hover:text-red-500 font-bold">
@@ -7756,19 +7752,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               placeholder="Ex: Alerte pluie ! Soyez prudents à Cocody. Les Gombos en extérieur sont ajournés."
               value={broadcastMessage}
               onChange={(e) => setBroadcastMessage(e.target.value)}
-              className="w-full bg-black border border-[#D4AF37]/20 rounded p-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+              className="w-full bg-black border border-afri-gold/20 rounded p-2 text-xs text-white focus:outline-none focus:border-afri-gold"
             />
 
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setIsBroadcastModalOpen(false)}
-                className="px-4 py-1.5 border border-[#D4AF37]/20 text-xs rounded hover:bg-[#D4AF37]/5 transition-all text-[#F5F5F5]"
+                className="px-4 py-1.5 border border-afri-gold/20 text-xs rounded hover:bg-afri-gold/5 transition-all text-[#F5F5F5]"
               >
                 Annuler
               </button>
               <button
                 onClick={triggerDailyBulletin}
-                className="px-5 py-1.5 bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] text-xs font-bold rounded transition-all uppercase"
+                className="px-5 py-1.5 bg-afri-gold hover:bg-[#B48F17] text-[#050505] text-xs font-bold rounded transition-all uppercase"
               >
                 Diffuser
               </button>
@@ -7785,12 +7781,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg bg-[#09090A] border-2 border-[#D4AF37] p-6 rounded-2xl space-y-4 shadow-2xl relative"
+            className="w-full max-w-lg bg-[#09090A] border-2 border-afri-gold p-6 rounded-2xl space-y-4 shadow-2xl relative"
           >
             {/* Redesigned safe exit close */}
-            <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-3">
+            <div className="flex justify-between items-center border-b border-afri-gold/20 pb-3">
               <div>
-                <h4 className="text-md font-sans font-black uppercase text-[#D4AF37] flex items-center gap-1">
+                <h4 className="text-md font-sans font-black uppercase text-afri-gold flex items-center gap-1">
                   📅 Événements & Concerts Élite 2026
                 </h4>
                 <p className="text-[9px] font-mono text-zinc-400">
@@ -7799,7 +7795,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
               <button 
                 onClick={() => setIsEventsModalOpen(false)} 
-                className="w-8 h-8 rounded-full border border-[#D4AF37]/35 flex items-center justify-center text-white hover:text-red-500 font-bold hover:bg-[#D4AF37]/10"
+                className="w-8 h-8 rounded-full border border-afri-gold/35 flex items-center justify-center text-white hover:text-red-500 font-bold hover:bg-afri-gold/10"
               >
                 &times;
               </button>
@@ -7807,13 +7803,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
             <div className="space-y-3.5 max-h-[60vh] overflow-y-auto pr-1">
               {/* Event 1 */}
-              <div className="p-4 rounded-xl bg-black border border-[#D4AF37]/15 hover:border-[#D4AF37]/45 transition-colors space-y-2">
+              <div className="p-4 rounded-xl bg-black border border-afri-gold/15 hover:border-afri-gold/45 transition-colors space-y-2">
                 <div className="flex justify-between items-start">
                   <div>
                     <h5 className="text-xs font-sans font-black text-white uppercase">FEMUA 2026 — Grande Scène</h5>
-                    <p className="text-[9px] text-[#D4AF37] font-mono">📍 Marcory, Abidjan • 12 Juillet 2026</p>
+                    <p className="text-[9px] text-afri-gold font-mono">📍 Marcory, Abidjan • 12 Juillet 2026</p>
                   </div>
-                  <span className="text-[8px] font-mono py-0.5 px-2 bg-[#D4AF37]/10 rounded border border-[#D4AF37]/20 text-[#D4AF37] uppercase font-bold">
+                  <span className="text-[8px] font-mono py-0.5 px-2 bg-afri-gold/10 rounded border border-afri-gold/20 text-afri-gold uppercase font-bold">
                     Tête d'Affiche
                   </span>
                 </div>
@@ -7827,7 +7823,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       alert("Enregistré ! Votre agence d'Héritage a transmis votre dossier de candidature de groupe au BURIDA / FEMUA.");
                       try { audioSynth.playKoraSuccess(); } catch(e){}
                     }}
-                    className="px-3 py-1 bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] font-bold rounded uppercase transition-colors"
+                    className="px-3 py-1 bg-afri-gold hover:bg-[#B48F17] text-[#050505] font-bold rounded uppercase transition-colors"
                   >
                     Postuler 🔥
                   </button>
@@ -7835,11 +7831,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
 
               {/* Event 2 */}
-              <div className="p-4 rounded-xl bg-black border border-[#D4AF37]/15 hover:border-[#D4AF37]/45 transition-colors space-y-2">
+              <div className="p-4 rounded-xl bg-black border border-afri-gold/15 hover:border-afri-gold/45 transition-colors space-y-2">
                 <div className="flex justify-between items-start">
                   <div>
                     <h5 className="text-xs font-sans font-black text-white uppercase font-display">Abidjan Jazz Premium Live</h5>
-                    <p className="text-[9px] text-[#D4AF37] font-mono">📍 Palais des Congrès, Cocody • 28 Août 2026</p>
+                    <p className="text-[9px] text-afri-gold font-mono">📍 Palais des Congrès, Cocody • 28 Août 2026</p>
                   </div>
                   <span className="text-[8px] font-mono py-0.5 px-2 bg-emerald-500/10 rounded border border-emerald-500/20 text-emerald-400 uppercase font-bold">
                     Cachet Garanti
@@ -7849,13 +7845,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   Soirée VIP de prestige. Idéal pour guitaristes solos, saxophonistes et percussionnistes d'Alliance.
                 </p>
                 <div className="flex justify-between items-center pt-1 text-[10px]">
-                  <span className="text-zinc-500">Cachet : <strong className="text-[#D4AF37]">4 000 000 FCFA</strong></span>
+                  <span className="text-zinc-500">Cachet : <strong className="text-afri-gold">4 000 000 FCFA</strong></span>
                   <button 
                     onClick={() => {
                       alert("Premium Option validée ! Entretien de cachet planifié au Cabinet Gombo.");
                       try { audioSynth.playKoraSuccess(); } catch(e){}
                     }}
-                    className="px-3 py-1 bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] font-bold rounded uppercase transition-colors"
+                    className="px-3 py-1 bg-afri-gold hover:bg-[#B48F17] text-[#050505] font-bold rounded uppercase transition-colors"
                   >
                     Réserver Place 💎
                   </button>
@@ -7863,11 +7859,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
 
               {/* Event 3 */}
-              <div className="p-4 rounded-xl bg-black border border-[#D4AF37]/15 hover:border-[#D4AF37]/45 transition-colors space-y-2">
+              <div className="p-4 rounded-xl bg-black border border-afri-gold/15 hover:border-afri-gold/45 transition-colors space-y-2">
                 <div className="flex justify-between items-start">
                   <div>
                     <h5 className="text-xs font-sans font-black text-white uppercase font-display">Nuit du Zouglou Souverain</h5>
-                    <p className="text-[9px] text-[#D4AF37] font-mono">📍 Complexe Sportif, Yopougon • 05 Septembre 2026</p>
+                    <p className="text-[9px] text-afri-gold font-mono">📍 Complexe Sportif, Yopougon • 05 Septembre 2026</p>
                   </div>
                   <span className="text-[8px] font-mono py-0.5 px-2 bg-pink-500/10 rounded border border-pink-500/25 text-pink-400 uppercase font-bold">
                     Zouglou Only
@@ -7883,7 +7879,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       alert("Inscrit au Tam-Tam ! Votre groupe est présélectionné pour le live de Yop.");
                       try { audioSynth.playKoraSuccess(); } catch(e){}
                     }}
-                    className="px-3 py-1 bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] font-bold rounded uppercase transition-colors"
+                    className="px-3 py-1 bg-afri-gold hover:bg-[#B48F17] text-[#050505] font-bold rounded uppercase transition-colors"
                   >
                     Postuler 🔥
                   </button>
@@ -7891,10 +7887,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2 border-t border-[#D4AF37]/10">
+            <div className="flex justify-end pt-2 border-t border-afri-gold/10">
               <button
                 onClick={() => setIsEventsModalOpen(false)}
-                className="px-5 py-2 bg-[#111111] hover:bg-zinc-850 text-white text-xs font-mono font-bold uppercase rounded-xl transition-all"
+                className="px-5 py-2 bg-afri-bg-sec hover:bg-zinc-850 text-white text-xs font-mono font-bold uppercase rounded-xl transition-all"
               >
                 Fermer
               </button>
@@ -7949,7 +7945,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="w-full max-w-md bg-[#09090A] border-2 border-[#D4AF37] p-6 rounded-3xl space-y-5 shadow-2xl relative overflow-hidden"
+              className="w-full max-w-md bg-[#09090A] border-2 border-afri-gold p-6 rounded-3xl space-y-5 shadow-2xl relative overflow-hidden"
             >
               {/* Colorful top abstract blob */}
               <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${details.color}`} />
@@ -7958,10 +7954,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{details.icon}</span>
                   <div>
-                    <h4 className="text-md font-sans font-black uppercase text-[#D4AF37]">
+                    <h4 className="text-md font-sans font-black uppercase text-afri-gold">
                       {details.title}
                     </h4>
-                    <span className="text-[9px] font-mono py-0.5 px-2 bg-[#D4AF37]/10 text-[#D4AF37] rounded-full border border-[#D4AF37]/25 uppercase font-black tracking-wider">
+                    <span className="text-[9px] font-mono py-0.5 px-2 bg-afri-gold/10 text-afri-gold rounded-full border border-afri-gold/25 uppercase font-black tracking-wider">
                       {details.badge}
                     </span>
                   </div>
@@ -8007,7 +8003,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       setComingSoonFeatureKey(null);
                     }
                   }}
-                  className="w-full py-2.5 bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] text-xs font-black uppercase tracking-wider rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                  className="w-full py-2.5 bg-afri-gold hover:bg-[#B48F17] text-[#050505] text-xs font-black uppercase tracking-wider rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                 >
                   M'inscrire sur la liste d'attente 🚀
                 </button>
@@ -8031,11 +8027,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg bg-[#09090A] border-2 border-[#D4AF37] p-6 rounded-2xl space-y-4 shadow-2xl relative"
+            className="w-full max-w-lg bg-[#09090A] border-2 border-afri-gold p-6 rounded-2xl space-y-4 shadow-2xl relative"
           >
-            <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-3">
+            <div className="flex justify-between items-center border-b border-afri-gold/20 pb-3">
               <div>
-                <h4 className="text-md font-sans font-black uppercase text-[#D4AF37] flex items-center gap-1.5">
+                <h4 className="text-md font-sans font-black uppercase text-afri-gold flex items-center gap-1.5">
                   🏛️ Gombo Academy • Masterclasses
                 </h4>
                 <p className="text-[9px] font-mono text-zinc-400">
@@ -8044,7 +8040,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
               <button 
                 onClick={() => setIsAcademyModalOpen(false)} 
-                className="w-8 h-8 rounded-full border border-[#D4AF37]/35 flex items-center justify-center text-white hover:text-red-500 font-bold hover:bg-[#D4AF37]/10"
+                className="w-8 h-8 rounded-full border border-afri-gold/35 flex items-center justify-center text-white hover:text-red-500 font-bold hover:bg-afri-gold/10"
               >
                 &times;
               </button>
@@ -8053,8 +8049,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
               {/* Class 1 */}
               <div className="space-y-1.5">
-                <h5 className="text-xs font-bold text-[#D4AF37] uppercase flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>
+                <h5 className="text-xs font-bold text-afri-gold uppercase flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
                   1. Législation BURIDA & Droits d'Héritage
                 </h5>
                 <p className="text-[11px] text-zinc-350 leading-relaxed pl-3.5 border-l border-zinc-800">
@@ -8085,7 +8081,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
             </div>
 
-            <div className="flex gap-2 justify-between items-center pt-2 border-t border-[#D4AF37]/10">
+            <div className="flex gap-2 justify-between items-center pt-2 border-t border-afri-gold/10">
               <span className="text-[9px] font-mono text-zinc-500 italic block">
                 "Ce que tu sais préserve l'Héritage."
               </span>
@@ -8094,7 +8090,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   alert("Félicitations pour votre soif d'enseignement artistique ! Des tuteurs nationaux vous contacteront prochainement.");
                   setIsAcademyModalOpen(false);
                 }}
-                className="px-4 py-1.5 bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] text-xs font-mono font-black uppercase rounded transition-colors"
+                className="px-4 py-1.5 bg-afri-gold hover:bg-[#B48F17] text-[#050505] text-xs font-mono font-black uppercase rounded transition-colors"
               >
                 S'inscrire à l'Héritage d'Alliance 🎓
               </button>
@@ -8104,7 +8100,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       )}
       {isBetaFeedbackOpen && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-[#050505] border border-[#D4AF37]/20 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+          <div className="bg-afri-bg border border-afri-gold/20 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
             <button 
               onClick={() => setIsBetaFeedbackOpen(false)}
               className="absolute top-4 right-4 p-2 text-gray-500 hover:text-white rounded-lg transition-colors"
@@ -8116,7 +8112,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 <AlertTriangle className="w-5 h-5 text-emerald-500" />
               </div>
               <div>
-                <h3 className="text-sm font-black tracking-widest text-[#D4AF37] uppercase">Bêta Feedback</h3>
+                <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase">Bêta Feedback</h3>
                 <p className="text-[10px] text-gray-400 font-mono">Signaler un bug ou une idée</p>
               </div>
             </div>
@@ -8152,7 +8148,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             }} className="space-y-4">
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2">Type de retour</label>
-                <select name="type" className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-white focus:border-[#D4AF37]/50 focus:outline-none">
+                <select name="type" className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-white focus:border-afri-gold/50 focus:outline-none">
                   <option value="bug">🐛 Signaler un bug</option>
                   <option value="idea">💡 Suggérer une idée</option>
                   <option value="other">💬 Autre remarque</option>
@@ -8166,7 +8162,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   rows={4} 
                   required
                   placeholder="Décrivez le problème rencontré ou votre idée d'amélioration..."
-                  className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-white focus:border-[#D4AF37]/50 focus:outline-none placeholder-gray-600 resize-none"
+                  className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-white focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
                 />
               </div>
 
@@ -8180,7 +8176,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 py-3 bg-[#D4AF37] hover:bg-[#c19b2e] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-colors"
+                  className="flex-1 py-3 bg-afri-gold hover:bg-[#c19b2e] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-colors"
                 >
                   Envoyer
                 </button>
@@ -8192,13 +8188,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
       {isAuthModalOpen && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="w-full max-w-sm bg-[#050505] border border-[#D4AF37]/25 rounded-3xl p-6 relative overflow-hidden text-center shadow-[0_0_50px_rgba(212,175,55,0.1)]">
+          <div className="w-full max-w-sm bg-afri-bg border border-afri-gold/25 rounded-3xl p-6 relative overflow-hidden text-center shadow-[0_0_50px_rgba(212,175,55,0.1)]">
             {/* Ambient Background Light */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-afri-gold/5 blur-3xl rounded-full pointer-events-none" />
             
             {/* Elegant Icon */}
-            <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/30 mx-auto mb-6 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
-              <Sparkles className="w-8 h-8 text-[#D4AF37]" />
+            <div className="w-16 h-16 rounded-2xl bg-afri-gold/10 flex items-center justify-center border border-afri-gold/30 mx-auto mb-6 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+              <Sparkles className="w-8 h-8 text-afri-gold" />
             </div>
 
             <h3 className="text-white text-lg font-bold font-sans mb-2 uppercase tracking-wide">
@@ -8219,7 +8215,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     console.error(err);
                   }
                 }}
-                className="w-full py-3 px-4 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-black font-sans font-black text-sm uppercase tracking-wider transition-all duration-300 shadow-[0_4px_12px_rgba(212,175,55,0.2)] flex items-center justify-between gap-2 group"
+                className="w-full py-3 px-4 rounded-xl bg-afri-gold hover:bg-[#B48F17] text-black font-sans font-black text-sm uppercase tracking-wider transition-all duration-300 shadow-[0_4px_12px_rgba(212,175,55,0.2)] flex items-center justify-between gap-2 group"
               >
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 24 24">
@@ -8248,25 +8244,25 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </button>
 
               {/* GOMBO ID (Bientôt disponible) */}
-              <div className="w-full py-3 px-4 rounded-xl bg-[#050505] border border-zinc-900 text-zinc-500 font-sans font-bold text-sm uppercase tracking-wider flex items-center justify-between gap-2 select-none opacity-60">
+              <div className="w-full py-3 px-4 rounded-xl bg-afri-bg border border-zinc-900 text-zinc-500 font-sans font-bold text-sm uppercase tracking-wider flex items-center justify-between gap-2 select-none opacity-60">
                 <div className="flex items-center gap-2">
                   <span className="text-base">🆔</span>
                   <span>Continuer avec GOMBO ID</span>
                 </div>
-                <span className="text-[9px] font-mono font-black bg-[#111111] border border-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded uppercase tracking-widest">
+                <span className="text-[9px] font-mono font-black bg-afri-bg-sec border border-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded uppercase tracking-widest">
                   bientôt
                 </span>
               </div>
 
               {/* Facebook (Bientôt disponible) */}
-              <div className="w-full py-3 px-4 rounded-xl bg-[#050505] border border-zinc-900 text-zinc-500 font-sans font-bold text-sm uppercase tracking-wider flex items-center justify-between gap-2 select-none opacity-60">
+              <div className="w-full py-3 px-4 rounded-xl bg-afri-bg border border-zinc-900 text-zinc-500 font-sans font-bold text-sm uppercase tracking-wider flex items-center justify-between gap-2 select-none opacity-60">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                   <span>Continuer avec Facebook</span>
                 </div>
-                <span className="text-[9px] font-mono font-black bg-[#111111] border border-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded uppercase tracking-widest">
+                <span className="text-[9px] font-mono font-black bg-afri-bg-sec border border-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded uppercase tracking-widest">
                   bientôt
                 </span>
               </div>
@@ -8274,7 +8270,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               <div className="pt-2">
                 <button
                   onClick={() => setIsAuthModalOpen(false)}
-                  className="w-full py-2 px-4 rounded-xl bg-transparent hover:bg-[#050505] text-zinc-500 hover:text-zinc-300 text-xs font-mono font-bold transition-all duration-300"
+                  className="w-full py-2 px-4 rounded-xl bg-transparent hover:bg-afri-bg text-zinc-500 hover:text-zinc-300 text-xs font-mono font-bold transition-all duration-300"
                 >
                   Plus tard
                 </button>
@@ -8286,8 +8282,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
       {showHeritageLoginRequired && (
         <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-[999] animate-fadeIn text-left select-none">
-          <div className="w-full max-w-sm bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-6 space-y-5 shadow-2xl shadow-amber-500/5">
-            <div className="w-14 h-14 bg-[#D4AF37]/10 rounded-full flex items-center justify-center text-[#D4AF37] mx-auto">
+          <div className="w-full max-w-sm bg-afri-bg border border-afri-gold/35 rounded-3xl p-6 space-y-5 shadow-2xl shadow-amber-500/5">
+            <div className="w-14 h-14 bg-afri-gold/10 rounded-full flex items-center justify-center text-afri-gold mx-auto">
               <Lock className="w-7 h-7" />
             </div>
             
@@ -8312,7 +8308,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     setIsAuthModalOpen(true);
                   }
                 }}
-                className="w-full py-3 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-black font-sans font-black uppercase tracking-wider text-xs transition-all cursor-pointer"
+                className="w-full py-3 rounded-xl bg-afri-gold hover:bg-[#B48F17] text-black font-sans font-black uppercase tracking-wider text-xs transition-all cursor-pointer"
               >
                 Continuer avec Google
               </button>
@@ -8329,7 +8325,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
       {showGoogleLoginRequiredModal && (
         <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-[999] animate-fadeIn text-left">
-          <div className="w-full max-w-sm bg-[#050505] border border-amber-500/35 rounded-3xl p-6 space-y-5 shadow-2xl shadow-amber-500/5">
+          <div className="w-full max-w-sm bg-afri-bg border border-amber-500/35 rounded-3xl p-6 space-y-5 shadow-2xl shadow-amber-500/5">
             <div className="w-14 h-14 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-500 mx-auto select-none">
               <Lock className="w-7 h-7" />
             </div>
@@ -8343,7 +8339,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </p>
             </div>
 
-            <div className="p-3 bg-[#111111]/60 border border-zinc-850 rounded-2xl text-[11px] font-mono text-zinc-550 space-y-1">
+            <div className="p-3 bg-afri-bg-sec/60 border border-zinc-850 rounded-2xl text-[11px] font-mono text-zinc-550 space-y-1">
               <div>• Session courante : {currentUser?.email || "Email standard"}</div>
               <div>• Statut : Lié par email/pass (Exclus)</div>
             </div>
@@ -8362,7 +8358,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   setIsAuthModalOpen(true);
                   try { audioSynth.playTamTam(false); } catch(e){}
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-black transition-all text-xs font-sans font-black uppercase tracking-wider"
+                className="flex-1 py-2.5 rounded-xl bg-afri-gold hover:bg-[#B48F17] text-black transition-all text-xs font-sans font-black uppercase tracking-wider"
               >
                 S'AUTHENTIFIER ↩
               </button>
@@ -8378,10 +8374,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="w-full max-w-lg bg-[#0F0F11] border border-[#D4AF37]/35 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              className="w-full max-w-lg bg-[#0F0F11] border border-afri-gold/35 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
             >
               {/* Header Image backdrop */}
-              <div className="h-44 w-full relative bg-[#050505] shrink-0">
+              <div className="h-44 w-full relative bg-afri-bg shrink-0">
                 <img
                   src={
                     selectedGomboDetails.id.includes("1") || selectedGomboDetails.id.includes("a")
@@ -8400,14 +8396,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 {/* Close Button */}
                 <button
                   onClick={() => setSelectedGomboDetails(null)}
-                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/85 border border-[#D4AF37]/30 flex items-center justify-center text-white hover:text-red-400 text-lg transition-all cursor-pointer select-none active:scale-90"
+                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/85 border border-afri-gold/30 flex items-center justify-center text-white hover:text-red-400 text-lg transition-all cursor-pointer select-none active:scale-90"
                   title="Fermer"
                 >
                   &times;
                 </button>
 
                 <div className="absolute bottom-4 left-6">
-                  <span className="text-[10px] font-mono font-black uppercase text-[#D4AF37] bg-black/90 px-3 py-1 rounded-xl border border-[#D4AF37]/30">
+                  <span className="text-[10px] font-mono font-black uppercase text-afri-gold bg-black/90 px-3 py-1 rounded-xl border border-afri-gold/30">
                     {selectedGomboDetails.type || "Live Direct Showcase"}
                   </span>
                 </div>
@@ -8431,7 +8427,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                 <div className="space-y-1.5 p-4 rounded-2xl bg-black/40 border border-white/5">
                   <span className="text-[9px] font-mono uppercase text-zinc-500 block font-bold">CACHET FINANCIER GARANTI :</span>
-                  <strong className="text-3xl font-display font-black text-[#D4AF37] tracking-tight block">
+                  <strong className="text-3xl font-display font-black text-afri-gold tracking-tight block">
                     {(selectedGomboDetails.budget || 250000).toLocaleString("fr-FR")} <span className="text-sm font-mono text-zinc-400 font-normal">FCFA</span>
                   </strong>
                 </div>
@@ -8443,9 +8439,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                 {/* SOVEREIGN CONTRACT TRACKING & ESCROW PANEL */}
                 {hasApplied && (
-                  <div className="p-5 rounded-2xl bg-[#050505] border border-[#D4AF37]/35 space-y-4 text-xs animate-fadeIn">
-                    <div className="border-b border-[#D4AF37]/20 pb-2 flex items-center justify-between">
-                      <span className="font-mono font-bold text-[#D4AF37] uppercase tracking-wider text-[9px]">⚖️ RECTO-VERSO CONTRACTUEL SOUVERAIN</span>
+                  <div className="p-5 rounded-2xl bg-afri-bg border border-afri-gold/35 space-y-4 text-xs animate-fadeIn">
+                    <div className="border-b border-afri-gold/20 pb-2 flex items-center justify-between">
+                      <span className="font-mono font-bold text-afri-gold uppercase tracking-wider text-[9px]">⚖️ RECTO-VERSO CONTRACTUEL SOUVERAIN</span>
                       <span className="text-[8px] bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2 py-0.5 rounded uppercase font-mono font-bold">Escrow Sécurisé GomboCaisse</span>
                     </div>
 
@@ -8461,7 +8457,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <div className="text-[10px] text-zinc-400 space-y-1 bg-zinc-90 w-full p-2.5 rounded-lg border border-white/5 font-mono">
                           <div>📅 <span className="text-zinc-500">Dates :</span> <span className="text-white">{selectedGomboDetails.repetitionsDates || "Défini par l'organisateur"}</span></div>
                           <div>⏰ <span className="text-zinc-500">Horaires :</span> <span className="text-white">{selectedGomboDetails.repetitionsSchedule || "ex: 18:00 - 21:00"}</span></div>
-                          <div>💰 <span className="text-zinc-500">Transport/répétition :</span> <span className="text-[#D4AF37] font-bold">{(selectedGomboDetails.transportFee || 3000).toLocaleString()} FCFA</span></div>
+                          <div>💰 <span className="text-zinc-500">Transport/répétition :</span> <span className="text-afri-gold font-bold">{(selectedGomboDetails.transportFee || 3000).toLocaleString()} FCFA</span></div>
                           <div>💰 <span className="text-zinc-500">Budget transport bloqué :</span> <span className="text-emerald-400 font-bold">{((selectedGomboDetails.transportFee || 3000) * (selectedGomboDetails.repetitionsCount || 3)).toLocaleString()} FCFA</span></div>
                         </div>
 
@@ -8486,7 +8482,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               addToTerminal(`[🛡️ PRÉSENCE] Répétition #${currentCount + 1} confirmée à ${now} ! Localisation GPS validée. En attente de validation organisateur (libération sous 8h automatique).`);
                               audioSynth.playValidationSuccess();
                             }}
-                            className="flex-1 py-1.5 px-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37] border border-[#D4AF37]/35 text-[#D4AF37] hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
+                            className="flex-1 py-1.5 px-2 bg-afri-gold/10 hover:bg-afri-gold border border-afri-gold/35 text-afri-gold hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
                           >
                             Présence (Selfie+GPS) 🤳
                           </button>
@@ -8560,7 +8556,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               addToTerminal(`[🏦 LIBÉRATION ESCROW] Co-confirmation reçue ! Le cachet de ${(selectedGomboDetails.budget || 250000).toLocaleString()} FCFA est débloqué vers le portefeuille du musicien !`);
                               audioSynth.playValidationSuccess();
                             }}
-                            className="w-full py-1.5 px-2.5 bg-[#D4AF37]/20 hover:bg-[#D4AF37] border border-[#D4AF37]/35 text-[#D4AF37] hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
+                            className="w-full py-1.5 px-2.5 bg-afri-gold/20 hover:bg-afri-gold border border-afri-gold/35 text-afri-gold hover:text-black font-sans font-bold text-[9px] rounded-lg tracking-wider transition-all cursor-pointer uppercase text-center"
                           >
                             Co-Confirmer la Fin (Libérer) 🔓
                           </button>
@@ -8625,10 +8621,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         addToTerminal(`[🏆 HONNEUR] ${isLiked ? "Retrait d'honneur" : "Honneur accordé"} sur le Gombo "${selectedGomboDetails.title}".`);
                       });
                     }}
-                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${likedGombos.includes(selectedGomboDetails.id) ? "text-[#D4AF37]" : "hover:text-[#D4AF37]"}`}
+                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${likedGombos.includes(selectedGomboDetails.id) ? "text-afri-gold" : "hover:text-afri-gold"}`}
                     title="Accorder un honneur prestigieux à ce Gombo"
                   >
-                    <Award className={`w-4 h-4 ${likedGombos.includes(selectedGomboDetails.id) ? "fill-[#D4AF37] text-[#D4AF37]" : ""}`} />
+                    <Award className={`w-4 h-4 ${likedGombos.includes(selectedGomboDetails.id) ? "fill-afri-gold text-afri-gold" : ""}`} />
                     <span>{likedGombos.includes(selectedGomboDetails.id) ? "Honouré" : "🏆 Honneur reçu"}</span>
                   </button>
 
@@ -8644,10 +8640,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         addToTerminal(`[🔖 ENREGISTRER] Gombo "${selectedGomboDetails.title}" ${isSaved ? "retiré de vos" : "enregistré dans vos"} favoris.`);
                       });
                     }}
-                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${savedGomboIds.includes(selectedGomboDetails.id) ? "text-[#D4AF37]" : "hover:text-[#D4AF37]"}`}
+                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${savedGomboIds.includes(selectedGomboDetails.id) ? "text-afri-gold" : "hover:text-afri-gold"}`}
                     title="Enregistrer ce Gombo dans votre espace personnel"
                   >
-                    <Bookmark className={`w-4 h-4 ${savedGomboIds.includes(selectedGomboDetails.id) ? "fill-[#D4AF37] text-[#D4AF37]" : ""}`} />
+                    <Bookmark className={`w-4 h-4 ${savedGomboIds.includes(selectedGomboDetails.id) ? "fill-afri-gold text-afri-gold" : ""}`} />
                     <span>{savedGomboIds.includes(selectedGomboDetails.id) ? "Enregistré" : "🔖 Enregistrer"}</span>
                   </button>
 
@@ -8664,10 +8660,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         addToTerminal(`[👥 SUIVRE] ${isFollowing ? "Désabonnement" : "Abonnement"} à l'organisateur "${selectedGomboDetails.organizerName || "Admin"}".`);
                       });
                     }}
-                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "text-[#D4AF37]" : "hover:text-[#D4AF37]"}`}
+                    className={`flex items-center gap-1.5 transition text-[11px] font-bold cursor-pointer ${followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "text-afri-gold" : "hover:text-afri-gold"}`}
                     title="Suivre l'activité de cet artiste / organisateur"
                   >
-                    <Users className={`w-4 h-4 ${followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "fill-[#D4AF37] text-[#D4AF37]" : ""}`} />
+                    <Users className={`w-4 h-4 ${followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "fill-afri-gold text-afri-gold" : ""}`} />
                     <span>{followedArtists.includes(selectedGomboDetails.organizerId || "admin") ? "Abonné" : "👥 Suivre artiste"}</span>
                   </button>
 
@@ -8699,7 +8695,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         } catch (_) {}
                       });
                     }}
-                    className="flex items-center gap-1.5 hover:text-[#D4AF37] transition text-[11px] font-bold cursor-pointer"
+                    className="flex items-center gap-1.5 hover:text-afri-gold transition text-[11px] font-bold cursor-pointer"
                     title="Partager ce Gombo"
                   >
                     <Share2 className="w-4 h-4" />
@@ -8710,7 +8706,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 {/* AUTHOR PROFILE ROW */}
                 <div className="flex items-center justify-between border-b border-zinc-900/60 pb-4 text-[11px] font-mono text-zinc-500 gap-4 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full border border-[#D4AF37]/35 flex items-center justify-center bg-[#050505] font-bold text-[#D4AF37] text-[10px] uppercase">
+                    <div className="w-8 h-8 rounded-full border border-afri-gold/35 flex items-center justify-center bg-afri-bg font-bold text-afri-gold text-[10px] uppercase">
                       {selectedGomboDetails.organizerName?.charAt(0) || "O"}
                     </div>
                     <div>
@@ -8720,7 +8716,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   </div>
                   <div>
                     <span className="block text-[8px] text-zinc-650 uppercase font-bold text-right leading-none">CANDIDATS :</span>
-                    <span className="text-[#D4AF37] font-bold mt-0.5 block text-right">{selectedGomboDetails.applicantsCount + (hasApplied ? 1 : 0)} postulants</span>
+                    <span className="text-afri-gold font-bold mt-0.5 block text-right">{selectedGomboDetails.applicantsCount + (hasApplied ? 1 : 0)} postulants</span>
                   </div>
                 </div>
 
@@ -8741,8 +8737,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       }
                       return commentsList.map((c, i) => (
                         <div key={i} className="bg-black/40 border border-zinc-900/60 rounded-2xl p-3 flex gap-2.5 w-full text-left">
-                          <div className="w-7 h-7 rounded-xl bg-[#111111]/70 border border-[#D4AF37]/20 flex items-center justify-center shrink-0">
-                            <span className="text-[9px] font-bold text-[#D4AF37] uppercase">{c.author.substring(0, 2)}</span>
+                          <div className="w-7 h-7 rounded-xl bg-afri-bg-sec/70 border border-afri-gold/20 flex items-center justify-center shrink-0">
+                            <span className="text-[9px] font-bold text-afri-gold uppercase">{c.author.substring(0, 2)}</span>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-baseline gap-1">
@@ -8780,7 +8776,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }
                       }}
-                      className="flex-1 bg-[#050505] border border-zinc-900 focus:border-[#D4AF37]/50 focus:bg-black rounded-2xl px-4 py-3 text-xs text-white placeholder-zinc-700 focus:outline-none"
+                      className="flex-1 bg-afri-bg border border-zinc-900 focus:border-afri-gold/50 focus:bg-black rounded-2xl px-4 py-3 text-xs text-white placeholder-zinc-700 focus:outline-none"
                     />
                     <button
                       onClick={() => {
@@ -8800,7 +8796,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         if (inputEl) inputEl.value = "";
                         try { audioSynth.playValidationSuccess(); } catch (_) {}
                       }}
-                      className="bg-[#D4AF37] hover:bg-[#F3C43F] text-black font-black text-[9px] uppercase tracking-widest px-4 rounded-2xl transition-all active:scale-95"
+                      className="bg-afri-gold hover:bg-[#F3C43F] text-black font-black text-[9px] uppercase tracking-widest px-4 rounded-2xl transition-all active:scale-95"
                     >
                       Envoyer
                     </button>
@@ -8809,10 +8805,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
 
               {/* Action Footer */}
-              <div className="p-6 bg-[#050505] border-t border-zinc-900 shrink-0 flex gap-3">
+              <div className="p-6 bg-afri-bg border-t border-zinc-900 shrink-0 flex gap-3">
                 <button
                   onClick={() => setSelectedGomboDetails(null)}
-                  className="flex-1 py-3.5 rounded-2xl bg-[#050505] border border-zinc-900 hover:border-zinc-800 text-white text-xs font-mono font-black uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer"
+                  className="flex-1 py-3.5 rounded-2xl bg-afri-bg border border-zinc-900 hover:border-zinc-800 text-white text-xs font-mono font-black uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer"
                 >
                   Fermer
                 </button>
@@ -8827,7 +8823,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   className={`flex-[2] py-3.5 rounded-2xl font-mono font-black text-xs uppercase tracking-wider transition-all select-none active:scale-95 cursor-pointer text-center ${
                     hasApplied
                       ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 cursor-not-allowed"
-                      : "bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] shadow-[0_4px_15px_rgba(212,175,55,0.25)]"
+                      : "bg-afri-gold hover:bg-[#B48F17] text-[#050505] shadow-[0_4px_15px_rgba(212,175,55,0.25)]"
                   }`}
                 >
                   {hasApplied ? "✓ CANDIDATURE ENREGISTRÉE" : "DÉCROCHER LE CACHET ! 🎯"}

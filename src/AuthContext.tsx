@@ -45,6 +45,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (!uProfile) {
             const names = firebaseUser.displayName ? firebaseUser.displayName.split(" ") : ["Artiste", "Afrigombo"];
+            const isFounder = firebaseUser.email === "jhs.kmj7@gmail.com";
+            const founderPermissions = [
+              "admin",
+              "founder",
+              "dashboard",
+              "users",
+              "verification",
+              "payments",
+              "reports",
+              "settings"
+            ];
+
             uProfile = {
               uid: firebaseUser.uid,
               email: firebaseUser.email || "",
@@ -53,7 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               displayName: firebaseUser.displayName || "",
               photoURL: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
               avatarUrl: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-              role: "user",
+              role: isFounder ? "founder" : "user",
+              isFounder: isFounder,
+              permissions: isFounder ? founderPermissions : [],
               provider: firebaseUser.providerData?.[0]?.providerId || "google.com",
               isProfileComplete: false,
               balance: 0,
@@ -63,6 +77,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
           } else {
+            // Ensure founder role is set for existing profile if email matches
+            if (firebaseUser.email === "jhs.kmj7@gmail.com" && (!uProfile.isFounder || uProfile.role !== "founder")) {
+              const founderPermissions = [
+                "admin",
+                "founder",
+                "dashboard",
+                "users",
+                "verification",
+                "payments",
+                "reports",
+                "settings"
+              ];
+              uProfile.role = "founder";
+              uProfile.isFounder = true;
+              uProfile.permissions = founderPermissions;
+              await gomboDB.updateUserProfile(firebaseUser.uid, { 
+                role: "founder", 
+                isFounder: true,
+                permissions: founderPermissions
+              });
+            }
           }
           
           setProfile(uProfile);

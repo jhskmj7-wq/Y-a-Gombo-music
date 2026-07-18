@@ -12,7 +12,8 @@ interface AfrigomboPlusProps {
 
 export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshProfile }: AfrigomboPlusProps) {
   const { t } = useLanguage();
-  const [selectedPlan, setSelectedPlan] = useState<"free" | "pro" | "elite" | "legend">("elite");
+  const [selectedPlan, setSelectedPlan] = useState<"free" | "pro" | "elite">("elite");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [paymentOption, setPaymentOption] = useState<string | null>(null);
   const [phonePayment, setPhonePayment] = useState("");
   const [paymentStep, setPaymentStep] = useState<"idle" | "processing" | "success">("idle");
@@ -28,8 +29,10 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
     {
       id: "free",
       name: "GOMBO FREE",
-      price: "0 FCFA",
-      period: t ? t('par_mois') || "/mois" : "/mois",
+      monthlyPrice: 0,
+      yearlyPrice: 0,
+      priceLabel: "0 FCFA",
+      period: "Compte gratuit",
       color: "border-zinc-800 bg-zinc-950/40",
       accentColor: "text-zinc-400",
       badge: "Inclus par défaut",
@@ -39,89 +42,58 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         "Messagerie standard",
         "Voir les gombos de base",
       ],
-      disabledFeatures: [
-        "👑 Pastille de Prestige Premium",
-        "⭐ Mise en avant dans les recherches",
-        "🚀 Priorité dans les Renforts Express",
-        "📈 Jusqu'à +150% de visibilité",
-        "🎖️ Profil recommandé d'office",
-        "📊 Statistiques d'audience avancées",
-        "💬 Priorité de mise en relation directe"
-      ]
+      commission: "2,5%"
     },
     {
       id: "pro",
       name: "GOMBO PRO",
-      price: "1 500 FCFA",
-      period: "/mois",
-      color: "border-emerald-500/30 bg-emerald-950/10 shadow-[0_4px_20px_rgba(16,185,129,0.05)]",
+      monthlyPrice: 500,
+      yearlyPrice: 5000,
+      priceLabel: billingCycle === "monthly" ? "500 FCFA" : "5 000 FCFA",
+      period: billingCycle === "monthly" ? "/ mois" : "/ an",
+      color: "border-zinc-800 bg-zinc-950/60 hover:border-[#D4AF37]/50",
       accentColor: "text-emerald-400",
-      badge: "Populaire",
+      badge: "Mieux Vendu",
+      description: "Le meilleur rapport qualité/prix.",
       features: [
         "👑 Badge Premium Silver",
-        "⚡ Commission de 1,5% au lieu de 2,5%",
+        "⚡ Commission de 1,5%",
         "⭐ Boost de recherche moyen (+40%)",
-        "📈 Plus de visibilité sur l'annuaire",
+        "📈 Plus de visibilité",
         "3 publications par jour",
-        "Accès aux opportunités régionales",
-        "Portfolio: jusqu'à 3 audios & 3 vidéos",
+        "Accès aux opportunités",
       ],
-      disabledFeatures: [
-        "🚀 Priorité dans les Renforts Express",
-        "🎖️ Profil recommandé d'office",
-        "📊 Statistiques avancées complètes",
-        "💬 Priorité de mise en relation directe"
-      ]
+      commission: "1,5%"
     },
     {
       id: "elite",
       name: "GOMBO ELITE",
-      price: "4 000 FCFA",
-      period: "/mois",
-      color: "border-[#D4AF37] bg-gradient-to-b from-[#121008] to-[#040402] shadow-[0_10px_35px_rgba(212,175,55,0.12)] relative overflow-hidden",
+      monthlyPrice: 1000,
+      yearlyPrice: 10000,
+      priceLabel: billingCycle === "monthly" ? "1 000 FCFA" : "10 000 FCFA",
+      period: billingCycle === "monthly" ? "/ mois" : "/ an",
+      color: "border-[#D4AF37]/40 bg-[#0A0A0A] shadow-[0_10px_40px_rgba(212,175,55,0.08)]",
       accentColor: "text-[#D4AF37]",
-      badge: "Recommandé Elite",
-      features: [
-        "👑 Badge Premium Gold d'excellence",
-        "⚡ Commission de 1,5% au lieu de 2,5%",
-        "⭐ Mise en avant maximale dans l'annuaire",
-        "🚀 Priorité absolue dans les Renforts Express",
-        "📈 Visibilité boostée à 150%",
-        "🎖️ Profil recommandé d'office aux recruteurs",
-        "📊 Accès aux Statistiques Avancées",
-        "💬 Priorité absolue de mise en relation",
-        "Candidatures illimitées aux cachets premium",
-        "Création de groupes musicaux & co-promotions",
-      ],
-      disabledFeatures: []
-    },
-    {
-      id: "legend",
-      name: "GOMBO LEGEND",
-      price: "VIP",
-      period: "Sur Invitation",
-      color: "border-[#D4AF37]/50 bg-[#08080c] shadow-[0_8px_30px_rgba(212,175,55,0.06)]",
-      accentColor: "text-amber-500",
       badge: "Prestige",
+      description: "La meilleure expérience AFRIGOMBO.",
       features: [
-        "Accompagnement de carrière d'élite (A&R)",
-        "Mise en relation directe avec les labels internationaux",
-        "Session studio premium offerte trimestriellement",
-        "Badge LEGEND Platine certifié",
-        "Accès à tous les événements physiques VIP d'AFRIGOMBO",
+        "💎 Badge Premium Gold",
+        "⚡ Commission de 1,5%",
+        "⭐ Mise en avant maximale",
+        "🚀 Priorité absolue (Renforts)",
+        "📈 Visibilité boostée à 150%",
+        "🎖️ Profil recommandé d'office",
+        "📊 Statistiques Avancées",
+        "💬 Priorité de relation",
       ],
-      disabledFeatures: []
+      commission: "1,5%"
     }
   ];
 
-  const handleSubscribeClick = (planId: "free" | "pro" | "elite" | "legend") => {
+  const handleSubscribeClick = (planId: "free" | "pro" | "elite") => {
     if (planId === "free") {
       localStorage.setItem("gombo_subscription", "GOMBO FREE");
       setSubscribedPlan("GOMBO FREE");
-      return;
-    }
-    if (planId === "legend") {
-      alert("La formule LEGEND est disponible uniquement sur invitation privée de la commission AFRIGOMBO pour les artistes émérites.");
       return;
     }
     setSelectedPlan(planId);
@@ -147,13 +119,14 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       try {
         const matchedPlan = plans.find(p => p.id === selectedPlan);
         const subName = matchedPlan ? matchedPlan.name : "GOMBO ELITE";
+        const amount = matchedPlan ? (billingCycle === "monthly" ? matchedPlan.monthlyPrice : matchedPlan.yearlyPrice) : 1000;
         
         // Publish real transaction record
         if (currentUserProfile?.uid) {
           await gomboDB.publishPayment({
             userId: currentUserProfile.uid,
             userName: currentUserProfile.name || currentUserProfile.artistName || "Membre Premium",
-            amount: selectedPlan === "pro" ? 1500 : 4000,
+            amount: amount,
             purpose: `💎 Abonnement ${subName} - Premium AFRIGOMBO`,
             provider: paymentOption || "wave",
             phoneNumber: phonePayment,
@@ -192,105 +165,108 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans pb-32">
       {/* HEADER SECTION */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-[#121008] to-[#050505] border-b border-zinc-900 px-6 py-6 sm:py-8 text-left">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative overflow-hidden bg-gradient-to-b from-[#121008] to-[#050505] border-b border-zinc-900 px-6 pt-10 pb-20 sm:pt-16 sm:pb-32 text-center">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#D4AF37]/5 rounded-full blur-[120px] pointer-events-none"></div>
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-xs font-black text-zinc-400 hover:text-white transition-colors cursor-pointer mb-5 uppercase tracking-widest"
+          className="absolute top-6 left-6 flex items-center gap-1.5 text-xs font-black text-zinc-500 hover:text-[#D4AF37] transition-colors cursor-pointer uppercase tracking-widest z-10"
         >
           <ChevronLeft className="w-4 h-4" />
-          Retour au Terrain
+          Retour
         </button>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] uppercase font-black tracking-widest px-2.5 py-0.5 rounded-full border border-[#D4AF37]/20 flex items-center gap-1 animate-pulse">
-                <Sparkles className="w-3 h-3 fill-[#D4AF37]" />
-                Offre Exclusive
-              </span>
-              <span className="text-zinc-500 font-mono text-[10px]">Abonnement actif : <span className="text-[#D4AF37] font-black">{subscribedPlan}</span></span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase font-sans">
-              ⭐ AFRIGOMBO <span className="text-[#D4AF37]">PLUS</span>
-            </h1>
-            <p className="text-xs text-zinc-400 mt-1 max-w-xl">
-              Propulsez votre identité d'artiste africain vers de nouveaux standards. Obtenez les statistiques d'audience, d'écoutes, plus de visibilité, et des gombos d'exception.
-            </p>
+        <div className="max-w-4xl mx-auto space-y-6 relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+            👑 AFRIGOMBO PREMIUM
+          </div>
+          
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-white uppercase leading-[0.95]">
+            Développez votre <span className="text-[#D4AF37]">carrière</span>.
+          </h1>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 pt-4">
+            <div className="text-zinc-400 text-sm font-medium uppercase tracking-wider">Soyez davantage visible.</div>
+            <div className="text-zinc-400 text-sm font-medium uppercase tracking-wider">Obtenez plus de Gombos.</div>
+            <div className="text-zinc-400 text-sm font-medium uppercase tracking-wider">Économisez sur vos contrats.</div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-16 relative z-20">
+        {/* BILLING TOGGLE */}
+        <div className="flex justify-center mb-12">
+          <div className="bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-800 flex items-center gap-1 backdrop-blur-xl">
+            <button 
+              onClick={() => setBillingCycle("monthly")}
+              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${billingCycle === "monthly" ? "bg-[#D4AF37] text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
+            >
+              Mensuel
+            </button>
+            <button 
+              onClick={() => setBillingCycle("yearly")}
+              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${billingCycle === "yearly" ? "bg-[#D4AF37] text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
+            >
+              Annuel <span className="text-[9px] opacity-70 ml-1">-20%</span>
+            </button>
+          </div>
+        </div>
+
         {/* CARDS LIST */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-24">
           {plans.map((p) => {
             const isActive = subscribedPlan === p.name;
             const isSelected = selectedPlan === p.id;
             return (
               <div
                 key={p.id}
-                className={`flex flex-col justify-between p-5 rounded-3xl border transition-all duration-300 relative ${p.color} ${
-                  isSelected ? "ring-2 ring-[#D4AF37]" : ""
+                className={`flex flex-col p-8 rounded-[40px] border transition-all duration-500 group relative ${p.color} ${
+                  isSelected ? "ring-2 ring-[#D4AF37] scale-105 z-10" : "hover:scale-[1.02]"
                 }`}
               >
-                {/* Visual Glow Indicator */}
-                {p.id === "elite" && (
-                  <div className="absolute -top-12 -right-12 w-28 h-28 bg-[#D4AF37]/10 rounded-full blur-2xl"></div>
-                )}
-
-                <div className="space-y-4">
+                <div className="space-y-6 flex-1">
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="text-[10px] uppercase font-black tracking-wider text-zinc-500">Formule</span>
-                      <h3 className="text-lg font-black tracking-tight group-hover:text-[#D4AF37] transition-colors">{p.name}</h3>
+                      <h3 className="text-xl font-black tracking-tight text-white">{p.name}</h3>
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1 font-bold">
+                        {p.id === "free" ? "Formule de base" : p.description}
+                      </p>
                     </div>
-                    <span className="text-[9px] font-black bg-zinc-900 border border-zinc-800 text-[#D4AF37] py-0.5 px-2.5 rounded-full uppercase">
-                      {p.badge}
-                    </span>
                   </div>
 
-                  <div className="py-2 text-left">
-                    <span className="text-3xl font-extrabold text-white tracking-tighter">{p.price}</span>
-                    <span className="text-xs text-zinc-500 ml-1">{p.period}</span>
+                  <div className="py-4">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-5xl font-black text-white tracking-tighter">{p.priceLabel}</span>
+                      <span className="text-xs text-zinc-500 font-bold uppercase">{p.period}</span>
+                    </div>
                   </div>
 
-                  <hr className="border-zinc-900" />
-
-                  {/* Included benefits */}
-                  <ul className="space-y-2.5 text-left text-xs text-zinc-300">
+                  <div className="space-y-4">
                     {p.features.map((feat, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>{feat}</span>
-                      </li>
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 text-[#D4AF37] stroke-[3]" />
+                        </div>
+                        <span className="text-xs font-medium text-zinc-300">{feat}</span>
+                      </div>
                     ))}
-                    {p.disabledFeatures.map((feat, i) => (
-                      <li key={i} className="flex items-start gap-2 opacity-35 line-through decoration-zinc-700">
-                        <span className="text-zinc-600 block shrink-0 mt-0.5 font-bold">✕</span>
-                        <span className="text-zinc-500">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  </div>
                 </div>
 
-                <div className="mt-8 pt-4">
+                <div className="mt-12">
                   {isActive ? (
-                    <div className="w-full text-center py-2.5 px-4 rounded-xl bg-zinc-900 text-zinc-400 font-extrabold text-xs uppercase border border-zinc-800">
+                    <div className="w-full text-center py-4 px-6 rounded-2xl bg-zinc-900/50 text-zinc-500 font-black text-[10px] uppercase tracking-[0.2em] border border-zinc-800">
                       Formule Actuelle
                     </div>
                   ) : (
                     <button
                       onClick={() => handleSubscribeClick(p.id as any)}
-                      className={`w-full text-center py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                        p.id === "elite"
-                          ? "bg-gradient-to-r from-[#D4AF37] to-[#F1C40F] text-black shadow-lg hover:shadow-[#D4AF37]/20 hover:scale-101"
-                          : p.id === "legend"
-                          ? "bg-zinc-900 border border-[#D4AF37]/40 text-[#D4AF37] hover:bg-zinc-850"
-                          : "bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-white"
+                      className={`w-full py-4 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 shadow-xl hover:shadow-[#D4AF37]/20 active:scale-95 cursor-pointer ${
+                        p.id === "free" 
+                          ? "bg-zinc-800 text-white hover:bg-zinc-700" 
+                          : "bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black hover:brightness-110"
                       }`}
                     >
-                      {p.id === "legend" ? "Sur Invitation" : "Sélectionner"}
+                      {p.id === "free" ? "Continuer" : `Devenir ${p.id.toUpperCase()}`}
                     </button>
                   )}
                 </div>
@@ -299,19 +275,114 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
           })}
         </div>
 
+        {/* PRÉSENTER LES AVANTAGES (LARGE CARDS) */}
+        <div className="mb-24 space-y-12">
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Pourquoi devenir Premium ?</h2>
+            <p className="text-zinc-500 text-sm max-w-xl mx-auto">Découvrez les outils conçus pour propulser votre carrière musicale vers le haut.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { 
+                title: "Badge Premium", 
+                desc: "Soyez immédiatement reconnu comme un professionnel certifié.", 
+                icon: Award,
+                highlight: "Confiance & Prestige"
+              },
+              { 
+                title: "Plus de visibilité", 
+                desc: "Votre profil apparaît avant les autres dans toutes les recherches.", 
+                icon: Sparkles,
+                highlight: "Top 1% de l'annuaire"
+              },
+              { 
+                title: "Plus d'opportunités", 
+                desc: "Accédez aux meilleurs Gombos et aux contrats exclusifs.", 
+                icon: Music,
+                highlight: "Contrats Premium"
+              },
+              { 
+                title: "Réduction des commissions", 
+                desc: "Payez seulement 1,5% au lieu de 2,5% sur vos revenus.", 
+                icon: Shield,
+                highlight: "Économies directes"
+              },
+              { 
+                title: "Statistiques avancées", 
+                desc: "Comprenez l'évolution de votre carrière avec des rapports précis.", 
+                icon: BarChart3,
+                highlight: "Données analytiques"
+              },
+              { 
+                title: "Priorité absolue", 
+                desc: "Vos publications et candidatures passent avant les comptes standards.", 
+                icon: Radio,
+                highlight: "Vitesse & Efficacité"
+              },
+            ].map((adv, idx) => (
+              <div key={idx} className="p-8 bg-zinc-900/30 border border-zinc-800 rounded-[32px] space-y-6 hover:border-[#D4AF37]/30 transition-all group">
+                <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <adv.icon className="w-7 h-7" />
+                </div>
+                <div className="space-y-2">
+                  <div className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">{adv.highlight}</div>
+                  <h4 className="text-lg font-black text-white uppercase tracking-tight">{adv.title}</h4>
+                  <p className="text-sm text-zinc-500 leading-relaxed">{adv.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* COMPARISON TABLE */}
+        <div className="mb-24 space-y-12 overflow-x-auto">
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Comparatif des offres</h2>
+          </div>
+
+          <table className="w-full text-left border-collapse min-w-[600px]">
+            <thead>
+              <tr className="border-b border-zinc-900">
+                <th className="py-6 text-zinc-500 font-bold uppercase text-[10px] tracking-widest">Avantages</th>
+                <th className="py-6 text-center text-zinc-300 font-black uppercase text-xs">Free</th>
+                <th className="py-6 text-center text-emerald-400 font-black uppercase text-xs">Pro</th>
+                <th className="py-6 text-center text-[#D4AF37] font-black uppercase text-xs">Elite</th>
+              </tr>
+            </thead>
+            <tbody className="text-xs">
+              {[
+                { label: "Commission sur contrat", free: "2,5%", pro: "1,5%", elite: "1,5%" },
+                { label: "Badge de profil", free: "Standard", pro: "Silver", elite: "Gold Prestige" },
+                { label: "Publications / jour", free: "1 / sem", pro: "3 / jour", elite: "Illimité" },
+                { label: "Visibilité annuaire", free: "Standard", pro: "+40%", elite: "Priorité Maximale" },
+                { label: "Statistiques", free: "Basique", pro: "Standards", elite: "Avancées" },
+                { label: "Candidatures", free: "Standard", pro: "Prioritaires", elite: "Ultra-Prioritaires" },
+              ].map((row, i) => (
+                <tr key={i} className="border-b border-zinc-900/50 hover:bg-zinc-900/20 transition-colors">
+                  <td className="py-5 font-medium text-zinc-400">{row.label}</td>
+                  <td className="py-5 text-center text-zinc-600 font-mono">{row.free}</td>
+                  <td className="py-5 text-center text-zinc-300 font-mono">{row.pro}</td>
+                  <td className="py-5 text-center text-white font-mono font-bold">{row.elite}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
         {/* SECTION : ÉCONOMISEZ SUR VOS CONTRATS */}
-        <div className="mt-16 bg-gradient-to-b from-zinc-950 to-black border border-zinc-850 p-6 sm:p-8 rounded-3xl space-y-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="mt-16 bg-gradient-to-b from-zinc-950 to-black border border-zinc-850 p-10 sm:p-16 rounded-[48px] space-y-12 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-[120px] pointer-events-none"></div>
           
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <span className="text-[#D4AF37] text-[10px] uppercase font-black tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/20">
-              ⚡ Monétisation Équitable & Transparente
+          <div className="text-center max-w-2xl mx-auto space-y-4">
+            <span className="text-[#D4AF37] text-[10px] uppercase font-black tracking-widest bg-[#D4AF37]/10 px-4 py-1.5 rounded-full border border-[#D4AF37]/20">
+              ⚡ Économie Directe
             </span>
-            <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tighter">
               Économisez sur vos contrats
             </h2>
-            <p className="text-xs text-zinc-400">
-              Avec AFRIGOMBO, les commissions sont appliquées individuellement. <strong className="text-[#D4AF37]">Le Premium réduit uniquement VOS PROPRES commissions</strong>. Le statut Premium d'un utilisateur ne modifie jamais la commission de l'autre partie : chaque partie bénéficie individuellement de son abonnement.
+            <p className="text-sm text-zinc-500 leading-relaxed">
+              Le Premium réduit uniquement <strong className="text-[#D4AF37]">VOS PROPRES commissions</strong> (1,5% au lieu de 2,5%). Chaque partie bénéficie individuellement de son propre abonnement.
             </p>
           </div>
 
@@ -401,14 +472,14 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
             </div>
 
             {/* Right: Dynamic simulation widget */}
-            <div className="lg:col-span-5 bg-zinc-900/30 border border-zinc-850 p-5 rounded-3xl space-y-4">
+            <div className="lg:col-span-5 bg-zinc-900/30 border border-zinc-850 p-8 rounded-[32px] space-y-6">
               <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block">Simulateur d'économies</span>
-              <h4 className="text-sm font-bold text-white">Ajuster manuellement</h4>
+              <h4 className="text-sm font-bold text-white">Ajuster le montant</h4>
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex justify-between text-xs">
-                  <span className="text-zinc-400">Montant du contrat :</span>
-                  <span className="text-[#D4AF37] font-bold font-mono">{simAmount.toLocaleString()} FCFA</span>
+                  <span className="text-zinc-400">Contrat :</span>
+                  <span className="text-[#D4AF37] font-bold font-mono text-base">{simAmount.toLocaleString()} FCFA</span>
                 </div>
                 <input 
                   type="range" 
@@ -417,17 +488,12 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                   step="50000"
                   value={simAmount}
                   onChange={(e) => setSimAmount(Number(e.target.value))}
-                  className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                  className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
                 />
-                <div className="flex justify-between text-[9px] text-zinc-500 font-mono">
-                  <span>50 000 F</span>
-                  <span>500 000 F</span>
-                  <span>1 000 000 F</span>
-                </div>
               </div>
 
-              <div className="space-y-2 border-t border-zinc-800 pt-3 text-xs">
-                <div className="flex justify-between text-zinc-400">
+              <div className="space-y-3 border-t border-zinc-800 pt-6 text-xs">
+                <div className="flex justify-between text-zinc-500">
                   <span>Frais standard (2.5%) :</span>
                   <span className="font-mono">{(simAmount * 0.025).toLocaleString()} FCFA</span>
                 </div>
@@ -435,45 +501,14 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                   <span>Frais Premium (1.5%) :</span>
                   <span className="font-mono text-[#D4AF37]">{(simAmount * 0.015).toLocaleString()} FCFA</span>
                 </div>
-                <div className="flex justify-between font-bold text-emerald-400 pt-1 border-t border-dashed border-zinc-800">
-                  <span>Votre Économie (1%) :</span>
+                <div className="flex justify-between font-black text-emerald-400 pt-3 border-t border-dashed border-zinc-800 text-sm">
+                  <span>Gain net :</span>
                   <span className="font-mono">{(simAmount * 0.01).toLocaleString()} FCFA</span>
                 </div>
               </div>
             </div>
 
           </div>
-
-          {/* AVANTAGES PREMIUM SECTION */}
-          <div className="border-t border-zinc-900 pt-8 mt-4 space-y-6">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-[#D4AF37] border-l-2 border-[#D4AF37] pl-3">
-              AVANTAGES PREMIUM EXCLUSIFS
-            </h3>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { title: "Badge Premium", desc: "Affichez fièrement votre statut Gold ou Silver vérifié d'office.", icon: Award },
-                { title: "Profil mis en avant", desc: "Maximisez votre exposition en haut de l'annuaire général des artistes.", icon: Sparkles },
-                { title: "Publications prioritaires", desc: "Diffusez vos actus sans aucune restriction hebdomadaire.", icon: Film },
-                { title: "Apparition prioritaire", desc: "Soyez le premier affiché lors des requêtes des recruteurs et promoteurs.", icon: Radio },
-                { title: "Statistiques avancées", desc: "Accédez aux rapports d'audience, de clics et d'écoutes de vos œuvres.", icon: BarChart3 },
-                { title: "Réduction des commissions", desc: "Payez seulement 1,5% de commission au lieu de 2,5% sur chaque contrat.", icon: Shield },
-                { title: "Futures fonctionnalités", desc: "Bénéficiez en avant-première des outils de co-promotion et du studio AFRIGOMBO.", icon: Music }
-              ].map((adv, idx) => {
-                const IconComponent = adv.icon;
-                return (
-                  <div key={idx} className="p-4 bg-zinc-900/20 border border-zinc-900 rounded-2xl space-y-2 hover:border-zinc-850 transition-colors">
-                    <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] flex items-center justify-center">
-                      <IconComponent className="w-4 h-4" />
-                    </div>
-                    <h4 className="text-xs font-bold text-white uppercase tracking-tight">{adv.title}</h4>
-                    <p className="text-[10px] text-zinc-400 leading-relaxed">{adv.desc}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
         </div>
 
         {/* PAYMENT POPUP / INTERACTIVE CARD */}
@@ -527,9 +562,9 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
 
                 <button
                   onClick={processPayment}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl hover:brightness-110 active:scale-99 transition-all cursor-pointer shadow-[0_5px_15px_rgba(16,185,129,0.15)]"
+                  className="w-full bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-black uppercase text-xs py-4 tracking-widest rounded-2xl hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-xl"
                 >
-                  Payez {plans.find(p => p.id === selectedPlan)?.price}
+                  Confirmer le paiement - {plans.find(p => p.id === selectedPlan)?.priceLabel}
                 </button>
               </div>
             )}

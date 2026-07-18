@@ -63,8 +63,11 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
   const [avatarProgress, setAvatarProgress] = useState(0);
 
   const [idCardUrl, setIdCardUrl] = useState(currentUserProfile.kycDocs?.identityCardUrl || currentUserProfile.kycDocUrl || "");
+  const [idCardBackUrl, setIdCardBackUrl] = useState(currentUserProfile.kycDocs?.identityCardBackUrl || "");
   const [idUploading, setIdUploading] = useState(false);
+  const [idBackUploading, setIdBackUploading] = useState(false);
   const [idProgress, setIdProgress] = useState(0);
+  const [idBackProgress, setIdBackProgress] = useState(0);
 
   const [selfieUrl, setSelfieUrl] = useState(currentUserProfile.kycDocs?.selfieUrl || "");
   const [selfieUploading, setSelfieUploading] = useState(false);
@@ -97,6 +100,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
       setArtistName(currentUserProfile.artisticName || currentUserProfile.artistName || "");
       setAvatarUrl(currentUserProfile.avatarUrl || currentUserProfile.photoURL || "");
       setIdCardUrl(currentUserProfile.kycDocs?.identityCardUrl || currentUserProfile.kycDocUrl || "");
+      setIdCardBackUrl(currentUserProfile.kycDocs?.identityCardBackUrl || "");
       setSelfieUrl(currentUserProfile.kycDocs?.selfieUrl || "");
       setRole(currentUserProfile.role || "musicien");
       setExperience(currentUserProfile.experience || "Intermédiaire");
@@ -125,8 +129,8 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
         if (avatarUrl) return "Validée"; // any avatar url counts
         return "À faire";
       case 3: // Pièce d'identité
-        if (idCardUrl) return "Validée";
-        if (idUploading) return "En cours";
+        if (idCardUrl && idCardBackUrl) return "Validée";
+        if (idUploading || idBackUploading) return "En cours";
         return "À faire";
       case 4: // Selfie de vérification
         if (selfieUrl) return "Validée";
@@ -187,7 +191,8 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
             kycDocUrl: idCardUrl,
             kycDocs: {
               ...currentUserProfile.kycDocs,
-              identityCardUrl: idCardUrl
+              identityCardUrl: idCardUrl,
+              identityCardBackUrl: idCardBackUrl
             }
           };
           break;
@@ -239,20 +244,25 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
   };
 
   // Upload file handler
-  const handleFileUpload = async (file: File, type: "avatar" | "id" | "selfie") => {
+  const handleFileUpload = async (file: File, type: "avatar" | "id" | "id_verso" | "selfie") => {
     const isAvatar = type === "avatar";
     const isId = type === "id";
+    const isIdBack = type === "id_verso";
     const isSelfie = type === "selfie";
 
     if (isAvatar) { setAvatarUploading(true); setAvatarProgress(0); }
     if (isId) { setIdUploading(true); setIdProgress(0); }
+    if (isIdBack) { setIdBackUploading(true); setIdBackProgress(0); }
     if (isSelfie) { setSelfieUploading(true); setSelfieProgress(0); }
 
     try {
-      const path = `kyc/${currentUserProfile.uid}/${Date.now()}_${type}_${file.name}`;
+      const fileName = isId ? "id_front.jpg" : isIdBack ? "id_back.jpg" : file.name;
+      const path = `kyc/${currentUserProfile.uid}/${isId || isIdBack ? fileName : `${Date.now()}_${type}_${file.name}`}`;
+      
       const downloadUrl = await gomboDB.uploadFile(file, path, (progress) => {
         if (isAvatar) setAvatarProgress(Math.round(progress));
         if (isId) setIdProgress(Math.round(progress));
+        if (isIdBack) setIdBackProgress(Math.round(progress));
         if (isSelfie) setSelfieProgress(Math.round(progress));
       });
 
@@ -266,6 +276,14 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
           kycDocs: {
             ...currentUserProfile.kycDocs,
             identityCardUrl: downloadUrl
+          }
+        });
+      } else if (isIdBack) {
+        setIdCardBackUrl(downloadUrl);
+        await gomboDB.updateUserProfile(currentUserProfile.uid, {
+          kycDocs: {
+            ...currentUserProfile.kycDocs,
+            identityCardBackUrl: downloadUrl
           }
         });
       } else if (isSelfie) {
@@ -285,6 +303,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
     } finally {
       if (isAvatar) setAvatarUploading(false);
       if (isId) setIdUploading(false);
+      if (isIdBack) setIdBackUploading(false);
       if (isSelfie) setSelfieUploading(false);
     }
   };
@@ -349,7 +368,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                 type="text" 
                 value={firstName} 
                 onChange={(e) => setFirstName(e.target.value)} 
-                className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]" 
+                className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-afri-gold" 
                 placeholder="Ex. Jean"
               />
             </div>
@@ -359,7 +378,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                 type="text" 
                 value={lastName} 
                 onChange={(e) => setLastName(e.target.value)} 
-                className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]" 
+                className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-afri-gold" 
                 placeholder="Ex. Kouassi"
               />
             </div>
@@ -372,7 +391,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                 type="tel" 
                 value={phone} 
                 onChange={(e) => setPhone(e.target.value)} 
-                className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]" 
+                className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-afri-gold" 
                 placeholder="0700000000"
               />
             </div>
@@ -382,7 +401,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                 type="date" 
                 value={birthDate} 
                 onChange={(e) => setBirthDate(e.target.value)} 
-                className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]" 
+                className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-afri-gold" 
               />
             </div>
           </div>
@@ -392,7 +411,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
             <select 
               value={commune} 
               onChange={(e) => setCommune(e.target.value)} 
-              className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+              className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-afri-gold"
             >
               {ABIDJAN_COMMUNES.map((comm) => (
                 <option key={comm} value={comm}>{comm}</option>
@@ -422,7 +441,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
               type="text" 
               value={artistName} 
               onChange={(e) => setArtistName(e.target.value)} 
-              className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37] font-black text-center" 
+              className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-afri-gold font-black text-center" 
               placeholder="Ex. DJ KEROZEN, SERGE BEYNAUD"
             />
             <p className="text-[9px] text-zinc-500 font-mono mt-1.5 leading-normal">
@@ -446,13 +465,13 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
       icon: Camera,
       renderForm: () => (
         <div className="space-y-4 pt-2">
-          <div className="flex flex-col items-center justify-center p-4 border border-dashed border-zinc-800 rounded-2xl bg-[#030303]">
+          <div className="flex flex-col items-center justify-center p-4 border border-dashed border-zinc-800 rounded-2xl bg-afri-bg-sec">
             {avatarUrl ? (
               <div className="relative group mb-3">
                 <img 
                   src={avatarUrl} 
                   alt="Profile Preview" 
-                  className="w-24 h-24 rounded-full object-cover border-2 border-[#D4AF37]/50" 
+                  className="w-24 h-24 rounded-full object-cover border-2 border-afri-gold/50" 
                   referrerPolicy="no-referrer"
                 />
                 <button 
@@ -506,60 +525,107 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
       renderForm: () => (
         <div className="space-y-4 pt-2">
           <p className="text-[10px] text-zinc-400 font-sans leading-relaxed">
-            Pour assurer l'authenticité de l'écosystème, téléversez un scan ou une photo nette de votre pièce d'identité officielle (recto).
+            Pour assurer l'authenticité de l'écosystème, téléversez un scan ou une photo nette de votre pièce d'identité officielle (<strong className="text-white">Recto et Verso séparés</strong>).
           </p>
 
-          <div className="flex flex-col items-center justify-center p-5 border border-dashed border-zinc-800 rounded-2xl bg-[#030303]">
-            {idCardUrl ? (
-              <div className="w-full bg-emerald-950/20 border border-emerald-900/30 rounded-xl p-3 flex items-center gap-3.5 mb-3">
-                <span className="text-emerald-400 text-lg">📄</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-bold text-white truncate">Pièce d'identité reçue</p>
-                  <p className="text-[9px] text-zinc-500 font-mono">Format sécurisé stocké</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* RECTO */}
+            <div className="flex flex-col items-center justify-center p-4 border border-dashed border-zinc-800 rounded-2xl bg-afri-bg-sec">
+              <span className="text-[9px] font-mono font-black text-zinc-500 uppercase mb-2">Carte Recto (Face)</span>
+              {idCardUrl ? (
+                <div className="w-full bg-emerald-950/20 border border-emerald-900/30 rounded-xl p-2 flex items-center gap-2 mb-2">
+                  <span className="text-emerald-400 text-sm">✅</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold text-white truncate">Reçu</p>
+                  </div>
+                  <button 
+                    onClick={() => setIdCardUrl("")}
+                    className="bg-zinc-900 hover:bg-zinc-800 p-1 rounded-lg text-zinc-400 text-[10px]"
+                  >
+                    X
+                  </button>
                 </div>
-                <button 
-                  onClick={() => setIdCardUrl("")}
-                  className="bg-zinc-900 hover:bg-zinc-800 p-1 rounded-lg text-zinc-400 hover:text-white"
-                >
-                  Modifier
-                </button>
-              </div>
-            ) : (
-              <div className="text-center space-y-2">
-                <FileText className="w-9 h-9 text-zinc-600 mx-auto" />
-                <p className="text-[9.5px] text-zinc-500 font-mono">JPG, PNG jusqu'à 5 Mo</p>
-              </div>
-            )}
+              ) : (
+                <div className="text-center space-y-1 mb-2">
+                  <FileText className="w-6 h-6 text-zinc-600 mx-auto" />
+                </div>
+              )}
 
-            <input 
-              type="file" 
-              accept="image/*,application/pdf" 
-              id="idcard-flow-picker" 
-              className="hidden" 
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleFileUpload(e.target.files[0], "id");
-                }
-              }}
-            />
-            
-            {!idCardUrl && (
-              <label 
-                htmlFor="idcard-flow-picker"
-                className="mt-3 px-4 py-2 bg-zinc-900 hover:bg-zinc-850 text-white font-mono text-xs rounded-xl border border-zinc-800 cursor-pointer flex items-center gap-1.5 transition-all"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                {idUploading ? `Envoi... ${idProgress}%` : "Sélectionner la pièce d'identité"}
-              </label>
-            )}
+              <input 
+                type="file" 
+                accept="image/*" 
+                id="idcard-recto-picker" 
+                className="hidden" 
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileUpload(e.target.files[0], "id");
+                  }
+                }}
+              />
+              
+              {!idCardUrl && (
+                <label 
+                  htmlFor="idcard-recto-picker"
+                  className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-850 text-white font-mono text-[10px] rounded-lg border border-zinc-800 cursor-pointer flex items-center gap-1 transition-all"
+                >
+                  <Upload className="w-3 h-3" />
+                  {idUploading ? `${idProgress}%` : "Recto"}
+                </label>
+              )}
+            </div>
+
+            {/* VERSO */}
+            <div className="flex flex-col items-center justify-center p-4 border border-dashed border-zinc-800 rounded-2xl bg-afri-bg-sec">
+              <span className="text-[9px] font-mono font-black text-zinc-500 uppercase mb-2">Carte Verso (Dos)</span>
+              {idCardBackUrl ? (
+                <div className="w-full bg-emerald-950/20 border border-emerald-900/30 rounded-xl p-2 flex items-center gap-2 mb-2">
+                  <span className="text-emerald-400 text-sm">✅</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold text-white truncate">Reçu</p>
+                  </div>
+                  <button 
+                    onClick={() => setIdCardBackUrl("")}
+                    className="bg-zinc-900 hover:bg-zinc-800 p-1 rounded-lg text-zinc-400 text-[10px]"
+                  >
+                    X
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center space-y-1 mb-2">
+                  <FileText className="w-6 h-6 text-zinc-600 mx-auto" />
+                </div>
+              )}
+
+              <input 
+                type="file" 
+                accept="image/*" 
+                id="idcard-verso-picker" 
+                className="hidden" 
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileUpload(e.target.files[0], "id_verso");
+                  }
+                }}
+              />
+              
+              {!idCardBackUrl && (
+                <label 
+                  htmlFor="idcard-verso-picker"
+                  className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-850 text-white font-mono text-[10px] rounded-lg border border-zinc-800 cursor-pointer flex items-center gap-1 transition-all"
+                >
+                  <Upload className="w-3 h-3" />
+                  {idBackUploading ? `${idBackProgress}%` : "Verso"}
+                </label>
+              )}
+            </div>
           </div>
 
           <button 
             onClick={() => handleSaveStep(3)}
-            disabled={!idCardUrl || idUploading}
+            disabled={!idCardUrl || !idCardBackUrl || idUploading || idBackUploading}
             className="w-full py-2 bg-gradient-to-r from-amber-600 to-[#D4AF37] hover:brightness-110 disabled:opacity-50 text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer"
           >
-            Valider la pièce d'identité
+            {savingStep === 3 ? "Sauvegarde..." : "Valider les deux faces"}
           </button>
         </div>
       )
@@ -571,10 +637,10 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
       renderForm: () => (
         <div className="space-y-4 pt-2">
           <p className="text-[10px] text-zinc-400 font-sans leading-relaxed">
-            Pour confirmer que la pièce d'identité vous appartient, téléversez un selfie de vous tenant un bout de papier écrit à la main <strong className="text-[#D4AF37]">"AFRIGOMBO"</strong> avec la date d'aujourd'hui.
+            Pour confirmer que la pièce d'identité vous appartient, téléversez un selfie de vous tenant un bout de papier écrit à la main <strong className="text-afri-gold">"AFRIGOMBO"</strong> avec la date d'aujourd'hui.
           </p>
 
-          <div className="flex flex-col items-center justify-center p-5 border border-dashed border-zinc-800 rounded-2xl bg-[#030303]">
+          <div className="flex flex-col items-center justify-center p-5 border border-dashed border-zinc-800 rounded-2xl bg-afri-bg-sec">
             {selfieUrl ? (
               <div className="w-full bg-emerald-950/20 border border-emerald-900/30 rounded-xl p-3 flex items-center gap-3.5 mb-3">
                 <span className="text-emerald-400 text-lg">🤳</span>
@@ -641,7 +707,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
               <select 
                 value={role} 
                 onChange={(e) => setRole(e.target.value)} 
-                className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-afri-gold"
               >
                 <option value="musicien">Musicien / Chanteur</option>
                 <option value="client">Organisateur / Promoteur</option>
@@ -653,7 +719,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
               <select 
                 value={experience} 
                 onChange={(e) => setExperience(e.target.value)} 
-                className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-afri-gold"
               >
                 {EXPERIENCES.map((exp) => (
                   <option key={exp} value={exp}>{exp}</option>
@@ -664,7 +730,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
 
           <div>
             <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1.5">Spécialités artistiques (Choisir au moins 1)</label>
-            <div className="flex flex-wrap gap-1.5 max-h-[100px] overflow-y-auto p-2 bg-[#030303] border border-zinc-900 rounded-xl">
+            <div className="flex flex-wrap gap-1.5 max-h-[100px] overflow-y-auto p-2 bg-afri-bg-sec border border-zinc-900 rounded-xl">
               {SPECIALTIES.map((spec) => {
                 const selected = specialties.includes(spec);
                 return (
@@ -673,7 +739,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                     type="button"
                     onClick={() => handleToggleSpecialty(spec)}
                     className={`px-2 py-1 rounded text-[10px] font-mono font-bold uppercase transition-all ${
-                      selected ? "bg-[#D4AF37] text-black border border-amber-500" : "bg-zinc-900 text-zinc-500 border border-zinc-950"
+                      selected ? "bg-afri-gold text-black border border-amber-500" : "bg-afri-bg-sec text-zinc-500 border border-zinc-950"
                     }`}
                   >
                     {spec}
@@ -685,7 +751,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
 
           <div>
             <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1.5">Styles musicaux</label>
-            <div className="flex flex-wrap gap-1.5 max-h-[100px] overflow-y-auto p-2 bg-[#030303] border border-zinc-900 rounded-xl">
+            <div className="flex flex-wrap gap-1.5 max-h-[100px] overflow-y-auto p-2 bg-afri-bg-sec border border-zinc-900 rounded-xl">
               {GENRES.map((gen) => {
                 const selected = musicGenres.includes(gen);
                 return (
@@ -694,7 +760,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                     type="button"
                     onClick={() => handleToggleGenre(gen)}
                     className={`px-2 py-1 rounded text-[10px] font-mono font-bold uppercase transition-all ${
-                      selected ? "bg-[#D4AF37] text-black border border-amber-500" : "bg-zinc-900 text-zinc-400 border border-zinc-950"
+                      selected ? "bg-afri-gold text-black border border-amber-500" : "bg-afri-bg-sec text-zinc-400 border border-zinc-950"
                     }`}
                   >
                     {gen}
@@ -710,7 +776,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
               value={bio} 
               onChange={(e) => setBio(e.target.value)} 
               rows={3}
-              className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37] placeholder-zinc-700" 
+              className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-afri-gold placeholder-zinc-700" 
               placeholder="Décrivez votre parcours musical, vos collaborations passées, vos influences et vos scènes..."
             />
           </div>
@@ -738,7 +804,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                 type="text" 
                 value={instagram} 
                 onChange={(e) => { setInstagram(e.target.value); setSkippedSocials(false); }} 
-                className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]" 
+                className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-afri-gold" 
                 placeholder="Ex: instagram.com/mon_artiste"
               />
             </div>
@@ -748,7 +814,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                 type="text" 
                 value={youtube} 
                 onChange={(e) => { setYoutube(e.target.value); setSkippedSocials(false); }} 
-                className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]" 
+                className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-afri-gold" 
                 placeholder="Ex: youtube.com/c/mon_artiste"
               />
             </div>
@@ -758,7 +824,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                 type="text" 
                 value={facebook} 
                 onChange={(e) => { setFacebook(e.target.value); setSkippedSocials(false); }} 
-                className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]" 
+                className="w-full bg-afri-bg border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-afri-gold" 
                 placeholder="Ex: facebook.com/mon_artiste"
               />
             </div>
@@ -777,7 +843,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
                   setFacebook("");
                 }
               }}
-              className="rounded border-zinc-850 bg-[#050505] text-[#D4AF37] focus:ring-[#D4AF37]"
+              className="rounded border-zinc-850 bg-afri-bg text-afri-gold focus:ring-[#D4AF37]"
             />
             <label htmlFor="skip-socials-cb" className="text-[10.5px] font-mono font-bold text-zinc-400 select-none uppercase tracking-wide">
               Je n'ai pas de réseaux à lier / Passer
@@ -861,16 +927,16 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
       </div>
 
       {/* Progress Card */}
-      <div className="bg-[#050505] border border-zinc-900 rounded-3xl p-5 shadow-lg space-y-4">
+      <div className="bg-afri-bg border border-zinc-900 rounded-3xl p-5 shadow-lg space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <span className="text-[9px] font-mono font-black text-[#D4AF37] uppercase tracking-[0.15em]">Statut de votre dossier</span>
+            <span className="text-[9px] font-mono font-black text-afri-gold uppercase tracking-[0.15em]">Statut de votre dossier</span>
             <h3 className="text-sm font-sans font-black uppercase text-white tracking-wide">
               {progressPercent === 100 ? "Dossier prêt pour envoi" : `${completedStepsCount} / 7 étapes complétées`}
             </h3>
           </div>
           <div className="text-right">
-            <span className="text-lg font-serif font-black text-[#D4AF37]">{progressPercent}%</span>
+            <span className="text-lg font-serif font-black text-afri-gold">{progressPercent}%</span>
           </div>
         </div>
 
@@ -885,8 +951,8 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
         </div>
 
         {/* Informative block */}
-        <div className="flex gap-2.5 bg-black/40 border border-white/5 rounded-2xl p-3 text-[10px] text-zinc-400 font-sans leading-relaxed">
-          <Fingerprint className="w-5 h-5 text-[#D4AF37] shrink-0 stroke-[1.8]" />
+        <div className="flex gap-2.5 bg-afri-bg-sec/40 border border-white/5 rounded-2xl p-3 text-[10px] text-zinc-400 font-sans leading-relaxed">
+          <Fingerprint className="w-5 h-5 text-afri-gold shrink-0 stroke-[1.8]" />
           <span>
             Le GOMBO ID certifie votre profil auprès des producteurs, garantit le versement sécurisé de vos cachets et vous donne un accès privilégié aux Gombos du Temple.
           </span>
@@ -903,9 +969,9 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
           return (
             <div 
               key={idx}
-              className={`bg-[#050505] border rounded-2xl overflow-hidden transition-all duration-300 ${
+              className={`bg-afri-bg border rounded-2xl overflow-hidden transition-all duration-300 ${
                 isOpen 
-                  ? "border-[#D4AF37]/45 shadow-[0_4px_15px_rgba(212,175,55,0.06)]" 
+                  ? "border-afri-gold/45 shadow-[0_4px_15px_rgba(212,175,55,0.06)]" 
                   : "border-zinc-900/80 hover:border-zinc-800"
               }`}
             >
@@ -968,7 +1034,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
 
       {/* Submission Panel at the bottom */}
       {currentUserProfile.kycStatus !== "pending" && !currentUserProfile.isVerified && (
-        <div className="bg-[#050505] border border-zinc-900 rounded-3xl p-5 text-center space-y-4">
+        <div className="bg-afri-bg border border-zinc-900 rounded-3xl p-5 text-center space-y-4">
           <div className="space-y-1">
             <h4 className="text-xs font-mono uppercase font-black text-zinc-500 tracking-wider">Soumettre le dossier de certification</h4>
             <p className="text-[10px] text-zinc-400 font-sans">
@@ -1007,7 +1073,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
       {/* Success Modal / Display */}
       {submitSuccess && (
         <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[999999] flex items-center justify-center p-4">
-          <div className="w-full max-w-sm rounded-3xl border border-[#D4AF37]/35 bg-[#050505] p-6 text-center space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="w-full max-w-sm rounded-3xl border border-afri-gold/35 bg-afri-bg p-6 text-center space-y-6 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 via-[#D4AF37] to-amber-300" />
             
             <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto">
@@ -1016,7 +1082,7 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
 
             <div className="space-y-1.5">
               <h3 className="text-base font-sans font-black uppercase text-white tracking-wider">Demande soumise !</h3>
-              <p className="text-[10.5px] font-mono text-[#D4AF37] tracking-widest uppercase">⏱️ Analyse en cours</p>
+              <p className="text-[10.5px] font-mono text-afri-gold tracking-widest uppercase">⏱️ Analyse en cours</p>
             </div>
 
             <p className="text-[11px] text-zinc-400 leading-relaxed max-w-[280px] mx-auto">

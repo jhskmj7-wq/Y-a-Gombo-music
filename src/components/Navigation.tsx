@@ -17,7 +17,7 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[460px] bg-[#0E0E10]/95 backdrop-blur-xl border border-white/10 rounded-[28px] px-4 py-2 flex justify-between items-center z-40 shadow-[0_12px_32px_rgba(0,0,0,0.7)] h-[72px]">
+    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[460px] bg-afri-bg-sec/95 backdrop-blur-xl border border-afri-border rounded-[28px] px-4 py-2 flex justify-between items-center z-40 shadow-[0_12px_32px_rgba(0,0,0,0.1)] h-[72px]">
       {navItems.map((item) => {
         const Icon = item.icon;
         const active = location.pathname === item.path;
@@ -32,11 +32,11 @@ export default function Navigation() {
                     navigate(item.path);
                   });
                 }}
-                className="w-14 h-14 rounded-full bg-[#D4AF37] border-4 border-[#0E0E10] flex items-center justify-center text-black cursor-pointer shadow-[0_6px_20px_rgba(212,175,55,0.35)] hover:scale-105 active:scale-95 transition-all"
+                className="w-14 h-14 rounded-full bg-afri-gold border-4 border-afri-bg flex items-center justify-center text-black cursor-pointer shadow-[0_6px_20px_rgba(212,175,55,0.35)] hover:scale-105 active:scale-95 transition-all"
               >
                 <span className="text-3xl font-light leading-none">+</span>
               </button>
-              <span className="text-[8.5px] font-bold text-white mt-1 tracking-wider uppercase">PUBLIER</span>
+              <span className="text-[8.5px] font-bold text-afri-text mt-1 tracking-wider uppercase">PUBLIER</span>
             </div>
           );
         }
@@ -56,8 +56,8 @@ export default function Navigation() {
             }}
             className={`flex flex-col items-center justify-center cursor-pointer transition-all w-16 ${
               active 
-                ? 'text-[#D4AF37] scale-105 font-bold' 
-                : 'text-zinc-500 hover:text-zinc-300'
+                ? 'text-afri-gold scale-105 font-bold' 
+                : 'text-afri-text-muted hover:text-afri-text'
             }`}
           >
             {Icon && <Icon size={20} className={active ? 'stroke-[2.5px]' : 'stroke-[1.8px]'} />}

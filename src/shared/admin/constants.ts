@@ -1,6 +1,5 @@
 export const SUPER_FOUNDERS = [
-  "jhs.kmj7@gmail.com",
-  "Johnsylvesterh@gmail.com"
+  "jhs.kmj7@gmail.com"
 ];
 
 export const isSuperFounder = (email?: string) => {

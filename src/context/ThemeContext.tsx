@@ -3,7 +3,7 @@ import { globalAudioManager } from "../lib/audioManager";
 import { useAuth } from "../AuthContext";
 import { gomboDB } from "../firebase";
 
-export type Theme = "imperial" | "light" | "nuit" | "elite" | "studio" | "nature";
+export type Theme = "imperial" | "light" | "royal" | "saphir" | "emeraude" | "studio" | "rouge";
 type TextSize = "petit" | "moyen" | "grand";
 
 const safeGetItem = (key: string, fallback: string): string => {
@@ -22,7 +22,7 @@ const safeSetItem = (key: string, value: string): void => {
   }
 };
 
-export const themeColors: Record<Theme, { bg: string; bgSec: string; text: string; textSec: string; border: string; gold: string }> = {
+export const themeColors: Record<Theme, { bg: string; bgSec: string; bgTer?: string; text: string; textSec: string; textMuted?: string; border: string; gold: string }> = {
   imperial: {
     bg: "#050505",
     bgSec: "#111111",
@@ -34,26 +34,36 @@ export const themeColors: Record<Theme, { bg: string; bgSec: string; text: strin
   light: {
     bg: "#F8F6F1",
     bgSec: "#FFFFFF",
-    text: "#1C1C1C",
+    bgTer: "#F2EFE8",
+    text: "#111111",
     textSec: "#555555",
-    border: "rgba(212, 175, 55, 0.15)",
+    textMuted: "#777777",
+    border: "#E2DDD3",
     gold: "#D4AF37"
   },
-  nuit: {
-    bg: "#080810",
-    bgSec: "#0F0F1A",
-    text: "#E2E8F0",
-    textSec: "#94A3B8",
-    border: "rgba(99, 102, 241, 0.2)",
-    gold: "#6366F1"
-  },
-  elite: {
-    bg: "#0D0D0D",
-    bgSec: "#161616",
-    text: "#F5F5F7",
-    textSec: "#8E8E93",
-    border: "rgba(142, 142, 147, 0.2)",
+  royal: {
+    bg: "#121008",
+    bgSec: "#1C190F",
+    text: "#FDFBF5",
+    textSec: "#D4AF37",
+    border: "rgba(212, 175, 55, 0.3)",
     gold: "#D4AF37"
+  },
+  saphir: {
+    bg: "#050B15",
+    bgSec: "#0D162B",
+    text: "#F0F4FF",
+    textSec: "#7FA1FF",
+    border: "rgba(63, 131, 248, 0.2)",
+    gold: "#3F83F8"
+  },
+  emeraude: {
+    bg: "#051109",
+    bgSec: "#0D1F13",
+    text: "#F0FFF4",
+    textSec: "#6EE7B7",
+    border: "rgba(16, 185, 129, 0.2)",
+    gold: "#10B981"
   },
   studio: {
     bg: "#0F0A15",
@@ -63,13 +73,13 @@ export const themeColors: Record<Theme, { bg: string; bgSec: string; text: strin
     border: "rgba(168, 85, 247, 0.2)",
     gold: "#A855F7"
   },
-  nature: {
-    bg: "#050B08",
-    bgSec: "#0C1510",
-    text: "#ECFDF5",
-    textSec: "#A7F3D0",
-    border: "rgba(16, 185, 129, 0.2)",
-    gold: "#10B981"
+  rouge: {
+    bg: "#110505",
+    bgSec: "#1F0D0D",
+    text: "#FFF5F5",
+    textSec: "#F87171",
+    border: "rgba(239, 68, 68, 0.2)",
+    gold: "#EF4444"
   }
 };
 
@@ -144,7 +154,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Sync theme from loaded user profile
   useEffect(() => {
     if (profile?.theme && profile.theme !== theme) {
-      if (["imperial", "light", "nuit", "elite", "studio", "nature"].includes(profile.theme)) {
+      if (["imperial", "light", "royal", "saphir", "emeraude", "studio", "rouge"].includes(profile.theme)) {
         setThemeState(profile.theme as Theme);
       }
     }
@@ -153,19 +163,25 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Apply theme & store
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark", "imperial", "nuit", "elite", "studio", "nature");
+    root.classList.remove("light", "dark", "imperial", "royal", "saphir", "emeraude", "studio", "rouge");
     root.classList.add(theme);
     
-    // For backwards compatibility, treat dark/imperial/nuit/elite/studio as dark-based
-    if (theme === "imperial" || theme === "nuit" || theme === "elite" || theme === "studio") {
+    // Treat all except "light" as dark-based for tailwind dark: classes
+    if (theme !== "light") {
       root.classList.add("dark");
     }
     
     const cols = themeColors[theme] || themeColors.imperial;
     root.style.setProperty("--afri-bg", cols.bg);
     root.style.setProperty("--afri-bg-sec", cols.bgSec);
+    if (cols.bgTer) root.style.setProperty("--afri-bg-ter", cols.bgTer);
+    else root.style.removeProperty("--afri-bg-ter");
+
     root.style.setProperty("--afri-text", cols.text);
     root.style.setProperty("--afri-text-sec", cols.textSec);
+    if (cols.textMuted) root.style.setProperty("--afri-text-muted", cols.textMuted);
+    else root.style.removeProperty("--afri-text-muted");
+
     root.style.setProperty("--afri-border", cols.border);
     root.style.setProperty("--afri-gold", cols.gold);
     

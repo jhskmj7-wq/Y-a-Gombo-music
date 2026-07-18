@@ -413,29 +413,29 @@ export default function SocialPostCard({
 
   const getCategoryBadge = (category?: string) => {
     const categories: Record<string, { label: string; style: string }> = {
-      demo: { label: "🎤 Démo musicale", style: "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/25" },
-      recherche: { label: "🎹 Recherche d'instrumentiste", style: "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/25" },
-      renfort: { label: "🎼 Renfort Express", style: "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/25" },
-      concert: { label: "🎉 Annonce de concert", style: "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/25" },
-      opportunite: { label: "💼 Opportunité/Gombo", style: "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/25" },
-      aide: { label: "🙏 Besoin d'aide", style: "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/25" },
-      showbiz: { label: "📢 Actualité Showbiz", style: "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/25" },
-      coeur: { label: "🔥 Coup de cœur", style: "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/25" },
+      demo: { label: "🎤 Démo musicale", style: "bg-afri-gold/10 text-afri-gold border-afri-gold/25" },
+      recherche: { label: "🎹 Recherche d'instrumentiste", style: "bg-afri-gold/10 text-afri-gold border-afri-gold/25" },
+      renfort: { label: "🎼 Renfort Express", style: "bg-afri-gold/10 text-afri-gold border-afri-gold/25" },
+      concert: { label: "🎉 Annonce de concert", style: "bg-afri-gold/10 text-afri-gold border-afri-gold/25" },
+      opportunite: { label: "💼 Opportunité/Gombo", style: "bg-afri-gold/10 text-afri-gold border-afri-gold/25" },
+      aide: { label: "🙏 Besoin d'aide", style: "bg-afri-gold/10 text-afri-gold border-afri-gold/25" },
+      showbiz: { label: "📢 Actualité Showbiz", style: "bg-afri-gold/10 text-afri-gold border-afri-gold/25" },
+      coeur: { label: "🔥 Coup de cœur", style: "bg-afri-gold/10 text-afri-gold border-afri-gold/25" },
     };
-    return categories[category || ""] || { label: `💼 ${category || "Gombo"}`, style: "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/25" };
+    return categories[category || ""] || { label: `💼 ${category || "Gombo"}`, style: "bg-afri-gold/10 text-afri-gold border-afri-gold/25" };
   };
 
   const getGamifiedBadge = (gigsCount = 0, isCertified = false) => {
     if (isCertified || gigsCount >= 15) {
-      return { label: "👑 Niveau Boss", style: "text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/25" };
+      return { label: "👑 Niveau Boss", style: "text-afri-gold bg-afri-gold/10 border border-afri-gold/25" };
     }
     if (gigsCount >= 8) {
-      return { label: "🥇 Talent Vérifié", style: "text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/20" };
+      return { label: "🥇 Talent Vérifié", style: "text-afri-gold bg-afri-gold/10 border border-afri-gold/20" };
     }
     if (gigsCount >= 3) {
-      return { label: "🥈 Talent Actif", style: "text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/25" };
+      return { label: "🥈 Talent Actif", style: "text-afri-gold bg-afri-gold/10 border border-afri-gold/25" };
     }
-    return { label: "🥉 Nouveau Talent", style: "text-gray-400 bg-zinc-800/10 border border-zinc-800/20" };
+    return { label: "🥉 Nouveau Talent", style: "text-zinc-500 bg-afri-bg-sec border border-afri-border" };
   };
 
   return (
@@ -444,10 +444,10 @@ export default function SocialPostCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className={`bg-white dark:bg-[#121212] border rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 ${
+      className={`bg-afri-bg border rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 ${
         post.urgent 
-          ? "border-[#D4AF37] dark:border-[#D4AF37] shadow-[#D4AF37]/5 bg-gradient-to-tr from-[#D4AF37]/[0.02] to-transparent ring-2 ring-[#D4AF37]/10" 
-          : "border-gray-150 dark:border-zinc-800"
+          ? "border-afri-gold shadow-afri-gold/5 bg-gradient-to-tr from-afri-gold/[0.02] to-transparent ring-2 ring-afri-gold/10" 
+          : "border-afri-border"
       }`}
     >
       {/* 1. Header block: user info */}
@@ -458,7 +458,7 @@ export default function SocialPostCard({
               
               src={authorProfile?.avatarUrl || authorProfile?.photoURL || post.userAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
               alt={post.userName} 
-              className="w-full h-full rounded-full object-cover border border-white dark:border-[#121212]" 
+              className="w-full h-full rounded-full object-cover border border-afri-bg" 
             />
           </div>
           <div>
