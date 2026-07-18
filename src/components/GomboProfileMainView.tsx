@@ -136,6 +136,45 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         </motion.div>
       )}
 
+      {/* 👑 AFRIGOMBO PREMIUM CARD */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative overflow-hidden rounded-[28px] border-2 border-afri-gold bg-afri-bg p-6 shadow-[0_15px_40px_rgba(212,175,55,0.15)] space-y-4"
+      >
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-afri-gold/20 blur-[50px] rounded-full pointer-events-none" />
+        
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-14 h-14 rounded-2xl bg-afri-gold/20 border border-afri-gold/30 flex items-center justify-center">
+            <span className="text-3xl">👑</span>
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-mono font-black text-afri-gold uppercase tracking-[0.2em]">Abonnement</span>
+            <h3 className="text-lg font-sans font-black text-white uppercase tracking-tight">AFRIGOMBO PREMIUM</h3>
+          </div>
+        </div>
+        
+        <p className="text-[11px] text-zinc-400 leading-relaxed font-sans text-left relative z-10">
+          Passez au niveau supérieur. Multipliez vos gombos, démarquez-vous des autres virtuoses et débloquez les fonctionnalités exclusives de l'élite.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-3 mt-4 relative z-10">
+          <button 
+            onClick={() => onNavigateView("user_subscription_management")}
+            className="flex-1 py-3 bg-afri-gold hover:bg-[#bfa032] text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            Découvrir les offres
+          </button>
+          
+          <button 
+            onClick={() => onNavigateView("user_mes_gombos")}
+            className="flex-1 py-3 bg-afri-bg-ter border border-afri-gold text-afri-gold hover:bg-afri-gold/10 font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            Booster une publication
+          </button>
+        </div>
+      </motion.div>
+
       {/* 1. GRANDE CARTE PROFIL PREMIUM (SCREENSHOT STYLE) */}
       <div className="relative overflow-hidden rounded-[28px] border-2 border-afri-gold/35 bg-afri-bg shadow-[0_12px_35px_rgba(0,0,0,0.9)] p-5 xs:p-6 sm:p-7">
         {/* Subtle interior gold light */}

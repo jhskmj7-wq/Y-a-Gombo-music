@@ -418,6 +418,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
+  const [activeBoostItem, setActiveBoostItem] = useState<{id: string, type: 'gombo' | 'candidature'} | null>(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState<boolean>(false);
 
   // Scroll Position Memory Engine for Independent Scroll Preservation
@@ -4444,7 +4445,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       title: `🎖️ (${categoryLabel}) ${newGomboTitle}`,
                       description: newGomboDesc + (selectedPublishTags.length > 0 ? `\\n\\nTags: ${selectedPublishTags.map(t => `#${t}`).join(" ")}` : ""),
                       budget: newGomboPrice,
-                      commissionRate: 0.10,
+                      commissionRate: (activeArtist.subscriptionPlan === "pro" || activeArtist.subscriptionPlan === "elite") ? 0.015 : 0.025,
                       location: `${newGomboQuartier}, ${newGomboCity}`,
                       city: newGomboCity,
                       quartier: newGomboQuartier,
@@ -5436,12 +5437,24 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           </div>
 
                           {/* Action Buttons if user is organizer or selected talent */}
-                          <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
+                          <div className="flex flex-wrap gap-2 pt-2 border-t border-afri-border">
                             {gombo.organizerId === currentArtist.id && gombo.status === "publie" && (
                               <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "artiste_selectionne")} className="px-3 py-1.5 bg-afri-gold text-black text-[9px] font-bold uppercase rounded hover:bg-[#B48F17]">
                                 Sélectionner un Candidat
                               </button>
                             )}
+                            
+                            {/* Actions requested for published items */}
+                            {gombo.organizerId === currentArtist.id && (
+                              <div className="w-full flex flex-wrap gap-2 mt-2">
+                                <button className="px-3 py-1.5 bg-afri-bg-ter border border-afri-border text-afri-text text-[9px] font-bold uppercase rounded hover:bg-afri-border">Modifier</button>
+                                <button className="px-3 py-1.5 bg-afri-bg-ter border border-afri-border text-afri-text text-[9px] font-bold uppercase rounded hover:bg-afri-border">Partager</button>
+                                <button className="px-3 py-1.5 bg-afri-bg-ter border border-afri-border text-afri-text text-[9px] font-bold uppercase rounded hover:bg-afri-border">Statistiques</button>
+                                <button onClick={() => {if(window.confirm('Supprimer cette publication ?')) alert('En cours...');}} className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-500 text-[9px] font-bold uppercase rounded hover:bg-red-500/20">Supprimer</button>
+                                <button onClick={() => setActiveBoostItem({id: gombo.id!, type: 'gombo'})} className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-afri-gold text-black text-[9px] font-black uppercase rounded shadow-md shadow-afri-gold/20 flex items-center gap-1 active:scale-95 transition-transform"><Sparkles className="w-3 h-3" /> 🚀 Booster</button>
+                              </div>
+                            )}
+
                             {gombo.selectedTalentId === currentArtist.id && gombo.status === "artiste_selectionne" && (
                               <>
                                 <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_accepte")} className="px-3 py-1.5 bg-emerald-500 text-black text-[9px] font-bold uppercase rounded hover:bg-emerald-400">
@@ -5475,7 +5488,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                >
                                  <MessageSquare className="w-3.5 h-3.5 text-afri-gold" /> Discuter
                                </button>
-                             )}
+                            )}
+
+                            {gombo.applicantIds?.includes(currentArtist.id) && gombo.status === "publie" && (
+                              <button onClick={() => setActiveBoostItem({id: gombo.id!, type: 'candidature'})} className="px-3 py-1.5 mt-2 bg-gradient-to-r from-amber-500 to-afri-gold text-black text-[9px] font-black uppercase rounded shadow-md shadow-afri-gold/20 flex items-center gap-1 active:scale-95 transition-transform">
+                                <Sparkles className="w-3 h-3" /> ⚡ Booster ma candidature
+                              </button>
+                            )}
                           </div>
 
                           {/* Reciprocal feedback review trigger (only when mission completed) */}
@@ -8865,6 +8884,48 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               autoPlay 
               className="w-full h-full object-contain"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Boost Modal */}
+      {activeBoostItem && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-afri-bg-sec border border-afri-gold/30 rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden animate-slideUp">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-afri-gold/10 blur-3xl rounded-full" />
+            <div className="relative z-10 text-center space-y-6">
+              <div className="w-16 h-16 mx-auto bg-afri-gold/10 rounded-full flex items-center justify-center border border-afri-gold/30">
+                <span className="text-3xl">🚀</span>
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-black text-afri-text uppercase tracking-tight mb-2">Booster {activeBoostItem.type === 'gombo' ? 'cette publication' : 'ma candidature'}</h3>
+                <p className="text-xs text-afri-text-sec">Augmentez considérablement votre visibilité et multipliez vos chances.</p>
+              </div>
+
+              <div className="space-y-3 text-left">
+                {[
+                  { duration: "24 h", price: "200 FCFA" },
+                  { duration: "3 jours", price: "500 FCFA" },
+                  { duration: "7 jours", price: "1 000 FCFA" }
+                ].map((boost, idx) => (
+                  <button key={idx} onClick={() => {
+                    alert("Redirection CinetPay en développement...");
+                    setActiveBoostItem(null);
+                  }} className="w-full flex items-center justify-between p-4 rounded-xl border border-afri-border bg-afri-bg hover:border-afri-gold/50 hover:bg-afri-gold/5 transition-all group">
+                    <span className="text-sm font-bold text-afri-text group-hover:text-afri-gold transition-colors">{boost.duration}</span>
+                    <span className="text-xs font-black text-afri-text px-3 py-1 bg-afri-bg-ter rounded-lg border border-afri-border">{boost.price}</span>
+                  </button>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => setActiveBoostItem(null)}
+                className="text-[10px] font-bold text-afri-text-muted hover:text-afri-text uppercase tracking-widest mt-4"
+              >
+                Annuler
+              </button>
+            </div>
           </div>
         </div>
       )}

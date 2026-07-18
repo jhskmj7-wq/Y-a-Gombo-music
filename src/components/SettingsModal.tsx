@@ -624,7 +624,7 @@ export default function SettingsModal({
                       type="button"
                       onClick={() => {
                         if (locked) {
-                          alert("Ouvrez AFRIGOMBO Premium pour débloquer ce thème.");
+                          alert("Disponible avec AFRIGOMBO Premium.");
                           return;
                         }
                         setTheme(th.id as any);
