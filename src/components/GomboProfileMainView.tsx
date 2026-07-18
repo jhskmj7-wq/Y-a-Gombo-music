@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   ShieldCheck, Star, Briefcase, Wallet, Users, Target, Heart,
   MessageSquare, Edit3, Share2, Crown, Award, Copy, QrCode, Check, X, ShieldAlert,
-  Fingerprint, Flame, ChevronRight, Clock, Shield
+  Fingerprint, Flame, ChevronRight, Clock, Shield, Download
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { audioSynth } from "../lib/audio";
@@ -324,7 +324,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 }}
                 className="w-full xs:w-auto px-8 py-3 bg-[#D4AF37] hover:brightness-110 text-black font-sans font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg hover:scale-101 active:scale-98 transition-all cursor-pointer"
               >
-                COMMENCER LA CERTIFICATION
+                COMMENCER MA CERTIFICATION
               </button>
             </div>
           </div>
@@ -340,7 +340,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               <ShieldCheck className="w-7 h-7 text-emerald-400" />
             </div>
             <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded-full text-[8.5px] font-mono font-black uppercase tracking-widest">
-              ✓ VÉRIFIÉ ELITE
+              ✓ ARTISTE CERTIFIÉ
             </span>
           </div>
 
@@ -353,7 +353,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           </div>
 
           {/* Buttons: Copier, Partager, Afficher QR Code, Voir mon certificat */}
-          <div className="grid grid-cols-2 xs:flex xs:flex-row items-center justify-center gap-2 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
             <button 
               onClick={handleCopyId}
               className="py-2 px-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-zinc-300 font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
@@ -376,39 +376,52 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               className="py-2 px-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-zinc-300 font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
             >
               <QrCode className="w-3 h-3 text-[#D4AF37]" />
-              <span>QR Code</span>
+              <span>Afficher le QR Code</span>
             </button>
             <button 
               onClick={() => {
                 setShowCertModal(true);
                 try { audioSynth.playKoraNote(523.25, 0, 0.1, 0.5); } catch (_) {}
               }}
-              className="col-span-2 xs:col-span-1 py-2 px-3 bg-gradient-to-r from-amber-500/10 to-[#D4AF37]/10 hover:from-amber-500/20 hover:to-[#D4AF37]/20 border border-[#D4AF37]/25 text-[#D4AF37] font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
+              className="py-2 px-3 bg-gradient-to-r from-amber-500/10 to-[#D4AF37]/10 hover:from-amber-500/20 hover:to-[#D4AF37]/20 border border-[#D4AF37]/25 text-[#D4AF37] font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
             >
               <Award className="w-3 h-3" />
-              <span>Certificat</span>
+              <span>Voir mon certificat</span>
+            </button>
+            <button 
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = 'data:text/plain;charset=utf-8,Certificat%20GOMBO%20ID%20Afrigombo%0AIdentifiant:%20' + gomboId;
+                link.download = `Certificat_Afrigombo_${gomboId}.txt`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                try { audioSynth.playKoraNote(659.25, 0, 0.1, 0.5); } catch (_) {}
+              }}
+              className="py-2 px-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-[#D4AF37] font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
+            >
+              <Download className="w-3 h-3 text-[#D4AF37]" />
+              <span>Télécharger mon certificat</span>
             </button>
           </div>
         </div>
       )}
 
       {/* 5b. AVANTAGES SECTION */}
-      <div className="bg-[#050505] border border-zinc-900 rounded-[28px] p-5 xs:p-6 shadow-md space-y-3">
-        <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-[0.2em]">🛡️ Avantages GOMBO ID</h4>
+      <div className="bg-[#050505] border border-zinc-900 rounded-[28px] p-5 xs:p-6 shadow-md space-y-3 text-left">
+        <h4 className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-[0.2em]">Grâce à votre GOMBO ID :</h4>
         <div className="space-y-2">
           {[
-            { title: "Profil certifié", desc: "Badge officiel de confiance auprès de tout l'écosystème musical." },
-            { title: "Contrats sécurisés", desc: "Signature légale protégée sur tous vos engagements et cachets." },
-            { title: "Priorité dans les recherches", desc: "Algorithme boosté pour apparaître en haut des recruteurs." },
-            { title: "Plus de visibilité", desc: "Mise en avant sur l'accueil et les suggestions d'artistes." },
-            { title: "Confiance renforcée", desc: "Accès exclusif aux gombos d'or et de haut calibre." }
+            "Profil certifié",
+            "Plus de visibilité",
+            "Priorité dans les recherches",
+            "Accès aux contrats sécurisés",
+            "Plus de crédibilité",
+            "Protection contre les faux profils"
           ].map((item, idx) => (
-            <div key={idx} className="flex gap-2.5 text-left">
+            <div key={idx} className="flex gap-2.5 items-center">
               <span className="text-emerald-400 font-bold shrink-0">✓</span>
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-white uppercase tracking-wide block">{item.title}</span>
-                <p className="text-[10px] text-zinc-500 leading-normal">{item.desc}</p>
-              </div>
+              <span className="text-[11px] font-bold text-white uppercase tracking-wide block">{item}</span>
             </div>
           ))}
         </div>

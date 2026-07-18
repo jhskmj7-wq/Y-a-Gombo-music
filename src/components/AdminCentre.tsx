@@ -1713,13 +1713,26 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     addToTerminal(`[LOG ADMIN] Action: ${actionType} | Cible: ${targetName} | ${detail}`);
   };
 
+  const generateUniqueGomboId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let id;
+    let isUnique = false;
+    while (!isUnique) {
+      const part1 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      const part2 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      id = `GMB-${part1}-${part2}`;
+      
+      // Check if any existing user has this gomboIdNumber
+      isUnique = !users.some(u => u.gomboIdNumber === id || u.gomboId?.id === id || (typeof u.gomboId === 'string' && u.gomboId === id));
+    }
+    return id;
+  };
+
   const handleApproveKYC = async (userId: string, express: boolean = false) => {
     const targetUser = users.find(u => u.id === userId);
     if (!targetUser) return;
 
-    const code = (targetUser.artisticName || "ELT").replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "ELT";
-    const digits = Math.floor(10000 + Math.random() * 90000); // 5 digits
-    const gmbId = `GMB-${code}-${digits}`;
+    const gmbId = generateUniqueGomboId();
 
     const levels = [
       "🟢 Vérifié AFRIGOMBO",
@@ -1751,7 +1764,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           gomboId: gomboIdObj,
           kycApprovedDate: new Date().toLocaleDateString("fr-FR"),
           verificationDate: new Date().toLocaleDateString("fr-FR"),
-          verifiedBy: "Yoro Admin (Equipe AFRIGOMBO)"
+          verifiedBy: "Yoro Admin (Equipe AFRIGOMBO)",
+          verificationStatus: "approved"
         };
         saveToFirestore("users", user.id, u);
         return u;

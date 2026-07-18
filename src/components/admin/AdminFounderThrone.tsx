@@ -80,7 +80,7 @@ export default function AdminFounderThrone({
 
   // Satellite states from Firestore
   const [universeStates, setUniverseStates] = useState<Record<string, string>>({
-    afriId: "DÉPLOYÉ & ACTIF",
+    gomboId: "DÉPLOYÉ & ACTIF",
     afriTrust: "DÉPLOYÉ & ACTIF",
     afriLivraison: "EN ATTENTE",
     gomboMusik: "DÉPLOYÉ & ACTIF"
@@ -934,7 +934,7 @@ export default function AdminFounderThrone({
                       🏛 Univers AFRI
                     </h3>
                     <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
-                      Contrôle des constellations souveraines satellites: AfriID, AfriTrust, AfriLivraison, Gombo Musik et gestion des gardiens du Trône.
+                      Contrôle des constellations souveraines satellites: GOMBO ID, AfriTrust, AfriLivraison, Gombo Musik et gestion des gardiens du Trône.
                     </p>
                   </div>
                 </div>
@@ -1322,7 +1322,7 @@ export default function AdminFounderThrone({
 
                     <div className="space-y-4">
                       {[
-                        { id: "afriId", label: "AfriID", desc: "Souveraineté d'identité numérique artistique" },
+                        { id: "gomboId", label: "GOMBO ID", desc: "Souveraineté d'identité numérique artistique" },
                         { id: "afriTrust", label: "AfriTrust", desc: "Certification et assurance de contrats" },
                         { id: "afriLivraison", label: "AfriLivraison", desc: "Livraison sécurisée d'instruments & œuvres" },
                         { id: "gomboMusik", label: "Gombo Musik", desc: "Flux et distribution de musiques" }
