@@ -30,9 +30,7 @@ service cloud.firestore {
 
     // Role-based Access Control
     function isFounder() {
-      return isSignedIn() && 
-             request.auth.token.email == "jhs.kmj7@gmail.com" &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isFounder == true;
+      return isSignedIn() && request.auth.token.email == "jhs.kmj7@gmail.com";
     }
 
     function isAdmin() {

@@ -161,8 +161,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     action();
   };
 
+  const authContextValue = React.useMemo(() => ({ 
+    currentUser, 
+    profile, 
+    loading: authLoading, 
+    signIn, 
+    signUp, 
+    loginWithGoogle, 
+    logout, 
+    refreshProfile, 
+    setProfile, 
+    showAuthPopup, 
+    setShowAuthPopup, 
+    requireAuth 
+  }), [currentUser, profile, authLoading, showAuthPopup]);
+
   return (
-    <AuthContext.Provider value={{ currentUser, profile, loading: authLoading, signIn, signUp, loginWithGoogle, logout, refreshProfile, setProfile, showAuthPopup, setShowAuthPopup, requireAuth }}>
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -684,13 +684,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [localSaved, setLocalSaved] = useState<boolean>(true);
   const [autoSaveActive, setAutoSaveActive] = useState<boolean>(false);
 
-  const AUTHORIZED_ADMIN_EMAILS = [
+  const AUTHORIZED_ADMIN_EMAILS = React.useMemo(() => [
     "jhs.kmj7@gmail.com"
-  ];
+  ], []);
 
   const userEmail = currentUser?.email?.toLowerCase() || "";
-  const isAuthorizedAdmin = !!(currentUser && (AUTHORIZED_ADMIN_EMAILS.includes(userEmail) || profile?.role === "founder" || profile?.isFounder));
-  const isAuthorizedSuperFounder = !!(currentUser && (userEmail === "jhs.kmj7@gmail.com" || profile?.isFounder));
+  const isAuthorizedAdmin = React.useMemo(() => !!(currentUser && (AUTHORIZED_ADMIN_EMAILS.includes(userEmail) || profile?.role === "founder" || profile?.isFounder)), [currentUser, userEmail, profile?.role, profile?.isFounder, AUTHORIZED_ADMIN_EMAILS]);
+  const isAuthorizedSuperFounder = React.useMemo(() => !!(currentUser && (userEmail === "jhs.kmj7@gmail.com" || profile?.isFounder)), [currentUser, userEmail, profile?.isFounder]);
 
   const [realNotifications, setRealNotifications] = useState<any[]>([]);
   const [globalNotifications, setGlobalNotifications] = useState<any[]>([]);
@@ -1029,7 +1029,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   // --- FIRESTORE ACTIVE SYNC ROUTINE ---
   useEffect(() => {
-    if (!currentUser || !db) return;
+    if (!currentUser || !db || perspective !== "admin") return;
     // Attempt Firestore subscription & binding
     try {
       gomboDB.getSystemCommissionRate().then((rate) => {
@@ -1045,7 +1045,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           fetchedUsers.push({ id: docSnap.id, ...docSnap.data() } as User);
         });
         setUsers(fetchedUsers);
-        addToTerminal(`[INFO] Synchronisation : ${fetchedUsers.length} comptes synchronisés depuis Firestore.`);
       }, (error) => {
         addToTerminal(`[Alerte réseau] Firestore non-accessible directement. Mode local premium activé.`);
       });
@@ -1061,14 +1060,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         console.warn("🔐 Gombos sync limited or offline:", error.message);
       });
 
-      const qTransactions = collection(db, "transactions");
+      const qTransactions = query(collection(db, "transactions"), orderBy("timestamp", "desc"), limit(200));
       const unsubscribeTransactions = onSnapshot(qTransactions, (snapshot) => {
         const fetchedTransactions: Transaction[] = [];
         snapshot.forEach((docSnap) => {
           fetchedTransactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
         });
-        // Sort transactions by timestamp desc
-        fetchedTransactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         setTransactions(fetchedTransactions);
       }, (error) => {
         console.warn("🔐 Transactions sync restricted for current user role:", error.message);
@@ -1096,41 +1093,34 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         console.warn("🔐 Alerts sync restricted for current user role:", error.message);
       });
 
-      const qPosts = collection(db, "posts");
+      const qPosts = query(collection(db, "posts"), orderBy("timestamp", "desc"), limit(200));
       const unsubscribePosts = onSnapshot(qPosts, (snapshot) => {
         const fetchedPosts: Post[] = [];
         snapshot.forEach((docSnap) => {
           fetchedPosts.push({ id: docSnap.id, ...docSnap.data() } as Post);
         });
-        fetchedPosts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         setPosts(fetchedPosts);
       }, (error) => {
         console.warn("🔐 Posts sync limited or offline:", error.message);
       });
 
-      const qRenforts = collection(db, "renforts");
+      const qRenforts = query(collection(db, "renforts"), orderBy("createdAt", "desc"), limit(100));
       const unsubscribeRenforts = onSnapshot(qRenforts, (snapshot) => {
         const fetchedRenforts: any[] = [];
         snapshot.forEach((docSnap) => {
           fetchedRenforts.push({ id: docSnap.id, ...docSnap.data() });
-        });
-        fetchedRenforts.sort((a, b) => {
-          const aDate = new Date(a.createdAt || a.date).getTime();
-          const bDate = new Date(b.createdAt || b.date).getTime();
-          return bDate - aDate;
         });
         setRenforts(fetchedRenforts);
       }, (error) => {
         console.warn("🔐 Renforts sync limited or offline:", error.message);
       });
 
-      const qLogs = collection(db, "admin_logs");
+      const qLogs = query(collection(db, "admin_logs"), orderBy("timestamp", "desc"), limit(100));
       const unsubscribeLogs = onSnapshot(qLogs, (snapshot) => {
         const fetchedLogs: any[] = [];
         snapshot.forEach((docSnap) => {
           fetchedLogs.push({ id: docSnap.id, ...docSnap.data() });
         });
-        fetchedLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         setAdminLogs(fetchedLogs);
       }, (error) => {
         console.warn("🔐 Logs sync limited:", error.message);
@@ -1161,7 +1151,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     } catch (e) {
       addToTerminal(`[Alerte locale] Lancement offline synchronisé.`);
     }
-  }, [currentUser]);
+  }, [currentUser, perspective]);
 
   // --- DASHBOARD INTRO MOUNT SEQUENCE ---
   useEffect(() => {
