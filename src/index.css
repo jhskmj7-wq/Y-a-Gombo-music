@@ -6,7 +6,7 @@
   --afri-gold-light: #FFD95A;
 }
 
-.dark {
+.imperial, .dark {
   --afri-bg: #050505;
   --afri-bg-sec: #111111;
   --afri-text: #FFFFFF;
@@ -15,11 +15,16 @@
 }
 
 .light {
-  --afri-bg: #F7F5EF;
+  --afri-bg: #F8F6F1;
   --afri-bg-sec: #FFFFFF;
-  --afri-text: #1F1F1F;
-  --afri-text-sec: #666666;
-  --afri-border: #E5E5E5;
+  --afri-text: #1C1C1C;
+  --afri-text-sec: #555555;
+  --afri-border: rgba(212, 175, 55, 0.15); /* or discret */
+}
+
+/* Smooth 250-300ms transitions for colors, backgrounds, borders and shadows when theme is changed */
+html, body, #root, .afri-card, .afri-card-inset, input, select, textarea, aside, header, footer, nav, button, div, span, p, h1, h2, h3, h4, h5, h6 {
+  transition: background-color 280ms ease-in-out, border-color 280ms ease-in-out, color 280ms ease-in-out, box-shadow 280ms ease-in-out, text-shadow 280ms ease-in-out;
 }
 
 html.text-size-petit {

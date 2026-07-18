@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { globalAudioManager } from "../lib/audioManager";
+import { AfriGomboLogo } from "./AfriGomboLogo";
 
 interface AfrigomboCinematicIntroProps {
   onComplete: () => void;
@@ -10,6 +11,16 @@ interface AfrigomboCinematicIntroProps {
 export default function AfrigomboCinematicIntro({ onComplete }: AfrigomboCinematicIntroProps) {
   const [elapsed, setElapsed] = useState(0);
   const [isMuted, setIsMuted] = useState(() => globalAudioManager.getIsMuted());
+  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+  const [isLogoFailed, setIsLogoFailed] = useState(false);
+
+  useEffect(() => {
+    // Preload logo asset
+    const img = new Image();
+    img.src = "/public/logo_afrigombo.png";
+    img.onload = () => setIsLogoLoaded(true);
+    img.onerror = () => setIsLogoFailed(true);
+  }, []);
 
   // Timing markers:
   // 0s: Black screen
@@ -158,12 +169,16 @@ export default function AfrigomboCinematicIntro({ onComplete }: AfrigomboCinemat
               {/* Spinning sound-glow pattern */}
               <div className="absolute inset-2 border border-dashed border-[#D4AF37]/15 rounded-full animate-spin" style={{ animationDuration: "25s" }} />
 
-              <img 
-                src="/public/logo_afrigombo.png" 
-                alt="AFRIGOMBO Logo" 
-                className="w-32 h-32 object-contain relative z-10"
-                referrerPolicy="no-referrer"
-              />
+              {isLogoLoaded && !isLogoFailed ? (
+                <img 
+                  src="/public/logo_afrigombo.png" 
+                  alt="" 
+                  className="w-32 h-32 object-contain relative z-10"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <AfriGomboLogo className="w-32 h-32 relative z-10" />
+              )}
             </motion.div>
           )}
         </AnimatePresence>

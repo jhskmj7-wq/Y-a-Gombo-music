@@ -193,7 +193,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 ✓ BIO OK
               </span>
               <button 
-                onClick={() => onNavigateView("user_publish")}
+                onClick={() => onNavigateView("user_gombo_plus")}
                 className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-[#D4AF37] hover:brightness-115 text-black text-[9px] xs:text-[10px] font-black uppercase tracking-wider shadow-md hover:scale-102 active:scale-98 transition-all cursor-pointer"
               >
                 DEVENIR ELITE
@@ -240,7 +240,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
       {/* 4. GÉRER MON ABONNEMENT BUTTON (SCREENSHOT STYLE) */}
       <button 
-        onClick={() => setPanelView("settings")}
+        onClick={() => onNavigateView("user_subscription_management")}
         className="w-full max-w-sm mx-auto flex items-center justify-between py-2.5 px-5 bg-[#050505] border border-zinc-900 hover:border-[#D4AF37]/30 text-zinc-400 font-mono font-black text-[9.5px] uppercase tracking-widest rounded-full shadow-md hover:text-white transition-all active:scale-98 cursor-pointer"
       >
         <span />
@@ -495,117 +495,69 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           </motion.div>
         )}
 
-        {/* TABLEAU CRÉATEUR (LARGE PREMIUM CARD) */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#070707] p-5 shadow-xl space-y-4">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/5 blur-[35px] rounded-full pointer-events-none" />
+        {/* MON ACTIVITÉ */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#070707] p-5 shadow-xl space-y-4 mt-8">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 blur-[35px] rounded-full pointer-events-none" />
           
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
-              <Target className="w-4.5 h-4.5 text-purple-400" />
+          <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+            <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <Briefcase className="w-4.5 h-4.5 text-amber-400" />
             </div>
             <div>
-              <h4 className="text-[11px] font-mono uppercase font-black text-white tracking-widest">📊 Tableau de bord créateur</h4>
-              <p className="text-[9.5px] text-zinc-500 font-mono">Pilotez votre prestige & opportunités</p>
+              <h4 className="text-[11px] font-mono uppercase font-black text-white tracking-widest">💼 Mon Activité</h4>
+              <p className="text-[9.5px] text-zinc-500 font-mono">Gérez l'ensemble de votre présence</p>
             </div>
           </div>
 
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-black/40 p-3 rounded-xl border border-white/5">
-            <div className="text-center">
-              <span className="text-[8.5px] text-zinc-500 block uppercase font-mono font-bold">Publications</span>
-              <span className="text-base font-black text-white font-mono">{myPosts.length}</span>
-            </div>
-            <div className="text-center border-l border-zinc-900">
-              <span className="text-[8.5px] text-zinc-500 block uppercase font-mono font-bold">Revenus</span>
-              <span className="text-base font-black text-amber-400 font-mono">{(currentUserProfile.totalRevenue || 0).toLocaleString()} F</span>
-            </div>
-            <div className="text-center border-l border-zinc-900">
-              <span className="text-[8.5px] text-zinc-500 block uppercase font-mono font-bold">Opportunités</span>
-              <span className="text-base font-black text-emerald-400 font-mono">{dynamicAppsCount}</span>
-            </div>
-            <div className="text-center border-l border-zinc-900">
-              <span className="text-[8.5px] text-zinc-500 block uppercase font-mono font-bold">Candidatures</span>
-              <span className="text-base font-black text-purple-400 font-mono">{currentUserProfile.applicationsSent || 0}</span>
-            </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => onNavigateView("user_mes_gombos")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+              <Edit3 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <div className="truncate">
+                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Publications</span>
+                <span className="block text-[8px] text-zinc-500 font-mono">{myPosts.length} posts</span>
+              </div>
+            </button>
+            
+            <button onClick={() => onNavigateView("user_contracts")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+              <ShieldCheck className="w-4 h-4 text-[#D4AF37] shrink-0" />
+              <div className="truncate">
+                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Contrats</span>
+                <span className="block text-[8px] text-zinc-500 font-mono">Sécurisés</span>
+              </div>
+            </button>
+            
+            <button onClick={() => onNavigateView("user_opportunities")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+              <Target className="w-4 h-4 text-purple-400 shrink-0" />
+              <div className="truncate">
+                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Candidatures</span>
+                <span className="block text-[8px] text-zinc-500 font-mono">{currentUserProfile.applicationsSent || 0} envois</span>
+              </div>
+            </button>
+
+            <button onClick={() => onNavigateView("user_wallet")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+              <Wallet className="w-4 h-4 text-amber-500 shrink-0" />
+              <div className="truncate">
+                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Revenus</span>
+                <span className="block text-[8px] text-zinc-500 font-mono">{(currentUserProfile.totalRevenue || 0).toLocaleString()} F</span>
+              </div>
+            </button>
+            
+            <button onClick={() => onNavigateView("user_vibes")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+              <Heart className="w-4 h-4 text-rose-500 shrink-0" />
+              <div className="truncate">
+                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Favoris</span>
+                <span className="block text-[8px] text-zinc-500 font-mono">Sauvegardés</span>
+              </div>
+            </button>
+
+            <button onClick={() => onNavigateView("user_events")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+              <Clock className="w-4 h-4 text-cyan-400 shrink-0" />
+              <div className="truncate">
+                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Calendrier</span>
+                <span className="block text-[8px] text-zinc-500 font-mono">Mes dates</span>
+              </div>
+            </button>
           </div>
-
-          <button 
-            onClick={() => onNavigateView("user_publish")}
-            className="w-full py-2.5 px-4 bg-zinc-900 hover:bg-zinc-850 text-white font-sans font-black text-[10px] uppercase tracking-widest rounded-xl border border-zinc-800/80 active:scale-98 transition-all duration-200"
-          >
-            Ouvrir le Tableau Créateur
-          </button>
-        </div>
-
-        {/* KYC SECTION */}
-        <div className={`rounded-2xl border p-5 shadow-md space-y-4 ${
-          isKycApproved 
-            ? "bg-emerald-950/10 border-emerald-500/20" 
-            : "bg-amber-950/5 border-amber-500/20"
-        }`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className={`p-2 rounded-xl bg-black ${isKycApproved ? "border-emerald-500/20" : "border-amber-500/20"}`}>
-                <ShieldCheck className={`w-4.5 h-4.5 ${isKycApproved ? "text-emerald-400" : "text-amber-400"}`} />
-              </div>
-              <div>
-                <h4 className="text-[11px] font-mono uppercase font-black text-white tracking-widest">🛡️ Validation KYC</h4>
-                <p className="text-[9px] text-zinc-500 font-mono">Conformité légale & Sécurité de vos paiements</p>
-              </div>
-            </div>
-
-            <div>
-              {isKycApproved ? (
-                <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[8.5px] font-mono font-black uppercase rounded-full">
-                  ✓ KYC Validé
-                </span>
-              ) : (
-                <span className="px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[8.5px] font-mono font-black uppercase rounded-full">
-                  En attente
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* KYC Interactive action */}
-          {!isKycApproved ? (
-            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5 space-y-3">
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Pour débloquer vos virements mobiles, vous devez envoyer une photo de votre pièce d'identité officielle (CNI ou Passeport).
-              </p>
-              
-              <div className="relative">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleKycFileChange}
-                  disabled={verifyingIdentity}
-                  id="kyc-file-picker" 
-                  className="hidden" 
-                />
-                <label 
-                  htmlFor="kyc-file-picker"
-                  className="w-full py-2.5 px-4 bg-[#D4AF37] hover:bg-[#B48F17] disabled:opacity-50 text-black font-sans font-black text-[10px] uppercase tracking-widest rounded-xl active:scale-98 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
-                >
-                  {verifyingIdentity ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                      <span>Envoi... {kycProgress}%</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Compléter mon KYC</span>
-                    </>
-                  )}
-                </label>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5 text-[11px] text-zinc-400 leading-relaxed flex items-center gap-3">
-              <span className="text-emerald-400 text-sm">🛡️</span>
-              <span>Félicitations, votre identité a été validée par nos administrateurs à Abidjan. Votre profil est certifié.</span>
-            </div>
-          )}
         </div>
       </div>
 

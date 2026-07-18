@@ -23,10 +23,6 @@ import { useTheme } from "../context/ThemeContext";
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  darkMode: boolean;
-  setDarkMode: (val: boolean) => void;
-  themeMode: "dark-gold" | "light-gold" | "night-navy";
-  setThemeMode: (theme: "dark-gold" | "light-gold" | "night-navy") => void;
   onLogout?: () => void;
 }
 
@@ -152,10 +148,6 @@ const modalTranslations: Record<string, Record<string, string>> = {
 export default function SettingsModal({ 
   isOpen, 
   onClose, 
-  darkMode, 
-  setDarkMode, 
-  themeMode, 
-  setThemeMode, 
   onLogout 
 }: SettingsModalProps) {
   if (!isOpen) return null;
@@ -607,7 +599,7 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            {mt("style_title")}
+            APPARENCE
           </h2>
 
           <div className="space-y-4">
@@ -615,8 +607,8 @@ export default function SettingsModal({
               <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">{mt("theme_label")}</span>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { id: "dark", label: "🌑 Noir Premium" },
-                  { id: "light", label: "☀️ Blanc Cassé Premium" }
+                  { id: "imperial", label: "Thème Impérial" },
+                  { id: "light", label: "Thème Clair" }
                 ].map((th) => {
                   const isSelected = theme === th.id;
                   return (
@@ -625,17 +617,16 @@ export default function SettingsModal({
                       type="button"
                       onClick={() => {
                         setTheme(th.id as any);
-                        setThemeMode(th.id === "light" ? "light-gold" : "dark-gold");
-                        setDarkMode(th.id === "dark");
                         try { audioSynth.playValidationSuccess(); } catch (_) {}
                       }}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all cursor-pointer ${
+                      className={`flex items-center justify-center gap-2 p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
                         isSelected 
-                          ? "bg-afri-gold/10 border-afri-gold text-afri-gold" 
-                          : "bg-afri-bg border-afri-border text-zinc-500 hover:text-zinc-350"
+                          ? "bg-afri-gold/10 border-afri-gold text-afri-gold font-black" 
+                          : "bg-afri-bg border-afri-border text-zinc-500 hover:text-zinc-300"
                       }`}
                     >
-                      <span className="text-[10px] font-black uppercase tracking-tight">{th.label}</span>
+                      <span className="text-xs">{isSelected ? "●" : "○"}</span>
+                      <span className="text-[10px] uppercase tracking-tight">{th.label}</span>
                     </button>
                   );
                 })}

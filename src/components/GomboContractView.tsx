@@ -818,9 +818,9 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-zinc-300">Commission Promoteur (Client)</span>
                       {contract.isClientPremium ? (
-                        <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase tracking-widest border border-[#D4AF37]/20">💎 Premium (4%)</span>
+                        <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase tracking-widest border border-[#D4AF37]/20">💎 Premium (1.5%)</span>
                       ) : (
-                        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-widest">Standard (6%)</span>
+                        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-widest">Standard (2.5%)</span>
                       )}
                     </div>
                     <p className="text-[9px] text-zinc-500">Ajoutée au cachet de base</p>
@@ -839,9 +839,9 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-zinc-300">Commission Musicien (Artiste)</span>
                       {contract.isArtistPremium ? (
-                        <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase tracking-widest border border-[#D4AF37]/20">💎 Premium (4%)</span>
+                        <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase tracking-widest border border-[#D4AF37]/20">💎 Premium (1.5%)</span>
                       ) : (
-                        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-widest">Standard (6%)</span>
+                        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-widest">Standard (2.5%)</span>
                       )}
                     </div>
                     <p className="text-[9px] text-zinc-500">Déduite du cachet de base</p>
@@ -863,7 +863,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   <span className="text-zinc-300 font-mono font-bold">
                     {(contract.commissionClient + contract.commissionArtist).toLocaleString()} FCFA 
                     <span className="text-[10px] text-zinc-500 ml-1.5 font-normal">
-                      ({Math.round(((contract.commissionClientRate || 0.06) + (contract.commissionArtistRate || 0.06)) * 100)}%)
+                      ({parseFloat((((contract.commissionClientRate || 0.025) + (contract.commissionArtistRate || 0.025)) * 100).toFixed(1))}%)
                     </span>
                   </span>
                 </div>

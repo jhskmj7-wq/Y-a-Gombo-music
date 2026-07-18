@@ -16,6 +16,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   const [paymentOption, setPaymentOption] = useState<string | null>(null);
   const [phonePayment, setPhonePayment] = useState("");
   const [paymentStep, setPaymentStep] = useState<"idle" | "processing" | "success">("idle");
+  const [simAmount, setSimAmount] = useState<number>(100000);
   const [subscribedPlan, setSubscribedPlan] = useState<string | null>(() => {
     if (typeof window !== "undefined" && window.localStorage) {
       return localStorage.getItem("gombo_subscription") || "GOMBO FREE";
@@ -58,6 +59,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       badge: "Populaire",
       features: [
         "👑 Badge Premium Silver",
+        "⚡ Commission de 1,5% au lieu de 2,5%",
         "⭐ Boost de recherche moyen (+40%)",
         "📈 Plus de visibilité sur l'annuaire",
         "3 publications par jour",
@@ -81,6 +83,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       badge: "Recommandé Elite",
       features: [
         "👑 Badge Premium Gold d'excellence",
+        "⚡ Commission de 1,5% au lieu de 2,5%",
         "⭐ Mise en avant maximale dans l'annuaire",
         "🚀 Priorité absolue dans les Renforts Express",
         "📈 Visibilité boostée à 150%",
@@ -294,6 +297,183 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
               </div>
             );
           })}
+        </div>
+
+        {/* SECTION : ÉCONOMISEZ SUR VOS CONTRATS */}
+        <div className="mt-16 bg-gradient-to-b from-zinc-950 to-black border border-zinc-850 p-6 sm:p-8 rounded-3xl space-y-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-[#D4AF37] text-[10px] uppercase font-black tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/20">
+              ⚡ Monétisation Équitable & Transparente
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
+              Économisez sur vos contrats
+            </h2>
+            <p className="text-xs text-zinc-400">
+              Avec AFRIGOMBO, les commissions sont appliquées individuellement. <strong className="text-[#D4AF37]">Le Premium réduit uniquement VOS PROPRES commissions</strong>. Le statut Premium d'un utilisateur ne modifie jamais la commission de l'autre partie : chaque partie bénéficie individuellement de son abonnement.
+            </p>
+          </div>
+
+          {/* Preset Buttons */}
+          <div className="flex flex-wrap justify-center gap-2.5">
+            {[50000, 100000, 250000, 500000].map((presetAmt) => (
+              <button
+                key={presetAmt}
+                type="button"
+                onClick={() => setSimAmount(presetAmt)}
+                className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer border ${
+                  simAmount === presetAmt 
+                    ? "bg-[#D4AF37]/15 border-[#D4AF37] text-[#D4AF37]" 
+                    : "bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                }`}
+              >
+                {presetAmt.toLocaleString()} FCFA
+              </button>
+            ))}
+          </div>
+
+          {/* Comparative Calculator & Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            {/* Left: Beautiful visual comparison card */}
+            <div className="lg:col-span-7 space-y-4">
+              <h3 className="text-xs font-mono uppercase tracking-wider text-zinc-500">Exemple d'un contrat de {simAmount.toLocaleString()} FCFA</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Standard Account */}
+                <div className="p-5 bg-zinc-900/40 border border-zinc-850 rounded-2xl relative overflow-hidden">
+                  <div className="absolute top-2 right-2 bg-zinc-800 text-zinc-400 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">
+                    Standard
+                  </div>
+                  <span className="text-xs font-bold text-zinc-300 block mb-3">Compte Standard (2.5%)</span>
+                  <div className="space-y-1.5 text-xs font-mono">
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Votre commission :</span>
+                      <span className="text-white font-bold">{(simAmount * 0.025).toLocaleString()} FCFA</span>
+                    </div>
+                    <p className="text-[9px] text-zinc-500 italic mt-1">Calculée uniquement sur votre part (2.5%)</p>
+                    <hr className="border-zinc-800 my-2" />
+                    <div className="flex justify-between text-[#D4AF37] font-sans font-bold text-xs">
+                      <span>Taux standard :</span>
+                      <span>2.5%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Premium Account */}
+                <div className="p-5 bg-[#D4AF37]/5 border border-[#D4AF37]/35 rounded-2xl relative overflow-hidden">
+                  <div className="absolute top-2 right-2 bg-[#D4AF37]/20 text-[#D4AF37] text-[8px] font-black px-1.5 py-0.5 rounded uppercase border border-[#D4AF37]/35">
+                    ★ Premium
+                  </div>
+                  <span className="text-xs font-bold text-[#D4AF37] block mb-3">Compte Premium (1.5%)</span>
+                  <div className="space-y-1.5 text-xs font-mono">
+                    <div className="flex justify-between text-zinc-300">
+                      <span>Votre commission :</span>
+                      <span className="text-white font-bold">{(simAmount * 0.015).toLocaleString()} FCFA</span>
+                    </div>
+                    <p className="text-[9px] text-[#D4AF37]/70 italic mt-1">Économie de {(simAmount * 0.01).toLocaleString()} FCFA acquise !</p>
+                    <hr className="border-[#D4AF37]/20 my-2" />
+                    <div className="flex justify-between text-emerald-400 font-sans font-bold text-xs">
+                      <span>Taux réduit :</span>
+                      <span>1.5%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Total economy showcase */}
+              <div className="bg-gradient-to-r from-emerald-950/20 to-teal-950/20 border border-emerald-500/20 p-4 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">
+                    ★
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white">Économie Immédiate</h4>
+                    <p className="text-[10px] text-zinc-400">Sur chaque contrat conclu via AFRIGOMBO</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-emerald-400 text-lg font-black font-mono">-{(simAmount * 0.01).toLocaleString()} FCFA</span>
+                  <span className="text-[9px] text-zinc-500 block">d'économie nette pour vous</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Dynamic simulation widget */}
+            <div className="lg:col-span-5 bg-zinc-900/30 border border-zinc-850 p-5 rounded-3xl space-y-4">
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block">Simulateur d'économies</span>
+              <h4 className="text-sm font-bold text-white">Ajuster manuellement</h4>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-400">Montant du contrat :</span>
+                  <span className="text-[#D4AF37] font-bold font-mono">{simAmount.toLocaleString()} FCFA</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="50000" 
+                  max="1000000" 
+                  step="50000"
+                  value={simAmount}
+                  onChange={(e) => setSimAmount(Number(e.target.value))}
+                  className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                />
+                <div className="flex justify-between text-[9px] text-zinc-500 font-mono">
+                  <span>50 000 F</span>
+                  <span>500 000 F</span>
+                  <span>1 000 000 F</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 border-t border-zinc-800 pt-3 text-xs">
+                <div className="flex justify-between text-zinc-400">
+                  <span>Frais standard (2.5%) :</span>
+                  <span className="font-mono">{(simAmount * 0.025).toLocaleString()} FCFA</span>
+                </div>
+                <div className="flex justify-between text-zinc-300">
+                  <span>Frais Premium (1.5%) :</span>
+                  <span className="font-mono text-[#D4AF37]">{(simAmount * 0.015).toLocaleString()} FCFA</span>
+                </div>
+                <div className="flex justify-between font-bold text-emerald-400 pt-1 border-t border-dashed border-zinc-800">
+                  <span>Votre Économie (1%) :</span>
+                  <span className="font-mono">{(simAmount * 0.01).toLocaleString()} FCFA</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* AVANTAGES PREMIUM SECTION */}
+          <div className="border-t border-zinc-900 pt-8 mt-4 space-y-6">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-[#D4AF37] border-l-2 border-[#D4AF37] pl-3">
+              AVANTAGES PREMIUM EXCLUSIFS
+            </h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { title: "Badge Premium", desc: "Affichez fièrement votre statut Gold ou Silver vérifié d'office.", icon: Award },
+                { title: "Profil mis en avant", desc: "Maximisez votre exposition en haut de l'annuaire général des artistes.", icon: Sparkles },
+                { title: "Publications prioritaires", desc: "Diffusez vos actus sans aucune restriction hebdomadaire.", icon: Film },
+                { title: "Apparition prioritaire", desc: "Soyez le premier affiché lors des requêtes des recruteurs et promoteurs.", icon: Radio },
+                { title: "Statistiques avancées", desc: "Accédez aux rapports d'audience, de clics et d'écoutes de vos œuvres.", icon: BarChart3 },
+                { title: "Réduction des commissions", desc: "Payez seulement 1,5% de commission au lieu de 2,5% sur chaque contrat.", icon: Shield },
+                { title: "Futures fonctionnalités", desc: "Bénéficiez en avant-première des outils de co-promotion et du studio AFRIGOMBO.", icon: Music }
+              ].map((adv, idx) => {
+                const IconComponent = adv.icon;
+                return (
+                  <div key={idx} className="p-4 bg-zinc-900/20 border border-zinc-900 rounded-2xl space-y-2 hover:border-zinc-850 transition-colors">
+                    <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] flex items-center justify-center">
+                      <IconComponent className="w-4 h-4" />
+                    </div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-tight">{adv.title}</h4>
+                    <p className="text-[10px] text-zinc-400 leading-relaxed">{adv.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
 
         {/* PAYMENT POPUP / INTERACTIVE CARD */}

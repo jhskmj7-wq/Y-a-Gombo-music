@@ -2,18 +2,34 @@ import { Howl } from "howler";
 import { audioSynth } from "../lib/audio";
 import { performanceState } from "./performanceService";
 
-// Ensure settings exist in localStorage
-if (localStorage.getItem("gombo_pref_ui_sounds") === null) {
-  localStorage.setItem("gombo_pref_ui_sounds", "true");
+const safeGetItem = (key: string, fallback: string = ""): string => {
+  try {
+    return localStorage.getItem(key) ?? fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
+const safeSetItem = (key: string, value: string): void => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    // Silently ignore
+  }
+};
+
+// Ensure settings exist in localStorage safely
+if (safeGetItem("gombo_pref_ui_sounds") === "") {
+  safeSetItem("gombo_pref_ui_sounds", "true");
 }
-if (localStorage.getItem("gombo_pref_vibration") === null) {
-  localStorage.setItem("gombo_pref_vibration", "true");
+if (safeGetItem("gombo_pref_vibration") === "") {
+  safeSetItem("gombo_pref_vibration", "true");
 }
-if (localStorage.getItem("gombo_pref_volume") === null) {
-  localStorage.setItem("gombo_pref_volume", "70");
+if (safeGetItem("gombo_pref_volume") === "") {
+  safeSetItem("gombo_pref_volume", "70");
 }
-if (localStorage.getItem("gombo_pref_sound_mode") === null) {
-  localStorage.setItem("gombo_pref_sound_mode", "Standard"); // Silencieux, Standard, Immersion
+if (safeGetItem("gombo_pref_sound_mode") === "") {
+  safeSetItem("gombo_pref_sound_mode", "Standard"); // Silencieux, Standard, Immersion
 }
 
 // Preload critical message and notification sounds ONLY
@@ -84,24 +100,24 @@ const sounds: Record<string, Howl> = {
 // High-fidelity local synthesizers using Web Audio API for unmatched authenticity and performance
 function playSynthFallback(soundName: string) {
   // Always verify if sounds are enabled first
-  if (localStorage.getItem("gombo_pref_ui_sounds") === "false") {
+  if (safeGetItem("gombo_pref_ui_sounds") === "false") {
     return;
   }
 
   // Trigger brief, elegant vibrations if active & supported
   if (!performanceState.areVibrationsReduced) {
-    if (localStorage.getItem("gombo_pref_vibration") !== "false" && typeof navigator !== "undefined" && navigator.vibrate) {
+    if (safeGetItem("gombo_pref_vibration") !== "false" && typeof navigator !== "undefined" && navigator.vibrate) {
       try { navigator.vibrate(12); } catch (_) {}
     }
   } else {
     // Under low battery / vibration preservation mode, only do a ultra-short micro vibration (6ms)
-    if (localStorage.getItem("gombo_pref_vibration") !== "false" && typeof navigator !== "undefined" && navigator.vibrate) {
+    if (safeGetItem("gombo_pref_vibration") !== "false" && typeof navigator !== "undefined" && navigator.vibrate) {
       try { navigator.vibrate(4); } catch (_) {}
     }
   }
 
   // Retrieve current sound preset mode
-  const mode = localStorage.getItem("gombo_pref_sound_mode") || "Standard";
+  const mode = safeGetItem("gombo_pref_sound_mode", "Standard");
   if (mode === "Silencieux") return;
 
   // Adapt gain/volume slightly based on mode
@@ -204,17 +220,17 @@ function playSynthFallback(soundName: string) {
 }
 
 export const playSound = (soundName: string) => {
-  if (localStorage.getItem("gombo_pref_ui_sounds") === "false") {
+  if (safeGetItem("gombo_pref_ui_sounds") === "false") {
     return;
   }
 
-  const mode = localStorage.getItem("gombo_pref_sound_mode") || "Standard";
+  const mode = safeGetItem("gombo_pref_sound_mode", "Standard");
   if (mode === "Silencieux") return;
 
   const sound = sounds[soundName];
   if (sound) {
     // Set volume relative to localStorage preference
-    const volSetting = parseInt(localStorage.getItem("gombo_pref_volume") || "70");
+    const volSetting = parseInt(safeGetItem("gombo_pref_volume", "70"));
     let modeMultiplier = mode === "Immersion" ? 1.3 : 1.0;
 
     // Reduce sound intensity dynamically if Battery Save is active

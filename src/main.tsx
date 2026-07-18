@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./AuthContext";
 import { LanguageProvider } from "./LanguageContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import App from "./App";
 import "./index.css";
@@ -37,7 +38,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <BrowserRouter>
           <LanguageProvider>
-            <App />
+            <ThemeProvider>
+              <App />
+            </ThemeProvider>
           </LanguageProvider>
         </BrowserRouter>
       </AuthProvider>

@@ -52,6 +52,7 @@ export interface UserPerformance {
 export interface User {
   id?: string;
   uid?: string;
+  theme?: string;
   ecosystemApps?: {
     afrigombo?: boolean;
     afritrust?: boolean;

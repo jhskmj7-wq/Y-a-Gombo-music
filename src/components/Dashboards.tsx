@@ -157,12 +157,32 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
 
         // 5. Live Activity Logs
         unsubActFeed = gomboDB.listenToActivityFeed((allActs) => {
-          const userActs = allActs.filter(act => 
-            act.userId === userUid || 
-            act.message.includes(currentUserProfile.firstName) || 
-            act.message.includes(currentUserProfile.lastName) ||
-            JSON.stringify(act).includes(userUid)
-          ).slice(0, 25);
+          const userActs = allActs.filter(act => {
+            if (!act) return false;
+            const message = act.message || "";
+            const firstName = currentUserProfile.firstName || "";
+            const lastName = currentUserProfile.lastName || "";
+            
+            let hasUid = false;
+            try {
+              const seen = new WeakSet();
+              const replacer = (key: string, value: any) => {
+                if (typeof value === "object" && value !== null) {
+                  if (seen.has(value)) return;
+                  seen.add(value);
+                }
+                return value;
+              };
+              hasUid = JSON.stringify(act, replacer).includes(userUid);
+            } catch (_) {}
+
+            return (
+              act.userId === userUid || 
+              (firstName && message.includes(firstName)) || 
+              (lastName && message.includes(lastName)) ||
+              hasUid
+            );
+          }).slice(0, 25);
           setMyActivities(userActs);
         });
 
@@ -246,7 +266,7 @@ export default function Dashboards({ currentUserProfile, onRefreshProfile, initi
 
       // --- NEW: AUTOMATIC CONTRACT GENERATION ---
       const contractId = gomboDB.generateContractId();
-      const commissionRate = targetGombo.commissionRate || 0.10;
+      const commissionRate = targetGombo.commissionRate || 0.025;
       const amount = targetGombo.budget || 0;
       const commission = amount * commissionRate;
 

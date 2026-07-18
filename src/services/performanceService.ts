@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 
-// Get initial preferences from localStorage
+// Get initial preferences from localStorage safely
 const getLocalBool = (key: string, defVal: boolean): boolean => {
-  const val = localStorage.getItem(key);
-  if (val === null) return defVal;
-  return val === "true";
+  try {
+    const val = localStorage.getItem(key);
+    if (val === null) return defVal;
+    return val === "true";
+  } catch (e) {
+    return defVal;
+  }
 };
 
 // State variables for system detection

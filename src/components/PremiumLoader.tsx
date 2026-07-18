@@ -1,10 +1,20 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { AfriGomboLogo } from "./AfriGomboLogo";
 
 interface PremiumLoaderProps {
   message?: string;
 }
 
 export default function PremiumLoader({ message = "Connexion sécurisée..." }: PremiumLoaderProps) {
+  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+  const [isLogoFailed, setIsLogoFailed] = useState(false);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/public/logo_afrigombo.png";
+    img.onload = () => setIsLogoLoaded(true);
+    img.onerror = () => setIsLogoFailed(true);
+  }, []);
   return (
     <div className="fixed inset-0 bg-[#030303] z-[9999] flex flex-col items-center justify-center text-center p-6 select-none overflow-hidden">
       {/* Ambient Gold Dust / Particles */}
@@ -33,12 +43,16 @@ export default function PremiumLoader({ message = "Connexion sécurisée..." }: 
         <div className="absolute w-24 h-24 rounded-full bg-[#D4AF37]/5 blur-xl animate-pulse" />
 
         {/* LOGO AFRIGOMBO (Official Image) */}
-        <img 
-          src="/public/logo_afrigombo.png" 
-          alt="AFRIGOMBO Logo" 
-          className="w-24 h-24 relative z-10 object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]"
-          referrerPolicy="no-referrer"
-        />
+        {isLogoLoaded && !isLogoFailed ? (
+          <img 
+            src="/public/logo_afrigombo.png" 
+            alt="" 
+            className="w-24 h-24 relative z-10 object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <AfriGomboLogo className="w-24 h-24 relative z-10" />
+        )}
       </div>
 
       {/* Loading message */}

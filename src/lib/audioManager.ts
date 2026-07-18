@@ -7,6 +7,22 @@
 import { db } from "../firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 
+const safeGetItem = (key: string, fallback: string = ""): string => {
+  try {
+    return localStorage.getItem(key) ?? fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
+const safeSetItem = (key: string, value: string): void => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    // ignore
+  }
+};
+
 /**
  * Intelligent client-side caching using the standard Cache Storage API.
  * Intercepts network queries for media files, downloads and persists them locally,
@@ -55,9 +71,9 @@ class AudioManager {
 
   constructor() {
     if (typeof window !== "undefined") {
-      this.isMuted = localStorage.getItem("gombo_pref_music_muted") === "true";
-      const savedVol = localStorage.getItem("gombo_pref_music_volume");
-      this.volume = savedVol !== null ? parseFloat(savedVol) : 0.7;
+      this.isMuted = safeGetItem("gombo_pref_music_muted") === "true";
+      const savedVol = safeGetItem("gombo_pref_music_volume");
+      this.volume = savedVol !== "" ? parseFloat(savedVol) : 0.7;
 
       // Subscribe to real-time system media configuration in Firestore
       this.initializeMediaSync();
@@ -143,7 +159,7 @@ class AudioManager {
   public setVolume(vol: number) {
     this.volume = Math.max(0, Math.min(1, vol));
     if (typeof window !== "undefined") {
-      localStorage.setItem("gombo_pref_music_volume", this.volume.toString());
+      safeSetItem("gombo_pref_music_volume", this.volume.toString());
     }
     // Propagate volume change to all active media assets
     Object.entries(this.mediaElements).forEach(([id, audio]) => {
@@ -160,7 +176,7 @@ class AudioManager {
   public setIsMuted(muted: boolean) {
     this.isMuted = muted;
     if (typeof window !== "undefined") {
-      localStorage.setItem("gombo_pref_music_muted", this.isMuted.toString());
+      safeSetItem("gombo_pref_music_muted", this.isMuted.toString());
     }
     // Propagate mute state
     Object.entries(this.mediaElements).forEach(([id, audio]) => {
@@ -217,13 +233,13 @@ class AudioManager {
     if (typeof window === "undefined") return;
 
     if (!force) {
-      const alreadyPlayed = localStorage.getItem("gombo_intro_played") === "true";
+      const alreadyPlayed = safeGetItem("gombo_intro_played") === "true";
       if (alreadyPlayed) return;
     }
 
     this.stopAll();
     this.currentPlaying = "intro";
-    localStorage.setItem("gombo_intro_played", "true");
+    safeSetItem("gombo_intro_played", "true");
     this.playSound("intro", force);
   }
 

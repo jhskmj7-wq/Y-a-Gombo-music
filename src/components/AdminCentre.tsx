@@ -46,6 +46,7 @@ import ComingSoon from "./ComingSoon";
 import { UserTerrainLandingPage } from "./UserTerrainLandingPage";
 import SettingsModal from "./SettingsModal";
 import AfrigomboPlus from "./AfrigomboPlus";
+import { MonAbonnementView } from "./MonAbonnementView";
 import PremiumEmptyState from "./PremiumEmptyState";
 import AboutAfrigombo from "./AboutAfrigombo";
 import { AfriGomboLogo } from "./AfriGomboLogo";
@@ -78,6 +79,7 @@ import { AfrigomboVibeWaves } from "./AfrigomboVibeWaves";
 import { Carousel } from "./Carousel";
 import { useDynamicPlaceholder } from "../hooks/useDynamicPlaceholder";
 import { isSuperFounder } from "../shared/admin/constants";
+import WakandaTechBackground from "./WakandaTechBackground";
 import {
   motion,
   AnimatePresence
@@ -161,7 +163,8 @@ import {
   Download,
   CreditCard,
   ChevronRight,
-  Handshake
+  Handshake,
+  ArrowLeft
 } from "lucide-react";
 import {
   AreaChart,
@@ -395,15 +398,13 @@ function RevenuQuickActionModal({
 }
 
 interface AdminCentreProps {
-  theme: 'dark' | 'light';
+  theme: any;
   toggleTheme: () => void;
 }
 
-import WakandaTechBackground from "./WakandaTechBackground";
-
 export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
-  const darkMode = theme === 'dark';
-  const setDarkMode = (val: boolean) => { if ((theme === 'dark') !== val) toggleTheme(); };
+  const darkMode = theme !== 'light';
+  const setDarkMode = (val: boolean) => { if ((theme !== 'light') !== val) toggleTheme(); };
 
   const dynamicPlaceholder = useDynamicPlaceholder([
     "Rechercher un artiste...",
@@ -896,10 +897,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       hasSeenThroneCinematic.current = true;
     }
   }, [activeMenu]);
-
-  const [themeMode, setThemeMode] = useState<"dark-gold" | "light-gold" | "night-navy">(() => {
-    return (localStorage.getItem("gombo_theme_mode") as any) || "dark-gold";
-  });
 
   // Custom Reviews & Gombo completeness state
   const [reviews, setReviews] = useState<GomboReview[]>([]);
@@ -2044,7 +2041,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   // CompleteProfile route moved to App.tsx
 
   return (
-    <div className={`flex h-screen w-full max-w-full box-border overflow-x-hidden ${darkMode ? "bg-[#050505] text-[#F5F5F5]" : "bg-[#F9FBFA] text-[#111]"} font-sans antialiased overflow-hidden uppercase-none`}>
+    <div className={`flex h-screen w-full max-w-full box-border overflow-x-hidden bg-afri-bg text-afri-text font-sans antialiased overflow-hidden uppercase-none`}>
 
       
       {(activeMenu === "super_admin" || activeMenu === "dashboard") && (
@@ -2071,7 +2068,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="fixed inset-y-0 left-0 w-80 bg-[#09090A] border-r border-[#D4AF37]/30 flex flex-col justify-between z-[1001] shrink-0 h-screen overflow-y-auto pb-8"
+              className="fixed inset-y-0 left-0 w-80 bg-afri-bg-sec border-r border-afri-border flex flex-col justify-between z-[1001] shrink-0 h-screen overflow-y-auto pb-8"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
               {/* SIDEBAR CONTAINER SCROLL */}
@@ -2080,7 +2077,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 {/* TOP PART */}
                 <div>
                   {/* BRAND HEADER LINE */}
-                  <div className="p-5 border-b border-[#D4AF37]/15 bg-black/60 flex items-center justify-between">
+                  <div className="p-5 border-b border-afri-border bg-afri-bg/60 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/50 flex items-center justify-center animate-pulse">
                         <Flame className="text-[#D4AF37] w-4.5 h-4.5" />
@@ -2535,135 +2532,212 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
             </header>
           ) : (
-            <header className="flex flex-col afri-container py-2 sm:py-3 border-b border-[#D4AF37]/30 bg-[#050505] shrink-0 gap-2 sm:gap-3.5 w-full animate-fadeIn select-none shadow-[0_10px_35px_rgba(0,0,0,0.85)] rounded-b-[24px] sm:rounded-b-[40px] z-[40] relative">
-              {/* TOP ROW */}
-              <div className="flex items-center justify-between w-full gap-2 sm:gap-4 px-1 sm:px-4">
-                {/* Left: Menu & Logo Group */}
-                <div className="flex items-center gap-2.5 sm:gap-5">
-                  <button
-                    id="hamburger-trigger"
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-zinc-900/40 border border-zinc-800/80 text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all active:scale-95 shrink-0"
-                  >
-                    <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
-                  </button>
-
-                  {menuHistory.length > 1 && (
+            activeMenu === "user_terrain" ? (
+              <header className="flex flex-col afri-container py-2 sm:py-3 border-b border-[#D4AF37]/30 bg-[#050505] shrink-0 gap-2 sm:gap-3.5 w-full animate-fadeIn select-none shadow-[0_10px_35px_rgba(0,0,0,0.85)] rounded-b-[24px] sm:rounded-b-[40px] z-[40] relative">
+                {/* TOP ROW */}
+                <div className="flex items-center justify-between w-full gap-2 sm:gap-4 px-1 sm:px-4">
+                  {/* Left: Menu & Logo Group */}
+                  <div className="flex items-center gap-2.5 sm:gap-5">
                     <button
-                      onClick={goBackMenu}
-                      className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer font-bold text-[9px] sm:text-[11px] uppercase tracking-tight shrink-0"
+                      id="hamburger-trigger"
+                      onClick={() => setIsSidebarOpen(true)}
+                      className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-zinc-900/40 border border-zinc-800/80 text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all active:scale-95 shrink-0"
                     >
-                      <span>← Retour</span>
+                      <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
                     </button>
-                  )}
 
-                  <div className="flex items-center gap-2.5 sm:gap-4">
-                    {logoUrl ? (
-                      <img 
-                        src={logoUrl} 
-                        alt="AFRIGOMBO LOGO" 
-                        className="w-10 h-10 sm:w-16 sm:h-16 object-contain rounded-2xl shrink-0"
-                      />
-                    ) : (
-                      <AfriGomboLogo className="w-10 h-10 sm:w-16 sm:h-16 shrink-0" />
+                    {menuHistory.length > 1 && (
+                      <button
+                        onClick={goBackMenu}
+                        className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer font-bold text-[9px] sm:text-[11px] uppercase tracking-tight shrink-0"
+                      >
+                        <span>← Retour</span>
+                      </button>
                     )}
-                    <div className="flex flex-col justify-center">
-                      <h1 className="text-2xl sm:text-5xl font-black tracking-tighter text-[#D4AF37] leading-none font-display antialiased subpixel-antialiased" 
-                          style={{ 
-                            textShadow: "1px 1px 0px #B48F17"
-                          }}>
-                        AFRIGOMBO
-                      </h1>
-                      <span className="text-[10px] sm:text-[13px] text-[#F2F2F2] font-black tracking-wide mt-1 sm:mt-1.5 font-sans antialiased whitespace-nowrap">
-                        Le Temple du Gombo Musical
-                      </span>
+
+                    <div className="flex items-center gap-2.5 sm:gap-4">
+                      {logoUrl ? (
+                        <img 
+                          src={logoUrl} 
+                          alt="AFRIGOMBO LOGO" 
+                          className="w-10 h-10 sm:w-16 sm:h-16 object-contain rounded-2xl shrink-0"
+                        />
+                      ) : (
+                        <AfriGomboLogo className="w-10 h-10 sm:w-16 sm:h-16 shrink-0" />
+                      )}
+                      <div className="flex flex-col justify-center">
+                        <h1 className="text-2xl sm:text-5xl font-black tracking-tighter text-[#D4AF37] leading-none font-display antialiased subpixel-antialiased" 
+                            style={{ 
+                              textShadow: "1px 1px 0px #B48F17"
+                            }}>
+                          AFRIGOMBO
+                        </h1>
+                        <span className="text-[10px] sm:text-[13px] text-[#F2F2F2] font-black tracking-wide mt-1 sm:mt-1.5 font-sans antialiased whitespace-nowrap">
+                          Le Temple du Gombo Musical
+                        </span>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Right: Actions */}
+                  <div className="flex items-center gap-2 sm:gap-5 shrink-0">
+                     {/* Notification with Badge */}
+                     <button 
+                       onClick={() => {
+                          setActiveMenu("user_notifications");
+                          addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
+                       }} 
+                       className="relative p-1.5 sm:p-2 text-[#D4AF37] hover:scale-110 transition-transform cursor-pointer shrink-0"
+                     >
+                       <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
+                       {realNotifications.some(n => !n.read) && (
+                         <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-2 h-2 sm:w-2.5 bg-red-600 rounded-full border border-black shadow-[0_0_5px_rgba(220,38,38,0.5)]" />
+                       )}
+                     </button>
+
+                     {/* Wallet */}
+                     <div 
+                       onClick={() => setActiveMenu("user_wallet")}
+                       className="hidden xs:flex items-center gap-2 px-2.5 sm:px-4 py-1 sm:py-2 bg-zinc-900/40 border border-zinc-800/80 rounded-xl sm:rounded-2xl cursor-pointer hover:border-[#D4AF37]/30 transition-colors shrink-0"
+                     >
+                       <CreditCard className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-[#D4AF37]" />
+                       <div className="flex flex-col">
+                         <span className="text-[7px] sm:text-[9px] text-zinc-500 uppercase font-bold leading-none">Wallet</span>
+                         <span className="text-[10px] sm:text-sm font-black text-white">{(profile?.wallet?.soldeDisponible ?? profile?.balance ?? 0).toLocaleString('fr-FR')} <span className="text-[8px] sm:text-xs font-bold text-[#D4AF37]">F</span></span>
+                       </div>
+                     </div>
+
+                     {/* Profile Avatar */}
+                     <div 
+                       onClick={() => { 
+                          if (!currentUser) {
+                            setShowHeritageLoginRequired(true);
+                          } else {
+                            setActiveMenu("user_edit_profile");
+                            setViewingGomboIdDetail(false); 
+                          }
+                       }}
+                       className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-zinc-900 cursor-pointer hover:scale-105 transition-transform shadow-[0_0_12px_rgba(212,175,55,0.2)] relative shrink-0"
+                     >
+                       {profile?.avatarUrl || currentUser?.photoURL ? (
+                          <img src={profile?.avatarUrl || currentUser?.photoURL || ""} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                       ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[#D4AF37] font-black text-xs sm:text-base">
+                            {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
+                          </div>
+                       )}
+                       {(profile?.isCertified || profile?.gomboIdNumber) && (
+                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-[#D4AF37] rounded-full border border-black flex items-center justify-center">
+                            <CheckCircle2 className="w-1.5 sm:w-2 h-1.5 sm:h-2 text-black stroke-[4]" />
+                          </div>
+                       )}
+                     </div>
                   </div>
                 </div>
 
-                {/* Right: Actions */}
-                <div className="flex items-center gap-2 sm:gap-5 shrink-0">
-                   {/* Notification with Badge */}
-                   <button 
-                     onClick={() => {
-                        setActiveMenu("user_notifications");
-                        addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
-                     }} 
-                     className="relative p-1.5 sm:p-2 text-[#D4AF37] hover:scale-110 transition-transform cursor-pointer shrink-0"
-                   >
-                     <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-                     {realNotifications.some(n => !n.read) && (
-                       <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-2 h-2 sm:w-2.5 bg-red-600 rounded-full border border-black shadow-[0_0_5px_rgba(220,38,38,0.5)]" />
-                     )}
-                   </button>
-
-                   {/* Wallet */}
-                   <div 
-                     onClick={() => setActiveMenu("user_wallet")}
-                     className="hidden xs:flex items-center gap-2 px-2.5 sm:px-4 py-1 sm:py-2 bg-zinc-900/40 border border-zinc-800/80 rounded-xl sm:rounded-2xl cursor-pointer hover:border-[#D4AF37]/30 transition-colors shrink-0"
-                   >
-                     <CreditCard className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-[#D4AF37]" />
-                     <div className="flex flex-col">
-                       <span className="text-[7px] sm:text-[9px] text-zinc-500 uppercase font-bold leading-none">Wallet</span>
-                       <span className="text-[10px] sm:text-sm font-black text-white">{(profile?.wallet?.soldeDisponible ?? profile?.balance ?? 0).toLocaleString('fr-FR')} <span className="text-[8px] sm:text-xs font-bold text-[#D4AF37]">F</span></span>
+                {/* BOTTOM ROW: STATS BAR */}
+                <div className="w-full flex justify-center mt-0.5 px-3">
+                  <div className="flex items-center justify-center gap-3.5 sm:gap-8 px-4 sm:px-8 py-1.5 sm:py-2.5 rounded-full bg-[#0d0d0f] border border-zinc-900/90 shadow-2xl overflow-x-auto scrollbar-none max-w-full">
+                     <div className="flex items-center gap-1.5 shrink-0">
+                       <Users className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] stroke-[2.5]" />
+                       <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                         <strong className="text-[#F2F2F2] font-mono font-black">{users.filter(u => u.status === 'active').length}</strong> dispos
+                       </span>
                      </div>
-                   </div>
-
-                   {/* Profile Avatar */}
-                   <div 
-                     onClick={() => { 
-                        if (!currentUser) {
-                          setShowHeritageLoginRequired(true);
-                        } else {
-                          setActiveMenu("user_edit_profile");
-                          setViewingGomboIdDetail(false); 
-                        }
-                     }}
-                     className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-zinc-900 cursor-pointer hover:scale-105 transition-transform shadow-[0_0_12px_rgba(212,175,55,0.2)] relative shrink-0"
-                   >
-                     {profile?.avatarUrl || currentUser?.photoURL ? (
-                        <img src={profile?.avatarUrl || currentUser?.photoURL || ""} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[#D4AF37] font-black text-xs sm:text-base">
-                          {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
-                        </div>
-                     )}
-                     {(profile?.isCertified || profile?.gomboIdNumber) && (
-                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-[#D4AF37] rounded-full border border-black flex items-center justify-center">
-                          <CheckCircle2 className="w-1.5 sm:w-2 h-1.5 sm:h-2 text-black stroke-[4]" />
-                        </div>
-                     )}
-                   </div>
+                     <div className="w-[0.5px] h-2.5 sm:h-4 bg-zinc-800/40 shrink-0" />
+                     <div className="flex items-center gap-1.5 shrink-0">
+                       <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] stroke-[2.5]" />
+                       <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                         <strong className="text-[#F2F2F2] font-mono font-black">{renforts.filter(r => r.status === 'active').length}</strong> renforts
+                       </span>
+                     </div>
+                     <div className="w-[0.5px] h-2.5 sm:h-4 bg-zinc-800/40 shrink-0" />
+                     <div className="flex items-center gap-1.5 shrink-0">
+                       <Handshake className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] stroke-[2.5]" />
+                       <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                         <strong className="text-[#F2F2F2] font-mono font-black">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats
+                       </span>
+                     </div>
+                  </div>
                 </div>
-              </div>
-
-              {/* BOTTOM ROW: STATS BAR */}
-              <div className="w-full flex justify-center mt-0.5 px-3">
-                <div className="flex items-center justify-center gap-3.5 sm:gap-8 px-4 sm:px-8 py-1.5 sm:py-2.5 rounded-full bg-[#0d0d0f] border border-zinc-900/90 shadow-2xl overflow-x-auto scrollbar-none max-w-full">
-                   <div className="flex items-center gap-1.5 shrink-0">
-                     <Users className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] stroke-[2.5]" />
-                     <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                       <strong className="text-[#F2F2F2] font-mono font-black">{users.filter(u => u.status === 'active').length}</strong> dispos
-                     </span>
-                   </div>
-                   <div className="w-[0.5px] h-2.5 sm:h-4 bg-zinc-800/40 shrink-0" />
-                   <div className="flex items-center gap-1.5 shrink-0">
-                     <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] stroke-[2.5]" />
-                     <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                       <strong className="text-[#F2F2F2] font-mono font-black">{renforts.filter(r => r.status === 'active').length}</strong> renforts
-                     </span>
-                   </div>
-                   <div className="w-[0.5px] h-2.5 sm:h-4 bg-zinc-800/40 shrink-0" />
-                   <div className="flex items-center gap-1.5 shrink-0">
-                     <Handshake className="w-3 h-3 sm:w-4 sm:h-4 text-[#D4AF37] stroke-[2.5]" />
-                     <span className="text-[7.5px] xs:text-[8px] sm:text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                       <strong className="text-[#F2F2F2] font-mono font-black">{contracts.filter(c => c.status.includes('accept') || c.status === 'payment_held' || c.status === 'in_progress').length}</strong> contrats
-                     </span>
-                   </div>
+              </header>
+            ) : (
+              <header className="flex items-center justify-between px-4 py-3 bg-[#050505] border-b border-zinc-900/50 z-[40] relative shrink-0 shadow-md">
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={goBackMenu} 
+                    className="p-1.5 sm:p-2 bg-zinc-900/40 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors border border-zinc-800/80 active:scale-95"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <h1 className="text-lg font-black text-white tracking-tight uppercase">
+                    {(() => {
+                      switch(activeMenu) {
+                        case "user_wallet": return "Wallet & Finances";
+                        case "user_messages": return "Messagerie";
+                        case "user_edit_profile": return "Mon Profil";
+                        case "user_gombo_plus": return "Premium Elite";
+                        case "user_subscription_management": return "Mon Abonnement";
+                        case "user_heritage": return "Mon Héritage";
+                        case "user_vibes": return "Afrigombo Vibes";
+                        case "user_reels": return "Les Vibes";
+                        case "user_notifications": return "Notifications";
+                        case "user_publish": return "Publier";
+                        case "user_contracts": return "Mes Contrats";
+                        case "user_events": return "Calendrier";
+                        case "user_settings": return "Paramètres";
+                        case "user_gombo_id": return "Gombo ID";
+                        case "user_command_center": return "Centre de Commandement";
+                        case "user_mes_gombos": return "Mes Publications";
+                        case "user_mes_groupes": return "Mes Groupes";
+                        case "user_renforts": return "Renforts";
+                        case "user_opportunities": return "Mes Candidatures";
+                        case "user_help_center": return "Centre d'Aide";
+                        case "user_builders": return "Afrigombo Builders";
+                        case "user_ecosystem": return "Gombo ID";
+                        case "user_about": return "À Propos";
+                        case "user_support": return "Support";
+                        case "user_whats_new": return "Nouveautés";
+                        case "dashboard": return "Tableau de bord";
+                        case "users": return "Utilisateurs";
+                        case "kyc": return "Certifications";
+                        case "contracts": return "Contrats";
+                        case "revenue": return "Revenus";
+                        case "caisse": return "Finances";
+                        case "reports": return "Signalements";
+                        case "settings": return "Paramètres Admin";
+                        case "security": return "Sécurité";
+                        case "logs": return "Système";
+                        default: 
+                          if (activeMenu.startsWith("user_")) return activeMenu.replace("user_", "").replace(/_/g, " ");
+                          return activeMenu;
+                      }
+                    })()}
+                  </h1>
                 </div>
-              </div>
-            </header>
-
+                
+                {/* Always show Avatar on the right in compact header */}
+                <div 
+                   onClick={() => { 
+                      if (!currentUser) {
+                        setShowHeritageLoginRequired(true);
+                      } else {
+                        setActiveMenu("user_edit_profile");
+                        setViewingGomboIdDetail(false); 
+                      }
+                   }}
+                   className="w-8 h-8 rounded-full border-2 border-[#D4AF37] overflow-hidden bg-zinc-900 cursor-pointer hover:scale-105 transition-transform"
+                 >
+                   {profile?.avatarUrl || currentUser?.photoURL ? (
+                      <img src={profile?.avatarUrl || currentUser?.photoURL || ""} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                   ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#D4AF37] font-black text-xs">
+                        {profile?.artisticName?.charAt(0) || currentUser?.displayName?.charAt(0) || "U"}
+                      </div>
+                   )}
+                 </div>
+              </header>
+            )
           )
         )}
 
@@ -5676,18 +5750,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <SettingsModal 
                     isOpen={true} 
                     onClose={() => goBackMenu()}
-                    darkMode={darkMode}
-                    setDarkMode={setDarkMode}
-                    themeMode={themeMode}
-                    setThemeMode={(t) => {
-                      setThemeMode(t);
-                      localStorage.setItem("gombo_theme_mode", t);
-                      if (t === "light-gold") {
-                        setDarkMode(false);
-                      } else {
-                        setDarkMode(true);
-                      }
-                    }}
                   />
                 );
               })()}
@@ -5811,6 +5873,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               })()}
 
               <div className="pb-24">
+                {activeMenu === "user_subscription_management" && (
+                  <div className="animate-fadeIn">
+                    <MonAbonnementView 
+                      isPremium={profile?.isPro || profile?.isVip || (profile?.balance !== undefined) || false}
+                      onUpgrade={() => setActiveMenu("user_gombo_plus")}
+                    />
+                  </div>
+                )}
                 {activeMenu === "user_gombo_plus" && (
                   <div className="animate-fadeIn">
                     <AfrigomboPlus 
@@ -7214,10 +7284,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             <div className="w-20 h-20 bg-gradient-to-tr from-purple-600 via-pink-600 to-[#FF6600] rounded-full flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(236,72,153,0.5)] overflow-hidden">
               <img 
                 src="/public/logo_afrigombo.png" 
-                alt="AFRIGOMBO Logo" 
+                alt="" 
                 className="w-14 h-14 object-contain animate-pulse"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const sibling = e.currentTarget.nextElementSibling;
+                  if (sibling) (sibling as HTMLElement).style.display = 'block';
+                }}
                 referrerPolicy="no-referrer"
               />
+              <div style={{ display: 'none' }} className="w-14 h-14 animate-pulse">
+                <AfriGomboLogo className="w-full h-full" />
+              </div>
             </div>
             <div className="space-y-2">
               <span className="text-[10px] font-mono uppercase tracking-widest text-purple-400 font-extrabold block">Décret Royal Activé</span>

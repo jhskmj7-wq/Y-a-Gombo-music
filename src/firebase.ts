@@ -1664,8 +1664,8 @@ export const gomboDB = {
       let isArtistPremium = contract.isArtistPremium || false;
       let savingsClient = contract.savingsClient || 0;
       let savingsArtist = contract.savingsArtist || 0;
-      let commissionClientRate = contract.commissionClientRate || 0.06;
-      let commissionArtistRate = contract.commissionArtistRate || 0.06;
+      let commissionClientRate = contract.commissionClientRate || 0.025;
+      let commissionArtistRate = contract.commissionArtistRate || 0.025;
 
       if (amount > 0) {
         if (contract.clientId) {
@@ -1690,19 +1690,19 @@ export const gomboDB = {
         }
 
         // Apply Premium Economic Rules:
-        // Client rate: 4% if Premium, else 6%
-        // Artist rate: 4% if Premium, else 6%
-        commissionClientRate = isClientPremium ? 0.04 : 0.06;
-        commissionArtistRate = isArtistPremium ? 0.04 : 0.06;
+        // Client rate: 1.5% if Premium, else 2.5%
+        // Artist rate: 1.5% if Premium, else 2.5%
+        commissionClientRate = isClientPremium ? 0.015 : 0.025;
+        commissionArtistRate = isArtistPremium ? 0.015 : 0.025;
 
         commissionClient = Math.round(amount * commissionClientRate);
         commissionArtist = Math.round(amount * commissionArtistRate);
         totalClientPaid = amount + commissionClient;
         totalArtistReceives = amount - commissionArtist;
 
-        // Premium savings compared to the standard 6% rate
-        savingsClient = isClientPremium ? Math.round(amount * 0.02) : 0;
-        savingsArtist = isArtistPremium ? Math.round(amount * 0.02) : 0;
+        // Premium savings compared to the standard 2.5% rate
+        savingsClient = isClientPremium ? Math.round(amount * 0.01) : 0;
+        savingsArtist = isArtistPremium ? Math.round(amount * 0.01) : 0;
       }
 
       const initialHistory = [

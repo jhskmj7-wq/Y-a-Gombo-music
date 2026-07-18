@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Flame, 
@@ -11,6 +11,7 @@ import { useAuth } from "../AuthContext";
 import { gomboDB } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { AfriGomboLogo } from "./AfriGomboLogo";
 
 interface AuthScreenProps {
   onSuccess: () => void;
@@ -18,6 +19,15 @@ interface AuthScreenProps {
 }
 
 function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
+  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+  const [isLogoFailed, setIsLogoFailed] = useState(false);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/public/logo_afrigombo.png";
+    img.onload = () => setIsLogoLoaded(true);
+    img.onerror = () => setIsLogoFailed(true);
+  }, []);
   const { loginWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
   
@@ -270,12 +280,16 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         {/* Brand logo header */}
         <div className="mt-4 mb-8">
           <div className="inline-flex items-center justify-center w-24 h-24 bg-[#D4AF37]/5 text-[#D4AF37] rounded-full mb-4 border border-[#D4AF37]/20 shadow-lg overflow-hidden">
-            <img 
-              src="/public/logo_afrigombo.png" 
-              alt="AFRIGOMBO Logo" 
-              className="w-full h-full object-contain"
-              referrerPolicy="no-referrer"
-            />
+            {isLogoLoaded && !isLogoFailed ? (
+              <img 
+                src="/public/logo_afrigombo.png" 
+                alt="" 
+                className="w-full h-full object-contain"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <AfriGomboLogo className="w-16 h-16" />
+            )}
           </div>
           <h1 className="text-3xl font-black text-[#D4AF37] tracking-wider uppercase mb-1">
             AFRIGOMBO

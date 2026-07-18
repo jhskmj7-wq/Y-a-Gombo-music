@@ -179,12 +179,20 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    return (localStorage.getItem("gombo_language") as Language) || "fr";
+    try {
+      return (localStorage.getItem("gombo_language") as Language) || "fr";
+    } catch (e) {
+      return "fr";
+    }
   });
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem("gombo_language", lang);
+    try {
+      localStorage.setItem("gombo_language", lang);
+    } catch (e) {
+      // ignore
+    }
   };
 
   const t = (key: string): string => {
