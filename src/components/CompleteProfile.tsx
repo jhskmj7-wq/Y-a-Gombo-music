@@ -322,12 +322,12 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
       
       if (typeof window !== 'undefined') {
         const toast = document.createElement('div');
-        toast.className = "fixed bottom-5 right-5 bg-black border border-[#D4AF37] text-white px-6 py-4 rounded-xl shadow-2xl z-[10000] flex flex-col gap-1";
+        toast.className = "fixed bottom-5 right-5 bg-afri-bg border border-[#D4AF37] text-afri-text px-6 py-4 rounded-xl shadow-2xl z-[10000] flex flex-col gap-1";
         toast.innerHTML = `
           <div class="flex items-center gap-2 text-[#D4AF37] font-black tracking-wide text-xs">
             <span>AFRIGOMBO LOGISTIC</span> <span>♫ 🎷 🪘</span>
           </div>
-          <div class="text-xs text-zinc-300">Bienvenue sur AFRIGOMBO</div>
+          <div class="text-xs text-afri-text">Bienvenue sur AFRIGOMBO</div>
         `;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 2500);
@@ -470,14 +470,14 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-[#050505] border border-[#D4AF37]/25 rounded-[2rem] p-6 md:p-8 shadow-[0_0_50px_rgba(212,175,55,0.05)] relative text-left flex flex-col min-h-max pb-[140px] w-full max-w-full"
+        className="bg-afri-bg-sec border border-[#D4AF37]/25 rounded-[2rem] p-6 md:p-8 shadow-[0_0_50px_rgba(212,175,55,0.05)] relative text-left flex flex-col min-h-max pb-[140px] w-full max-w-full"
       >
         {/* Animated Gold Aura Background */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-afri-bg-sec/5 rounded-full blur-3xl pointer-events-none" />
 
         {/* Dynamic Progressive Bar (25%, 50%, 75%, 100%) */}
         {activeStep > 0 && (
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-zinc-900 z-20">
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-afri-bg-sec z-20">
             <div 
               className="h-full bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] transition-all duration-300"
               style={{ width: `${getProgressPercentage()}%` }}
@@ -487,7 +487,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
 
         {/* Active Step Indicator (Percent tag) */}
         {activeStep > 0 && (
-          <div className="absolute top-4 right-4 bg-zinc-950 border border-zinc-900 rounded-full py-1 px-3 text-[10px] font-mono font-black text-[#D4AF37]">
+          <div className="absolute top-4 right-4 bg-afri-bg border border-afri-border rounded-full py-1 px-3 text-[10px] font-mono font-black text-[#D4AF37]">
             {getProgressPercentage()}% COMPLÉTÉ
           </div>
         )}
@@ -520,7 +520,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   {[3, 7, 5, 8, 4, 6, 2].map((height, i) => (
                     <motion.div
                       key={i}
-                      className="w-1 bg-[#D4AF37] rounded-full"
+                      className="w-1 bg-afri-bg-sec rounded-full"
                       animate={{ 
                         height: [6, height * 4, 6],
                       }}
@@ -538,10 +538,10 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                 <h2 className="text-2xl md:text-3xl font-black tracking-widest text-[#D4AF37] uppercase font-sans">
                   Bienvenue dans AFRIGOMBO
                 </h2>
-                <p className="text-sm text-zinc-300 font-medium max-w-sm mx-auto leading-relaxed">
+                <p className="text-sm text-afri-text font-medium max-w-sm mx-auto leading-relaxed">
                   Le terrain d'action de l'Afrique musicale
                 </p>
-                <p className="text-xs text-zinc-500 max-w-xs mx-auto leading-relaxed">
+                <p className="text-xs text-afri-text-sec max-w-xs mx-auto leading-relaxed">
                   Créez votre carte d'artiste certifiée et connectez-vous aux opportunités, beatmakers, studios et promoteurs du continent.
                 </p>
               </div>
@@ -571,13 +571,13 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                 <User className="w-5 h-5" />
                 <span>1. Votre Identité & Localisation</span>
               </h3>
-              <p className="text-[11px] text-zinc-500 mb-4">
+              <p className="text-[11px] text-afri-text-sec mb-4">
                 Saisissez les informations de base de votre carte d'artiste d'Afrique.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 label-required">
+                  <label className="block text-[9px] font-black uppercase tracking-wider text-afri-text-sec mb-1.5 label-required">
                     Prénom *
                   </label>
                   <input
@@ -586,12 +586,12 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     placeholder="Ex: Serge"
                     value={prenom}
                     onChange={(e) => setPrenom(e.target.value)}
-                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white placeholder-zinc-700 font-bold focus:outline-none"
+                    className="w-full px-4 py-3 bg-afri-bg border border-afri-border focus:border-[#D4AF37]/50 rounded-xl text-xs text-afri-text placeholder-zinc-700 font-bold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5">
+                  <label className="block text-[9px] font-black uppercase tracking-wider text-afri-text-sec mb-1.5">
                     Nom *
                   </label>
                   <input
@@ -600,14 +600,14 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     placeholder="Ex: Kassi"
                     value={nom}
                     onChange={(e) => setNom(e.target.value)}
-                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white placeholder-zinc-700 font-bold focus:outline-none"
+                    className="w-full px-4 py-3 bg-afri-bg border border-afri-border focus:border-[#D4AF37]/50 rounded-xl text-xs text-afri-text placeholder-zinc-700 font-bold focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5">
+                  <label className="block text-[9px] font-black uppercase tracking-wider text-afri-text-sec mb-1.5">
                     Nom Artistique / De Scène (Facultatif)
                   </label>
                   <input
@@ -615,12 +615,12 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     placeholder="Ex: DJ Gombo, Serge K."
                     value={nomArtistique}
                     onChange={(e) => setNomArtistique(e.target.value)}
-                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white placeholder-zinc-700 font-bold focus:outline-none"
+                    className="w-full px-4 py-3 bg-afri-bg border border-afri-border focus:border-[#D4AF37]/50 rounded-xl text-xs text-afri-text placeholder-zinc-700 font-bold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
+                  <label className="block text-[9px] font-black uppercase tracking-wider text-afri-text-sec mb-1.5 flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-[#D4AF37]" />
                     <span>Date de naissance *</span>
                   </label>
@@ -629,14 +629,14 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     required
                     value={dateNaissance}
                     onChange={(e) => setDateNaissance(e.target.value)}
-                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white uppercase font-bold focus:outline-none focus:text-white [color-scheme:dark]"
+                    className="w-full px-4 py-3 bg-afri-bg border border-afri-border focus:border-[#D4AF37]/50 rounded-xl text-xs text-afri-text uppercase font-bold focus:outline-none focus:text-afri-text [color-scheme:dark]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
+                  <label className="block text-[9px] font-black uppercase tracking-wider text-afri-text-sec mb-1.5 flex items-center gap-1">
                     <Globe className="w-3 h-3 text-[#D4AF37]" />
                     <span>Pays d'origine *</span>
                   </label>
@@ -646,12 +646,12 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     placeholder="Ex: Côte d'Ivoire, Sénégal"
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white placeholder-zinc-700 font-bold focus:outline-none"
+                    className="w-full px-4 py-3 bg-afri-bg border border-afri-border focus:border-[#D4AF37]/50 rounded-xl text-xs text-afri-text placeholder-zinc-700 font-bold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
+                  <label className="block text-[9px] font-black uppercase tracking-wider text-afri-text-sec mb-1.5 flex items-center gap-1">
                     <MapPin className="w-3 h-3 text-[#D4AF37]" />
                     <span>Ville / Commune *</span>
                   </label>
@@ -661,7 +661,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                       const selected = e.target.value;
                       setCity(selected === "Autre" ? "" : selected);
                     }}
-                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white font-bold focus:outline-none mb-2"
+                    className="w-full px-4 py-3 bg-afri-bg border border-afri-border focus:border-[#D4AF37]/50 rounded-xl text-xs text-afri-text font-bold focus:outline-none mb-2"
                   >
                     <option value="">Sélectionner une ville...</option>
                     {CIV_CITIES.map((c) => (
@@ -686,7 +686,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                             setOtherCity(e.target.value);
                             setCity(e.target.value);
                           }}
-                          className="w-full px-4 py-3 bg-zinc-900/50 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-xs text-white placeholder-zinc-600 font-bold focus:outline-none"
+                          className="w-full px-4 py-3 bg-afri-bg-sec/50 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-xs text-afri-text placeholder-zinc-600 font-bold focus:outline-none"
                         />
                       </motion.div>
                     )}
@@ -695,7 +695,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
               </div>
 
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
+                <label className="block text-[9px] font-black uppercase tracking-wider text-afri-text-sec mb-1.5 flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-[#D4AF37]" />
                   <span>Quartier / District (Facultatif)</span>
                 </label>
@@ -704,12 +704,12 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   placeholder="Ex: Riviera Palmeraie, Marcory Zone 4..."
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white placeholder-zinc-700 font-bold focus:outline-none"
+                  className="w-full px-4 py-3 bg-afri-bg border border-afri-border focus:border-[#D4AF37]/50 rounded-xl text-xs text-afri-text placeholder-zinc-700 font-bold focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
+                <label className="block text-[9px] font-black uppercase tracking-wider text-afri-text-sec mb-1.5 flex items-center gap-1">
                   <Phone className="w-3 h-3 text-[#D4AF37]" />
                   <span>Téléphone Direct (+225) *</span>
                 </label>
@@ -719,12 +719,12 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   placeholder="Ex: 07 00 11 22 33"
                   value={telephone}
                   onChange={(e) => setTelephone(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white placeholder-zinc-700 font-mono font-bold focus:outline-none"
+                  className="w-full px-4 py-3 bg-afri-bg border border-afri-border focus:border-[#D4AF37]/50 rounded-xl text-xs text-afri-text placeholder-zinc-700 font-mono font-bold focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1">
+                <label className="block text-[9px] font-black uppercase tracking-wider text-afri-text-sec mb-1.5 flex items-center gap-1">
                   <PenTool className="w-3 h-3 text-[#D4AF37]" />
                   <span>Biographie d'Artiste / Présentation (Bio)</span>
                 </label>
@@ -734,7 +734,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   placeholder="Présentez brièvement votre profil du showbiz, votre style ou vos ambitions..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-900 focus:border-[#D4AF37]/50 rounded-xl text-xs text-white placeholder-zinc-700 leading-relaxed font-bold focus:outline-none font-sans"
+                  className="w-full px-4 py-3 bg-afri-bg border border-afri-border focus:border-[#D4AF37]/50 rounded-xl text-xs text-afri-text placeholder-zinc-700 leading-relaxed font-bold focus:outline-none font-sans"
                 />
                 <p className="text-right text-[8px] font-mono text-zinc-650 uppercase">
                   {bio.length} / 500 caracts
@@ -746,7 +746,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <button
                     type="button"
                     onClick={handlePrevStep}
-                    className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                    className="flex-1 h-13 bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Retour</span>
@@ -789,14 +789,14 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <Music className="w-5 h-5" />
                   <span>2. Votre Profil Musical</span>
                 </h3>
-                <p className="text-[11px] text-zinc-500">
+                <p className="text-[11px] text-afri-text-sec">
                   Définissez vos rôles clés dans l'industrie musicale africaine.
                 </p>
               </div>
 
               {/* MAIN ROLE: Single exclusive select */}
               <div className="space-y-3">
-                <span className="block text-[10px] font-black uppercase text-zinc-400 tracking-wider">
+                <span className="block text-[10px] font-black uppercase text-afri-text-sec tracking-wider">
                   Quel est votre rôle principal ? * (Choix unique)
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto pr-1">
@@ -812,8 +812,8 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                       }}
                       className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between font-bold text-[10px] uppercase tracking-tight ${
                         mainRole === r.value
-                          ? "border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37] scale-[1.02]"
-                          : "border-zinc-900 bg-zinc-950 text-zinc-500 hover:text-zinc-300"
+                          ? "border-[#D4AF37] bg-afri-bg-sec/10 text-[#D4AF37] scale-[1.02]"
+                          : "border-afri-border bg-afri-bg text-afri-text-sec hover:text-afri-text"
                       }`}
                     >
                       <span className="truncate">{r.label}</span>
@@ -836,7 +836,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                         placeholder="✏ Entrez votre rôle (ex: Ingénieur son, Manager...)"
                         value={otherMainRole}
                         onChange={(e) => setOtherMainRole(e.target.value)}
-                        className="w-full px-4 py-3 bg-zinc-900/50 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-xs text-white placeholder-zinc-600 font-bold focus:outline-none"
+                        className="w-full px-4 py-3 bg-afri-bg-sec/50 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-xs text-afri-text placeholder-zinc-600 font-bold focus:outline-none"
                       />
                     </motion.div>
                   )}
@@ -844,8 +844,8 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
               </div>
 
               {/* SECONDARY ROLES: Multi choice select */}
-              <div className="space-y-3 pt-2 border-t border-zinc-900">
-                <span className="block text-[10px] font-black uppercase text-zinc-400 tracking-wider">
+              <div className="space-y-3 pt-2 border-t border-afri-border">
+                <span className="block text-[10px] font-black uppercase text-afri-text-sec tracking-wider">
                   D'autres rôles showbiz secondaires ? (Choix multiples libres)
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto pr-1">
@@ -861,7 +861,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                         className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between font-bold text-[10px] uppercase tracking-tight ${
                           isSelected
                             ? "border-amber-500/50 bg-amber-500/5 text-amber-400"
-                            : "border-zinc-900 bg-zinc-950 text-zinc-600 hover:text-zinc-400"
+                            : "border-afri-border bg-afri-bg text-afri-text-sec hover:text-afri-text-sec"
                         }`}
                       >
                         <span className="truncate">{r.label}</span>
@@ -877,7 +877,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <button
                     type="button"
                     onClick={handlePrevStep}
-                    className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                    className="flex-1 h-13 bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Retour</span>
@@ -920,13 +920,13 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <Radio className="w-5 h-5" />
                   <span>3. Votre Univers Musical</span>
                 </h3>
-                <p className="text-[11px] text-zinc-500">
+                <p className="text-[11px] text-afri-text-sec">
                   Sélectionnez vos genres préférés et vos influences sonores (Sélection multiple).
                 </p>
               </div>
 
               <div className="space-y-4">
-                <span className="block text-[10px] font-black uppercase text-zinc-400 tracking-wider">
+                <span className="block text-[10px] font-black uppercase text-afri-text-sec tracking-wider">
                   Quels styles définissent votre direction artistique ? *
                 </span>
                 
@@ -940,17 +940,17 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                         onClick={() => toggleGenre(g)}
                         className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between font-bold text-[10.5px] xs:text-xs uppercase tracking-tight break-normal ${
                           isSelected
-                            ? "border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37] scale-[1.01]"
-                            : "border-zinc-900 w-full bg-zinc-950 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
+                            ? "border-[#D4AF37] bg-afri-bg-sec/10 text-[#D4AF37] scale-[1.01]"
+                            : "border-afri-border w-full bg-afri-bg text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec"
                         }`}
                       >
                         <span className="truncate">{g}</span>
                         {isSelected ? (
-                          <div className="w-4 h-4 rounded-full bg-[#D4AF37] text-black flex items-center justify-center shrink-0 ml-1">
+                          <div className="w-4 h-4 rounded-full bg-afri-bg-sec text-black flex items-center justify-center shrink-0 ml-1">
                             <Check className="w-2.5 h-2.5 stroke-[4px]" />
                           </div>
                         ) : (
-                          <div className="w-4 h-4 rounded-full border border-zinc-800 shrink-0 ml-1" />
+                          <div className="w-4 h-4 rounded-full border border-afri-border shrink-0 ml-1" />
                         )}
                       </button>
                     );
@@ -971,7 +971,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                         placeholder="✏ Entrez votre style (ex: Afro-fusion, Drill...)"
                         value={otherGenre}
                         onChange={(e) => setOtherGenre(e.target.value)}
-                        className="w-full px-4 py-3 bg-zinc-900/50 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-xs text-white placeholder-zinc-600 font-bold focus:outline-none"
+                        className="w-full px-4 py-3 bg-afri-bg-sec/50 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-xs text-afri-text placeholder-zinc-600 font-bold focus:outline-none"
                       />
                     </motion.div>
                   )}
@@ -983,7 +983,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <button
                     type="button"
                     onClick={handlePrevStep}
-                    className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                    className="flex-1 h-13 bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Retour</span>
@@ -1026,13 +1026,13 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <Users className="w-5 h-5" />
                   <span>4. Vos Collaborations</span>
                 </h3>
-                <p className="text-[11px] text-zinc-500">
+                <p className="text-[11px] text-afri-text-sec">
                   Déterminez précisément ce que vous recherchez au sein de l'écosystème AFRIGOMBO (Sélection multiple).
                 </p>
               </div>
 
               <div className="space-y-4">
-                <span className="block text-[10px] font-black uppercase text-zinc-400 tracking-wider">
+                <span className="block text-[10px] font-black uppercase text-afri-text-sec tracking-wider">
                   Quelles connexions showbiz vous intéressent ? *
                 </span>
                 
@@ -1047,7 +1047,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                         className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between font-bold text-[10.5px] xs:text-xs uppercase tracking-tight break-normal ${
                           isSelected
                             ? "border-amber-500 bg-amber-500/10 text-amber-400 scale-[1.01]"
-                            : "border-zinc-900 w-full bg-zinc-950 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
+                            : "border-afri-border w-full bg-afri-bg text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec"
                         }`}
                       >
                         <span className="truncate">{collab}</span>
@@ -1056,7 +1056,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                             <Check className="w-2.5 h-2.5 stroke-[4px]" />
                           </div>
                         ) : (
-                          <div className="w-4 h-4 rounded-full border border-zinc-800 shrink-0 ml-1" />
+                          <div className="w-4 h-4 rounded-full border border-afri-border shrink-0 ml-1" />
                         )}
                       </button>
                     );
@@ -1069,7 +1069,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <button
                     type="button"
                     onClick={handlePrevStep}
-                    className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                    className="flex-1 h-13 bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Retour</span>
@@ -1112,14 +1112,14 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <Camera className="w-5 h-5" />
                   <span>5. Votre Photo de Profil</span>
                 </h3>
-                <p className="text-[11px] text-zinc-500">
+                <p className="text-[11px] text-afri-text-sec">
                   Conservez votre photo Google récupérée automatiquement ou ajoutez votre plus beau cliché showbiz.
                 </p>
               </div>
 
               <div className="flex flex-col items-center space-y-4">
                 {/* Image / Video preview bubble */}
-                <div className="relative w-36 h-36 rounded-full border-2 border-[#D4AF37] p-1 bg-black overflow-hidden flex items-center justify-center shadow-lg">
+                <div className="relative w-36 h-36 rounded-full border-2 border-[#D4AF37] p-1 bg-afri-bg overflow-hidden flex items-center justify-center shadow-lg">
                   {cameraActive ? (
                     <video 
                       ref={videoRef} 
@@ -1134,19 +1134,19 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                       className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
-                    <div className="w-full h-full bg-zinc-950 flex items-center justify-center text-[#D4AF37] font-sans font-black text-3xl uppercase rounded-full">
+                    <div className="w-full h-full bg-afri-bg flex items-center justify-center text-[#D4AF37] font-sans font-black text-3xl uppercase rounded-full">
                       {(nomArtistique || prenom || "A").charAt(0)}
                     </div>
                   )}
                   {uploading && (
-                    <div className="absolute inset-0 bg-black/80 flex items-center justify-center rounded-full">
+                    <div className="absolute inset-0 bg-afri-bg/80 flex items-center justify-center rounded-full">
                       <div className="w-8 h-8 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin" />
                     </div>
                   )}
                 </div>
 
                 <div className="flex flex-col items-center gap-2">
-                  <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider">
                     PHOTO AUTOMATIQUE : {avatarUrl !== gdPhoto ? "MODIFIÉE ⚡" : "ACTIVE ✔"}
                   </span>
                   
@@ -1163,7 +1163,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                         <button
                           type="button"
                           onClick={stopCamera}
-                          className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-400 font-bold text-[10px] rounded-lg hover:text-white uppercase cursor-pointer"
+                          className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text-sec font-bold text-[10px] rounded-lg hover:text-afri-text uppercase cursor-pointer"
                         >
                           Annuler
                         </button>
@@ -1174,7 +1174,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                           type="button"
                           onClick={() => setAvatarUrl(gdPhoto)}
                           disabled={avatarUrl === gdPhoto}
-                          className="px-3.5 py-2 bg-zinc-950 border border-zinc-9D0 text-zinc-500 hover:text-zinc-300 disabled:opacity-40 font-bold text-[9.5px] rounded-xl hover:bg-zinc-900 uppercase cursor-pointer border-zinc-900"
+                          className="px-3.5 py-2 bg-afri-bg border border-zinc-9D0 text-afri-text-sec hover:text-afri-text disabled:opacity-40 font-bold text-[9.5px] rounded-xl hover:bg-afri-bg-sec uppercase cursor-pointer border-afri-border"
                         >
                           Réinitialiser (Photo Google)
                         </button>
@@ -1182,13 +1182,13 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                         <button
                           type="button"
                           onClick={startCamera}
-                          className="px-3.5 py-2 bg-zinc-950 border border-zinc-900 text-zinc-300 hover:text-white font-bold text-[9.5px] rounded-xl hover:bg-zinc-900 uppercase flex items-center gap-1 cursor-pointer border-zinc-900"
+                          className="px-3.5 py-2 bg-afri-bg border border-afri-border text-afri-text hover:text-afri-text font-bold text-[9.5px] rounded-xl hover:bg-afri-bg-sec uppercase flex items-center gap-1 cursor-pointer border-afri-border"
                         >
                           <Camera className="w-3.5 h-3.5 text-[#D4AF37]" />
                           <span>Caméra</span>
                         </button>
 
-                        <label className="px-3.5 py-2 bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/20 font-bold text-[9.5px] rounded-xl uppercase flex items-center gap-1 cursor-pointer">
+                        <label className="px-3.5 py-2 bg-afri-bg-sec/10 border border-[#D4AF37]/20 text-[#D4AF37] hover:bg-afri-bg-sec/20 font-bold text-[9.5px] rounded-xl uppercase flex items-center gap-1 cursor-pointer">
                           <Upload className="w-3.5 h-3.5" />
                           <span>Téléverser</span>
                           <input
@@ -1205,7 +1205,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
               </div>
 
               {/* Recapitulation check list */}
-              <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl text-[10px] text-zinc-400 space-y-2 font-mono">
+              <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl text-[10px] text-afri-text-sec space-y-2 font-mono">
                 <p className="font-sans font-black text-[#D4AF37] uppercase tracking-wider mb-1">Résumé de signature :</p>
                 <p>👤 <strong>Nom Showbiz :</strong> {nomArtistique || `${prenom} ${nom}`}</p>
                 <p>📞 <strong>Téléphone certifié :</strong> {telephone}</p>
@@ -1221,7 +1221,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                   <button
                     type="button"
                     onClick={handlePrevStep}
-                    className="flex-1 h-13 bg-zinc-950 border border-zinc-900 text-zinc-400 hover:text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                    className="flex-1 h-13 bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text font-bold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Retour</span>
@@ -1230,7 +1230,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
                     type="button"
                     onClick={handleSubmitProfile}
                     disabled={loading || uploading}
-                    className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] disabled:from-zinc-800 disabled:to-zinc-900 disabled:text-zinc-500 text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                    className="flex-[2] h-13 bg-gradient-to-r from-[#D4AF37] to-[#FFAA00] disabled:from-afri-bg-sec disabled:to-afri-bg-action disabled:text-afri-text-sec text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
                   >
                     {loading ? (
                       <>

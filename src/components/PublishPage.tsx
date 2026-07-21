@@ -8,7 +8,7 @@ export default function PublishPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] text-[#F5F5F5] py-6 px-4">
+    <div className="min-h-screen bg-afri-bg-sec text-afri-text py-6 px-4">
       {profile ? (
         <GomboPublish
           currentUserProfile={profile}
@@ -20,7 +20,7 @@ export default function PublishPage() {
           }}
         />
       ) : (
-        <div className="flex justify-center items-center h-[50vh] text-zinc-500">
+        <div className="flex justify-center items-center h-[50vh] text-afri-text-sec">
           Chargement du profil...
         </div>
       )}

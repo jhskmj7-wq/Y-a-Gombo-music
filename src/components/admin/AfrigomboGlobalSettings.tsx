@@ -50,10 +50,10 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
   };
 
   return (
-    <div className="bg-[#050505] border border-zinc-900 rounded-2xl p-6 mb-6">
-      <div className="flex items-center gap-2 border-b border-zinc-900 pb-4 mb-4">
+    <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-6 mb-6">
+      <div className="flex items-center gap-2 border-b border-afri-border pb-4 mb-4">
         <Settings className="w-5 h-5 text-[#D4AF37]" />
-        <h4 className="text-sm font-black text-white font-mono uppercase tracking-wider">
+        <h4 className="text-sm font-black text-afri-text font-mono uppercase tracking-wider">
           Configuration Impériale Globale
         </h4>
       </div>
@@ -61,119 +61,119 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
       <form onSubmit={handleSave} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Nom de l'Application</label>
+            <label className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">Nom de l'Application</label>
             <input 
               type="text" 
               value={config.appName} 
               onChange={e => handleChange("appName", e.target.value)} 
-              className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] text-white p-2.5 rounded-xl text-xs font-mono"
+              className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2.5 rounded-xl text-xs font-mono"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Version</label>
+            <label className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">Version</label>
             <input 
               type="text" 
               value={config.version} 
               onChange={e => handleChange("version", e.target.value)} 
-              className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] text-white p-2.5 rounded-xl text-xs font-mono"
+              className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2.5 rounded-xl text-xs font-mono"
             />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Message d'accueil</label>
+          <label className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">Message d'accueil</label>
           <textarea 
             value={config.welcomeMessage} 
             onChange={e => handleChange("welcomeMessage", e.target.value)} 
-            className="w-full h-20 bg-black border border-zinc-800 focus:border-[#D4AF37] text-white p-2.5 rounded-xl text-xs font-mono resize-none"
+            className="w-full h-20 bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2.5 rounded-xl text-xs font-mono resize-none"
           />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Villes Disponibles</label>
+            <label className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">Villes Disponibles</label>
             <input 
               type="text" 
               value={config.villes} 
               onChange={e => handleChange("villes", e.target.value)} 
-              className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] text-white p-2.5 rounded-xl text-xs font-mono"
+              className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2.5 rounded-xl text-xs font-mono"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Catégories</label>
+            <label className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">Catégories</label>
             <input 
               type="text" 
               value={config.categories} 
               onChange={e => handleChange("categories", e.target.value)} 
-              className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] text-white p-2.5 rounded-xl text-xs font-mono"
+              className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2.5 rounded-xl text-xs font-mono"
             />
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Badges / Titres</label>
+            <label className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">Badges / Titres</label>
             <input 
               type="text" 
               value={config.badges} 
               onChange={e => handleChange("badges", e.target.value)} 
-              className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] text-white p-2.5 rounded-xl text-xs font-mono"
+              className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2.5 rounded-xl text-xs font-mono"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Défis en cours</label>
+            <label className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">Défis en cours</label>
             <input 
               type="text" 
               value={config.defis} 
               onChange={e => handleChange("defis", e.target.value)} 
-              className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] text-white p-2.5 rounded-xl text-xs font-mono"
+              className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2.5 rounded-xl text-xs font-mono"
             />
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Langues Prises en Charge</label>
+            <label className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">Langues Prises en Charge</label>
             <input 
               type="text" 
               value={config.langues} 
               onChange={e => handleChange("langues", e.target.value)} 
-              className="w-full bg-black border border-zinc-800 focus:border-[#D4AF37] text-white p-2.5 rounded-xl text-xs font-mono"
+              className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] text-afri-text p-2.5 rounded-xl text-xs font-mono"
             />
           </div>
-          <div className="flex items-center gap-3 bg-zinc-950 p-4 rounded-xl border border-zinc-900 mt-2">
+          <div className="flex items-center gap-3 bg-afri-bg p-4 rounded-xl border border-afri-border mt-2">
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" checked={config.maintenanceMode} onChange={(e) => handleChange("maintenanceMode", e.target.checked)} />
-              <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+              <div className="w-11 h-6 bg-afri-bg-ter peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
             </label>
-            <span className="text-xs font-mono font-bold text-white flex items-center gap-2">
-              <AlertTriangle className={`w-4 h-4 ${config.maintenanceMode ? "text-red-500 animate-pulse" : "text-zinc-600"}`} />
+            <span className="text-xs font-mono font-bold text-afri-text flex items-center gap-2">
+              <AlertTriangle className={`w-4 h-4 ${config.maintenanceMode ? "text-red-500 animate-pulse" : "text-afri-text-sec"}`} />
               MODE MAINTENANCE
             </span>
           </div>
         </div>
 
         {/* SECTION GRAPHISME SOUVERAIN (FAVICON, LOGO, PWA, SPLASH SCREEN) */}
-        <div className="border-t border-zinc-900 pt-6 mt-6 space-y-4">
+        <div className="border-t border-afri-border pt-6 mt-6 space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-sm">🎨</span>
             <h5 className="text-[11px] font-mono uppercase font-black text-[#D4AF37] tracking-wider">
               Identité Visuelle & Assets Graphiques Souverains
             </h5>
           </div>
-          <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
+          <p className="text-[11px] text-afri-text-sec leading-relaxed font-sans">
             Personnalisez les logos officiels et l'identité visuelle de l'application sans dépendance externe à Firebase Storage. Les images sont enregistrées localement et appliquées en temps réel.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* 1. LOGO PRINCIPAL */}
-            <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-900 space-y-3">
+            <div className="bg-afri-bg p-4 rounded-2xl border border-afri-border space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-[9.5px] font-mono uppercase font-black text-white">1. Logo Principal (Branding)</span>
-                <span className="text-[8px] font-mono text-zinc-500">FORMAT : PNG/SVG</span>
+                <span className="text-[9.5px] font-mono uppercase font-black text-afri-text">1. Logo Principal (Branding)</span>
+                <span className="text-[8px] font-mono text-afri-text-sec">FORMAT : PNG/SVG</span>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-black border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                <div className="w-16 h-16 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center overflow-hidden shrink-0">
                   <img 
                     src={localStorage.getItem("custom_app_logo") || "/public/logo_afrigombo.png"} 
                     alt="Logo" 
@@ -202,7 +202,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
                   <div className="flex gap-2">
                     <label 
                       htmlFor="logo-upload"
-                      className="px-2.5 py-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold rounded uppercase cursor-pointer hover:bg-[#D4AF37]/20"
+                      className="px-2.5 py-1.5 bg-afri-bg-sec/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold rounded uppercase cursor-pointer hover:bg-afri-bg-sec/20"
                     >
                       Téléverser
                     </label>
@@ -223,13 +223,13 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
             </div>
 
             {/* 2. FAVICON */}
-            <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-900 space-y-3">
+            <div className="bg-afri-bg p-4 rounded-2xl border border-afri-border space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-[9.5px] font-mono uppercase font-black text-white">2. Favicon Navigateur</span>
-                <span className="text-[8px] font-mono text-zinc-500">FORMAT : ICO/PNG</span>
+                <span className="text-[9.5px] font-mono uppercase font-black text-afri-text">2. Favicon Navigateur</span>
+                <span className="text-[8px] font-mono text-afri-text-sec">FORMAT : ICO/PNG</span>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-black border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                <div className="w-16 h-16 rounded-xl bg-afri-bg border border-afri-border flex items-center justify-center overflow-hidden shrink-0">
                   <img 
                     src={localStorage.getItem("custom_app_favicon") || "/favicon.ico"} 
                     alt="Favicon" 
@@ -264,7 +264,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
                   <div className="flex gap-2">
                     <label 
                       htmlFor="favicon-upload"
-                      className="px-2.5 py-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold rounded uppercase cursor-pointer hover:bg-[#D4AF37]/20"
+                      className="px-2.5 py-1.5 bg-afri-bg-sec/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold rounded uppercase cursor-pointer hover:bg-afri-bg-sec/20"
                     >
                       Téléverser
                     </label>
@@ -288,13 +288,13 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
             </div>
 
             {/* 3. ICÔNE PWA */}
-            <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-900 space-y-3">
+            <div className="bg-afri-bg p-4 rounded-2xl border border-afri-border space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-[9.5px] font-mono uppercase font-black text-white">3. Icône PWA (Mobile)</span>
-                <span className="text-[8px] font-mono text-zinc-500">FORMAT : PNG 512x512</span>
+                <span className="text-[9.5px] font-mono uppercase font-black text-afri-text">3. Icône PWA (Mobile)</span>
+                <span className="text-[8px] font-mono text-afri-text-sec">FORMAT : PNG 512x512</span>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-black border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                <div className="w-16 h-16 rounded-xl bg-afri-bg border border-afri-border flex items-center justify-center overflow-hidden shrink-0">
                   <img 
                     src={localStorage.getItem("custom_app_pwa_icon") || "/public/logo_afrigombo.png"} 
                     alt="PWA Icon" 
@@ -322,7 +322,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
                   <div className="flex gap-2">
                     <label 
                       htmlFor="pwa-upload"
-                      className="px-2.5 py-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold rounded uppercase cursor-pointer hover:bg-[#D4AF37]/20"
+                      className="px-2.5 py-1.5 bg-afri-bg-sec/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold rounded uppercase cursor-pointer hover:bg-afri-bg-sec/20"
                     >
                       Téléverser
                     </label>
@@ -342,13 +342,13 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
             </div>
 
             {/* 4. ÉCRAN DE DÉMARRAGE (SPLASH SCREEN) */}
-            <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-900 space-y-3">
+            <div className="bg-afri-bg p-4 rounded-2xl border border-afri-border space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-[9.5px] font-mono uppercase font-black text-white">4. Écran de Démarrage (Splash)</span>
-                <span className="text-[8px] font-mono text-zinc-500">FORMAT : JPG/PNG</span>
+                <span className="text-[9.5px] font-mono uppercase font-black text-afri-text">4. Écran de Démarrage (Splash)</span>
+                <span className="text-[8px] font-mono text-afri-text-sec">FORMAT : JPG/PNG</span>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-black border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                <div className="w-16 h-16 rounded-xl bg-afri-bg border border-afri-border flex items-center justify-center overflow-hidden shrink-0">
                   <img 
                     src={localStorage.getItem("custom_app_splash_screen") || "/public/media/splash_background.jpg" || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=200"} 
                     alt="Splash Screen" 
@@ -379,7 +379,7 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
                   <div className="flex gap-2">
                     <label 
                       htmlFor="splash-upload"
-                      className="px-2.5 py-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold rounded uppercase cursor-pointer hover:bg-[#D4AF37]/20"
+                      className="px-2.5 py-1.5 bg-afri-bg-sec/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold rounded uppercase cursor-pointer hover:bg-afri-bg-sec/20"
                     >
                       Téléverser
                     </label>
@@ -400,12 +400,12 @@ export default function AfrigomboGlobalSettings({ audioSynth }: { audioSynth?: a
           </div>
         </div>
 
-        <div className="flex justify-end items-center gap-4 pt-4 border-t border-zinc-900">
+        <div className="flex justify-end items-center gap-4 pt-4 border-t border-afri-border">
           {saved && <span className="text-emerald-500 text-[10px] uppercase font-mono">Enregistré !</span>}
           <button 
             type="submit" 
             disabled={saving}
-            className="px-6 py-3 bg-[#D4AF37] text-black text-xs font-mono font-black uppercase tracking-wider rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)] cursor-pointer"
+            className="px-6 py-3 bg-afri-bg-sec text-black text-xs font-mono font-black uppercase tracking-wider rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)] cursor-pointer"
           >
             {saving ? "SAUVEGARDE..." : "SAUVEGARDER LA CONFIGURATION"}
           </button>

@@ -34,12 +34,12 @@ export default function AdminGomboID({
   return (
     <div className="space-y-6 text-left pb-24 animate-fadeIn">
       {/* Header */}
-      <div className="border-b border-white/5 pb-4">
+      <div className="border-b border-afri-border pb-4">
         <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
           <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
           Validation Gombo ID & Certification
         </h3>
-        <p className="text-xs text-zinc-400 mt-1">
+        <p className="text-xs text-afri-text-sec mt-1">
           Validez les dossiers de vérification d'identité des artistes d'AFRIGOMBO pour sécuriser les transactions.
         </p>
       </div>
@@ -52,28 +52,28 @@ export default function AdminGomboID({
 
         <div className="space-y-3">
           {pendingKycUsers.length === 0 ? (
-            <div className="p-10 text-center bg-black/40 border border-zinc-900 rounded-2xl text-zinc-500 text-xs font-mono">
+            <div className="p-10 text-center bg-afri-bg/40 border border-afri-border rounded-2xl text-afri-text-sec text-xs font-mono">
               Aucun dossier Gombo ID en attente de validation.
             </div>
           ) : (
             pendingKycUsers.map((u) => (
               <div
                 key={u.id}
-                className="p-5 bg-gradient-to-br from-[#070707] to-black border border-zinc-900 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-[#D4AF37]/35 transition-all"
+                className="p-5 bg-gradient-to-br from-afri-bg-ter to-afri-bg border border-afri-border rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-[#D4AF37]/35 transition-all"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] shrink-0 mt-0.5 font-bold font-display text-lg">
+                  <div className="w-10 h-10 rounded-xl bg-afri-bg-sec/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] shrink-0 mt-0.5 font-bold font-display text-lg">
                     {u.artisticName?.charAt(0) || u.name?.charAt(0) || "A"}
                   </div>
                   <div>
-                    <h5 className="text-sm font-sans font-black text-white">{u.artisticName || "Artiste Gombo"}</h5>
-                    <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">{u.email}</span>
+                    <h5 className="text-sm font-sans font-black text-afri-text">{u.artisticName || "Artiste Gombo"}</h5>
+                    <span className="text-[10px] font-mono text-afri-text-sec block mt-0.5">{u.email}</span>
                     <div className="flex flex-wrap items-center gap-2.5 mt-2">
-                      <span className="text-[9px] font-mono text-zinc-400 uppercase bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase bg-afri-bg-sec border border-afri-border px-2 py-0.5 rounded">
                         Commune : {u.commune || "Inconnue"}
                       </span>
                       {u.specialties && u.specialties.length > 0 && (
-                        <span className="text-[9px] font-mono text-zinc-400 uppercase bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded truncate max-w-[150px]">
+                        <span className="text-[9px] font-mono text-afri-text-sec uppercase bg-afri-bg-sec border border-afri-border px-2 py-0.5 rounded truncate max-w-[150px]">
                           Styles : {u.specialties.join(", ")}
                         </span>
                       )}

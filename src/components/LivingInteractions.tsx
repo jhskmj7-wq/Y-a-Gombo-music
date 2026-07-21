@@ -73,9 +73,9 @@ export const LivingInteractions: React.FC = () => {
               animate={{ y: [0, -20, 0], opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5, ease: "bounce" }}
-              className="absolute bottom-20 right-10 bg-[#0B0B0B] border border-[#D4AF37] p-4 rounded-2xl shadow-xl flex items-center gap-3"
+              className="absolute bottom-20 right-10 bg-afri-bg-sec border border-[#D4AF37] p-4 rounded-2xl shadow-xl flex items-center gap-3"
             >
-               <div className="w-10 h-10 rounded-full bg-[#1A1A1E] flex items-center justify-center animate-pulse">
+               <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center animate-pulse">
                  <Zap className="w-5 h-5 text-emerald-400" />
                </div>
                <div>
@@ -105,7 +105,7 @@ export const LivingInteractions: React.FC = () => {
               transition={{ duration: 1 }}
               className="absolute flex items-center justify-center"
             >
-               <div className="absolute w-60 h-60 bg-[#D4AF37]/20 rounded-full animate-ping" />
+               <div className="absolute w-60 h-60 bg-afri-bg-sec/20 rounded-full animate-ping" />
                <Star className="w-24 h-24 text-[#D4AF37] animate-pulse drop-shadow-[0_0_20px_rgba(212,175,55,1)]" />
                <p className="absolute -bottom-10 font-mono text-[#D4AF37] font-black uppercase tracking-[0.3em]">Marché Conclu</p>
             </motion.div>
@@ -130,7 +130,7 @@ export const LivingInteractions: React.FC = () => {
                     duration: Math.random() * 1.5 + 0.5,
                     ease: "easeIn"
                   }}
-                  className="absolute w-3 h-3 bg-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.8)]"
+                  className="absolute w-3 h-3 bg-afri-bg-sec shadow-[0_0_10px_rgba(212,175,55,0.8)]"
                   style={{ borderRadius: i % 2 === 0 ? '50%' : '2px' }}
                />
              ))

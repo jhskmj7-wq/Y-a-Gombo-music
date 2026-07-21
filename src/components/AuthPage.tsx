@@ -6,7 +6,7 @@ export default function AuthPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-afri-bg-sec flex items-center justify-center p-4">
       <div className="w-full max-w-sm relative">
         <AuthScreen 
           onSuccess={() => {

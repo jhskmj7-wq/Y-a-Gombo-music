@@ -101,13 +101,13 @@ export default function AfrigomboCinematicIntro({ onComplete }: AfrigomboCinemat
   const showButton = elapsed >= 14.0;
 
   return (
-    <div className="fixed inset-0 bg-[#020202] z-[10000] flex flex-col items-center justify-center text-center select-none overflow-hidden font-sans">
+    <div className="fixed inset-0 bg-afri-bg-sec z-[10000] flex flex-col items-center justify-center text-center select-none overflow-hidden font-sans">
       
       {/* 1. DISCRETE CONTROLS (Passer & Mute) */}
       <div className="absolute top-6 inset-x-6 flex justify-between items-center z-50">
         <button
           onClick={handleToggleMute}
-          className="p-3 bg-zinc-950/60 border border-zinc-900/40 rounded-full hover:border-[#D4AF37]/50 text-zinc-400 hover:text-[#D4AF37] transition-all cursor-pointer"
+          className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-full hover:border-[#D4AF37]/50 text-afri-text-sec hover:text-[#D4AF37] transition-all cursor-pointer"
           title={isMuted ? "Activer le son" : "Mettre en sourdine"}
         >
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -115,7 +115,7 @@ export default function AfrigomboCinematicIntro({ onComplete }: AfrigomboCinemat
 
         <button
           onClick={handleSkip}
-          className="px-4 py-2 bg-zinc-950/60 border border-zinc-900/40 rounded-full text-zinc-400 hover:text-[#D4AF37] text-[10px] font-mono uppercase tracking-widest transition-all cursor-pointer hover:border-[#D4AF37]/50 active:scale-95"
+          className="px-4 py-2 bg-afri-bg/60 border border-afri-border/40 rounded-full text-afri-text-sec hover:text-[#D4AF37] text-[10px] font-mono uppercase tracking-widest transition-all cursor-pointer hover:border-[#D4AF37]/50 active:scale-95"
         >
           ▶ Passer
         </button>
@@ -164,7 +164,7 @@ export default function AfrigomboCinematicIntro({ onComplete }: AfrigomboCinemat
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 2.5, ease: "easeOut" }}
-              className="relative w-48 h-48 flex items-center justify-center border border-[#D4AF37]/20 rounded-full bg-black/60 shadow-[0_0_60px_rgba(212,175,55,0.1)] overflow-hidden"
+              className="relative w-48 h-48 flex items-center justify-center border border-[#D4AF37]/20 rounded-full bg-afri-bg/60 shadow-[0_0_60px_rgba(212,175,55,0.1)] overflow-hidden"
             >
               {/* Spinning sound-glow pattern */}
               <div className="absolute inset-2 border border-dashed border-[#D4AF37]/15 rounded-full animate-spin" style={{ animationDuration: "25s" }} />
@@ -231,7 +231,7 @@ export default function AfrigomboCinematicIntro({ onComplete }: AfrigomboCinemat
       </div>
 
       {/* 7. DISCRETE FOOTER */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[9px] font-mono uppercase tracking-[0.34em] text-zinc-600 z-25">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[9px] font-mono uppercase tracking-[0.34em] text-afri-text-sec z-25">
         AFRIGOMBO © 2026 ● ABIDJAN
       </div>
 

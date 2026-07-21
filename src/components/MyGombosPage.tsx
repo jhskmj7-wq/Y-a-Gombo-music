@@ -6,14 +6,14 @@ export default function MyGombosPage() {
   const { profile, refreshProfile } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] text-[#F5F5F5]">
+    <div className="min-h-screen bg-afri-bg-sec text-afri-text">
       {profile ? (
         <Dashboards
           currentUserProfile={profile}
           onRefreshProfile={refreshProfile}
         />
       ) : (
-        <div className="flex justify-center items-center h-[50vh] text-zinc-500">
+        <div className="flex justify-center items-center h-[50vh] text-afri-text-sec">
           Chargement de vos Gombos...
         </div>
       )}

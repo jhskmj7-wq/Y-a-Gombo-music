@@ -75,27 +75,27 @@ export default function FirebaseDiagnostic({ isOpen, onClose }: FirebaseDiagnost
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-afri-bg/80 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="w-full max-w-2xl bg-zinc-950 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl"
+          className="w-full max-w-2xl bg-afri-bg border border-afri-border rounded-3xl overflow-hidden shadow-2xl"
         >
           {/* Header */}
-          <div className="p-6 border-b border-zinc-900 flex justify-between items-center bg-zinc-900/50">
+          <div className="p-6 border-b border-afri-border flex justify-between items-center bg-afri-bg-sec/50">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-amber-500/10 rounded-xl">
                 <ShieldCheck className="w-6 h-6 text-amber-500" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Diagnostic Firebase</h2>
-                <p className="text-xs text-zinc-500">Infrastructure & Connectivité</p>
+                <h2 className="text-xl font-bold text-afri-text">Diagnostic Firebase</h2>
+                <p className="text-xs text-afri-text-sec">Infrastructure & Connectivité</p>
               </div>
             </div>
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors"
+              className="p-2 hover:bg-white/5 rounded-full text-afri-text-sec hover:text-afri-text transition-colors"
             >
               <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} onClick={(e) => { e.stopPropagation(); runDiagnostic(); }} />
             </button>
@@ -107,30 +107,30 @@ export default function FirebaseDiagnostic({ isOpen, onClose }: FirebaseDiagnost
               <div className={`p-4 rounded-2xl border ${status?.isEnabled ? "bg-emerald-500/5 border-emerald-500/20" : "bg-rose-500/5 border-rose-500/20"}`}>
                 <div className="flex items-center gap-2 mb-1">
                   <Database className={`w-4 h-4 ${status?.isEnabled ? "text-emerald-500" : "text-rose-500"}`} />
-                  <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">SDK Init</span>
+                  <span className="text-[8px] font-bold text-afri-text-sec uppercase tracking-widest">SDK Init</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-white">{status?.isEnabled ? "OK" : "FAIL"}</span>
+                  <span className="text-sm font-bold text-afri-text">{status?.isEnabled ? "OK" : "FAIL"}</span>
                 </div>
               </div>
 
               <div className={`p-4 rounded-2xl border ${status?.writeTestOk ? "bg-emerald-500/5 border-emerald-500/20" : "bg-rose-500/5 border-rose-500/20"}`}>
                 <div className="flex items-center gap-2 mb-1">
                   <Activity className={`w-4 h-4 ${status?.writeTestOk ? "text-emerald-500" : "text-rose-500"}`} />
-                  <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Simple (Blob)</span>
+                  <span className="text-[8px] font-bold text-afri-text-sec uppercase tracking-widest">Simple (Blob)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-white">{status?.writeTestOk ? "RÉUSSI" : "ÉCHOUÉ"}</span>
+                  <span className="text-sm font-bold text-afri-text">{status?.writeTestOk ? "RÉUSSI" : "ÉCHOUÉ"}</span>
                 </div>
               </div>
 
               <div className={`p-4 rounded-2xl border ${status?.resumableTestOk ? "bg-emerald-500/5 border-emerald-500/20" : "bg-rose-500/5 border-rose-500/20"}`}>
                 <div className="flex items-center gap-2 mb-1">
                   <Activity className={`w-4 h-4 ${status?.resumableTestOk ? "text-emerald-500" : "text-rose-500"}`} />
-                  <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Resumable</span>
+                  <span className="text-[8px] font-bold text-afri-text-sec uppercase tracking-widest">Resumable</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-white">{status?.resumableTestOk ? "RÉUSSI" : "ÉCHOUÉ"}</span>
+                  <span className="text-sm font-bold text-afri-text">{status?.resumableTestOk ? "RÉUSSI" : "ÉCHOUÉ"}</span>
                 </div>
               </div>
             </div>
@@ -140,12 +140,12 @@ export default function FirebaseDiagnostic({ isOpen, onClose }: FirebaseDiagnost
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-indigo-300">Action Manuelle</h4>
-                  <p className="text-[10px] text-zinc-500">Tester Firebase Storage avec un fichier temporaire</p>
+                  <p className="text-[10px] text-afri-text-sec">Tester Firebase Storage avec un fichier temporaire</p>
                 </div>
                 <button 
                   onClick={runFullTest}
                   disabled={testMode === "running"}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-afri-text text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50"
                 >
                   {testMode === "running" ? "Test en cours..." : "Tester Firebase Storage"}
                 </button>
@@ -155,7 +155,7 @@ export default function FirebaseDiagnostic({ isOpen, onClose }: FirebaseDiagnost
                 <div className={`p-3 rounded-xl text-[10px] font-mono ${
                   testMode === "success" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : 
                   testMode === "error" ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" : 
-                  "bg-white/5 text-zinc-400 border border-white/10"
+                  "bg-white/5 text-afri-text-sec border border-afri-border"
                 }`}>
                   {testMode === "running" && "Vérification de l'intégrité du bucket..."}
                   {testMode === "success" && "Succès : L'infrastructure Storage répond correctement."}
@@ -166,11 +166,11 @@ export default function FirebaseDiagnostic({ isOpen, onClose }: FirebaseDiagnost
 
             {/* Detailed Info */}
             <div className="space-y-3">
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-600">Configuration Détectée</h3>
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-afri-text-sec">Configuration Détectée</h3>
               
-              <div className="bg-zinc-900/50 rounded-2xl p-4 space-y-4 border border-zinc-800">
+              <div className="bg-afri-bg-sec/50 rounded-2xl p-4 space-y-4 border border-afri-border">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-zinc-500 flex items-center gap-2">
+                  <span className="text-afri-text-sec flex items-center gap-2">
                     <Server className="w-4 h-4" /> Bucket Actuel
                   </span>
                   <span className={`font-mono text-[10px] ${status?.bucket?.includes("afrigombo") ? "text-emerald-400" : "text-rose-400"}`}>
@@ -178,10 +178,10 @@ export default function FirebaseDiagnostic({ isOpen, onClose }: FirebaseDiagnost
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-zinc-500 flex items-center gap-2">
+                  <span className="text-afri-text-sec flex items-center gap-2">
                     <Database className="w-4 h-4" /> Projet Firebase
                   </span>
-                  <span className="font-mono text-zinc-300 text-[10px]">{status?.projectId}</span>
+                  <span className="font-mono text-afri-text text-[10px]">{status?.projectId}</span>
                 </div>
               </div>
             </div>
@@ -193,16 +193,16 @@ export default function FirebaseDiagnostic({ isOpen, onClose }: FirebaseDiagnost
                   <AlertCircle className="w-5 h-5" />
                   <span className="text-sm">Analyse d'Erreur</span>
                 </div>
-                <div className="p-3 bg-black/40 rounded-xl font-mono text-[11px] text-rose-300/80 break-all">
+                <div className="p-3 bg-afri-bg/40 rounded-xl font-mono text-[11px] text-rose-300/80 break-all">
                   <p className="font-bold text-rose-400 mb-1">{status.error.code}</p>
                   <p>{status.error.message}</p>
                 </div>
                 <div className="pt-2 space-y-2">
-                  <div className="p-3 bg-zinc-900 rounded-xl">
-                    <p className="text-[10px] text-zinc-400 font-bold mb-1 uppercase tracking-tighter flex items-center gap-1">
+                  <div className="p-3 bg-afri-bg-sec rounded-xl">
+                    <p className="text-[10px] text-afri-text-sec font-bold mb-1 uppercase tracking-tighter flex items-center gap-1">
                       <Zap className="w-3 h-3 text-amber-500" /> Recommandation
                     </p>
-                    <p className="text-[10px] text-zinc-500 leading-relaxed">
+                    <p className="text-[10px] text-afri-text-sec leading-relaxed">
                       {status.error.code === "storage/retry-limit-exceeded" ? 
                         "L'environnement AI Studio ou votre réseau bloque peut-être les requêtes multiples (resumable). Tentez d'activer le mode Fallback Firestore si le problème persiste." :
                         "Vérifiez que les règles Firebase Storage autorisent l'écriture publique pour le test, et que le bucket correspond au projet 'afrigombo'."
@@ -216,10 +216,10 @@ export default function FirebaseDiagnostic({ isOpen, onClose }: FirebaseDiagnost
             {/* LIVE LOGS */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-600">Console Logs</h3>
-                <Terminal className="w-3 h-3 text-zinc-600" />
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-afri-text-sec">Console Logs</h3>
+                <Terminal className="w-3 h-3 text-afri-text-sec" />
               </div>
-              <div className="bg-black rounded-2xl p-4 font-mono text-[10px] text-zinc-400 border border-zinc-900 space-y-1">
+              <div className="bg-afri-bg rounded-2xl p-4 font-mono text-[10px] text-afri-text-sec border border-afri-border space-y-1">
                 {logs.length === 0 && <p className="italic text-zinc-700">En attente de données...</p>}
                 {logs.map((log, i) => (
                   <p key={i} className={log.includes("✅") ? "text-emerald-500" : log.includes("❌") ? "text-rose-500" : log.includes("ℹ️") ? "text-indigo-400" : ""}>
@@ -231,10 +231,10 @@ export default function FirebaseDiagnostic({ isOpen, onClose }: FirebaseDiagnost
           </div>
 
           {/* Footer Actions */}
-          <div className="p-6 bg-zinc-900/30 border-t border-zinc-900 flex gap-3">
+          <div className="p-6 bg-afri-bg-sec/30 border-t border-afri-border flex gap-3">
             <button 
               onClick={onClose}
-              className="flex-1 py-4 bg-zinc-800 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-zinc-700 transition-all"
+              className="flex-1 py-4 bg-afri-bg-ter text-afri-text font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-zinc-700 transition-all"
             >
               Fermer le diagnostic
             </button>

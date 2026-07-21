@@ -806,8 +806,8 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     if (!diag && !status) return null;
 
     return (
-      <div className="mt-4 p-3 bg-zinc-950 border border-zinc-900 rounded-xl text-left space-y-3 font-mono text-[10px] w-full">
-        <div className="flex justify-between items-center border-b border-zinc-900 pb-1.5">
+      <div className="mt-4 p-3 bg-afri-bg border border-afri-border rounded-xl text-left space-y-3 font-mono text-[10px] w-full">
+        <div className="flex justify-between items-center border-b border-afri-border pb-1.5">
           <span className="text-amber-500 font-bold uppercase tracking-wider flex items-center gap-1">
             <Activity className="w-3.5 h-3.5 animate-pulse" /> Diagnostics Firebase Storage
           </span>
@@ -820,23 +820,23 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[9px] text-zinc-400">
-          <div><span className="text-zinc-600 font-bold">Bucket :</span> <span className="text-zinc-200">{diag?.bucket || "GomboBucket"}</span></div>
-          <div><span className="text-zinc-600 font-bold">Projet ID :</span> <span className="text-zinc-200">{diag?.projectId || "afrigombo-elite"}</span></div>
-          <div><span className="text-zinc-605 font-bold">Fichier :</span> <span className="text-zinc-300 truncate block max-w-full" title={diag?.fileName}>{diag?.fileName || "En attente"}</span></div>
-          <div><span className="text-zinc-605 font-bold">Taille :</span> <span className="text-zinc-300">{diag?.fileSize ? formatBytes(diag.fileSize) : "Inconnue"}</span></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[9px] text-afri-text-sec">
+          <div><span className="text-afri-text-sec font-bold">Bucket :</span> <span className="text-afri-text">{diag?.bucket || "GomboBucket"}</span></div>
+          <div><span className="text-afri-text-sec font-bold">Projet ID :</span> <span className="text-afri-text">{diag?.projectId || "afrigombo-elite"}</span></div>
+          <div><span className="text-zinc-605 font-bold">Fichier :</span> <span className="text-afri-text truncate block max-w-full" title={diag?.fileName}>{diag?.fileName || "En attente"}</span></div>
+          <div><span className="text-zinc-605 font-bold">Taille :</span> <span className="text-afri-text">{diag?.fileSize ? formatBytes(diag.fileSize) : "Inconnue"}</span></div>
         </div>
 
         <div className="space-y-1">
           <span className="text-zinc-550 text-[9px] block">Trace de transfert :</span>
-          <div className="bg-black/60 p-2 rounded border border-zinc-900 max-h-32 overflow-y-auto space-y-1 scrollbar-thin">
+          <div className="bg-afri-bg/60 p-2 rounded border border-afri-border max-h-32 overflow-y-auto space-y-1 scrollbar-thin">
             {diag?.logs.map((log, index) => (
-              <div key={index} className="text-zinc-400 leading-normal flex items-start gap-1">
-                <span className="text-zinc-600 shrink-0">[{index + 1}]</span>
+              <div key={index} className="text-afri-text-sec leading-normal flex items-start gap-1">
+                <span className="text-afri-text-sec shrink-0">[{index + 1}]</span>
                 <span className="break-all">{log}</span>
               </div>
             ))}
-            {(!diag || diag.logs.length === 0) && <span className="text-zinc-600 italic">Connexion au point de montage...</span>}
+            {(!diag || diag.logs.length === 0) && <span className="text-afri-text-sec italic">Connexion au point de montage...</span>}
           </div>
         </div>
 
@@ -904,13 +904,13 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           return (
             <div
               key={spot.id}
-              className="p-5 bg-gradient-to-b from-[#050505] to-[#020202] border border-zinc-900 rounded-xl space-y-4 flex flex-col justify-between relative overflow-hidden group"
+              className="p-5 bg-gradient-to-b from-[#050505] to-[#020202] border border-afri-border rounded-xl space-y-4 flex flex-col justify-between relative overflow-hidden group"
             >
               {hasError && (
                 <div className="absolute inset-0 z-50 bg-rose-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center space-y-4">
                   <AlertTriangle className="w-10 h-10 text-rose-500 animate-bounce" />
                   <div className="space-y-1">
-                    <h5 className="text-sm font-bold text-white">Échec du Transfert</h5>
+                    <h5 className="text-sm font-bold text-afri-text">Échec du Transfert</h5>
                     <p className="text-[10px] text-rose-200/70 line-clamp-2">{errorMessage}</p>
                   </div>
                   <div className="flex gap-2">
@@ -922,7 +922,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                           return copy;
                         });
                       }}
-                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[9px] font-bold uppercase rounded-lg transition-all"
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-afri-text text-[9px] font-bold uppercase rounded-lg transition-all"
                     >
                       Réessayer
                     </button>
@@ -942,7 +942,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               <div className="space-y-1.5">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2">
-                    <span className="text-[8px] font-mono bg-zinc-900/80 text-[#D4AF37] px-2 py-0.5 rounded border border-zinc-800 uppercase font-bold tracking-widest">
+                    <span className="text-[8px] font-mono bg-afri-bg-sec/80 text-[#D4AF37] px-2 py-0.5 rounded border border-afri-border uppercase font-bold tracking-widest">
                       ID: {spot.id}
                     </span>
                     {asset?.sourceType && (
@@ -965,21 +965,21 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     </span>
                   )}
                 </div>
-                <h4 className="text-xs font-black text-white group-hover:text-[#D4AF37] transition-all">{spot.title}</h4>
+                <h4 className="text-xs font-black text-afri-text group-hover:text-[#D4AF37] transition-all">{spot.title}</h4>
                 <p className="text-[10px] text-zinc-550 leading-relaxed line-clamp-1">{spot.desc}</p>
               </div>
 
               {/* SOURCE SELECTOR BAR */}
               {isAuthorizedSuperFounder && asset && (
-                <div className="flex gap-1 p-1 bg-black/40 rounded-lg border border-zinc-900">
+                <div className="flex gap-1 p-1 bg-afri-bg/40 rounded-lg border border-afri-border">
                   {(["FIREBASE", "GITHUB", "URL", "DISABLED"] as SourceType[]).map((type) => (
                     <button
                       key={type}
                       onClick={() => handleSourceChange(spot.id, type)}
                       className={`flex-1 py-1 text-[7px] font-black uppercase rounded transition-all ${
                         asset.sourceType === type 
-                          ? "bg-[#D4AF37] text-black" 
-                          : "bg-zinc-900 text-zinc-500 hover:text-white"
+                          ? "bg-afri-bg-sec text-black" 
+                          : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text"
                       }`}
                     >
                       {type === "FIREBASE" ? "Storage" : type}
@@ -992,16 +992,16 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                 <div className="space-y-3 pt-3 border-t border-zinc-950">
                   {/* Preview Display Based on Asset Type */}
                   {sectionName === "audio" || sectionName === "sounds" ? (
-                    <div className="flex items-center justify-between bg-black/40 p-2.5 rounded-lg border border-zinc-950">
-                      <span className="text-[10px] font-mono text-zinc-400 truncate max-w-[70%]" title={asset.title}>
+                    <div className="flex items-center justify-between bg-afri-bg/40 p-2.5 rounded-lg border border-zinc-950">
+                      <span className="text-[10px] font-mono text-afri-text-sec truncate max-w-[70%]" title={asset.title}>
                         🎵 {asset.title}
                       </span>
                       <button
                         onClick={() => togglePlayAudio(spot.id, asset.downloadURL, asset.volume)}
                         className={`p-2 rounded-lg cursor-pointer border transition-all ${
                           isPlaying
-                            ? "bg-[#D4AF37] text-black border-[#D4AF37]"
-                            : "bg-black border-zinc-850 text-[#D4AF37] hover:border-[#D4AF37]"
+                            ? "bg-afri-bg-sec text-black border-[#D4AF37]"
+                            : "bg-afri-bg border-afri-border text-[#D4AF37] hover:border-[#D4AF37]"
                         }`}
                         title="Écouter l'extrait audio"
                       >
@@ -1009,7 +1009,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                       </button>
                     </div>
                   ) : sectionName === "images" || sectionName === "notifications" || sectionName === "system" ? (
-                    <div className="h-28 w-full bg-zinc-950 border border-zinc-900 rounded-lg overflow-hidden flex items-center justify-center relative bg-grid-pattern">
+                    <div className="h-28 w-full bg-afri-bg border border-afri-border rounded-lg overflow-hidden flex items-center justify-center relative bg-grid-pattern">
                       {asset.downloadURL ? (
                         <img
                           src={asset.downloadURL}
@@ -1023,19 +1023,19 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                       )}
                       <button
                         onClick={() => window.open(asset.downloadURL, "_blank")}
-                        className="absolute bottom-2 right-2 p-1 bg-black/80 hover:bg-[#D4AF37] hover:text-black rounded text-white transition-all cursor-pointer"
+                        className="absolute bottom-2 right-2 p-1 bg-afri-bg/80 hover:bg-afri-bg-sec hover:text-black rounded text-afri-text transition-all cursor-pointer"
                         title="Agrandir l'image"
                       >
                         <Maximize2 className="w-3 h-3" />
                       </button>
                     </div>
                   ) : sectionName === "videos" ? (
-                    <div className="h-28 bg-zinc-950 border border-zinc-900 rounded-lg flex items-center justify-center relative overflow-hidden group/video">
-                      <div className="absolute inset-0 bg-black/60 group-hover/video:bg-black/40 transition-all z-10" />
+                    <div className="h-28 bg-afri-bg border border-afri-border rounded-lg flex items-center justify-center relative overflow-hidden group/video">
+                      <div className="absolute inset-0 bg-afri-bg/60 group-hover/video:bg-afri-bg/40 transition-all z-10" />
                       <VideoIcon className="w-8 h-8 text-zinc-650 z-20 group-hover/video:scale-110 transition-all" />
                       <button
                         onClick={() => setVideoModalUrl(asset.downloadURL)}
-                        className="absolute z-25 p-2 bg-[#D4AF37] text-black rounded-full shadow-lg scale-90 group-hover/video:scale-100 opacity-0 group-hover/video:opacity-100 transition-all cursor-pointer"
+                        className="absolute z-25 p-2 bg-afri-bg-sec text-black rounded-full shadow-lg scale-90 group-hover/video:scale-100 opacity-0 group-hover/video:opacity-100 transition-all cursor-pointer"
                       >
                         <Play className="w-4 h-4 fill-black" />
                       </button>
@@ -1044,14 +1044,14 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
                   {/* Paramètres & Metadata Form Editor */}
                   {isEditing ? (
-                    <div className="space-y-3 p-3 bg-black/40 rounded-xl border border-zinc-900">
+                    <div className="space-y-3 p-3 bg-afri-bg/40 rounded-xl border border-afri-border">
                       <div>
                         <label className="text-[8.5px] font-mono text-zinc-550 block mb-1 uppercase font-bold">Nom personnalisé du média</label>
                         <input
                           type="text"
                           value={editTitle}
                           onChange={(e) => setEditTitle(e.target.value)}
-                          className="w-full bg-black border border-zinc-850 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                          className="w-full bg-afri-bg border border-afri-border rounded-lg p-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                         />
                       </div>
 
@@ -1068,7 +1068,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                             step="0.05"
                             value={editVolume}
                             onChange={(e) => setEditVolume(parseFloat(e.target.value))}
-                            className="w-full appearance-none h-1 bg-zinc-800 rounded accent-[#D4AF37] cursor-pointer"
+                            className="w-full appearance-none h-1 bg-afri-bg-ter rounded accent-[#D4AF37] cursor-pointer"
                           />
                         </div>
                       )}
@@ -1082,7 +1082,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                               type="text"
                               value={editDuration}
                               onChange={(e) => setEditDuration(e.target.value)}
-                              className="w-full bg-black border border-zinc-850 rounded p-1 text-[10px] text-white"
+                              className="w-full bg-afri-bg border border-afri-border rounded p-1 text-[10px] text-afri-text"
                             />
                           </div>
                           <div>
@@ -1091,7 +1091,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                               type="text"
                               value={editResolution}
                               onChange={(e) => setEditResolution(e.target.value)}
-                              className="w-full bg-black border border-zinc-850 rounded p-1 text-[10px] text-white"
+                              className="w-full bg-afri-bg border border-afri-border rounded p-1 text-[10px] text-afri-text"
                             />
                           </div>
                         </div>
@@ -1099,7 +1099,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
                       {/* Enabled check */}
                       <div className="flex items-center justify-between pt-1">
-                        <span className="text-[10px] font-mono text-zinc-400">Activer le média en direct</span>
+                        <span className="text-[10px] font-mono text-afri-text-sec">Activer le média en direct</span>
                         <input
                           type="checkbox"
                           checked={editEnabled}
@@ -1109,20 +1109,20 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                         />
                         <label
                           htmlFor={`enabled-chk-${spot.id}`}
-                          className="w-8 h-4.5 bg-zinc-900 peer-checked:bg-[#D4AF37] rounded-full relative cursor-pointer after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5"
+                          className="w-8 h-4.5 bg-afri-bg-sec peer-checked:bg-afri-bg-sec rounded-full relative cursor-pointer after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5"
                         />
                       </div>
 
                       <div className="flex gap-2 pt-1.5">
                         <button
                           onClick={handleSaveEdit}
-                          className="flex-1 py-1.5 bg-[#D4AF37] text-black font-black text-[9px] uppercase rounded-lg hover:opacity-95 transition-all"
+                          className="flex-1 py-1.5 bg-afri-bg-sec text-black font-black text-[9px] uppercase rounded-lg hover:opacity-95 transition-all"
                         >
                           Enregistrer
                         </button>
                         <button
                           onClick={() => setEditingAsset(null)}
-                          className="px-3 py-1.5 bg-zinc-900 text-zinc-400 hover:text-white text-[9px] uppercase rounded-lg transition-all"
+                          className="px-3 py-1.5 bg-afri-bg-sec text-afri-text-sec hover:text-afri-text text-[9px] uppercase rounded-lg transition-all"
                         >
                           Fermer
                         </button>
@@ -1136,11 +1136,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                       </div>
                       <div className="flex justify-between">
                         <span>Source :</span>
-                        <span className="text-zinc-400">{asset.sourceType || "FIREBASE"}</span>
+                        <span className="text-afri-text-sec">{asset.sourceType || "FIREBASE"}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Éditeur :</span>
-                        <span className="text-zinc-400 truncate max-w-[60%]">{asset.updatedBy}</span>
+                        <span className="text-afri-text-sec truncate max-w-[60%]">{asset.updatedBy}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Synchro :</span>
@@ -1151,14 +1151,14 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
                       {/* Safety Replacement History Accordion */}
                       {isAuthorizedSuperFounder && asset.history && asset.history.length > 0 && (
-                        <div className="mt-2.5 bg-black/20 p-2 rounded-lg border border-dashed border-zinc-900 space-y-1">
+                        <div className="mt-2.5 bg-afri-bg/20 p-2 rounded-lg border border-dashed border-afri-border space-y-1">
                           <span className="text-[8px] text-amber-500/80 font-bold uppercase tracking-wider block flex items-center gap-1">
                             <History className="w-2.5 h-2.5" /> Versions d'Historique :
                           </span>
                           <div className="max-h-16 overflow-y-auto space-y-1 scrollbar-thin">
                             {asset.history.slice(0, 3).map((hist, idx) => (
-                              <div key={idx} className="flex justify-between items-center text-[8.5px] bg-black/40 p-1 rounded border border-zinc-950">
-                                <span className="truncate max-w-[50%] text-zinc-400" title={hist.title}>{hist.title}</span>
+                              <div key={idx} className="flex justify-between items-center text-[8.5px] bg-afri-bg/40 p-1 rounded border border-zinc-950">
+                                <span className="truncate max-w-[50%] text-afri-text-sec" title={hist.title}>{hist.title}</span>
                                 <button
                                   onClick={() => handleRollback(spot.id, idx)}
                                   className="text-[8px] font-mono text-[#D4AF37] hover:underline uppercase"
@@ -1186,7 +1186,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                                 setEditDuration(asset.duration || "");
                                 setEditResolution(asset.resolution || "");
                               }}
-                              className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 text-[9px] font-bold uppercase rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1"
+                              className="px-3 py-1.5 bg-afri-bg-sec hover:bg-afri-bg-sec border border-afri-border text-afri-text text-[9px] font-bold uppercase rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1"
                             >
                               <Edit3 className="w-3 h-3" /> Config
                             </button>
@@ -1231,9 +1231,9 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                                     placeholder="Chemin GitHub..."
                                     value={githubInput}
                                     onChange={(e) => setGithubInput(e.target.value)}
-                                    className="w-full bg-black border border-purple-500/30 rounded p-1.5 text-[9px] text-white"
+                                    className="w-full bg-afri-bg border border-purple-500/30 rounded p-1.5 text-[9px] text-afri-text"
                                   />
-                                  <button onClick={() => handleGithubImport(spot.id, githubInput)} className="w-full py-1.5 bg-purple-600 text-white text-[8px] font-black uppercase rounded">Importer GitHub</button>
+                                  <button onClick={() => handleGithubImport(spot.id, githubInput)} className="w-full py-1.5 bg-purple-600 text-afri-text text-[8px] font-black uppercase rounded">Importer GitHub</button>
                                 </div>
                               )}
                               {isChangingSource === `${spot.id}_url` && (
@@ -1243,15 +1243,15 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                                     placeholder="Lien URL..."
                                     value={urlInput}
                                     onChange={(e) => setUrlInput(e.target.value)}
-                                    className="w-full bg-black border border-amber-500/30 rounded p-1.5 text-[9px] text-white"
+                                    className="w-full bg-afri-bg border border-amber-500/30 rounded p-1.5 text-[9px] text-afri-text"
                                   />
-                                  <button onClick={() => handleUrlImport(spot.id, urlInput)} className="w-full py-1.5 bg-amber-600 text-white text-[8px] font-black uppercase rounded">Importer URL</button>
+                                  <button onClick={() => handleUrlImport(spot.id, urlInput)} className="w-full py-1.5 bg-amber-600 text-afri-text text-[8px] font-black uppercase rounded">Importer URL</button>
                                 </div>
                               )}
                             </div>
                           </>
                         ) : (
-                          <div className="w-full flex items-center justify-center gap-1 py-1 text-[8.5px] text-zinc-600 uppercase">
+                          <div className="w-full flex items-center justify-center gap-1 py-1 text-[8.5px] text-afri-text-sec uppercase">
                             <Lock className="w-3 h-3" /> Consultation Uniquement
                           </div>
                         )}
@@ -1260,7 +1260,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                   )}
                 </div>
               ) : (
-                <div className="py-6 bg-black/20 border border-dashed border-zinc-900 rounded-xl text-center mt-2 flex flex-col items-center justify-center space-y-4">
+                <div className="py-6 bg-afri-bg/20 border border-dashed border-afri-border rounded-xl text-center mt-2 flex flex-col items-center justify-center space-y-4">
                   {isUploading ? (
                     <div className="space-y-1.5">
                       <Loader2 className="w-5 h-5 text-[#D4AF37] animate-spin mx-auto" />
@@ -1270,7 +1270,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     <div className="w-full px-4 space-y-4">
                       <div className="space-y-1">
                         <UploadCloud className="w-6 h-6 text-zinc-800 mx-auto" />
-                        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest block">Aucun média</span>
+                        <span className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">Aucun média</span>
                       </div>
 
                       {/* Multi-Source Import Grid */}
@@ -1286,26 +1286,26 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                             }}
                             disabled={isUploading}
                           />
-                          <div className="h-10 flex flex-col items-center justify-center bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-850 rounded-xl cursor-pointer transition-all group/up">
-                            <UploadCloud className="w-4 h-4 text-zinc-500 group-hover/up:text-blue-400" />
-                            <span className="text-[6px] font-black uppercase text-zinc-600">Storage</span>
+                          <div className="h-10 flex flex-col items-center justify-center bg-afri-bg-sec/50 hover:bg-afri-bg-sec border border-afri-border rounded-xl cursor-pointer transition-all group/up">
+                            <UploadCloud className="w-4 h-4 text-afri-text-sec group-hover/up:text-blue-400" />
+                            <span className="text-[6px] font-black uppercase text-afri-text-sec">Storage</span>
                           </div>
                         </label>
 
                         <button
                           onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_github` ? null : `${spot.id}_github`)}
-                          className="h-10 flex flex-col items-center justify-center bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-850 rounded-xl cursor-pointer transition-all group/git"
+                          className="h-10 flex flex-col items-center justify-center bg-afri-bg-sec/50 hover:bg-afri-bg-sec border border-afri-border rounded-xl cursor-pointer transition-all group/git"
                         >
-                          <RefreshCw className={`w-4 h-4 text-zinc-500 group-hover/git:text-purple-400 ${isChangingSource === `${spot.id}_github` ? "animate-spin" : ""}`} />
-                          <span className="text-[6px] font-black uppercase text-zinc-600">GitHub</span>
+                          <RefreshCw className={`w-4 h-4 text-afri-text-sec group-hover/git:text-purple-400 ${isChangingSource === `${spot.id}_github` ? "animate-spin" : ""}`} />
+                          <span className="text-[6px] font-black uppercase text-afri-text-sec">GitHub</span>
                         </button>
 
                         <button
                           onClick={() => setIsChangingSource(isChangingSource === `${spot.id}_url` ? null : `${spot.id}_url`)}
-                          className="h-10 flex flex-col items-center justify-center bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-850 rounded-xl cursor-pointer transition-all group/url"
+                          className="h-10 flex flex-col items-center justify-center bg-afri-bg-sec/50 hover:bg-afri-bg-sec border border-afri-border rounded-xl cursor-pointer transition-all group/url"
                         >
-                          <SlidersHorizontal className="w-4 h-4 text-zinc-500 group-hover/url:text-amber-400" />
-                          <span className="text-[6px] font-black uppercase text-zinc-600">URL</span>
+                          <SlidersHorizontal className="w-4 h-4 text-afri-text-sec group-hover/url:text-amber-400" />
+                          <span className="text-[6px] font-black uppercase text-afri-text-sec">URL</span>
                         </button>
                       </div>
 
@@ -1317,9 +1317,9 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                             placeholder="Chemin GitHub..."
                             value={githubInput}
                             onChange={(e) => setGithubInput(e.target.value)}
-                            className="w-full bg-black border border-purple-500/30 rounded-lg p-2 text-[10px] text-white"
+                            className="w-full bg-afri-bg border border-purple-500/30 rounded-lg p-2 text-[10px] text-afri-text"
                           />
-                          <button onClick={() => handleGithubImport(spot.id, githubInput)} className="w-full py-2 bg-purple-600 text-white text-[8px] font-black uppercase rounded-lg">Valider GitHub</button>
+                          <button onClick={() => handleGithubImport(spot.id, githubInput)} className="w-full py-2 bg-purple-600 text-afri-text text-[8px] font-black uppercase rounded-lg">Valider GitHub</button>
                         </div>
                       )}
 
@@ -1330,9 +1330,9 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                             placeholder="URL Directe..."
                             value={urlInput}
                             onChange={(e) => setUrlInput(e.target.value)}
-                            className="w-full bg-black border border-amber-500/30 rounded-lg p-2 text-[10px] text-white"
+                            className="w-full bg-afri-bg border border-amber-500/30 rounded-lg p-2 text-[10px] text-afri-text"
                           />
-                          <button onClick={() => handleUrlImport(spot.id, urlInput)} className="w-full py-2 bg-amber-600 text-white text-[8px] font-black uppercase rounded-lg">Valider URL</button>
+                          <button onClick={() => handleUrlImport(spot.id, urlInput)} className="w-full py-2 bg-amber-600 text-afri-text text-[8px] font-black uppercase rounded-lg">Valider URL</button>
                         </div>
                       )}
                     </div>
@@ -1348,17 +1348,17 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
   };
 
   return (
-    <div className="space-y-6 text-zinc-300">
+    <div className="space-y-6 text-afri-text">
       {/* Fullscreen interactive visual animation test engine */}
       {isTestingAnimation && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md pointer-events-none animate-fade-in">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-afri-bg/90 backdrop-blur-md pointer-events-none animate-fade-in">
           <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
             {testAnimationType === "anim_throne" && (
               <div className="flex gap-4">
                 {[...Array(20)].map((_, i) => (
                   <div
                     key={i}
-                    className="w-2.5 h-2.5 bg-[#D4AF37] rounded-full animate-bounce"
+                    className="w-2.5 h-2.5 bg-afri-bg-sec rounded-full animate-bounce"
                     style={{
                       animationDelay: `${i * 150}ms`,
                       opacity: Math.random(),
@@ -1369,7 +1369,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               </div>
             )}
             {testAnimationType === "anim_login" && (
-              <div className="w-96 h-96 bg-[#D4AF37]/15 rounded-full blur-3xl animate-pulse scale-150 transition-all duration-1000" />
+              <div className="w-96 h-96 bg-afri-bg-sec/15 rounded-full blur-3xl animate-pulse scale-150 transition-all duration-1000" />
             )}
             {testAnimationType === "anim_payment" && (
               <div className="relative flex items-center justify-center">
@@ -1378,7 +1378,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               </div>
             )}
             {testAnimationType === "anim_cert" && (
-              <div className="w-full h-full bg-gradient-to-r from-amber-950/20 via-[#D4AF37]/10 to-zinc-950 transition-all duration-500 flex items-center justify-center">
+              <div className="w-full h-full bg-gradient-to-r from-amber-950/20 via-[#D4AF37]/10 to-afri-bg-action transition-all duration-500 flex items-center justify-center">
                 <div className="text-lg font-mono tracking-widest text-[#D4AF37] uppercase animate-pulse">CERTIFICATION IMPÉRIALE...</div>
               </div>
             )}
@@ -1395,33 +1395,33 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
       {/* READ ONLY NOTIFICATION BOX */}
       {!isAuthorizedSuperFounder && (
-        <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl flex items-center gap-3 animate-fade-in">
+        <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl flex items-center gap-3 animate-fade-in">
           <Lock className="w-5 h-5 text-[#D4AF37] shrink-0" />
           <div className="space-y-0.5">
-            <h4 className="text-xs font-black text-white uppercase tracking-wider">Mode Consultation Uniquement (Lecture seule)</h4>
-            <p className="text-[10px] text-zinc-500 leading-normal">
-              En tant qu'administrateur, vous disposez d'un accès en lecture seule. Seul le Super Fondateur de la plateforme (<span className="text-zinc-300 font-mono">jhs.kmj7@gmail.com</span>) peut téléverser, remplacer, configurer ou effacer des fichiers médias.
+            <h4 className="text-xs font-black text-afri-text uppercase tracking-wider">Mode Consultation Uniquement (Lecture seule)</h4>
+            <p className="text-[10px] text-afri-text-sec leading-normal">
+              En tant qu'administrateur, vous disposez d'un accès en lecture seule. Seul le Super Fondateur de la plateforme (<span className="text-afri-text font-mono">jhs.kmj7@gmail.com</span>) peut téléverser, remplacer, configurer ou effacer des fichiers médias.
             </p>
           </div>
         </div>
       )}
 
       {/* HEADER DE LA CONSOLE */}
-      <div className="p-6 bg-gradient-to-b from-[#0a0a0a] to-[#040404] border border-zinc-900 rounded-2xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div className="p-6 bg-gradient-to-b from-[#0a0a0a] to-[#040404] border border-afri-border rounded-2xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-[#D4AF37]" />
-            <h3 className="text-sm font-display font-black text-white uppercase tracking-wider">
+            <h3 className="text-sm font-display font-black text-afri-text uppercase tracking-wider">
               CENTRE MÉDIA AFRIGOMBO
             </h3>
           </div>
-          <p className="text-[11px] text-zinc-500">
+          <p className="text-[11px] text-afri-text-sec">
             Le cœur audiovisuel du Temple du Gombo.
           </p>
         </div>
 
         {/* NAVIGATION DU STUDIO */}
-        <div className="flex flex-wrap gap-1.5 bg-black/40 p-1 rounded-xl border border-zinc-900 w-full lg:w-auto">
+        <div className="flex flex-wrap gap-1.5 bg-afri-bg/40 p-1 rounded-xl border border-afri-border w-full lg:w-auto">
           {(["dashboard", "audio", "images", "videos", "sounds", "notifications", "animations", "system", "logs"] as ActiveSection[]).map((tab) => {
             const getIcon = () => {
               switch (tab) {
@@ -1457,8 +1457,8 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                 onClick={() => setActiveTab(tab)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
                   activeTab === tab
-                    ? "bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/25 font-bold"
-                    : "text-zinc-500 hover:text-zinc-300 border border-transparent"
+                    ? "bg-afri-bg-sec/10 text-[#D4AF37] border border-[#D4AF37]/25 font-bold"
+                    : "text-afri-text-sec hover:text-afri-text border border-transparent"
                 }`}
               >
                 {getIcon()}
@@ -1474,38 +1474,38 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         <div className="space-y-6">
           {/* STATS GRID */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="p-4 bg-[#050505] border border-zinc-900 rounded-xl space-y-2">
+            <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-xl space-y-2">
               <span className="text-[10px] font-mono text-zinc-550 uppercase tracking-wider block">Nombre de médias</span>
               <div className="flex justify-between items-end">
-                <span className="text-2xl font-black text-white">{totalAssets}</span>
+                <span className="text-2xl font-black text-afri-text">{totalAssets}</span>
                 <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/10">Synchro</span>
               </div>
             </div>
 
-            <div className="p-4 bg-[#050505] border border-zinc-900 rounded-xl space-y-2">
+            <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-xl space-y-2">
               <span className="text-[10px] font-mono text-zinc-550 uppercase tracking-wider block">Médias Actifs</span>
               <div className="flex justify-between items-end">
                 <span className="text-2xl font-black text-amber-500">{activeMediaCount}</span>
-                <span className="text-[8px] font-mono text-zinc-500">en ligne</span>
+                <span className="text-[8px] font-mono text-afri-text-sec">en ligne</span>
               </div>
             </div>
 
-            <div className="p-4 bg-[#050505] border border-zinc-900 rounded-xl space-y-2">
+            <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-xl space-y-2">
               <span className="text-[10px] font-mono text-zinc-550 uppercase tracking-wider block">Taille totale</span>
               <div className="flex justify-between items-end">
-                <span className="text-lg font-black text-white truncate max-w-full">
+                <span className="text-lg font-black text-afri-text truncate max-w-full">
                   {formatBytes(realStorageBytes)}
                 </span>
-                <span className="text-[8px] font-mono text-zinc-600 shrink-0">de cache</span>
+                <span className="text-[8px] font-mono text-afri-text-sec shrink-0">de cache</span>
               </div>
             </div>
 
-            <div className="p-4 bg-[#050505] border border-zinc-900 rounded-xl space-y-2">
+            <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-xl space-y-2">
               <span className="text-[10px] font-mono text-zinc-550 uppercase tracking-wider block">Dernier upload</span>
               <div className="space-y-1">
                 {lastUploadItem ? (
                   <>
-                    <span className="text-[10.5px] font-bold text-zinc-300 truncate block max-w-full" title={lastUploadItem.title}>
+                    <span className="text-[10.5px] font-bold text-afri-text truncate block max-w-full" title={lastUploadItem.title}>
                       {lastUploadItem.title}
                     </span>
                     <span className="text-[8px] font-mono text-zinc-550 block">
@@ -1513,13 +1513,13 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     </span>
                   </>
                 ) : (
-                  <span className="text-[10px] text-zinc-600 italic">Aucun média</span>
+                  <span className="text-[10px] text-afri-text-sec italic">Aucun média</span>
                 )}
               </div>
             </div>
 
             {/* ÉTAT DU CENTRE MÉDIA (Bento Card) */}
-            <div className="p-4 bg-[#050505] border border-zinc-900 rounded-xl space-y-3">
+            <div className="p-4 bg-afri-bg-sec border border-afri-border rounded-xl space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-mono text-zinc-550 uppercase tracking-wider block">État du Centre Média</span>
                 <div className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${
@@ -1534,24 +1534,24 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               </div>
               
               <div className="grid grid-cols-3 gap-2">
-                <div className="p-2 bg-black/40 rounded-lg border border-zinc-950 text-center">
+                <div className="p-2 bg-afri-bg/40 rounded-lg border border-zinc-950 text-center">
                   <span className="text-[8px] text-blue-400 font-bold uppercase block">Firebase</span>
-                  <span className="text-xs font-black text-white">{Object.values(mediaAssets).filter(m => m.sourceType === "FIREBASE").length}</span>
+                  <span className="text-xs font-black text-afri-text">{Object.values(mediaAssets).filter(m => m.sourceType === "FIREBASE").length}</span>
                 </div>
-                <div className="p-2 bg-black/40 rounded-lg border border-zinc-950 text-center">
+                <div className="p-2 bg-afri-bg/40 rounded-lg border border-zinc-950 text-center">
                   <span className="text-[8px] text-purple-400 font-bold uppercase block">GitHub</span>
-                  <span className="text-xs font-black text-white">{Object.values(mediaAssets).filter(m => m.sourceType === "GITHUB").length}</span>
+                  <span className="text-xs font-black text-afri-text">{Object.values(mediaAssets).filter(m => m.sourceType === "GITHUB").length}</span>
                 </div>
-                <div className="p-2 bg-black/40 rounded-lg border border-zinc-950 text-center">
+                <div className="p-2 bg-afri-bg/40 rounded-lg border border-zinc-950 text-center">
                   <span className="text-[8px] text-amber-400 font-bold uppercase block">URL</span>
-                  <span className="text-xs font-black text-white">{Object.values(mediaAssets).filter(m => m.sourceType === "URL").length}</span>
+                  <span className="text-xs font-black text-afri-text">{Object.values(mediaAssets).filter(m => m.sourceType === "URL").length}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center text-[9px] font-mono border-t border-zinc-950 pt-2">
                 <div className="flex gap-3">
                   <span className="text-emerald-500">Active: {activeMediaCount}</span>
-                  <span className="text-zinc-600">Désactivée: {totalAssets - activeMediaCount}</span>
+                  <span className="text-afri-text-sec">Désactivée: {totalAssets - activeMediaCount}</span>
                 </div>
                 {lastUploadItem && (
                   <span className="text-zinc-650">{new Date(lastUploadItem.updatedAt).toLocaleDateString()}</span>
@@ -1563,7 +1563,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           {/* DUAL CODES & RECENT ACTIONS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* DERNIERS CHANGEMENTS MULTIMÉDIAS */}
-            <div className="p-5 bg-[#050505] border border-zinc-900 rounded-xl space-y-4">
+            <div className="p-5 bg-afri-bg-sec border border-afri-border rounded-xl space-y-4">
               <div className="flex justify-between items-center">
                 <h4 className="text-[11px] font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
                   <Activity className="w-4 h-4" /> Média Actif & Performance
@@ -1572,18 +1572,18 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               </div>
 
               {lastUploadItem ? (
-                <div className="p-4 bg-black/60 rounded-xl border border-zinc-900 space-y-3">
+                <div className="p-4 bg-afri-bg/60 rounded-xl border border-afri-border space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="text-[9px] font-mono bg-[#D4AF37]/5 text-[#D4AF37] px-2 py-0.5 rounded border border-[#D4AF37]/10">
+                      <span className="text-[9px] font-mono bg-afri-bg-sec/5 text-[#D4AF37] px-2 py-0.5 rounded border border-[#D4AF37]/10">
                         {lastUploadItem.category.toUpperCase()}
                       </span>
-                      <h5 className="text-xs font-bold text-white mt-1">{lastUploadItem.title}</h5>
+                      <h5 className="text-xs font-bold text-afri-text mt-1">{lastUploadItem.title}</h5>
                     </div>
                     <span className="text-[9px] font-mono text-zinc-550">{lastUploadItem.fileSize || "Taille inconnue"}</span>
                   </div>
 
-                  <div className="text-[9.5px] text-zinc-500 border-t border-zinc-950 pt-2 space-y-1.5 font-sans leading-relaxed">
+                  <div className="text-[9.5px] text-afri-text-sec border-t border-zinc-950 pt-2 space-y-1.5 font-sans leading-relaxed">
                     <div className="flex items-center gap-1 text-emerald-400 font-bold">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                       Optimisations de streaming et de cache impériaux actives :
@@ -1598,30 +1598,30 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                   </div>
                 </div>
               ) : (
-                <div className="py-12 text-center text-xs text-zinc-600">Aucun média enregistré pour le moment.</div>
+                <div className="py-12 text-center text-xs text-afri-text-sec">Aucun média enregistré pour le moment.</div>
               )}
             </div>
 
             {/* QUICK AUDIT STREAM */}
-            <div className="p-5 bg-[#050505] border border-zinc-900 rounded-xl space-y-4">
+            <div className="p-5 bg-afri-bg-sec border border-afri-border rounded-xl space-y-4">
               <div className="flex justify-between items-center">
                 <h4 className="text-[11px] font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
                   <History className="w-4 h-4" /> Flux d'Audits Impérial
                 </h4>
-                <button onClick={() => setActiveTab("logs")} className="text-[9px] font-mono text-zinc-500 hover:text-[#D4AF37] uppercase tracking-wider transition-all cursor-pointer">
+                <button onClick={() => setActiveTab("logs")} className="text-[9px] font-mono text-afri-text-sec hover:text-[#D4AF37] uppercase tracking-wider transition-all cursor-pointer">
                   Tout voir
                 </button>
               </div>
 
               <div className="space-y-2.5 max-h-[170px] overflow-y-auto pr-1">
                 {auditLogs.slice(0, 3).map((log) => (
-                  <div key={log.id} className="p-2.5 bg-black/40 border border-zinc-950 rounded-lg text-[10.5px] font-mono space-y-1">
+                  <div key={log.id} className="p-2.5 bg-afri-bg/40 border border-zinc-950 rounded-lg text-[10.5px] font-mono space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-zinc-300 font-bold">{log.action}</span>
-                      <span className="text-zinc-600 text-[9px]">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                      <span className="text-afri-text font-bold">{log.action}</span>
+                      <span className="text-afri-text-sec text-[9px]">{new Date(log.timestamp).toLocaleTimeString()}</span>
                     </div>
-                    <p className="text-zinc-500 text-[10px] leading-tight">
-                      Média: {log.mediaTitle} • <span className="text-zinc-600 font-light">{log.details}</span>
+                    <p className="text-afri-text-sec text-[10px] leading-tight">
+                      Média: {log.mediaTitle} • <span className="text-afri-text-sec font-light">{log.details}</span>
                     </p>
                   </div>
                 ))}
@@ -1637,11 +1637,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       {/* VIEW 2 : MUSIQUES */}
       {activeTab === "audio" && (
         <div className="space-y-6">
-          <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-1">
+          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-1">
             <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
               🎵 Gestion des musiques impériales
             </h4>
-            <p className="text-[10px] text-zinc-500">
+            <p className="text-[10px] text-afri-text-sec">
               Gérez indépendamment l'identité sonore de l'écosystème : l'introduction, l'hymne officiel, la musique d'ambiance, le Thon, le Centre de Commandement, etc.
             </p>
           </div>
@@ -1653,22 +1653,22 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       {activeTab === "images" && (
         <div className="space-y-6">
           {isComparing && compareAsset && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-fade-in">
-              <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-6 w-full max-w-2xl space-y-4 relative">
-                <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-afri-bg/90 p-4 animate-fade-in">
+              <div className="bg-afri-bg border border-afri-border rounded-2xl p-6 w-full max-w-2xl space-y-4 relative">
+                <div className="flex justify-between items-center border-b border-afri-border pb-2">
                   <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
                     <RefreshCw className="w-4 h-4 animate-spin-hover" /> Remplacement d'Image Impériale
                   </h4>
-                  <button onClick={() => setIsComparing(false)} className="text-zinc-500 hover:text-white cursor-pointer">
+                  <button onClick={() => setIsComparing(false)} className="text-afri-text-sec hover:text-afri-text cursor-pointer">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Left: Old Image */}
-                  <div className="p-4 bg-black/40 border border-zinc-950 rounded-xl space-y-2 text-center">
-                    <span className="text-[9px] font-mono text-zinc-500 uppercase block">Version Active Actuelle</span>
-                    <div className="h-44 w-full bg-zinc-950 rounded-lg overflow-hidden flex items-center justify-center border border-zinc-900 relative">
+                  <div className="p-4 bg-afri-bg/40 border border-zinc-950 rounded-xl space-y-2 text-center">
+                    <span className="text-[9px] font-mono text-afri-text-sec uppercase block">Version Active Actuelle</span>
+                    <div className="h-44 w-full bg-afri-bg rounded-lg overflow-hidden flex items-center justify-center border border-afri-border relative">
                       <img
                         src={compareAsset.downloadURL}
                         alt="Active version"
@@ -1676,14 +1676,14 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                         className="max-h-full max-w-full object-contain"
                       />
                     </div>
-                    <span className="text-[10px] font-mono text-zinc-400 mt-1 block truncate">{compareAsset.title}</span>
+                    <span className="text-[10px] font-mono text-afri-text-sec mt-1 block truncate">{compareAsset.title}</span>
                   </div>
 
                   {/* Right: New uploaded candidate or dragzone */}
-                  <div className="p-4 bg-black/40 border border-zinc-950 rounded-xl space-y-2 text-center flex flex-col justify-between">
+                  <div className="p-4 bg-afri-bg/40 border border-zinc-950 rounded-xl space-y-2 text-center flex flex-col justify-between">
                     <span className="text-[9px] font-mono text-amber-500 uppercase block">Nouvelle Image Candidate</span>
                     {newComparePreview ? (
-                      <div className="h-44 w-full bg-zinc-950 rounded-lg overflow-hidden flex items-center justify-center border border-zinc-900">
+                      <div className="h-44 w-full bg-afri-bg rounded-lg overflow-hidden flex items-center justify-center border border-afri-border">
                         <img
                           src={newComparePreview}
                           alt="New candidate"
@@ -1691,15 +1691,15 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                         />
                       </div>
                     ) : (
-                      <div className="h-44 w-full border-dashed border border-zinc-850 bg-zinc-950/20 rounded-lg flex flex-col items-center justify-center p-4">
+                      <div className="h-44 w-full border-dashed border border-afri-border bg-afri-bg/20 rounded-lg flex flex-col items-center justify-center p-4">
                         <UploadCloud className="w-8 h-8 text-zinc-650 mb-2" />
-                        <label className="px-3 py-1.5 bg-[#D4AF37] text-black font-bold text-[9.5px] rounded-lg cursor-pointer uppercase">
+                        <label className="px-3 py-1.5 bg-afri-bg-sec text-black font-bold text-[9.5px] rounded-lg cursor-pointer uppercase">
                           Sélectionner
                           <input type="file" accept="image/*" onChange={handleCompareFileSelect} className="hidden" />
                         </label>
                       </div>
                     )}
-                    <span className="text-[10px] font-mono text-zinc-500 block truncate">
+                    <span className="text-[10px] font-mono text-afri-text-sec block truncate">
                       {newCompareFile ? newCompareFile.name : "Aucun fichier choisi"}
                     </span>
                   </div>
@@ -1709,11 +1709,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                   <button
                     onClick={executeCompareReplace}
                     disabled={!newCompareFile}
-                    className="flex-1 py-2 bg-[#D4AF37] disabled:opacity-40 disabled:cursor-not-allowed text-black font-black text-[10px] uppercase rounded-xl tracking-wider transition-all"
+                    className="flex-1 py-2 bg-afri-bg-sec disabled:opacity-40 disabled:cursor-not-allowed text-black font-black text-[10px] uppercase rounded-xl tracking-wider transition-all"
                   >
                     Valider le Remplacement Impérial
                   </button>
-                  <button onClick={() => setIsComparing(false)} className="px-5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[10px] uppercase rounded-xl transition-all">
+                  <button onClick={() => setIsComparing(false)} className="px-5 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text text-[10px] uppercase rounded-xl transition-all">
                     Annuler
                   </button>
                 </div>
@@ -1721,11 +1721,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
             </div>
           )}
 
-          <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-1">
+          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-1">
             <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
               🖼 Gestion des images d'identité
             </h4>
-            <p className="text-[10px] text-zinc-500">
+            <p className="text-[10px] text-afri-text-sec">
               Gérez les logos, splash screens, fonds d'arrière-plan du Trône et du Centre de Commandement, etc. Modifiables sans republier l'application.
             </p>
           </div>
@@ -1737,21 +1737,21 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       {activeTab === "videos" && (
         <div className="space-y-6">
           {videoModalUrl && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4" onClick={() => setVideoModalUrl(null)}>
-              <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 w-full max-w-4xl space-y-3 relative" onClick={(e) => e.stopPropagation()}>
-                <button onClick={() => setVideoModalUrl(null)} className="absolute -top-10 right-0 text-white hover:text-[#D4AF37] cursor-pointer">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-afri-bg/95 p-4" onClick={() => setVideoModalUrl(null)}>
+              <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 w-full max-w-4xl space-y-3 relative" onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => setVideoModalUrl(null)} className="absolute -top-10 right-0 text-afri-text hover:text-[#D4AF37] cursor-pointer">
                   Fermer <X className="inline w-5 h-5 ml-1" />
                 </button>
-                <video src={videoModalUrl} controls autoPlay className="w-full h-auto max-h-[70vh] rounded-xl border border-zinc-900 bg-black" />
+                <video src={videoModalUrl} controls autoPlay className="w-full h-auto max-h-[70vh] rounded-xl border border-afri-border bg-afri-bg" />
               </div>
             </div>
           )}
 
-          <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-1">
+          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-1">
             <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
               🎥 Cinématiques et vidéos
             </h4>
-            <p className="text-[10px] text-zinc-500">
+            <p className="text-[10px] text-afri-text-sec">
               Diffusez des cinématiques d'accueil, guides d'apprentissage ou promotions de prestige. Les vidéos sont entièrement optionnelles.
             </p>
           </div>
@@ -1762,11 +1762,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       {/* VIEW 5 : SONS */}
       {activeTab === "sounds" && (
         <div className="space-y-6">
-          <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-1">
+          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-1">
             <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
               🔔 Effets sonores d'interface (Sons courts)
             </h4>
-            <p className="text-[10px] text-zinc-500">
+            <p className="text-[10px] text-afri-text-sec">
               Téléversez et paramétrez les effets sonores courts joués pour les clics, les notifications, les validations, les paiements, etc.
             </p>
           </div>
@@ -1777,11 +1777,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       {/* VIEW 6 : NOTIFICATIONS */}
       {activeTab === "notifications" && (
         <div className="space-y-6">
-          <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-1">
+          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-1">
             <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
               📢 Visuels et médias de notification
             </h4>
-            <p className="text-[10px] text-zinc-500">
+            <p className="text-[10px] text-afri-text-sec">
               Gérez les affiches, bannières et popups visuels intégrés dans les notifications push et annonces de la république.
             </p>
           </div>
@@ -1792,11 +1792,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       {/* VIEW 7 : ANIMATIONS */}
       {activeTab === "animations" && (
         <div className="space-y-6">
-          <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-1">
+          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-1">
             <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
               🎬 Animations de prestige interactives
             </h4>
-            <p className="text-[10px] text-zinc-500">
+            <p className="text-[10px] text-afri-text-sec">
               Configurez et testez en direct les animations spéciales déclenchées lors des événements majeurs : paiement, certification impériale, etc.
             </p>
           </div>
@@ -1806,12 +1806,12 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               const isEnabled = asset ? asset.enabled : true;
 
               return (
-                <div key={spot.id} className="p-5 bg-[#050505] border border-zinc-900 rounded-xl space-y-4 flex flex-col justify-between">
+                <div key={spot.id} className="p-5 bg-afri-bg-sec border border-afri-border rounded-xl space-y-4 flex flex-col justify-between">
                   <div className="flex justify-between items-start gap-4">
                     <div>
                       <span className="text-[9px] font-mono text-zinc-550 uppercase block">Animation ID: {spot.id}</span>
-                      <h4 className="text-xs font-black text-white mt-1">{spot.title}</h4>
-                      <p className="text-[10px] text-zinc-500 leading-tight">{spot.desc}</p>
+                      <h4 className="text-xs font-black text-afri-text mt-1">{spot.title}</h4>
+                      <p className="text-[10px] text-afri-text-sec leading-tight">{spot.desc}</p>
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -1827,7 +1827,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                           {isEnabled ? "Actif" : "Désactivé"}
                         </button>
                       ) : (
-                        <span className="text-[9px] font-mono uppercase text-zinc-650 bg-zinc-950 p-1 border border-zinc-900 rounded">
+                        <span className="text-[9px] font-mono uppercase text-zinc-650 bg-afri-bg p-1 border border-afri-border rounded">
                           {isEnabled ? "Actif" : "Désactivé"}
                         </span>
                       )}
@@ -1852,11 +1852,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       {/* VIEW 8 : SYSTÈME */}
       {activeTab === "system" && (
         <div className="space-y-6">
-          <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-1">
+          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-1">
             <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
               🧩 Médias et documents système réglementaires
             </h4>
-            <p className="text-[10px] text-zinc-500">
+            <p className="text-[10px] text-afri-text-sec">
               Gérez les bannières système, avatars de substitution, filigranes et éditez en direct le contenu des mentions légales d'AFRIGOMBO (CGU, Charte de Confidentialité).
             </p>
           </div>
@@ -1906,13 +1906,13 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     }}
                     className={`w-full p-4 rounded-xl border text-left transition-all flex justify-between items-center cursor-pointer ${
                       isSelected
-                        ? "bg-[#D4AF37]/10 border-[#D4AF37] text-white"
-                        : "bg-[#050505] border-zinc-900 hover:border-zinc-850 text-zinc-400"
+                        ? "bg-afri-bg-sec/10 border-[#D4AF37] text-afri-text"
+                        : "bg-afri-bg-sec border-afri-border hover:border-afri-border text-afri-text-sec"
                     }`}
                   >
                     <div>
-                      <h4 className="text-[11px] font-bold text-white">{spot.title}</h4>
-                      <p className="text-[9px] text-zinc-500 mt-0.5">{spot.desc}</p>
+                      <h4 className="text-[11px] font-bold text-afri-text">{spot.title}</h4>
+                      <p className="text-[9px] text-afri-text-sec mt-0.5">{spot.desc}</p>
                     </div>
                     {asset ? (
                       <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded border uppercase ${
@@ -1923,7 +1923,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                         {asset.status || (asset.enabled ? "Actif" : "Inactif")}
                       </span>
                     ) : (
-                      <span className="text-[8px] font-mono bg-zinc-905 text-zinc-600 border border-zinc-800 px-1.5 py-0.5 rounded uppercase">Vide</span>
+                      <span className="text-[8px] font-mono bg-afri-bg text-afri-text-sec border border-afri-border px-1.5 py-0.5 rounded uppercase">Vide</span>
                     )}
                   </button>
                 );
@@ -1931,7 +1931,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
             </div>
 
             {/* Content / Upload Editor */}
-            <div className="lg:col-span-2 bg-[#050505] border border-zinc-900 rounded-xl p-5 flex flex-col justify-between min-h-[450px] space-y-4">
+            <div className="lg:col-span-2 bg-afri-bg-sec border border-afri-border rounded-xl p-5 flex flex-col justify-between min-h-[450px] space-y-4">
               {editingAsset ? (
                 <div className="space-y-4 flex-1 flex flex-col justify-between">
                   <div className="space-y-3 flex-1 flex flex-col">
@@ -1944,7 +1944,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                             value={editStatus}
                             onChange={(e: any) => setEditStatus(e.target.value)}
                             disabled={!isAuthorizedSuperFounder}
-                            className="bg-black border border-zinc-800 rounded p-1 text-[10px] text-zinc-300"
+                            className="bg-afri-bg border border-afri-border rounded p-1 text-[10px] text-afri-text"
                           >
                             <option value="draft">Brouillon</option>
                             <option value="published">Publé</option>
@@ -1959,7 +1959,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       disabled={!isAuthorizedSuperFounder}
-                      className="w-full bg-black border border-zinc-850 rounded-xl p-2.5 text-xs font-bold text-white focus:outline-none focus:border-[#D4AF37]"
+                      className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs font-bold text-afri-text focus:outline-none focus:border-[#D4AF37]"
                       placeholder="Titre officiel du document / asset"
                     />
 
@@ -1967,45 +1967,45 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 mt-2">
                         {/* Editor Box */}
                         <div className="space-y-1 flex flex-col">
-                          <label className="text-[8.5px] font-mono text-zinc-500 uppercase block">Contenu Réglementaire</label>
+                          <label className="text-[8.5px] font-mono text-afri-text-sec uppercase block">Contenu Réglementaire</label>
                           <textarea
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                             disabled={!isAuthorizedSuperFounder}
                             placeholder="Écrivez le texte juridique d'AFRIGOMBO..."
-                            className="w-full h-80 bg-black border border-zinc-850 rounded-xl p-3 text-xs font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-[#D4AF37] resize-none flex-1"
+                            className="w-full h-80 bg-afri-bg border border-afri-border rounded-xl p-3 text-xs font-mono text-afri-text placeholder-zinc-700 focus:outline-none focus:border-[#D4AF37] resize-none flex-1"
                           />
                         </div>
 
                         {/* Live Preview Box */}
                         <div className="space-y-1 flex flex-col">
                           <label className="text-[8.5px] font-mono text-[#D4AF37] uppercase block">Aperçu direct</label>
-                          <div className="w-full h-80 bg-zinc-950/60 border border-zinc-900 rounded-xl p-4 overflow-y-auto text-xs text-zinc-400 space-y-3 leading-relaxed flex-1">
+                          <div className="w-full h-80 bg-afri-bg/60 border border-afri-border rounded-xl p-4 overflow-y-auto text-xs text-afri-text-sec space-y-3 leading-relaxed flex-1">
                             {editContent ? (
                               <div className="prose prose-invert prose-xs">
-                                <h4 className="text-white font-bold text-sm border-b border-zinc-900 pb-1">{editTitle}</h4>
-                                <p className="whitespace-pre-line text-zinc-300 mt-2">{editContent}</p>
+                                <h4 className="text-afri-text font-bold text-sm border-b border-afri-border pb-1">{editTitle}</h4>
+                                <p className="whitespace-pre-line text-afri-text mt-2">{editContent}</p>
                               </div>
                             ) : (
-                              <div className="h-full flex items-center justify-center text-zinc-600 italic">Saisissez du contenu pour l'aperçu</div>
+                              <div className="h-full flex items-center justify-center text-afri-text-sec italic">Saisissez du contenu pour l'aperçu</div>
                             )}
                           </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="py-12 bg-black/40 border border-zinc-900 rounded-xl text-center space-y-4">
+                      <div className="py-12 bg-afri-bg/40 border border-afri-border rounded-xl text-center space-y-4">
                         <ImageIcon className="w-12 h-12 text-zinc-700 mx-auto" />
                         <div className="space-y-1">
-                          <p className="text-xs text-zinc-400 font-bold">Téléversez un fichier image pour cet emplacement</p>
-                          <p className="text-[9px] text-zinc-600">Recommandé : PNG transparent ou SVG léger</p>
+                          <p className="text-xs text-afri-text-sec font-bold">Téléversez un fichier image pour cet emplacement</p>
+                          <p className="text-[9px] text-afri-text-sec">Recommandé : PNG transparent ou SVG léger</p>
                         </div>
                         {editingAsset.downloadURL && (
-                          <div className="h-24 max-w-xs mx-auto border border-zinc-900 rounded overflow-hidden flex items-center justify-center bg-black">
+                          <div className="h-24 max-w-xs mx-auto border border-afri-border rounded overflow-hidden flex items-center justify-center bg-afri-bg">
                             <img src={editingAsset.downloadURL} alt="System Asset" className="max-h-full max-w-full object-contain" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         {isAuthorizedSuperFounder && (
-                          <label className="inline-flex px-3 py-1.5 bg-[#D4AF37] text-black font-black uppercase text-[9px] rounded-lg cursor-pointer hover:opacity-90 transition-all">
+                          <label className="inline-flex px-3 py-1.5 bg-afri-bg-sec text-black font-black uppercase text-[9px] rounded-lg cursor-pointer hover:opacity-90 transition-all">
                             Uploader un asset
                             <input
                               type="file"
@@ -2026,13 +2026,13 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                     <div className="flex gap-2 pt-3 border-t border-zinc-950">
                       <button
                         onClick={handleSaveEdit}
-                        className="flex-1 py-2 bg-[#D4AF37] text-black font-black text-[10px] uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="flex-1 py-2 bg-afri-bg-sec text-black font-black text-[10px] uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <Check className="w-4 h-4" /> Publier & Déployer en direct
                       </button>
                       <button
                         onClick={() => setEditingAsset(null)}
-                        className="px-5 py-2 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-white text-[10px] uppercase rounded-xl transition-all cursor-pointer"
+                        className="px-5 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text-sec hover:text-afri-text text-[10px] uppercase rounded-xl transition-all cursor-pointer"
                       >
                         Fermer
                       </button>
@@ -2046,7 +2046,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
                   <FileText className="w-12 h-12 text-zinc-750" />
-                  <p className="text-xs text-zinc-500 max-w-sm">
+                  <p className="text-xs text-afri-text-sec max-w-sm">
                     Sélectionnez une ressource ou un document officiel à gauche pour modifier son contenu, le prévisualiser en direct ou téléverser l'asset.
                   </p>
                 </div>
@@ -2059,7 +2059,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
       {/* VIEW 9 : AUDIT LOGS */}
       {activeTab === "logs" && (
         <div className="space-y-4 animate-fade-in">
-          <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl flex justify-between items-center">
+          <div className="p-4 bg-afri-bg border border-afri-border rounded-xl flex justify-between items-center">
             <div className="space-y-0.5">
               <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-1.5">
                 <Lock className="w-4 h-4" /> Journal de Sécurité & d'Audits du Studio
@@ -2070,17 +2070,17 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
             </div>
             <button
               onClick={() => logAudit("system", "console", "Rafraîchissement", "Manuel de l'utilisateur")}
-              className="p-2 bg-black border border-zinc-800 text-zinc-400 hover:text-white rounded-lg transition-all"
+              className="p-2 bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text rounded-lg transition-all"
               title="Rafraîchir"
             >
               <RefreshCw className="w-3.5 h-3.5 animate-spin-hover" />
             </button>
           </div>
 
-          <div className="bg-[#030303] border border-zinc-900 rounded-xl overflow-hidden">
+          <div className="bg-afri-bg-sec border border-afri-border rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-[10.5px] font-mono text-left">
-                <thead className="bg-[#050505] border-b border-zinc-900 text-zinc-500 uppercase tracking-widest text-[9px]">
+                <thead className="bg-afri-bg-sec border-b border-afri-border text-afri-text-sec uppercase tracking-widest text-[9px]">
                   <tr>
                     <th className="p-3">Date & Heure</th>
                     <th className="p-3">Média Target</th>
@@ -2091,8 +2091,8 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                 </thead>
                 <tbody className="divide-y divide-zinc-950/60">
                   {auditLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-zinc-950/30 transition-all">
-                      <td className="p-3 text-zinc-500">{new Date(log.timestamp).toLocaleString()}</td>
+                    <tr key={log.id} className="hover:bg-afri-bg/30 transition-all">
+                      <td className="p-3 text-afri-text-sec">{new Date(log.timestamp).toLocaleString()}</td>
                       <td className="p-3 text-[#D4AF37] font-bold">{log.mediaId}</td>
                       <td className="p-3">
                         <span className={`px-2 py-0.5 rounded text-[9px] uppercase border ${
@@ -2105,8 +2105,8 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                           {log.action}
                         </span>
                       </td>
-                      <td className="p-3 text-zinc-400">{log.updatedBy}</td>
-                      <td className="p-3 text-zinc-500 italic">{log.details}</td>
+                      <td className="p-3 text-afri-text-sec">{log.updatedBy}</td>
+                      <td className="p-3 text-afri-text-sec italic">{log.details}</td>
                     </tr>
                   ))}
                   {auditLogs.length === 0 && (

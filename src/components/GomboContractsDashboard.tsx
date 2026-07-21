@@ -95,13 +95,13 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
       case "completed_artist":
         return { label: "Prestation Terminée", color: "text-orange-400 border-orange-500/30 bg-orange-500/5" };
       case "completed":
-        return { label: "Terminé & Libéré", color: "text-zinc-400 border-zinc-700 bg-zinc-800" };
+        return { label: "Terminé & Libéré", color: "text-afri-text-sec border-afri-border bg-afri-bg-ter" };
       case "disputed":
         return { label: "En Litige 🚨", color: "text-red-500 border-red-500/30 bg-red-500/5" };
       case "cancelled":
-        return { label: "Annulé", color: "text-zinc-600 border-zinc-800 bg-zinc-900" };
+        return { label: "Annulé", color: "text-afri-text-sec border-afri-border bg-afri-bg-sec" };
       default:
-        return { label: status, color: "text-zinc-400 border-zinc-800 bg-zinc-900" };
+        return { label: status, color: "text-afri-text-sec border-afri-border bg-afri-bg-sec" };
     }
   };
 
@@ -121,15 +121,15 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
       {/* Title block */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
-          <h2 className="text-2xl font-sans font-black text-white uppercase tracking-tighter">
+          <h2 className="text-2xl font-sans font-black text-afri-text uppercase tracking-tighter">
             {isAdminView ? "TABLEAU DE BORD DES CONTRATS" : "CONTRATS AFRIGOMBO"}
           </h2>
-          <p className="text-zinc-500 text-xs font-medium uppercase tracking-widest">
+          <p className="text-afri-text-sec text-xs font-medium uppercase tracking-widest">
             {isAdminView ? "CONTRÔLE ET SOUVERAINETÉ DE LA PRESTATION IMPÉRIALE" : "Gérez vos engagements sécurisés et vos paiements"}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 p-1 bg-zinc-900/50 border border-zinc-800 rounded-xl self-start md:self-auto">
+        <div className="flex items-center gap-2 p-1 bg-afri-bg-sec/50 border border-afri-border rounded-xl self-start md:self-auto">
           {[
             { id: "all", label: "Tous" },
             { id: "active", label: "Actifs" },
@@ -141,8 +141,8 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
               onClick={() => setFilterStatus(tab.id)}
               className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                 filterStatus === tab.id 
-                  ? "bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20" 
-                  : "text-zinc-500 hover:text-white"
+                  ? "bg-afri-bg-sec text-black shadow-lg shadow-[#D4AF37]/20" 
+                  : "text-afri-text-sec hover:text-afri-text"
               }`}
             >
               {tab.label}
@@ -155,60 +155,60 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
       {isAdminView ? (
         /* FOUNDER/ADMIN STATS GRID */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 bg-zinc-950/80 border border-zinc-800/80 rounded-[2rem] space-y-2">
+          <div className="p-5 bg-afri-bg-sec border border-afri-border rounded-[2rem] space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest">Contrats Actifs</p>
+              <p className="text-afri-text-sec text-[9px] font-black uppercase tracking-widest">Contrats Actifs</p>
               <Clock className="w-4 h-4 text-amber-500" />
             </div>
-            <p className="text-2xl font-sans font-black text-white tracking-tighter">{adminStats.active}</p>
-            <div className="text-[10px] text-zinc-600 font-mono">Prêts & en cours de mission</div>
+            <p className="text-2xl font-sans font-black text-afri-text tracking-tighter">{adminStats.active}</p>
+            <div className="text-[10px] text-afri-text-sec font-mono">Prêts & en cours de mission</div>
           </div>
 
-          <div className="p-5 bg-zinc-950/80 border border-zinc-800/80 rounded-[2rem] space-y-2">
+          <div className="p-5 bg-afri-bg-sec border border-afri-border rounded-[2rem] space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-emerald-500 text-[9px] font-black uppercase tracking-widest">Missions Réussies</p>
               <CheckCircle2 className="w-4 h-4 text-emerald-500" />
             </div>
-            <p className="text-2xl font-sans font-black text-white tracking-tighter">{adminStats.completed}</p>
-            <div className="text-[10px] text-zinc-600 font-mono">{adminStats.cancelled} annulés</div>
+            <p className="text-2xl font-sans font-black text-afri-text tracking-tighter">{adminStats.completed}</p>
+            <div className="text-[10px] text-afri-text-sec font-mono">{adminStats.cancelled} annulés</div>
           </div>
 
-          <div className="p-5 bg-zinc-950/80 border border-zinc-800/80 rounded-[2rem] space-y-2">
+          <div className="p-5 bg-afri-bg-sec border border-afri-border rounded-[2rem] space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-red-500 text-[9px] font-black uppercase tracking-widest">Contrats en Litige</p>
               <ShieldAlert className="w-4 h-4 text-red-500" />
             </div>
-            <p className="text-2xl font-sans font-black text-white tracking-tighter">{adminStats.disputed}</p>
-            <div className="text-[10px] text-zinc-600 font-mono">Nécessite arbitrage impérial</div>
+            <p className="text-2xl font-sans font-black text-afri-text tracking-tighter">{adminStats.disputed}</p>
+            <div className="text-[10px] text-afri-text-sec font-mono">Nécessite arbitrage impérial</div>
           </div>
 
-          <div className="p-5 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-[2rem] space-y-2">
+          <div className="p-5 bg-afri-bg-sec/5 border border-[#D4AF37]/20 rounded-[2rem] space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-[#D4AF37] text-[9px] font-black uppercase tracking-widest">Paiements Bloqués</p>
               <Wallet className="w-4 h-4 text-[#D4AF37]" />
             </div>
-            <p className="text-2xl font-sans font-black text-white tracking-tighter">
+            <p className="text-2xl font-sans font-black text-afri-text tracking-tighter">
               {adminStats.blockedPayments.toLocaleString()} <span className="text-xs font-mono">FCFA</span>
             </p>
             <div className="text-[10px] text-[#D4AF37]/60 font-mono">Sécurisés en séquestre (Escrow)</div>
           </div>
 
-          <div className="sm:col-span-2 p-6 bg-gradient-to-r from-[#D4AF37]/10 to-zinc-950 border border-[#D4AF37]/35 rounded-[2.5rem] space-y-3 lg:col-span-2">
+          <div className="sm:col-span-2 p-6 bg-gradient-to-r from-[#D4AF37]/10 to-afri-bg-action border border-[#D4AF37]/35 rounded-[2.5rem] space-y-3 lg:col-span-2">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest">Commissions Afrigombo</p>
-                <p className="text-3xl font-sans font-black text-white tracking-tighter mt-1">
-                  {adminStats.commissions.toLocaleString()} <span className="text-sm font-mono text-zinc-400">FCFA</span>
+                <p className="text-3xl font-sans font-black text-afri-text tracking-tighter mt-1">
+                  {adminStats.commissions.toLocaleString()} <span className="text-sm font-mono text-afri-text-sec">FCFA</span>
                 </p>
               </div>
-              <div className="p-3 bg-[#D4AF37]/10 rounded-2xl">
+              <div className="p-3 bg-afri-bg-sec/10 rounded-2xl">
                 <TrendingUp className="w-6 h-6 text-[#D4AF37]" />
               </div>
             </div>
-            <div className="flex items-center gap-4 text-xs font-mono text-zinc-500 border-t border-[#D4AF37]/20 pt-3">
+            <div className="flex items-center gap-4 text-xs font-mono text-afri-text-sec border-t border-[#D4AF37]/20 pt-3">
               <span className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-emerald-500" />
-                Revenus journaliers : <strong className="text-white">{adminStats.dailyRevenue.toLocaleString()} FCFA</strong>
+                Revenus journaliers : <strong className="text-afri-text">{adminStats.dailyRevenue.toLocaleString()} FCFA</strong>
               </span>
             </div>
           </div>
@@ -216,33 +216,33 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
       ) : (
         /* STANDARD USER STATS GRID */
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-[2rem] space-y-2">
+          <div className="p-6 bg-afri-bg-sec/50 border border-afri-border rounded-[2rem] space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Total Contrats</p>
-              <FileText className="w-4 h-4 text-zinc-600" />
+              <p className="text-afri-text-sec text-[10px] font-black uppercase tracking-widest">Total Contrats</p>
+              <FileText className="w-4 h-4 text-afri-text-sec" />
             </div>
-            <p className="text-2xl font-sans font-black text-white tracking-tighter">{userStats.total}</p>
+            <p className="text-2xl font-sans font-black text-afri-text tracking-tighter">{userStats.total}</p>
           </div>
-          <div className="p-6 bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded-[2rem] space-y-2">
+          <div className="p-6 bg-afri-bg-sec/5 border border-[#D4AF37]/10 rounded-[2rem] space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest">En Cours</p>
               <Clock className="w-4 h-4 text-[#D4AF37]" />
             </div>
-            <p className="text-2xl font-sans font-black text-white tracking-tighter">{userStats.active}</p>
+            <p className="text-2xl font-sans font-black text-afri-text tracking-tighter">{userStats.active}</p>
           </div>
           <div className="p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-[2rem] space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">Missions Réussies</p>
               <BadgeCheck className="w-4 h-4 text-emerald-500" />
             </div>
-            <p className="text-2xl font-sans font-black text-white tracking-tighter">{userStats.completed}</p>
+            <p className="text-2xl font-sans font-black text-afri-text tracking-tighter">{userStats.completed}</p>
           </div>
           <div className="p-6 bg-blue-500/5 border border-blue-500/10 rounded-[2rem] space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-blue-500 text-[10px] font-black uppercase tracking-widest">Cachets Sécurisés</p>
               <Wallet className="w-4 h-4 text-blue-500" />
             </div>
-            <p className="text-2xl font-sans font-black text-white tracking-tighter">
+            <p className="text-2xl font-sans font-black text-afri-text tracking-tighter">
               {userStats.revenue.toLocaleString()} <span className="text-xs">FCFA</span>
             </p>
           </div>
@@ -253,7 +253,7 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 space-y-4">
           <Loader2 className="w-10 h-10 text-[#D4AF37] animate-spin" />
-          <p className="afri-text-tiny text-zinc-600 uppercase">SÉCURISATION DU CENTRE...</p>
+          <p className="afri-text-tiny text-afri-text-sec uppercase">SÉCURISATION DU CENTRE...</p>
         </div>
       ) : filteredContracts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xs:gap-6">
@@ -279,7 +279,7 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
                         <FileSignature className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#D4AF37]" />
                         <span className="text-[#D4AF37] text-[9px] xs:text-[10px] font-mono font-bold tracking-widest uppercase truncate">#{contract.id.substring(0, 8)}</span>
                       </div>
-                      <h3 className="text-sm xs:text-base text-white font-sans font-black tracking-tighter group-hover:text-[#D4AF37] transition-colors line-clamp-1">{contract.title}</h3>
+                      <h3 className="text-sm xs:text-base text-afri-text font-sans font-black tracking-tighter group-hover:text-[#D4AF37] transition-colors line-clamp-1">{contract.title}</h3>
                     </div>
                     <div className={`px-2 py-0.5 xs:px-2.5 xs:py-1 rounded-md text-[8px] xs:text-[9px] font-black uppercase tracking-widest border shrink-0 ${bInfo.color}`}>
                       {bInfo.label}
@@ -288,27 +288,27 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
 
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                     <div className="space-y-0.5">
-                      <p className="afri-text-tiny text-zinc-600">Client</p>
-                      <p className="text-[10px] xs:text-[11px] text-zinc-300 font-bold truncate max-w-[100px] xs:max-w-[120px]">{contract.clientName}</p>
+                      <p className="afri-text-tiny text-afri-text-sec">Client</p>
+                      <p className="text-[10px] xs:text-[11px] text-afri-text font-bold truncate max-w-[100px] xs:max-w-[120px]">{contract.clientName}</p>
                     </div>
-                    <div className="h-4 xs:h-6 w-px bg-zinc-850" />
+                    <div className="h-4 xs:h-6 w-px bg-afri-bg-sec" />
                     <div className="space-y-0.5">
-                      <p className="afri-text-tiny text-zinc-600">Artiste</p>
-                      <p className="text-[10px] xs:text-[11px] text-zinc-300 font-bold truncate max-w-[100px] xs:max-w-[120px]">{contract.artistName}</p>
+                      <p className="afri-text-tiny text-afri-text-sec">Artiste</p>
+                      <p className="text-[10px] xs:text-[11px] text-afri-text font-bold truncate max-w-[100px] xs:max-w-[120px]">{contract.artistName}</p>
                     </div>
-                    <div className="h-4 xs:h-6 w-px bg-zinc-850" />
+                    <div className="h-4 xs:h-6 w-px bg-afri-bg-sec" />
                     <div className="space-y-0.5">
-                      <p className="afri-text-tiny text-zinc-600">Cachet</p>
-                      <p className="text-[10px] xs:text-[11px] text-white font-mono font-bold">{(contract.amount || 0).toLocaleString()} <span className="text-[8px]">FCFA</span></p>
+                      <p className="afri-text-tiny text-afri-text-sec">Cachet</p>
+                      <p className="text-[10px] xs:text-[11px] text-afri-text font-mono font-bold">{(contract.amount || 0).toLocaleString()} <span className="text-[8px]">FCFA</span></p>
                     </div>
                   </div>
 
                   {/* Arrival indicators & photo counters if any */}
                   {(contract.arrivalTime || (contract.presencePhotos && contract.presencePhotos.length > 0)) && (
-                    <div className="p-3 bg-zinc-950/90 border border-zinc-850/60 rounded-xl flex items-center justify-between text-[10px] font-mono text-zinc-500">
+                    <div className="p-3 bg-afri-bg border border-afri-border rounded-xl flex items-center justify-between text-[10px] font-mono text-afri-text-sec">
                       {contract.arrivalTime ? (
                         <span className="flex items-center gap-1 text-[#D4AF37]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-afri-bg-sec animate-pulse" />
                           Arrivé à {contract.arrivalTime}
                         </span>
                       ) : (
@@ -322,15 +322,15 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
                     </div>
                   )}
 
-                  <div className="pt-4 border-t border-zinc-900 flex items-center justify-between">
+                  <div className="pt-4 border-t border-afri-border flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${contract.clientSignedAt ? "bg-emerald-500" : "bg-zinc-800"}`} />
-                        <span className="text-zinc-500 text-[8px] font-bold uppercase">Signé Client</span>
+                        <div className={`w-1.5 h-1.5 rounded-full ${contract.clientSignedAt ? "bg-emerald-500" : "bg-afri-bg-ter"}`} />
+                        <span className="text-afri-text-sec text-[8px] font-bold uppercase">Signé Client</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${contract.artistSignedAt ? "bg-emerald-500" : "bg-zinc-800"}`} />
-                        <span className="text-zinc-500 text-[8px] font-bold uppercase">Signé Artiste</span>
+                        <div className={`w-1.5 h-1.5 rounded-full ${contract.artistSignedAt ? "bg-emerald-500" : "bg-afri-bg-ter"}`} />
+                        <span className="text-afri-text-sec text-[8px] font-bold uppercase">Signé Artiste</span>
                       </div>
                     </div>
                     <ArrowUpRight className="w-4 h-4 text-zinc-700 group-hover:text-[#D4AF37] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
@@ -341,13 +341,13 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
           })}
         </div>
       ) : (
-        <div className="text-center py-24 space-y-4 bg-zinc-900/20 border border-dashed border-zinc-800 rounded-[2.5rem]">
-          <div className="p-4 bg-zinc-900 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
+        <div className="text-center py-24 space-y-4 bg-afri-bg-sec/20 border border-dashed border-afri-border rounded-[2.5rem]">
+          <div className="p-4 bg-afri-bg-sec rounded-full w-16 h-16 flex items-center justify-center mx-auto">
             <FileText className="w-8 h-8 text-zinc-700" />
           </div>
           <div className="space-y-1">
-            <h4 className="text-white font-bold">Aucun contrat trouvé</h4>
-            <p className="text-zinc-500 text-[10px] uppercase tracking-widest">Les contrats sécurisés d'engagement apparaîtront ici.</p>
+            <h4 className="text-afri-text font-bold">Aucun contrat trouvé</h4>
+            <p className="text-afri-text-sec text-[10px] uppercase tracking-widest">Les contrats sécurisés d'engagement apparaîtront ici.</p>
           </div>
         </div>
       )}

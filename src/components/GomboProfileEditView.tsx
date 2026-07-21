@@ -178,7 +178,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               <p className="afri-text-tiny">Couverture & Identité Visuelle</p>
               
               {/* Cover Card */}
-              <div className="relative h-32 xs:h-40 rounded-2xl overflow-hidden bg-zinc-900 border border-white/5">
+              <div className="relative h-32 xs:h-40 rounded-2xl overflow-hidden bg-afri-bg-sec border border-afri-border">
                 {coverUrl ? (
                   <img src={coverUrl} alt="" className="w-full h-full object-cover opacity-60" />
                 ) : (
@@ -200,7 +200,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               {/* Avatar Jumbo */}
               <div className="flex flex-col items-center gap-4 -mt-16 relative z-10">
                 <div className="relative">
-                  <div className="w-24 h-24 xs:w-28 xs:h-28 rounded-[2rem] overflow-hidden border-4 border-[#080808] bg-zinc-900 shadow-2xl">
+                  <div className="w-24 h-24 xs:w-28 xs:h-28 rounded-[2rem] overflow-hidden border-4 border-[#080808] bg-afri-bg-sec shadow-2xl">
                     {cameraActive ? (
                       <video id="webcam-preview" autoPlay playsInline className="w-full h-full object-cover scale-x-[-1]" />
                     ) : (
@@ -208,7 +208,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                     )}
                   </div>
                   {uploading && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-[2rem]">
+                    <div className="absolute inset-0 bg-afri-bg/60 flex items-center justify-center rounded-[2rem]">
                       <span className="text-[10px] font-black text-[#D4AF37]">{uploadProgress}%</span>
                     </div>
                   )}
@@ -244,34 +244,34 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
             <div className="space-y-4">
               <div className="afri-grid-2">
                 <div className="space-y-1.5">
-                  <label className="afri-text-tiny text-zinc-400">Prénom</label>
-                  <input value={firstName} onChange={e => setFirstName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none focus:border-[#D4AF37]/40" />
+                  <label className="afri-text-tiny text-afri-text-sec">Prénom</label>
+                  <input value={firstName} onChange={e => setFirstName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="afri-text-tiny text-zinc-400">Nom</label>
-                  <input value={lastName} onChange={e => setLastName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none focus:border-[#D4AF37]/40" />
+                  <label className="afri-text-tiny text-afri-text-sec">Nom</label>
+                  <input value={lastName} onChange={e => setLastName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="afri-text-tiny text-zinc-400">Nom de Scène</label>
+                <label className="afri-text-tiny text-afri-text-sec">Nom de Scène</label>
                 <input value={artistName} onChange={e => setArtistName(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-black text-[#D4AF37] outline-none focus:border-[#D4AF37]/40" placeholder="Votre blaze..." />
               </div>
 
               <div className="afri-grid-2">
                 <div className="space-y-1.5">
-                  <label className="afri-text-tiny text-zinc-400">Téléphone</label>
-                  <input value={phone} onChange={e => setPhone(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none focus:border-[#D4AF37]/40" />
+                  <label className="afri-text-tiny text-afri-text-sec">Téléphone</label>
+                  <input value={phone} onChange={e => setPhone(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="afri-text-tiny text-zinc-400">WhatsApp</label>
-                  <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none focus:border-[#D4AF37]/40" />
+                  <label className="afri-text-tiny text-afri-text-sec">WhatsApp</label>
+                  <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none focus:border-[#D4AF37]/40" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="afri-text-tiny text-zinc-400">Ma Biographie</label>
-                <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className="afri-card-inset w-full p-3 text-xs font-medium text-zinc-300 outline-none focus:border-[#D4AF37]/40 resize-none" placeholder="Présentez-vous au showbiz..." />
+                <label className="afri-text-tiny text-afri-text-sec">Ma Biographie</label>
+                <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className="afri-card-inset w-full p-3 text-xs font-medium text-afri-text outline-none focus:border-[#D4AF37]/40 resize-none" placeholder="Présentez-vous au showbiz..." />
               </div>
             </div>
           </div>
@@ -281,19 +281,19 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
             <p className="afri-text-tiny">Zone d'Activité</p>
             <div className="afri-grid-2">
               <div className="space-y-1.5">
-                <label className="afri-text-tiny text-zinc-400">Ville</label>
-                <input value={ville} onChange={e => setVille(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none" />
+                <label className="afri-text-tiny text-afri-text-sec">Ville</label>
+                <input value={ville} onChange={e => setVille(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none" />
               </div>
               <div className="relative space-y-1.5">
-                <label className="afri-text-tiny text-zinc-400">Commune</label>
-                <button type="button" onClick={() => setShowCommuneDropdown(!showCommuneDropdown)} className="afri-card-inset w-full p-3 text-xs font-black text-white flex items-center justify-between">
+                <label className="afri-text-tiny text-afri-text-sec">Commune</label>
+                <button type="button" onClick={() => setShowCommuneDropdown(!showCommuneDropdown)} className="afri-card-inset w-full p-3 text-xs font-black text-afri-text flex items-center justify-between">
                   <span>{commune || "Choisir"}</span>
                   <ChevronDown className="w-4 h-4 text-[#D4AF37]" />
                 </button>
                 {showCommuneDropdown && (
                   <div className="absolute z-20 left-0 right-0 mt-1 afri-card p-2 max-h-40 overflow-y-auto space-y-1">
                     {filteredCommunes.map(c => (
-                      <button key={c} type="button" onClick={() => { setCommune(c); setShowCommuneDropdown(false); }} className="w-full text-left p-2 rounded-xl text-xs font-bold hover:bg-[#D4AF37]/10 text-zinc-400 hover:text-white">
+                      <button key={c} type="button" onClick={() => { setCommune(c); setShowCommuneDropdown(false); }} className="w-full text-left p-2 rounded-xl text-xs font-bold hover:bg-afri-bg-sec/10 text-afri-text-sec hover:text-afri-text">
                         {c}
                       </button>
                     ))}
@@ -302,8 +302,8 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="afri-text-tiny text-zinc-400">Quartier</label>
-              <input value={quartier} onChange={e => setQuartier(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-white outline-none" />
+              <label className="afri-text-tiny text-afri-text-sec">Quartier</label>
+              <input value={quartier} onChange={e => setQuartier(e.target.value)} className="afri-card-inset w-full p-3 text-xs font-bold text-afri-text outline-none" />
             </div>
           </div>
 
@@ -313,12 +313,12 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="afri-text-tiny text-zinc-400">Spécialités</label>
+                <label className="afri-text-tiny text-afri-text-sec">Spécialités</label>
                 <div className="flex flex-wrap gap-2">
                   {SPECIALTIES_LIST.map(spec => {
                     const active = specialties.includes(spec);
                     return (
-                      <button key={spec} type="button" onClick={() => active ? setSpecialties(specialties.filter(s => s !== spec)) : setSpecialties([...specialties, spec])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-[#D4AF37] border-[#D4AF37] text-black" : "bg-white/5 border-white/10 text-zinc-500"}`}>
+                      <button key={spec} type="button" onClick={() => active ? setSpecialties(specialties.filter(s => s !== spec)) : setSpecialties([...specialties, spec])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-afri-bg-sec border-[#D4AF37] text-black" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {spec}
                       </button>
                     );
@@ -327,12 +327,12 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="afri-text-tiny text-zinc-400">Styles Musicaux</label>
+                <label className="afri-text-tiny text-afri-text-sec">Styles Musicaux</label>
                 <div className="flex flex-wrap gap-2">
                   {GENRES_LIST.map(gen => {
                     const active = musicGenres.includes(gen);
                     return (
-                      <button key={gen} type="button" onClick={() => active ? setMusicGenres(musicGenres.filter(g => g !== gen)) : setMusicGenres([...musicGenres, gen])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-amber-500 border-amber-500 text-white" : "bg-white/5 border-white/10 text-zinc-500"}`}>
+                      <button key={gen} type="button" onClick={() => active ? setMusicGenres(musicGenres.filter(g => g !== gen)) : setMusicGenres([...musicGenres, gen])} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${active ? "bg-amber-500 border-amber-500 text-afri-text" : "bg-white/5 border-afri-border text-afri-text-sec"}`}>
                         {gen}
                       </button>
                     );
@@ -350,11 +350,11 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
             </div>
             
             <div className="afri-card-inset space-y-3">
-              <p className="text-[10px] text-zinc-400 leading-relaxed">Téléchargez une pièce d'identité pour certifier votre héritage musical.</p>
+              <p className="text-[10px] text-afri-text-sec leading-relaxed">Téléchargez une pièce d'identité pour certifier votre héritage musical.</p>
               {verifyingIdentity ? (
                 <div className="space-y-2">
                   <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#D4AF37]" style={{ width: `${kycProgress}%` }} />
+                    <div className="h-full bg-afri-bg-sec" style={{ width: `${kycProgress}%` }} />
                   </div>
                   <p className="text-[9px] font-black text-center text-[#D4AF37] animate-pulse">ENVOI EN COURS...</p>
                 </div>

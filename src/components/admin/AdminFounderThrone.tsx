@@ -733,7 +733,7 @@ export default function AdminFounderThrone({
   };
 
   return (
-    <div className="space-y-8 text-left pb-28 font-sans text-zinc-100 select-none bg-black/40 min-h-screen">
+    <div className="space-y-8 text-left pb-28 font-sans text-afri-text select-none bg-afri-bg/40 min-h-screen">
       
       {/* Dynamic Keyframes Injector */}
       <style>{`
@@ -756,10 +756,10 @@ export default function AdminFounderThrone({
       {/* ----------------------------------------------------
            PREMIUM TRÔNE DU FONDATEUR HEADER
            ---------------------------------------------------- */}
-      <div className="relative overflow-hidden rounded-3xl bg-[#020202] border border-[#D4AF37]/30 p-6 md:p-8 shadow-[0_12px_45px_rgba(212,175,55,0.15)]">
+      <div className="relative overflow-hidden rounded-3xl bg-afri-bg-sec border border-[#D4AF37]/30 p-6 md:p-8 shadow-[0_12px_45px_rgba(212,175,55,0.15)]">
         
         {/* Golden glow halo */}
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-80 h-80 rounded-full bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-80 h-80 rounded-full bg-afri-bg-sec/5 blur-3xl pointer-events-none" />
         <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-60 h-60 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
 
         {/* Slow moving light beam */}
@@ -775,7 +775,7 @@ export default function AdminFounderThrone({
             return (
               <div
                 key={idx}
-                className="absolute rounded-full bg-[#D4AF37]/50"
+                className="absolute rounded-full bg-afri-bg-sec/50"
                 style={{
                   width: `${randomSize}px`,
                   height: `${randomSize}px`,
@@ -793,22 +793,22 @@ export default function AdminFounderThrone({
         {/* Header content */}
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-4">
-            <span className="p-4 rounded-2xl bg-gradient-to-b from-[#D4AF37]/20 to-black border border-[#D4AF37]/45 shadow-[0_0_25px_rgba(212,175,55,0.3)] shrink-0">
+            <span className="p-4 rounded-2xl bg-gradient-to-b from-[#D4AF37]/20 to-afri-bg border border-[#D4AF37]/45 shadow-[0_0_25px_rgba(212,175,55,0.3)] shrink-0">
               <Crown className="w-8 h-8 text-[#D4AF37] animate-pulse" />
             </span>
             <div>
               <h2 className="text-xl md:text-2xl font-display font-black uppercase tracking-[0.18em] text-[#D4AF37] flex items-center gap-2">
                 👑 TRÔNE DU FONDATEUR
               </h2>
-              <p className="text-xs font-mono tracking-wider text-zinc-300 uppercase mt-1 flex items-center gap-1.5">
+              <p className="text-xs font-mono tracking-wider text-afri-text uppercase mt-1 flex items-center gap-1.5">
                 Le Temple du Gombo reconnaît son Gardien.
               </p>
             </div>
           </div>
 
           {/* Unique Guardian Badge */}
-          <div className="flex items-center gap-3 bg-black/80 border border-[#D4AF37]/35 rounded-2xl px-4 py-3 text-xs shadow-[0_0_20px_rgba(212,175,55,0.12)] shrink-0 self-stretch md:self-auto justify-center">
-            <span className="w-2.5 h-2.5 bg-[#D4AF37] rounded-full animate-ping shrink-0" />
+          <div className="flex items-center gap-3 bg-afri-bg/80 border border-[#D4AF37]/35 rounded-2xl px-4 py-3 text-xs shadow-[0_0_20px_rgba(212,175,55,0.12)] shrink-0 self-stretch md:self-auto justify-center">
+            <span className="w-2.5 h-2.5 bg-afri-bg-sec rounded-full animate-ping shrink-0" />
             <span className="font-mono text-[10px] uppercase font-bold text-[#D4AF37] tracking-wider">
               GARDIEN : {adminEmail}
             </span>
@@ -858,22 +858,22 @@ export default function AdminFounderThrone({
             className="space-y-8"
           >
             {/* Quick overview metrics row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-zinc-950/40 p-4 border border-zinc-900 rounded-3xl">
-              <div className="text-center md:text-left md:border-r border-zinc-900 md:pr-4">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500 block">Souveraineté</span>
-                <span className="text-sm font-sans font-black text-white block mt-0.5">AFRIGOMBO ELITE</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-afri-bg/40 p-4 border border-afri-border rounded-3xl">
+              <div className="text-center md:text-left md:border-r border-afri-border md:pr-4">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec block">Souveraineté</span>
+                <span className="text-sm font-sans font-black text-afri-text block mt-0.5">AFRIGOMBO ELITE</span>
               </div>
-              <div className="text-center md:text-left md:border-r border-zinc-900 md:px-4">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500 block">Citoyens</span>
+              <div className="text-center md:text-left md:border-r border-afri-border md:px-4">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec block">Citoyens</span>
                 <span className="text-sm font-sans font-black text-[#D4AF37] block mt-0.5">{users.length} Actifs</span>
               </div>
-              <div className="text-center md:text-left md:border-r border-zinc-900 md:px-4">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500 block">Trésorerie</span>
+              <div className="text-center md:text-left md:border-r border-afri-border md:px-4">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec block">Trésorerie</span>
                 <span className="text-sm font-sans font-black text-emerald-400 block mt-0.5 truncate">{formattedRevenues}</span>
               </div>
               <div className="text-center md:text-left md:pl-4">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500 block">Ambiance active</span>
-                <span className="text-xs font-sans font-bold text-zinc-300 block mt-0.5 truncate">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec block">Ambiance active</span>
+                <span className="text-xs font-sans font-bold text-afri-text block mt-0.5 truncate">
                   {playingTrackId ? "Sound System Joue..." : "Sound System Idle"}
                 </span>
               </div>
@@ -895,14 +895,14 @@ export default function AdminFounderThrone({
                   <Globe className="w-40 h-40 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-700" />
                 </div>
                 <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] group-hover:scale-110 transition-transform duration-300">
+                  <span className="w-12 h-12 rounded-2xl bg-afri-bg-sec/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] group-hover:scale-110 transition-transform duration-300">
                     <Globe className="w-6 h-6 animate-spin duration-[20s]" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       🌍 Vision AFRI
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Définition de la trajectoire impériale de l'écosystème, objectifs clés et piliers du destin culturel africain.
                     </p>
                   </div>
@@ -926,14 +926,14 @@ export default function AdminFounderThrone({
                   <Landmark className="w-40 h-40 text-[#D4AF37]" />
                 </div>
                 <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] group-hover:scale-110 transition-transform duration-300">
+                  <span className="w-12 h-12 rounded-2xl bg-afri-bg-sec/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] group-hover:scale-110 transition-transform duration-300">
                     <Landmark className="w-6 h-6" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       🏛 Univers AFRI
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Contrôle des constellations souveraines satellites: GOMBO ID, AfriTrust, AfriLivraison, Gombo Musik et gestion des gardiens du Trône.
                     </p>
                   </div>
@@ -957,14 +957,14 @@ export default function AdminFounderThrone({
                   <ShieldCheck className="w-40 h-40 text-[#D4AF37]" />
                 </div>
                 <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] group-hover:scale-110 transition-transform duration-300">
+                  <span className="w-12 h-12 rounded-2xl bg-afri-bg-sec/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] group-hover:scale-110 transition-transform duration-300">
                     <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       🛡 Bouclier AFRIGOMBO
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Système de protection souverain, modération de contenu, certification Gombo ID et contrôle de cyber-défense.
                     </p>
                   </div>
@@ -992,10 +992,10 @@ export default function AdminFounderThrone({
                     <Coins className="w-6 h-6 text-emerald-400" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       💰 Revenus Globaux
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Analyse souveraine de la trésorerie globale, suivi de la Gombocaisse et transactions régionales de l'Empire.
                     </p>
                   </div>
@@ -1023,10 +1023,10 @@ export default function AdminFounderThrone({
                     <BarChart3 className="w-6 h-6 text-sky-400" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       📈 Croissance
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Expansion impériale, taux de KYC certifiés, croissance démographique et projection des objectifs de l'Empire.
                     </p>
                   </div>
@@ -1054,10 +1054,10 @@ export default function AdminFounderThrone({
                     <Brain className="w-6 h-6 text-amber-500 animate-pulse" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       🧠 Intelligence
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Console de commande interactive, terminal d'ordres système et audit cyber intelligent en temps réel.
                     </p>
                   </div>
@@ -1085,10 +1085,10 @@ export default function AdminFounderThrone({
                     <Music className="w-6 h-6 text-purple-400" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       🎬 Centre Multimédia
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Ambiances sonores impériales, sound designer royal et configuration des mélodies sacreés de l'Empire.
                     </p>
                   </div>
@@ -1116,10 +1116,10 @@ export default function AdminFounderThrone({
                     <AlertTriangle className={`w-6 h-6 ${highAlertsCount > 0 ? 'animate-bounce' : ''}`} />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       🚨 Veille Critique
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Suivi passif des faiblesses d'infrastructure, alertes d'accès prioritaires et signaux d'intrusions d'usurpateurs.
                     </p>
                   </div>
@@ -1147,10 +1147,10 @@ export default function AdminFounderThrone({
                     <Scroll className="w-6 h-6 text-[#D4AF37]" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       📜 Journal Impérial
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Annales sacrées de l'Empire, décisions stratégiques, notes privées du Fondateur et diffusion des décrets solennels.
                     </p>
                   </div>
@@ -1178,10 +1178,10 @@ export default function AdminFounderThrone({
                     <CheckSquare className="w-6 h-6 text-emerald-400" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       📋 Checklist Bêta
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Suivi interactif de validation des fonctionnalités critiques pour la version Bêta d'AFRIGOMBO ELITE.
                     </p>
                   </div>
@@ -1210,10 +1210,10 @@ export default function AdminFounderThrone({
                     <Coins className="w-6 h-6 text-[#D4AF37]" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className="text-lg font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                       💰 Économie AFRIGOMBO
                     </h3>
-                    <p className="text-xs text-zinc-400 font-mono leading-relaxed line-clamp-3">
+                    <p className="text-xs text-afri-text-sec font-mono leading-relaxed line-clamp-3">
                       Moteur de commissions, paramètres de paiements, boosts, contrats et statistiques financières.
                     </p>
                   </div>
@@ -1240,7 +1240,7 @@ export default function AdminFounderThrone({
                 setSelectedSection(null);
                 try { audioSynth?.playValidationSuccess(); } catch (_) {}
               }}
-              className="flex items-center gap-2 px-5 py-3.5 bg-zinc-950 border border-[#D4AF37]/35 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-2xl text-[10px] font-mono font-black uppercase tracking-wider transition-all cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
+              className="flex items-center gap-2 px-5 py-3.5 bg-afri-bg border border-[#D4AF37]/35 text-[#D4AF37] hover:bg-afri-bg-sec/10 rounded-2xl text-[10px] font-mono font-black uppercase tracking-wider transition-all cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
             >
               <ArrowLeft className="w-4 h-4 text-[#D4AF37]" />
               <span>← Retourner au Trône Impérial</span>
@@ -1251,14 +1251,14 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "vision" && (
               <div className="space-y-6">
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <Globe className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5 animate-spin duration-[15s]" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
                     <strong>SOUVERAINETÉ STRATÉGIQUE — VISION AFRI :</strong> Définissez les orientations suprêmes de la plateforme. Chaque mot inscrit est synchronisé instantanément avec le cœur du système Firestore pour guider nos actions régionales.
                   </div>
                 </div>
 
-                <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4 relative">
+                <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4 relative">
                   <div className="flex items-center gap-2.5 text-[#D4AF37]">
                     <Award className="w-5 h-5" />
                     <span className="text-[11px] font-mono uppercase tracking-widest font-black">Plan d'Avenir de l'Empire</span>
@@ -1269,10 +1269,10 @@ export default function AdminFounderThrone({
                       setGovData({ ...govData, vision: e.target.value });
                       handleSaveGovField("vision", e.target.value);
                     }}
-                    className="w-full h-44 bg-zinc-950 border border-zinc-900 rounded-2xl p-4 text-xs text-white focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/45"
+                    className="w-full h-44 bg-afri-bg border border-afri-border rounded-2xl p-4 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/45"
                     placeholder="Écrivez la vision stratégique d'AFRIGOMBO..."
                   />
-                  <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500">
+                  <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-sec">
                     <span>⚡ CODES SYSTÈME COGÉRATEURS : CLASSE 1</span>
                     <span className="text-[#D4AF37] font-bold">FIRESTORE SYNC ACTIVE</span>
                   </div>
@@ -1280,20 +1280,20 @@ export default function AdminFounderThrone({
 
                 {/* Sub-section: Piliers Stratégiques */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  <div className="p-6 bg-[#040404] border border-zinc-900 rounded-2xl space-y-3">
+                  <div className="p-6 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3">
                     <span className="text-[10px] text-[#D4AF37] font-mono font-black block">PILIER ACCÉLÉRATEUR I</span>
-                    <h4 className="text-xs font-sans font-black text-white">Souveraineté Culturelle</h4>
-                    <p className="text-[11px] text-zinc-400 font-mono leading-relaxed">Valorisation des vibes authentiques ouest-africaines sans intermédiaires occidentaux.</p>
+                    <h4 className="text-xs font-sans font-black text-afri-text">Souveraineté Culturelle</h4>
+                    <p className="text-[11px] text-afri-text-sec font-mono leading-relaxed">Valorisation des vibes authentiques ouest-africaines sans intermédiaires occidentaux.</p>
                   </div>
-                  <div className="p-6 bg-[#040404] border border-zinc-900 rounded-2xl space-y-3">
+                  <div className="p-6 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3">
                     <span className="text-[10px] text-[#D4AF37] font-mono font-black block">PILIER ACCÉLÉRATEUR II</span>
-                    <h4 className="text-xs font-sans font-black text-white">Confiance Mutuelle Absolute</h4>
-                    <p className="text-[11px] text-zinc-400 font-mono leading-relaxed">Assurer une transparence totale à l'aide des certifications d'identités GomboID.</p>
+                    <h4 className="text-xs font-sans font-black text-afri-text">Confiance Mutuelle Absolute</h4>
+                    <p className="text-[11px] text-afri-text-sec font-mono leading-relaxed">Assurer une transparence totale à l'aide des certifications d'identités GomboID.</p>
                   </div>
-                  <div className="p-6 bg-[#040404] border border-zinc-900 rounded-2xl space-y-3">
+                  <div className="p-6 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3">
                     <span className="text-[10px] text-[#D4AF37] font-mono font-black block">PILIER ACCÉLÉRATEUR III</span>
-                    <h4 className="text-xs font-sans font-black text-white">Monétisation Solidaire</h4>
-                    <p className="text-[11px] text-zinc-400 font-mono leading-relaxed">Partage équitable et instantané de chaque commission d'honoraires prélevée.</p>
+                    <h4 className="text-xs font-sans font-black text-afri-text">Monétisation Solidaire</h4>
+                    <p className="text-[11px] text-afri-text-sec font-mono leading-relaxed">Partage équitable et instantané de chaque commission d'honoraires prélevée.</p>
                   </div>
                 </div>
               </div>
@@ -1304,9 +1304,9 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "univers" && (
               <div className="space-y-6">
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <Landmark className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
                     <strong>CONSTELLATIONS SOUVERAINES — UNIVERS AFRI :</strong> Contrôlez l'état de fonctionnement des différents services de l'écosystème. Activez de nouveaux services ou alternez l'état opérationnel des modules.
                   </div>
                 </div>
@@ -1314,8 +1314,8 @@ export default function AdminFounderThrone({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   
                   {/* Satellites Control list */}
-                  <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-5">
-                    <h4 className="text-xs font-mono uppercase font-black tracking-wider text-white border-b border-zinc-900 pb-2 flex items-center gap-2">
+                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-5">
+                    <h4 className="text-xs font-mono uppercase font-black tracking-wider text-afri-text border-b border-afri-border pb-2 flex items-center gap-2">
                       <Server className="w-4.5 h-4.5 text-[#D4AF37]" />
                       État des Services Satellitaires
                     </h4>
@@ -1327,10 +1327,10 @@ export default function AdminFounderThrone({
                         { id: "afriLivraison", label: "AfriLivraison", desc: "Livraison sécurisée d'instruments & œuvres" },
                         { id: "gomboMusik", label: "Gombo Musik", desc: "Flux et distribution de musiques" }
                       ].map((serv) => (
-                        <div key={serv.id} className="p-4 bg-zinc-950 border border-zinc-900/60 rounded-2xl flex items-center justify-between gap-4">
+                        <div key={serv.id} className="p-4 bg-afri-bg border border-afri-border/60 rounded-2xl flex items-center justify-between gap-4">
                           <div className="text-left">
-                            <span className="font-sans font-black text-xs text-white block">{serv.label}</span>
-                            <span className="text-[10px] text-zinc-500 font-mono mt-0.5 block">{serv.desc}</span>
+                            <span className="font-sans font-black text-xs text-afri-text block">{serv.label}</span>
+                            <span className="text-[10px] text-afri-text-sec font-mono mt-0.5 block">{serv.desc}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className={`px-2 py-0.5 text-[8px] font-mono rounded font-bold ${universeStates[serv.id] === "DÉPLOYÉ & ACTIF" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border border-amber-500/30"}`}>
@@ -1338,7 +1338,7 @@ export default function AdminFounderThrone({
                             </span>
                             <button
                               onClick={() => handleToggleSatellite(serv.id)}
-                              className="px-2.5 py-1.5 bg-zinc-900 hover:bg-[#D4AF37] text-zinc-400 hover:text-black font-mono font-black text-[9px] uppercase rounded-lg transition-all"
+                              className="px-2.5 py-1.5 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text-sec hover:text-black font-mono font-black text-[9px] uppercase rounded-lg transition-all"
                             >
                               Alterner
                             </button>
@@ -1349,33 +1349,33 @@ export default function AdminFounderThrone({
                   </div>
 
                   {/* Privilege Management: Membres du Trône */}
-                  <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4">
-                    <h4 className="text-xs font-mono uppercase font-black tracking-wider text-[#D4AF37] border-b border-zinc-900 pb-2 flex items-center gap-2">
+                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4">
+                    <h4 className="text-xs font-mono uppercase font-black tracking-wider text-[#D4AF37] border-b border-afri-border pb-2 flex items-center gap-2">
                       <UserPlus className="w-4.5 h-4.5 text-[#D4AF37]" />
                       🏰 Gardiens & Co-Fondateurs du Temple
                     </h4>
 
                     {/* Add Founder Form */}
                     <form onSubmit={handleAddFounder} className="space-y-2">
-                      <label className="text-[9px] font-mono uppercase text-zinc-400 font-black block">Promouvoir un Co-Fondateur (Email)</label>
+                      <label className="text-[9px] font-mono uppercase text-afri-text-sec font-black block">Promouvoir un Co-Fondateur (Email)</label>
                       <div className="flex gap-2">
                         <input
                           type="email"
                           placeholder="adresse@gmail.com"
                           value={newFounderInput}
                           onChange={(e) => setNewFounderInput(e.target.value)}
-                          className="flex-1 bg-zinc-950 border border-zinc-900 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                          className="flex-1 bg-afri-bg border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                         />
-                        <button type="submit" className="px-3.5 py-2 bg-[#D4AF37] text-black text-[10px] font-mono font-black uppercase rounded-xl hover:opacity-90 transition-all cursor-pointer">
+                        <button type="submit" className="px-3.5 py-2 bg-afri-bg-sec text-black text-[10px] font-mono font-black uppercase rounded-xl hover:opacity-90 transition-all cursor-pointer">
                           Ajouter
                         </button>
                       </div>
                     </form>
 
-                    <div className="space-y-1.5 max-h-36 overflow-y-auto pt-2 border-t border-zinc-900/60">
+                    <div className="space-y-1.5 max-h-36 overflow-y-auto pt-2 border-t border-afri-border/60">
                       {founders.map((f, idx) => (
-                        <div key={idx} className="p-2.5 bg-zinc-950 border border-zinc-900/40 rounded-xl flex justify-between items-center text-xs">
-                          <span className="font-mono text-zinc-300 truncate max-w-[200px]">{f}</span>
+                        <div key={idx} className="p-2.5 bg-afri-bg border border-afri-border/40 rounded-xl flex justify-between items-center text-xs">
+                          <span className="font-mono text-afri-text truncate max-w-[200px]">{f}</span>
                           <button
                             onClick={() => handleRemoveFounder(f)}
                             className="text-red-400 hover:text-red-300 transition-colors cursor-pointer"
@@ -1388,15 +1388,15 @@ export default function AdminFounderThrone({
                     </div>
 
                     {/* Promouvoir Super Admin */}
-                    <form onSubmit={handleAddSuperAdmin} className="space-y-2 pt-2 border-t border-zinc-900">
-                      <label className="text-[9px] font-mono uppercase text-zinc-400 font-black block">Promouvoir un Super Administrateur (Email)</label>
+                    <form onSubmit={handleAddSuperAdmin} className="space-y-2 pt-2 border-t border-afri-border">
+                      <label className="text-[9px] font-mono uppercase text-afri-text-sec font-black block">Promouvoir un Super Administrateur (Email)</label>
                       <div className="flex gap-2">
                         <input
                           type="email"
                           placeholder="adresse@gmail.com"
                           value={newAdminInput}
                           onChange={(e) => setNewAdminInput(e.target.value)}
-                          className="flex-1 bg-zinc-950 border border-zinc-900 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                          className="flex-1 bg-afri-bg border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                         />
                         <button type="submit" className="px-3.5 py-2 bg-emerald-500 text-black text-[10px] font-mono font-black uppercase rounded-xl hover:opacity-90 transition-all cursor-pointer">
                           Ajouter
@@ -1406,8 +1406,8 @@ export default function AdminFounderThrone({
 
                     <div className="space-y-1.5 max-h-36 overflow-y-auto">
                       {superAdmins.map((ad, idx) => (
-                        <div key={idx} className="p-2.5 bg-zinc-950 border border-zinc-900/40 rounded-xl flex justify-between items-center text-xs">
-                          <span className="font-mono text-zinc-300 truncate max-w-[200px]">{ad}</span>
+                        <div key={idx} className="p-2.5 bg-afri-bg border border-afri-border/40 rounded-xl flex justify-between items-center text-xs">
+                          <span className="font-mono text-afri-text truncate max-w-[200px]">{ad}</span>
                           <button
                             onClick={() => handleRemoveSuperAdmin(ad)}
                             className="text-red-400 hover:text-red-300 transition-colors cursor-pointer"
@@ -1430,19 +1430,19 @@ export default function AdminFounderThrone({
             {selectedSection === "bouclier" && (
               <div className="space-y-6">
                 <BouclierAfrigombo />
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <ShieldCheck className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
                     <strong>BOUCLIER AUTONOME — CYBER-DÉFENSE & MODÉRATION :</strong> Modérez les publications jugées suspectes par le filtre d'IA, approuvez ou révoquez les certifications Gombo ID d'artistes régionaux.
                   </div>
                 </div>
 
-                <div className="p-5 bg-gradient-to-r from-black to-[#090909] border border-emerald-500/30 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="p-5 bg-gradient-to-r from-afri-bg to-[#090909] border border-emerald-500/30 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <Lock className="w-10 h-10 text-emerald-400 animate-pulse bg-emerald-500/5 p-2 rounded-xl" />
                     <div className="text-left">
                       <h4 className="text-xs font-mono font-black uppercase text-emerald-400 tracking-wider">Audit Cyber-Impérial Actif</h4>
-                      <p className="text-[10px] font-mono text-zinc-400">Lancez un audit d'intégrité en direct sur l'ensemble de notre cluster Firestore.</p>
+                      <p className="text-[10px] font-mono text-afri-text-sec">Lancez un audit d'intégrité en direct sur l'ensemble de notre cluster Firestore.</p>
                     </div>
                   </div>
                   <button
@@ -1457,26 +1457,26 @@ export default function AdminFounderThrone({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   
                   {/* Pending Certs */}
-                  <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4 shadow-xl">
-                    <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-                      <h4 className="text-xs font-mono uppercase font-black text-white flex items-center gap-2">
+                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4 shadow-xl">
+                    <div className="flex items-center justify-between border-b border-afri-border pb-3">
+                      <h4 className="text-xs font-mono uppercase font-black text-afri-text flex items-center gap-2">
                         <Award className="w-5 h-5 text-[#D4AF37]" />
                         Dossiers Gombo ID en Attente d'Arbitrage
                       </h4>
-                      <span className="px-2.5 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded-full text-[9px] font-mono">
+                      <span className="px-2.5 py-0.5 bg-afri-bg-sec/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded-full text-[9px] font-mono">
                         {pendingCerts.length} dossiers
                       </span>
                     </div>
 
                     {pendingCerts.length === 0 ? (
-                      <p className="text-zinc-500 font-mono text-center py-8 text-xs">Aucune demande de certificat Gombo ID en attente d'évaluation.</p>
+                      <p className="text-afri-text-sec font-mono text-center py-8 text-xs">Aucune demande de certificat Gombo ID en attente d'évaluation.</p>
                     ) : (
                       <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1">
                         {pendingCerts.map((u: any) => (
-                          <div key={u.id} className="p-4 bg-zinc-950 border border-zinc-900/60 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+                          <div key={u.id} className="p-4 bg-afri-bg border border-afri-border/60 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
                             <div>
-                              <h5 className="font-sans font-bold text-sm text-white">{u.artisticName || u.nom || "Citoyen Inconnu"}</h5>
-                              <p className="text-[10px] text-zinc-400 font-mono mt-0.5">{u.email} • Commune: {u.commune || "Non spécifiée"}</p>
+                              <h5 className="font-sans font-bold text-sm text-afri-text">{u.artisticName || u.nom || "Citoyen Inconnu"}</h5>
+                              <p className="text-[10px] text-afri-text-sec font-mono mt-0.5">{u.email} • Commune: {u.commune || "Non spécifiée"}</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <button
@@ -1499,9 +1499,9 @@ export default function AdminFounderThrone({
                   </div>
 
                   {/* Moderation section */}
-                  <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4 shadow-xl">
-                    <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-                      <h4 className="text-xs font-mono uppercase font-black text-white flex items-center gap-2">
+                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4 shadow-xl">
+                    <div className="flex items-center justify-between border-b border-afri-border pb-3">
+                      <h4 className="text-xs font-mono uppercase font-black text-afri-text flex items-center gap-2">
                         <ShieldAlert className="w-5 h-5 text-red-500" />
                         Contributions Signalées pour Abus
                       </h4>
@@ -1511,26 +1511,26 @@ export default function AdminFounderThrone({
                     </div>
 
                     {reportedPosts.length === 0 ? (
-                      <p className="text-zinc-500 font-mono text-center py-8 text-xs">Le fil de discussion est parfaitement sain. Aucun débordement.</p>
+                      <p className="text-afri-text-sec font-mono text-center py-8 text-xs">Le fil de discussion est parfaitement sain. Aucun débordement.</p>
                     ) : (
                       <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1">
                         {reportedPosts.map((p: any) => (
-                          <div key={p.id} className="p-4 bg-zinc-950 border border-zinc-900/60 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+                          <div key={p.id} className="p-4 bg-afri-bg border border-afri-border/60 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
                             <div className="max-w-xs">
-                              <h5 className="font-sans font-bold text-xs text-white truncate">{p.title || "Contribution"}</h5>
-                              <p className="text-[10px] text-zinc-400 truncate mt-1">{p.content}</p>
+                              <h5 className="font-sans font-bold text-xs text-afri-text truncate">{p.title || "Contribution"}</h5>
+                              <p className="text-[10px] text-afri-text-sec truncate mt-1">{p.content}</p>
                               <p className="text-[9px] text-red-400 font-mono mt-1">Alerte : {p.reportsCount || 1} signalements</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleUnflagPost(p.id)}
-                                className="px-2.5 py-1.5 bg-[#D4AF37] text-black font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer"
+                                className="px-2.5 py-1.5 bg-afri-bg-sec text-black font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer"
                               >
                                 Lever
                               </button>
                               <button
                                 onClick={() => handleDeletePost(p.id)}
-                                className="px-2.5 py-1.5 bg-red-600 text-white font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer"
+                                className="px-2.5 py-1.5 bg-red-600 text-afri-text font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer"
                               >
                                 Supprimer
                               </button>
@@ -1550,51 +1550,51 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "revenus" && (
               <div className="space-y-6">
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <Coins className="w-8 h-8 text-emerald-400 shrink-0 mt-0.5" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
                     <strong>TRESORERIE IMPÉRIALE ET FLUX MONÉTAIRES :</strong> Suivi de la Gombocaisse souveraine, historique détaillé des prestations versées et virement des parts de cotisations d'abonnements.
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-6 bg-[#040404] border border-zinc-900 rounded-3xl text-center space-y-1.5">
-                    <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">Trésor de l'Empire</span>
+                  <div className="p-6 bg-afri-bg-sec border border-afri-border rounded-3xl text-center space-y-1.5">
+                    <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-widest block">Trésor de l'Empire</span>
                     <strong className="text-2xl text-emerald-400 font-black font-display block">{formattedRevenues}</strong>
                     <span className="text-[8px] font-mono text-[#D4AF37] uppercase block">Cumul de souveraineté</span>
                   </div>
 
-                  <div className="p-6 bg-[#040404] border border-zinc-900 rounded-3xl text-center space-y-1.5">
-                    <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">Transactions Soumises</span>
-                    <strong className="text-2xl text-white font-black font-display block">{transactions.length}</strong>
-                    <span className="text-[8px] font-mono text-zinc-400 uppercase block">Total certifié en ligne</span>
+                  <div className="p-6 bg-afri-bg-sec border border-afri-border rounded-3xl text-center space-y-1.5">
+                    <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-widest block">Transactions Soumises</span>
+                    <strong className="text-2xl text-afri-text font-black font-display block">{transactions.length}</strong>
+                    <span className="text-[8px] font-mono text-afri-text-sec uppercase block">Total certifié en ligne</span>
                   </div>
 
-                  <div className="p-6 bg-[#040404] border border-zinc-900 rounded-3xl text-center space-y-1.5">
-                    <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">Commission de Plateforme</span>
+                  <div className="p-6 bg-afri-bg-sec border border-afri-border rounded-3xl text-center space-y-1.5">
+                    <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-widest block">Commission de Plateforme</span>
                     <strong className="text-2xl text-sky-400 font-black font-display block">15%</strong>
                     <span className="text-[8px] font-mono text-sky-400 uppercase block">Redistribution active</span>
                   </div>
                 </div>
 
-                <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4">
-                  <h4 className="text-xs font-mono uppercase font-black text-[#D4AF37] border-b border-zinc-900 pb-2">
+                <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4">
+                  <h4 className="text-xs font-mono uppercase font-black text-[#D4AF37] border-b border-afri-border pb-2">
                     Grand Livre de Caisse de l'Empire (Dernières Transactions)
                   </h4>
 
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {transactions.length === 0 ? (
-                      <p className="text-zinc-500 text-center py-8 text-xs font-mono">Aucun virement ou prestation en cours.</p>
+                      <p className="text-afri-text-sec text-center py-8 text-xs font-mono">Aucun virement ou prestation en cours.</p>
                     ) : (
                       transactions.map((tx, idx) => (
-                        <div key={idx} className="p-3 bg-zinc-950 border border-zinc-900/40 hover:border-[#D4AF37]/30 rounded-2xl flex justify-between items-center text-xs transition-colors">
+                        <div key={idx} className="p-3 bg-afri-bg border border-afri-border/40 hover:border-[#D4AF37]/30 rounded-2xl flex justify-between items-center text-xs transition-colors">
                           <div className="text-left">
-                            <span className="font-sans font-bold text-white block">{tx.description || "Gombo Prestation"}</span>
-                            <span className="text-[9px] text-zinc-500 font-mono block mt-0.5">{tx.timestamp ? new Date(tx.timestamp).toLocaleString("fr-FR") : "Date inconnue"}</span>
+                            <span className="font-sans font-bold text-afri-text block">{tx.description || "Gombo Prestation"}</span>
+                            <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">{tx.timestamp ? new Date(tx.timestamp).toLocaleString("fr-FR") : "Date inconnue"}</span>
                           </div>
                           <div className="text-right">
                             <span className="text-emerald-400 font-black block">+{Number(tx.amount || 0).toLocaleString("fr-FR")} FCFA</span>
-                            <span className="text-[8px] text-zinc-500 font-mono block uppercase">Statut: Validé</span>
+                            <span className="text-[8px] text-afri-text-sec font-mono block uppercase">Statut: Validé</span>
                           </div>
                         </div>
                       ))
@@ -1609,9 +1609,9 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "croissance" && (
               <div className="space-y-6">
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <BarChart3 className="w-8 h-8 text-sky-400 shrink-0 mt-0.5" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
                     <strong>EXPPANSION IMPÉRIALE — CROISSANCE :</strong> Surveillez le taux de pénétration régional et les nouveaux flux d'utilisateurs. Rédigez et fixez les nouveaux objectifs de croissance.
                   </div>
                 </div>
@@ -1619,48 +1619,48 @@ export default function AdminFounderThrone({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   {/* Stats Cards */}
-                  <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4">
-                    <h4 className="text-xs font-mono uppercase font-black text-white border-b border-zinc-900 pb-2">Mesures de Pénétration Culturelle</h4>
+                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4">
+                    <h4 className="text-xs font-mono uppercase font-black text-afri-text border-b border-afri-border pb-2">Mesures de Pénétration Culturelle</h4>
                     
                     <div className="grid grid-cols-2 gap-4 text-center">
-                      <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-900/60">
-                        <span className="text-[9px] font-mono text-zinc-500 uppercase block">Citoyens</span>
-                        <strong className="text-2xl text-white block mt-1 font-black">{users.length}</strong>
+                      <div className="p-4 bg-afri-bg rounded-2xl border border-afri-border/60">
+                        <span className="text-[9px] font-mono text-afri-text-sec uppercase block">Citoyens</span>
+                        <strong className="text-2xl text-afri-text block mt-1 font-black">{users.length}</strong>
                       </div>
-                      <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-900/60">
-                        <span className="text-[9px] font-mono text-zinc-500 uppercase block">Ratio Certifiés</span>
+                      <div className="p-4 bg-afri-bg rounded-2xl border border-afri-border/60">
+                        <span className="text-[9px] font-mono text-afri-text-sec uppercase block">Ratio Certifiés</span>
                         <strong className="text-2xl text-[#D4AF37] block mt-1 font-black">
                           {users.length > 0 ? Math.round((certifiedCount / users.length) * 100) : 0}%
                         </strong>
                       </div>
-                      <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-900/60">
-                        <span className="text-[9px] font-mono text-zinc-500 uppercase block">Expansion</span>
+                      <div className="p-4 bg-afri-bg rounded-2xl border border-afri-border/60">
+                        <span className="text-[9px] font-mono text-afri-text-sec uppercase block">Expansion</span>
                         <strong className="text-2xl text-emerald-400 block mt-1 font-black">+24.8%</strong>
                       </div>
-                      <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-900/60">
-                        <span className="text-[9px] font-mono text-zinc-500 uppercase block">Contrats Actifs</span>
+                      <div className="p-4 bg-afri-bg rounded-2xl border border-afri-border/60">
+                        <span className="text-[9px] font-mono text-afri-text-sec uppercase block">Contrats Actifs</span>
                         <strong className="text-2xl text-sky-400 block mt-1 font-black">{gombos.length}</strong>
                       </div>
                     </div>
                   </div>
 
                   {/* Set growth target */}
-                  <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-3 relative">
+                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-3 relative">
                     <div className="flex items-center gap-2 text-amber-500">
                       <Target className="w-5 h-5 text-amber-500" />
                       <span className="text-[11px] font-mono uppercase tracking-widest font-black text-amber-500">Objectifs de Croissance</span>
                     </div>
-                    <p className="text-[10px] text-zinc-400 font-mono">Définissez les paliers et les cibles d'expansion d'abonnés et d'usage pour motiver les troupes de terrain.</p>
+                    <p className="text-[10px] text-afri-text-sec font-mono">Définissez les paliers et les cibles d'expansion d'abonnés et d'usage pour motiver les troupes de terrain.</p>
                     <textarea
                       value={govData.growth}
                       onChange={(e) => {
                         setGovData({ ...govData, growth: e.target.value });
                         handleSaveGovField("growth", e.target.value);
                       }}
-                      className="w-full h-36 bg-zinc-950 border border-zinc-900 rounded-2xl p-4 text-xs text-zinc-300 focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/35"
+                      className="w-full h-36 bg-afri-bg border border-afri-border rounded-2xl p-4 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/35"
                       placeholder="Définissez les chiffres ou régions cibles..."
                     />
-                    <span className="absolute bottom-4 right-10 text-[8px] font-mono text-zinc-500">FIRESTORE SYNC</span>
+                    <span className="absolute bottom-4 right-10 text-[8px] font-mono text-afri-text-sec">FIRESTORE SYNC</span>
                   </div>
 
                 </div>
@@ -1672,9 +1672,9 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "intelligence" && (
               <div className="space-y-6">
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <Brain className="w-8 h-8 text-amber-400 shrink-0 mt-0.5" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
                     <strong>CONSOLE SOUVERAINE & INTÉGRITÉ CHRONIQUE :</strong> Interface de commande interactive. Tapez vos directives pour commander le Temple ou lancez l'audit cyber intelligent passif.
                   </div>
                 </div>
@@ -1682,8 +1682,8 @@ export default function AdminFounderThrone({
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   
                   {/* Live Terminal Terminal Console */}
-                  <div className="p-6 bg-[#040404] border border-zinc-900 rounded-3xl lg:col-span-2 space-y-4">
-                    <div className="flex justify-between items-center border-b border-zinc-900 pb-2.5">
+                  <div className="p-6 bg-afri-bg-sec border border-afri-border rounded-3xl lg:col-span-2 space-y-4">
+                    <div className="flex justify-between items-center border-b border-afri-border pb-2.5">
                       <h4 className="text-xs font-mono uppercase font-black tracking-wider text-[#D4AF37] flex items-center gap-2">
                         <Terminal className="w-4.5 h-4.5 text-[#D4AF37] animate-pulse" />
                         Terminal Interactif du Temple
@@ -1691,10 +1691,10 @@ export default function AdminFounderThrone({
                       <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
                     </div>
 
-                    <div className="font-mono text-[10px] text-zinc-400 space-y-2 h-64 overflow-y-auto scrollbar-none pr-1 bg-black p-4 border border-zinc-900/60 rounded-2xl leading-relaxed flex flex-col-reverse text-left">
+                    <div className="font-mono text-[10px] text-afri-text-sec space-y-2 h-64 overflow-y-auto scrollbar-none pr-1 bg-afri-bg p-4 border border-afri-border/60 rounded-2xl leading-relaxed flex flex-col-reverse text-left">
                       <div>
                         {logs.map((logLine, idx) => (
-                          <div key={idx} className="hover:text-white transition-colors py-1 border-b border-zinc-950 font-mono">
+                          <div key={idx} className="hover:text-afri-text transition-colors py-1 border-b border-zinc-950 font-mono">
                             {logLine}
                           </div>
                         ))}
@@ -1708,30 +1708,30 @@ export default function AdminFounderThrone({
                         placeholder="Tapez /help pour les ordres..."
                         value={terminalInput}
                         onChange={(e) => setTerminalInput(e.target.value)}
-                        className="flex-1 bg-zinc-950 border border-zinc-900 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-[#D4AF37]"
+                        className="flex-1 bg-afri-bg border border-afri-border rounded-xl px-3 py-2 text-xs font-mono text-afri-text focus:outline-none focus:border-[#D4AF37]"
                       />
                     </form>
                   </div>
 
                   {/* Parameters Panel */}
-                  <div className="p-6 bg-[#040404] border border-zinc-900 rounded-3xl lg:col-span-1 space-y-4">
-                    <h4 className="text-xs font-mono uppercase font-black text-white border-b border-zinc-900 pb-2">Seuils Cognitifs de Protection</h4>
+                  <div className="p-6 bg-afri-bg-sec border border-afri-border rounded-3xl lg:col-span-1 space-y-4">
+                    <h4 className="text-xs font-mono uppercase font-black text-afri-text border-b border-afri-border pb-2">Seuils Cognitifs de Protection</h4>
                     
-                    <div className="space-y-4 text-xs font-mono text-zinc-300">
+                    <div className="space-y-4 text-xs font-mono text-afri-text">
                       <div className="space-y-1">
-                        <label className="text-[10px] text-zinc-500 uppercase block">Sensibilité du Matcher Gombo</label>
+                        <label className="text-[10px] text-afri-text-sec uppercase block">Sensibilité du Matcher Gombo</label>
                         <input type="range" className="w-full accent-[#D4AF37]" min="1" max="10" defaultValue="8" />
                         <span className="text-[8px] text-[#D4AF37] block text-right font-black">NIVEAU 8 (TRÈS STRICT)</span>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] text-zinc-500 uppercase block">Filtre Antispam Contributions</label>
+                        <label className="text-[10px] text-afri-text-sec uppercase block">Filtre Antispam Contributions</label>
                         <input type="range" className="w-full accent-[#D4AF37]" min="1" max="10" defaultValue="9" />
                         <span className="text-[8px] text-[#D4AF37] block text-right font-black">NIVEAU 9 (HERMÉTIQUE)</span>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] text-zinc-500 uppercase block">Alerte Ping Intrusion Passif</label>
+                        <label className="text-[10px] text-afri-text-sec uppercase block">Alerte Ping Intrusion Passif</label>
                         <input type="range" className="w-full accent-[#D4AF37]" min="1" max="10" defaultValue="5" />
                         <span className="text-[8px] text-[#D4AF37] block text-right font-black">NIVEAU 5 (HARMONIEUX)</span>
                       </div>
@@ -1747,9 +1747,9 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "multimedia" && (
               <div className="space-y-6">
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <Music className="w-8 h-8 text-purple-400 shrink-0 mt-0.5 animate-pulse" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
                     <strong>SOUND DESIGNER ROYAL — BIBLIOTHÈQUE MULTIMÉDIA :</strong> Administrez les flux sonores du Temple, chargez de nouveaux enregistrements et affectez des ambiances aux différents spots du site.
                   </div>
                 </div>
@@ -1757,38 +1757,38 @@ export default function AdminFounderThrone({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   
                   {/* Sound list */}
-                  <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4">
-                    <h4 className="text-xs font-mono uppercase font-black text-white border-b border-zinc-900 pb-2">Patrimoine Musical Actif</h4>
+                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4">
+                    <h4 className="text-xs font-mono uppercase font-black text-afri-text border-b border-afri-border pb-2">Patrimoine Musical Actif</h4>
 
                     {musicTracks.length === 0 ? (
-                      <p className="text-zinc-500 font-mono text-center py-10 text-xs">Aucune mélodie royale chargée dans le cluster.</p>
+                      <p className="text-afri-text-sec font-mono text-center py-10 text-xs">Aucune mélodie royale chargée dans le cluster.</p>
                     ) : (
                       <div className="space-y-2.5 max-h-[400px] overflow-y-auto pr-1">
                         {musicTracks.map((track, idx) => (
-                          <div key={track.id} className={`p-3 border rounded-2xl flex items-center justify-between gap-4 text-xs transition-all ${playingTrackId === track.id ? 'bg-[#D4AF37]/5 border-[#D4AF37]' : 'bg-zinc-950 border-zinc-900/60'}`}>
+                          <div key={track.id} className={`p-3 border rounded-2xl flex items-center justify-between gap-4 text-xs transition-all ${playingTrackId === track.id ? 'bg-afri-bg-sec/5 border-[#D4AF37]' : 'bg-afri-bg border-afri-border/60'}`}>
                             <div className="flex items-center gap-3">
                               <button
                                 onClick={() => handlePlayPauseTrack(track)}
-                                className="w-8 h-8 rounded-full bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] cursor-pointer"
+                                className="w-8 h-8 rounded-full bg-afri-bg-sec/10 hover:bg-afri-bg-sec/20 flex items-center justify-center text-[#D4AF37] cursor-pointer"
                               >
                                 {playingTrackId === track.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                               </button>
                               <div className="text-left">
-                                <span className="font-sans font-bold text-white block">{track.title}</span>
-                                <span className="text-[9px] text-zinc-400 font-mono block mt-0.5">{track.artist}</span>
+                                <span className="font-sans font-bold text-afri-text block">{track.title}</span>
+                                <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">{track.artist}</span>
                               </div>
                             </div>
 
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleReorderMusic(idx, "up")}
-                                className="p-1 text-zinc-500 hover:text-white transition-colors cursor-pointer"
+                                className="p-1 text-afri-text-sec hover:text-afri-text transition-colors cursor-pointer"
                               >
                                 <ArrowUp className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleReorderMusic(idx, "down")}
-                                className="p-1 text-zinc-500 hover:text-white transition-colors cursor-pointer"
+                                className="p-1 text-afri-text-sec hover:text-afri-text transition-colors cursor-pointer"
                               >
                                 <ArrowDown className="w-4 h-4" />
                               </button>
@@ -1808,61 +1808,61 @@ export default function AdminFounderThrone({
                   {/* Add Track & Assign Spots */}
                   <div className="space-y-6">
                     {/* Form */}
-                    <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4 text-left">
-                      <h4 className="text-xs font-mono uppercase font-black text-[#D4AF37] border-b border-zinc-900 pb-2">Ajouter un Opus</h4>
+                    <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4 text-left">
+                      <h4 className="text-xs font-mono uppercase font-black text-[#D4AF37] border-b border-afri-border pb-2">Ajouter un Opus</h4>
                       
                       <form onSubmit={handleAddMusicTrack} className="space-y-3 font-mono text-xs">
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase text-zinc-400 block font-bold">Titre de l'Œuvre</label>
+                          <label className="text-[9px] uppercase text-afri-text-sec block font-bold">Titre de l'Œuvre</label>
                           <input
                             type="text"
                             placeholder="ex: Célébration des Ancêtres"
                             value={newTrackTitle}
                             onChange={(e) => setNewTrackTitle(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-900 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#D4AF37]"
+                            className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-afri-text focus:outline-none focus:border-[#D4AF37]"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase text-zinc-400 block font-bold">Artiste / Compositeur</label>
+                          <label className="text-[9px] uppercase text-afri-text-sec block font-bold">Artiste / Compositeur</label>
                           <input
                             type="text"
                             placeholder="ex: Kora Orphée Abidjan"
                             value={newTrackArtist}
                             onChange={(e) => setNewTrackArtist(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-900 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#D4AF37]"
+                            className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-afri-text focus:outline-none focus:border-[#D4AF37]"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase text-zinc-400 block font-bold">Adresse URL Absolue du fichier (Audio MP3/WAV)</label>
+                          <label className="text-[9px] uppercase text-afri-text-sec block font-bold">Adresse URL Absolue du fichier (Audio MP3/WAV)</label>
                           <input
                             type="url"
                             placeholder="https://assets.mixkit.co/active_storage/sfx/..."
                             value={newTrackUrl}
                             onChange={(e) => setNewTrackUrl(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-900 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#D4AF37]"
+                            className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-afri-text focus:outline-none focus:border-[#D4AF37]"
                           />
                         </div>
-                        <button type="submit" className="w-full py-2.5 bg-[#D4AF37] text-black font-black uppercase text-[10px] tracking-wider hover:opacity-90 transition-all rounded-xl cursor-pointer">
+                        <button type="submit" className="w-full py-2.5 bg-afri-bg-sec text-black font-black uppercase text-[10px] tracking-wider hover:opacity-90 transition-all rounded-xl cursor-pointer">
                           Enregistrer dans l'Empire
                         </button>
                       </form>
                     </div>
 
                     {/* Spots controller */}
-                    <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4 text-left font-mono">
-                      <h4 className="text-xs font-mono uppercase font-black text-white border-b border-zinc-900 pb-2">Affectation Acoustique</h4>
+                    <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4 text-left font-mono">
+                      <h4 className="text-xs font-mono uppercase font-black text-afri-text border-b border-afri-border pb-2">Affectation Acoustique</h4>
                       
                       <div className="space-y-3 text-xs">
                         {["accueil", "throne", "navigation", "celebration"].map((spotKey) => (
-                          <div key={spotKey} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-zinc-950 rounded-2xl border border-zinc-900/40">
+                          <div key={spotKey} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-afri-bg rounded-2xl border border-afri-border/40">
                             <div>
-                              <span className="font-bold text-white uppercase text-[10px] block">{spotKey}</span>
-                              <span className="text-[8px] text-zinc-500 block truncate max-w-[180px]">{musicSpots[spotKey as keyof MusicSpots] || "Aucune musique active"}</span>
+                              <span className="font-bold text-afri-text uppercase text-[10px] block">{spotKey}</span>
+                              <span className="text-[8px] text-afri-text-sec block truncate max-w-[180px]">{musicSpots[spotKey as keyof MusicSpots] || "Aucune musique active"}</span>
                             </div>
                             <select
                               onChange={(e) => handleAssignSpot(spotKey as keyof MusicSpots, e.target.value)}
                               value={musicSpots[spotKey as keyof MusicSpots] || ""}
-                              className="bg-black border border-zinc-900 text-zinc-300 rounded-lg p-1.5 focus:outline-none focus:border-[#D4AF37] text-[10px]"
+                              className="bg-afri-bg border border-afri-border text-afri-text rounded-lg p-1.5 focus:outline-none focus:border-[#D4AF37] text-[10px]"
                             >
                               <option value="">-- Assigner Opus --</option>
                               {musicTracks.map(t => (
@@ -1884,9 +1884,9 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "veille" && (
               <div className="space-y-6">
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <AlertTriangle className="w-8 h-8 text-red-500 shrink-0 mt-0.5 animate-bounce" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
                     <strong>SIGNALEMENTS & VEILLE CRITIQUE :</strong> Veillez sur les signaux passifs du Temple d'Abidjan et réagissez de manière précoce face aux tentatives d'intrusions d'utilisateurs suspects.
                   </div>
                 </div>
@@ -1894,33 +1894,33 @@ export default function AdminFounderThrone({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   
                   {/* Suspect actors telemetry */}
-                  <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4">
-                    <h4 className="text-xs font-mono uppercase font-black text-white border-b border-zinc-900 pb-2 flex items-center gap-2">
+                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4">
+                    <h4 className="text-xs font-mono uppercase font-black text-afri-text border-b border-afri-border pb-2 flex items-center gap-2">
                       <Shield className="w-4 h-4 text-red-500" />
                       Télémétrie Active d'Intrusions Passives
                     </h4>
 
-                    <div className="space-y-3 font-mono text-[10px] text-zinc-400">
-                      <div className="p-3 bg-zinc-950 rounded-2xl border border-zinc-900/60 flex justify-between items-center">
+                    <div className="space-y-3 font-mono text-[10px] text-afri-text-sec">
+                      <div className="p-3 bg-afri-bg rounded-2xl border border-afri-border/60 flex justify-between items-center">
                         <div className="text-left">
-                          <span className="text-white block font-bold">Tentatives d'accès de brute-force</span>
-                          <span className="text-[8px] text-zinc-500 block mt-0.5">IP: 213.12.98.45 (Nigéria)</span>
+                          <span className="text-afri-text block font-bold">Tentatives d'accès de brute-force</span>
+                          <span className="text-[8px] text-afri-text-sec block mt-0.5">IP: 213.12.98.45 (Nigéria)</span>
                         </div>
                         <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full font-bold">PARÉ</span>
                       </div>
 
-                      <div className="p-3 bg-zinc-950 rounded-2xl border border-zinc-900/60 flex justify-between items-center">
+                      <div className="p-3 bg-afri-bg rounded-2xl border border-afri-border/60 flex justify-between items-center">
                         <div className="text-left">
-                          <span className="text-white block font-bold">Vérification de Token CSRF suspect</span>
-                          <span className="text-[8px] text-zinc-500 block mt-0.5">Appareil: Mozilla Gecko Client</span>
+                          <span className="text-afri-text block font-bold">Vérification de Token CSRF suspect</span>
+                          <span className="text-[8px] text-afri-text-sec block mt-0.5">Appareil: Mozilla Gecko Client</span>
                         </div>
                         <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full font-bold">RÉSOLU</span>
                       </div>
 
-                      <div className="p-3 bg-zinc-950 rounded-2xl border border-zinc-900/60 flex justify-between items-center">
+                      <div className="p-3 bg-afri-bg rounded-2xl border border-afri-border/60 flex justify-between items-center">
                         <div className="text-left">
-                          <span className="text-white block font-bold">Suspicion passive usurpateur</span>
-                          <span className="text-[8px] text-zinc-500 block mt-0.5">Utilisateur: invite_temp349</span>
+                          <span className="text-afri-text block font-bold">Suspicion passive usurpateur</span>
+                          <span className="text-[8px] text-afri-text-sec block mt-0.5">Utilisateur: invite_temp349</span>
                         </div>
                         <span className="px-2 py-0.5 bg-red-500/10 text-red-400 rounded-full font-bold animate-pulse">CRITIQUE</span>
                       </div>
@@ -1928,9 +1928,9 @@ export default function AdminFounderThrone({
                   </div>
 
                   {/* Active threat resolutions */}
-                  <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4 text-left font-mono">
-                    <h4 className="text-xs font-mono uppercase font-black text-white border-b border-zinc-900 pb-2">Actions d'Urgence</h4>
-                    <p className="text-[10px] text-zinc-400 leading-relaxed">Déclenchez le blocage passif temporaire de l'ensemble du réseau en cas d'attaque généralisée avérée.</p>
+                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4 text-left font-mono">
+                    <h4 className="text-xs font-mono uppercase font-black text-afri-text border-b border-afri-border pb-2">Actions d'Urgence</h4>
+                    <p className="text-[10px] text-afri-text-sec leading-relaxed">Déclenchez le blocage passif temporaire de l'ensemble du réseau en cas d'attaque généralisée avérée.</p>
                     
                     <div className="space-y-2.5">
                       <button
@@ -1939,7 +1939,7 @@ export default function AdminFounderThrone({
                           setTimeout(() => setSuccessMsg(""), 5000);
                           try { audioSynth?.playTamTam(true); } catch (_) {}
                         }}
-                        className="w-full py-3 bg-red-950/40 text-red-400 border border-red-900 hover:bg-red-900 hover:text-white font-mono font-black text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                        className="w-full py-3 bg-red-950/40 text-red-400 border border-red-900 hover:bg-red-900 hover:text-afri-text font-mono font-black text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer"
                       >
                         🔥 Activer Bouclier Anti-Usurpateur Strict
                       </button>
@@ -1950,7 +1950,7 @@ export default function AdminFounderThrone({
                           setTimeout(() => setSuccessMsg(""), 4000);
                           try { audioSynth?.playValidationSuccess(); } catch (_) {}
                         }}
-                        className="w-full py-3 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 font-mono font-black text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                        className="w-full py-3 bg-afri-bg-sec text-afri-text hover:bg-afri-bg-ter font-mono font-black text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer"
                       >
                         📢 Diffuser Alerte Vigilance Générale
                       </button>
@@ -1966,9 +1966,9 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "journal" && (
               <div className="space-y-6">
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <Scroll className="w-8 h-8 text-amber-500 shrink-0 mt-0.5 animate-pulse" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
                     <strong>📜 ANNALES DE GOUVERNANCE ET JOURNAL IMPÉRIAL :</strong> Rédigez le journal d'apprentissage et de stratégie du Fondateur, signez de nouveaux décrets impériaux et diffusez de grands messages mégaphoniques.
                   </div>
                 </div>
@@ -1978,7 +1978,7 @@ export default function AdminFounderThrone({
                   {/* Journal and Decisions field textareas */}
                   <div className="space-y-6">
                     {/* Journal */}
-                    <div className="p-5 bg-black border border-zinc-900 rounded-3xl space-y-2 relative">
+                    <div className="p-5 bg-afri-bg border border-afri-border rounded-3xl space-y-2 relative">
                       <div className="flex items-center gap-2 text-[#D4AF37]">
                         <BookOpen className="w-4.5 h-4.5" />
                         <span className="text-[9px] font-mono uppercase tracking-widest font-black">Journal Intime du Fondateur</span>
@@ -1989,14 +1989,14 @@ export default function AdminFounderThrone({
                           setGovData({ ...govData, journal: e.target.value });
                           handleSaveGovField("journal", e.target.value);
                         }}
-                        className="w-full h-28 bg-zinc-950 border border-zinc-900 rounded-xl p-3 text-xs text-zinc-300 focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/30"
+                        className="w-full h-28 bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/30"
                         placeholder="Notes d'observation de terrain..."
                       />
                       <span className="absolute bottom-4 right-10 text-[7px] font-mono text-zinc-650">FIRESTORE SYNC</span>
                     </div>
 
                     {/* Strategic Decisions */}
-                    <div className="p-5 bg-black border border-zinc-900 rounded-3xl space-y-2 relative">
+                    <div className="p-5 bg-afri-bg border border-afri-border rounded-3xl space-y-2 relative">
                       <div className="flex items-center gap-2 text-emerald-400">
                         <Scroll className="w-4.5 h-4.5" />
                         <span className="text-[9px] font-mono uppercase tracking-widest font-black">Decisions Strategiques de Souche</span>
@@ -2007,7 +2007,7 @@ export default function AdminFounderThrone({
                           setGovData({ ...govData, decisions: e.target.value });
                           handleSaveGovField("decisions", e.target.value);
                         }}
-                        className="w-full h-28 bg-zinc-950 border border-zinc-900 rounded-xl p-3 text-xs text-zinc-300 focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/30"
+                        className="w-full h-28 bg-afri-bg border border-afri-border rounded-xl p-3 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] font-mono leading-relaxed resize-none focus:ring-1 focus:ring-[#D4AF37]/30"
                         placeholder="Écrivez les décrets signés aujourd'hui..."
                       />
                       <span className="absolute bottom-4 right-10 text-[7px] font-mono text-zinc-650">FIRESTORE SYNC</span>
@@ -2015,19 +2015,19 @@ export default function AdminFounderThrone({
                   </div>
 
                   {/* Broadcast Form */}
-                  <div className="p-6 bg-black border border-zinc-900 rounded-3xl space-y-4">
-                    <h4 className="text-xs font-mono uppercase font-black text-white border-b border-zinc-900 pb-2 flex items-center gap-2">
+                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4">
+                    <h4 className="text-xs font-mono uppercase font-black text-afri-text border-b border-afri-border pb-2 flex items-center gap-2">
                       <Send className="w-4.5 h-4.5 text-sky-400" />
                       Signer & Diffuser un Décret Mégaphonique
                     </h4>
 
                     <form onSubmit={handleSendNotice} className="space-y-3 font-mono text-xs">
                       <div className="space-y-1">
-                        <label className="text-[9px] uppercase text-zinc-400 block font-bold">Catégorie du Décret</label>
+                        <label className="text-[9px] uppercase text-afri-text-sec block font-bold">Catégorie du Décret</label>
                         <select
                           value={noticeCategory}
                           onChange={(e) => setNoticeCategory(e.target.value)}
-                          className="w-full bg-zinc-950 border border-zinc-900 rounded-xl p-2 text-white focus:outline-none focus:border-[#D4AF37]"
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl p-2 text-afri-text focus:outline-none focus:border-[#D4AF37]"
                         >
                           <option value="MESSAGE SPECIAL">👑 DECRET SPECIAL DU SOUVERAIN</option>
                           <option value="MAINTENANCE">🛡️ ALERTE DE PROTECTION SYSTÈME</option>
@@ -2036,28 +2036,28 @@ export default function AdminFounderThrone({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] uppercase text-zinc-400 block font-bold">Titre Impérial</label>
+                        <label className="text-[9px] uppercase text-afri-text-sec block font-bold">Titre Impérial</label>
                         <input
                           type="text"
                           placeholder="ex: LANÇEMENT DES CERTIFICATIONS ACTIVES"
                           value={noticeTitle}
                           onChange={(e) => setNoticeTitle(e.target.value)}
-                          className="w-full bg-zinc-950 border border-zinc-900 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#D4AF37]"
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl p-2.5 text-afri-text focus:outline-none focus:border-[#D4AF37]"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] uppercase text-zinc-400 block font-bold">Corps du Message</label>
+                        <label className="text-[9px] uppercase text-afri-text-sec block font-bold">Corps du Message</label>
                         <textarea
                           rows={4}
                           placeholder="Écrivez le message de décret..."
                           value={noticeBody}
                           onChange={(e) => setNoticeBody(e.target.value)}
-                          className="w-full bg-zinc-950 border border-zinc-900 rounded-xl p-3 text-white focus:outline-none focus:border-[#D4AF37] leading-relaxed resize-none"
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl p-3 text-afri-text focus:outline-none focus:border-[#D4AF37] leading-relaxed resize-none"
                         />
                       </div>
 
-                      <button type="submit" className="w-full py-2.5 bg-[#D4AF37] text-black font-black uppercase text-[10px] tracking-wider hover:opacity-90 transition-all rounded-xl cursor-pointer">
+                      <button type="submit" className="w-full py-2.5 bg-afri-bg-sec text-black font-black uppercase text-[10px] tracking-wider hover:opacity-90 transition-all rounded-xl cursor-pointer">
                         Diffuser maintenant
                       </button>
                     </form>
@@ -2072,26 +2072,26 @@ export default function AdminFounderThrone({
                  ========================================================= */}
             {selectedSection === "checklist" && (
               <div className="space-y-6">
-                <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                   <CheckSquare className="w-8 h-8 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
-                  <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
                     <strong>📋 CHECKLIST DE VALIDATION DE LA BÊTA PUBLIQUE :</strong> Suivez pas à pas la validation de l'écosystème souverain AFRIGOMBO ELITE. Cochez les modules pour certifier leur bon fonctionnement avant le déploiement général.
                   </div>
                 </div>
 
-                <div className="bg-black border border-zinc-900 rounded-3xl p-6 space-y-6">
+                <div className="bg-afri-bg border border-afri-border rounded-3xl p-6 space-y-6">
                   {/* Progress Header */}
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-zinc-900">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-afri-border">
                     <div>
-                      <h3 className="text-sm font-sans font-black text-white uppercase tracking-wider">
+                      <h3 className="text-sm font-sans font-black text-afri-text uppercase tracking-wider">
                         Progression de la Certification Bêta
                       </h3>
-                      <p className="text-[10px] font-mono text-zinc-500 uppercase mt-1">
+                      <p className="text-[10px] font-mono text-afri-text-sec uppercase mt-1">
                         Chaque jalon doit être testé rigoureusement sur mobile et ordinateur
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-xs font-black text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/25 px-3 py-1 rounded-xl">
+                      <span className="font-mono text-xs font-black text-[#D4AF37] bg-afri-bg-sec/10 border border-[#D4AF37]/25 px-3 py-1 rounded-xl">
                         {progressCount} / 11 VALIDÉS ({Math.round((progressCount / 11) * 100)}%)
                       </span>
                       <button
@@ -2103,7 +2103,7 @@ export default function AdminFounderThrone({
                             try { audioSynth.playValidationSuccess(); } catch (_) {}
                           }
                         }}
-                        className="text-[9px] font-mono uppercase text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                        className="text-[9px] font-mono uppercase text-afri-text-sec hover:text-afri-text transition-colors cursor-pointer"
                       >
                         Réinitialiser
                       </button>
@@ -2111,7 +2111,7 @@ export default function AdminFounderThrone({
                   </div>
 
                   {/* Progress bar */}
-                  <div className="w-full h-2 bg-zinc-950 rounded-full overflow-hidden border border-zinc-900">
+                  <div className="w-full h-2 bg-afri-bg rounded-full overflow-hidden border border-afri-border">
                     <motion.div
                       className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 shadow-[0_0_10px_rgba(212,175,55,0.3)]"
                       initial={{ width: 0 }}
@@ -2140,25 +2140,25 @@ export default function AdminFounderThrone({
                         <div
                           key={key}
                           onClick={() => toggleChecklist(key)}
-                          className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 select-none ${isChecked ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40' : 'bg-zinc-950/40 border-zinc-900 hover:border-zinc-800'}`}
+                          className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 select-none ${isChecked ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40' : 'bg-afri-bg/40 border-afri-border hover:border-afri-border'}`}
                         >
                           <div className="mt-0.5 shrink-0">
                             {isChecked ? (
                               <CheckSquare className="w-5 h-5 text-emerald-400" />
                             ) : (
-                              <Square className="w-5 h-5 text-zinc-650 hover:text-zinc-500" />
+                              <Square className="w-5 h-5 text-zinc-650 hover:text-afri-text-sec" />
                             )}
                           </div>
                           <div className="space-y-1 text-left">
                             <div className="flex items-center gap-2">
-                              <span className={`text-xs font-sans font-bold ${isChecked ? 'text-white' : 'text-zinc-300'}`}>
+                              <span className={`text-xs font-sans font-bold ${isChecked ? 'text-afri-text' : 'text-afri-text'}`}>
                                 {key}
                               </span>
                               <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded uppercase font-black ${isChecked ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-500'}`}>
                                 {isChecked ? 'VALIDÉ' : 'EN COURS'}
                               </span>
                             </div>
-                            <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
+                            <p className="text-[10px] text-afri-text-sec font-mono leading-relaxed">
                               {desc}
                             </p>
                           </div>
@@ -2182,123 +2182,123 @@ export default function AdminFounderThrone({
 
               return (
                 <div className="space-y-6">
-                  <div className="p-6 bg-zinc-950/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                  <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
                     <Coins className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5" />
-                    <div className="text-xs text-zinc-300 leading-relaxed font-mono">
+                    <div className="text-xs text-afri-text leading-relaxed font-mono">
                       <strong>💰 GESTION ÉCONOMIQUE SOUVERAINE :</strong> Configurez la commission universelle et surveillez en temps réel l'essor de la richesse partagée au sein du Temple du Gombo.
                     </div>
                   </div>
 
                   {/* Real-time Sovereign Economic Health Dashboard */}
                   <div className="space-y-4">
-                    <h4 className="text-[10px] font-mono uppercase text-zinc-500 tracking-widest border-l-2 border-[#D4AF37] pl-3">
+                    <h4 className="text-[10px] font-mono uppercase text-afri-text-sec tracking-widest border-l-2 border-[#D4AF37] pl-3">
                       SANTÉ ÉCONOMIQUE DE L'EMPIRE (TEMPS RÉEL)
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                       {/* 1. Commissions */}
-                      <div className="bg-zinc-950/90 border border-zinc-900 rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
+                      <div className="bg-afri-bg/90 border border-afri-border rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl"></div>
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Commissions</span>
+                            <span className="text-[9px] font-mono font-bold text-afri-text-sec uppercase tracking-wider">Commissions</span>
                             <Coins className="w-4 h-4 text-emerald-400" />
                           </div>
                           <span className="text-xl font-black text-emerald-400 tracking-tight block">
                             {totalCommissions.toLocaleString()} FCFA
                           </span>
                         </div>
-                        <p className="text-[8.5px] text-zinc-500 mt-2">Frais de service (12% / 10% / 8%) perçus sur les contrats finalisés</p>
+                        <p className="text-[8.5px] text-afri-text-sec mt-2">Frais de service (12% / 10% / 8%) perçus sur les contrats finalisés</p>
                       </div>
 
                       {/* 2. Premium subscriptions */}
-                      <div className="bg-zinc-950/90 border border-zinc-900 rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-16 h-16 bg-[#D4AF37]/5 rounded-full blur-xl"></div>
+                      <div className="bg-afri-bg/90 border border-afri-border rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-afri-bg-sec/5 rounded-full blur-xl"></div>
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Revenus Premium</span>
+                            <span className="text-[9px] font-mono font-bold text-afri-text-sec uppercase tracking-wider">Revenus Premium</span>
                             <Crown className="w-4 h-4 text-[#D4AF37]" />
                           </div>
                           <span className="text-xl font-black text-[#D4AF37] tracking-tight block">
                             {totalPremiumRevenue.toLocaleString()} FCFA
                           </span>
                         </div>
-                        <p className="text-[8.5px] text-zinc-500 mt-2">Cumul des abonnements Gombo Pro et Elite encaissés</p>
+                        <p className="text-[8.5px] text-afri-text-sec mt-2">Cumul des abonnements Gombo Pro et Elite encaissés</p>
                       </div>
 
                       {/* 3. Premium penetration rate */}
-                      <div className="bg-zinc-950/90 border border-zinc-900 rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
+                      <div className="bg-afri-bg/90 border border-afri-border rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full blur-xl"></div>
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Pénétration Premium</span>
+                            <span className="text-[9px] font-mono font-bold text-afri-text-sec uppercase tracking-wider">Pénétration Premium</span>
                             <Users className="w-4 h-4 text-blue-400" />
                           </div>
                           <span className="text-xl font-black text-blue-400 tracking-tight block">
                             {penetrationRate}%
                           </span>
                         </div>
-                        <p className="text-[8.5px] text-zinc-500 mt-2">Taux d'artistes et promoteurs abonnés à l'offre payante</p>
+                        <p className="text-[8.5px] text-afri-text-sec mt-2">Taux d'artistes et promoteurs abonnés à l'offre payante</p>
                       </div>
 
                       {/* 4. Signed contracts */}
-                      <div className="bg-zinc-950/90 border border-zinc-900 rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
+                      <div className="bg-afri-bg/90 border border-afri-border rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full blur-xl"></div>
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Gombos Validés</span>
+                            <span className="text-[9px] font-mono font-bold text-afri-text-sec uppercase tracking-wider">Gombos Validés</span>
                             <FileText className="w-4 h-4 text-purple-400" />
                           </div>
                           <span className="text-xl font-black text-purple-400 tracking-tight block">
                             {signedContractsCount} / {allContracts.length}
                           </span>
                         </div>
-                        <p className="text-[8.5px] text-zinc-500 mt-2">Contrats signés numériquement par les deux parties</p>
+                        <p className="text-[8.5px] text-afri-text-sec mt-2">Contrats signés numériquement par les deux parties</p>
                       </div>
 
                       {/* 5. Economic savings */}
-                      <div className="bg-zinc-950/90 border border-zinc-900 rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
+                      <div className="bg-afri-bg/90 border border-afri-border rounded-3xl p-5 flex flex-col justify-between shadow-inner relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full blur-xl"></div>
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Économies Membres</span>
+                            <span className="text-[9px] font-mono font-bold text-afri-text-sec uppercase tracking-wider">Économies Membres</span>
                             <Sparkles className="w-4 h-4 text-amber-400" />
                           </div>
                           <span className="text-xl font-black text-amber-400 tracking-tight block">
                             {totalSavings.toLocaleString()} FCFA
                           </span>
                         </div>
-                        <p className="text-[8.5px] text-zinc-500 mt-2">Frais économisés par les adhérents grâce aux taux Premium réduits (4%)</p>
+                        <p className="text-[8.5px] text-afri-text-sec mt-2">Frais économisés par les adhérents grâce aux taux Premium réduits (4%)</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Economy Settings Form */}
-                  <div className="bg-black border border-zinc-900 rounded-3xl p-6 space-y-6">
-                    <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider border-b border-white/5 pb-2">
+                  <div className="bg-afri-bg border border-afri-border rounded-3xl p-6 space-y-6">
+                    <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider border-b border-afri-border pb-2">
                       Paramètres de Commission & Tarification (FCFA)
                     </h3>
                     
                     {economySettings ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-mono text-zinc-400 uppercase">Taux Commission Standard (%)</label>
-                          <input type="number" value={economySettings.commissionRateStandard * 100} onChange={(e) => setEconomySettings({...economySettings, commissionRateStandard: Number(e.target.value) / 100})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                          <label className="text-[10px] font-mono text-afri-text-sec uppercase">Taux Commission Standard (%)</label>
+                          <input type="number" value={economySettings.commissionRateStandard * 100} onChange={(e) => setEconomySettings({...economySettings, commissionRateStandard: Number(e.target.value) / 100})} className="w-full bg-[#111] border border-afri-border rounded-xl px-4 py-2 text-afri-text font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-mono text-zinc-400 uppercase">Taux Commission Premium (%)</label>
-                          <input type="number" value={economySettings.commissionRatePremium * 100} onChange={(e) => setEconomySettings({...economySettings, commissionRatePremium: Number(e.target.value) / 100})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                          <label className="text-[10px] font-mono text-afri-text-sec uppercase">Taux Commission Premium (%)</label>
+                          <input type="number" value={economySettings.commissionRatePremium * 100} onChange={(e) => setEconomySettings({...economySettings, commissionRatePremium: Number(e.target.value) / 100})} className="w-full bg-[#111] border border-afri-border rounded-xl px-4 py-2 text-afri-text font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Boost Standard</label>
-                          <input type="number" value={economySettings.boostPriceStandard} onChange={(e) => setEconomySettings({...economySettings, boostPriceStandard: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                          <label className="text-[10px] font-mono text-afri-text-sec uppercase">Prix Boost Standard</label>
+                          <input type="number" value={economySettings.boostPriceStandard} onChange={(e) => setEconomySettings({...economySettings, boostPriceStandard: Number(e.target.value)})} className="w-full bg-[#111] border border-afri-border rounded-xl px-4 py-2 text-afri-text font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Boost Premium</label>
-                          <input type="number" value={economySettings.boostPricePremium} onChange={(e) => setEconomySettings({...economySettings, boostPricePremium: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                          <label className="text-[10px] font-mono text-afri-text-sec uppercase">Prix Boost Premium</label>
+                          <input type="number" value={economySettings.boostPricePremium} onChange={(e) => setEconomySettings({...economySettings, boostPricePremium: Number(e.target.value)})} className="w-full bg-[#111] border border-afri-border rounded-xl px-4 py-2 text-afri-text font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                          <label className="text-[10px] font-mono text-zinc-400 uppercase">Prix Renfort Express</label>
-                          <input type="number" value={economySettings.renfortExpressPrice} onChange={(e) => setEconomySettings({...economySettings, renfortExpressPrice: Number(e.target.value)})} className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
+                          <label className="text-[10px] font-mono text-afri-text-sec uppercase">Prix Renfort Express</label>
+                          <input type="number" value={economySettings.renfortExpressPrice} onChange={(e) => setEconomySettings({...economySettings, renfortExpressPrice: Number(e.target.value)})} className="w-full bg-[#111] border border-afri-border rounded-xl px-4 py-2 text-afri-text font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
                         </div>
                         <div className="md:col-span-2 flex justify-end mt-4">
                           <button 
@@ -2311,14 +2311,14 @@ export default function AdminFounderThrone({
                                 });
                               });
                             }}
-                            className="bg-[#D4AF37] hover:bg-[#B48F17] text-black px-6 py-2.5 rounded-xl font-bold font-mono text-[10px] uppercase transition-colors"
+                            className="bg-afri-bg-sec hover:bg-afri-bg-sec text-black px-6 py-2.5 rounded-xl font-bold font-mono text-[10px] uppercase transition-colors"
                           >
                             Sauvegarder les Paramètres
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-zinc-500 font-mono text-xs animate-pulse">Chargement des paramètres...</div>
+                      <div className="text-afri-text-sec font-mono text-xs animate-pulse">Chargement des paramètres...</div>
                     )}
                   </div>
                 </div>
@@ -2332,11 +2332,11 @@ export default function AdminFounderThrone({
 
       {/* Cyber Security Scanner overlay animation */}
       {isScanning && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-lg z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-afri-bg/90 backdrop-blur-lg z-[200] flex items-center justify-center p-4">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-black border-2 border-emerald-500/30 p-8 rounded-3xl w-full max-w-md text-center space-y-6"
+            className="bg-afri-bg border-2 border-emerald-500/30 p-8 rounded-3xl w-full max-w-md text-center space-y-6"
           >
             <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
               <div className="absolute inset-0 rounded-full border border-emerald-500/20 animate-ping" />
@@ -2348,10 +2348,10 @@ export default function AdminFounderThrone({
 
             <div className="space-y-1">
               <h3 className="text-sm font-mono font-black text-emerald-400 uppercase tracking-widest">SCAN CYBER-IMPÉRIAL EN COURS</h3>
-              <p className="text-[10px] font-mono text-zinc-400">ANALYSE EN TEMPS RÉEL DES INFRASTRUCTURES FIRESTORE</p>
+              <p className="text-[10px] font-mono text-afri-text-sec">ANALYSE EN TEMPS RÉEL DES INFRASTRUCTURES FIRESTORE</p>
             </div>
 
-            <div className="w-full h-1.5 bg-zinc-950 border border-zinc-900 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-afri-bg border border-afri-border rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"
                 initial={{ width: "0%" }}
@@ -2360,7 +2360,7 @@ export default function AdminFounderThrone({
               />
             </div>
 
-            <div className="bg-zinc-950 border border-zinc-900 p-3 rounded-xl text-left h-24 overflow-y-auto scrollbar-none space-y-1 font-mono text-[9px] text-zinc-400 leading-tight">
+            <div className="bg-afri-bg border border-afri-border p-3 rounded-xl text-left h-24 overflow-y-auto scrollbar-none space-y-1 font-mono text-[9px] text-afri-text-sec leading-tight">
               {scanLogs.map((logLine, idx) => (
                 <div key={idx} className="border-b border-zinc-950 py-0.5">
                   {logLine}
@@ -2374,7 +2374,7 @@ export default function AdminFounderThrone({
       {/* =========================================================================
                       SUPER FOUNDER FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
-      <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-black/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-2 px-4 sm:px-6 flex items-center z-45 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.35)] w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1 sm:gap-4 select-none">
+      <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-afri-bg/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-2 px-4 sm:px-6 flex items-center z-45 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.35)] w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1 sm:gap-4 select-none">
         {/* 1. TRÔNE */}
         <button
           type="button"
@@ -2383,7 +2383,7 @@ export default function AdminFounderThrone({
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
           className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-            selectedSection === null ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+            selectedSection === null ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
           <Crown className="w-4.5 h-4.5" />
@@ -2398,7 +2398,7 @@ export default function AdminFounderThrone({
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
           className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-            selectedSection === "vision" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+            selectedSection === "vision" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
           <Globe className="w-4.5 h-4.5" />
@@ -2413,7 +2413,7 @@ export default function AdminFounderThrone({
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
           className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-            selectedSection === "univers" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+            selectedSection === "univers" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
           <Landmark className="w-4.5 h-4.5" />
@@ -2428,7 +2428,7 @@ export default function AdminFounderThrone({
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
           className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-            selectedSection === "bouclier" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+            selectedSection === "bouclier" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
           <ShieldCheck className="w-4.5 h-4.5" />
@@ -2443,7 +2443,7 @@ export default function AdminFounderThrone({
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
           className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-            selectedSection === "revenus" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+            selectedSection === "revenus" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
           <Coins className="w-4.5 h-4.5" />
@@ -2458,7 +2458,7 @@ export default function AdminFounderThrone({
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
           className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-            selectedSection === "intelligence" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+            selectedSection === "intelligence" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
           <Brain className="w-4.5 h-4.5" />
@@ -2473,7 +2473,7 @@ export default function AdminFounderThrone({
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
           className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
-            selectedSection === "journal" ? "text-[#D4AF37] scale-105 bg-[#D4AF37]/10 font-black" : "text-zinc-500 hover:text-zinc-300"
+            selectedSection === "journal" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
           <Scroll className="w-4.5 h-4.5" />

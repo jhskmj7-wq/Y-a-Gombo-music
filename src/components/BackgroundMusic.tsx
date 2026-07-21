@@ -408,8 +408,8 @@ export const BackgroundMusic: React.FC = () => {
           onClick={togglePlay}
           className={`w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-all duration-500 border ${
             isPlaying 
-              ? 'bg-[#D4AF37]/90 border-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/25' 
-              : 'bg-zinc-950/80 border-white/10 text-white/55 hover:text-white hover:border-white/35'
+              ? 'bg-afri-bg-sec/90 border-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/25' 
+              : 'bg-afri-bg/80 border-afri-border text-afri-text/55 hover:text-afri-text hover:border-white/35'
           }`}
           title={isPlaying ? "Couper l'ambiance musicale" : "Activer l'ambiance musicale"}
         >
@@ -430,27 +430,27 @@ export const BackgroundMusic: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -8 }}
               onClick={() => setIsOpenDrawer(!isOpenDrawer)}
-              className="flex items-center gap-3.5 bg-zinc-950/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-zinc-800/80 shadow-2xl cursor-pointer hover:border-[#D4AF37]/45 transition-all select-none"
+              className="flex items-center gap-3.5 bg-afri-bg/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-afri-border/80 shadow-2xl cursor-pointer hover:border-[#D4AF37]/45 transition-all select-none"
             >
               <div className="flex items-center gap-2">
                 <Disc className={`w-3.5 h-3.5 text-[#D4AF37] ${isPlaying ? 'animate-spin-slow' : ''}`} />
                 <div className="flex flex-col min-w-[120px] max-w-[180px]">
-                  <span className="text-[7.5px] font-mono uppercase tracking-widest text-zinc-500 leading-none">Ambiance active</span>
-                  <span className="text-[10.5px] font-extrabold text-white truncate leading-tight mt-0.5">{currentTrack.title}</span>
+                  <span className="text-[7.5px] font-mono uppercase tracking-widest text-afri-text-sec leading-none">Ambiance active</span>
+                  <span className="text-[10.5px] font-extrabold text-afri-text truncate leading-tight mt-0.5">{currentTrack.title}</span>
                 </div>
               </div>
               
               <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                 <button 
                   onClick={() => handleNextTrack(false)}
-                  className="p-1 hover:text-[#D4AF37] text-zinc-500 hover:scale-105 active:scale-95 transition-all"
+                  className="p-1 hover:text-[#D4AF37] text-afri-text-sec hover:scale-105 active:scale-95 transition-all"
                   title="Suivant"
                 >
                   <SkipForward size={13} />
                 </button>
                 <button 
                   onClick={() => setIsOpenDrawer(!isOpenDrawer)}
-                  className={`p-1 transition-all ${isOpenDrawer ? 'text-[#D4AF37] rotate-180' : 'text-zinc-500 hover:text-white'}`}
+                  className={`p-1 transition-all ${isOpenDrawer ? 'text-[#D4AF37] rotate-180' : 'text-afri-text-sec hover:text-afri-text'}`}
                   title="Ouvrir la playlist"
                 >
                   <ListMusic size={13} />
@@ -467,28 +467,28 @@ export const BackgroundMusic: React.FC = () => {
             initial={{ opacity: 0, y: 15, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 15, scale: 0.95 }}
-            className="w-72 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-2xl p-4 shadow-[0_10px_35px_rgba(0,0,0,0.8)] overflow-hidden text-left relative mt-1"
+            className="w-72 bg-afri-bg/95 backdrop-blur-xl border border-afri-border rounded-2xl p-4 shadow-[0_10px_35px_rgba(0,0,0,0.8)] overflow-hidden text-left relative mt-1"
           >
-            <div className="flex justify-between items-center pb-2 border-b border-zinc-900 mb-3">
+            <div className="flex justify-between items-center pb-2 border-b border-afri-border mb-3">
               <div className="flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5 text-[#D4AF37] animate-pulse" />
-                <h4 className="text-[10px] font-mono font-black text-white uppercase tracking-widest">Afrigombo Playback</h4>
+                <h4 className="text-[10px] font-mono font-black text-afri-text uppercase tracking-widest">Afrigombo Playback</h4>
               </div>
               <button 
                 onClick={() => setIsOpenDrawer(false)}
-                className="p-1 hover:bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-all"
+                className="p-1 hover:bg-afri-bg-sec rounded-full text-afri-text-sec hover:text-afri-text transition-all"
               >
                 <ChevronDown size={14} />
               </button>
             </div>
 
-            <div className="flex items-center justify-between bg-zinc-900/60 p-2 rounded-xl mb-3 border border-zinc-900 gap-1.5">
+            <div className="flex items-center justify-between bg-afri-bg-sec/60 p-2 rounded-xl mb-3 border border-afri-border gap-1.5">
               <button
                 onClick={() => setIsShuffle(!isShuffle)}
                 className={`flex-1 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition-all flex items-center justify-center gap-1 border ${
                   isShuffle 
-                    ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30 text-[#D4AF37]' 
-                    : 'bg-transparent border-transparent text-zinc-500 hover:text-zinc-350'
+                    ? 'bg-afri-bg-sec/10 border-[#D4AF37]/30 text-[#D4AF37]' 
+                    : 'bg-transparent border-transparent text-afri-text-sec hover:text-zinc-350'
                 }`}
                 title="Lecture aléatoire"
               >
@@ -500,8 +500,8 @@ export const BackgroundMusic: React.FC = () => {
                 onClick={() => setIsLoopList(!isLoopList)}
                 className={`flex-1 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase transition-all flex items-center justify-center gap-1 border ${
                   isLoopList 
-                    ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30 text-[#D4AF37]' 
-                    : 'bg-transparent border-transparent text-zinc-500 hover:text-zinc-350'
+                    ? 'bg-afri-bg-sec/10 border-[#D4AF37]/30 text-[#D4AF37]' 
+                    : 'bg-transparent border-transparent text-afri-text-sec hover:text-zinc-350'
                 }`}
                 title="Boucle infinie"
               >
@@ -510,15 +510,15 @@ export const BackgroundMusic: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-1.5 mb-3 border-b border-zinc-900 pb-3">
+            <div className="flex flex-wrap gap-1.5 mb-3 border-b border-afri-border pb-3">
               {["Tous", "Calme", "Lounge", "Rythmé"].map(cat => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-2 py-1 rounded-md text-[8.5px] font-black uppercase transition-all border ${
                     selectedCategory === cat 
-                      ? "bg-[#D4AF37] text-black border-[#D4AF37]" 
-                      : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:text-white"
+                      ? "bg-afri-bg-sec text-black border-[#D4AF37]" 
+                      : "bg-afri-bg-sec text-afri-text-sec border-afri-border hover:text-afri-text"
                   }`}
                 >
                   {cat}
@@ -539,8 +539,8 @@ export const BackgroundMusic: React.FC = () => {
                     }}
                     className={`p-2 rounded-xl cursor-pointer transition-all flex items-center justify-between text-left group ${
                       isActive 
-                        ? 'bg-[#D4AF37]/10 border border-[#D4AF37]/25 text-white' 
-                        : 'bg-transparent hover:bg-zinc-900 border border-transparent text-zinc-400 hover:text-white'
+                        ? 'bg-afri-bg-sec/10 border border-[#D4AF37]/25 text-afri-text' 
+                        : 'bg-transparent hover:bg-afri-bg-sec border border-transparent text-afri-text-sec hover:text-afri-text'
                     }`}
                   >
                     <div className="flex flex-col min-w-0 flex-1 pr-2">
@@ -548,13 +548,13 @@ export const BackgroundMusic: React.FC = () => {
                         <span className="text-[10.5px] font-extrabold truncate leading-tight">{track.title}</span>
                         <span className="text-[7.5px] font-mono text-[#D4AF37] opacity-60">[{track.category}]</span>
                       </div>
-                      <span className="text-[8px] font-mono text-zinc-500 mt-0.5">{track.artist}</span>
+                      <span className="text-[8px] font-mono text-afri-text-sec mt-0.5">{track.artist}</span>
                     </div>
                     {isActive && isPlaying ? (
                       <div className="flex items-end gap-0.5 h-3">
-                        <div className="w-0.5 bg-[#D4AF37] h-2 animate-bounce rounded-full" style={{ animationDelay: '0.1s' }} />
-                        <div className="w-0.5 bg-[#D4AF37] h-3 animate-bounce rounded-full" style={{ animationDelay: '0.3s' }} />
-                        <div className="w-0.5 bg-[#D4AF37] h-1.5 animate-bounce rounded-full" style={{ animationDelay: '0.2s' }} />
+                        <div className="w-0.5 bg-afri-bg-sec h-2 animate-bounce rounded-full" style={{ animationDelay: '0.1s' }} />
+                        <div className="w-0.5 bg-afri-bg-sec h-3 animate-bounce rounded-full" style={{ animationDelay: '0.3s' }} />
+                        <div className="w-0.5 bg-afri-bg-sec h-1.5 animate-bounce rounded-full" style={{ animationDelay: '0.2s' }} />
                       </div>
                     ) : (
                       <span className="text-[8px] font-mono text-zinc-650 opacity-0 group-hover:opacity-100 transition-opacity">PLAY</span>
@@ -564,7 +564,7 @@ export const BackgroundMusic: React.FC = () => {
               })}
             </div>
 
-            <div className="mt-3 pt-2 border-t border-zinc-900 flex items-center gap-2 text-zinc-500">
+            <div className="mt-3 pt-2 border-t border-afri-border flex items-center gap-2 text-afri-text-sec">
               <VolumeX size={11} />
               <input
                 type="range"
@@ -573,7 +573,7 @@ export const BackgroundMusic: React.FC = () => {
                 step="0.05"
                 value={volume}
                 onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                className="w-full h-1 bg-afri-bg-ter rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
                 title="Volume de l'ambiance"
               />
               <Volume2 size={11} className="text-[#D4AF37]" />

@@ -80,9 +80,9 @@ export default function GlobalNotificationBanner() {
   const activeNotif = sorted[0];
 
   const bgColor = 
-    activeNotif.priority === "Urgente" ? "bg-red-500 text-white" :
-    activeNotif.priority === "Importante" ? "bg-[#D4AF37] text-black" :
-    "bg-blue-600 text-white";
+    activeNotif.priority === "Urgente" ? "bg-red-500 text-afri-text" :
+    activeNotif.priority === "Importante" ? "bg-afri-bg-sec text-black" :
+    "bg-blue-600 text-afri-text";
 
   const borderColor = 
     activeNotif.priority === "Urgente" ? "border-red-400" :
@@ -98,7 +98,7 @@ export default function GlobalNotificationBanner() {
         <div>
           <h4 className="font-bold text-sm tracking-wide flex items-center gap-2">
             {activeNotif.titre}
-            <span className="text-[9px] uppercase tracking-wider font-mono bg-black/20 px-1.5 py-0.5 rounded">
+            <span className="text-[9px] uppercase tracking-wider font-mono bg-afri-bg/20 px-1.5 py-0.5 rounded">
               {activeNotif.type}
             </span>
           </h4>
@@ -112,7 +112,7 @@ export default function GlobalNotificationBanner() {
       </div>
       <button 
         onClick={() => handleDismiss(activeNotif.id)}
-        className="shrink-0 p-1.5 hover:bg-black/20 rounded-lg transition-colors"
+        className="shrink-0 p-1.5 hover:bg-afri-bg/20 rounded-lg transition-colors"
       >
         <X className="w-4 h-4" />
       </button>

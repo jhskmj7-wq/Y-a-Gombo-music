@@ -438,7 +438,7 @@ export default function GroupeVIPAnnuaire({
             className="space-y-8"
           >
             {/* Elegant Header Hero Badge Banner */}
-            <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-r from-purple-950 via-slate-900 to-[#120422] border border-purple-500/15 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-r from-purple-950 via-slate-900 to-[#120422] border border-purple-500/15 text-afri-text shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 blur-3xl rounded-full" />
               <div className="absolute -bottom-10 left-10 w-48 h-48 bg-purple-600/5 blur-2xl rounded-full" />
 
@@ -462,9 +462,9 @@ export default function GroupeVIPAnnuaire({
                       initFormFields();
                       setShowFormModal(true);
                     }}
-                    className="px-6 py-4 bg-gradient-to-r from-[#7C3AED] to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md active:scale-95 flex items-center gap-2 cursor-pointer"
+                    className="px-6 py-4 bg-gradient-to-r from-[#7C3AED] to-purple-600 hover:from-purple-600 hover:to-purple-700 text-afri-text font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md active:scale-95 flex items-center gap-2 cursor-pointer"
                   >
-                    <Plus className="w-4.5 h-4.5 text-white" />
+                    <Plus className="w-4.5 h-4.5 text-afri-text" />
                     Créer mon groupe
                   </button>
                 ) : (
@@ -486,7 +486,7 @@ export default function GroupeVIPAnnuaire({
                 className="bg-gradient-to-r from-purple-900/40 to-slate-900 border border-purple-500/25 p-5 rounded-3xl"
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="animate-pulse flex h-2.5 w-2.5 rounded-full bg-[#A78BFA]" />
+                  <span className="animate-pulse flex h-2.5 w-2.5 rounded-full bg-afri-bg-sec" />
                   <h3 className="text-xs font-black uppercase tracking-widest text-[#A78BFA]">
                     📨 Vos invitations de Showbiz en attente !
                   </h3>
@@ -496,20 +496,20 @@ export default function GroupeVIPAnnuaire({
                   {myReceivedInvitations.filter(x => x.status === "en_attente").map((inv) => {
                     const group = groups.find(g => g.id === inv.groupId);
                     return (
-                      <div key={inv.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-purple-950/20 rounded-2xl border border-purple-500/10 text-xs text-white">
+                      <div key={inv.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-purple-950/20 rounded-2xl border border-purple-500/10 text-xs text-afri-text">
                         <div>
                           Le groupe <span className="text-[#A78BFA] font-black">{group?.name || "Orchestre VIP"}</span> vous invite en tant que <span className="font-extrabold uppercase tracking-wide">{inv.role}</span> ({inv.instrument}).
                         </div>
                         <div className="flex gap-2 w-full sm:w-auto self-end">
                           <button
                             onClick={() => handleAcceptInvitation(inv.id)}
-                            className="flex-1 sm:flex-initial px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg text-[10px] uppercase transition cursor-pointer"
+                            className="flex-1 sm:flex-initial px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-afri-text font-extrabold rounded-lg text-[10px] uppercase transition cursor-pointer"
                           >
                             Accepter
                           </button>
                           <button
                             onClick={() => handleDeclineInvitation(inv.id)}
-                            className="flex-1 sm:flex-initial px-3 py-1.5 bg-rose-600/30 hover:bg-rose-600 hover:text-white text-rose-300 font-extrabold rounded-lg text-[10px] uppercase transition cursor-pointer"
+                            className="flex-1 sm:flex-initial px-3 py-1.5 bg-rose-600/30 hover:bg-rose-600 hover:text-afri-text text-rose-300 font-extrabold rounded-lg text-[10px] uppercase transition cursor-pointer"
                           >
                             Refuser
                           </button>
@@ -529,7 +529,7 @@ export default function GroupeVIPAnnuaire({
                   price: "Gratuit / Simulation", 
                   badge: "Gratuit", 
                   benefits: ["Référencement standard de base", "Mise en relation par téléphone", "Sélection de genres artistiques"], 
-                  color: "border-gray-100 dark:border-gray-800 text-gray-500 bg-white/50 dark:bg-[#120e22]/50" 
+                  color: "border-gray-100 dark:border-gray-800 text-afri-text-sec bg-white/50 dark:bg-afri-bg-sec/50" 
                 },
                 { 
                   title: "Statut Annuaire VIP ⭐", 
@@ -546,11 +546,11 @@ export default function GroupeVIPAnnuaire({
                   color: "border-pink-500/30 bg-pink-500/[0.02] text-pink-500" 
                 }
               ].map((plan) => (
-                <div key={plan.title} className={`p-5 rounded-2xl border ${plan.color} space-y-4 shadow-sm relative flex flex-col justify-between bg-white dark:bg-[#120E22]`}>
+                <div key={plan.title} className={`p-5 rounded-2xl border ${plan.color} space-y-4 shadow-sm relative flex flex-col justify-between bg-white dark:bg-afri-bg-sec`}>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <h3 className="font-extrabold text-xs uppercase tracking-wider">{plan.title}</h3>
-                      <span className="text-[9px] uppercase font-black tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-gray-400">{plan.badge}</span>
+                      <span className="text-[9px] uppercase font-black tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-afri-text-sec">{plan.badge}</span>
                     </div>
                     <div className="text-lg font-black">{plan.price}</div>
                     <ul className="text-xs space-y-2 pt-1 font-medium text-gray-600 dark:text-gray-300">
@@ -562,7 +562,7 @@ export default function GroupeVIPAnnuaire({
                       ))}
                     </ul>
                   </div>
-                  <div className="text-[9px] text-gray-400 text-center uppercase tracking-widest border-t border-dashed border-gray-100 dark:border-gray-800/80 pt-3 mt-1.5">
+                  <div className="text-[9px] text-afri-text-sec text-center uppercase tracking-widest border-t border-dashed border-gray-100 dark:border-gray-800/80 pt-3 mt-1.5">
                     Réseau Persistant • Aucun paiement requis
                   </div>
                 </div>
@@ -570,7 +570,7 @@ export default function GroupeVIPAnnuaire({
             </div>
 
             {/* Smart Search, Filters & Local Catalog index card */}
-            <div className="bg-white dark:bg-[#120E22] p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs space-y-4">
+            <div className="bg-white dark:bg-afri-bg-sec p-5.5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs space-y-4">
               
               <div className="text-xs font-black uppercase text-purple-600 dark:text-purple-400 tracking-widest flex items-center gap-1">
                 <Search className="w-4 h-4" />
@@ -586,7 +586,7 @@ export default function GroupeVIPAnnuaire({
                     placeholder="Saisir un nom de groupe, style ou commune..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-3 pr-4 py-2 bg-gray-50/70 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:bg-white dark:focus:bg-[#120e22] text-gray-950 dark:text-white"
+                    className="w-full pl-3 pr-4 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:bg-white dark:focus:bg-afri-bg-sec text-gray-950 dark:text-afri-text"
                   />
                 </div>
 
@@ -595,7 +595,7 @@ export default function GroupeVIPAnnuaire({
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-white"
+                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-afri-text"
                   >
                     <option value="all">Tous Types de Groupes</option>
                     {TYPES_GROUPES.map(tg => <option key={tg} value={tg}>{tg}</option>)}
@@ -607,7 +607,7 @@ export default function GroupeVIPAnnuaire({
                   <select
                     value={selectedStyle}
                     onChange={(e) => setSelectedStyle(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-white"
+                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-afri-text"
                   >
                     <option value="all">Tous Styles Musicaux</option>
                     {STYLES_MUSICAUX.map(st => <option key={st} value={st}>{st}</option>)}
@@ -619,7 +619,7 @@ export default function GroupeVIPAnnuaire({
                   <select
                     value={selectedCommune}
                     onChange={(e) => setSelectedCommune(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-white"
+                    className="w-full px-3 py-2 bg-gray-50/70 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-850 dark:text-afri-text"
                   >
                     <option value="all">Toutes Communes</option>
                     {COMMUNES_LIST.map(cm => <option key={cm} value={cm}>{cm}</option>)}
@@ -630,12 +630,12 @@ export default function GroupeVIPAnnuaire({
 
               {/* Dynamic Group results query grid output */}
               {filteredGroups.length === 0 ? (
-                <div className="text-center py-16 text-gray-400 space-y-3.5 border border-dashed border-gray-100 dark:border-gray-800/85 rounded-2xl">
+                <div className="text-center py-16 text-afri-text-sec space-y-3.5 border border-dashed border-gray-100 dark:border-gray-800/85 rounded-2xl">
                   <div className="p-3.5 bg-purple-50 dark:bg-purple-950/20 text-purple-500 rounded-full inline-flex">
                     <Music className="w-8 h-8" />
                   </div>
                   <div className="text-xs font-bold uppercase tracking-wider">Aucun Orchestre ou Groupe Répertorié</div>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 max-w-sm mx-auto">Veuillez défaire certains filtres ou enregistrer votre propre équipe en haut de page.</p>
+                  <p className="text-[11px] text-afri-text-sec dark:text-afri-text-sec max-w-sm mx-auto">Veuillez défaire certains filtres ou enregistrer votre propre équipe en haut de page.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1.5">
@@ -646,7 +646,7 @@ export default function GroupeVIPAnnuaire({
                         key={group.id}
                         layout
                         whileHover={{ y: -3 }}
-                        className={`p-5.5 rounded-3xl border transition-all shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 justify-between bg-white dark:bg-[#120E22] ${
+                        className={`p-5.5 rounded-3xl border transition-all shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 justify-between bg-white dark:bg-afri-bg-sec ${
                           group.plan === "premium" 
                             ? "border-pink-500/30 ring-2 ring-pink-500/5 shadow-md bg-gradient-to-tr from-pink-500/[0.02] to-transparent" 
                             : group.plan === "vip" 
@@ -682,7 +682,7 @@ export default function GroupeVIPAnnuaire({
 
                           <div className="space-y-1.5 flex-1 pr-14">
                             <div>
-                              <h3 className="font-extrabold text-sm text-gray-950 dark:text-white uppercase tracking-tight flex items-center gap-1">
+                              <h3 className="font-extrabold text-sm text-gray-950 dark:text-afri-text uppercase tracking-tight flex items-center gap-1">
                                 <span>{group.name}</span>
                                 {group.isVerified && <CheckCircle className="w-4 h-4 text-emerald-500 fill-current bg-white rounded-full shrink-0" />}
                               </h3>
@@ -693,14 +693,14 @@ export default function GroupeVIPAnnuaire({
                               </div>
                             </div>
 
-                            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2 pr-2">
+                            <p className="text-xs text-afri-text-sec dark:text-afri-text-sec leading-relaxed line-clamp-2 pr-2">
                               {group.description}
                             </p>
 
                             {/* Genres / Tags styles list */}
                             <div className="flex flex-wrap gap-1 pt-1">
                               {(group.genres || []).map(g => (
-                                <span key={g} className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400">
+                                <span key={g} className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 text-afri-text-sec dark:text-afri-text-sec">
                                   #{g}
                                 </span>
                               ))}
@@ -712,7 +712,7 @@ export default function GroupeVIPAnnuaire({
                         {/* Underline actions */}
                         <div className="sm:w-36 flex sm:flex-col justify-end gap-2 shrink-0 border-t sm:border-t-0 sm:border-l border-gray-100 dark:border-gray-800 pt-3 sm:pt-0 sm:pl-3.5 mt-3 sm:mt-0 items-stretch">
                           
-                          <div className="text-[9px] text-gray-400 flex items-center gap-1 pb-1 sm:self-center">
+                          <div className="text-[9px] text-afri-text-sec flex items-center gap-1 pb-1 sm:self-center">
                             <MapPin className="w-3 h-3 text-purple-500 shrink-0" />
                             <span>{group.commune}, {group.ville}</span>
                           </div>
@@ -730,7 +730,7 @@ export default function GroupeVIPAnnuaire({
                               target="_blank"
                               rel="no-referrer"
                               onClick={() => handleContactAction(group.id, "whatsapp")}
-                              className="bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-650 dark:hover:bg-emerald-700 text-white p-1.5 rounded-xl text-center flex-1 flex items-center justify-center transition-all cursor-pointer text-[10px] font-black uppercase tracking-wider gap-0.5"
+                              className="bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-650 dark:hover:bg-emerald-700 text-afri-text p-1.5 rounded-xl text-center flex-1 flex items-center justify-center transition-all cursor-pointer text-[10px] font-black uppercase tracking-wider gap-0.5"
                             >
                               <Phone className="w-3.5 h-3.5" />
                               <span>Salon</span>
@@ -767,7 +767,7 @@ export default function GroupeVIPAnnuaire({
             <div className="flex items-center justify-between pb-3 border-b border-gray-150 dark:border-gray-850">
               <button
                 onClick={() => setSelectedGroup(null)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-wider text-gray-600 dark:text-gray-300 hover:text-purple-650 dark:hover:text-purple-400 bg-white dark:bg-[#120E22]/85 border border-gray-200 dark:border-gray-850 rounded-xl transition-all cursor-pointer shadow-inner"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-wider text-gray-600 dark:text-gray-300 hover:text-purple-650 dark:hover:text-purple-400 bg-white dark:bg-afri-bg-sec/85 border border-gray-200 dark:border-gray-850 rounded-xl transition-all cursor-pointer shadow-inner"
               >
                 <span>← Retour à l'annuaire</span>
               </button>
@@ -779,7 +779,7 @@ export default function GroupeVIPAnnuaire({
                       initFormFields(selectedGroup);
                       setShowFormModal(true);
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-white hover:bg-purple-600 rounded-xl border border-gray-250 dark:border-gray-800 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-afri-text hover:bg-purple-600 rounded-xl border border-gray-250 dark:border-gray-800 transition-all cursor-pointer"
                   >
                     <Edit3 className="w-4 h-4" />
                     <span>Modifier mon Groupe</span>
@@ -788,7 +788,7 @@ export default function GroupeVIPAnnuaire({
 
                 <button
                   onClick={() => simulateShareLocalLink(selectedGroup.id)}
-                  className="p-2 bg-gray-50 hover:bg-gray-100 dark:bg-[#120E22]/85 dark:hover:bg-[#120E22] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 font-bold text-xs"
+                  className="p-2 bg-gray-50 hover:bg-gray-100 dark:bg-afri-bg-sec/85 dark:hover:bg-afri-bg-sec border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 font-bold text-xs"
                 >
                   <Share2 className="w-4.5 h-4.5" />
                   <span>{copiedFeedback ? "Lien Copié !" : "Partager"}</span>
@@ -797,7 +797,7 @@ export default function GroupeVIPAnnuaire({
             </div>
 
             {/* Immersive Cover Visual Profile card */}
-            <div className="relative rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-850 bg-white dark:bg-[#120E22] shadow-sm">
+            <div className="relative rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-850 bg-white dark:bg-afri-bg-sec shadow-sm">
               
               {/* Cover Banner page */}
               <div className="h-44 sm:h-60 relative w-full overflow-hidden bg-slate-900 border-b border-gray-100 dark:border-gray-850">
@@ -807,14 +807,14 @@ export default function GroupeVIPAnnuaire({
                   className="w-full h-full object-cover opacity-85" 
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+                <div className="absolute inset-0 bg-gradient-to-t from-afri-bg/80 via-transparent to-afri-bg/30" />
               </div>
 
               {/* Bottom profile info overlapping cover */}
               <div className="px-6 pb-6 pt-16 sm:pt-20 relative flex flex-col md:flex-row gap-6 justify-between items-start md:items-end">
                 
                 {/* Logo profile floating layout */}
-                <div className="absolute -top-12 left-6 sm:-top-16 w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-4 border-white dark:border-[#120E22] bg-gray-50 dark:bg-[#0A0516] overflow-hidden shadow-lg flex items-center justify-center font-black text-4xl text-gray-400">
+                <div className="absolute -top-12 left-6 sm:-top-16 w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border-4 border-white dark:border-[#120E22] bg-gray-50 dark:bg-afri-bg-sec overflow-hidden shadow-lg flex items-center justify-center font-black text-4xl text-afri-text-sec">
                   {selectedGroup.logoUrl ? (
                     <img src={selectedGroup.logoUrl} alt={selectedGroup.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
@@ -824,7 +824,7 @@ export default function GroupeVIPAnnuaire({
 
                 <div className="space-y-2 flex-grow">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-1">
+                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-afri-text uppercase tracking-tight flex items-center gap-1">
                       <span>{selectedGroup.name}</span>
                       {selectedGroup.isVerified && <CheckCircle className="w-5 h-5 text-emerald-500 fill-current bg-white rounded-full inline-block" />}
                     </h1>
@@ -853,7 +853,7 @@ export default function GroupeVIPAnnuaire({
 
                   <div className="flex flex-wrap gap-1 md:pt-1">
                     {(selectedGroup.genres || []).map(g => (
-                      <span key={g} className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800/80 text-gray-500 dark:text-gray-400">
+                      <span key={g} className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800/80 text-afri-text-sec dark:text-afri-text-sec">
                         #{g}
                       </span>
                     ))}
@@ -867,7 +867,7 @@ export default function GroupeVIPAnnuaire({
                     className={`px-4 py-2.5 rounded-xl border font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                       currentUserProfile && (selectedGroup.followers || []).includes(currentUserProfile.uid)
                         ? "bg-rose-50 text-rose-600 border-rose-300 dark:bg-rose-950/20 dark:text-rose-400"
-                        : "bg-white text-gray-700 border-gray-205 dark:bg-[#120E22] dark:text-gray-300 dark:border-gray-800"
+                        : "bg-white text-gray-700 border-gray-205 dark:bg-afri-bg-sec dark:text-gray-300 dark:border-gray-800"
                     }`}
                   >
                     <Heart className={`w-4 h-4 ${currentUserProfile && (selectedGroup.followers || []).includes(currentUserProfile.uid) ? "fill-rose-500 stroke-rose-500" : ""}`} />
@@ -879,7 +879,7 @@ export default function GroupeVIPAnnuaire({
                     target="_blank"
                     rel="no-referrer"
                     onClick={() => handleContactAction(selectedGroup.id, "whatsapp")}
-                    className="flex-1 md:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-1.5"
+                    className="flex-1 md:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-afri-text font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-1.5"
                   >
                     <Phone className="w-4 h-4" />
                     <span>WhatsApp</span>
@@ -888,7 +888,7 @@ export default function GroupeVIPAnnuaire({
                   <a
                     href={`tel:${selectedGroup.phone}`}
                     onClick={() => handleContactAction(selectedGroup.id, "phone")}
-                    className="flex-1 md:flex-initial px-4 py-2.5 bg-slate-900 hover:bg-black text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 border border-transparent dark:border-gray-800"
+                    className="flex-1 md:flex-initial px-4 py-2.5 bg-slate-900 hover:bg-afri-bg text-afri-text font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 border border-transparent dark:border-gray-800"
                   >
                     <Mail className="w-4 h-4" />
                     <span>Appeler</span>
@@ -898,31 +898,31 @@ export default function GroupeVIPAnnuaire({
               </div>
 
               {/* Statistics Panel */}
-              <div className="bg-gray-50 dark:bg-[#0E0B1A] border-t border-gray-100 dark:border-gray-850 px-6 py-4 grid grid-cols-3 gap-4 text-center">
+              <div className="bg-gray-50 dark:bg-afri-bg-sec border-t border-gray-100 dark:border-gray-850 px-6 py-4 grid grid-cols-3 gap-4 text-center">
                 <div className="space-y-0.5">
-                  <div className="text-xs text-gray-400 py-0.5 flex items-center justify-center gap-1 font-bold">
+                  <div className="text-xs text-afri-text-sec py-0.5 flex items-center justify-center gap-1 font-bold">
                     <Eye className="w-4 h-4 text-purple-500" />
                     <span>VUES</span>
                   </div>
-                  <div className="text-lg font-black text-gray-900 dark:text-white uppercase">
+                  <div className="text-lg font-black text-gray-900 dark:text-afri-text uppercase">
                     {selectedGroup.viewsCount || 0}
                   </div>
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-xs text-gray-400 py-0.5 flex items-center justify-center gap-1 font-bold">
+                  <div className="text-xs text-afri-text-sec py-0.5 flex items-center justify-center gap-1 font-bold">
                     <Heart className="w-4 h-4 text-red-500" />
                     <span>ABONNÉS</span>
                   </div>
-                  <div className="text-lg font-black text-gray-900 dark:text-white uppercase">
+                  <div className="text-lg font-black text-gray-900 dark:text-afri-text uppercase">
                     {selectedGroup.favoritesCount || 0}
                   </div>
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-xs text-gray-400 py-0.5 flex items-center justify-center gap-1 font-bold">
+                  <div className="text-xs text-afri-text-sec py-0.5 flex items-center justify-center gap-1 font-bold">
                     <Phone className="w-4 h-4 text-emerald-500" />
                     <span>CONTACTS</span>
                   </div>
-                  <div className="text-lg font-black text-gray-900 dark:text-white uppercase">
+                  <div className="text-lg font-black text-gray-900 dark:text-afri-text uppercase">
                     {selectedGroup.contactsCount || 0}
                   </div>
                 </div>
@@ -943,7 +943,7 @@ export default function GroupeVIPAnnuaire({
                   className={`pb-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
                     activeTab === tab.name 
                       ? "border-purple-600 text-purple-600 dark:text-[#A78BFA]"
-                      : "border-transparent text-gray-400 hover:text-gray-950 dark:hover:text-white"
+                      : "border-transparent text-afri-text-sec hover:text-gray-950 dark:hover:text-afri-text"
                   }`}
                 >
                   {tab.label}
@@ -956,11 +956,11 @@ export default function GroupeVIPAnnuaire({
               
               {/* Tab A PROPOS */}
               {activeTab === "apropos" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in text-gray-900 dark:text-white">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in text-gray-900 dark:text-afri-text">
                   
                   {/* Left block cover descriptions */}
                   <div className="md:col-span-2 space-y-4">
-                    <div className="bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-850 p-6 rounded-3xl shadow-xs space-y-3">
+                    <div className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-850 p-6 rounded-3xl shadow-xs space-y-3">
                       <h3 className="text-xs font-black uppercase tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">Présentation Générale</h3>
                       <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300 whitespace-pre-line font-medium">
                         {selectedGroup.description}
@@ -970,28 +970,28 @@ export default function GroupeVIPAnnuaire({
 
                   {/* Right block details metadata */}
                   <div className="space-y-4">
-                    <div className="bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-850 p-6 rounded-3xl shadow-xs space-y-4 text-xs font-bold">
+                    <div className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-850 p-6 rounded-3xl shadow-xs space-y-4 text-xs font-bold">
                       <h3 className="text-xs font-black uppercase tracking-widest text-[#7C3AED] dark:text-[#A78BFA]">Fiche d'Information</h3>
                       
                       <div className="space-y-2 text-gray-600 dark:text-gray-350">
                         <div className="flex justify-between pb-2 border-b border-gray-50 dark:border-gray-850">
-                          <span className="text-xs text-gray-400 font-bold">Commune :</span>
+                          <span className="text-xs text-afri-text-sec font-bold">Commune :</span>
                           <span>{selectedGroup.commune}</span>
                         </div>
                         <div className="flex justify-between pb-2 border-b border-gray-50 dark:border-gray-850">
-                          <span className="text-xs text-gray-400 font-bold">Ville :</span>
+                          <span className="text-xs text-afri-text-sec font-bold">Ville :</span>
                           <span>{selectedGroup.ville}</span>
                         </div>
                         <div className="flex justify-between pb-2 border-b border-gray-50 dark:border-gray-850">
-                          <span className="text-xs text-gray-400 font-bold">Téléphone direct :</span>
+                          <span className="text-xs text-afri-text-sec font-bold">Téléphone direct :</span>
                           <span>{selectedGroup.phone}</span>
                         </div>
                         <div className="flex justify-between pb-2 border-b border-gray-50 dark:border-gray-850">
-                          <span className="text-xs text-gray-400 font-bold">Adresse Email :</span>
+                          <span className="text-xs text-afri-text-sec font-bold">Adresse Email :</span>
                           <span className="lowercase font-semibold">{selectedGroup.email || "Non renseigné"}</span>
                         </div>
                         <div className="flex justify-between pb-2">
-                          <span className="text-xs text-gray-400 font-bold">Membre fondateur :</span>
+                          <span className="text-xs text-afri-text-sec font-bold">Membre fondateur :</span>
                           <span className="text-[#7C3AED] dark:text-purple-400 uppercase tracking-wide">Vérifié Propriétaire</span>
                         </div>
                       </div>
@@ -1003,7 +1003,7 @@ export default function GroupeVIPAnnuaire({
 
               {/* Tab MEMBRES */}
               {activeTab === "membres" && (
-                <div className="space-y-6 animate-fade-in text-gray-900 dark:text-white">
+                <div className="space-y-6 animate-fade-in text-gray-900 dark:text-afri-text">
                   
                   {/* Register dynamic new members overlay for OWNER ONLY */}
                   {currentUserProfile && selectedGroup.creatorId === currentUserProfile.uid && (
@@ -1024,8 +1024,8 @@ export default function GroupeVIPAnnuaire({
                               onClick={() => setInviteMethod("manual")}
                               className={`px-3 py-1 rounded-md transition-all ${
                                 inviteMethod === "manual"
-                                  ? "bg-purple-600 text-white"
-                                  : "text-gray-500 dark:text-gray-400"
+                                  ? "bg-purple-600 text-afri-text"
+                                  : "text-afri-text-sec dark:text-afri-text-sec"
                               }`}
                             >
                               ✍️ Enregistrement Manuel
@@ -1035,8 +1035,8 @@ export default function GroupeVIPAnnuaire({
                               onClick={() => setInviteMethod("registered")}
                               className={`px-3 py-1 rounded-md transition-all ${
                                 inviteMethod === "registered"
-                                  ? "bg-purple-600 text-white"
-                                  : "text-gray-500 dark:text-gray-400"
+                                  ? "bg-purple-600 text-afri-text"
+                                  : "text-afri-text-sec dark:text-afri-text-sec"
                               }`}
                             >
                               📡 Inviter un Membre Inscrit
@@ -1057,12 +1057,12 @@ export default function GroupeVIPAnnuaire({
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               {inviteMethod === "registered" ? (
                                 <div>
-                                  <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Sélectionner l'artiste Gombo VIP</label>
+                                  <label className="text-[10px] text-afri-text-sec uppercase font-bold block pb-1">Sélectionner l'artiste Gombo VIP</label>
                                   <select
                                     required
                                     value={selectedUserIdToInvite}
                                     onChange={e => setSelectedUserIdToInvite(e.target.value)}
-                                    className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
+                                    className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
                                   >
                                     <option value="">-- Choisir un artiste --</option>
                                     {allUsers
@@ -1076,24 +1076,24 @@ export default function GroupeVIPAnnuaire({
                                 </div>
                               ) : (
                                 <div>
-                                  <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Nom du musicien</label>
+                                  <label className="text-[10px] text-afri-text-sec uppercase font-bold block pb-1">Nom du musicien</label>
                                   <input
                                     type="text"
                                     required
                                     value={newMemberName}
                                     onChange={e => setNewMemberName(e.target.value)}
                                     placeholder="Nom Complet"
-                                    className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
+                                    className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
                                   />
                                 </div>
                               )}
                               
                               <div>
-                                <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Fonction principale</label>
+                                <label className="text-[10px] text-afri-text-sec uppercase font-bold block pb-1">Fonction principale</label>
                                 <select
                                   value={newMemberRole}
                                   onChange={e => setNewMemberRole(e.target.value)}
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
                                 >
                                   <option value="Chanteur Solo">Chanteur Solo</option>
                                   <option value="Choriste">Choriste</option>
@@ -1108,21 +1108,21 @@ export default function GroupeVIPAnnuaire({
                                 </select>
                               </div>
                               <div>
-                                <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Instrument joué</label>
+                                <label className="text-[10px] text-afri-text-sec uppercase font-bold block pb-1">Instrument joué</label>
                                 <input
                                   type="text"
                                   required
                                   value={newMemberInstrument}
                                   onChange={e => setNewMemberInstrument(e.target.value)}
                                   placeholder="Ex: Guitare, Batterie, Keni"
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-950 dark:text-slate-100"
                                 />
                               </div>
                             </div>
 
                             <button
                               type="submit"
-                              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-afri-text rounded-xl text-xs font-bold transition cursor-pointer"
                             >
                               {inviteMethod === "registered" ? "📡 Envoyer l'invitation officielle Gombo VIP" : "✍️ Valider l'enregistrement direct"}
                             </button>
@@ -1162,7 +1162,7 @@ export default function GroupeVIPAnnuaire({
 
                   {/* Rendering Members view hierarchy */}
                   {(selectedGroup.members || []).length === 0 ? (
-                    <div className="text-center py-8 text-gray-400 bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-850 rounded-2xl p-6">
+                    <div className="text-center py-8 text-afri-text-sec bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-850 rounded-2xl p-6">
                       <p className="text-xs">Aucun membre officiel n'a encore été enregistré sous ce groupe.</p>
                     </div>
                   ) : (
@@ -1170,7 +1170,7 @@ export default function GroupeVIPAnnuaire({
                       {selectedGroup.members.map(member => (
                         <div 
                           key={member.id} 
-                          className="bg-white dark:bg-[#120E22]/60 border border-gray-100 dark:border-gray-850 p-4 rounded-2xl flex flex-col items-center text-center gap-2 shadow-inner relative group"
+                          className="bg-white dark:bg-afri-bg-sec/60 border border-gray-100 dark:border-gray-850 p-4 rounded-2xl flex flex-col items-center text-center gap-2 shadow-inner relative group"
                         >
                           <div className="w-14 h-14 rounded-full bg-slate-50 border-2 border-purple-100 dark:border-purple-950 overflow-hidden shrink-0">
                             <img 
@@ -1182,15 +1182,15 @@ export default function GroupeVIPAnnuaire({
                           </div>
 
                           <div className="space-y-0.5">
-                            <h4 className="font-extrabold text-xs text-gray-900 dark:text-white uppercase tracking-tight line-clamp-1">{member.name}</h4>
+                            <h4 className="font-extrabold text-xs text-gray-900 dark:text-afri-text uppercase tracking-tight line-clamp-1">{member.name}</h4>
                             <p className="text-[10px] text-purple-650 dark:text-purple-400 uppercase tracking-wider font-extrabold">{member.role}</p>
-                            <p className="text-[9px] text-gray-400 font-semibold">{member.instrument}</p>
+                            <p className="text-[9px] text-afri-text-sec font-semibold">{member.instrument}</p>
                           </div>
 
                           {currentUserProfile && selectedGroup.creatorId === currentUserProfile.uid && (
                             <button
                               onClick={() => handleDeleteMember(member.id)}
-                              className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                              className="absolute top-2 right-2 p-1 text-afri-text-sec hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                               title="Retirer ce membre"
                             >
                               <X className="w-4 h-4" />
@@ -1206,7 +1206,7 @@ export default function GroupeVIPAnnuaire({
 
               {/* Tab GALERIE */}
               {activeTab === "galerie" && (
-                <div className="space-y-6 animate-fade-in text-gray-900 dark:text-white">
+                <div className="space-y-6 animate-fade-in text-gray-900 dark:text-afri-text">
                   
                   {/* Visual tabs filter */}
                   <div className="flex gap-2 border-b border-gray-50 dark:border-gray-850 pb-2">
@@ -1221,8 +1221,8 @@ export default function GroupeVIPAnnuaire({
                         onClick={() => setGallerySubTab(st.type as any)}
                         className={`px-3 py-1 rounded-lg text-[10px] uppercase font-black tracking-wider transition-all cursor-pointer ${
                           gallerySubTab === st.type 
-                            ? "bg-purple-650 text-white"
-                            : "bg-gray-100 dark:bg-gray-850 text-gray-500 dark:text-gray-400 hover:bg-gray-200"
+                            ? "bg-purple-650 text-afri-text"
+                            : "bg-gray-100 dark:bg-gray-850 text-afri-text-sec dark:text-afri-text-sec hover:bg-gray-200"
                         }`}
                       >
                         {st.label}
@@ -1252,22 +1252,22 @@ export default function GroupeVIPAnnuaire({
                           >
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               <div>
-                                <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Titre de l'élément</label>
+                                <label className="text-[10px] text-afri-text-sec uppercase font-bold block pb-1">Titre de l'élément</label>
                                 <input
                                   type="text"
                                   required
                                   value={newMediaTitle}
                                   onChange={e => setNewMediaTitle(e.target.value)}
                                   placeholder="Ex: Live Sofitel, Répétition..."
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                                 />
                               </div>
                               <div>
-                                <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">Type de média</label>
+                                <label className="text-[10px] text-afri-text-sec uppercase font-bold block pb-1">Type de média</label>
                                 <select
                                   value={newMediaType}
                                   onChange={e => setNewMediaType(e.target.value as any)}
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                                 >
                                   <option value="photo">Photo 📸</option>
                                   <option value="video">Vidéo YouTube Link 🎥</option>
@@ -1275,21 +1275,21 @@ export default function GroupeVIPAnnuaire({
                                 </select>
                               </div>
                               <div>
-                                <label className="text-[10px] text-gray-400 uppercase font-bold block pb-1">URL Web du média</label>
+                                <label className="text-[10px] text-afri-text-sec uppercase font-bold block pb-1">URL Web du média</label>
                                 <input
                                   type="text"
                                   required
                                   value={newMediaUrl}
                                   onChange={e => setNewMediaUrl(e.target.value)}
                                   placeholder="Coller l'adresse URL du fichier"
-                                  className="w-full px-3 py-1.5 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                                  className="w-full px-3 py-1.5 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                                 />
                               </div>
                             </div>
 
                             <button
                               type="submit"
-                              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition"
+                              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-afri-text rounded-xl text-xs font-bold transition"
                             >
                               Enregistrer le Média
                             </button>
@@ -1308,7 +1308,7 @@ export default function GroupeVIPAnnuaire({
 
                     if (filteredGallery.length === 0) {
                       return (
-                        <div className="text-center py-8 text-gray-400 bg-white dark:bg-[#120E22] border border-gray-100 dark:border-gray-850 rounded-2xl p-6">
+                        <div className="text-center py-8 text-afri-text-sec bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-850 rounded-2xl p-6">
                           <p className="text-xs">Aucun média enregistré de cette catégorie.</p>
                         </div>
                       );
@@ -1319,7 +1319,7 @@ export default function GroupeVIPAnnuaire({
                         {filteredGallery.map(item => (
                           <div 
                             key={item.id} 
-                            className="bg-white dark:bg-[#120E22]/60 border border-gray-100 dark:border-gray-850 rounded-2xl p-4 flex flex-col gap-2 relative group overflow-hidden"
+                            className="bg-white dark:bg-afri-bg-sec/60 border border-gray-100 dark:border-gray-850 rounded-2xl p-4 flex flex-col gap-2 relative group overflow-hidden"
                           >
                             {/* Render Photo items */}
                             {item.type === "photo" && (
@@ -1328,7 +1328,7 @@ export default function GroupeVIPAnnuaire({
                                 onClick={() => setLightboxUrl(item.url)}
                               >
                                 <img src={item.url} alt={item.title} className="w-full h-full object-cover hover:scale-105 transition-all" referrerPolicy="no-referrer" />
-                                <div className="absolute top-2 left-2 bg-black/40 text-white px-2 py-0.5 rounded-md text-[9px] uppercase font-black tracking-widest">Photo</div>
+                                <div className="absolute top-2 left-2 bg-afri-bg/40 text-afri-text px-2 py-0.5 rounded-md text-[9px] uppercase font-black tracking-widest">Photo</div>
                               </div>
                             )}
 
@@ -1350,19 +1350,19 @@ export default function GroupeVIPAnnuaire({
                                     <a href={item.url} target="_blank" rel="noopener noreferrer" className="underline mt-1">Ouvrir dans un nouvel onglet</a>
                                   </div>
                                 )}
-                                <div className="absolute top-2 left-2 bg-black/40 text-white px-2 py-0.5 rounded-md text-[9px] uppercase font-black tracking-widest">Vidéo</div>
+                                <div className="absolute top-2 left-2 bg-afri-bg/40 text-afri-text px-2 py-0.5 rounded-md text-[9px] uppercase font-black tracking-widest">Vidéo</div>
                               </div>
                             )}
 
                             {/* Render Audio items */}
                             {item.type === "audio" && (
-                              <div className="h-44 w-full bg-[#0E0B1A] border border-indigo-950/30 rounded-xl flex flex-col items-center justify-center p-4 text-center gap-3 relative">
+                              <div className="h-44 w-full bg-afri-bg-sec border border-indigo-950/30 rounded-xl flex flex-col items-center justify-center p-4 text-center gap-3 relative">
                                 <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-full inline-flex">
                                   <Volume2 className="w-7 h-7" />
                                 </div>
                                 <div className="space-y-1">
                                   <div className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">AUDIO TRACK</div>
-                                  <div className="text-xs font-bold text-gray-250 dark:text-white truncate max-w-44">{item.title}</div>
+                                  <div className="text-xs font-bold text-gray-250 dark:text-afri-text truncate max-w-44">{item.title}</div>
                                 </div>
 
                                 {item.url.endsWith(".mp3") || item.url.includes("helix") ? (
@@ -1380,7 +1380,7 @@ export default function GroupeVIPAnnuaire({
                                     Écouter le lien externe
                                   </a>
                                 )}
-                                <div className="absolute top-2 left-2 bg-black/40 text-white px-2 py-0.5 rounded-md text-[9px] uppercase font-black tracking-widest">Audio</div>
+                                <div className="absolute top-2 left-2 bg-afri-bg/40 text-afri-text px-2 py-0.5 rounded-md text-[9px] uppercase font-black tracking-widest">Audio</div>
                               </div>
                             )}
 
@@ -1389,7 +1389,7 @@ export default function GroupeVIPAnnuaire({
                               {currentUserProfile && selectedGroup.creatorId === currentUserProfile.uid && (
                                 <button
                                   onClick={() => handleDeleteMedia(item.id)}
-                                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-slate-50 dark:hover:bg-slate-850 rounded-lg shrink-0 transition"
+                                  className="p-1 text-afri-text-sec hover:text-red-500 hover:bg-slate-50 dark:hover:bg-slate-850 rounded-lg shrink-0 transition"
                                   title="Supprimer ce média"
                                 >
                                   <X className="w-3.5 h-3.5" />
@@ -1415,7 +1415,7 @@ export default function GroupeVIPAnnuaire({
       <AnimatePresence>
         {lightboxUrl && (
           <div 
-            className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 cursor-zoom-out"
+            className="fixed inset-0 bg-afri-bg/85 z-50 flex items-center justify-center p-4 cursor-zoom-out"
             onClick={() => setLightboxUrl(null)}
           >
             <motion.div 
@@ -1426,7 +1426,7 @@ export default function GroupeVIPAnnuaire({
             >
               <img src={lightboxUrl} alt="Preview" className="object-scale-down w-full h-full rounded-2xl max-h-[80vh]" referrerPolicy="no-referrer" />
               <button 
-                className="absolute top-4 right-4 bg-black/50 hover:bg-black p-2 text-white font-bold rounded-full w-9 h-9 flex items-center justify-center cursor-pointer"
+                className="absolute top-4 right-4 bg-afri-bg/50 hover:bg-afri-bg p-2 text-afri-text font-bold rounded-full w-9 h-9 flex items-center justify-center cursor-pointer"
                 onClick={() => setLightboxUrl(null)}
               >
                 ✕
@@ -1439,18 +1439,18 @@ export default function GroupeVIPAnnuaire({
       {/* Registration / Modification FORM MODAL */}
       <AnimatePresence>
         {showFormModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-afri-bg/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
             <motion.div 
               initial={{ scale: 0.94, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.94, opacity: 0 }}
-              className="bg-white dark:bg-[#120E22] border border-gray-150 dark:border-gray-800 rounded-3xl p-6 sm:p-8 max-w-xl w-full relative overflow-hidden text-gray-900 dark:text-white shadow-2xl my-8 max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-3xl p-6 sm:p-8 max-w-xl w-full relative overflow-hidden text-gray-900 dark:text-afri-text shadow-2xl my-8 max-h-[90vh] overflow-y-auto"
             >
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-600 to-indigo-600" />
 
               <button 
                 onClick={() => { setShowFormModal(false); setRegistrationSuccess(false); }}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-950 dark:hover:text-white font-bold cursor-pointer"
+                className="absolute top-4 right-4 text-afri-text-sec hover:text-gray-950 dark:hover:text-afri-text font-bold cursor-pointer"
               >
                 ✕
               </button>
@@ -1462,7 +1462,7 @@ export default function GroupeVIPAnnuaire({
                     <h2 className="text-xl font-black uppercase tracking-tight">
                       {editingGroup ? "Modifier les Informations" : "➕ Créer mon groupe"}
                     </h2>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-afri-text-sec">
                       Renseignez la fiche officielle du groupe pour l'annuaire de Côte d'Ivoire.
                     </p>
                   </div>
@@ -1470,23 +1470,23 @@ export default function GroupeVIPAnnuaire({
                   {/* Nom du groupe */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Nom du Groupe</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Nom du Groupe</label>
                       <input
                         type="text"
                         required
                         placeholder="Ex: Les Chocs de Yopougon"
                         value={formName}
                         onChange={e => setFormName(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Type de Groupe</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Type de Groupe</label>
                       <select
                         value={formType}
                         onChange={e => setFormType(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none"
                       >
                         {TYPES_GROUPES.map(tg => <option key={tg} value={tg}>{tg}</option>)}
                       </select>
@@ -1496,25 +1496,25 @@ export default function GroupeVIPAnnuaire({
                   {/* Commune et Ville */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Commune</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Commune</label>
                       <select
                         value={formCommune}
                         onChange={e => setFormCommune(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-extrabold focus:outline-none"
                       >
                         {COMMUNES_LIST.map(tg => <option key={tg} value={tg}>{tg}</option>)}
                       </select>
                     </div>
 
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Ville</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Ville</label>
                       <input
                         type="text"
                         required
                         placeholder="Ex: Abidjan, Yamoussoukro"
                         value={formVille}
                         onChange={e => setFormVille(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1522,38 +1522,38 @@ export default function GroupeVIPAnnuaire({
                   {/* Telephones Whatsapp Mail */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Téléphone</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Téléphone</label>
                       <input
                         type="tel"
                         required
                         placeholder="0707..."
                         value={formPhone}
                         onChange={e => setFormPhone(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">WhatsApp</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">WhatsApp</label>
                       <input
                         type="tel"
                         required
                         placeholder="0505..."
                         value={formWhatsapp}
                         onChange={e => setFormWhatsapp(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Email</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Email</label>
                       <input
                         type="email"
                         required
                         placeholder="groupe@gmail.com"
                         value={formEmail}
                         onChange={e => setFormEmail(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1561,19 +1561,19 @@ export default function GroupeVIPAnnuaire({
                   {/* MembersCount & Founded Year */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Nombre membres d'équipe</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Nombre membres d'équipe</label>
                       <input
                         type="number"
                         min="1"
                         required
                         value={formMembersCount}
                         onChange={e => setFormMembersCount(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Année de Création</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Année de Création</label>
                       <input
                         type="number"
                         min="1960"
@@ -1581,7 +1581,7 @@ export default function GroupeVIPAnnuaire({
                         required
                         value={formCreationYear}
                         onChange={e => setFormCreationYear(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1589,45 +1589,45 @@ export default function GroupeVIPAnnuaire({
                   {/* Photo cover URL & Logo URL */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Lien Photo du Groupe (Cover)</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Lien Photo du Groupe (Cover)</label>
                       <input
                         type="url"
                         placeholder="Laisser vide pour photo par défaut"
                         value={formPhotoUrl}
                         onChange={e => setFormPhotoUrl(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Lien Logo du Groupe</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Lien Logo du Groupe</label>
                       <input
                         type="url"
                         placeholder="Laisser vide pour logo par défaut"
                         value={formLogoUrl}
                         onChange={e => setFormLogoUrl(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none"
                       />
                     </div>
                   </div>
 
                   {/* Description */}
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-black text-gray-500 block pb-1">Description & Formules d'Animations</label>
+                    <label className="text-[10px] uppercase font-black text-afri-text-sec block pb-1">Description & Formules d'Animations</label>
                     <textarea
                       required
                       rows={2}
                       placeholder="Présentation du groupe, tarifs indicatifs, répertoires..."
                       value={formDescription}
                       onChange={e => setFormDescription(e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none resize-none"
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-xl text-xs font-semibold focus:outline-none resize-none"
                     />
                   </div>
 
                   {/* Styles Musicaux - Multiple choosing */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-black text-gray-500 block">Styles Musicaux (Sélection Multiple*)</label>
-                    <div className="flex flex-wrap gap-1 bg-gray-50 dark:bg-[#0A0516] p-2.5 rounded-xl border border-gray-150 dark:border-gray-800">
+                    <label className="text-[10px] uppercase font-black text-afri-text-sec block">Styles Musicaux (Sélection Multiple*)</label>
+                    <div className="flex flex-wrap gap-1 bg-gray-50 dark:bg-afri-bg-sec p-2.5 rounded-xl border border-gray-150 dark:border-gray-800">
                       {STYLES_MUSICAUX.map(st => {
                         const isChosen = formGenres.includes(st);
                         return (
@@ -1637,8 +1637,8 @@ export default function GroupeVIPAnnuaire({
                             onClick={() => toggleGenreSelection(st)}
                             className={`px-2 py-1 rounded-lg text-[9px] uppercase font-black tracking-wider transition-all cursor-pointer ${
                               isChosen 
-                                ? "bg-purple-600 text-white"
-                                : "bg-white dark:bg-[#120E22] border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-405 hover:bg-slate-100"
+                                ? "bg-purple-600 text-afri-text"
+                                : "bg-white dark:bg-afri-bg-sec border border-gray-200 dark:border-gray-800 text-afri-text-sec dark:text-gray-405 hover:bg-slate-100"
                             }`}
                           >
                             {st}
@@ -1651,7 +1651,7 @@ export default function GroupeVIPAnnuaire({
                   {/* Plans options pricing only if creating new group */}
                   {!editingGroup && (
                     <div className="space-y-2 pt-1">
-                      <label className="text-[10px] uppercase font-black text-gray-500 block">Niveau de visibilité d'Annuaire d'Abidjan</label>
+                      <label className="text-[10px] uppercase font-black text-afri-text-sec block">Niveau de visibilité d'Annuaire d'Abidjan</label>
                       <div className="grid grid-cols-3 gap-2">
                         {[
                           { value: "standard", label: "Standard", price: "Simulation Gratuit" },
@@ -1665,7 +1665,7 @@ export default function GroupeVIPAnnuaire({
                             className={`p-2 rounded-xl text-center border transition flex flex-col items-center justify-center cursor-pointer ${
                               formPlan === opt.value 
                                 ? "bg-purple-550/20 text-purple-600 dark:text-purple-300 border-purple-500 ring-2 ring-purple-500/10" 
-                                : "bg-gray-50 dark:bg-[#0A0516] text-gray-400 border-gray-150 dark:border-gray-800"
+                                : "bg-gray-50 dark:bg-afri-bg-sec text-afri-text-sec border-gray-150 dark:border-gray-800"
                             }`}
                           >
                             <span className="text-[10px] font-black uppercase tracking-tight">{opt.label}</span>
@@ -1684,11 +1684,11 @@ export default function GroupeVIPAnnuaire({
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>
-                          <label className="text-[10px] text-gray-400 block font-bold">Opérateur Mobile Money</label>
+                          <label className="text-[10px] text-afri-text-sec block font-bold">Opérateur Mobile Money</label>
                           <select
                             value={paymentProvider}
                             onChange={e => setPaymentProvider(e.target.value as any)}
-                            className="w-full px-2 py-1 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-lg text-[10px] font-extrabold text-slate-800 dark:text-white"
+                            className="w-full px-2 py-1 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-lg text-[10px] font-extrabold text-slate-800 dark:text-afri-text"
                           >
                             <option value="Wave">Wave</option>
                             <option value="Orange Money">Orange Money</option>
@@ -1697,13 +1697,13 @@ export default function GroupeVIPAnnuaire({
                           </select>
                         </div>
                         <div>
-                          <label className="text-[10px] text-gray-400 block font-bold">Numéro de facturation</label>
+                          <label className="text-[10px] text-afri-text-sec block font-bold">Numéro de facturation</label>
                           <input
                             type="tel"
                             required
                             value={paymentPhone}
                             onChange={e => setPaymentPhone(e.target.value)}
-                            className="w-full px-2 py-1 bg-white dark:bg-[#0A0516] border border-gray-150 dark:border-gray-800 rounded-lg text-[10px]"
+                            className="w-full px-2 py-1 bg-white dark:bg-afri-bg-sec border border-gray-150 dark:border-gray-800 rounded-lg text-[10px]"
                           />
                         </div>
                       </div>
@@ -1713,25 +1713,25 @@ export default function GroupeVIPAnnuaire({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-purple-650 hover:bg-purple-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3 bg-purple-650 hover:bg-purple-700 text-afri-text font-black text-xs uppercase tracking-widest rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
-                        <ShieldCheck className="w-4 h-4 text-white" />
+                        <ShieldCheck className="w-4 h-4 text-afri-text" />
                         <span>Référencer le Groupe {formPlan !== "standard" && !editingGroup && `(${getPlanPrice(formPlan).toLocaleString()} FCFA)`}</span>
                       </>
                     )}
                   </button>
                 </form>
               ) : (
-                <div className="py-8 text-center space-y-4 text-gray-950 dark:text-white">
+                <div className="py-8 text-center space-y-4 text-gray-950 dark:text-afri-text">
                   <div className="w-14 h-14 bg-purple-100 dark:bg-purple-950/40 text-purple-650 dark:text-purple-300 border border-purple-200 dark:border-purple-950 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
                     ✓
                   </div>
                   <div className="space-y-1.5">
-                    <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">GUIDE GROUPE VIP VALIDE !</h2>
+                    <h2 className="text-lg font-black text-gray-900 dark:text-afri-text uppercase tracking-tight">GUIDE GROUPE VIP VALIDE !</h2>
                     <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
                       Félicitations, votre groupe est désormais listé avec succès dans l'annuaire de YA GOMBO MUSIC. Les requêtes de scènes arrivent !
                     </p>
@@ -1741,7 +1741,7 @@ export default function GroupeVIPAnnuaire({
                       setShowFormModal(false);
                       setRegistrationSuccess(false);
                     }}
-                    className="px-6 py-2 bg-purple-650 hover:bg-purple-700 text-white text-xs font-black uppercase tracking-wider rounded-lg transition"
+                    className="px-6 py-2 bg-purple-650 hover:bg-purple-700 text-afri-text text-xs font-black uppercase tracking-wider rounded-lg transition"
                   >
                     Fermer l'onglet
                   </button>

@@ -1204,7 +1204,7 @@ export default function GomboProfile({
       <div className="afri-section">
         <div className="flex items-center gap-4 mb-4">
           <button onClick={() => setPanelView("main")} className="afri-btn-ghost p-2">
-            <ArrowLeft className="w-5 h-5 text-white" />
+            <ArrowLeft className="w-5 h-5 text-afri-text" />
           </button>
           <h3 className="afri-title-md">{panelView === "support" ? "Support Assistance Gombo" : "Réglages"}</h3>
         </div>
@@ -1215,8 +1215,8 @@ export default function GomboProfile({
               <div className="inline-flex p-3 bg-orange-100 dark:bg-orange-950 text-[#D4AF37] rounded-full">
                 <HelpCircle className="w-10 h-10" />
               </div>
-              <h2 className="afri-title-lg text-white text-center">SUPPORT ASSISTANCE GOMBO</h2>
-              <p className="afri-text-body text-zinc-400 text-center">Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO est disponible 24/7.</p>
+              <h2 className="afri-title-lg text-afri-text text-center">SUPPORT ASSISTANCE GOMBO</h2>
+              <p className="afri-text-body text-afri-text-sec text-center">Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO est disponible 24/7.</p>
             </div>
             
             <div className="space-y-3">
@@ -1224,7 +1224,7 @@ export default function GomboProfile({
                 href={supportConfig.getLink("Aide générale")} 
                 target="_blank"
                 rel="noreferrer"
-                className="afri-btn-primary py-4 text-center bg-[#25D366] border-[#25D366] flex items-center justify-center gap-2"
+                className="afri-btn-primary py-4 text-center bg-afri-bg-sec border-[#25D366] flex items-center justify-center gap-2"
               >
                 <MessageSquare className="w-4 h-4" /> Parler à un Admin sur WhatsApp
               </a>
@@ -1237,10 +1237,10 @@ export default function GomboProfile({
           <div className="afri-card p-6 space-y-4">
             <p className="afri-text-tiny uppercase">Paramètres du compte</p>
             <div className="space-y-2">
-              <button onClick={() => setPanelView("edit")} className="w-full text-left p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between group">
+              <button onClick={() => setPanelView("edit")} className="w-full text-left p-4 rounded-2xl bg-white/5 border border-afri-border flex items-center justify-between group">
                 <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 text-zinc-500" />
-                  <span className="text-xs font-bold text-white">Modifier le profil</span>
+                  <User className="w-5 h-5 text-afri-text-sec" />
+                  <span className="text-xs font-bold text-afri-text">Modifier le profil</span>
                 </div>
                 <ChevronDown className="w-4 h-4 text-zinc-700 -rotate-90" />
               </button>

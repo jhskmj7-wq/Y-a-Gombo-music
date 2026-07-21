@@ -288,7 +288,7 @@ function App() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.2, duration: 0.6 }}
-                className="w-48 sm:w-56 h-1 bg-zinc-900 rounded-full overflow-hidden mx-auto my-6 relative z-10 shrink-0"
+                className="w-48 sm:w-56 h-1 bg-afri-bg-sec rounded-full overflow-hidden mx-auto my-6 relative z-10 shrink-0"
               >
                 <div 
                   className="h-full bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-400 transition-all duration-100 ease-out"
@@ -324,7 +324,7 @@ function App() {
                         const isActive = currentStepIndex === idx;
                         
                         let icon = "○";
-                        let textColor = "text-zinc-500 opacity-40";
+                        let textColor = "text-afri-text-sec opacity-40";
                         
                         if (isCompleted) {
                           icon = "✓";

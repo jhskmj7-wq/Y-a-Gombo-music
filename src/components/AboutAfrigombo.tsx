@@ -40,12 +40,12 @@ interface AboutAfrigomboProps {
 
 export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProps) {
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
+    <div className="min-h-screen bg-afri-bg text-afri-text pb-20">
       {/* HEADER WITH BACK BUTTON */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center pointer-events-none">
         <button 
           onClick={onBack}
-          className="p-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-full text-white pointer-events-auto hover:bg-zinc-800 transition-all active:scale-95"
+          className="p-3 bg-afri-bg-sec/80 backdrop-blur-md border border-afri-border rounded-full text-afri-text pointer-events-auto hover:bg-afri-bg-ter transition-all active:scale-95"
         >
           <ArrowRight className="w-5 h-5 rotate-180" />
         </button>
@@ -97,7 +97,7 @@ export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProp
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-zinc-400 text-sm md:text-lg max-w-2xl mx-auto font-medium"
+            className="text-afri-text-sec text-sm md:text-lg max-w-2xl mx-auto font-medium"
           >
             Nous ne sommes pas juste une application de petites annonces. Nous construisons le Temple de la Confiance pour l'industrie musicale africaine.
           </motion.p>
@@ -114,13 +114,13 @@ export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProp
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-zinc-950 border border-zinc-900 p-8 rounded-3xl space-y-4 hover:border-zinc-700 transition-colors group"
+              className="bg-afri-bg border border-afri-border p-8 rounded-3xl space-y-4 hover:border-afri-border transition-colors group"
             >
               <div className={`w-14 h-14 rounded-2xl ${feature.bg} flex items-center justify-center ${feature.color} group-hover:scale-110 transition-transform`}>
                 <feature.icon className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-black font-mono uppercase tracking-tight">{feature.title}</h3>
-              <p className="text-zinc-500 text-sm leading-relaxed font-medium">
+              <p className="text-afri-text-sec text-sm leading-relaxed font-medium">
                 {feature.description}
               </p>
             </motion.div>
@@ -129,34 +129,34 @@ export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProp
       </section>
 
       {/* Philosophy Section */}
-      <section className="px-6 py-20 bg-zinc-950/50">
+      <section className="px-6 py-20 bg-afri-bg/50">
         <div className="max-w-4xl mx-auto space-y-16">
           <div className="text-center space-y-4">
             <h2 className="text-3xl font-black font-mono uppercase">Notre Vision</h2>
-            <div className="w-20 h-1 bg-[#D4AF37] mx-auto rounded-full" />
+            <div className="w-20 h-1 bg-afri-bg-sec mx-auto rounded-full" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 rounded-full bg-afri-bg-sec border border-afri-border flex items-center justify-center mx-auto">
                 <Trophy className="w-6 h-6 text-amber-500" />
               </div>
               <h4 className="font-bold text-sm uppercase">Excellence</h4>
-              <p className="text-[11px] text-zinc-500 font-medium">Nous valorisons le talent pur et la ponctualité exemplaire.</p>
+              <p className="text-[11px] text-afri-text-sec font-medium">Nous valorisons le talent pur et la ponctualité exemplaire.</p>
             </div>
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 rounded-full bg-afri-bg-sec border border-afri-border flex items-center justify-center mx-auto">
                 <ShieldCheck className="w-6 h-6 text-blue-500" />
               </div>
               <h4 className="font-bold text-sm uppercase">Transparence</h4>
-              <p className="text-[11px] text-zinc-500 font-medium">Aucun frais caché. Une commission claire qui finance le Temple.</p>
+              <p className="text-[11px] text-afri-text-sec font-medium">Aucun frais caché. Une commission claire qui finance le Temple.</p>
             </div>
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 rounded-full bg-afri-bg-sec border border-afri-border flex items-center justify-center mx-auto">
                 <Heart className="w-6 h-6 text-red-500" />
               </div>
               <h4 className="font-bold text-sm uppercase">Communauté</h4>
-              <p className="text-[11px] text-zinc-500 font-medium">Un écosystème où chaque musicien est respecté et protégé.</p>
+              <p className="text-[11px] text-afri-text-sec font-medium">Un écosystème où chaque musicien est respecté et protégé.</p>
             </div>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProp
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          className="max-w-2xl mx-auto bg-[#D4AF37] text-black p-12 rounded-[3rem] space-y-8 shadow-[0_20px_50px_rgba(212,175,55,0.2)]"
+          className="max-w-2xl mx-auto bg-afri-bg-sec text-black p-12 rounded-[3rem] space-y-8 shadow-[0_20px_50px_rgba(212,175,55,0.2)]"
         >
           <h2 className="text-3xl font-black font-mono leading-none uppercase italic">Prêt à entrer dans l'Élite ?</h2>
           <p className="text-sm font-bold opacity-80 uppercase tracking-wide">
@@ -175,7 +175,7 @@ export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProp
           </p>
           <button 
             onClick={() => window.location.href = "/"}
-            className="bg-black text-white px-8 py-4 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2 mx-auto"
+            className="bg-afri-bg text-afri-text px-8 py-4 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2 mx-auto"
           >
             Explorer le Terrain <ArrowRight className="w-4 h-4" />
           </button>

@@ -75,10 +75,10 @@ export default function PWAHandler() {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="pointer-events-auto w-full max-w-sm bg-[#D4AF37] text-black p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-amber-300/50"
+            className="pointer-events-auto w-full max-w-sm bg-afri-bg-sec text-black p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-amber-300/50"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-afri-bg/10 flex items-center justify-center">
                 <RefreshCw className="w-5 h-5 animate-spin" />
               </div>
               <div>
@@ -89,11 +89,11 @@ export default function PWAHandler() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => updateServiceWorker(true)}
-                className="bg-black text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-zinc-900 transition-colors"
+                className="bg-afri-bg text-afri-text px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-afri-bg-sec transition-colors"
               >
                 Actualiser
               </button>
-              <button onClick={closeNeedRefresh} className="p-1 hover:bg-black/10 rounded-lg">
+              <button onClick={closeNeedRefresh} className="p-1 hover:bg-afri-bg/10 rounded-lg">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -106,7 +106,7 @@ export default function PWAHandler() {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="pointer-events-auto w-full max-w-sm bg-emerald-500 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-emerald-400/50"
+            className="pointer-events-auto w-full max-w-sm bg-emerald-500 text-afri-text p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-emerald-400/50"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -129,25 +129,25 @@ export default function PWAHandler() {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="pointer-events-auto w-full max-w-sm bg-black border border-zinc-800 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4"
+            className="pointer-events-auto w-full max-w-sm bg-afri-bg-sec border border-afri-border p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
+              <div className="w-10 h-10 rounded-xl bg-afri-gold/10 border border-afri-gold/20 flex items-center justify-center text-afri-gold">
                 <Download className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-black text-white uppercase tracking-tight">Installer AFRIGOMBO</p>
-                <p className="text-[10px] text-zinc-400 font-medium">Accès rapide & expérience plein écran.</p>
+                <p className="text-sm font-black text-afri-text uppercase tracking-tight">Installer AFRIGOMBO</p>
+                <p className="text-[10px] text-afri-text-sec font-medium">Accès rapide & expérience plein écran.</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleInstall}
-                className="bg-[#D4AF37] text-black px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-[#B8962D] transition-colors shadow-[0_0_15px_rgba(212,175,55,0.3)]"
+                className="bg-afri-gold text-black px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-afri-gold-light transition-colors shadow-[0_0_15px_rgba(212,175,55,0.3)]"
               >
                 Installer
               </button>
-              <button onClick={closeInstallBanner} className="p-1 hover:bg-white/5 rounded-lg text-zinc-500">
+              <button onClick={closeInstallBanner} className="p-1 hover:bg-afri-text/5 rounded-lg text-afri-text-muted">
                 <X className="w-4 h-4" />
               </button>
             </div>

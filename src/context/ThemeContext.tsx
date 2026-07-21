@@ -2,8 +2,9 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { globalAudioManager } from "../lib/audioManager";
 import { useAuth } from "../AuthContext";
 import { gomboDB } from "../firebase";
+import { Theme, ThemeColors, themeColors } from "../theme/colors";
 
-export type Theme = "imperial" | "light" | "royal" | "saphir" | "emeraude" | "studio" | "rouge";
+export type { Theme, ThemeColors };
 type TextSize = "petit" | "moyen" | "grand";
 
 const safeGetItem = (key: string, fallback: string): string => {
@@ -22,70 +23,9 @@ const safeSetItem = (key: string, value: string): void => {
   }
 };
 
-export const themeColors: Record<Theme, { bg: string; bgSec: string; bgTer?: string; text: string; textSec: string; textMuted?: string; border: string; gold: string }> = {
-  imperial: {
-    bg: "#050505",
-    bgSec: "#111111",
-    text: "#FFFFFF",
-    textSec: "#B9B9B9",
-    border: "rgba(212, 175, 55, 0.2)",
-    gold: "#D4AF37"
-  },
-  light: {
-    bg: "#F8F6F2",
-    bgSec: "#ECE8E1",
-    bgTer: "#FFFFFF",
-    text: "#222222",
-    textSec: "#666666",
-    textMuted: "#666666",
-    border: "#DDD8CF",
-    gold: "#D4AF37"
-  },
-  royal: {
-    bg: "#121008",
-    bgSec: "#1C190F",
-    text: "#FDFBF5",
-    textSec: "#D4AF37",
-    border: "rgba(212, 175, 55, 0.3)",
-    gold: "#D4AF37"
-  },
-  saphir: {
-    bg: "#050B15",
-    bgSec: "#0D162B",
-    text: "#F0F4FF",
-    textSec: "#7FA1FF",
-    border: "rgba(63, 131, 248, 0.2)",
-    gold: "#3F83F8"
-  },
-  emeraude: {
-    bg: "#051109",
-    bgSec: "#0D1F13",
-    text: "#F0FFF4",
-    textSec: "#6EE7B7",
-    border: "rgba(16, 185, 129, 0.2)",
-    gold: "#10B981"
-  },
-  studio: {
-    bg: "#0F0A15",
-    bgSec: "#181224",
-    text: "#F3EEFC",
-    textSec: "#B1A2CA",
-    border: "rgba(168, 85, 247, 0.2)",
-    gold: "#A855F7"
-  },
-  rouge: {
-    bg: "#110505",
-    bgSec: "#1F0D0D",
-    text: "#FFF5F5",
-    textSec: "#F87171",
-    border: "rgba(239, 68, 68, 0.2)",
-    gold: "#EF4444"
-  }
-};
-
 interface ThemeContextType {
   theme: Theme;
-  colors: typeof themeColors.imperial;
+  colors: ThemeColors;
   setTheme: (t: Theme) => void;
   toggleTheme: () => void;
   textSize: TextSize;
@@ -172,18 +112,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     
     const cols = themeColors[theme] || themeColors.imperial;
-    root.style.setProperty("--afri-bg", cols.bg);
-    root.style.setProperty("--afri-bg-sec", cols.bgSec);
-    if (cols.bgTer) root.style.setProperty("--afri-bg-ter", cols.bgTer);
-    else root.style.removeProperty("--afri-bg-ter");
+    root.style.setProperty("--afri-bg", cols.background);
+    root.style.setProperty("--afri-bg-sec", cols.surface);
+    root.style.setProperty("--afri-bg-ter", cols.card);
 
     root.style.setProperty("--afri-text", cols.text);
-    root.style.setProperty("--afri-text-sec", cols.textSec);
-    if (cols.textMuted) root.style.setProperty("--afri-text-muted", cols.textMuted);
-    else root.style.removeProperty("--afri-text-muted");
+    root.style.setProperty("--afri-text-sec", cols.textSecondary);
+    root.style.setProperty("--afri-text-muted", cols.secondary);
 
     root.style.setProperty("--afri-border", cols.border);
     root.style.setProperty("--afri-gold", cols.gold);
+    root.style.setProperty("--afri-error", cols.error);
+    root.style.setProperty("--afri-success", cols.success);
+    root.style.setProperty("--afri-warning", cols.warning);
     
     safeSetItem("gombo_theme", theme);
   }, [theme]);

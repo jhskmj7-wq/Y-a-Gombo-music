@@ -46,7 +46,7 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ users = [], gombos = [],
 
   return (
     <div className="space-y-6 animate-fadeIn pb-24">
-      <div className="p-5 rounded-lg bg-black/40 border border-[#D4AF37]/20">
+      <div className="p-5 rounded-lg bg-afri-bg/40 border border-[#D4AF37]/20">
         <h4 className="text-xs uppercase font-mono text-[#D4AF37] tracking-wider mb-4">
           Revenus & Enregistrements de la semaine (Par jour)
         </h4>
@@ -70,56 +70,56 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ users = [], gombos = [],
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-5 rounded-lg border border-[#D4AF37]/10 bg-[#0B0B0B]">
+        <div className="p-5 rounded-lg border border-[#D4AF37]/10 bg-afri-bg-sec">
           <h5 className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] mb-3">Participation par Commune</h5>
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-mono">
               <span>Cocody</span>
               <span>45%</span>
             </div>
-            <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-[#D4AF37] h-full" style={{ width: "45%" }} />
+            <div className="w-full bg-afri-bg-sec/10 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-afri-bg-sec h-full" style={{ width: "45%" }} />
             </div>
             <div className="flex justify-between text-xs font-mono">
               <span>Yopougon</span>
               <span>35%</span>
             </div>
-            <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-[#D4AF37] h-full" style={{ width: "35%" }} />
+            <div className="w-full bg-afri-bg-sec/10 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-afri-bg-sec h-full" style={{ width: "35%" }} />
             </div>
             <div className="flex justify-between text-xs font-mono">
               <span>Marcory</span>
               <span>20%</span>
             </div>
-            <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-[#D4AF37] h-full" style={{ width: "20%" }} />
+            <div className="w-full bg-afri-bg-sec/10 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-afri-bg-sec h-full" style={{ width: "20%" }} />
             </div>
           </div>
         </div>
 
-        <div className="p-5 rounded-lg border border-[#D4AF37]/10 bg-[#0B0B0B]">
+        <div className="p-5 rounded-lg border border-[#D4AF37]/10 bg-afri-bg-sec">
           <h5 className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] mb-3">Répartition des Instruments</h5>
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-mono">
               <span>Chant & Chœur</span>
               <span>50%</span>
             </div>
-            <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-[#D4AF37] h-full" style={{ width: "50%" }} />
+            <div className="w-full bg-afri-bg-sec/10 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-afri-bg-sec h-full" style={{ width: "50%" }} />
             </div>
             <div className="flex justify-between text-xs font-mono">
               <span>Clavierist / Piano</span>
               <span>30%</span>
             </div>
-            <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-[#D4AF37] h-full" style={{ width: "30%" }} />
+            <div className="w-full bg-afri-bg-sec/10 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-afri-bg-sec h-full" style={{ width: "30%" }} />
             </div>
             <div className="flex justify-between text-xs font-mono">
               <span>Guitare & Basse</span>
               <span>20%</span>
             </div>
-            <div className="w-full bg-[#D4AF37]/10 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-[#D4AF37] h-full" style={{ width: "20%" }} />
+            <div className="w-full bg-afri-bg-sec/10 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-afri-bg-sec h-full" style={{ width: "20%" }} />
             </div>
           </div>
         </div>

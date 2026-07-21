@@ -194,7 +194,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-black/95 dark:bg-[#0c0c0e] text-white rounded-3xl p-6 sm:p-8 border border-[#D4AF37]/35 shadow-[0_0_30px_rgba(212,175,55,0.15)] relative overflow-hidden"
+        className="bg-afri-bg/95 dark:bg-afri-bg-sec text-afri-text rounded-3xl p-6 sm:p-8 border border-[#D4AF37]/35 shadow-[0_0_30px_rgba(212,175,55,0.15)] relative overflow-hidden"
       >
         {/* Gold design bar */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#D4AF37]" />
@@ -206,9 +206,9 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/98 z-50 flex flex-col items-center justify-center text-center p-6 space-y-6"
+              className="absolute inset-0 bg-afri-bg/98 z-50 flex flex-col items-center justify-center text-center p-6 space-y-6"
             >
-              <div className="w-20 h-20 bg-[#D4AF37]/15 border-2 border-[#D4AF37] rounded-full flex items-center justify-center animate-bounce text-4xl">
+              <div className="w-20 h-20 bg-afri-bg-sec/15 border-2 border-[#D4AF37] rounded-full flex items-center justify-center animate-bounce text-4xl">
                 🎶
               </div>
               
@@ -216,7 +216,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 <h3 className="text-2xl font-black text-[#D4AF37] uppercase tracking-wider">
                   Ton gombo est lancé ! 🚀
                 </h3>
-                <p className="text-xs text-gray-400 max-w-sm px-4">
+                <p className="text-xs text-afri-text-sec max-w-sm px-4">
                   Il résonne déjà sur les téléphones de tous les instrumentistes et patrons de showbizz d'Abidjan !
                 </p>
               </div>
@@ -227,7 +227,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   setShowSuccessOverlay(false);
                   onSuccess();
                 }}
-                className="px-8 py-3 bg-[#D4AF37] hover:bg-[#bfa032] active:scale-95 text-black font-black text-xs uppercase rounded-xl transition-all tracking-widest shadow-lg shadow-[#D4AF37]/25 cursor-pointer"
+                className="px-8 py-3 bg-afri-bg-sec hover:bg-afri-bg-sec active:scale-95 text-black font-black text-xs uppercase rounded-xl transition-all tracking-widest shadow-lg shadow-[#D4AF37]/25 cursor-pointer"
               >
                 Super, continuons !
               </button>
@@ -244,7 +244,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           <h2 className="text-xl sm:text-2xl font-black text-[#D4AF37] flex items-center gap-2 uppercase tracking-tight">
             🚀 Lancer le Gombo
           </h2>
-          <p className="text-[11px] text-gray-400 font-medium">
+          <p className="text-[11px] text-afri-text-sec font-medium">
             Entrez dans le temple musical et diffusez instantanément votre opportunité.
           </p>
         </div>
@@ -259,7 +259,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* CATEGORY SELECTION: LIBRE vs SECURISE */}
           <div className="space-y-2">
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            <label className="block text-[10px] font-black text-afri-text-sec uppercase tracking-widest">
               Catégorie de Gombo
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -268,8 +268,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 onClick={() => setGomboCategory("libre")}
                 className={`p-4 rounded-2xl border transition-all text-left space-y-1 relative group ${
                   gomboCategory === "libre" 
-                    ? "bg-zinc-900/50 border-emerald-500/50 text-white" 
-                    : "bg-transparent border-zinc-900 text-zinc-500 hover:border-zinc-700"
+                    ? "bg-afri-bg-sec/50 border-emerald-500/50 text-afri-text" 
+                    : "bg-transparent border-afri-border text-afri-text-sec hover:border-afri-border"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -284,8 +284,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 onClick={() => setGomboCategory("securise")}
                 className={`p-4 rounded-2xl border transition-all text-left space-y-1 relative group overflow-hidden ${
                   gomboCategory === "securise" 
-                    ? "bg-[#D4AF37]/5 border-[#D4AF37]/50 text-white" 
-                    : "bg-transparent border-zinc-900 text-zinc-500 hover:border-zinc-700"
+                    ? "bg-afri-bg-sec/5 border-[#D4AF37]/50 text-afri-text" 
+                    : "bg-transparent border-afri-border text-afri-text-sec hover:border-afri-border"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -300,7 +300,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
           {/* 1. SELECTION DU TYPE */}
           <div>
-            <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">
+            <label className="block text-[10px] font-black text-afri-text-sec mb-2 uppercase tracking-widest">
               Nature de la mission
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[#D4AF37]">
@@ -311,12 +311,12 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   onClick={() => setSelectedType(t.id)}
                   className={`p-3 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                     selectedType === t.id 
-                      ? "border-[#D4AF37] bg-white/[0.03] text-white shadow-xs" 
-                      : "border-white/[0.08] bg-transparent text-gray-400 hover:border-white/[0.2] hover:text-white"
+                      ? "border-[#D4AF37] bg-white/[0.03] text-afri-text shadow-xs" 
+                      : "border-white/[0.08] bg-transparent text-afri-text-sec hover:border-white/[0.2] hover:text-afri-text"
                   }`}
                 >
                   <span className="text-xs font-black uppercase tracking-wider">{t.label}</span>
-                  <span className="text-[9px] text-gray-500 mt-0.5 leading-tight">{t.desc}</span>
+                  <span className="text-[9px] text-afri-text-sec mt-0.5 leading-tight">{t.desc}</span>
                 </button>
               ))}
             </div>
@@ -324,7 +324,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
           {/* 2. TITRE */}
           <div>
-            <label className="block text-[10px] font-black text-gray-400 mb-1.5 uppercase tracking-widest">
+            <label className="block text-[10px] font-black text-afri-text-sec mb-1.5 uppercase tracking-widest">
               Titre de la publication
             </label>
             <input
@@ -333,13 +333,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               placeholder="Ex: Solo trompette recherché pour cabaret chic..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-600"
+              className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-600"
             />
           </div>
 
           {/* 3. DESCRIPTION */}
           <div>
-            <label className="block text-[10px] font-black text-gray-400 mb-1.5 uppercase tracking-widest">
+            <label className="block text-[10px] font-black text-afri-text-sec mb-1.5 uppercase tracking-widest">
               Description / Détails
             </label>
             <textarea
@@ -348,38 +348,38 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               placeholder="Donnez tous les détails avec style : lieu précis, ambiance, exigences de morceaux..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-semibold text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-600"
+              className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-semibold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-600"
             />
           </div>
 
           {/* 4. COMMUNE EXCLUSIVITÉ & LOCALISATION PRÉCISE */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-black text-gray-400 mb-1.5 uppercase tracking-widest">
+              <label className="block text-[10px] font-black text-afri-text-sec mb-1.5 uppercase tracking-widest">
                 Commune / Ville
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-afri-text-sec">
                   <MapPin className="w-4 h-4 text-[#D4AF37]" />
                 </span>
                 <select
                   value={commune}
                   onChange={(e) => setCommune(e.target.value)}
-                  className="w-full pl-9 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-black text-white hover:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-[#D4AF37] cursor-pointer"
+                  className="w-full pl-9 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-black text-afri-text hover:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-[#D4AF37] cursor-pointer"
                 >
                   {ABIDJAN_COMMUNES.map((com) => (
-                    <option key={com} value={com} className="bg-black text-white">{com}</option>
+                    <option key={com} value={com} className="bg-afri-bg text-afri-text">{com}</option>
                   ))}
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-gray-400 mb-1.5 uppercase tracking-widest">
+              <label className="block text-[10px] font-black text-afri-text-sec mb-1.5 uppercase tracking-widest">
                 Localisation précise (ex: Rue 12, Salle)
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-afri-text-sec">
                   <MapPin className="w-4 h-4 text-[#D4AF37]" />
                 </span>
                 <input
@@ -387,7 +387,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   placeholder="Ex : Bar Le Monument, Rue des Jardins"
                   value={locationDetail}
                   onChange={(e) => setLocationDetail(e.target.value)}
-                  className="w-full pl-9 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-black text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-650"
+                  className="w-full pl-9 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-black text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-650"
                 />
               </div>
             </div>
@@ -399,7 +399,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               Date de l'événement
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-afri-text-sec">
                 <Calendar className="w-4 h-4 text-[#D4AF37]" />
               </span>
               <input
@@ -407,14 +407,14 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full pl-9 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-black text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                className="w-full pl-9 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-black text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
               />
             </div>
           </div>
 
           {/* 6. CACHET OPTIONNEL */}
           <div>
-            <label className="block text-[10px] font-black text-gray-400 mb-1.5 uppercase tracking-widest">
+            <label className="block text-[10px] font-black text-afri-text-sec mb-1.5 uppercase tracking-widest">
               Cachet (Optionnel, en FCFA)
             </label>
             <div className="relative">
@@ -426,7 +426,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 placeholder="Ex : 35000 (Laisser vide pour discuter)"
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-600"
+                className="w-full pl-12 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-bold text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37] placeholder-gray-600"
               />
             </div>
           </div>
@@ -453,13 +453,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <ImageIcon className="w-5 h-5 text-gray-500 mx-auto" />
+                  <ImageIcon className="w-5 h-5 text-afri-text-sec mx-auto" />
                   <span className="text-[10px] font-black block text-gray-300">Photo d'illustration</span>
-                  <span className="text-[8px] text-gray-500 block font-semibold">(Optionnel)</span>
+                  <span className="text-[8px] text-afri-text-sec block font-semibold">(Optionnel)</span>
                 </div>
               )}
               {uploadingState.image && (
-                <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center">
+                <div className="absolute inset-0 bg-afri-bg/95 flex flex-col items-center justify-center">
                   <span className="text-[9px] text-[#D4AF37] font-black uppercase">Envoi photo... {uploadProgress.image || 0}%</span>
                 </div>
               )}
@@ -491,7 +491,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 </div>
               )}
               {uploadingState.audio && (
-                <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center">
+                <div className="absolute inset-0 bg-afri-bg/95 flex flex-col items-center justify-center">
                   <span className="text-[9px] text-[#D4AF37] font-black uppercase">Envoi audio... {uploadProgress.audio || 0}%</span>
                 </div>
               )}
@@ -513,7 +513,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               disabled={loading || uploadingState.image || uploadingState.audio}
               className={`flex-1 px-6 py-3.5 font-extrabold text-[#0B0B0B] font-sans text-xs uppercase rounded-xl shadow-lg transition-all active:scale-97 cursor-pointer text-center font-black tracking-widest flex items-center justify-center gap-2 ${
                 gomboCategory === "securise" 
-                  ? "bg-[#D4AF37] animate-pulse shadow-[0_0_20px_rgba(212,175,55,0.4)]" 
+                  ? "bg-afri-bg-sec animate-pulse shadow-[0_0_20px_rgba(212,175,55,0.4)]" 
                   : "bg-emerald-500"
               }`}
             >

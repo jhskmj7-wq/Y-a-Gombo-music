@@ -25,7 +25,7 @@ export default function HeritagePage({ onNavigateView, darkMode, setDarkMode, in
           initialPanelView={initialPanelView}
         />
       ) : (
-        <div className="flex justify-center items-center h-[50vh] text-zinc-500">
+        <div className="flex justify-center items-center h-[50vh] text-afri-text-sec">
           Chargement de votre Héritage...
         </div>
       )}

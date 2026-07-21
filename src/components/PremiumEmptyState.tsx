@@ -22,16 +22,16 @@ export function PremiumEmptyState({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col items-center justify-center p-8 text-center bg-[#070708] border border-zinc-900 rounded-2xl max-w-md mx-auto my-6 shadow-xl"
+      className="flex flex-col items-center justify-center p-8 text-center bg-afri-bg-sec border border-afri-border rounded-2xl max-w-md mx-auto my-6 shadow-xl"
     >
-      <div className="w-14 h-14 rounded-2xl bg-zinc-950 border border-zinc-850 flex items-center justify-center text-[#D4AF37] mb-4 shadow-inner">
+      <div className="w-14 h-14 rounded-2xl bg-afri-bg border border-afri-border flex items-center justify-center text-afri-gold mb-4 shadow-inner">
         <Icon className="w-6 h-6 opacity-80" />
       </div>
-      <h3 className="text-sm font-black text-white uppercase tracking-wider mb-2">
+      <h3 className="text-sm font-black text-afri-text uppercase tracking-wider mb-2">
         {message}
       </h3>
       {submessage && (
-        <p className="text-xs text-zinc-400 font-mono leading-relaxed mb-4 max-w-xs">
+        <p className="text-xs text-afri-text-sec font-mono leading-relaxed mb-4 max-w-xs">
           {submessage}
         </p>
       )}

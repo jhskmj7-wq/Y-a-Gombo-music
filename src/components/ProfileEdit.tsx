@@ -231,8 +231,8 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 text-left">
-      <div className="bg-white dark:bg-[#111113] p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl">
-        <h3 className="text-xl font-black text-gray-900 dark:text-white mb-6 flex items-center justify-between">
+      <div className="bg-white dark:bg-afri-bg-sec p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl">
+        <h3 className="text-xl font-black text-gray-900 dark:text-afri-text mb-6 flex items-center justify-between">
           <span className="flex items-center gap-2">
             <User className="w-5.5 h-5.5 text-[#D4AF37]" />
             Modifier mon Profil Gombo
@@ -245,7 +245,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
         </h3>
 
         {/* Real-time Dynamic Completeness & Autosave Status visual indicators */}
-        <div className="bg-[#FAF9F5] dark:bg-[#1c1c1f]/40 p-4.5 rounded-2xl border border-[#D4AF37]/15 space-y-2 mb-6">
+        <div className="bg-afri-bg-sec dark:bg-afri-bg-sec/40 p-4.5 rounded-2xl border border-[#D4AF37]/15 space-y-2 mb-6">
           <div className="flex justify-between items-center text-xs">
             <span className="font-black text-[#D4AF37] uppercase tracking-wider font-mono flex items-center gap-1">
               <span>📈</span> Complétude du Profil ({completeness.score}%)
@@ -264,9 +264,9 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
             <div className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500" style={{ width: `${completeness.score}%` }} />
           </div>
           {completeness.score < 105 && (
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+            <p className="text-[10px] text-afri-text-sec dark:text-afri-text-sec font-medium">
               {completeness.score < 100 ? (
-                <>Reste à configurer : <strong className="text-gray-900 dark:text-white">{completeness.missing.join(", ")}</strong></>
+                <>Reste à configurer : <strong className="text-gray-900 dark:text-afri-text">{completeness.missing.join(", ")}</strong></>
               ) : (
                 <span className="text-emerald-500 font-semibold">🎉 Félicitations, profil complété ! Prêt pour débloquer de grosses opportunités.</span>
               )}
@@ -276,8 +276,8 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
           {/* Swithing Autosave state text badge */}
           <div className="pt-1.5 flex items-center justify-end text-[10.5px]">
             {saveStatus === "saving" && (
-              <span className="text-[#D4AF37] font-black animate-pulse flex items-center gap-1 bg-[#D4AF37]/5 px-2.5 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" />
+              <span className="text-[#D4AF37] font-black animate-pulse flex items-center gap-1 bg-afri-bg-sec/5 px-2.5 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-afri-bg-sec animate-ping" />
                 Sauvegarde automatique...
               </span>
             )}
@@ -292,12 +292,12 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
 
         {/* Custom photo uploader & Avatar picks */}
         <div className="mb-6 space-y-4">
-          <label className="block text-xs font-black text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">
+          <label className="block text-xs font-black text-afri-text-sec dark:text-afri-text-sec mb-1 uppercase tracking-wider">
             Photo de Profil (Uploader une photo réelle)
           </label>
           
-          <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-[#FAF9F5] dark:bg-[#1c1c1f]/40 rounded-2xl border border-dashed border-[#D4AF37]/20">
-            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[#D4AF37] bg-zinc-950 shrink-0 flex items-center justify-center">
+          <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-afri-bg-sec dark:bg-afri-bg-sec/40 rounded-2xl border border-dashed border-[#D4AF37]/20">
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[#D4AF37] bg-afri-bg shrink-0 flex items-center justify-center">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Aperçu" className="w-full h-full object-cover" />
               ) : (
@@ -306,7 +306,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
                 </span>
               )}
               {uploading && (
-                <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-[10px] font-bold text-white">
+                <div className="absolute inset-0 bg-afri-bg/70 flex items-center justify-center text-[10px] font-bold text-afri-text">
                   {Math.round(uploadProgress)}%
                 </div>
               )}
@@ -323,14 +323,14 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
               />
               <label
                 htmlFor="profile-photo-upload"
-                className={`inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs transition-transform active:scale-97 ${
+                className={`inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-afri-text font-bold rounded-xl text-xs cursor-pointer shadow-xs transition-transform active:scale-97 ${
                   uploading ? "opacity-50 pointer-events-none" : ""
                 }`}
               >
                 <Camera className="w-4 h-4" />
                 <span>{uploading ? "Chargement..." : "Uploader de vraies photos"}</span>
               </label>
-              <p className="text-[10px] text-gray-400">Photos de scène réelles acceptées (JPG, PNG, TIFF. Max : 4 Mo).</p>
+              <p className="text-[10px] text-afri-text-sec">Photos de scène réelles acceptées (JPG, PNG, TIFF. Max : 4 Mo).</p>
             </div>
           </div>
         </div>
@@ -338,53 +338,53 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
         {/* Text Fields Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Nom d’Artiste / de Scène *</label>
+            <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Nom d’Artiste / de Scène *</label>
             <input
               type="text"
               required
               value={artistName}
               onChange={(e) => setArtistName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white font-bold"
+              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text font-bold"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Ville de Résidence *</label>
+            <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Ville de Résidence *</label>
             <input
               type="text"
               required
               value={ville}
               onChange={(e) => setVille(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white"
+              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Prénom *</label>
+            <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Prénom *</label>
             <input
               type="text"
               required
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white"
+              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Nom de famille *</label>
+            <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Nom de famille *</label>
             <input
               type="text"
               required
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white"
+              className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Téléphone de contact *</label>
+            <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Téléphone de contact *</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
                 <Phone className="w-4 h-4" />
               </span>
               <input
@@ -392,21 +392,21 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white"
+                className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Commune d'Abidjan *</label>
+            <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Commune d'Abidjan *</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
                 <MapPin className="w-4 h-4" />
               </span>
               <select
                 value={commune}
                 onChange={(e) => setCommune(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white"
+                className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
               >
                 {ABIDJAN_COMMUNES.map((com) => (
                   <option key={com} value={com}>{com}</option>
@@ -418,9 +418,9 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
 
         {/* Presentation description text */}
         <div className="mt-4">
-          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Présentation / Bio *</label>
+          <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Présentation / Bio *</label>
           <div className="relative">
-            <span className="absolute top-3 left-3.5 text-gray-400">
+            <span className="absolute top-3 left-3.5 text-afri-text-sec">
               <FileText className="w-4 h-4" />
             </span>
             <textarea
@@ -428,7 +428,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
               placeholder="Ex : Bassiste de live ayant accompagné de nombreux groupes, disponible pour des sessions régulières sur Marcory et Cocody..."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white"
+              className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
             />
           </div>
         </div>
@@ -439,24 +439,24 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-[#111113] p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl space-y-4"
+          className="bg-white dark:bg-afri-bg-sec p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl space-y-4"
         >
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-afri-text flex items-center gap-2">
             <Music className="w-5 h-5 text-[#D4AF37]" />
             Compétences Musicales & Tarification
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Spécialité Instrumentale</label>
+              <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Spécialité Instrumentale</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
                   <Music className="w-4 h-4" />
                 </span>
                 <select
                   value={specialty}
                   onChange={(e) => setSpecialty(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
                 >
                   {SPECIALTIES.map((spec) => (
                     <option key={spec} value={spec}>{spec}</option>
@@ -466,15 +466,15 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Niveau d'Expérience</label>
+              <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Niveau d'Expérience</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
                   <Award className="w-4 h-4" />
                 </span>
                 <select
                   value={experience}
                   onChange={(e) => setExperience(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
                 >
                   {EXPERIENCES.map((exp) => (
                     <option key={exp} value={exp}>{exp}</option>
@@ -489,17 +489,17 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
               <Wallet className="w-4.5 h-4.5 text-[#D4AF37]" />
               Réception des Paiements Mobiles (Wave / Orange)
             </h4>
-            <p className="text-xs text-gray-400 mb-3 leading-relaxed">
+            <p className="text-xs text-afri-text-sec mb-3 leading-relaxed">
               Vos coordonnées ne seront révélées qu'aux clients officiellement retenus après validation mutuelle du gombo.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Réseau Préféré</label>
+                <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Réseau Préféré</label>
                 <select
                   value={paymentProvider}
                   onChange={(e) => setPaymentProvider(e.target.value as PaymentProvider)}
-                  className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white"
+                  className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
                 >
                   <option value="Wave">Wave 🌊</option>
                   <option value="Orange Money">Orange Money 🍊</option>
@@ -509,13 +509,13 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Numéro de Mobile Money</label>
+                <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Numéro de Mobile Money</label>
                 <input
                   type="text"
                   placeholder="Ex : 0500112233"
                   value={paymentNumber}
                   onChange={(e) => setPaymentNumber(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-[#111113] dark:text-white"
+                  className="w-full px-4 py-3 bg-gray-55/60 dark:bg-gray-800/20 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
                 />
               </div>
             </div>
@@ -543,7 +543,7 @@ export default function ProfileEdit({ initialProfile, onSave, onCancel }: Profil
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 sm:flex-none px-8 py-3 bg-[#D4AF37] hover:bg-[#bfa12d] text-gray-900 font-black rounded-xl text-xs shadow-md transition-all active:scale-97 flex items-center justify-center gap-1.5 cursor-pointer"
+            className="flex-1 sm:flex-none px-8 py-3 bg-afri-bg-sec hover:bg-afri-bg-sec text-gray-900 font-black rounded-xl text-xs shadow-md transition-all active:scale-97 flex items-center justify-center gap-1.5 cursor-pointer"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />

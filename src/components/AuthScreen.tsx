@@ -183,7 +183,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative w-full bg-[#0E0E10] text-[#E4E4E7] rounded-3xl border border-emerald-500/35 p-8 shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden text-center space-y-6"
+          className="relative w-full bg-afri-bg-sec text-[#E4E4E7] rounded-3xl border border-emerald-500/35 p-8 shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden text-center space-y-6"
         >
           {/* Accent decoration */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -205,8 +205,8 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
             </p>
           </div>
 
-          <div className="p-4 bg-zinc-900/60 border border-zinc-850 rounded-2xl max-w-xs mx-auto space-y-2">
-            <div className="flex justify-center items-center gap-1.5 text-[10px] text-zinc-400 font-mono">
+          <div className="p-4 bg-afri-bg-sec/60 border border-afri-border rounded-2xl max-w-xs mx-auto space-y-2">
+            <div className="flex justify-center items-center gap-1.5 text-[10px] text-afri-text-sec font-mono">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
               <span>Redirection automatique...</span>
             </div>
@@ -230,7 +230,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                   window.location.href = window.location.origin;
                 }
               }}
-              className="w-full py-2 bg-transparent hover:bg-white/5 text-gray-500 hover:text-white font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
+              className="w-full py-2 bg-transparent hover:bg-white/5 text-afri-text-sec hover:text-afri-text font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
             >
               Fermer cet onglet 🔒
             </button>
@@ -261,16 +261,16 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.25 }}
-        className="relative w-full bg-[#0E0E10] text-[#E4E4E7] rounded-3xl border border-[#D4AF37]/25 p-6 sm:p-8 shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden text-center"
+        className="relative w-full bg-afri-bg-sec text-[#E4E4E7] rounded-3xl border border-[#D4AF37]/25 p-6 sm:p-8 shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden text-center"
       >
         {/* Ambient Gold detailing glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-afri-bg-sec/5 rounded-full blur-3xl pointer-events-none" />
 
         {onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white rounded-full bg-white/5 hover:bg-white/10 transition-all z-50 cursor-pointer"
+            className="absolute top-4 right-4 p-2 text-afri-text-sec hover:text-afri-text rounded-full bg-white/5 hover:bg-white/10 transition-all z-50 cursor-pointer"
             aria-label="Fermer"
           >
             <X className="w-5 h-5" />
@@ -279,7 +279,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
         {/* Brand logo header */}
         <div className="mt-4 mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-[#D4AF37]/5 text-[#D4AF37] rounded-full mb-4 border border-[#D4AF37]/20 shadow-lg overflow-hidden">
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-afri-bg-sec/5 text-[#D4AF37] rounded-full mb-4 border border-[#D4AF37]/20 shadow-lg overflow-hidden">
             {isLogoLoaded && !isLogoFailed ? (
               <img 
                 src="/public/logo_afrigombo.png" 
@@ -294,7 +294,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
           <h1 className="text-3xl font-black text-[#D4AF37] tracking-wider uppercase mb-1">
             AFRIGOMBO
           </h1>
-          <h2 className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-1">
+          <h2 className="text-xs font-bold text-afri-text-sec tracking-widest uppercase mb-1">
             LE TEMPLE DU GOMBO MUSICAL
           </h2>
           <div className="flex items-center justify-center gap-1.5 mb-4">
@@ -303,7 +303,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
               Vos cachets 100% sécurisés
             </span>
           </div>
-          <div className="h-[1px] w-1/3 bg-[#D4AF37]/20 mx-auto mb-4" />
+          <div className="h-[1px] w-1/3 bg-afri-bg-sec/20 mx-auto mb-4" />
           <p className="text-xs text-gray-300 font-sans font-bold leading-relaxed whitespace-pre-line max-w-sm mx-auto">
             {"Le Temple du Gombo :\nVos opportunités musicales certifiées,\nvos cachets sécurisés."}
           </p>
@@ -312,7 +312,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         {isTransferMode && (
           <div className="p-4 mb-6 bg-amber-500/10 border border-[#D4AF37]/30 rounded-2xl text-left space-y-1 max-w-sm mx-auto">
             <span className="text-[9px] font-black font-mono text-[#D4AF37] uppercase tracking-widest block">🇨🇮 SÉCURISATION INTÉGRATION</span>
-            <p className="text-[10.5px] text-zinc-300 leading-relaxed">
+            <p className="text-[10.5px] text-afri-text leading-relaxed">
               Pour lier ou rétablir votre connexion Google, cliquez sur <strong>"Continuer avec Google"</strong> ci-dessous. La synchronisation avec l'application principale s'exécutera automatiquement.
             </p>
           </div>
@@ -338,7 +338,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                     setErrorMSG("");
                     handleGoogleLogin();
                   }}
-                  className="mt-1 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer inline-block w-fit text-center"
+                  className="mt-1 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-afri-text font-mono font-black text-[10px] uppercase rounded-xl transition-all cursor-pointer inline-block w-fit text-center"
                 >
                   Réessayer
                 </button>
@@ -364,14 +364,14 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
           {isRedirectPending ? (
             <div className="p-4 bg-slate-950/40 border border-[#D4AF37]/20 rounded-xl space-y-4 text-center">
               <div className="flex justify-center">
-                <div className="w-10 h-10 rounded-full bg-[#D4AF37]/10 flex items-center justify-center animate-bounce">
+                <div className="w-10 h-10 rounded-full bg-afri-bg-sec/10 flex items-center justify-center animate-bounce">
                   <Flame className="w-5 h-5 text-[#D4AF37] fill-current" />
                 </div>
               </div>
               
               <div className="space-y-1">
                 <h3 className="text-xs font-black text-[#D4AF37] uppercase tracking-wider">Connexion externe en cours</h3>
-                <p className="text-[10px] text-gray-400 leading-relaxed max-w-xs mx-auto">
+                <p className="text-[10px] text-afri-text-sec leading-relaxed max-w-xs mx-auto">
                   La fenêtre se poursuit dans Chrome pour contourner les restrictions.
                 </p>
               </div>
@@ -386,7 +386,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                     const chromeIntentUrl = `intent://${webUrlWithoutHttps}#Intent;scheme=https;package=com.android.chrome;end`;
                     window.location.href = chromeIntentUrl;
                   }}
-                  className="w-full h-11 bg-[#D4AF37] hover:bg-[#be992c] text-[#0E0E10] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                  className="w-full h-11 bg-afri-bg-sec hover:bg-afri-bg-sec text-[#0E0E10] font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
                 >
                   Ouvrir dans Chrome 🚀
                 </button>
@@ -396,7 +396,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                     setIsRedirectPending(false);
                     setLoading(false);
                   }}
-                  className="w-full py-2 bg-transparent text-gray-400 hover:text-white font-bold text-[10px] uppercase transition-colors"
+                  className="w-full py-2 bg-transparent text-afri-text-sec hover:text-afri-text font-bold text-[10px] uppercase transition-colors"
                 >
                   Annuler la connexion
                 </button>
@@ -409,7 +409,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={loading}
-                className="w-full h-14 flex items-center justify-center gap-3 bg-[#D4AF37] hover:bg-[#b5921f] text-black rounded-2xl transition-all duration-300 font-bold text-xs uppercase tracking-widest active:scale-[0.98] cursor-pointer shadow-[0_4px_20px_rgba(212,175,55,0.2)] border border-[#D4AF37]/30"
+                className="w-full h-14 flex items-center justify-center gap-3 bg-afri-bg-sec hover:bg-afri-bg-sec text-black rounded-2xl transition-all duration-300 font-bold text-xs uppercase tracking-widest active:scale-[0.98] cursor-pointer shadow-[0_4px_20px_rgba(212,175,55,0.2)] border border-[#D4AF37]/30"
               >
                 <svg className="w-5.5 h-5.5 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -424,13 +424,13 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
               <button
                 type="button"
                 disabled={true}
-                className="w-full h-16 relative flex flex-col items-center justify-center bg-[#121214]/60 border border-zinc-800/80 text-zinc-400 rounded-2xl font-bold uppercase cursor-not-allowed opacity-[0.55] transition-all"
+                className="w-full h-16 relative flex flex-col items-center justify-center bg-afri-bg-sec/60 border border-afri-border/80 text-afri-text-sec rounded-2xl font-bold uppercase cursor-not-allowed opacity-[0.55] transition-all"
               >
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 fill-current shrink-0 text-zinc-400" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 fill-current shrink-0 text-afri-text-sec" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                   </svg>
-                  <span className="text-xs tracking-widest font-black text-zinc-300">Continuer avec Facebook</span>
+                  <span className="text-xs tracking-widest font-black text-afri-text">Continuer avec Facebook</span>
                 </div>
                 <span className="text-[7.5px] font-black uppercase text-[#D4AF37] tracking-widest mt-0.5 font-mono">
                   Bientôt disponible
@@ -440,7 +440,7 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
           )}
         </div>
 
-        <p className="text-[10px] text-gray-500 font-mono mt-8 uppercase tracking-widest">
+        <p className="text-[10px] text-afri-text-sec font-mono mt-8 uppercase tracking-widest">
           SÉCURISÉ PAR FIREBASE AUTHENTIFICATION • 2026
         </p>
       </motion.div>

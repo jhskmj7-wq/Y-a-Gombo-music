@@ -493,6 +493,15 @@ export const gomboDB = {
         };
         if (receiverId) {
           updates[`unreadCount.${receiverId}`] = increment(1);
+          
+          await this.publishNotification({
+            userId: receiverId,
+            type: "new_message",
+            title: "💬 Nouveau message",
+            message: `Vous avez reçu un nouveau message de ${senderName} : "${text.slice(0, 50)}${text.length > 50 ? "..." : ""}"`,
+            relatedId: convoId,
+            priority: "medium"
+          });
         }
         await updateDoc(doc(db, "conversations", convoId), updates);
       }
@@ -597,9 +606,16 @@ export const gomboDB = {
       });
       
       if (gomboId) {
-        await updateDoc(doc(db, "gombos", gomboId), {
-          applicantsCount: increment(1)
-        });
+        const gomboRef = doc(db, "gombos", gomboId);
+        const gomboSnap = await getDoc(gomboRef);
+        let updates: any = { applicantsCount: increment(1) };
+        if (gomboSnap.exists()) {
+          const gData = gomboSnap.data();
+          if (gData.status === "publie" || !gData.status) {
+            updates.status = "candidatures_ouvertes";
+          }
+        }
+        await updateDoc(gomboRef, updates);
       }
       return ref.id;
     }
@@ -814,6 +830,45 @@ export const gomboDB = {
   // NOTIFICATIONS
   async publishNotification(notif: Partial<GomboNotification>) {
     if (db) {
+      if (notif.userId) {
+        try {
+          const userSnap = await getDoc(doc(db, "users", notif.userId));
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            const prefs = userData.notificationPrefs;
+            if (prefs) {
+              const masterEnabled = prefs.masterEnabled !== false;
+              if (!masterEnabled) {
+                console.log(`Skipping notification for user ${notif.userId} because master notifications are disabled.`);
+                return;
+              }
+              const mapping: Record<string, string> = {
+                "new_message": "messages",
+                "payment_received": "payments",
+                "payment_held": "payments",
+                "contract_signed": "contracts",
+                "application_accepted": "contracts",
+                "application_refused": "contracts",
+                "kyc_validated": "gomboId",
+                "gombo_id_validated": "gomboId",
+                "premium_activated": "premium",
+                "app_update": "news",
+                "publication_boosted": "news",
+                "new_favorite": "news",
+                "support_received": "news"
+              };
+              const prefKey = mapping[notif.type || ""];
+              if (prefKey && prefs[prefKey] === false) {
+                console.log(`Skipping notification of type ${notif.type} because preference is off.`);
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Could not check user notification preferences:", e);
+        }
+      }
+
       await addDoc(collection(db, "notifications"), {
         ...notif,
         isRead: false,
@@ -824,6 +879,39 @@ export const gomboDB = {
 
   async sendNotification(notif: Partial<GomboNotification>) {
     return await this.publishNotification(notif);
+  },
+
+  async notifyFounder(notif: Partial<GomboNotification>) {
+    if (db) {
+      try {
+        const q = query(collection(db, "users"), where("email", "==", "jhs.kmj7@gmail.com"));
+        const snap = await getDocs(q);
+        let founderUid = "";
+        if (!snap.empty) {
+          founderUid = snap.docs[0].id;
+        }
+        
+        if (founderUid) {
+          await this.publishNotification({
+            ...notif,
+            userId: founderUid,
+            isFounderOnly: true
+          });
+        } else {
+          const q2 = query(collection(db, "users"), where("role", "==", "founder"));
+          const snap2 = await getDocs(q2);
+          if (!snap2.empty) {
+            await this.publishNotification({
+              ...notif,
+              userId: snap2.docs[0].id,
+              isFounderOnly: true
+            });
+          }
+        }
+      } catch (e) {
+        console.warn("Could not notify founder:", e);
+      }
+    }
   },
 
   listenUserNotifications(userId: string, callback: (notifs: GomboNotification[]) => void) {
@@ -852,9 +940,27 @@ export const gomboDB = {
     }
   },
 
+  async markAllUserNotificationsAsRead(userId: string) {
+    if (db) {
+      const q = query(collection(db, "notifications"), where("userId", "==", userId), where("isRead", "==", false));
+      const snap = await getDocs(q);
+      const batchPromises = snap.docs.map(d => updateDoc(doc(db, "notifications", d.id), { isRead: true }));
+      await Promise.all(batchPromises);
+    }
+  },
+
   async deleteNotification(notifId: string) {
     if (db) {
       await deleteDoc(doc(db, "notifications", notifId));
+    }
+  },
+
+  async deleteAllUserNotifications(userId: string) {
+    if (db) {
+      const q = query(collection(db, "notifications"), where("userId", "==", userId));
+      const snap = await getDocs(q);
+      const batchPromises = snap.docs.map(d => deleteDoc(doc(db, "notifications", d.id)));
+      await Promise.all(batchPromises);
     }
   },
 
@@ -941,10 +1047,21 @@ export const gomboDB = {
 
   async publishPayment(payment: any) {
     if (db) {
-      await addDoc(collection(db, "payments"), {
+      const docRef = await addDoc(collection(db, "payments"), {
         ...payment,
         createdAt: new Date().toISOString()
       });
+
+      if (payment.userId) {
+        await this.publishNotification({
+          userId: payment.userId,
+          type: "payment_received",
+          title: "💰 Paiement reçu",
+          message: `Votre paiement de ${payment.amount ? payment.amount.toLocaleString() : "0"} FCFA pour "${payment.label || payment.description || "Prestation"}" a été enregistré !`,
+          relatedId: docRef.id,
+          priority: "high"
+        });
+      }
     }
   },
 
@@ -1795,6 +1912,102 @@ export const gomboDB = {
 
         await updateDoc(ref, finalUpdates);
 
+        // Dispatch Contract Notifications
+        const nextStatus = updates.status || finalUpdates.status;
+        if (nextStatus && nextStatus !== data.status) {
+          if (nextStatus === "signed") {
+            await this.publishNotification({
+              userId: data.artistId,
+              type: "contract_signed",
+              title: "📄 Contrat Signé !",
+              message: `Félicitations ! Le contrat pour "${data.title || "Prestation"}" a été validé et signé par les deux parties.`,
+              relatedId: id,
+              priority: "high"
+            });
+            await this.publishNotification({
+              userId: data.clientId,
+              type: "contract_signed",
+              title: "📄 Contrat Signé !",
+              message: `Félicitations ! Le contrat pour "${data.title || "Prestation"}" a été validé et signé par les deux parties.`,
+              relatedId: id,
+              priority: "high"
+            });
+          } else if (nextStatus === "payment_held") {
+            await this.publishNotification({
+              userId: data.artistId,
+              type: "payment_held",
+              title: "💰 Fonds en Séquestre !",
+              message: `Le promoteur a déposé les fonds en séquestre pour "${data.title || "Prestation"}". Vous pouvez démarrer la prestation sereinement !`,
+              relatedId: id,
+              priority: "high"
+            });
+          } else if (nextStatus === "completed") {
+            await this.publishNotification({
+              userId: data.artistId,
+              type: "payment_received",
+              title: "💰 Cachet Libéré !",
+              message: `Le gombo "${data.title || "Prestation"}" est clôturé. Vos gains ont été transférés sur votre portefeuille !`,
+              relatedId: id,
+              priority: "high"
+            });
+            await this.publishNotification({
+              userId: data.clientId,
+              type: "contract_signed",
+              title: "✅ Gombo Terminé !",
+              message: `Le gombo "${data.title || "Prestation"}" est clos. Merci d'avoir soutenu les talents du showbiz !`,
+              relatedId: id,
+              priority: "medium"
+            });
+          } else if (nextStatus === "cancelled") {
+            await this.publishNotification({
+              userId: data.artistId,
+              type: "application_refused",
+              title: "❌ Contrat Annulé",
+              message: `Le contrat pour "${data.title || "Prestation"}" a été annulé.`,
+              relatedId: id,
+              priority: "high"
+            });
+            await this.publishNotification({
+              userId: data.clientId,
+              type: "application_refused",
+              title: "❌ Contrat Annulé",
+              message: `Le contrat pour "${data.title || "Prestation"}" a été annulé.`,
+              relatedId: id,
+              priority: "high"
+            });
+          }
+        }
+
+        // Sync associated Gombo status automatically
+        const gomboId = updates.gomboId || data.gomboId;
+        if (gomboId) {
+          let newGomboStatus: string | null = null;
+          const currentStatus = updates.status || finalUpdates.status;
+          
+          if (currentStatus === "signed") {
+            newGomboStatus = "contrat_confirme";
+          } else if (currentStatus === "payment_held") {
+            newGomboStatus = "paiement_recu";
+          } else if (["arrived", "in_progress", "completed_artist"].includes(currentStatus)) {
+            newGomboStatus = "en_cours";
+          } else if (currentStatus === "completed") {
+            newGomboStatus = "mission_terminee";
+          } else if (currentStatus === "cancelled") {
+            newGomboStatus = "mission_annulee";
+          }
+
+          if (newGomboStatus) {
+            try {
+              await updateDoc(doc(db, "gombos", gomboId), {
+                status: newGomboStatus,
+                updatedAt: new Date().toISOString()
+              });
+            } catch (err) {
+              console.error("Error auto-syncing Gombo status from contract updates:", err);
+            }
+          }
+        }
+
         // If status becomes completed, trigger certification automatically
         if (updates.status === "completed" || finalUpdates.status === "completed") {
           try {
@@ -2131,10 +2344,21 @@ export const gomboDB = {
   },
   async publishBoost(boost: any) {
     if (db) {
-      await addDoc(collection(db, "boosts"), {
+      const docRef = await addDoc(collection(db, "boosts"), {
         ...boost,
         createdAt: new Date().toISOString()
       });
+
+      if (boost.userId) {
+        await this.publishNotification({
+          userId: boost.userId,
+          type: "publication_boosted",
+          title: "🚀 Publication Boostée !",
+          message: `Votre publication ou profil a été boosté avec succès (Niveau ${boost.level || "BRONZE"}). Visibilité maximale activée !`,
+          relatedId: docRef.id,
+          priority: "high"
+        });
+      }
     }
   },
   async updateCertificationRequestStatus(id: string, status: string) {
@@ -2456,6 +2680,18 @@ export const gomboDB = {
         totalArtistReceives,
         updatedAt: now
       });
+
+      // Sync Gombo status to paiement_recu if associated with a gombo
+      if (contractData.gomboId) {
+        try {
+          await updateDoc(doc(db, "gombos", contractData.gomboId), {
+            status: "paiement_recu",
+            updatedAt: now
+          });
+        } catch (err) {
+          console.error("Error auto-syncing Gombo status to paiement_recu on deposit:", err);
+        }
+      }
 
       // 5. Append to history
       const history = contractData.history || [];

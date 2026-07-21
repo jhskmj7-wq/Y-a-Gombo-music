@@ -125,9 +125,9 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
   );
 
   return (
-    <div className="bg-[#0B0B0B] border border-[#2B2B2B] rounded-3xl p-5 space-y-4 shadow-xl text-white relative overflow-hidden transition-all duration-300">
+    <div className="bg-afri-bg-sec border border-[#2B2B2B] rounded-3xl p-5 space-y-4 shadow-xl text-afri-text relative overflow-hidden transition-all duration-300">
       {/* Background glow for premiumness */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 blur-2xl rounded-full" />
+      <div className="absolute top-0 right-0 w-24 h-24 bg-afri-bg-sec/5 blur-2xl rounded-full" />
       
       {/* Header with live and countdown indicator */}
       <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
@@ -138,7 +138,7 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
           </span>
           <div>
             <h4 className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] font-mono">🔔 Le Tam-Tam</h4>
-            <span className="text-[9px] text-gray-400 block font-sans">L'instantané du Showbiz Ivoirien</span>
+            <span className="text-[9px] text-afri-text-sec block font-sans">L'instantané du Showbiz Ivoirien</span>
           </div>
         </div>
 
@@ -155,7 +155,7 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-4 gap-1 p-0.5 bg-zinc-950/80 rounded-2xl border border-white/[0.04]">
+      <div className="grid grid-cols-4 gap-1 p-0.5 bg-afri-bg-sec rounded-2xl border border-afri-border">
         {[
           { id: "gombo", label: "🔥 Gombo", icon: Flame },
           { id: "talent", label: "👑 Talent", icon: Award },
@@ -170,8 +170,8 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
               onClick={() => setActiveTab(t.id as any)}
               className={`py-2 rounded-xl text-[9px] font-black uppercase flex flex-col items-center gap-1 transition-all cursor-pointer ${
                 isActive 
-                  ? "bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 shadow-xs font-black" 
-                  : "text-gray-400 hover:text-white hover:bg-white/[0.02]"
+                  ? "bg-afri-bg-sec/10 text-[#D4AF37] border border-[#D4AF37]/20 shadow-xs font-black" 
+                  : "text-afri-text-sec hover:text-afri-text hover:bg-white/[0.02]"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -188,7 +188,7 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-1 right-2 left-2 z-10 p-2.5 bg-[#D4AF37] text-black font-extrabold text-[10px] uppercase tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-1.5 border border-[#b59223]"
+            className="absolute top-1 right-2 left-2 z-10 p-2.5 bg-afri-bg-sec text-black font-extrabold text-[10px] uppercase tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-1.5 border border-[#b59223]"
           >
             <span>✨</span>
             <span>{toastMessage}</span>
@@ -208,7 +208,7 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
               transition={{ duration: 0.2 }}
               className="space-y-3.5 py-1"
             >
-              <div className="space-y-1 bg-[#121212] p-3 rounded-2xl border border-white/[0.02]">
+              <div className="space-y-1 bg-afri-bg-sec p-3 rounded-2xl border border-white/[0.02]">
                 <div className="flex items-center justify-between">
                   <span className="px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 text-[8px] font-black uppercase rounded-lg tracking-wider">
                     ⚡ GOMBO DU JOUR
@@ -217,10 +217,10 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
                     💰 {(gomboDuJour.budget || 0).toLocaleString()} FCFA
                   </span>
                 </div>
-                <h5 className="font-extrabold text-xs text-white uppercase tracking-tight py-1">
+                <h5 className="font-extrabold text-xs text-afri-text uppercase tracking-tight py-1">
                   {gomboDuJour.title}
                 </h5>
-                <p className="text-[10px] text-gray-400 leading-relaxed line-clamp-2">
+                <p className="text-[10px] text-afri-text-sec leading-relaxed line-clamp-2">
                   {gomboDuJour.description}
                 </p>
                 <div className="flex items-center gap-1 text-[9px] text-[#D4AF37] font-bold pt-1">
@@ -247,27 +247,27 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
               transition={{ duration: 0.2 }}
               className="space-y-3 py-1"
             >
-              <div className="flex items-center gap-3 bg-[#121212] p-3 rounded-2xl border border-white/[0.02]">
+              <div className="flex items-center gap-3 bg-afri-bg-sec p-3 rounded-2xl border border-white/[0.02]">
                 <div className="relative shrink-0">
                   <img
                     src={talentDuJour.avatarUrl}
                     alt={talentDuJour.artistName}
                     className="w-11 h-11 rounded-full object-cover border border-[#D4AF37]/30"
                   />
-                  <span className="absolute -bottom-1 -right-1 bg-[#D4AF37] w-4.5 h-4.5 rounded-full flex items-center justify-center text-[9px]">
+                  <span className="absolute -bottom-1 -right-1 bg-afri-bg-sec w-4.5 h-4.5 rounded-full flex items-center justify-center text-[9px]">
                     ⭐
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1 justify-between flex-wrap">
-                    <span className="text-[8px] bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 px-1.5 py-0.5 rounded font-black uppercase font-mono">
+                    <span className="text-[8px] bg-afri-bg-sec/10 text-[#D4AF37] border border-[#D4AF37]/20 px-1.5 py-0.5 rounded font-black uppercase font-mono">
                       Talent Spotlight
                     </span>
                     <span className="text-[9px] font-bold text-[#D4AF37]">
                       {talentDuJour.experience}
                     </span>
                   </div>
-                  <h5 className="font-extrabold text-xs text-white truncate uppercase tracking-tight py-0.5">
+                  <h5 className="font-extrabold text-xs text-afri-text truncate uppercase tracking-tight py-0.5">
                     {talentDuJour.artistName}
                   </h5>
                   <span className="text-[9px] text-[#D4AF37] font-semibold flex items-center gap-1 font-sans">
@@ -276,13 +276,13 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
                 </div>
               </div>
 
-              <p className="text-[10px] text-gray-400 italic line-clamp-1 text-center font-sans">
+              <p className="text-[10px] text-afri-text-sec italic line-clamp-1 text-center font-sans">
                 &ldquo;{talentDuJour.bio}&rdquo;
               </p>
 
               <button
                 onClick={() => onNavigateView("annuaire")}
-                className="w-full py-2 bg-zinc-900 hover:bg-zinc-850 border border-white/[0.08] text-white hover:text-[#D4AF37] font-extrabold text-[10px] uppercase tracking-wider rounded-xl cursor-pointer flex items-center justify-center gap-1 transition-all"
+                className="w-full py-2 bg-afri-bg-sec hover:bg-afri-bg-sec border border-white/[0.08] text-afri-text hover:text-[#D4AF37] font-extrabold text-[10px] uppercase tracking-wider rounded-xl cursor-pointer flex items-center justify-center gap-1 transition-all"
               >
                 <span>🔍 Contacter le Talent</span>
               </button>
@@ -298,7 +298,7 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
               transition={{ duration: 0.2 }}
               className="space-y-3.5 py-1"
             >
-              <div className="space-y-1.5 bg-[#121212] p-3 rounded-2xl border border-white/[0.02]">
+              <div className="space-y-1.5 bg-afri-bg-sec p-3 rounded-2xl border border-white/[0.02]">
                 <div className="flex justify-between items-center">
                   <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase rounded-lg tracking-wider">
                     🎯 DÉFI GLOBAL DU JOUR
@@ -307,10 +307,10 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
                     {currentDefi.points}
                   </span>
                 </div>
-                <h5 className="font-extrabold text-xs text-white uppercase tracking-tight leading-snug">
+                <h5 className="font-extrabold text-xs text-afri-text uppercase tracking-tight leading-snug">
                   {currentDefi.title}
                 </h5>
-                <p className="text-[10px] text-gray-400 leading-relaxed">
+                <p className="text-[10px] text-afri-text-sec leading-relaxed">
                   {currentDefi.desc} Utilise le tag <strong className="text-[#D4AF37] font-mono">{currentDefi.tag}</strong> !
                 </p>
               </div>
@@ -320,7 +320,7 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
                   onNavigateView("home");
                   onOpenPostComposer();
                 }}
-                className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-1 transition-all border border-purple-500/20"
+                className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-afri-text font-extrabold text-[10px] uppercase tracking-wider rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-1 transition-all border border-purple-500/20"
               >
                 <span>🎤 Relever le Défi (+Points)</span>
               </button>
@@ -342,11 +342,11 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
                     <div 
                       key={g.id} 
                       onClick={() => onNavigateView("gombo_list")}
-                      className="p-2 bg-zinc-900 border border-white/[0.04] rounded-xl flex justify-between items-center cursor-pointer hover:bg-zinc-850 hover:border-[#D4AF37]/30 transition-all text-left"
+                      className="p-2 bg-afri-bg-sec border border-white/[0.04] rounded-xl flex justify-between items-center cursor-pointer hover:bg-afri-bg-sec hover:border-[#D4AF37]/30 transition-all text-left"
                     >
                       <div className="min-w-0 flex-1 pr-2">
                         <span className="text-[8px] font-bold text-[#D4AF37] block uppercase">{g.eventType} • {g.date}</span>
-                        <h6 className="font-extrabold text-[10.5px] text-white truncate uppercase">{g.title}</h6>
+                        <h6 className="font-extrabold text-[10.5px] text-afri-text truncate uppercase">{g.title}</h6>
                       </div>
                       <span className="text-[10px] font-black text-[#D4AF37] font-mono whitespace-nowrap">
                         💰 {(g.budget).toLocaleString()} FCFA
@@ -355,12 +355,12 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="bg-[#121212] p-4 rounded-2xl border border-white/[0.02] space-y-1">
+                <div className="bg-afri-bg-sec p-4 rounded-2xl border border-afri-border space-y-1">
                   <Compass className="w-5 h-5 mx-auto text-[#D4AF37] animate-pulse" />
-                  <p className="text-[10px] font-extrabold uppercase text-gray-300">
+                  <p className="text-[10px] font-extrabold uppercase text-afri-text">
                     Secteur {userCommune} Calme
                   </p>
-                  <p className="text-[9px] text-gray-500 leading-relaxed font-sans">
+                  <p className="text-[9px] text-afri-text-sec leading-relaxed font-sans">
                     Pas d'offre directe à {userCommune} en ce moment, élargis ton horizon !
                   </p>
                 </div>
@@ -368,7 +368,7 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
 
               <button
                 onClick={() => onNavigateView("gombo_list")}
-                className="w-full py-2 bg-zinc-950 hover:bg-zinc-900 border border-white/[0.05] text-[#D4AF37] hover:text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1"
+                className="w-full py-2 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-[#D4AF37] hover:text-afri-text font-extrabold text-[10px] uppercase tracking-wider rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1"
               >
                 <span>🌍 Voir les {activeGombos.length} Gombos d'Abidjan</span>
               </button>
@@ -378,7 +378,7 @@ export const TamTamWidget: React.FC<TamTamWidgetProps> = ({
       </div>
 
       {/* Habits prompt footer */}
-      <div className="text-[8px] font-mono tracking-wider uppercase text-gray-500 flex justify-between items-center mt-1 border-t border-white/[0.04] pt-2">
+      <div className="text-[8px] font-mono tracking-wider uppercase text-afri-text-sec flex justify-between items-center mt-1 border-t border-white/[0.04] pt-2">
         <span>📶 Connexion Temps Réel</span>
         <span className="text-[#D4AF37] font-bold animate-pulse font-sans">Une habitude quotidienne, un cachet décroché !</span>
       </div>

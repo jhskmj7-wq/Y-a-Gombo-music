@@ -112,7 +112,7 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
           </div>
           <button
             onClick={() => window.location.href = "/"}
-            className="w-full bg-[#D4AF37] hover:bg-opacity-95 text-black py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all shadow-[0_10px_30px_rgba(212,175,55,0.3)] cursor-pointer text-xs"
+            className="w-full bg-afri-bg-sec hover:bg-opacity-95 text-black py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all shadow-[0_10px_30px_rgba(212,175,55,0.3)] cursor-pointer text-xs"
           >
             Retour au Terrain
           </button>
@@ -137,7 +137,7 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-black uppercase tracking-widest"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-afri-bg-sec/10 border border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-black uppercase tracking-widest"
         >
           <Star className="w-3.5 h-3.5 fill-current" />
           Construction du Temple
@@ -170,7 +170,7 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
                 }`}
               >
                 {selectedLevel?.id === level.id && (
-                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#D4AF37]" />
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-afri-bg-sec" />
                 )}
                 
                 <div className={`w-16 h-16 rounded-2xl ${level.bg} flex items-center justify-center ${level.color} shrink-0 group-hover:scale-105 transition-transform`}>
@@ -243,7 +243,7 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
                     </div>
 
                     <label className="flex items-center gap-3 cursor-pointer group select-none">
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isAnonymous ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-afri-bg border-afri-border group-hover:border-[#D4AF37]"}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isAnonymous ? "bg-afri-bg-sec border-[#D4AF37]" : "bg-afri-bg border-afri-border group-hover:border-[#D4AF37]"}`}>
                         <input
                           type="checkbox"
                           className="hidden"
@@ -259,7 +259,7 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
                   <button
                     type="submit"
                     disabled={loading || !amount}
-                    className="w-full bg-[#D4AF37] hover:bg-opacity-95 text-black py-4.5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-[0.98] transition-all disabled:opacity-50 group shadow-lg shadow-[#D4AF37]/15 text-xs cursor-pointer"
+                    className="w-full bg-afri-bg-sec hover:bg-opacity-95 text-black py-4.5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-[0.98] transition-all disabled:opacity-50 group shadow-lg shadow-[#D4AF37]/15 text-xs cursor-pointer"
                   >
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />

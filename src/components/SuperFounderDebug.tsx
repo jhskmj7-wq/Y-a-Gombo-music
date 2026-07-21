@@ -44,26 +44,26 @@ export default function SuperFounderDebug() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] p-4 bg-black/95 border-2 border-red-500 rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto font-mono text-[10px] text-red-400 shadow-2xl">
+    <div className="fixed bottom-4 right-4 z-[9999] p-4 bg-afri-bg/95 border-2 border-red-500 rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto font-mono text-[10px] text-red-400 shadow-2xl">
       <div className="flex items-center justify-between border-b border-red-500/30 pb-2 mb-2">
-        <h3 className="text-white font-bold uppercase">Diagnostic Super Fondateur</h3>
+        <h3 className="text-afri-text font-bold uppercase">Diagnostic Super Fondateur</h3>
         <button
           type="button"
           onClick={() => setIsOpen(false)}
-          className="px-2 py-0.5 bg-red-950 hover:bg-red-900 border border-red-500 text-white rounded text-[9px] uppercase transition-colors"
+          className="px-2 py-0.5 bg-red-950 hover:bg-red-900 border border-red-500 text-afri-text rounded text-[9px] uppercase transition-colors"
         >
           Masquer
         </button>
       </div>
       
       <div className="space-y-2">
-        <div><strong className="text-white">Date:</strong> {new Date().toLocaleString()}</div>
-        <div><strong className="text-white">Domain actuel:</strong> {window.location.hostname}</div>
-        <div><strong className="text-white">Firebase Project ID:</strong> {auth?.app?.options?.projectId || "N/A"}</div>
-        <div><strong className="text-white">Authorized Domain:</strong> Doit être configuré dans Firebase Console (Authentication &gt; Settings &gt; Authorized domains)</div>
+        <div><strong className="text-afri-text">Date:</strong> {new Date().toLocaleString()}</div>
+        <div><strong className="text-afri-text">Domain actuel:</strong> {window.location.hostname}</div>
+        <div><strong className="text-afri-text">Firebase Project ID:</strong> {auth?.app?.options?.projectId || "N/A"}</div>
+        <div><strong className="text-afri-text">Authorized Domain:</strong> Doit être configuré dans Firebase Console (Authentication &gt; Settings &gt; Authorized domains)</div>
         
         <div className="mt-4 pt-2 border-t border-red-500/30">
-          <strong className="text-white uppercase">Current User</strong>
+          <strong className="text-afri-text uppercase">Current User</strong>
           {currentUser ? (
             <div className="pl-2 mt-1 space-y-1">
               <div>UID: {currentUser.uid}</div>
@@ -78,7 +78,7 @@ export default function SuperFounderDebug() {
         </div>
 
         <div className="mt-4 pt-2 border-t border-red-500/30">
-          <strong className="text-white uppercase">Redirect Result</strong>
+          <strong className="text-afri-text uppercase">Redirect Result</strong>
           {redirectResult ? (
             <div className="pl-2 mt-1">
               User UID: {redirectResult.user?.uid}

@@ -100,20 +100,20 @@ export default function FounderThrone({
       animate={{ opacity: 1, filter: "brightness(1) drop-shadow(0 0 0px rgba(212,175,55,0))" }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed inset-0 w-full h-full bg-[#030303] text-zinc-100 flex flex-col overflow-hidden font-sans select-none z-[150]"
+      className="fixed inset-0 w-full h-full bg-afri-bg-sec text-afri-text flex flex-col overflow-hidden font-sans select-none z-[150]"
     >
       
       <div className="flex-1 flex flex-col xl:flex-row min-h-0 overflow-hidden">
         {/* DESKTOP SIDEBAR */}
-        <aside className="hidden xl:flex flex-col w-20 2xl:w-[280px] bg-black border-r border-[#D4AF37]/20 z-40 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
+        <aside className="hidden xl:flex flex-col w-20 2xl:w-[280px] bg-afri-bg border-r border-[#D4AF37]/20 z-40 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
         <div className="p-4 2xl:p-8 flex flex-col items-center justify-center shrink-0">
-          <div className="w-12 h-12 2xl:w-20 2xl:h-20 rounded-full border border-[#D4AF37] flex items-center justify-center bg-black mb-2 2xl:mb-4 shadow-[0_0_15px_rgba(212,175,55,0.4)] relative">
+          <div className="w-12 h-12 2xl:w-20 2xl:h-20 rounded-full border border-[#D4AF37] flex items-center justify-center bg-afri-bg mb-2 2xl:mb-4 shadow-[0_0_15px_rgba(212,175,55,0.4)] relative">
              <div className="absolute inset-0 border border-[#D4AF37] rounded-full scale-110 opacity-30"></div>
              <Globe className="w-6 h-6 2xl:w-10 2xl:h-10 text-[#D4AF37]" strokeWidth={1} />
           </div>
           <h1 className="text-[10px] 2xl:text-base font-black font-display text-[#D4AF37] tracking-widest uppercase text-center leading-tight drop-shadow-[0_0_20px_rgba(212,175,55,0.8)]">
             AFRIGOMBO<br/>
-            <span className="text-[8px] 2xl:text-xs text-white font-sans tracking-wide">Y'A GOMBO MUSIC</span>
+            <span className="text-[8px] 2xl:text-xs text-afri-text font-sans tracking-wide">Y'A GOMBO MUSIC</span>
           </h1>
         </div>
 
@@ -138,12 +138,12 @@ export default function FounderThrone({
                 key={item.id}
                 onClick={() => { setActiveMenu(item.id); try{ audioSynth.playTamTam(false); }catch(e){} }}
                 className={`w-full flex items-center justify-center 2xl:justify-start gap-5 px-4 py-3.5 2xl:py-4 rounded-xl text-[10px] 2xl:text-xs font-black uppercase tracking-widest font-mono transition-all group ${
-                  isActive ? "bg-gradient-to-r from-[#D4AF37]/20 to-transparent text-[#D4AF37] border-l-2 border-[#D4AF37]" : "text-zinc-500 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 border-l-2 border-transparent"
+                  isActive ? "bg-gradient-to-r from-[#D4AF37]/20 to-transparent text-[#D4AF37] border-l-2 border-[#D4AF37]" : "text-afri-text-sec hover:text-[#D4AF37] hover:bg-afri-bg-sec/5 border-l-2 border-transparent"
                 }`}
               >
                 <div className="relative">
-                  <Icon className={`w-5 h-5 2xl:w-6 2xl:h-6 shrink-0 ${isActive ? "text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.8)]" : "text-zinc-500 group-hover:text-[#D4AF37]"}`} strokeWidth={isActive ? 2.5 : 1.5} />
-                  {item.badge && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#D4AF37] rounded-full shadow-[0_0_8px_rgba(212,175,55,0.8)] animate-pulse"></span>}
+                  <Icon className={`w-5 h-5 2xl:w-6 2xl:h-6 shrink-0 ${isActive ? "text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.8)]" : "text-afri-text-sec group-hover:text-[#D4AF37]"}`} strokeWidth={isActive ? 2.5 : 1.5} />
+                  {item.badge && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-afri-bg-sec rounded-full shadow-[0_0_8px_rgba(212,175,55,0.8)] animate-pulse"></span>}
                 </div>
                 <span className="hidden 2xl:inline truncate drop-shadow-md">{item.label}</span>
               </button>
@@ -153,15 +153,15 @@ export default function FounderThrone({
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#050505] relative">
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-afri-bg-sec relative">
         
         {/* Ambient Top Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-[#D4AF37]/5 blur-[100px] pointer-events-none"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-afri-bg-sec/5 blur-[100px] pointer-events-none"></div>
 
         {/* TOP HEADER */}
-        <header className="shrink-0 bg-black/50 border-b border-[#D4AF37]/20 px-4 sm:px-6 2xl:px-10 py-4 sm:py-5 flex justify-between items-center z-30 relative">
+        <header className="shrink-0 bg-afri-bg/50 border-b border-[#D4AF37]/20 px-4 sm:px-6 2xl:px-10 py-4 sm:py-5 flex justify-between items-center z-30 relative">
           <div className="flex items-center gap-3 sm:gap-6 pr-12">
-             <div className="xl:hidden shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#D4AF37] flex items-center justify-center bg-black shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+             <div className="xl:hidden shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#D4AF37] flex items-center justify-center bg-afri-bg shadow-[0_0_15px_rgba(212,175,55,0.4)]">
                  <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4AF37]" />
              </div>
              <div className="flex flex-col text-left">
@@ -186,27 +186,27 @@ export default function FounderThrone({
             <div className="flex gap-6 items-start">
               <div className="relative mt-2">
                 <Bell className="w-6 h-6 2xl:w-8 2xl:h-8 text-[#D4AF37]" strokeWidth={1.5} />
-                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[9px] 2xl:text-[10px] font-black w-4 h-4 2xl:w-5 2xl:h-5 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.8)] border border-black z-10">12</span>
+                <span className="absolute -top-2 -right-2 bg-red-600 text-afri-text text-[9px] 2xl:text-[10px] font-black w-4 h-4 2xl:w-5 2xl:h-5 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.8)] border border-black z-10">12</span>
               </div>
               
               <div className="hidden md:flex flex-col items-end text-right border-l border-[#D4AF37]/20 pl-6 h-12 justify-between">
-                <span className="text-[9px] 2xl:text-[10px] text-zinc-400 font-mono tracking-[0.15em] uppercase">Utilisateurs connectés</span>
+                <span className="text-[9px] 2xl:text-[10px] text-afri-text-sec font-mono tracking-[0.15em] uppercase">Utilisateurs connectés</span>
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse"></span>
                   <span className="text-emerald-400 font-sans text-sm 2xl:text-base font-black tracking-wider">1,248</span>
                 </div>
               </div>
               
-              <div className="hidden lg:flex flex-col items-end pt-1 bg-black/40 border border-[#D4AF37]/30 px-4 py-2 rounded-lg shadow-[inset_0_0_15px_rgba(212,175,55,0.05)]">
+              <div className="hidden lg:flex flex-col items-end pt-1 bg-afri-bg/40 border border-[#D4AF37]/30 px-4 py-2 rounded-lg shadow-[inset_0_0_15px_rgba(212,175,55,0.05)]">
                 <span className="text-[#D4AF37] text-lg 2xl:text-xl font-mono font-black tabular-nums tracking-wider">{currentTime}</span>
-                <span className="text-zinc-500 text-[9px] 2xl:text-[10px] uppercase tracking-widest leading-none mt-1">{currentDate}</span>
+                <span className="text-afri-text-sec text-[9px] 2xl:text-[10px] uppercase tracking-widest leading-none mt-1">{currentDate}</span>
               </div>
             </div>
           </div>
           
           <button 
             onClick={onClose} 
-            className="absolute right-4 top-4 sm:right-6 sm:top-1/2 sm:-translate-y-1/2 bg-black/50 border border-red-500/50 hover:bg-red-500/10 text-red-500 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 transition-all cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.2)] active:scale-95 z-50"
+            className="absolute right-4 top-4 sm:right-6 sm:top-1/2 sm:-translate-y-1/2 bg-afri-bg/50 border border-red-500/50 hover:bg-red-500/10 text-red-500 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 transition-all cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.2)] active:scale-95 z-50"
           >
             <UserX className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden sm:block text-[9px] font-black uppercase tracking-wider">Retour Utilisateur</span>
@@ -222,34 +222,34 @@ export default function FounderThrone({
             <div className="flex flex-col gap-5 w-full xl:w-[60%] 2xl:w-[65%] min-h-0">
                
                {/* TOP ROW OF LEFT COL: PROFILE */}
-               <div className="bg-black/80 backdrop-blur-md border border-[#D4AF37]/30 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center gap-8 shadow-[0_8px_40px_rgba(0,0,0,0.8)] relative overflow-hidden border-t-2 border-t-[#D4AF37]/60 shrink-0">
+               <div className="bg-afri-bg/80 backdrop-blur-md border border-[#D4AF37]/30 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center gap-8 shadow-[0_8px_40px_rgba(0,0,0,0.8)] relative overflow-hidden border-t-2 border-t-[#D4AF37]/60 shrink-0">
                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#D4AF37]/10 to-transparent blur-3xl rounded-full pointer-events-none"></div>
                  {/* Avatar */}
                  <div className="relative shrink-0 z-10">
-                   <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-[3px] border-[#D4AF37] p-1.5 overflow-hidden shadow-[0_0_30px_rgba(212,175,55,0.3)] bg-zinc-950">
+                   <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-[3px] border-[#D4AF37] p-1.5 overflow-hidden shadow-[0_0_30px_rgba(212,175,55,0.3)] bg-afri-bg">
                      <img 
                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&fit=crop&q=90" 
                        alt="Sylvestre Hounkpevi" 
                        className="w-full h-full object-cover rounded-full filter contrast-125 saturate-150"
                      />
                    </div>
-                   <div className="absolute -top-1 -right-1 bg-black rounded-full p-2 border-2 border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.8)]">
+                   <div className="absolute -top-1 -right-1 bg-afri-bg rounded-full p-2 border-2 border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.8)]">
                      <Crown className="w-5 h-5 text-[#D4AF37]" strokeWidth={3} />
                    </div>
                  </div>
 
                  {/* Profile Details */}
                  <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left min-w-0 z-10 w-full pt-2">
-                   <h2 className="text-2xl sm:text-3xl xl:text-4xl font-sans font-black text-white tracking-tight flex items-center justify-center md:justify-start gap-3 truncate w-full mb-1">
+                   <h2 className="text-2xl sm:text-3xl xl:text-4xl font-sans font-black text-afri-text tracking-tight flex items-center justify-center md:justify-start gap-3 truncate w-full mb-1">
                      Sylvestre Hounkpevi
-                     <div className="w-6 h-6 rounded-md bg-[#D4AF37] text-black flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(212,175,55,0.6)]">
+                     <div className="w-6 h-6 rounded-md bg-afri-bg-sec text-black flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(212,175,55,0.6)]">
                        <Check className="w-4 h-4 stroke-[4]" />
                      </div>
                    </h2>
                    <span className="text-[#D4AF37] font-sans font-black text-sm sm:text-base tracking-[0.25em] mb-2 block uppercase text-shadow-sm">
                      SUPER FONDATEUR
                    </span>
-                   <p className="text-white text-xs sm:text-sm mb-3 flex items-center justify-center md:justify-start gap-2 max-w-full">
+                   <p className="text-afri-text text-xs sm:text-sm mb-3 flex items-center justify-center md:justify-start gap-2 max-w-full">
                      Niveau : <span className="text-[#D4AF37] font-black uppercase tracking-wider drop-shadow-[0_0_5px_rgba(212,175,55,0.8)]">LÉGENDE AFRIGOMBO</span>
                    </p>
                    
@@ -257,13 +257,13 @@ export default function FounderThrone({
                      {Array(7).fill(0).map((_, i) => <Star key={i} filled />)}
                    </div>
 
-                   <div className="w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-full h-3 overflow-hidden relative shadow-inner">
+                   <div className="w-full max-w-lg bg-afri-bg border border-afri-border rounded-full h-3 overflow-hidden relative shadow-inner">
                      <div className="bg-gradient-to-r from-amber-700 via-[#D4AF37] to-amber-300 h-full rounded-full w-full relative">
                         <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
                      </div>
                    </div>
-                   <div className="w-full max-w-lg flex justify-between items-center mt-3 font-mono text-[10px] sm:text-xs font-black text-white">
-                      <button className="flex items-center gap-2 text-[#D4AF37] border border-[#D4AF37]/50 hover:bg-[#D4AF37] hover:text-black px-4 py-1.5 rounded-lg transition-all uppercase tracking-widest shadow-[0_0_10px_rgba(212,175,55,0.1)]">
+                   <div className="w-full max-w-lg flex justify-between items-center mt-3 font-mono text-[10px] sm:text-xs font-black text-afri-text">
+                      <button className="flex items-center gap-2 text-[#D4AF37] border border-[#D4AF37]/50 hover:bg-afri-bg-sec hover:text-black px-4 py-1.5 rounded-lg transition-all uppercase tracking-widest shadow-[0_0_10px_rgba(212,175,55,0.1)]">
                          Modifier le profil <PenTool className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <span className="uppercase tracking-widest">NIVEAU MAX <span className="text-[#D4AF37] ml-2 text-sm">100%</span></span>
@@ -285,14 +285,14 @@ export default function FounderThrone({
                  ].map((stat, i) => {
                    const Icon = stat.icon;
                    return (
-                     <div key={i} className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-4 sm:p-5 flex flex-col items-center text-center hover:border-[#D4AF37] hover:bg-black transition-all group shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#D4AF37]/5 border border-[#D4AF37]/30 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:bg-[#D4AF37]/20 transition-all shadow-inner">
+                     <div key={i} className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-4 sm:p-5 flex flex-col items-center text-center hover:border-[#D4AF37] hover:bg-afri-bg transition-all group shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-afri-bg-sec/5 border border-[#D4AF37]/30 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:bg-afri-bg-sec/20 transition-all shadow-inner">
                          <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-[#D4AF37]" strokeWidth={1.5} />
                        </div>
                        <span className="text-[8px] sm:text-[9px] min-h-[22px] flex items-center justify-center font-mono tracking-widest text-[#D4AF37] uppercase font-black mb-2 opacity-80 leading-tight p-0.5">
                          {stat.label}
                        </span>
-                       <strong className="text-lg sm:text-2xl font-sans font-black text-white tracking-tight">{stat.val}</strong>
+                       <strong className="text-lg sm:text-2xl font-sans font-black text-afri-text tracking-tight">{stat.val}</strong>
                        <span className={`text-[10px] sm:text-[11px] font-mono font-bold mt-1.5 flex items-center gap-1 ${stat.trendDown ? "text-red-500" : "text-emerald-500"}`}>
                          {stat.trend} {stat.trendDown ? <ArrowDownRight className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
                        </span>
@@ -305,12 +305,12 @@ export default function FounderThrone({
                <div className="flex flex-col gap-5 flex-1 min-h-0">
                    
                    {/* PLATFORM ACTIVITY CHART */}
-                   <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/30 rounded-2xl p-5 flex flex-col flex-1 min-h-[220px] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                   <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/30 rounded-2xl p-5 flex flex-col flex-1 min-h-[220px] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                      <div className="flex justify-between items-start mb-4 shrink-0">
                        <h3 className="text-xs sm:text-sm font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans">ACTIVITÉ PLATEFORME</h3>
-                       <div className="flex bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden shadow-inner">
+                       <div className="flex bg-afri-bg border border-afri-border rounded-lg overflow-hidden shadow-inner">
                          {["7 JOURS", "30 JOURS", "90 JOURS", "1 AN"].map((t, i) => (
-                           <button key={i} className={`px-4 py-1.5 text-[9px] font-mono font-black border-r border-zinc-800 last:border-0 uppercase tracking-widest transition-colors ${i === 0 ? "bg-[#D4AF37]/20 text-[#D4AF37] shadow-[inset_0_0_10px_rgba(212,175,55,0.2)]" : "text-zinc-400 hover:text-white hover:bg-zinc-900"}`}>
+                           <button key={i} className={`px-4 py-1.5 text-[9px] font-mono font-black border-r border-afri-border last:border-0 uppercase tracking-widest transition-colors ${i === 0 ? "bg-afri-bg-sec/20 text-[#D4AF37] shadow-[inset_0_0_10px_rgba(212,175,55,0.2)]" : "text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec"}`}>
                              {t}
                            </button>
                          ))}
@@ -342,8 +342,8 @@ export default function FounderThrone({
                         </ResponsiveContainer>
                      </div>
                      
-                     <div className="flex flex-wrap justify-between gap-4 mt-2 pt-4 border-t border-zinc-900 shrink-0 mx-4">
-                        <LegendItem2 color="bg-[#D4AF37]" label="Utilisateurs" />
+                     <div className="flex flex-wrap justify-between gap-4 mt-2 pt-4 border-t border-afri-border shrink-0 mx-4">
+                        <LegendItem2 color="bg-afri-bg-sec" label="Utilisateurs" />
                         <LegendItem2 color="bg-emerald-500" label="Publications" />
                         <LegendItem2 color="bg-sky-500" label="Engagement" />
                         <LegendItem2 color="bg-violet-500" label="Revenus" />
@@ -351,15 +351,15 @@ export default function FounderThrone({
                    </div>
 
                    {/* SUPREME ACTIONS */}
-                   <div className="w-full bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-4 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col justify-center">
+                   <div className="w-full bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-4 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col justify-center">
                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                        {supremeActions.map((act, i) => {
                          const Icon = act.icon;
                          const isDanger = ["Suspendre Utilisateur", "Geler Wallet", "Mode Crise"].includes(act.label);
                          return (
-                           <button key={i} className="flex flex-col items-center justify-center text-center p-2 2xl:p-3 rounded-xl hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all group aspect-square xl:aspect-auto h-full">
+                           <button key={i} className="flex flex-col items-center justify-center text-center p-2 2xl:p-3 rounded-xl hover:bg-afri-bg-sec border border-transparent hover:border-afri-border transition-all group aspect-square xl:aspect-auto h-full">
                               <Icon className={`w-5 h-5 2xl:w-6 2xl:h-6 mb-2 ${isDanger ? "text-red-500/80 group-hover:text-red-500 group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "text-[#D4AF37]/80 group-hover:text-[#D4AF37] group-hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]"}`} strokeWidth={1.5} />
-                              <span className="text-[9px] font-sans font-bold text-zinc-400 group-hover:text-white leading-tight uppercase tracking-wider block">
+                              <span className="text-[9px] font-sans font-bold text-afri-text-sec group-hover:text-afri-text leading-tight uppercase tracking-wider block">
                                 {act.label.split(' ')[0]}<br />{act.label.split(' ')[1] || ''}
                               </span>
                            </button>
@@ -371,15 +371,15 @@ export default function FounderThrone({
 
                {/* BOTTOM BANNER */}
                <div className="relative rounded-2xl overflow-hidden border border-[#D4AF37]/40 h-28 2xl:h-36 flex items-center shadow-[0_0_40px_rgba(212,175,55,0.15)] group shrink-0 mt-auto">
-                 <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent z-10 w-2/3"></div>
+                 <div className="absolute inset-0 bg-gradient-to-r from-afri-bg via-afri-bg/80 to-transparent z-10 w-2/3"></div>
                  <div className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-screen" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1540039155732-6761b54cbaca?w=1200&auto=format&fit=crop&q=80')`}}></div>
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                 <div className="absolute inset-0 bg-gradient-to-t from-afri-bg/80 to-transparent z-10"></div>
                  
                  <div className="relative z-20 p-6 sm:p-10 pl-10 flex flex-col justify-center h-full max-w-2xl">
                     <h2 className="text-4xl 2xl:text-5xl font-black font-sans text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-amber-200 tracking-tight leading-none mb-2 drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">
                       AFRIGOMBO
                     </h2>
-                    <p className="text-xs 2xl:text-sm font-bold text-white uppercase tracking-[0.2em] opacity-90 leading-tight">
+                    <p className="text-xs 2xl:text-sm font-bold text-afri-text uppercase tracking-[0.2em] opacity-90 leading-tight">
                       LE TERRAIN D'ACTION<br/>DE L'AFRIQUE CRÉATIVE.
                     </p>
                  </div>
@@ -399,44 +399,44 @@ export default function FounderThrone({
             <div className="flex flex-col gap-5 w-full xl:w-[40%] 2xl:w-[35%] min-h-0">
               
               {/* MONETIZATION CARD */}
-              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-[#D4AF37]/10 blur-3xl rounded-full pointer-events-none"></div>
+              <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-afri-bg-sec/10 blur-3xl rounded-full pointer-events-none"></div>
                 <h3 className="text-[11px] sm:text-xs font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-6 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">MONÉTISATION AFRIGOMBO</h3>
                 
                 <div className="space-y-6 relative z-10">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                       <span className="text-[10px] sm:text-[11px] text-zinc-400 tracking-[0.2em] uppercase font-mono font-bold">GAWA DISPONIBLES</span>
-                       <div className="w-5 h-5 rounded bg-zinc-900 border border-zinc-700 flex items-center justify-center cursor-pointer hover:bg-zinc-800 transition-colors" onClick={() => setBalanceVisible(!balanceVisible)}>
-                         {balanceVisible ? <Eye className="w-3 h-3 text-zinc-400" /> : <EyeOff className="w-3 h-3 text-[#D4AF37]" />}
+                       <span className="text-[10px] sm:text-[11px] text-afri-text-sec tracking-[0.2em] uppercase font-mono font-bold">GAWA DISPONIBLES</span>
+                       <div className="w-5 h-5 rounded bg-afri-bg-sec border border-afri-border flex items-center justify-center cursor-pointer hover:bg-afri-bg-ter transition-colors" onClick={() => setBalanceVisible(!balanceVisible)}>
+                         {balanceVisible ? <Eye className="w-3 h-3 text-afri-text-sec" /> : <EyeOff className="w-3 h-3 text-[#D4AF37]" />}
                        </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#D4AF37] text-black flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.6)] border-[3px] border-black shrink-0 relative">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-afri-bg-sec text-black flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.6)] border-[3px] border-black shrink-0 relative">
                         <span className="font-mono font-black text-xl">💰</span>
                       </div>
-                      <span className="text-3xl sm:text-4xl 2xl:text-5xl font-sans font-black text-white tracking-tight leading-none drop-shadow-md">
+                      <span className="text-3xl sm:text-4xl 2xl:text-5xl font-sans font-black text-afri-text tracking-tight leading-none drop-shadow-md">
                          {balanceVisible ? "12,450,000" : "••••••••"}
                       </span>
-                      <span className="text-zinc-500 font-mono text-[11px] font-black self-end mb-1 tracking-widest">GAWA</span>
+                      <span className="text-afri-text-sec font-mono text-[11px] font-black self-end mb-1 tracking-widest">GAWA</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6 pt-6 border-t border-zinc-800/80">
+                  <div className="grid grid-cols-2 gap-6 pt-6 border-t border-afri-border/80">
                     <div>
-                      <span className="text-[9px] sm:text-[10px] text-zinc-500 tracking-[0.15em] uppercase font-mono font-bold block mb-2">REVENUS MENSUELS</span>
-                      <span className="text-xl sm:text-2xl font-black font-sans text-white block leading-tight">185,750,000</span>
+                      <span className="text-[9px] sm:text-[10px] text-afri-text-sec tracking-[0.15em] uppercase font-mono font-bold block mb-2">REVENUS MENSUELS</span>
+                      <span className="text-xl sm:text-2xl font-black font-sans text-afri-text block leading-tight">185,750,000</span>
                       <span className="text-[11px] font-mono font-black text-emerald-400 flex items-center gap-1 mt-1.5 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]"><ArrowUpRight className="w-3 h-3"/> +12.4% <ArrowUpRight className="w-3 h-3 text-emerald-600 ml-1 opacity-50"/></span>
                     </div>
                     <div>
-                      <span className="text-[9px] sm:text-[10px] text-zinc-500 tracking-[0.15em] uppercase font-mono font-bold block mb-2">REVENUS ANNUELS</span>
-                      <span className="text-xl sm:text-2xl font-black font-sans text-white block leading-tight">1,982,450,000</span>
+                      <span className="text-[9px] sm:text-[10px] text-afri-text-sec tracking-[0.15em] uppercase font-mono font-bold block mb-2">REVENUS ANNUELS</span>
+                      <span className="text-xl sm:text-2xl font-black font-sans text-afri-text block leading-tight">1,982,450,000</span>
                       <span className="text-[11px] font-mono font-black text-emerald-400 flex items-center gap-1 mt-1.5 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]"><ArrowUpRight className="w-3 h-3"/> +28.7% <ArrowUpRight className="w-3 h-3 text-emerald-600 ml-1 opacity-50"/></span>
                     </div>
                   </div>
 
                   <div className="grid border border-[#D4AF37]/50 rounded-xl overflow-hidden mt-2 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-shadow">
-                    <button className="w-full bg-[#D4AF37]/5 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black py-3 rounded-xl flex items-center justify-center gap-3 font-mono font-black uppercase text-[11px] tracking-[0.2em] transition-all">
+                    <button className="w-full bg-afri-bg-sec/5 hover:bg-afri-bg-sec text-[#D4AF37] hover:text-black py-3 rounded-xl flex items-center justify-center gap-3 font-mono font-black uppercase text-[11px] tracking-[0.2em] transition-all">
                       <Wallet className="w-4 h-4" />
                       Voir le Wallet
                       <Eye className="w-3 h-3 ml-auto mr-4 opacity-50" />
@@ -446,7 +446,7 @@ export default function FounderThrone({
               </div>
 
               {/* GOUVERNANCE ET QUALITÉ DE LA COMMUNAUTÉ */}
-              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/40 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+              <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/40 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                 <div className="flex items-center justify-between mb-4 border-b border-[#D4AF37]/20 pb-3">
                   <div className="flex items-center gap-2">
                     <Shield className="w-5 h-5 text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]" />
@@ -461,8 +461,8 @@ export default function FounderThrone({
 
                 {/* KPI metrics */}
                 <div className="grid grid-cols-3 gap-2.5 mb-5">
-                  <div className="bg-zinc-950/80 border border-zinc-850 p-2.5 rounded-xl text-center">
-                    <div className="text-[8px] text-zinc-400 uppercase font-bold font-mono tracking-wider mb-1">Confiance Moyenne</div>
+                  <div className="bg-afri-bg/80 border border-afri-border p-2.5 rounded-xl text-center">
+                    <div className="text-[8px] text-afri-text-sec uppercase font-bold font-mono tracking-wider mb-1">Confiance Moyenne</div>
                     <div className="text-base font-black text-emerald-400 font-mono">
                       {(() => {
                         const scoreUsers = users.filter(u => u.trustScore !== undefined && u.trustScore > 0);
@@ -472,8 +472,8 @@ export default function FounderThrone({
                       })()}%
                     </div>
                   </div>
-                  <div className="bg-zinc-950/80 border border-zinc-850 p-2.5 rounded-xl text-center">
-                    <div className="text-[8px] text-zinc-400 uppercase font-bold font-mono tracking-wider mb-1">Note Générale</div>
+                  <div className="bg-afri-bg/80 border border-afri-border p-2.5 rounded-xl text-center">
+                    <div className="text-[8px] text-afri-text-sec uppercase font-bold font-mono tracking-wider mb-1">Note Générale</div>
                     <div className="text-base font-black text-[#D4AF37] font-mono">
                       ★{(() => {
                         const rated = users.filter(u => u.averageRating !== undefined && u.averageRating > 0);
@@ -483,9 +483,9 @@ export default function FounderThrone({
                       })()}
                     </div>
                   </div>
-                  <div className="bg-zinc-950/80 border border-zinc-850 p-2.5 rounded-xl text-center">
-                    <div className="text-[8px] text-zinc-400 uppercase font-bold font-mono tracking-wider mb-1">Passeports Gombo ID</div>
-                    <div className="text-base font-black text-white font-mono">
+                  <div className="bg-afri-bg/80 border border-afri-border p-2.5 rounded-xl text-center">
+                    <div className="text-[8px] text-afri-text-sec uppercase font-bold font-mono tracking-wider mb-1">Passeports Gombo ID</div>
+                    <div className="text-base font-black text-afri-text font-mono">
                       {users.filter(u => u.kycStatus === "approved" || u.gomboId !== undefined).length}
                     </div>
                   </div>
@@ -493,19 +493,19 @@ export default function FounderThrone({
 
                 {/* Reputation Badges summary list */}
                 <div className="mb-5 space-y-2">
-                  <h4 className="text-[9px] text-zinc-400 tracking-[0.15em] uppercase font-mono font-bold">
+                  <h4 className="text-[9px] text-afri-text-sec tracking-[0.15em] uppercase font-mono font-bold">
                     DISTRIBUTION DES BADGES DE RÉPUTATION
                   </h4>
                   <div className="grid grid-cols-2 gap-1.5">
                     {[
-                      { name: "Référence AFRIGOMBO", color: "bg-[#D4AF37] text-black", count: users.filter(u => u.badge === "Référence AFRIGOMBO").length },
-                      { name: "Artiste Premium", color: "bg-amber-600 text-white", count: users.filter(u => u.badge === "Artiste Premium").length },
-                      { name: "Excellence", color: "bg-emerald-600 text-white", count: users.filter(u => u.badge === "Excellence").length },
-                      { name: "Très fiable", color: "bg-blue-600 text-white", count: users.filter(u => u.badge === "Très fiable").length },
-                      { name: "Fiable", color: "bg-zinc-700 text-white", count: users.filter(u => u.badge === "Fiable").length },
+                      { name: "Référence AFRIGOMBO", color: "bg-afri-bg-sec text-black", count: users.filter(u => u.badge === "Référence AFRIGOMBO").length },
+                      { name: "Artiste Premium", color: "bg-amber-600 text-afri-text", count: users.filter(u => u.badge === "Artiste Premium").length },
+                      { name: "Excellence", color: "bg-emerald-600 text-afri-text", count: users.filter(u => u.badge === "Excellence").length },
+                      { name: "Très fiable", color: "bg-blue-600 text-afri-text", count: users.filter(u => u.badge === "Très fiable").length },
+                      { name: "Fiable", color: "bg-zinc-700 text-afri-text", count: users.filter(u => u.badge === "Fiable").length },
                     ].map((badge, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-1.5 bg-zinc-950 border border-zinc-900 rounded-lg">
-                        <span className="text-[8px] font-bold text-zinc-300 truncate">{badge.name}</span>
+                      <div key={idx} className="flex items-center justify-between p-1.5 bg-afri-bg border border-afri-border rounded-lg">
+                        <span className="text-[8px] font-bold text-afri-text truncate">{badge.name}</span>
                         <span className={`text-[8px] font-black px-1.5 py-0.5 rounded ${badge.color}`}>
                           {badge.count}
                         </span>
@@ -517,7 +517,7 @@ export default function FounderThrone({
                 {/* AI Security Alerts Section */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-[9px] text-zinc-400 tracking-[0.15em] uppercase font-mono font-bold flex items-center gap-1">
+                    <h4 className="text-[9px] text-afri-text-sec tracking-[0.15em] uppercase font-mono font-bold flex items-center gap-1">
                       🛡️ SIGNAUX DE FRAUDE DÉTECTÉS {alerts.length > 0 && `(${alerts.length})`}
                     </h4>
                     {alerts.length > 0 && (
@@ -534,14 +534,14 @@ export default function FounderThrone({
                   </div>
 
                   {alerts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-5 bg-zinc-950/40 border border-dashed border-emerald-500/20 rounded-xl text-center">
+                    <div className="flex flex-col items-center justify-center p-5 bg-afri-bg/40 border border-dashed border-emerald-500/20 rounded-xl text-center">
                       <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-1.5">
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                       </div>
                       <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">
                         Qualité de la Communauté au Sommet
                       </span>
-                      <p className="text-[8px] text-zinc-400 mt-1 max-w-xs leading-relaxed">
+                      <p className="text-[8px] text-afri-text-sec mt-1 max-w-xs leading-relaxed">
                         L'algorithme heuristique d'AFRIGOMBO n'a détecté aucune anomalie récente d'auto-évaluation ou de manipulation de score.
                       </p>
                     </div>
@@ -558,17 +558,17 @@ export default function FounderThrone({
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex flex-col">
-                              <span className="text-white font-black text-[10px]">
+                              <span className="text-afri-text font-black text-[10px]">
                                 {al.userArtisticName || "Artiste Suspect"}
                               </span>
-                              <span className="text-[8px] text-zinc-400 font-mono">
+                              <span className="text-[8px] text-afri-text-sec font-mono">
                                 ID: {al.userId?.substring(0, 8)}...
                               </span>
                             </div>
                             <span
                               className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${
                                 al.severity === "high"
-                                  ? "bg-red-500 text-white"
+                                  ? "bg-red-500 text-afri-text"
                                   : "bg-amber-500 text-black"
                               }`}
                             >
@@ -576,11 +576,11 @@ export default function FounderThrone({
                             </span>
                           </div>
 
-                          <p className="text-[9px] text-zinc-300 leading-relaxed font-mono">
+                          <p className="text-[9px] text-afri-text leading-relaxed font-mono">
                             {al.reason}
                           </p>
 
-                          <div className="flex justify-between items-center text-[8px] text-zinc-500 font-mono mt-1 border-t border-zinc-900 pt-1.5">
+                          <div className="flex justify-between items-center text-[8px] text-afri-text-sec font-mono mt-1 border-t border-afri-border pt-1.5">
                             <span>
                               {al.timestamp ? new Date(al.timestamp).toLocaleTimeString() : "Maintenant"}
                             </span>
@@ -592,7 +592,7 @@ export default function FounderThrone({
                                     setAlerts(prev => prev.filter(a => a.id !== al.id));
                                   }
                                 }}
-                                className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded font-black transition-colors uppercase cursor-pointer"
+                                className="px-2 py-0.5 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text rounded font-black transition-colors uppercase cursor-pointer"
                               >
                                 Ignorer
                               </button>
@@ -610,7 +610,7 @@ export default function FounderThrone({
                                     console.error(err);
                                   }
                                 }}
-                                className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded font-black transition-colors uppercase cursor-pointer"
+                                className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-afri-text rounded font-black transition-colors uppercase cursor-pointer"
                               >
                                 Bannir
                               </button>
@@ -624,7 +624,7 @@ export default function FounderThrone({
               </div>
 
               {/* AFRICA PLATFORM TIMELINE / MAP */}
-              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 relative flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+              <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 relative flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                  <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-4 shrink-0 drop-shadow-[0_0_5px_rgba(212,175,55,0.3)]">AFRIQUE MUSICALE - TEMPS RÉEL</h3>
                  <div className="flex flex-col 2xl:flex-row items-center gap-6 2xl:gap-8 flex-1 min-h-0 overflow-y-auto custom-scrollbar w-full p-2">
                    
@@ -650,7 +650,7 @@ export default function FounderThrone({
                    {/* Stats List */}
                    <div className="w-full space-y-4">
                      {[
-                       { r: "AFRIQUE DE L'OUEST", c: "bg-[#D4AF37]", tc: "text-[#D4AF37]", t1: "512,459", t2: "22,459", t3: "1,245" },
+                       { r: "AFRIQUE DE L'OUEST", c: "bg-afri-bg-sec", tc: "text-[#D4AF37]", t1: "512,459", t2: "22,459", t3: "1,245" },
                        { r: "AFRIQUE CENTRALE", c: "bg-emerald-500", tc: "text-emerald-500", t1: "215,784", t2: "8,754", t3: "542" },
                        { r: "AFRIQUE DE L'EST", c: "bg-sky-500", tc: "text-sky-500", t1: "280,145", t2: "12,584", t3: "754" },
                        { r: "AFRIQUE AUSTRALE", c: "bg-violet-500", tc: "text-violet-500", t1: "125,458", t2: "5,458", t3: "751" },
@@ -659,20 +659,20 @@ export default function FounderThrone({
                        <div key={i} className="flex flex-col">
                          <div className="flex items-center gap-2 mb-1.5">
                            <div className={`w-2.5 h-2.5 rounded-full ${item.c} shadow-[0_0_8px_currentColor] ${item.tc}`}></div>
-                           <span className="text-[10px] font-mono tracking-widest text-[#F5F5F5] font-bold uppercase leading-none">{item.r}</span>
+                           <span className="text-[10px] font-mono tracking-widest text-afri-text font-bold uppercase leading-none">{item.r}</span>
                          </div>
                          <div className="flex gap-6 ml-4">
                            <div className="flex flex-col">
-                             <span className="text-white text-xs font-black leading-tight tracking-wider">{item.t1}</span>
-                             <span className="text-[8px] text-zinc-500 font-mono tracking-wide">Utilisateurs</span>
+                             <span className="text-afri-text text-xs font-black leading-tight tracking-wider">{item.t1}</span>
+                             <span className="text-[8px] text-afri-text-sec font-mono tracking-wide">Utilisateurs</span>
                            </div>
                            <div className="flex flex-col">
-                             <span className="text-white text-xs font-black leading-tight tracking-wider">{item.t2}</span>
-                             <span className="text-[8px] text-zinc-500 font-mono tracking-wide">Publications</span>
+                             <span className="text-afri-text text-xs font-black leading-tight tracking-wider">{item.t2}</span>
+                             <span className="text-[8px] text-afri-text-sec font-mono tracking-wide">Publications</span>
                            </div>
                            <div className="flex flex-col">
-                             <span className="text-white text-xs font-black leading-tight tracking-wider">{item.t3}</span>
-                             <span className="text-[8px] text-zinc-500 font-mono tracking-wide">Opportunités</span>
+                             <span className="text-afri-text text-xs font-black leading-tight tracking-wider">{item.t3}</span>
+                             <span className="text-[8px] text-afri-text-sec font-mono tracking-wide">Opportunités</span>
                            </div>
                          </div>
                        </div>
@@ -682,32 +682,32 @@ export default function FounderThrone({
               </div>
 
               {/* CRITICAL ALERTS */}
-              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+              <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans drop-shadow-[0_0_5px_rgba(212,175,55,0.3)]">ALERTES CRITIQUES</h3>
-                  <button className="text-[9px] uppercase font-mono font-black text-zinc-300 hover:text-[#D4AF37] border border-zinc-700 hover:border-[#D4AF37] rounded-md px-3 py-1 transition-colors tracking-widest">Voir tout</button>
+                  <button className="text-[9px] uppercase font-mono font-black text-afri-text hover:text-[#D4AF37] border border-afri-border hover:border-[#D4AF37] rounded-md px-3 py-1 transition-colors tracking-widest">Voir tout</button>
                 </div>
 
                 <div className="space-y-3">
                   {[
                     { title: "Nouveau signalement critique", desc: "Contenu inapproprié détecté", time: "12:42", icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/30" },
-                    { title: "Transaction importante", desc: "250,000 GAWA transférés", time: "12:35", icon: Wallet, color: "text-[#D4AF37]", bg: "bg-[#D4AF37]/10", border: "border-[#D4AF37]/30" },
+                    { title: "Transaction importante", desc: "250,000 GAWA transférés", time: "12:35", icon: Wallet, color: "text-[#D4AF37]", bg: "bg-afri-bg-sec/10", border: "border-[#D4AF37]/30" },
                     { title: "Nouvel utilisateur enregistré", desc: "+150 nouveaux utilisateurs", time: "12:22", icon: UserPlus, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
                     { title: "Activité suspecte détectée", desc: "Tentative de connexion inhabituelle", time: "12:10", icon: AlertTriangle, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/30" },
                     { title: "Pic d'activité", desc: "Augmentation de 35% des publications", time: "11:58", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/30" }
                   ].map((alert, i) => {
                     const Icon = alert.icon;
                     return (
-                      <div key={i} className="flex gap-3.5 p-3 bg-black/40 border-b border-zinc-800/50 hover:bg-[#D4AF37]/5 transition-colors group">
+                      <div key={i} className="flex gap-3.5 p-3 bg-afri-bg/40 border-b border-afri-border/50 hover:bg-afri-bg-sec/5 transition-colors group">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${alert.bg} border ${alert.border}`}>
                           <Icon className={`w-5 h-5 ${alert.color}`} strokeWidth={2} />
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <h4 className={`text-xs font-black truncate leading-tight group-hover:text-white transition-colors ${i===0? 'text-white':'text-zinc-200'}`}>{alert.title}</h4>
-                          <p className="text-[10px] text-zinc-400 truncate mt-0.5 font-mono">{alert.desc}</p>
+                          <h4 className={`text-xs font-black truncate leading-tight group-hover:text-afri-text transition-colors ${i===0? 'text-afri-text':'text-afri-text'}`}>{alert.title}</h4>
+                          <p className="text-[10px] text-afri-text-sec truncate mt-0.5 font-mono">{alert.desc}</p>
                         </div>
                         <div className="flex flex-col justify-center items-end shrink-0 gap-1.5">
-                          <span className="text-[9px] font-mono font-bold text-zinc-500">{alert.time}</span>
+                          <span className="text-[9px] font-mono font-bold text-afri-text-sec">{alert.time}</span>
                           <div className={`w-2 h-2 rounded-full ${alert.color.replace('text-', 'bg-')} shadow-[0_0_5px_currentColor]`}></div>
                         </div>
                       </div>
@@ -717,18 +717,18 @@ export default function FounderThrone({
               </div>
 
               {/* SYSTEM STATUS GRID */}
-              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto">
+              <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/20 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto">
                  <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-4 drop-shadow-[0_0_5px_rgba(212,175,55,0.3)]">ÉTAT DU SYSTÈME</h3>
                  
                  <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-3 mb-5">
                     {systemStatus.slice(0, 5).map((sys, i) => {
                       const SysIcon = sys.icon;
                       return (
-                      <div key={i} className="bg-zinc-950/80 border border-zinc-800 rounded-lg p-2.5 flex flex-col items-center justify-center text-center hover:border-emerald-500/30 transition-colors">
+                      <div key={i} className="bg-afri-bg/80 border border-afri-border rounded-lg p-2.5 flex flex-col items-center justify-center text-center hover:border-emerald-500/30 transition-colors">
                          <div className="w-6 h-6 mb-1.5 flex items-center justify-center">
                            <SysIcon className="w-5 h-5 text-[#D4AF37] opacity-80" strokeWidth={1.5} />
                          </div>
-                         <span className="text-[8px] font-mono tracking-wider font-bold text-zinc-300 uppercase leading-tight truncate w-full">{sys.label}</span>
+                         <span className="text-[8px] font-mono tracking-wider font-bold text-afri-text uppercase leading-tight truncate w-full">{sys.label}</span>
                          <div className="flex items-center gap-1 mt-1">
                            <CheckCircle className="w-3 h-3 text-emerald-500" />
                            <span className="text-[7px] font-mono text-emerald-500 leading-none">Opérationnel</span>
@@ -743,11 +743,11 @@ export default function FounderThrone({
                      {systemStatus.slice(5, 8).map((sys, i) => {
                         const SysIcon = sys.icon;
                         return (
-                        <div key={i} className="bg-zinc-950/80 border border-zinc-800 rounded-lg p-2.5 flex flex-col items-center justify-center text-center">
+                        <div key={i} className="bg-afri-bg/80 border border-afri-border rounded-lg p-2.5 flex flex-col items-center justify-center text-center">
                            <div className="w-5 h-5 mb-1.5 flex items-center justify-center">
                              <SysIcon className="w-4 h-4 text-[#D4AF37] opacity-80" />
                            </div>
-                           <span className="text-[8px] font-mono tracking-wider font-bold text-zinc-300 uppercase leading-tight truncate w-full">{sys.label}</span>
+                           <span className="text-[8px] font-mono tracking-wider font-bold text-afri-text uppercase leading-tight truncate w-full">{sys.label}</span>
                            <div className="flex items-center gap-1 mt-1">
                              <CheckCircle className="w-3 h-3 text-emerald-400" />
                              <span className="text-[7px] font-mono text-emerald-400 leading-none">Opérationnel</span>
@@ -757,9 +757,9 @@ export default function FounderThrone({
                      )})}
                    </div>
                    
-                   <div className="bg-zinc-950/80 border border-[#D4AF37]/50 rounded-xl flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-[inset_0_0_20px_rgba(212,175,55,0.1)] py-4 sm:py-0">
+                   <div className="bg-afri-bg/80 border border-[#D4AF37]/50 rounded-xl flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-[inset_0_0_20px_rgba(212,175,55,0.1)] py-4 sm:py-0">
                       <div className="sm:absolute sm:top-2 w-full text-center">
-                        <span className="text-[8px] font-sans font-bold uppercase tracking-[0.2em] text-zinc-300">SYSTÈME GLOBAL</span>
+                        <span className="text-[8px] font-sans font-bold uppercase tracking-[0.2em] text-afri-text">SYSTÈME GLOBAL</span>
                       </div>
                       <div className="relative w-16 h-16 mt-2">
                           <svg className="w-full h-full transform -rotate-90 filter drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]">
@@ -767,7 +767,7 @@ export default function FounderThrone({
                             <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="none" strokeDasharray="176" strokeDashoffset="0" className="text-[#D4AF37]" strokeLinecap="round" />
                           </svg>
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-sm font-black text-white font-mono leading-none tracking-widest mt-0.5">99.9%</span>
+                            <span className="text-sm font-black text-afri-text font-mono leading-none tracking-widest mt-0.5">99.9%</span>
                           </div>
                       </div>
                    </div>
@@ -775,17 +775,17 @@ export default function FounderThrone({
               </div>
 
               {/* IA AFRIGOMBO DEDICATED CARD */}
-              <div className="bg-black/60 backdrop-blur-sm border border-[#D4AF37]/30 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto relative overflow-hidden group">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 blur-2xl rounded-full pointer-events-none group-hover:bg-[#D4AF37]/20 transition-all"></div>
+              <div className="bg-afri-bg/60 backdrop-blur-sm border border-[#D4AF37]/30 rounded-2xl p-5 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-auto relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-afri-bg-sec/10 blur-2xl rounded-full pointer-events-none group-hover:bg-afri-bg-sec/20 transition-all"></div>
                  <h3 className="text-[11px] font-black text-[#D4AF37] uppercase tracking-[0.2em] font-sans mb-3 drop-shadow-[0_0_5px_rgba(212,175,55,0.3)] flex items-center gap-2">
                    <Sparkles className="w-4 h-4 text-[#D4AF37]" /> IA AFRIGOMBO
                  </h3>
                  
                  <div className="grid grid-cols-2 gap-2 mb-3 relative z-10">
                    {["Détection anomalies", "Aide modération", "Résumés auto", "Recommandations", "Décisions", "Alerte préventive"].map((func, i) => (
-                     <div key={i} className="flex items-center gap-1.5 bg-black/40 border border-[#D4AF37]/20 rounded-md p-1.5 hover:border-[#D4AF37]/50 transition-colors">
+                     <div key={i} className="flex items-center gap-1.5 bg-afri-bg/40 border border-[#D4AF37]/20 rounded-md p-1.5 hover:border-[#D4AF37]/50 transition-colors">
                        <CheckCircle className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
-                       <span className="text-[8px] font-mono font-bold text-zinc-300 uppercase leading-none tracking-widest truncate">{func}</span>
+                       <span className="text-[8px] font-mono font-bold text-afri-text uppercase leading-none tracking-widest truncate">{func}</span>
                      </div>
                    ))}
                  </div>
@@ -805,7 +805,7 @@ export default function FounderThrone({
       </div>
 
       {/* BOTTOM NAVIGATION (MOBILE ONLY) */}
-      <footer className="shrink-0 h-16 sm:h-20 bg-black/90 backdrop-blur-xl border-t border-[#D4AF37]/30 flex z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.8)] relative overflow-hidden xl:hidden">
+      <footer className="shrink-0 h-16 sm:h-20 bg-afri-bg/90 backdrop-blur-xl border-t border-[#D4AF37]/30 flex z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.8)] relative overflow-hidden xl:hidden">
         <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent blur-sm"></div>
         <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-10 flex justify-between items-center h-full">
           {[
@@ -824,12 +824,12 @@ export default function FounderThrone({
                  onClick={() => { setActiveMenu(item.id); try{ audioSynth.playTamTam(false); }catch(e){} }}
                  className={`flex flex-col items-center justify-center relative w-16 sm:w-24 group transition-colors flex-1`}
                >
-                 <Icon className={`w-5 h-5 sm:w-6 sm:h-6 mb-1 transition-all ${isActive ? "text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.8)] -translate-y-1" : "text-zinc-500 group-hover:text-zinc-300 group-hover:-translate-y-0.5"}`} strokeWidth={isActive ? 2.5 : 1.5} />
-                 <span className={`text-[9px] sm:text-[10px] font-mono tracking-widest uppercase transition-all ${isActive ? "text-[#D4AF37] font-black" : "text-zinc-500 font-bold group-hover:text-zinc-300"}`}>
+                 <Icon className={`w-5 h-5 sm:w-6 sm:h-6 mb-1 transition-all ${isActive ? "text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.8)] -translate-y-1" : "text-afri-text-sec group-hover:text-afri-text group-hover:-translate-y-0.5"}`} strokeWidth={isActive ? 2.5 : 1.5} />
+                 <span className={`text-[9px] sm:text-[10px] font-mono tracking-widest uppercase transition-all ${isActive ? "text-[#D4AF37] font-black" : "text-afri-text-sec font-bold group-hover:text-afri-text"}`}>
                    {item.label}
                  </span>
                  {isActive && (
-                   <span className="absolute -bottom-2 sm:-bottom-3 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-[#D4AF37] rounded-full shadow-[0_0_8px_rgba(212,175,55,1)]"></span>
+                   <span className="absolute -bottom-2 sm:-bottom-3 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-afri-bg-sec rounded-full shadow-[0_0_8px_rgba(212,175,55,1)]"></span>
                  )}
                </button>
             )
@@ -852,7 +852,7 @@ function LegendItem2({ color, label }: { color: string, label: string }) {
   return (
     <div className="flex items-center gap-2">
       <span className={`w-3 h-[3px] rounded-full ${color} shadow-[0_0_8px_currentColor]`}></span>
-      <span className="text-[10px] text-zinc-300 font-mono font-bold uppercase tracking-[0.15em]">{label}</span>
+      <span className="text-[10px] text-afri-text font-mono font-bold uppercase tracking-[0.15em]">{label}</span>
     </div>
   );
 }

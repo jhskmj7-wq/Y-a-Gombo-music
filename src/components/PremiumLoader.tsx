@@ -16,7 +16,7 @@ export default function PremiumLoader({ message = "Connexion sécurisée..." }: 
     img.onerror = () => setIsLogoFailed(true);
   }, []);
   return (
-    <div className="fixed inset-0 bg-[#030303] z-[9999] flex flex-col items-center justify-center text-center p-6 select-none overflow-hidden">
+    <div className="fixed inset-0 bg-afri-bg-sec z-[9999] flex flex-col items-center justify-center text-center p-6 select-none overflow-hidden">
       {/* Ambient Gold Dust / Particles */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {Array.from({ length: 15 }).map((_, idx) => (
@@ -36,11 +36,11 @@ export default function PremiumLoader({ message = "Connexion sécurisée..." }: 
       </div>
 
       {/* Rotating and glowing sound waves */}
-      <div className="relative w-36 h-36 flex items-center justify-center mb-6 border border-[#D4AF37]/15 rounded-full bg-black/40 shadow-[0_0_40px_rgba(212,175,55,0.05)] z-10">
+      <div className="relative w-36 h-36 flex items-center justify-center mb-6 border border-[#D4AF37]/15 rounded-full bg-afri-bg/40 shadow-[0_0_40px_rgba(212,175,55,0.05)] z-10">
         <div className="absolute inset-0.5 rounded-full border border-dashed border-[#D4AF37]/30 animate-spin" style={{ animationDuration: "16s" }} />
         
         {/* Glowing aura */}
-        <div className="absolute w-24 h-24 rounded-full bg-[#D4AF37]/5 blur-xl animate-pulse" />
+        <div className="absolute w-24 h-24 rounded-full bg-afri-bg-sec/5 blur-xl animate-pulse" />
 
         {/* LOGO AFRIGOMBO (Official Image) */}
         {isLogoLoaded && !isLogoFailed ? (
@@ -57,7 +57,7 @@ export default function PremiumLoader({ message = "Connexion sécurisée..." }: 
 
       {/* Loading message */}
       <div className="space-y-1.5 z-10">
-        <h2 className="text-white text-xs font-mono uppercase tracking-[0.2em] font-black">{message}</h2>
+        <h2 className="text-afri-text text-xs font-mono uppercase tracking-[0.2em] font-black">{message}</h2>
         <p className="text-[10px] font-mono tracking-widest text-[#D4AF37] opacity-65 uppercase">Afrigombo Elite</p>
       </div>
     </div>

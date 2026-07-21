@@ -62,7 +62,7 @@ const FEATURE_INFOS = {
     badge: "Vérification Instantanée",
     description: "Contrôlez les identités de l'écosystème Gombo avec le scanner universel de QR",
     incentive: "Vérification inviolable et sécurisée ! ",
-    color: "from-[#111111] to-purple-600",
+    color: "from-purple-900 to-purple-600",
     bgPattern: "bg-grid-violet"
   }
 };
@@ -104,7 +104,7 @@ export default function ComingSoon({ featureId, onBack }: ComingSoonProps) {
       {/* Back Button */}
       <button 
         onClick={onBack}
-        className="mb-6 flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+        className="mb-6 flex items-center text-sm font-medium text-afri-text-sec hover:text-gray-900 dark:text-afri-text-sec dark:hover:text-afri-text transition-colors"
       >
         <ChevronLeft className="w-5 h-5 mr-1" />
         Retour à l'accueil
@@ -114,7 +114,7 @@ export default function ComingSoon({ featureId, onBack }: ComingSoonProps) {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="relative bg-white dark:bg-[#1e1e24] rounded-3xl overflow-hidden shadow-xl border border-gray-100 dark:border-gray-800 p-8 text-center"
+        className="relative bg-white dark:bg-afri-bg-sec rounded-3xl overflow-hidden shadow-xl border border-gray-100 dark:border-gray-800 p-8 text-center"
       >
         {/* Colorful top abstract blob */}
         <div className={`absolute top-0 left-0 right-0 h-3 bg-gradient-to-r ${currentFeature.color}`} />
@@ -124,7 +124,7 @@ export default function ComingSoon({ featureId, onBack }: ComingSoonProps) {
           {currentFeature.badge}
         </div>
 
-        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-afri-text sm:text-4xl">
           {currentFeature.title}
         </h1>
 
@@ -155,7 +155,7 @@ export default function ComingSoon({ featureId, onBack }: ComingSoonProps) {
         </p>
 
         <div className="mt-6 bg-gray-50 dark:bg-gray-800/40 rounded-xl p-4 border border-dashed border-gray-200 dark:border-gray-700 max-w-md mx-auto">
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+          <p className="text-xs font-semibold text-afri-text-sec dark:text-afri-text-sec">
             ⭐ {currentFeature.incentive}
           </p>
         </div>
@@ -163,7 +163,7 @@ export default function ComingSoon({ featureId, onBack }: ComingSoonProps) {
         <div className="mt-8">
           {isSubscribed ? (
             <div className="flex flex-col items-center justify-center p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900 rounded-2xl text-emerald-800 dark:text-emerald-400">
-              <div className="p-2 bg-emerald-500 text-white rounded-full mb-2">
+              <div className="p-2 bg-emerald-500 text-afri-text rounded-full mb-2">
                 <Check className="w-5 h-5" />
               </div>
               <p className="font-bold">Vous êtes inscrit !</p>
@@ -173,7 +173,7 @@ export default function ComingSoon({ featureId, onBack }: ComingSoonProps) {
             <button
               onClick={handleNotifyMe}
               disabled={loading}
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#7C3AED] to-indigo-600 hover:from-[#6D28D9] hover:to-indigo-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
+              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#7C3AED] to-indigo-600 hover:from-[#6D28D9] hover:to-indigo-700 text-afri-text font-bold rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -186,7 +186,7 @@ export default function ComingSoon({ featureId, onBack }: ComingSoonProps) {
             </button>
           )}
           {!user && (
-            <p className="mt-3 text-xs text-gray-400">
+            <p className="mt-3 text-xs text-afri-text-sec">
               Connectez-vous à votre compte pour activer les notifications de sortie.
             </p>
           )}

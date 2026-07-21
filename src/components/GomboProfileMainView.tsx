@@ -118,11 +118,11 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </div>
             <div className="space-y-0.5">
               <span className="text-[10px] font-mono font-black text-emerald-400 uppercase tracking-[0.2em]">👑 Rang Suprême</span>
-              <h3 className="text-lg font-sans font-black text-white uppercase tracking-tight">Centre de Commandement</h3>
+              <h3 className="text-lg font-sans font-black text-afri-text uppercase tracking-tight">Centre de Commandement</h3>
             </div>
           </div>
           
-          <p className="text-[11px] text-zinc-400 leading-relaxed font-sans text-left">
+          <p className="text-[11px] text-afri-text-sec leading-relaxed font-sans text-left">
             Piloter l'ensemble de l'écosystème AFRIGOMBO. Accès exclusif aux serveurs, statistiques globales et modération de haut niveau.
           </p>
           
@@ -150,18 +150,18 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           </div>
           <div className="space-y-0.5">
             <span className="text-[10px] font-mono font-black text-afri-gold uppercase tracking-[0.2em]">Abonnement</span>
-            <h3 className="text-lg font-sans font-black text-white uppercase tracking-tight">AFRIGOMBO PREMIUM</h3>
+            <h3 className="text-lg font-sans font-black text-afri-text uppercase tracking-tight">AFRIGOMBO PREMIUM</h3>
           </div>
         </div>
         
-        <p className="text-[11px] text-zinc-400 leading-relaxed font-sans text-left relative z-10">
+        <p className="text-[11px] text-afri-text-sec leading-relaxed font-sans text-left relative z-10">
           Passez au niveau supérieur. Multipliez vos gombos, démarquez-vous des autres virtuoses et débloquez les fonctionnalités exclusives de l'élite.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-3 mt-4 relative z-10">
           <button 
             onClick={() => onNavigateView("user_subscription_management")}
-            className="flex-1 py-3 bg-afri-gold hover:bg-[#bfa032] text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-afri-gold hover:bg-afri-bg-sec text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             Découvrir les offres
           </button>
@@ -206,7 +206,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           <div className="flex flex-col text-left space-y-2.5 w-full min-w-0">
             {/* Artist Name & badges row */}
             <div className="flex flex-wrap items-center gap-1.5 xs:gap-2">
-              <h2 className="text-[16px] xs:text-[18px] sm:text-[22px] font-serif font-black italic tracking-wide uppercase leading-none text-white truncate max-w-[140px] xs:max-w-[180px] sm:max-w-[220px]">
+              <h2 className="text-[16px] xs:text-[18px] sm:text-[22px] font-serif font-black italic tracking-wide uppercase leading-none text-afri-text truncate max-w-[140px] xs:max-w-[180px] sm:max-w-[220px]">
                 {currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}
               </h2>
               {currentUserProfile.role === "founder" && (
@@ -216,8 +216,8 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                   </span>
                 </div>
               )}
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-zinc-800 bg-afri-bg-sec text-[8px] font-bold text-zinc-400 font-mono shrink-0">
-                <Shield className="w-2.5 h-2.5 text-zinc-400" />
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-afri-border bg-afri-bg-sec text-[8px] font-bold text-afri-text-sec font-mono shrink-0">
+                <Shield className="w-2.5 h-2.5 text-afri-text-sec" />
                 <span>STANDARD</span>
               </span>
               <span className="text-[8px] xs:text-[9px] font-bold font-mono text-afri-gold tracking-tight shrink-0">
@@ -249,19 +249,19 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             )}
 
             {/* Subscription status */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-zinc-800/80 bg-afri-bg-ter text-[8.5px] xs:text-[9.5px] text-zinc-400 font-bold tracking-wide uppercase w-fit">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-afri-border/80 bg-afri-bg-ter text-[8.5px] xs:text-[9.5px] text-afri-text-sec font-bold tracking-wide uppercase w-fit">
               <span className="text-amber-500">👑</span>
               <span>ABONNEMENT : {isPremium ? "PREMIUM ELITE" : "STANDARD (GRATUIT)"}</span>
             </div>
 
             {/* KYC status badge */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-zinc-800/80 bg-afri-bg-ter text-[8.5px] xs:text-[9.5px] text-zinc-400 font-bold tracking-wide uppercase w-fit">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-afri-border/80 bg-afri-bg-ter text-[8.5px] xs:text-[9.5px] text-afri-text-sec font-bold tracking-wide uppercase w-fit">
               <span className={isKycApproved ? "text-emerald-400" : "text-amber-500"}>🛡️</span>
               <span>KYC : {isKycApproved ? "VÉRIFIÉ" : "NON VÉRIFIÉ"}</span>
             </div>
 
             {/* Timer status */}
-            <div className="flex items-center gap-1.5 text-[8.5px] font-mono font-bold text-zinc-500 tracking-wide uppercase">
+            <div className="flex items-center gap-1.5 text-[8.5px] font-mono font-bold text-afri-text-sec tracking-wide uppercase">
               <Clock className="w-2.5 h-2.5" />
               <span>0M / 30M (EC)</span>
             </div>
@@ -284,27 +284,27 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
       {/* 2. THREE STATS COLUMNS SIDE-BY-SIDE (SCREENSHOT STYLE) */}
       <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
-        <div className="bg-afri-bg border border-zinc-900/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
+        <div className="bg-afri-bg border border-afri-border/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
           <span className="text-[17px] xs:text-[20px] sm:text-[24px] font-serif font-black text-afri-gold tracking-tight leading-none">
             {currentUserProfile.followersCount || currentUserProfile.followers?.length || 142}
           </span>
-          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest mt-1">
+          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest mt-1">
             ABONNÉS
           </span>
         </div>
-        <div className="bg-afri-bg border border-zinc-900/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
+        <div className="bg-afri-bg border border-afri-border/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
           <span className="text-[17px] xs:text-[20px] sm:text-[24px] font-serif font-black text-afri-gold tracking-tight leading-none">
             {myPosts.length || 12}
           </span>
-          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest mt-1">
+          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest mt-1">
             POSTS
           </span>
         </div>
-        <div className="bg-afri-bg border border-zinc-900/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
+        <div className="bg-afri-bg border border-afri-border/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
           <span className="text-[17px] xs:text-[20px] sm:text-[24px] font-serif font-black text-afri-gold tracking-tight leading-none">
             {currentUserProfile.engagementRate || "12.4%"}
           </span>
-          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-zinc-500 uppercase tracking-widest mt-1">
+          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest mt-1">
             ENGAGEMENT
           </span>
         </div>
@@ -312,7 +312,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
       {/* 3. CENTERED SUBTITLE TEXT */}
       <div className="text-center py-1">
-        <p className="text-zinc-500 font-sans text-xs italic">
+        <p className="text-afri-text-sec font-sans text-xs italic">
           Membre Elite de la famille AFRIGOMBO
         </p>
       </div>
@@ -320,7 +320,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       {/* 4. GÉRER MON ABONNEMENT BUTTON (SCREENSHOT STYLE) */}
       <button 
         onClick={() => onNavigateView("user_subscription_management")}
-        className="w-full max-w-sm mx-auto flex items-center justify-between py-2.5 px-5 bg-afri-bg border border-zinc-900 hover:border-afri-gold/30 text-zinc-400 font-mono font-black text-[9.5px] uppercase tracking-widest rounded-full shadow-md hover:text-white transition-all active:scale-98 cursor-pointer"
+        className="w-full max-w-sm mx-auto flex items-center justify-between py-2.5 px-5 bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text-sec font-mono font-black text-[9.5px] uppercase tracking-widest rounded-full shadow-md hover:text-afri-text transition-all active:scale-98 cursor-pointer"
       >
         <span />
         <span className="text-center flex-1">GÉRER MON ABONNEMENT</span>
@@ -338,17 +338,17 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </div>
             <div className="space-y-1">
               <span className="text-[9px] font-mono font-black text-amber-400 uppercase tracking-[0.2em] block">Dossier Transmis</span>
-              <h3 className="text-[17px] xs:text-[19px] font-sans font-black text-white tracking-wide uppercase">
+              <h3 className="text-[17px] xs:text-[19px] font-sans font-black text-afri-text tracking-wide uppercase">
                 DEMANDE EN COURS D'ANALYSE
               </h3>
             </div>
-            <p className="text-[10px] xs:text-[11px] text-zinc-400 max-w-[320px] mx-auto leading-relaxed font-sans">
+            <p className="text-[10px] xs:text-[11px] text-afri-text-sec max-w-[320px] mx-auto leading-relaxed font-sans">
               Votre demande est en cours d'évaluation par le comité artistique AFRIGOMBO. Notre équipe procède à la vérification de vos pièces.
             </p>
             <div className="pt-2">
               <button 
                 onClick={() => setPanelView("certification")}
-                className="w-full xs:w-auto px-6 py-2.5 bg-zinc-900 border border-zinc-800 hover:border-amber-500/30 text-zinc-300 font-mono text-[10px] uppercase font-black tracking-widest rounded-xl transition-all active:scale-98 cursor-pointer"
+                className="w-full xs:w-auto px-6 py-2.5 bg-afri-bg-sec border border-afri-border hover:border-amber-500/30 text-afri-text font-mono text-[10px] uppercase font-black tracking-widest rounded-xl transition-all active:scale-98 cursor-pointer"
               >
                 Suivre ma certification ({[0, 1, 2, 3, 4, 5, 6].filter(idx => {
                   switch (idx) {
@@ -364,7 +364,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 }).length}/7)
               </button>
             </div>
-            <p className="text-[9px] text-zinc-500 font-mono uppercase tracking-wider">
+            <p className="text-[9px] text-afri-text-sec font-mono uppercase tracking-wider">
               ⏱️ Temps de réponse moyen : &lt; 24 heures
             </p>
           </div>
@@ -381,7 +381,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
             {/* Title & Subtitle */}
             <div className="space-y-1">
-              <h3 className="text-[18px] xs:text-[20px] font-sans font-black text-white tracking-[0.1em] uppercase">
+              <h3 className="text-[18px] xs:text-[20px] font-sans font-black text-afri-text tracking-[0.1em] uppercase">
                 OBTENIR MON GOMBO ID
               </h3>
               <p className="text-[9.5px] xs:text-[10.5px] font-mono font-black text-afri-gold uppercase tracking-widest">
@@ -390,7 +390,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </div>
 
             {/* Text details */}
-            <p className="text-[10px] xs:text-[11px] text-zinc-400 max-w-[340px] mx-auto leading-relaxed font-sans">
+            <p className="text-[10px] xs:text-[11px] text-afri-text-sec max-w-[340px] mx-auto leading-relaxed font-sans">
               Le GOMBO ID est attribué uniquement après vérification complète de votre identité et de votre activité musicale.
             </p>
 
@@ -425,7 +425,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
           {/* Title and ID */}
           <div className="space-y-1">
-            <h3 className="text-xs font-mono font-black text-zinc-500 uppercase tracking-[0.2em]">🎼 GOMBO ID OFFICIAL</h3>
+            <h3 className="text-xs font-mono font-black text-afri-text-sec uppercase tracking-[0.2em]">🎼 GOMBO ID OFFICIAL</h3>
             <p className="text-xl xs:text-2xl font-serif font-black text-afri-gold tracking-widest uppercase italic">
               {gomboId}
             </p>
@@ -435,14 +435,14 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
             <button 
               onClick={handleCopyId}
-              className="py-2 px-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-zinc-300 font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
+              className="py-2 px-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border hover:border-afri-gold/50 text-afri-text font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
             >
               <Copy className="w-3 h-3 text-afri-gold" />
               <span>{copiedId ? "Copié !" : "Copier"}</span>
             </button>
             <button 
               onClick={handleShareProfile}
-              className="py-2 px-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-zinc-300 font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
+              className="py-2 px-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border hover:border-afri-gold/50 text-afri-text font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
             >
               <Share2 className="w-3 h-3 text-afri-gold" />
               <span>Partager</span>
@@ -452,7 +452,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 setShowQrModal(true);
                 try { audioSynth.playKoraNote(392.00, 0, 0.05, 0.3); } catch (_) {}
               }}
-              className="py-2 px-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-zinc-300 font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
+              className="py-2 px-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border hover:border-afri-gold/50 text-afri-text font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
             >
               <QrCode className="w-3 h-3 text-afri-gold" />
               <span>Afficher le QR Code</span>
@@ -477,7 +477,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 document.body.removeChild(link);
                 try { audioSynth.playKoraNote(659.25, 0, 0.1, 0.5); } catch (_) {}
               }}
-              className="py-2 px-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 hover:border-zinc-800 text-afri-gold font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
+              className="py-2 px-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border hover:border-afri-gold/50 text-afri-gold font-mono text-[9px] uppercase font-bold rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-1"
             >
               <Download className="w-3 h-3 text-afri-gold" />
               <span>Télécharger mon certificat</span>
@@ -487,7 +487,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       )}
 
       {/* 5b. AVANTAGES SECTION */}
-      <div className="bg-afri-bg border border-zinc-900 rounded-[28px] p-5 xs:p-6 shadow-md space-y-3 text-left">
+      <div className="bg-afri-bg border border-afri-border rounded-[28px] p-5 xs:p-6 shadow-md space-y-3 text-left">
         <h4 className="text-[10px] font-mono font-black text-afri-gold uppercase tracking-[0.2em]">Grâce à votre GOMBO ID :</h4>
         <div className="space-y-2">
           {[
@@ -500,15 +500,15 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           ].map((item, idx) => (
             <div key={idx} className="flex gap-2.5 items-center">
               <span className="text-emerald-400 font-bold shrink-0">✓</span>
-              <span className="text-[11px] font-bold text-white uppercase tracking-wide block">{item}</span>
+              <span className="text-[11px] font-bold text-afri-text uppercase tracking-wide block">{item}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* 6. EXPANDABLE / SCROLLABLE TOOLS (PRESERVING APP RICH FEATURES) */}
-      <div className="pt-6 border-t border-zinc-900/60 space-y-4">
-        <h3 className="text-xs font-mono uppercase font-black text-zinc-500 tracking-[0.25em] px-1">
+      <div className="pt-6 border-t border-afri-border/60 space-y-4">
+        <h3 className="text-xs font-mono uppercase font-black text-afri-text-sec tracking-[0.25em] px-1">
           🛠️ Espace de Gestion & Créativité
         </h3>
 
@@ -551,14 +551,14 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             <button 
               key={idx}
               onClick={item.action}
-              className={`flex flex-col items-start p-4 rounded-2xl bg-zinc-900/25 border border-zinc-850/60 hover:bg-zinc-900/50 ${item.border} active:scale-[0.98] transition-all duration-200 text-left h-32 justify-between shadow-sm`}
+              className={`flex flex-col items-start p-4 rounded-2xl bg-afri-bg-sec/25 border border-afri-border/60 hover:bg-afri-bg-sec/50 ${item.border} active:scale-[0.98] transition-all duration-200 text-left h-32 justify-between shadow-sm`}
             >
-              <div className="p-2.5 rounded-xl bg-black border border-white/5">
+              <div className="p-2.5 rounded-xl bg-afri-bg border border-afri-border">
                 <item.icon className={`w-5 h-5 ${item.color}`} />
               </div>
               <div>
-                <p className="text-[10.5px] font-black text-zinc-100 uppercase tracking-wide leading-tight">{item.label}</p>
-                <p className="text-[9.5px] text-zinc-500 mt-1">{item.desc}</p>
+                <p className="text-[10.5px] font-black text-afri-text uppercase tracking-wide leading-tight">{item.label}</p>
+                <p className="text-[9.5px] text-afri-text-sec mt-1">{item.desc}</p>
               </div>
             </button>
           ))}
@@ -575,65 +575,65 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         )}
 
         {/* MON ACTIVITÉ */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-afri-bg-sec p-5 shadow-xl space-y-4 mt-8">
+        <div className="relative overflow-hidden rounded-2xl border border-afri-border bg-afri-bg-sec p-5 shadow-xl space-y-4 mt-8">
           <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 blur-[35px] rounded-full pointer-events-none" />
           
-          <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+          <div className="flex items-center gap-3 border-b border-afri-border pb-3">
             <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
               <Briefcase className="w-4.5 h-4.5 text-amber-400" />
             </div>
             <div>
-              <h4 className="text-[11px] font-mono uppercase font-black text-white tracking-widest">💼 Mon Activité</h4>
-              <p className="text-[9.5px] text-zinc-500 font-mono">Gérez l'ensemble de votre présence</p>
+              <h4 className="text-[11px] font-mono uppercase font-black text-afri-text tracking-widest">💼 Mon Activité</h4>
+              <p className="text-[9.5px] text-afri-text-sec font-mono">Gérez l'ensemble de votre présence</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => onNavigateView("user_mes_gombos")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+            <button onClick={() => onNavigateView("user_mes_gombos")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
               <Edit3 className="w-4 h-4 text-emerald-400 shrink-0" />
               <div className="truncate">
-                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Publications</span>
-                <span className="block text-[8px] text-zinc-500 font-mono">{myPosts.length} posts</span>
+                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Publications</span>
+                <span className="block text-[8px] text-afri-text-sec font-mono">{myPosts.length} posts</span>
               </div>
             </button>
             
-            <button onClick={() => onNavigateView("user_contracts")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+            <button onClick={() => onNavigateView("user_contracts")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
               <ShieldCheck className="w-4 h-4 text-afri-gold shrink-0" />
               <div className="truncate">
-                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Contrats</span>
-                <span className="block text-[8px] text-zinc-500 font-mono">Sécurisés</span>
+                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Contrats</span>
+                <span className="block text-[8px] text-afri-text-sec font-mono">Sécurisés</span>
               </div>
             </button>
             
-            <button onClick={() => onNavigateView("user_opportunities")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+            <button onClick={() => onNavigateView("user_opportunities")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
               <Target className="w-4 h-4 text-purple-400 shrink-0" />
               <div className="truncate">
-                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Candidatures</span>
-                <span className="block text-[8px] text-zinc-500 font-mono">{currentUserProfile.applicationsSent || 0} envois</span>
+                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Candidatures</span>
+                <span className="block text-[8px] text-afri-text-sec font-mono">{currentUserProfile.applicationsSent || 0} envois</span>
               </div>
             </button>
 
-            <button onClick={() => onNavigateView("user_wallet")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+            <button onClick={() => onNavigateView("user_wallet")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
               <Wallet className="w-4 h-4 text-amber-500 shrink-0" />
               <div className="truncate">
-                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Revenus</span>
-                <span className="block text-[8px] text-zinc-500 font-mono">{(currentUserProfile.totalRevenue || 0).toLocaleString()} F</span>
+                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Revenus</span>
+                <span className="block text-[8px] text-afri-text-sec font-mono">{(currentUserProfile.totalRevenue || 0).toLocaleString()} F</span>
               </div>
             </button>
             
-            <button onClick={() => onNavigateView("user_vibes")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+            <button onClick={() => onNavigateView("user_vibes")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
               <Heart className="w-4 h-4 text-rose-500 shrink-0" />
               <div className="truncate">
-                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Favoris</span>
-                <span className="block text-[8px] text-zinc-500 font-mono">Sauvegardés</span>
+                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Favoris</span>
+                <span className="block text-[8px] text-afri-text-sec font-mono">Sauvegardés</span>
               </div>
             </button>
 
-            <button onClick={() => onNavigateView("user_events")} className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-800/80 transition-colors text-left">
+            <button onClick={() => onNavigateView("user_events")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-afri-border hover:bg-afri-bg-ter/80 transition-colors text-left">
               <Clock className="w-4 h-4 text-cyan-400 shrink-0" />
               <div className="truncate">
-                <span className="block text-[10px] font-bold text-white uppercase tracking-wider truncate">Calendrier</span>
-                <span className="block text-[8px] text-zinc-500 font-mono">Mes dates</span>
+                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Calendrier</span>
+                <span className="block text-[8px] text-afri-text-sec font-mono">Mes dates</span>
               </div>
             </button>
           </div>
@@ -647,7 +647,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 backdrop-blur-md z-[99999] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md z-[99999] flex items-center justify-center p-4"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }}
@@ -660,18 +660,18 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                   setShowQrModal(false);
                   try { audioSynth.playKoraNote(392.00, 0, 0.1, 0.4); } catch (_) {}
                 }}
-                className="absolute top-4 right-4 text-zinc-500 hover:text-white bg-zinc-900/60 p-1.5 rounded-full border border-white/5 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text bg-afri-bg-sec/60 p-1.5 rounded-full border border-afri-border transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
 
               <div className="space-y-1 pt-2">
                 <span className="text-afri-gold text-[10px] font-mono uppercase tracking-[0.2em] block">Scanner & Recruter</span>
-                <h4 className="text-lg font-sans font-black text-white uppercase">QR CODE GOMBO ID</h4>
+                <h4 className="text-lg font-sans font-black text-afri-text uppercase">QR CODE GOMBO ID</h4>
               </div>
 
               {/* Vector Golden Simulated High-Tech QR Code */}
-              <div className="w-52 h-52 mx-auto bg-black border border-afri-gold/20 rounded-2xl p-4 flex items-center justify-center relative shadow-inner">
+              <div className="w-52 h-52 mx-auto bg-afri-bg border border-afri-gold/20 rounded-2xl p-4 flex items-center justify-center relative shadow-inner">
                 <div className="absolute inset-4 rounded-full bg-afri-gold/5 blur-xl pointer-events-none" />
                 <svg viewBox="0 0 100 100" className="w-full h-full text-afri-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]">
                   {/* Outer Frame Corners */}
@@ -715,7 +715,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <p className="text-sm font-sans font-black text-white">{currentUserProfile.artisticName}</p>
+                <p className="text-sm font-sans font-black text-afri-text">{currentUserProfile.artisticName}</p>
                 <span className="text-xs font-mono font-bold text-afri-gold uppercase tracking-wider">{gomboId}</span>
               </div>
 
@@ -724,7 +724,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                   handleCopyId();
                   setShowQrModal(false);
                 }}
-                className="w-full py-2.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-mono text-xs uppercase rounded-xl border border-zinc-800/80 active:scale-98 transition-all"
+                className="w-full py-2.5 px-4 bg-afri-bg-sec hover:bg-afri-bg-ter text-afri-text font-mono text-xs uppercase rounded-xl border border-afri-border/80 active:scale-98 transition-all"
               >
                 Copier GOMBO ID & Fermer
               </button>
@@ -740,7 +740,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/95 backdrop-blur-md z-[99999] flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 bg-afri-bg/95 backdrop-blur-md z-[99999] flex items-center justify-center p-4 overflow-y-auto"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 30 }}
@@ -756,7 +756,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                   setShowCertModal(false);
                   try { audioSynth.playKoraNote(392.00, 0, 0.1, 0.4); } catch (_) {}
                 }}
-                className="absolute top-4 right-4 text-zinc-500 hover:text-white bg-zinc-900/60 p-1.5 rounded-full border border-white/5 transition-colors cursor-pointer z-10"
+                className="absolute top-4 right-4 text-afri-text-sec hover:text-afri-text bg-afri-bg-sec/60 p-1.5 rounded-full border border-afri-border transition-colors cursor-pointer z-10"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -775,35 +775,35 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                     <Star className="w-4 h-4 fill-afri-gold" />
                   </div>
                   <span className="text-afri-gold text-[10px] font-mono uppercase tracking-[0.25em] block leading-none">TEMPLE DE LA SOUVERAINETÉ</span>
-                  <h3 className="text-xl sm:text-2xl font-serif font-black italic tracking-wider text-white uppercase leading-tight">CERTIFICAT D'EXCELLENCE</h3>
-                  <span className="text-zinc-500 text-[8px] font-mono uppercase tracking-[0.15em] block pt-1">NUMÉRO D'ENREGISTREMENT UNIQUE</span>
+                  <h3 className="text-xl sm:text-2xl font-serif font-black italic tracking-wider text-afri-text uppercase leading-tight">CERTIFICAT D'EXCELLENCE</h3>
+                  <span className="text-afri-text-sec text-[8px] font-mono uppercase tracking-[0.15em] block pt-1">NUMÉRO D'ENREGISTREMENT UNIQUE</span>
                 </div>
 
-                <div className="py-2 border-y border-zinc-900/80 my-4 space-y-1 text-center">
-                  <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block">IDENTIFIANT ATTRIBUÉ</span>
+                <div className="py-2 border-y border-afri-border/80 my-4 space-y-1 text-center">
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">IDENTIFIANT ATTRIBUÉ</span>
                   <span className="text-2xl font-serif font-black text-afri-gold tracking-widest block uppercase italic select-all">{gomboId}</span>
                 </div>
 
                 <div className="space-y-4">
-                  <p className="text-[11px] text-zinc-400 font-sans leading-relaxed max-w-[340px] mx-auto italic text-center">
+                  <p className="text-[11px] text-afri-text-sec font-sans leading-relaxed max-w-[340px] mx-auto italic text-center">
                     « Par ce présent certificat, l'équipe artistique et le comité de souveraineté d'AFRIGOMBO certifient l'artiste ci-dessous comme membre agréé de l'élite musicale ivoirienne. »
                   </p>
 
                   <div className="space-y-1.5 text-center">
-                    <p className="text-zinc-400 text-[10px] font-mono uppercase tracking-widest">ARTISTE TITULAIRE</p>
-                    <p className="text-lg font-sans font-black text-white uppercase tracking-wider">{currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}</p>
-                    <p className="text-xs font-mono font-bold text-zinc-500 uppercase">{currentUserProfile.commune || "Cocody"}, Abidjan</p>
+                    <p className="text-afri-text-sec text-[10px] font-mono uppercase tracking-widest">ARTISTE TITULAIRE</p>
+                    <p className="text-lg font-sans font-black text-afri-text uppercase tracking-wider">{currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}</p>
+                    <p className="text-xs font-mono font-bold text-afri-text-sec uppercase">{currentUserProfile.commune || "Cocody"}, Abidjan</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-900/60 text-left text-[9px] font-mono text-zinc-500">
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-afri-border/60 text-left text-[9px] font-mono text-afri-text-sec">
                   <div>
-                    <span className="block text-[8px] text-zinc-600 uppercase tracking-wider">Date d'approbation</span>
+                    <span className="block text-[8px] text-afri-text-sec uppercase tracking-wider">Date d'approbation</span>
                     <span className="text-afri-gold font-black uppercase">{currentUserProfile.kycApprovedDate || currentUserProfile.verificationDate || new Date().toLocaleDateString("fr-FR")}</span>
                   </div>
                   <div className="text-right">
-                    <span className="block text-[8px] text-zinc-600 uppercase tracking-wider">Signé par</span>
-                    <span className="text-white font-black uppercase">Le Grand Conseil Artistique</span>
+                    <span className="block text-[8px] text-afri-text-sec uppercase tracking-wider">Signé par</span>
+                    <span className="text-afri-text font-black uppercase">Le Grand Conseil Artistique</span>
                   </div>
                 </div>
               </div>
@@ -811,7 +811,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               <div className="pt-4 flex flex-col xs:flex-row gap-2 justify-center">
                 <button 
                   onClick={handleCopyId}
-                  className="py-2 px-4 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 font-mono text-xs uppercase rounded-xl border border-zinc-800 cursor-pointer transition-all active:scale-98"
+                  className="py-2 px-4 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text font-mono text-xs uppercase rounded-xl border border-afri-border cursor-pointer transition-all active:scale-98"
                 >
                   Copier GOMBO ID
                 </button>

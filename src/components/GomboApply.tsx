@@ -96,17 +96,17 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-afri-bg/60 flex items-center justify-center p-4 backdrop-blur-xs">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative bg-white dark:bg-[#1e1e24] w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800 p-6 sm:p-8"
+        className="relative bg-white dark:bg-afri-bg-sec w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800 p-6 sm:p-8"
       >
         {/* Close Button */}
         <button 
           onClick={onCancel}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full bg-gray-50 dark:bg-gray-800/40 transition-all"
+          className="absolute top-4 right-4 p-2 text-afri-text-sec hover:text-gray-600 dark:hover:text-afri-text rounded-full bg-gray-50 dark:bg-gray-800/40 transition-all"
         >
           <X className="w-5 h-5" />
         </button>
@@ -115,10 +115,10 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
           <span className="text-[10px] font-bold tracking-wider text-purple-600 bg-purple-50 dark:bg-purple-950/40 dark:text-purple-400 px-2.5 py-1 rounded-full uppercase">
             Candidature Gombo
           </span>
-          <h3 className="mt-2 text-xl font-extrabold text-gray-950 dark:text-white leading-tight">
+          <h3 className="mt-2 text-xl font-extrabold text-gray-950 dark:text-afri-text leading-tight">
             Postuler à : {gombo.title}
           </h3>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-afri-text-sec mt-1">
             Proposé par {gombo.clientName} (Cachet : {gombo.budget.toLocaleString()} FCFA)
           </p>
         </div>
@@ -133,7 +133,7 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
           
           {/* Motivation Message */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Message de motivation (Pitch)</label>
+            <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Message de motivation (Pitch)</label>
             <div className="relative">
               <span className="absolute top-3 left-3 text-gray-450">
                 <AlignLeft className="w-4 h-4" />
@@ -145,16 +145,16 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
                 placeholder="Présentez-vous : pourquoi vous êtes chaud pour ce gombo, votre rigueur, votre matériel de scène..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
               />
             </div>
           </div>
 
           {/* WhatsApp Field */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Numéro WhatsApp de contact</label>
+            <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Numéro WhatsApp de contact</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
                 <Phone className="w-4 h-4" />
               </span>
               <input
@@ -163,16 +163,16 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
                 placeholder="Ex: 07 45 89 12 00"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
               />
             </div>
           </div>
 
           {/* Specialty Field */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Votre Spécialité / Instrument pour ce plan</label>
+            <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Votre Spécialité / Instrument pour ce plan</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
                 <Briefcase className="w-4 h-4" />
               </span>
               <input
@@ -181,16 +181,16 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
                 placeholder="Ex: Guitariste Soliste, Chanteuse Lead, Pianiste, Batteur, Chœur..."
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
               />
             </div>
           </div>
 
           {/* Availability Field */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Votre Disponibilité</label>
+            <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Votre Disponibilité</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
                 <Calendar className="w-4 h-4" />
               </span>
               <input
@@ -199,7 +199,7 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
                 placeholder="Ex: Libre toutes les dates, disponible aussi pour répétitions"
                 value={disponibilite}
                 onChange={(e) => setDisponibilite(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
               />
             </div>
           </div>
@@ -207,7 +207,7 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Audio demo link */}
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Lien Audio démo (Optionnel)</label>
+              <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Lien Audio démo (Optionnel)</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-450">
                   <Music className="w-3.5 h-3.5" />
@@ -217,14 +217,14 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
                   placeholder="e.g. SoundCloud, Drive..."
                   value={audioUrl}
                   onChange={(e) => setAudioUrl(e.target.value)}
-                  className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+                  className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
                 />
               </div>
             </div>
 
             {/* Video performance link */}
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase">Lien Vidéo scène (Optionnel)</label>
+              <label className="block text-xs font-bold text-afri-text-sec dark:text-afri-text-sec mb-1.5 uppercase">Lien Vidéo scène (Optionnel)</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-450">
                   <Video className="w-3.5 h-3.5" />
@@ -234,7 +234,7 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
                   placeholder="e.g. YouTube, TikTok, Drive..."
                   value={videoUrl}
                   onChange={(e) => setVideoUrl(e.target.value)}
-                  className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#1e1e24] dark:text-white"
+                  className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-afri-bg-sec dark:text-afri-text"
                 />
               </div>
             </div>
@@ -244,10 +244,10 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
           <div className="bg-purple-50/30 dark:bg-purple-950/10 p-3.5 rounded-2xl border border-purple-100/50 dark:border-purple-900/20 text-xs">
             <span className="font-bold text-purple-700 dark:text-purple-400 block uppercase mb-1">Coordonnées de l'artiste :</span>
             <div className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-300">
-              <p>🎛️ Spécialité : <strong className="text-gray-900 dark:text-white">{currentUserProfile.specialty || "Musicien"}</strong></p>
-              <p>🏅 Expérience : <strong className="text-gray-900 dark:text-white">{currentUserProfile.experienceYears ? `${currentUserProfile.experienceYears} ans` : (currentUserProfile.experience || "Pro")}</strong></p>
-              <p>📍 Commune : <strong className="text-gray-900 dark:text-white">{currentUserProfile.commune || "Abidjan"}</strong></p>
-              <p>📅 Membre depuis : <strong className="text-gray-900 dark:text-white">{currentUserProfile.createdAt ? new Date(currentUserProfile.createdAt).toLocaleDateString("fr-FR") : "Récemment"}</strong></p>
+              <p>🎛️ Spécialité : <strong className="text-gray-900 dark:text-afri-text">{currentUserProfile.specialty || "Musicien"}</strong></p>
+              <p>🏅 Expérience : <strong className="text-gray-900 dark:text-afri-text">{currentUserProfile.experienceYears ? `${currentUserProfile.experienceYears} ans` : (currentUserProfile.experience || "Pro")}</strong></p>
+              <p>📍 Commune : <strong className="text-gray-900 dark:text-afri-text">{currentUserProfile.commune || "Abidjan"}</strong></p>
+              <p>📅 Membre depuis : <strong className="text-gray-900 dark:text-afri-text">{currentUserProfile.createdAt ? new Date(currentUserProfile.createdAt).toLocaleDateString("fr-FR") : "Récemment"}</strong></p>
             </div>
           </div>
 
@@ -263,7 +263,7 @@ export default function GomboApply({ gombo, currentUserProfile, onSuccess, onCan
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-98 flex items-center gap-1.5 text-sm"
+              className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-afri-text font-bold rounded-xl shadow-md transition-all active:scale-98 flex items-center gap-1.5 text-sm"
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

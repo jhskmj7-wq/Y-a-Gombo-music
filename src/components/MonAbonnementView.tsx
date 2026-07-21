@@ -112,7 +112,7 @@ export const MonAbonnementView: React.FC<Props> = ({ isPremium, onUpgrade, onBac
         <ul className="space-y-3 mb-6">
           {["5 publications par jour", "Statistiques", "Plus de visibilité", "Portfolio enrichi"].map((feature, i) => (
             <li key={i} className="flex items-center gap-3 text-xs text-afri-text font-medium">
-              <Check className="w-4 h-4 text-zinc-500 shrink-0" />
+              <Check className="w-4 h-4 text-afri-text-sec shrink-0" />
               {feature}
             </li>
           ))}
@@ -120,7 +120,7 @@ export const MonAbonnementView: React.FC<Props> = ({ isPremium, onUpgrade, onBac
         
         <button 
           onClick={onUpgrade}
-          className="w-full py-3 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-black uppercase tracking-wider transition-all shadow-lg active:scale-95"
+          className="w-full py-3 rounded-2xl bg-afri-bg-ter hover:bg-zinc-700 text-afri-text text-xs font-black uppercase tracking-wider transition-all shadow-lg active:scale-95"
         >
           Devenir PRO
         </button>

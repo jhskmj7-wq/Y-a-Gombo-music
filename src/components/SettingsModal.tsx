@@ -200,11 +200,48 @@ export default function SettingsModal({
   };
 
   // Notification States
-  const [notifMessages, setNotifMessages] = useState(() => localStorage.getItem("gombo_pref_notif_messages") !== "false");
-  const [notifOpps, setNotifOpps] = useState(() => localStorage.getItem("gombo_pref_notif_opps") !== "false");
-  const [notifGombos, setNotifGombos] = useState(() => localStorage.getItem("gombo_pref_notif_gombos") !== "false");
-  const [notifAlerts, setNotifAlerts] = useState(() => localStorage.getItem("gombo_pref_notif_alerts") !== "false");
-  const [notifEvents, setNotifEvents] = useState(() => localStorage.getItem("gombo_pref_notif_events") !== "false");
+  const [notifMessages, setNotifMessages] = useState(() => {
+    if (profile?.notificationPrefs?.messages !== undefined) return profile.notificationPrefs.messages;
+    return localStorage.getItem("gombo_pref_notif_messages") !== "false";
+  });
+  const [notifOpps, setNotifOpps] = useState(() => {
+    if (profile?.notificationPrefs?.opportunities !== undefined) return profile.notificationPrefs.opportunities;
+    return localStorage.getItem("gombo_pref_notif_opps") !== "false";
+  });
+  const [notifPayments, setNotifPayments] = useState(() => {
+    if (profile?.notificationPrefs?.payments !== undefined) return profile.notificationPrefs.payments;
+    return localStorage.getItem("gombo_pref_notif_payments") !== "false";
+  });
+  const [notifContracts, setNotifContracts] = useState(() => {
+    if (profile?.notificationPrefs?.contracts !== undefined) return profile.notificationPrefs.contracts;
+    return localStorage.getItem("gombo_pref_notif_contracts") !== "false";
+  });
+  const [notifGomboId, setNotifGomboId] = useState(() => {
+    if (profile?.notificationPrefs?.gomboId !== undefined) return profile.notificationPrefs.gomboId;
+    return localStorage.getItem("gombo_pref_notif_gombo_id") !== "false";
+  });
+  const [notifPremium, setNotifPremium] = useState(() => {
+    if (profile?.notificationPrefs?.premium !== undefined) return profile.notificationPrefs.premium;
+    return localStorage.getItem("gombo_pref_notif_premium") !== "false";
+  });
+  const [notifNews, setNotifNews] = useState(() => {
+    if (profile?.notificationPrefs?.news !== undefined) return profile.notificationPrefs.news;
+    return localStorage.getItem("gombo_pref_notif_news") !== "false";
+  });
+
+  // Keep state in-sync with profile data when it loads
+  useEffect(() => {
+    if (profile?.notificationPrefs) {
+      const prefs = profile.notificationPrefs;
+      if (prefs.messages !== undefined) setNotifMessages(prefs.messages);
+      if (prefs.opportunities !== undefined) setNotifOpps(prefs.opportunities);
+      if (prefs.payments !== undefined) setNotifPayments(prefs.payments);
+      if (prefs.contracts !== undefined) setNotifContracts(prefs.contracts);
+      if (prefs.gomboId !== undefined) setNotifGomboId(prefs.gomboId);
+      if (prefs.premium !== undefined) setNotifPremium(prefs.premium);
+      if (prefs.news !== undefined) setNotifNews(prefs.news);
+    }
+  }, [profile?.notificationPrefs]);
 
   // Privacy States
   const [privacyProfile, setPrivacyProfile] = useState(() => localStorage.getItem("gombo_pref_privacy_profile") || "public");
@@ -236,13 +273,15 @@ export default function SettingsModal({
   const [issueText, setIssueText] = useState("");
   const [issueSent, setIssueSent] = useState(false);
 
-  // Quick State Save
+  // Quick State Save & Firestore Sync
   useEffect(() => {
     localStorage.setItem("gombo_pref_notif_messages", notifMessages.toString());
     localStorage.setItem("gombo_pref_notif_opps", notifOpps.toString());
-    localStorage.setItem("gombo_pref_notif_gombos", notifGombos.toString());
-    localStorage.setItem("gombo_pref_notif_alerts", notifAlerts.toString());
-    localStorage.setItem("gombo_pref_notif_events", notifEvents.toString());
+    localStorage.setItem("gombo_pref_notif_payments", notifPayments.toString());
+    localStorage.setItem("gombo_pref_notif_contracts", notifContracts.toString());
+    localStorage.setItem("gombo_pref_notif_gombo_id", notifGomboId.toString());
+    localStorage.setItem("gombo_pref_notif_premium", notifPremium.toString());
+    localStorage.setItem("gombo_pref_notif_news", notifNews.toString());
     
     localStorage.setItem("gombo_pref_privacy_profile", privacyProfile);
     localStorage.setItem("gombo_pref_privacy_msg", privacyMsg);
@@ -253,10 +292,27 @@ export default function SettingsModal({
     localStorage.setItem("gombo_pref_autoplay_video", autoPlayVideo.toString());
     localStorage.setItem("gombo_pref_autoplay_audio", autoPlayAudio.toString());
     localStorage.setItem("gombo_pref_audio_quality", audioQuality);
+
+    if (profile?.uid) {
+      gomboDB.updateUserProfile(profile.uid, {
+        notificationPrefs: {
+          messages: notifMessages,
+          opportunities: notifOpps,
+          payments: notifPayments,
+          contracts: notifContracts,
+          gomboId: notifGomboId,
+          premium: notifPremium,
+          news: notifNews,
+          masterEnabled: notificationsEnabled
+        }
+      }).catch(err => console.error("Error saving notification preferences to Firestore:", err));
+    }
   }, [
-    notifMessages, notifOpps, notifGombos, notifAlerts, notifEvents,
+    notifMessages, notifOpps, notifPayments, notifContracts, notifGomboId, notifPremium, notifNews,
+    notificationsEnabled,
     privacyProfile, privacyMsg, privacyOnline, privacyCommune,
-    privacyPhone, autoPlayVideo, autoPlayAudio, audioQuality
+    privacyPhone, autoPlayVideo, autoPlayAudio, audioQuality,
+    profile?.uid
   ]);
 
   const handleClearCache = () => {
@@ -314,7 +370,7 @@ export default function SettingsModal({
           </div>
           <div>
             <h1 className="text-sm sm:text-base font-black text-afri-text uppercase tracking-tight">{mt("title")}</h1>
-            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">{mt("subtitle")}</p>
+            <p className="text-[10px] font-mono text-afri-text-muted uppercase tracking-wider">{mt("subtitle")}</p>
           </div>
         </div>
         <button 
@@ -363,7 +419,7 @@ export default function SettingsModal({
                     </div>
                   ) : (
                     <form onSubmit={handleSendIssue} className="space-y-4">
-                      <p className="text-[11px] text-zinc-500">Décrivez précisément l'erreur ou l'anomalie rencontrée sur l'écosystème d'Abidjan :</p>
+                      <p className="text-[11px] text-afri-text-muted">Décrivez précisément l'erreur ou l'anomalie rencontrée sur l'écosystème d'Abidjan :</p>
                       <textarea
                         value={issueText}
                         onChange={(e) => setIssueText(e.target.value)}
@@ -400,7 +456,7 @@ export default function SettingsModal({
                   <p className="text-afri-text-sec text-xs leading-relaxed max-w-sm mx-auto">
                     Conçu en Côte d'Ivoire pour propulser, protéger et professionnaliser les carrières des instrumentistes, chanteurs, beatmakers et promoteurs de spectacles d'Afrique.
                   </p>
-                  <p className="text-[10px] font-mono text-zinc-600 pt-4">© 2026 AFRIGOMBO. Tous droits réservés.</p>
+                  <p className="text-[10px] font-mono text-afri-text-muted pt-4">© 2026 AFRIGOMBO. Tous droits réservés.</p>
                 </div>
               )}
             </div>
@@ -410,7 +466,7 @@ export default function SettingsModal({
 
       {/* ACCOUNT DELETION CONFIRM OVERLAY */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] bg-afri-bg/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-afri-bg-sec border border-red-500/35 p-6 sm:p-8 rounded-3xl space-y-6 text-left">
             <div className="flex items-center gap-3 text-red-500">
               <AlertTriangle className="w-6 h-6 shrink-0" />
@@ -421,13 +477,13 @@ export default function SettingsModal({
               <button
                 onClick={handleDeleteAccount}
                 disabled={isDeleting}
-                className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs transition-all disabled:opacity-50"
+                className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-afri-text font-black uppercase text-xs transition-all disabled:opacity-50"
               >
                 {isDeleting ? "Suppression en cours..." : mt("delete_confirm_btn")}
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="w-full py-3 rounded-xl bg-afri-bg border border-afri-border text-afri-text hover:text-white font-bold text-xs transition-all"
+                className="w-full py-3 rounded-xl bg-afri-bg border border-afri-border text-afri-text hover:text-afri-text font-bold text-xs transition-all"
               >
                 {mt("delete_cancel_btn")}
               </button>
@@ -443,12 +499,12 @@ export default function SettingsModal({
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-afri-gold/5 to-transparent pointer-events-none rounded-bl-full"></div>
           
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
             {mt("compte_title")}
           </h2>
 
-          <div className="flex items-center gap-3.5 bg-black/5 p-3 rounded-xl border border-afri-border">
+          <div className="flex items-center gap-3.5 bg-afri-bg border border-afri-border p-3 rounded-xl">
             {profile?.avatarUrl || currentUser?.photoURL ? (
               <img 
                 src={profile?.avatarUrl || currentUser?.photoURL || ""} 
@@ -465,14 +521,14 @@ export default function SettingsModal({
               <h3 className="text-xs font-sans font-black text-afri-text truncate uppercase tracking-tight">
                 {profile?.artisticName || "Artiste Gombo"}
               </h3>
-              <p className="text-[10px] font-mono text-zinc-500 truncate">
+              <p className="text-[10px] font-mono text-afri-text-muted truncate">
                 {currentUser?.email || "non connecté"}
               </p>
               <div className="flex items-center gap-1.5 pt-1">
                 <span className="text-[8px] font-mono font-bold text-afri-gold bg-afri-gold/5 border border-afri-gold/20 px-1.5 py-0.5 rounded uppercase">
                   {accountLevel}
                 </span>
-                <span className="text-[8px] font-mono text-zinc-500 bg-black/10 px-1.5 py-0.5 rounded uppercase">
+                <span className="text-[8px] font-mono text-afri-text-sec bg-afri-bg px-1.5 py-0.5 rounded uppercase border border-afri-border">
                   🔗 {authProvider}
                 </span>
               </div>
@@ -512,7 +568,7 @@ export default function SettingsModal({
 
         {/* 4. LANGUE SECTION */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-3.5 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
             {mt("langue_title")}
           </h2>
@@ -532,7 +588,7 @@ export default function SettingsModal({
                   className={`flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border text-center transition-all cursor-pointer ${
                     isSelected 
                       ? "bg-afri-gold/10 border-afri-gold text-afri-gold" 
-                      : "bg-afri-bg border-afri-border text-zinc-500 hover:text-zinc-300"
+                      : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
                   }`}
                 >
                   <span className="text-[11px] font-black uppercase tracking-tight">{lang.label}</span>
@@ -548,7 +604,7 @@ export default function SettingsModal({
 
         {/* 5. NOTIFICATIONS SECTION */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
             {mt("notif_title")}
           </h2>
@@ -558,7 +614,7 @@ export default function SettingsModal({
             <label className="flex items-center justify-between cursor-pointer group pb-2 border-b border-afri-border/50">
               <div className="space-y-0.5">
                 <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("notif_all")}</span>
-                <p className="text-[9px] text-zinc-500 leading-none">{mt("notif_all_desc")}</p>
+                <p className="text-[9px] text-afri-text-muted leading-none">{mt("notif_all_desc")}</p>
               </div>
               <input
                 type="checkbox"
@@ -569,17 +625,22 @@ export default function SettingsModal({
                 }}
                 className="sr-only peer"
               />
-              <div className="w-8 h-4.5 bg-black/10 peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
             </label>
 
             {[
-              { label: mt("notif_msg"), desc: mt("notif_msg_desc"), value: notifMessages && notificationsEnabled, set: setNotifMessages },
-              { label: mt("notif_opps"), desc: mt("notif_opps_desc"), value: notifOpps && notificationsEnabled, set: setNotifOpps },
+              { label: "Messages & Chats", desc: "Discussions en direct pour les bails de gombos", value: notifMessages && notificationsEnabled, set: setNotifMessages },
+              { label: "Opportunités Showbiz", desc: "Annonces de scènes, concerts et castings", value: notifOpps && notificationsEnabled, set: setNotifOpps },
+              { label: "Paiements & Dépôts", desc: "Alertes d'encaissement, séquestre et transferts", value: notifPayments && notificationsEnabled, set: setNotifPayments },
+              { label: "Contrats de Gombos", desc: "Statuts de contrats, validations et signatures", value: notifContracts && notificationsEnabled, set: setNotifContracts },
+              { label: "Gombo ID & Badges", desc: "Suivi de validation KYC et certifications", value: notifGomboId && notificationsEnabled, set: setNotifGomboId },
+              { label: "Prestige Premium & VIP", desc: "Souscriptions, promotions et cadeaux", value: notifPremium && notificationsEnabled, set: setNotifPremium },
+              { label: "Actualités AFRIGOMBO", desc: "Nouvelles fonctionnalités de l'écosystème", value: notifNews && notificationsEnabled, set: setNotifNews }
             ].map((n, i) => (
               <label key={i} className={`flex items-center justify-between cursor-pointer group ${!notificationsEnabled ? "opacity-35 pointer-events-none" : ""}`}>
                 <div className="space-y-0.5">
                   <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{n.label}</span>
-                  <p className="text-[9px] text-zinc-500 leading-none">{n.desc}</p>
+                  <p className="text-[9px] text-afri-text-muted leading-none">{n.desc}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -590,7 +651,7 @@ export default function SettingsModal({
                   }}
                   className="sr-only peer"
                 />
-                <div className="w-8 h-4.5 bg-black/10 peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
               </label>
             ))}
           </div>
@@ -598,14 +659,14 @@ export default function SettingsModal({
 
         {/* 6. APPARENCE SECTION */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
             APPARENCE
           </h2>
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">{mt("theme_label")}</span>
+              <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest block">{mt("theme_label")}</span>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: "imperial", label: "Noir Impérial", premium: false, icon: "🌑" },
@@ -633,7 +694,7 @@ export default function SettingsModal({
                       className={`flex items-center justify-between gap-2 p-3 rounded-xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
                         isSelected 
                           ? "bg-afri-gold/10 border-afri-gold text-afri-gold font-black" 
-                          : "bg-afri-bg border-afri-border text-zinc-500 hover:text-zinc-350"
+                          : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
                       } ${locked ? "opacity-60" : ""}`}
                     >
                       <div className="flex items-center gap-2 overflow-hidden">
@@ -642,7 +703,7 @@ export default function SettingsModal({
                       </div>
                       
                       {locked ? (
-                        <Lock className="w-3 h-3 text-zinc-600 shrink-0" />
+                        <Lock className="w-3 h-3 text-afri-text-muted shrink-0" />
                       ) : (
                         isSelected && <Check className="w-3 h-3 text-afri-gold shrink-0" />
                       )}
@@ -657,7 +718,7 @@ export default function SettingsModal({
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">{mt("text_size_label")}</span>
+              <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest block">{mt("text_size_label")}</span>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { id: "petit", label: mt("text_petit") },
@@ -676,7 +737,7 @@ export default function SettingsModal({
                       className={`py-2 px-3 rounded-xl border text-[11px] font-bold text-center transition-all cursor-pointer ${
                         isSelected 
                           ? "bg-afri-gold/10 border-afri-gold text-afri-gold" 
-                          : "bg-afri-bg border-afri-border text-zinc-500 hover:text-zinc-350"
+                          : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
                       }`}
                     >
                       {ts.label}
@@ -690,7 +751,7 @@ export default function SettingsModal({
 
         {/* 7. CONFIDENTIALITÉ SECTION */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
             {mt("security_title")}
           </h2>
@@ -698,7 +759,7 @@ export default function SettingsModal({
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3.5">
               <div className="space-y-1">
-                <label className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-wider block">{mt("who_sees_profile")}</label>
+                <label className="text-[8.5px] font-mono text-afri-text-muted uppercase tracking-wider block">{mt("who_sees_profile")}</label>
                 <select
                   value={privacyProfile}
                   onChange={(e) => setPrivacyProfile(e.target.value)}
@@ -711,7 +772,7 @@ export default function SettingsModal({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-wider block">{mt("who_can_write")}</label>
+                <label className="text-[8.5px] font-mono text-afri-text-muted uppercase tracking-wider block">{mt("who_can_write")}</label>
                 <select
                   value={privacyMsg}
                   onChange={(e) => setPrivacyMsg(e.target.value)}
@@ -728,7 +789,7 @@ export default function SettingsModal({
               <label className="flex items-center justify-between cursor-pointer group">
                 <div className="space-y-0.5">
                   <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("online_status")}</span>
-                  <p className="text-[9px] text-zinc-500 leading-none">{mt("online_status_desc")}</p>
+                  <p className="text-[9px] text-afri-text-muted leading-none">{mt("online_status_desc")}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -736,13 +797,13 @@ export default function SettingsModal({
                   onChange={(e) => setPrivacyOnline(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-8 h-4.5 bg-black/10 peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
               </label>
 
               <label className="flex items-center justify-between cursor-pointer group">
                 <div className="space-y-0.5">
                   <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("commune_status")}</span>
-                  <p className="text-[9px] text-zinc-500 leading-none">{mt("commune_status_desc")}</p>
+                  <p className="text-[9px] text-afri-text-muted leading-none">{mt("commune_status_desc")}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -750,13 +811,13 @@ export default function SettingsModal({
                   onChange={(e) => setPrivacyCommune(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-8 h-4.5 bg-black/10 peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
               </label>
 
               <label className="flex items-center justify-between cursor-pointer group">
                 <div className="space-y-0.5">
                   <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("phone_status")}</span>
-                  <p className="text-[9px] text-zinc-500 leading-none">{mt("phone_status_desc")}</p>
+                  <p className="text-[9px] text-afri-text-muted leading-none">{mt("phone_status_desc")}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -764,7 +825,7 @@ export default function SettingsModal({
                   onChange={(e) => setPrivacyPhone(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-8 h-4.5 bg-black/10 peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
               </label>
             </div>
           </div>
@@ -772,22 +833,22 @@ export default function SettingsModal({
 
         {/* 8. STOCKAGE SECTION */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
             {mt("storage_title")}
           </h2>
 
-          <div className="grid grid-cols-2 gap-3 bg-black/5 p-3.5 rounded-xl border border-afri-border font-mono text-[10.5px]">
+          <div className="grid grid-cols-2 gap-3 bg-afri-bg border border-afri-border p-3.5 rounded-xl font-mono text-[10.5px]">
             <div className="space-y-0.5">
-              <span className="text-zinc-500 block uppercase text-[8.5px]">{mt("cache_label")}</span>
+              <span className="text-afri-text-muted block uppercase text-[8.5px]">{mt("cache_label")}</span>
               <span className="text-afri-text font-bold block">{cacheSize.toFixed(1)} Mo</span>
             </div>
             <div className="space-y-0.5">
-              <span className="text-zinc-500 block uppercase text-[8.5px]">{mt("photos_label")}</span>
+              <span className="text-afri-text-muted block uppercase text-[8.5px]">{mt("photos_label")}</span>
               <span className="text-afri-text font-bold block">{photosSize.toFixed(1)} Mo</span>
             </div>
             <div className="col-span-2 pt-2 border-t border-afri-border flex justify-between items-center">
-              <span className="text-zinc-500 text-[9px] uppercase">Espace global mobilisé:</span>
+              <span className="text-afri-text-muted text-[9px] uppercase">Espace global mobilisé:</span>
               <span className="text-afri-gold font-black">{(cacheSize + photosSize).toFixed(1)} Mo</span>
             </div>
           </div>
@@ -814,7 +875,7 @@ export default function SettingsModal({
 
         {/* 9. MUSIQUE ET AUDIO SECTION */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
             {mt("multimedia_title")}
           </h2>
@@ -824,7 +885,7 @@ export default function SettingsModal({
             <label className="flex items-center justify-between cursor-pointer group pb-2 border-b border-afri-border">
               <div className="space-y-0.5">
                 <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("toggle_music")}</span>
-                <p className="text-[9px] text-zinc-500 leading-none">{mt("toggle_music_desc")}</p>
+                <p className="text-[9px] text-afri-text-muted leading-none">{mt("toggle_music_desc")}</p>
               </div>
               <input
                 type="checkbox"
@@ -835,14 +896,14 @@ export default function SettingsModal({
                 }}
                 className="sr-only peer"
               />
-              <div className="w-8 h-4.5 bg-black/10 peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
             </label>
 
             {/* SOUNDS CONTROLS */}
             <label className="flex items-center justify-between cursor-pointer group">
               <div className="space-y-0.5">
                 <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Effets Sonores & Claps</span>
-                <p className="text-[9px] text-zinc-500 leading-none">Activer les djembe, saxo, et sons d'actions</p>
+                <p className="text-[9px] text-afri-text-muted leading-none">Activer les djembe, saxo, et sons d'actions</p>
               </div>
               <input
                 type="checkbox"
@@ -853,14 +914,14 @@ export default function SettingsModal({
                 }}
                 className="sr-only peer"
               />
-              <div className="w-8 h-4.5 bg-black/10 peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
             </label>
 
             {/* VIBRATIONS CONTROLS */}
             <label className="flex items-center justify-between cursor-pointer group">
               <div className="space-y-0.5">
                 <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Vibrations Tactiles</span>
-                <p className="text-[9px] text-zinc-500 leading-none">Ressentir des pulsations à chaque interaction</p>
+                <p className="text-[9px] text-afri-text-muted leading-none">Ressentir des pulsations à chaque interaction</p>
               </div>
               <input
                 type="checkbox"
@@ -870,7 +931,7 @@ export default function SettingsModal({
                 }}
                 className="sr-only peer"
               />
-              <div className="w-8 h-4.5 bg-black/10 peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-black after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
             </label>
 
             <div className={`space-y-2.5 pt-2 border-t border-afri-border ${!musicEnabled ? "opacity-35 pointer-events-none" : ""}`}>
@@ -886,7 +947,7 @@ export default function SettingsModal({
                   className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer ${
                     activeMusicPlay === "intro"
                       ? "bg-afri-gold/20 border-afri-gold text-afri-text"
-                      : "bg-afri-bg border-afri-border text-afri-text hover:text-white"
+                      : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-gold"
                   }`}
                 >
                   {mt("play_intro")}
@@ -900,7 +961,7 @@ export default function SettingsModal({
                   className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer ${
                     activeMusicPlay === "hymne"
                       ? "bg-afri-gold/20 border-afri-gold text-afri-text"
-                      : "bg-afri-bg border-afri-border text-afri-text hover:text-white"
+                      : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-gold"
                   }`}
                 >
                   {mt("play_hymne")}
@@ -922,7 +983,7 @@ export default function SettingsModal({
 
               {/* VOLUME SLIDER */}
               <div className="space-y-1.5 pt-1">
-                <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500">
+                <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-muted">
                   <span>{mt("volume_label")}</span>
                   <span className="text-afri-gold font-bold">{Math.round(musicVolume * 100)}%</span>
                 </div>
@@ -945,7 +1006,7 @@ export default function SettingsModal({
 
         {/* 10. SUPPORT & ASSISTANCE SECTION */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-3.5 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
             {mt("support_title")}
           </h2>
@@ -972,7 +1033,7 @@ export default function SettingsModal({
                     <Icon className="w-4 h-4 text-afri-gold/75" />
                     <span className="text-[11px] font-bold">{s.label}</span>
                   </div>
-                  <ChevronRight className="w-4.5 h-4.5 text-zinc-600" />
+                  <ChevronRight className="w-4.5 h-4.5 text-afri-text-muted" />
                 </button>
               );
             })}
@@ -997,8 +1058,8 @@ export default function SettingsModal({
         {/* 11. VERSION DE L'APPLICATION */}
         <div className="text-center space-y-1.5 pt-4">
           <p className="text-[11px] font-sans font-black text-afri-text uppercase tracking-wider">AFRIGOMBO</p>
-          <p className="text-[9px] font-mono text-zinc-650 uppercase tracking-widest">Version 1.0 — Elite Release</p>
-          <div className="flex items-center justify-center gap-1.5 text-[8.5px] font-mono text-zinc-550 uppercase">
+          <p className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest">Version 1.0 — Elite Release</p>
+          <div className="flex items-center justify-center gap-1.5 text-[8.5px] font-mono text-afri-text-muted uppercase">
             <span>Made in AFRI</span>
             <span>🌍</span>
             <span>2026 Côte d'Ivoire</span>

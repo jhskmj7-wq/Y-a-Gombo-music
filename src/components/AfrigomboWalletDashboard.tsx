@@ -359,7 +359,7 @@ export default function AfrigomboWalletDashboard({
   return (
     <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto afri-container afri-section text-left animate-fadeIn">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 border-b border-zinc-900 pb-3 sm:pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 border-b border-afri-border pb-3 sm:pb-4">
         <div>
           <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
             <span className="py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 text-[8px] xs:text-[9px] font-mono font-black uppercase tracking-widest rounded border border-emerald-500/20">
@@ -368,23 +368,23 @@ export default function AfrigomboWalletDashboard({
             {onBack && (
               <button 
                 onClick={onBack}
-                className="text-[9px] xs:text-[10px] font-mono text-zinc-500 hover:text-white transition-colors"
+                className="text-[9px] xs:text-[10px] font-mono text-afri-text-sec hover:text-afri-gold transition-colors"
               >
                 &larr; Retour
               </button>
             )}
           </div>
-          <h2 className="afri-title-lg text-white flex items-center gap-2">
+          <h2 className="afri-title-lg text-afri-text flex items-center gap-2">
             <Wallet className="w-5 h-5 xs:w-6 xs:h-6 text-[#D4AF37]" />
             WALLET AFRIGOMBO
           </h2>
-          <p className="afri-text-tiny text-zinc-500">
+          <p className="afri-text-tiny text-afri-text-muted">
             Solde souverain crypté & gestion séquestre
           </p>
         </div>
         
         <div className="hidden sm:flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-zinc-950 px-3 py-1.5 rounded-full border border-zinc-900 text-[10px] font-mono text-zinc-400">
+          <div className="flex items-center gap-2 bg-afri-bg-sec px-3 py-1.5 rounded-full border border-afri-border text-[10px] font-mono text-afri-text-sec">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             Tiers de Confiance
           </div>
@@ -396,7 +396,7 @@ export default function AfrigomboWalletDashboard({
         
         {/* MAIN CARD: BALANCE */}
         <div className="lg:col-span-2 afri-card p-5 xs:p-6 sm:p-8 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-[80px] -mr-32 -mt-32 transition-all group-hover:bg-[#D4AF37]/10"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-afri-bg-sec/5 rounded-full blur-[80px] -mr-32 -mt-32 transition-all group-hover:bg-afri-bg-sec/10"></div>
           
           <div className="relative z-10 flex flex-col h-full justify-between gap-6 sm:gap-8">
             <div className="flex justify-between items-start">
@@ -405,26 +405,26 @@ export default function AfrigomboWalletDashboard({
                   <ShieldCheck className="w-3.5 h-3.5" />
                   Solde Disponible
                 </span>
-                <h3 className="text-3xl xs:text-4xl sm:text-5xl font-black text-white font-mono tracking-tighter">
-                  {wallet.soldeDisponible.toLocaleString()} <span className="text-sm xs:text-base sm:text-xl text-zinc-500 font-sans font-normal uppercase">FCFA</span>
+                <h3 className="text-3xl xs:text-4xl sm:text-5xl font-black text-afri-text font-mono tracking-tighter">
+                  {wallet.soldeDisponible.toLocaleString()} <span className="text-sm xs:text-base sm:text-xl text-afri-text-muted font-sans font-normal uppercase">FCFA</span>
                 </h3>
               </div>
-              <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] backdrop-blur-md">
+              <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-afri-bg-sec/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] backdrop-blur-md">
                 <Wallet className="w-5 h-5 xs:w-6 xs:h-6 sm:w-7 sm:h-7" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-0.5 sm:space-y-1">
-                <span className="afri-text-tiny text-zinc-500 block">🔒 Séquestre</span>
+              <div className="bg-afri-bg/40 backdrop-blur-md border border-afri-border rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-0.5 sm:space-y-1">
+                <span className="afri-text-tiny text-afri-text-sec block">🔒 Séquestre</span>
                 <span className="text-sm xs:text-base sm:text-lg font-black text-[#D4AF37] font-mono">{wallet.soldeBloque.toLocaleString()}</span>
               </div>
-              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-0.5 sm:space-y-1">
-                <span className="afri-text-tiny text-zinc-500 block">📈 Revenus</span>
+              <div className="bg-afri-bg/40 backdrop-blur-md border border-afri-border rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-0.5 sm:space-y-1">
+                <span className="afri-text-tiny text-afri-text-sec block">📈 Revenus</span>
                 <span className="text-sm xs:text-base sm:text-lg font-black text-emerald-400 font-mono">+{wallet.revenus?.toLocaleString()}</span>
               </div>
-              <div className="bg-black/40 backdrop-blur-md border border-zinc-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-0.5 sm:space-y-1 col-span-2 sm:col-span-1">
-                <span className="afri-text-tiny text-zinc-500 block">🎁 Premium</span>
+              <div className="bg-afri-bg/40 backdrop-blur-md border border-afri-border rounded-xl sm:rounded-2xl p-3 sm:p-4 space-y-0.5 sm:space-y-1 col-span-2 sm:col-span-1">
+                <span className="afri-text-tiny text-afri-text-sec block">🎁 Premium</span>
                 <span className="text-sm xs:text-base sm:text-lg font-black text-amber-400 font-mono">{wallet.economiesPremium?.toLocaleString() || "0"}</span>
               </div>
             </div>
@@ -432,7 +432,7 @@ export default function AfrigomboWalletDashboard({
             <div className="flex flex-row gap-2 sm:gap-3">
               <button 
                 onClick={openDeposit}
-                className="flex-1 py-3 sm:py-4 bg-[#D4AF37] hover:bg-amber-400 text-black font-black font-mono text-[9px] xs:text-[10px] uppercase tracking-widest rounded-xl xs:rounded-2xl transition-all shadow-xl shadow-[#D4AF37]/20 flex items-center justify-center gap-1.5 sm:gap-2"
+                className="flex-1 py-3 sm:py-4 bg-afri-bg-sec hover:bg-amber-400 text-black font-black font-mono text-[9px] xs:text-[10px] uppercase tracking-widest rounded-xl xs:rounded-2xl transition-all shadow-xl shadow-[#D4AF37]/20 flex items-center justify-center gap-1.5 sm:gap-2"
               >
                 <ArrowUpRight className="w-3.5 h-3.5 xs:w-4 xs:h-4 stroke-[3]" />
                 Déposer
@@ -440,7 +440,7 @@ export default function AfrigomboWalletDashboard({
               <button 
                 onClick={openWithdraw}
                 disabled={wallet.soldeDisponible <= 0}
-                className="flex-1 py-3 sm:py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-black font-mono text-[9px] xs:text-[10px] uppercase tracking-widest rounded-xl xs:rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
+                className="flex-1 py-3 sm:py-4 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-black font-mono text-[9px] xs:text-[10px] uppercase tracking-widest rounded-xl xs:rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
               >
                 <ArrowDownLeft className="w-3.5 h-3.5 xs:w-4 xs:h-4 stroke-[3]" />
                 Retirer
@@ -450,27 +450,27 @@ export default function AfrigomboWalletDashboard({
         </div>
 
         {/* SIDE CARD: LEVEL & STATS */}
-        <div className="bg-zinc-950 border border-zinc-900 rounded-[2rem] p-6 flex flex-col justify-between shadow-2xl">
+        <div className="bg-afri-bg-sec border border-afri-border rounded-[2rem] p-6 flex flex-col justify-between shadow-2xl">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest font-black">Niveau du Wallet</span>
-              <div className="px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded-full text-[10px] font-black uppercase font-mono">
+              <span className="text-[10px] font-mono text-afri-text-muted uppercase tracking-widest font-black">Niveau du Wallet</span>
+              <div className="px-3 py-1 bg-afri-bg-sec/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded-full text-[10px] font-black uppercase font-mono">
                 {wallet.niveauWallet || "CLASSIQUE"}
               </div>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#D4AF37]">
+                <div className="w-12 h-12 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-[#D4AF37]">
                   <TrendingUp className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-mono text-zinc-400 uppercase">Progrès Prochain Niveau</span>
-                    <span className="text-[10px] font-mono text-zinc-500">75%</span>
+                    <span className="text-[10px] font-mono text-afri-text-sec uppercase">Progrès Prochain Niveau</span>
+                    <span className="text-[10px] font-mono text-afri-text-muted">75%</span>
                   </div>
-                  <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#D4AF37] w-3/4 shadow-[0_0_10px_#D4AF37]"></div>
+                  <div className="h-1.5 bg-afri-bg rounded-full overflow-hidden">
+                    <div className="h-full bg-afri-bg-sec w-3/4 shadow-[0_0_10px_#D4AF37]"></div>
                   </div>
                 </div>
               </div>
@@ -478,25 +478,25 @@ export default function AfrigomboWalletDashboard({
               <div className="grid grid-cols-2 gap-4 pt-4">
                 <button 
                   onClick={() => setActiveTab("contracts")}
-                  className="p-4 bg-zinc-900/50 border border-zinc-800/50 rounded-2xl text-left hover:border-[#D4AF37]/30 transition-all group"
+                  className="p-4 bg-afri-bg border border-afri-border rounded-2xl text-left hover:border-[#D4AF37]/30 transition-all group"
                 >
-                  <FileText className="w-5 h-5 text-zinc-500 mb-2 group-hover:text-[#D4AF37]" />
-                  <span className="text-[10px] font-black text-white uppercase block">Mes Contrats</span>
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase">{contracts.length} en cours</span>
+                  <FileText className="w-5 h-5 text-afri-text-sec mb-2 group-hover:text-[#D4AF37]" />
+                  <span className="text-[10px] font-black text-afri-text uppercase block">Mes Contrats</span>
+                  <span className="text-[9px] font-mono text-afri-text-muted uppercase">{contracts.length} en cours</span>
                 </button>
                 <button 
                   onClick={() => setActiveTab("all")}
-                  className="p-4 bg-zinc-900/50 border border-zinc-800/50 rounded-2xl text-left hover:border-[#D4AF37]/30 transition-all group"
+                  className="p-4 bg-afri-bg border border-afri-border rounded-2xl text-left hover:border-[#D4AF37]/30 transition-all group"
                 >
-                  <History className="w-5 h-5 text-zinc-500 mb-2 group-hover:text-[#D4AF37]" />
-                  <span className="text-[10px] font-black text-white uppercase block">Historique</span>
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase">Tout voir</span>
+                  <History className="w-5 h-5 text-afri-text-sec mb-2 group-hover:text-[#D4AF37]" />
+                  <span className="text-[10px] font-black text-afri-text uppercase block">Historique</span>
+                  <span className="text-[9px] font-mono text-afri-text-muted uppercase">Tout voir</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <button className="w-full mt-6 py-3 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white rounded-xl text-[10px] font-black uppercase font-mono tracking-widest transition-all flex items-center justify-center gap-2">
+          <button className="w-full mt-6 py-3 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/30 text-afri-text-sec hover:text-afri-text rounded-xl text-[10px] font-black uppercase font-mono tracking-widest transition-all flex items-center justify-center gap-2">
             <TrendingUp className="w-4 h-4" />
             Statistiques Détaillées
           </button>
@@ -505,19 +505,19 @@ export default function AfrigomboWalletDashboard({
       </div>
 
       {/* DETAILED ACTIVE COMPTE SÉQUESTRE ESCROW ROSTER */}
-      <div className="bg-black border border-zinc-900 rounded-2xl xs:rounded-3xl p-4 sm:p-6 space-y-4">
-        <div className="flex justify-between items-center border-b border-zinc-900 pb-3 sm:pb-4">
-          <h3 className="afri-title-md text-white flex items-center gap-2">
+      <div className="bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl p-4 sm:p-6 space-y-4">
+        <div className="flex justify-between items-center border-b border-afri-border pb-3 sm:pb-4">
+          <h3 className="afri-title-md text-afri-text flex items-center gap-2">
             <ShieldCheck className="w-4.5 h-4.5 text-emerald-400" />
             VOS CONTRATS EN SÉQUESTRE
           </h3>
-          <span className="afri-text-tiny bg-zinc-900 text-zinc-400 px-2 sm:px-2.5 py-1 rounded-full">
+          <span className="afri-text-tiny bg-afri-bg text-afri-text-sec px-2 sm:px-2.5 py-1 rounded-full border border-afri-border">
             {contracts.length} <span className="hidden xs:inline">contrats</span>
           </span>
         </div>
 
         {contracts.length === 0 ? (
-          <div className="text-center py-8 sm:py-12 text-zinc-600 font-mono text-[10px] xs:text-xs">
+          <div className="text-center py-8 sm:py-12 text-afri-text-muted font-mono text-[10px] xs:text-xs">
             Aucun contrat séquestré actif. Créez un Gombo pour engager le coffre-fort.
           </div>
         ) : (
@@ -531,32 +531,32 @@ export default function AfrigomboWalletDashboard({
               return (
                 <div 
                   key={c.id} 
-                  className="bg-zinc-950 border border-zinc-900 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 hover:border-zinc-800 transition-colors"
+                  className="bg-afri-bg border border-afri-border rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 hover:border-afri-border transition-colors"
                 >
                   <div className="space-y-1 w-full sm:w-auto">
                     <div className="flex items-center justify-between sm:justify-start gap-2">
-                      <span className="text-[11px] xs:text-xs font-bold text-white uppercase truncate max-w-[150px]">{c.gomboTitle || "Prestation Showbiz"}</span>
+                      <span className="text-[11px] xs:text-xs font-bold text-afri-text uppercase truncate max-w-[150px]">{c.gomboTitle || "Prestation Showbiz"}</span>
                       <span className={`text-[7px] xs:text-[8px] font-mono px-1.5 xs:px-2 py-0.5 rounded-full font-black uppercase tracking-widest shrink-0 ${
                         currentGomboStatus === "payment_held" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
                         currentGomboStatus === "disputed" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
                         currentGomboStatus === "completed" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
-                        "bg-zinc-900 text-zinc-400"
+                        "bg-afri-bg text-afri-text-sec"
                       }`}>
                         {currentGomboStatus === "payment_held" ? "Bloqué" :
                          currentGomboStatus === "disputed" ? "Litige" :
                          currentGomboStatus === "completed" ? "Libéré" : currentGomboStatus}
                       </span>
                     </div>
-                    <p className="text-[9px] xs:text-[10px] text-zinc-400 font-mono flex items-center gap-1">
-                      <span className="hidden xs:inline">ID:</span> <span className="text-zinc-500 truncate max-w-[80px]">{c.id}</span>
+                    <p className="text-[9px] xs:text-[10px] text-afri-text-sec font-mono flex items-center gap-1">
+                      <span className="hidden xs:inline">ID:</span> <span className="text-afri-text-muted truncate max-w-[80px]">{c.id}</span>
                       <span className="mx-1 opacity-20">|</span>
-                      <span className="text-white truncate">{isContractClient ? `${c.artistName}` : `${c.clientName}`}</span>
+                      <span className="text-afri-text truncate">{isContractClient ? `${c.artistName}` : `${c.clientName}`}</span>
                     </p>
                   </div>
 
-                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t border-zinc-900/50 sm:border-0">
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t border-afri-border sm:border-0">
                     <div className="text-left sm:text-right">
-                      <span className="afri-text-tiny text-zinc-500 block">
+                      <span className="afri-text-tiny text-afri-text-muted block">
                         {isContractClient ? "Total Déposé" : "Net à Recevoir"}
                       </span>
                       <span className={`text-[11px] xs:text-sm font-black font-mono ${isContractClient ? 'text-amber-500' : 'text-emerald-400'}`}>
@@ -572,13 +572,13 @@ export default function AfrigomboWalletDashboard({
       </div>
 
       {/* FILTERABLE LEDGER HISTORY & COMMISSIONS */}
-      <div className="bg-black border border-zinc-900 rounded-2xl xs:rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="bg-afri-bg-sec border border-afri-border rounded-2xl xs:rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-6">
         
         {/* TABS SELECTOR */}
-        <div className="flex flex-col gap-3 sm:gap-4 border-b border-zinc-900 pb-3 sm:pb-4">
+        <div className="flex flex-col gap-3 sm:gap-4 border-b border-afri-border pb-3 sm:pb-4">
           <div className="flex items-center gap-2">
             <History className="w-5 h-5 text-[#D4AF37]" />
-            <h3 className="afri-title-md text-white">
+            <h3 className="afri-title-md text-afri-text">
               JOURNAL DES TRANSACTIONS
             </h3>
           </div>
@@ -596,8 +596,8 @@ export default function AfrigomboWalletDashboard({
                 onClick={() => { setActiveTab(tab.id as any); playSound("click"); }}
                 className={`py-1.5 px-2.5 xs:px-3 rounded-full text-[8.5px] xs:text-[10px] font-mono font-bold uppercase transition-all ${
                   activeTab === tab.id 
-                    ? "bg-[#D4AF37] text-black font-black" 
-                    : "bg-zinc-950 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
+                    ? "bg-afri-bg-sec text-black font-black" 
+                    : "bg-afri-bg text-afri-text-muted hover:text-afri-text hover:bg-afri-bg-sec border border-afri-border"
                 }`}
               >
                 {tab.label}
@@ -608,11 +608,11 @@ export default function AfrigomboWalletDashboard({
 
         {/* LEDGER RENDER */}
         {filteredTxs.length === 0 ? (
-          <div className="text-center py-16 text-zinc-600 font-mono text-xs">
+          <div className="text-center py-16 text-afri-text-muted font-mono text-xs">
             Aucune transaction dans ce filtre pour le moment.
           </div>
         ) : (
-          <div className="divide-y divide-zinc-900">
+          <div className="divide-y divide-afri-border">
             {filteredTxs.map(tx => {
               const isFlowIn = tx.type === "deposit" || tx.type === "release" || tx.type === "refund";
               
@@ -624,7 +624,7 @@ export default function AfrigomboWalletDashboard({
                       tx.type === "withdrawal" ? "bg-amber-500/10 border-amber-500/20 text-amber-500" :
                       tx.type === "release" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
                       tx.type === "refund" ? "bg-red-500/10 border-red-500/20 text-red-400" :
-                      "bg-zinc-900 border-zinc-800 text-zinc-400"
+                      "bg-afri-bg border-afri-border text-afri-text-sec"
                     }`}>
                       {tx.type === "deposit" ? <ArrowUpRight className="w-4 h-4" /> :
                        tx.type === "withdrawal" ? <ArrowDownLeft className="w-4 h-4" /> :
@@ -634,15 +634,15 @@ export default function AfrigomboWalletDashboard({
                     </div>
 
                     <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-white">{tx.description || "Opération financière"}</p>
-                      <div className="flex items-center gap-2 text-[9px] font-mono text-zinc-500">
+                      <p className="text-xs font-bold text-afri-text">{tx.description || "Opération financière"}</p>
+                      <div className="flex items-center gap-2 text-[9px] font-mono text-afri-text-muted">
                         <span>{tx.id}</span>
                         <span>•</span>
                         <span>{tx.createdAt ? new Date(tx.createdAt).toLocaleString("fr-FR") : "Date inconnue"}</span>
                         {tx.provider && (
                           <>
                             <span>•</span>
-                            <span className="uppercase text-zinc-400 font-bold">{tx.provider}</span>
+                            <span className="uppercase text-afri-text-sec font-bold">{tx.provider}</span>
                           </>
                         )}
                       </div>
@@ -653,7 +653,7 @@ export default function AfrigomboWalletDashboard({
                     <span className={`text-xs font-mono font-black ${isFlowIn ? "text-emerald-400" : "text-amber-500"}`}>
                       {isFlowIn ? "+" : "-"}{tx.amount?.toLocaleString()} FCFA
                     </span>
-                    <span className="block text-[8px] font-mono py-0.5 px-1.5 bg-zinc-950 text-zinc-500 rounded border border-zinc-900 text-center max-w-[80px] ml-auto uppercase font-bold">
+                    <span className="block text-[8px] font-mono py-0.5 px-1.5 bg-afri-bg text-afri-text-sec rounded border border-afri-border text-center max-w-[80px] ml-auto uppercase font-bold">
                       {tx.status || "Terminé"}
                     </span>
                   </div>
@@ -668,16 +668,16 @@ export default function AfrigomboWalletDashboard({
       {/* MODAL: MOBILE MONEY DEPOSIT */}
       <AnimatePresence>
         {showDepositModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 w-full max-w-md space-y-6 relative"
+              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 w-full max-w-md space-y-6 relative text-left"
             >
               <button 
                 onClick={() => { setShowDepositModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                className="absolute top-4 right-4 text-afri-text-muted hover:text-afri-text"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -685,28 +685,28 @@ export default function AfrigomboWalletDashboard({
               {step === "form" && (
                 <form onSubmit={handleDepositSubmit} className="space-y-6">
                   <div className="text-center space-y-2">
-                    <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] mx-auto">
+                    <div className="w-12 h-12 rounded-full bg-afri-bg-sec/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] mx-auto">
                       <ArrowUpRight className="w-6 h-6" />
                     </div>
-                    <h3 className="text-base font-black text-white uppercase tracking-wider">
+                    <h3 className="text-base font-black text-afri-text uppercase tracking-wider">
                       RECHARGER MON COFFRE AFRIGOMBO
                     </h3>
-                    <p className="text-[11px] text-zinc-500 font-mono">
+                    <p className="text-[11px] text-afri-text-sec font-mono">
                       Effectuez un dépôt de Mobile Money en toute sécurité
                     </p>
                   </div>
 
                   {/* Operator Choice */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block">
+                    <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
                       Opérateur Mobile Money
                     </label>
                     <div className="grid grid-cols-4 gap-2">
                       {[
-                        { id: "wave", name: "Wave", color: "border-blue-500 text-blue-400" },
-                        { id: "orange", name: "Orange", color: "border-orange-500 text-orange-400" },
-                        { id: "mtn", name: "MTN", color: "border-yellow-500 text-yellow-500" },
-                        { id: "moov", name: "Moov", color: "border-emerald-500 text-emerald-400" }
+                        { id: "wave", name: "Wave", color: "border-blue-500 text-blue-500" },
+                        { id: "orange", name: "Orange", color: "border-orange-500 text-orange-500" },
+                        { id: "mtn", name: "MTN", color: "border-yellow-500 text-yellow-600" },
+                        { id: "moov", name: "Moov", color: "border-emerald-500 text-emerald-500" }
                       ].map(op => (
                         <button
                           key={op.id}
@@ -714,8 +714,8 @@ export default function AfrigomboWalletDashboard({
                           onClick={() => { setOperator(op.id as any); playSound("click"); }}
                           className={`py-2 text-[10px] font-black uppercase rounded-xl border text-center transition-all ${
                             operator === op.id 
-                              ? `${op.color} bg-white/5 font-black scale-102` 
-                              : "border-zinc-900 text-zinc-600 hover:border-zinc-800"
+                              ? `${op.color} bg-afri-bg font-black scale-102` 
+                              : "border-afri-border text-afri-text-muted hover:border-afri-text-sec"
                           }`}
                         >
                           {op.name}
@@ -727,28 +727,28 @@ export default function AfrigomboWalletDashboard({
                   {/* Fields */}
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block">
+                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
                         Numéro de téléphone (+225)
                       </label>
                       <div className="relative">
-                        <Phone className="absolute left-4 top-3.5 w-4 h-4 text-zinc-600" />
+                        <Phone className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
                         <input 
                           type="tel" 
                           required
                           value={phoneNumber} 
                           onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
                           placeholder="0707070707" 
-                          className="w-full bg-black border border-zinc-900 rounded-xl pl-11 pr-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]"
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block">
+                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
                         Montant à déposer (FCFA)
                       </label>
                       <div className="relative">
-                        <Coins className="absolute left-4 top-3.5 w-4 h-4 text-zinc-600" />
+                        <Coins className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
                         <input 
                           type="number" 
                           required
@@ -756,7 +756,7 @@ export default function AfrigomboWalletDashboard({
                           value={amount} 
                           onChange={(e) => setAmount(e.target.value)}
                           placeholder="Ex: 50000" 
-                          className="w-full bg-black border border-zinc-900 rounded-xl pl-11 pr-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]"
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
                         />
                       </div>
                     </div>
@@ -765,7 +765,7 @@ export default function AfrigomboWalletDashboard({
                   <button
                     type="submit"
                     disabled={processing || !amount || !phoneNumber}
-                    className="w-full py-4 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50"
+                    className="w-full py-4 bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer"
                   >
                     {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Générer la requête de paiement"}
                   </button>
@@ -774,14 +774,14 @@ export default function AfrigomboWalletDashboard({
 
               {step === "otp" && (
                 <div className="space-y-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 mx-auto animate-pulse">
+                  <div className="w-12 h-12 rounded-full bg-afri-bg flex items-center justify-center text-afri-text-muted mx-auto animate-pulse">
                     <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                    <h3 className="text-sm font-black text-afri-text uppercase tracking-wider">
                       Veuillez approuver la notification Push
                     </h3>
-                    <p className="text-zinc-500 text-[11px] font-mono max-w-sm mx-auto leading-relaxed">
+                    <p className="text-afri-text-sec text-[11px] font-mono max-w-sm mx-auto leading-relaxed">
                       Un code OTP a été généré pour votre sécurité. Veuillez entrer un code quelconque à 4 chiffres pour valider la transaction.
                     </p>
                   </div>
@@ -793,14 +793,14 @@ export default function AfrigomboWalletDashboard({
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
                       placeholder="XXXX"
-                      className="w-full text-center tracking-[0.5em] bg-black border-2 border-zinc-800 rounded-xl py-3 text-white font-mono text-lg font-black focus:outline-none focus:border-[#D4AF37]"
+                      className="w-full text-center tracking-[0.5em] bg-afri-bg border-2 border-afri-border rounded-xl py-3 text-afri-text font-mono text-lg font-black focus:outline-none focus:border-afri-gold"
                     />
                   </div>
 
                   <button
                     onClick={confirmOtp}
                     disabled={processing || otpCode.length < 4}
-                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50"
+                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-afri-text font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer"
                   >
                     {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Confirmer le paiement sécurisé"}
                   </button>
@@ -813,20 +813,20 @@ export default function AfrigomboWalletDashboard({
                     <CheckCircle2 className="w-10 h-10" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-base font-black text-white uppercase tracking-wider">
+                    <h3 className="text-base font-black text-afri-text uppercase tracking-wider">
                       DÉPÔT EFFECTUÉ AVEC SUCCÈS
                     </h3>
                     <p className="text-[#D4AF37] font-mono text-sm font-black">
                       +{Number(amount).toLocaleString()} FCFA
                     </p>
-                    <p className="text-zinc-500 text-[11px] font-mono leading-relaxed max-w-xs mx-auto">
+                    <p className="text-afri-text-sec text-[11px] font-mono leading-relaxed max-w-xs mx-auto">
                       Les fonds ont été déposés sur votre solde disponible et sont instantanément exploitables.
                     </p>
                   </div>
 
                   <button
                     onClick={() => { setShowDepositModal(false); playSound("click"); }}
-                    className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-bold uppercase font-mono text-[10px] tracking-widest rounded-xl transition-colors"
+                    className="w-full py-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-[10px] tracking-widest rounded-xl transition-colors cursor-pointer"
                   >
                     Fermer le guichet
                   </button>
@@ -840,16 +840,16 @@ export default function AfrigomboWalletDashboard({
       {/* MODAL: MOBILE MONEY WITHDRAWAL */}
       <AnimatePresence>
         {showWithdrawModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 w-full max-w-md space-y-6 relative"
+              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 w-full max-w-md space-y-6 relative text-left"
             >
               <button 
                 onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                className="absolute top-4 right-4 text-afri-text-muted hover:text-afri-text"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -859,25 +859,25 @@ export default function AfrigomboWalletDashboard({
                   <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mx-auto">
                     <ArrowDownLeft className="w-6 h-6" />
                   </div>
-                  <h3 className="text-base font-black text-white uppercase tracking-wider">
+                  <h3 className="text-base font-black text-afri-text uppercase tracking-wider">
                     RETRAIT DE FONDS SOUVERAINS
                   </h3>
-                  <p className="text-[11px] text-zinc-500 font-mono">
+                  <p className="text-[11px] text-afri-text-sec font-mono">
                     Retirez l'argent disponible vers votre compte Mobile Money
                   </p>
                 </div>
 
                 {/* Operator Choice */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block">
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
                     Opérateur de Destination
                   </label>
                   <div className="grid grid-cols-4 gap-2">
                     {[
-                      { id: "wave", name: "Wave", color: "border-blue-500 text-blue-400" },
-                      { id: "orange", name: "Orange", color: "border-orange-500 text-orange-400" },
-                      { id: "mtn", name: "MTN", color: "border-yellow-500 text-yellow-500" },
-                      { id: "moov", name: "Moov", color: "border-emerald-500 text-emerald-400" }
+                      { id: "wave", name: "Wave", color: "border-blue-500 text-blue-500" },
+                      { id: "orange", name: "Orange", color: "border-orange-500 text-orange-500" },
+                      { id: "mtn", name: "MTN", color: "border-yellow-500 text-yellow-600" },
+                      { id: "moov", name: "Moov", color: "border-emerald-500 text-emerald-500" }
                     ].map(op => (
                       <button
                         key={op.id}
@@ -885,8 +885,8 @@ export default function AfrigomboWalletDashboard({
                         onClick={() => { setOperator(op.id as any); playSound("click"); }}
                         className={`py-2 text-[10px] font-black uppercase rounded-xl border text-center transition-all ${
                           operator === op.id 
-                            ? `${op.color} bg-white/5 font-black scale-102` 
-                            : "border-zinc-900 text-zinc-600 hover:border-zinc-800"
+                            ? `${op.color} bg-afri-bg font-black scale-102` 
+                            : "border-afri-border text-afri-text-muted hover:border-afri-text-sec"
                         }`}
                       >
                         {op.name}
@@ -899,15 +899,15 @@ export default function AfrigomboWalletDashboard({
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                      <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">
+                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest">
                         Montant à retirer (FCFA)
                       </label>
-                      <span className="text-[9px] font-mono text-zinc-500">
+                      <span className="text-[9px] font-mono text-afri-text-muted">
                         Max disponible : {wallet.soldeDisponible.toLocaleString()} FCFA
                       </span>
                     </div>
                     <div className="relative">
-                      <Coins className="absolute left-4 top-3.5 w-4 h-4 text-zinc-600" />
+                      <Coins className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
                       <input 
                         type="number" 
                         required
@@ -916,24 +916,24 @@ export default function AfrigomboWalletDashboard({
                         value={amount} 
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="Ex: 25000" 
-                        className="w-full bg-black border border-zinc-900 rounded-xl pl-11 pr-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]"
+                        className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block">
+                    <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
                       Numéro de téléphone du destinataire (+225)
                     </label>
                     <div className="relative">
-                      <Phone className="absolute left-4 top-3.5 w-4 h-4 text-zinc-600" />
+                      <Phone className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
                       <input 
                         type="tel" 
                         required
                         value={phoneNumber} 
                         onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
                         placeholder="0707070707" 
-                        className="w-full bg-black border border-zinc-900 rounded-xl pl-11 pr-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-[#D4AF37]"
+                        className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
                       />
                     </div>
                   </div>
@@ -942,7 +942,7 @@ export default function AfrigomboWalletDashboard({
                 <button
                   type="submit"
                   disabled={processing || !amount || Number(amount) > wallet.soldeDisponible || !phoneNumber}
-                  className="w-full py-4 bg-[#D4AF37] hover:bg-[#B48F17] text-black font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50"
+                  className="w-full py-4 bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Déclencher le virement sécurisé"}
                 </button>

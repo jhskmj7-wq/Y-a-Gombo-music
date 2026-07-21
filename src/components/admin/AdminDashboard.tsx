@@ -181,7 +181,7 @@ export default function AdminDashboard({
   return (
     <div className="space-y-8 pb-24 animate-fadeIn text-left">
       {/* 1. ENTÊTE OPÉRATIONNELLE */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-b border-white/5 pb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-b border-afri-border pb-6">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
@@ -189,30 +189,30 @@ export default function AdminDashboard({
               CENTRE D'ADMINISTRATION
             </span>
           </div>
-          <h2 className="text-2xl font-display font-black tracking-tight text-[#FFFFFF] mt-1 uppercase">
+          <h2 className="text-2xl font-display font-black tracking-tight text-afri-text mt-1 uppercase">
             Gestion • Sécurité • Contrôle
           </h2>
           <div className="flex items-center gap-3 mt-3">
             <img src={currentUser?.photoURL || "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61"} alt="admin" className="w-10 h-10 rounded-full border-2 border-[#D4A017] object-cover" />
             <div>
               <p className="text-[11px] text-[#B8B8B8] font-mono uppercase tracking-widest font-bold">Administrateur Principal</p>
-              <p className="text-xs text-[#FFFFFF] font-sans font-medium">{userEmail}</p>
+              <p className="text-xs text-afri-text font-sans font-medium">{userEmail}</p>
             </div>
           </div>
         </div>
         
         <div className="text-right flex flex-col items-end gap-3">
           <div>
-            <span className="text-[9px] uppercase font-mono text-zinc-500 block font-bold">Activité temps réel (GMT)</span>
-            <strong className="text-xl font-mono font-black text-[#F5F5F5] tracking-wider block mt-0.5">
+            <span className="text-[9px] uppercase font-mono text-afri-text-sec block font-bold">Activité temps réel (GMT)</span>
+            <strong className="text-xl font-mono font-black text-afri-text tracking-wider block mt-0.5">
               {liveAdminTime}
             </strong>
           </div>
           {userEmail === "jhs.kmj7@gmail.com" && (
             <div className="flex items-center gap-2">
               <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4A017] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#D4A017]"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-afri-bg-sec opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-afri-bg-sec"></span>
               </span>
               <span className="text-[10px] font-mono text-[#D4A017] uppercase font-bold tracking-widest">Connecté</span>
             </div>
@@ -233,77 +233,77 @@ export default function AdminDashboard({
           animate="show"
           className="grid grid-cols-2 lg:grid-cols-4 gap-4"
         >
-          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left">
-            <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">Utilisateurs totaux</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-afri-bg-sec border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left">
+            <span className="text-[9px] font-mono uppercase tracking-widest text-afri-text-sec block">Utilisateurs totaux</span>
+            <strong className="text-2xl font-display font-black text-afri-text block mt-2">
               <AnimatedCounter value={kpiUsersCount} />
             </strong>
           </motion.div>
 
-          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left relative">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-afri-bg-sec border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left relative">
             <span className="w-2 h-2 bg-emerald-500 rounded-full absolute top-4 right-4 animate-pulse"></span>
-            <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">Utilisateurs actifs</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+            <span className="text-[9px] font-mono uppercase tracking-widest text-afri-text-sec block">Utilisateurs actifs</span>
+            <strong className="text-2xl font-display font-black text-afri-text block mt-2">
               <AnimatedCounter value={kpiOnlineCount} />
             </strong>
           </motion.div>
 
-          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left">
-            <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 block">Publications</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-afri-bg-sec border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left">
+            <span className="text-[9px] font-mono uppercase tracking-widest text-afri-text-sec block">Publications</span>
+            <strong className="text-2xl font-display font-black text-afri-text block mt-2">
               <AnimatedCounter value={kpiPostsCount} />
             </strong>
           </motion.div>
 
-          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left relative">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-afri-bg-sec border border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.1)] flex flex-col justify-between text-left relative">
             {(kpiAlertsCount > 0) && (
               <span className="w-2 h-2 bg-red-500 rounded-full absolute top-4 right-4 animate-pulse"></span>
             )}
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Signalements</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+            <strong className="text-2xl font-display font-black text-afri-text block mt-2">
               <AnimatedCounter value={kpiAlertsCount} />
             </strong>
           </motion.div>
 
-          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-afri-bg-sec border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Opportunités</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+            <strong className="text-2xl font-display font-black text-afri-text block mt-2">
               <AnimatedCounter value={kpiGombosCount} />
             </strong>
           </motion.div>
 
-          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-afri-bg-sec border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Vidéos partagées</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+            <strong className="text-2xl font-display font-black text-afri-text block mt-2">
               <AnimatedCounter value={posts.filter((p: any) => p.mediaType === 'video').length} />
             </strong>
           </motion.div>
 
-          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-afri-bg-sec border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4A017] block font-bold">Gombo ID validés</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
+            <strong className="text-2xl font-display font-black text-afri-text block mt-2">
               <AnimatedCounter value={kpiApprovedKycCount} />
             </strong>
           </motion.div>
 
-          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-afri-bg-sec border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Wallets & Revenus</span>
             <strong className="text-xl font-display font-black text-emerald-400 block mt-2">
-              <AnimatedCounter value={transactions.reduce((acc, tx) => acc + (Number(tx.amount) || 0), 0)} /> <span className="text-xs text-zinc-500 font-sans">FCFA</span>
+              <AnimatedCounter value={transactions.reduce((acc, tx) => acc + (Number(tx.amount) || 0), 0)} /> <span className="text-xs text-afri-text-sec font-sans">FCFA</span>
             </strong>
           </motion.div>
 
-          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-afri-bg-sec border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Fichiers Média</span>
-            <strong className="text-2xl font-display font-black text-[#FFFFFF] block mt-2">
-              <AnimatedCounter value={mediaStats.count} /> <span className="text-xs text-zinc-500 font-sans">Actifs</span>
+            <strong className="text-2xl font-display font-black text-afri-text block mt-2">
+              <AnimatedCounter value={mediaStats.count} /> <span className="text-xs text-afri-text-sec font-sans">Actifs</span>
             </strong>
           </motion.div>
 
-          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
+          <motion.div variants={statsItemVariants} className="p-4 rounded-xl bg-afri-bg-sec border border-[rgba(212,160,23,0.25)] shadow-[0_4px_20px_rgba(212,160,23,0.05)] flex flex-col justify-between text-left">
             <span className="text-[9px] font-mono uppercase tracking-widest text-[#B8B8B8] block">Stockage utilisé</span>
-            <strong className="text-xl font-display font-black text-[#FFFFFF] block mt-2">
-              <AnimatedCounter value={mediaStats.sizeMB} /> <span className="text-xs text-zinc-500 font-sans">MB</span>
+            <strong className="text-xl font-display font-black text-afri-text block mt-2">
+              <AnimatedCounter value={mediaStats.sizeMB} /> <span className="text-xs text-afri-text-sec font-sans">MB</span>
             </strong>
           </motion.div>
 
@@ -311,7 +311,7 @@ export default function AdminDashboard({
           <motion.div 
             variants={statsItemVariants} 
             onClick={() => setActiveMenu("media")}
-            className="p-4 rounded-xl bg-black border border-blue-500/20 hover:border-blue-500/50 transition-all cursor-pointer flex flex-col justify-between text-left group"
+            className="p-4 rounded-xl bg-afri-bg border border-blue-500/20 hover:border-blue-500/50 transition-all cursor-pointer flex flex-col justify-between text-left group"
           >
             <div className="flex justify-between items-start">
               <span className="text-[9px] font-mono uppercase tracking-widest text-blue-400 block font-bold">État Centre Média</span>
@@ -319,13 +319,13 @@ export default function AdminDashboard({
             </div>
             <div className="mt-2 space-y-1">
               <div className="flex justify-between text-[10px]">
-                <span className="text-zinc-500 font-mono">FIABILITÉ</span>
+                <span className="text-afri-text-sec font-mono">FIABILITÉ</span>
                 <span className="text-emerald-400 font-black uppercase">100% SÉCURISÉ</span>
               </div>
-              <div className="h-1 w-full bg-zinc-900 rounded-full overflow-hidden">
+              <div className="h-1 w-full bg-afri-bg-sec rounded-full overflow-hidden">
                 <div className="h-full bg-blue-500 w-[100%]" />
               </div>
-              <div className="flex justify-between text-[8px] font-mono text-zinc-600 uppercase">
+              <div className="flex justify-between text-[8px] font-mono text-afri-text-sec uppercase">
                 <span>Multi-Source</span>
                 <span className="text-blue-500">Actif</span>
               </div>
@@ -347,56 +347,56 @@ export default function AdminDashboard({
       {/* 3. & 4. PANNEAUX DE CONTRÔLE (RÉCENTE / SÉCURITÉ) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
         {/* 3. Activité Récente */}
-        <div className="p-6 rounded-2xl bg-[#050505] border border-[#D4AF37]/20 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+        <div className="p-6 rounded-2xl bg-afri-bg-sec border border-[#D4AF37]/20 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-afri-border">
             <Activity className="w-4 h-4 text-[#D4AF37]" />
-            <h4 className="text-xs font-mono font-black text-[#F5F5F5] uppercase tracking-wider">
+            <h4 className="text-xs font-mono font-black text-afri-text uppercase tracking-wider">
               Activité Récente
             </h4>
           </div>
           <ul className="space-y-4 max-h-60 overflow-y-auto px-1 scrollbar-thin">
             {recentSignups.slice(0, 4).map((u, i) => (
-              <li key={`u-${i}`} className="flex justify-between items-center bg-[#010101] border border-white/5 p-3 rounded-lg hover:border-[#D4AF37]/20 transition-colors">
-                <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+              <li key={`u-${i}`} className="flex justify-between items-center bg-afri-bg-sec border border-afri-border p-3 rounded-lg hover:border-[#D4AF37]/20 transition-colors">
+                <span className="text-[10px] font-bold text-afri-text flex items-center gap-2">
                   <UserPlus className="w-3 h-3 text-emerald-400" />
                   {u.nom || "Nouvel Utilisateur"}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500 uppercase">inscription</span>
+                <span className="text-[9px] font-mono text-afri-text-sec uppercase">inscription</span>
               </li>
             ))}
             {transactions.slice(0, 3).map((tx: any, i: number) => (
-              <li key={`tx-${i}`} className="flex justify-between items-center bg-[#010101] border border-white/5 p-3 rounded-lg hover:border-[#D4AF37]/20 transition-colors">
-                <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+              <li key={`tx-${i}`} className="flex justify-between items-center bg-afri-bg-sec border border-afri-border p-3 rounded-lg hover:border-[#D4AF37]/20 transition-colors">
+                <span className="text-[10px] font-bold text-afri-text flex items-center gap-2">
                   <Wallet className="w-3 h-3 text-[#D4AF37]" />
                   {tx.description}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500 uppercase">paiement</span>
+                <span className="text-[9px] font-mono text-afri-text-sec uppercase">paiement</span>
               </li>
             ))}
             {posts.slice(0, 3).map((p, i) => (
-              <li key={`p-${i}`} className="flex justify-between items-center bg-[#010101] border border-white/5 p-3 rounded-lg hover:border-[#D4AF37]/20 transition-colors">
-                <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2 truncate pr-2 max-w-[200px]">
+              <li key={`p-${i}`} className="flex justify-between items-center bg-afri-bg-sec border border-afri-border p-3 rounded-lg hover:border-[#D4AF37]/20 transition-colors">
+                <span className="text-[10px] font-bold text-afri-text flex items-center gap-2 truncate pr-2 max-w-[200px]">
                   <FileText className="w-3 h-3 text-cyan-400" />
                   {p.title || "Nouvelle opportunité"}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-500 uppercase shrink-0">publication</span>
+                <span className="text-[9px] font-mono text-afri-text-sec uppercase shrink-0">publication</span>
               </li>
             ))}
           </ul>
         </div>
 
         {/* 4. Sécurité & Alertes Temps Réel */}
-        <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-[rgba(212,160,23,0.25)] space-y-4 shadow-[0_4px_20px_rgba(212,160,23,0.05)]">
+        <div className="p-6 rounded-2xl bg-afri-bg-sec border border-[rgba(212,160,23,0.25)] space-y-4 shadow-[0_4px_20px_rgba(212,160,23,0.05)]">
           <div className="flex items-center gap-2 pb-3 border-b border-[rgba(212,160,23,0.1)]">
             <ShieldAlert className="w-4 h-4 text-red-500" />
-            <h4 className="text-xs font-mono font-black text-[#FFFFFF] uppercase tracking-wider">
+            <h4 className="text-xs font-mono font-black text-afri-text uppercase tracking-wider">
               Alertes Temps Réel
             </h4>
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse ml-auto" />
           </div>
           <ul className="space-y-3">
-            <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-[#D4A017] transition-all">
-              <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+            <li className="flex justify-between items-center bg-afri-bg-sec p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-[#D4A017] transition-all">
+              <span className="text-[10px] font-bold text-afri-text flex items-center gap-2">
                 <Users className="w-3 h-3 text-emerald-400 group-hover:scale-110 transition-transform" />
                 Nouveaux utilisateurs
               </span>
@@ -404,8 +404,8 @@ export default function AdminDashboard({
                 <AnimatedCounter value={brief.newUsersCount || 0} /> (7j)
               </span>
             </li>
-            <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-red-500 transition-all">
-              <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+            <li className="flex justify-between items-center bg-afri-bg-sec p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-red-500 transition-all">
+              <span className="text-[10px] font-bold text-afri-text flex items-center gap-2">
                 <AlertTriangle className="w-3 h-3 text-red-500 group-hover:scale-110 transition-transform" />
                 Signalements critiques
               </span>
@@ -413,8 +413,8 @@ export default function AdminDashboard({
                 <AnimatedCounter value={alerts.filter((a: any) => a.priority === 'high' || a.priority === 'critique').length} />
               </span>
             </li>
-            <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-amber-500 transition-all">
-              <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+            <li className="flex justify-between items-center bg-afri-bg-sec p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-amber-500 transition-all">
+              <span className="text-[10px] font-bold text-afri-text flex items-center gap-2">
                 <MessageSquare className="w-3 h-3 text-amber-500 group-hover:scale-110 transition-transform" />
                 Publications suspectes
               </span>
@@ -422,8 +422,8 @@ export default function AdminDashboard({
                 <AnimatedCounter value={flaggedPosts.length} />
               </span>
             </li>
-            <li className="flex justify-between items-center bg-[#050505] p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-[#D4AF37] transition-all">
-              <span className="text-[10px] font-bold text-[#F5F5F5] flex items-center gap-2">
+            <li className="flex justify-between items-center bg-afri-bg-sec p-3 rounded-lg border border-[rgba(212,160,23,0.15)] group hover:border-[#D4AF37] transition-all">
+              <span className="text-[10px] font-bold text-afri-text flex items-center gap-2">
                 <Zap className="w-3 h-3 text-[#D4AF37] group-hover:scale-110 transition-transform" />
                 Erreurs système
               </span>
@@ -436,7 +436,7 @@ export default function AdminDashboard({
           <button
             onClick={triggerGlobalSystemScan}
             disabled={scannerStatus === "scanning"}
-            className="w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#D4A017] hover:bg-[#B8860B] active:scale-95 transition-all text-[10px] font-mono font-black uppercase tracking-wider text-black shadow-md shadow-[#D4A017]/20"
+            className="w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-sec active:scale-95 transition-all text-[10px] font-mono font-black uppercase tracking-wider text-black shadow-md shadow-[#D4A017]/20"
           >
             <RefreshCw className={`w-3 h-3 ${scannerStatus === "scanning" ? "animate-spin" : ""}`} />
             Forcer Scan de Sécurité
@@ -456,7 +456,7 @@ export default function AdminDashboard({
               <Crown className="w-5 h-5" />
               Gouvernance Suprême
             </h4>
-            <p className="text-[11px] text-zinc-400 font-mono">
+            <p className="text-[11px] text-afri-text-sec font-mono">
               Zone réservée exclusivement au Fondateur de l'Empire AfriGombo.
             </p>
           </div>
@@ -467,7 +467,7 @@ export default function AdminDashboard({
               addToTerminal("👑 [SOUVERAINETÉ] Entrée dans le Trône demandée.");
               try { audioSynth.playTamTam(true); } catch (err) {}
             }}
-            className="relative z-10 group px-8 py-4 bg-black border border-[#D4AF37] hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-display font-black text-sm uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-4 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_40px_rgba(212,175,55,0.4)] mx-auto w-full md:w-auto"
+            className="relative z-10 group px-8 py-4 bg-afri-bg border border-[#D4AF37] hover:bg-afri-bg-sec text-[#D4AF37] hover:text-black font-display font-black text-sm uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-4 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_40px_rgba(212,175,55,0.4)] mx-auto w-full md:w-auto"
           >
             <Crown className="w-5 h-5" />
             <span>👑 Entrer dans le Trône</span>

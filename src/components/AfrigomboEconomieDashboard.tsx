@@ -202,18 +202,18 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
     <div id="afrigombo-economie-dashboard" className="space-y-6 text-left pb-12">
       
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-zinc-950 border border-zinc-900 rounded-3xl p-6 shadow-xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-afri-bg border border-afri-border rounded-3xl p-6 shadow-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 bg-[#D4AF37] rounded-full animate-pulse" />
+            <span className="w-2.5 h-2.5 bg-afri-bg-sec rounded-full animate-pulse" />
             <span className="text-[10px] font-mono text-[#D4AF37] tracking-widest font-black uppercase">
               CONSOLE DE CONTRÔLE SOUVERAIN
             </span>
           </div>
-          <h2 className="text-xl font-black text-white tracking-tight font-sans">
+          <h2 className="text-xl font-black text-afri-text tracking-tight font-sans">
             ÉCONOMIE AFRIGOMBO 1.0
           </h2>
-          <p className="text-[10px] text-zinc-500 font-mono">
+          <p className="text-[10px] text-afri-text-sec font-mono">
             Suivi fiduciaire des comptes séquestres et des commissions de l'Empire en temps réel.
           </p>
         </div>
@@ -221,7 +221,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
         {onBack && (
           <button 
             onClick={onBack}
-            className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all"
+            className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-ter border border-afri-border text-afri-text-sec hover:text-afri-text rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all"
           >
             Retour au Trône
           </button>
@@ -239,7 +239,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* NEW: Préparation du Lancement Card */}
-            <div className="bg-gradient-to-br from-indigo-950/40 to-zinc-900 border border-indigo-500/30 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg group hover:border-indigo-400/50 transition-all">
+            <div className="bg-gradient-to-br from-indigo-950/40 to-afri-bg-action border border-indigo-500/30 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg group hover:border-indigo-400/50 transition-all">
               <div className="absolute -top-4 -right-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
               <div className="space-y-4 relative z-10">
                 <div className="flex justify-between items-center">
@@ -254,30 +254,30 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
 
                 <div className="grid grid-cols-2 gap-y-3 gap-x-2">
                   <div className="space-y-0.5">
-                    <span className="text-[8px] text-zinc-500 font-mono uppercase block">Inscrits</span>
-                    <span className="text-sm font-black text-white font-mono">{stats.totalUsers}</span>
+                    <span className="text-[8px] text-afri-text-sec font-mono uppercase block">Inscrits</span>
+                    <span className="text-sm font-black text-afri-text font-mono">{stats.totalUsers}</span>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[8px] text-zinc-500 font-mono uppercase block">Attente Sécurisé</span>
+                    <span className="text-[8px] text-afri-text-sec font-mono uppercase block">Attente Sécurisé</span>
                     <span className="text-sm font-black text-[#D4AF37] font-mono">{stats.secureWaitlistCount}</span>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[8px] text-zinc-500 font-mono uppercase block">Soutiens</span>
+                    <span className="text-[8px] text-afri-text-sec font-mono uppercase block">Soutiens</span>
                     <span className="text-sm font-black text-emerald-400 font-mono">{stats.totalSupports}</span>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[8px] text-zinc-500 font-mono uppercase block">Gombos Libres</span>
+                    <span className="text-[8px] text-afri-text-sec font-mono uppercase block">Gombos Libres</span>
                     <span className="text-sm font-black text-indigo-400 font-mono">{stats.gombosLibresCount}</span>
                   </div>
                 </div>
 
                 {/* Progress bar */}
                 <div className="space-y-1">
-                  <div className="flex justify-between text-[7px] font-mono text-zinc-500 uppercase">
+                  <div className="flex justify-between text-[7px] font-mono text-afri-text-sec uppercase">
                     <span>Progression Bêta</span>
                     <span>{stats.betaProgression}%</span>
                   </div>
-                  <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-afri-bg-ter rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${stats.betaProgression}%` }}
@@ -289,11 +289,11 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
             </div>
 
             {/* Card 1: Argent Bloqué (Séquestre Actif) */}
-            <div className="bg-gradient-to-br from-zinc-950 to-zinc-900 border border-zinc-900 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
+            <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-afri-border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
               <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 rounded-full blur-2xl"></div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider font-black">
+                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black">
                     Argent Bloqué (Séquestre)
                   </span>
                   <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
@@ -302,9 +302,9 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                 </div>
                 <div>
                   <span className="text-2xl font-black text-[#D4AF37] font-mono tracking-tight block">
-                    {stats.argentBloque.toLocaleString()} <span className="text-xs text-zinc-400 font-sans font-normal">FCFA</span>
+                    {stats.argentBloque.toLocaleString()} <span className="text-xs text-afri-text-sec font-sans font-normal">FCFA</span>
                   </span>
-                  <span className="text-[9px] text-zinc-500 font-mono block mt-1">
+                  <span className="text-[9px] text-afri-text-sec font-mono block mt-1">
                     Garantie d'exécution active en coffre.
                   </span>
                 </div>
@@ -312,11 +312,11 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
             </div>
 
             {/* Card 2: Argent Libéré (Revenus Musiciens) */}
-            <div className="bg-gradient-to-br from-zinc-950 to-zinc-900 border border-zinc-900 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
+            <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-afri-border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
               <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl"></div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider font-black">
+                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black">
                     Argent Libéré (Payé)
                   </span>
                   <div className="w-7 h-7 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
@@ -324,10 +324,10 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                   </div>
                 </div>
                 <div>
-                  <span className="text-2xl font-black text-white font-mono tracking-tight block">
-                    {stats.argentLibere.toLocaleString()} <span className="text-xs text-zinc-400 font-sans font-normal">FCFA</span>
+                  <span className="text-2xl font-black text-afri-text font-mono tracking-tight block">
+                    {stats.argentLibere.toLocaleString()} <span className="text-xs text-afri-text-sec font-sans font-normal">FCFA</span>
                   </span>
-                  <span className="text-[9px] text-zinc-500 font-mono block mt-1">
+                  <span className="text-[9px] text-afri-text-sec font-mono block mt-1">
                     Fonds reversés avec succès aux artistes.
                   </span>
                 </div>
@@ -335,20 +335,20 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
             </div>
 
             {/* Card 3: Revenus Plateforme (Commissions Totales) */}
-            <div className="bg-gradient-to-br from-zinc-950 to-zinc-900 border border-[#D4AF37]/20 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-[#D4AF37]/5 rounded-full blur-2xl"></div>
+            <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-[#D4AF37]/20 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-afri-bg-sec/5 rounded-full blur-2xl"></div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-[9px] font-mono text-[#D4AF37] uppercase tracking-wider font-black">
                     Revenus Cumulés
                   </span>
-                  <div className="w-7 h-7 rounded-full bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/20">
+                  <div className="w-7 h-7 rounded-full bg-afri-bg-sec/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/20">
                     <TrendingUp className="w-3.5 h-3.5" />
                   </div>
                 </div>
                 <div>
                   <span className="text-2xl font-black text-[#D4AF37] font-mono tracking-tight block">
-                    {stats.totalCommissions.toLocaleString()} <span className="text-xs text-zinc-400 font-sans font-normal">FCFA</span>
+                    {stats.totalCommissions.toLocaleString()} <span className="text-xs text-afri-text-sec font-sans font-normal">FCFA</span>
                   </span>
                   <span className="text-[9px] text-[#D4AF37]/60 font-mono block mt-1">
                     Total des commissions prélevées.
@@ -358,11 +358,11 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
             </div>
 
             {/* Card 4: Commissions Périodiques */}
-            <div className="bg-gradient-to-br from-zinc-950 to-zinc-900 border border-zinc-900 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
+            <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-afri-border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
               <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full blur-2xl"></div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider font-black">
+                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black">
                     Revenus du Jour / Mois
                   </span>
                   <div className="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
@@ -371,12 +371,12 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-mono text-zinc-400">Ce jour:</span>
+                    <span className="text-[10px] font-mono text-afri-text-sec">Ce jour:</span>
                     <span className="text-xs font-bold text-emerald-400 font-mono">+{stats.revenusJour.toLocaleString()} FCFA</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-mono text-zinc-400">Ce mois:</span>
-                    <span className="text-xs font-bold text-white font-mono">+{stats.revenusMois.toLocaleString()} FCFA</span>
+                    <span className="text-[10px] font-mono text-afri-text-sec">Ce mois:</span>
+                    <span className="text-xs font-bold text-afri-text font-mono">+{stats.revenusMois.toLocaleString()} FCFA</span>
                   </div>
                 </div>
               </div>
@@ -388,74 +388,74 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
             {/* Metric A: Premium Roster */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 flex items-center gap-4">
+            <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block">Adhérents Premium</span>
-                <span className="text-lg font-black text-white font-mono">{stats.premiumCount} utilisateurs</span>
-                <span className="text-[8px] font-mono text-zinc-600 block">Commissions réduites à 4% + 4%</span>
+                <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Adhérents Premium</span>
+                <span className="text-lg font-black text-afri-text font-mono">{stats.premiumCount} utilisateurs</span>
+                <span className="text-[8px] font-mono text-afri-text-sec block">Commissions réduites à 4% + 4%</span>
               </div>
             </div>
 
             {/* Metric B: Gombos / Contrats */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 flex items-center gap-4">
+            <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block">Contrats Générés</span>
-                <span className="text-lg font-black text-white font-mono">{stats.nombreContrats} contrats</span>
-                <span className="text-[8px] font-mono text-zinc-600 block">Suivi automatique du BURIDA</span>
+                <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Contrats Générés</span>
+                <span className="text-lg font-black text-afri-text font-mono">{stats.nombreContrats} contrats</span>
+                <span className="text-[8px] font-mono text-afri-text-sec block">Suivi automatique du BURIDA</span>
               </div>
             </div>
 
             
             
             {/* Metric: Santé de la Plateforme */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-6 flex flex-col gap-4 col-span-1 md:col-span-2 lg:col-span-1">
+            <div className="bg-afri-bg border border-afri-border rounded-2xl p-6 flex flex-col gap-4 col-span-1 md:col-span-2 lg:col-span-1">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-500">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
                   <span className="text-[9px] font-mono text-blue-500 uppercase tracking-wider block">SANTÉ DE LA PLATEFORME</span>
-                  <span className="text-lg font-black text-white font-mono">{(stats.argentBloque + stats.argentLibere).toLocaleString()} FCFA sécurisés</span>
+                  <span className="text-lg font-black text-afri-text font-mono">{(stats.argentBloque + stats.argentLibere).toLocaleString()} FCFA sécurisés</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 mt-2">
-                <div className="bg-black border border-zinc-800 p-2 rounded-lg text-center">
+                <div className="bg-afri-bg border border-afri-border p-2 rounded-lg text-center">
                   <span className="block text-xs font-black text-emerald-500">{stats.contratsActifs}</span>
-                  <span className="block text-[8px] uppercase font-mono text-zinc-500">Actifs</span>
+                  <span className="block text-[8px] uppercase font-mono text-afri-text-sec">Actifs</span>
                 </div>
-                <div className="bg-black border border-zinc-800 p-2 rounded-lg text-center">
+                <div className="bg-afri-bg border border-afri-border p-2 rounded-lg text-center">
                   <span className="block text-xs font-black text-[#D4AF37]">{stats.contratsTermines}</span>
-                  <span className="block text-[8px] uppercase font-mono text-zinc-500">Terminés</span>
+                  <span className="block text-[8px] uppercase font-mono text-afri-text-sec">Terminés</span>
                 </div>
-                <div className="bg-black border border-zinc-800 p-2 rounded-lg text-center">
+                <div className="bg-afri-bg border border-afri-border p-2 rounded-lg text-center">
                   <span className="block text-xs font-black text-red-500">{stats.contratsAnnules}</span>
-                  <span className="block text-[8px] uppercase font-mono text-zinc-500">Annulés</span>
+                  <span className="block text-[8px] uppercase font-mono text-afri-text-sec">Annulés</span>
                 </div>
-                <div className="bg-black border border-zinc-800 p-2 rounded-lg text-center">
+                <div className="bg-afri-bg border border-afri-border p-2 rounded-lg text-center">
                   <span className="block text-xs font-black text-blue-400">2.5h</span>
-                  <span className="block text-[8px] uppercase font-mono text-zinc-500">Validation (Moy.)</span>
+                  <span className="block text-[8px] uppercase font-mono text-afri-text-sec">Validation (Moy.)</span>
                 </div>
               </div>
             </div>
 
 
             {/* Metric C: Litiges & Disputes */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 flex items-center gap-4">
+            <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-500">
                 <AlertTriangle className="w-5 h-5 animate-pulse" />
               </div>
               <div>
-                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block">Dossiers de Litige</span>
+                <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Dossiers de Litige</span>
                 <span className="text-lg font-black text-red-500 font-mono">
-                  {stats.litigesActifs} actifs <span className="text-zinc-500 font-sans text-xs font-normal">({stats.litigesResolus} résolus)</span>
+                  {stats.litigesActifs} actifs <span className="text-afri-text-sec font-sans text-xs font-normal">({stats.litigesResolus} résolus)</span>
                 </span>
-                <span className="text-[8px] font-mono text-zinc-600 block">Arbitrage Imperial Command Centre</span>
+                <span className="text-[8px] font-mono text-afri-text-sec block">Arbitrage Imperial Command Centre</span>
               </div>
             </div>
 
@@ -465,19 +465,19 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* Platform Commissions Ledger */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 space-y-4">
-              <div className="flex justify-between items-center border-b border-zinc-900 pb-3">
-                <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <div className="bg-afri-bg border border-afri-border rounded-3xl p-6 space-y-4">
+              <div className="flex justify-between items-center border-b border-afri-border pb-3">
+                <h3 className="text-xs font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
                   <TrendingUp className="w-4.5 h-4.5 text-[#D4AF37]" />
                   COMMISSIONS ENCAISSÉES (AFRIGOMBO)
                 </h3>
-                <span className="text-[9px] font-mono bg-zinc-900 text-zinc-400 px-2 py-0.5 rounded-full">
+                <span className="text-[9px] font-mono bg-afri-bg-sec text-afri-text-sec px-2 py-0.5 rounded-full">
                   Dernières transactions
                 </span>
               </div>
 
               {recentCommissions.length === 0 ? (
-                <div className="text-center py-12 text-zinc-600 font-mono text-xs">
+                <div className="text-center py-12 text-afri-text-sec font-mono text-xs">
                   Aucun encaissement de commission enregistré sur la plateforme.
                 </div>
               ) : (
@@ -485,8 +485,8 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                   {recentCommissions.map(comm => (
                     <div key={comm.id} className="py-3 flex justify-between items-center gap-4">
                       <div className="space-y-0.5">
-                        <p className="text-xs font-bold text-white uppercase">Contrat {comm.contractId || "AG-XXXX"}</p>
-                        <p className="text-[8.5px] font-mono text-zinc-500">
+                        <p className="text-xs font-bold text-afri-text uppercase">Contrat {comm.contractId || "AG-XXXX"}</p>
+                        <p className="text-[8.5px] font-mono text-afri-text-sec">
                           Encaissé le {comm.createdAt ? new Date(comm.createdAt).toLocaleString("fr-FR") : "Date inconnue"}
                         </p>
                       </div>
@@ -494,7 +494,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                         <span className="text-xs font-mono font-black text-[#D4AF37]">
                           +{comm.amount?.toLocaleString()} FCFA
                         </span>
-                        <span className="block text-[7.5px] font-mono text-zinc-500 uppercase">
+                        <span className="block text-[7.5px] font-mono text-afri-text-sec uppercase">
                           Taux: {comm.rate || "10"}%
                         </span>
                       </div>
@@ -505,19 +505,19 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
             </div>
 
             {/* Platform Disputes & Escrow States */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 space-y-4">
-              <div className="flex justify-between items-center border-b border-zinc-900 pb-3">
-                <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <div className="bg-afri-bg border border-afri-border rounded-3xl p-6 space-y-4">
+              <div className="flex justify-between items-center border-b border-afri-border pb-3">
+                <h3 className="text-xs font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
                   <AlertTriangle className="w-4.5 h-4.5 text-red-500" />
                   LITIGES & ARBITRAGES
                 </h3>
-                <span className="text-[9px] font-mono bg-zinc-900 text-zinc-400 px-2 py-0.5 rounded-full">
+                <span className="text-[9px] font-mono bg-afri-bg-sec text-afri-text-sec px-2 py-0.5 rounded-full">
                   {litigesList.length} dossiers
                 </span>
               </div>
 
               {litigesList.length === 0 ? (
-                <div className="text-center py-12 text-zinc-600 font-mono text-xs">
+                <div className="text-center py-12 text-afri-text-sec font-mono text-xs">
                   Sérénité absolue. Aucun litige ou désaccord en cours d'examen.
                 </div>
               ) : (
@@ -526,7 +526,7 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                     <div key={lit.id} className="py-3 flex justify-between items-start gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-white uppercase">{lit.gomboTitle || "Prestation"}</span>
+                          <span className="text-xs font-bold text-afri-text uppercase">{lit.gomboTitle || "Prestation"}</span>
                           <span className={`text-[7px] font-mono px-1.5 py-0.5 rounded font-black uppercase tracking-wider ${
                             lit.status === "resolu" 
                               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
@@ -535,15 +535,15 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                             {lit.status === "resolu" ? "Résolu" : "Actif / En attente"}
                           </span>
                         </div>
-                        <p className="text-[9px] text-zinc-400 leading-relaxed font-mono">
-                          Ouvert par <span className="text-white font-bold">{lit.openedByName}</span>: "{lit.reason}"
+                        <p className="text-[9px] text-afri-text-sec leading-relaxed font-mono">
+                          Ouvert par <span className="text-afri-text font-bold">{lit.openedByName}</span>: "{lit.reason}"
                         </p>
-                        <p className="text-[8.5px] text-zinc-500 font-mono">
-                          ID Litige: <span className="text-zinc-400">{lit.id}</span> | Contrat: <span className="text-zinc-400">{lit.contractId}</span>
+                        <p className="text-[8.5px] text-afri-text-sec font-mono">
+                          ID Litige: <span className="text-afri-text-sec">{lit.id}</span> | Contrat: <span className="text-afri-text-sec">{lit.contractId}</span>
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-xs font-mono font-black text-zinc-400">
+                        <span className="text-xs font-mono font-black text-afri-text-sec">
                           {lit.amount?.toLocaleString()} FCFA
                         </span>
                       </div>
@@ -556,8 +556,8 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
           </div>
 
           {/* Economy Settings Configuration */}
-          <div className="bg-zinc-950 border border-[#D4AF37]/30 rounded-3xl p-6 space-y-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
-            <div className="flex justify-between items-center border-b border-zinc-900 pb-3">
+          <div className="bg-afri-bg border border-[#D4AF37]/30 rounded-3xl p-6 space-y-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+            <div className="flex justify-between items-center border-b border-afri-border pb-3">
               <h3 className="text-xs font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-2">
                 <Sliders className="w-4.5 h-4.5" />
                 PARAMÉTRAGE ÉCONOMIQUE DE L'EMPIRE
@@ -623,17 +623,17 @@ function AfrigomboEconomyConfig() {
           { key: "prixRenfortExpress", label: "Prix Renfort Express (FCFA)", desc: "Alerte SMS/Notification urgente" },
           { key: "montantMinimumGombo", label: "Montant Minimum Gombo (FCFA)", desc: "Valeur plancher d'un contrat" }
         ].map(item => (
-          <div key={item.key} className="bg-[#050505] border border-zinc-900 rounded-xl p-4">
-            <label className="text-[10px] font-mono uppercase text-zinc-400 font-bold block mb-1">
+          <div key={item.key} className="bg-afri-bg-sec border border-afri-border rounded-xl p-4">
+            <label className="text-[10px] font-mono uppercase text-afri-text-sec font-bold block mb-1">
               {item.label}
             </label>
             <input 
               type="number"
               value={(config as any)[item.key]}
               onChange={e => handleNumChange(item.key, e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 focus:border-[#D4AF37] rounded-lg px-3 py-2 text-white font-mono text-xs focus:outline-none"
+              className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-lg px-3 py-2 text-afri-text font-mono text-xs focus:outline-none"
             />
-            <p className="text-[8px] font-mono text-zinc-600 mt-1">{item.desc}</p>
+            <p className="text-[8px] font-mono text-afri-text-sec mt-1">{item.desc}</p>
           </div>
         ))}
       </div>
@@ -642,7 +642,7 @@ function AfrigomboEconomyConfig() {
         <button 
           type="submit" 
           disabled={saving}
-          className="px-6 py-2.5 bg-[#D4AF37] hover:bg-[#B8860B] text-black text-[10px] font-mono font-black uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)] cursor-pointer"
+          className="px-6 py-2.5 bg-afri-bg-sec hover:bg-afri-bg-sec text-black text-[10px] font-mono font-black uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)] cursor-pointer"
         >
           {saving ? "Sauvegarde..." : "Appliquer la nouvelle économie"}
         </button>

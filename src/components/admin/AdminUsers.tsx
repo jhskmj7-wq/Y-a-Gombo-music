@@ -66,12 +66,12 @@ export default function AdminUsers({
   return (
     <div className="space-y-6">
       {/* SLOGAN & PROFILE SEARCH */}
-      <div className="flex justify-between items-center bg-[#D4AF37]/5 p-5 border border-[#D4AF37]/10 rounded-lg text-left">
+      <div className="flex justify-between items-center bg-afri-bg-sec/5 p-5 border border-[#D4AF37]/10 rounded-lg text-left">
         <div>
           <h4 className="text-md font-display font-bold text-[#D4AF37]">
             ⚜️ Gestion d'Héritage Musical & Gombo ID
           </h4>
-          <p className="text-xs text-[#F5F5F5]/60 italic font-mono mt-0.5">
+          <p className="text-xs text-afri-text/60 italic font-mono mt-0.5">
             "🎼 Ton héritage attire les gombos."
           </p>
         </div>
@@ -80,14 +80,14 @@ export default function AdminUsers({
           <button
             id="kyc-tab-all"
             onClick={() => setKycActiveTab("all")}
-            className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "all" ? "bg-[#D4AF37] text-black font-bold" : "border border-[#D4AF37]/20 text-[#D4AF37]/80 hover:bg-[#D4AF37]/5"}`}
+            className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "all" ? "bg-afri-bg-sec text-black font-bold" : "border border-[#D4AF37]/20 text-[#D4AF37]/80 hover:bg-afri-bg-sec/5"}`}
           >
             👥 Tous ({users.length})
           </button>
           <button
             id="kyc-tab-standard"
             onClick={() => setKycActiveTab("standard")}
-            className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "standard" ? "bg-[#D4AF37] text-black font-bold" : "border border-[#D4AF37]/20 text-[#D4AF37]/80 hover:bg-[#D4AF37]/5"}`}
+            className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "standard" ? "bg-afri-bg-sec text-black font-bold" : "border border-[#D4AF37]/20 text-[#D4AF37]/80 hover:bg-afri-bg-sec/5"}`}
           >
             Standard ({users.filter(u => u.kycStatus === "pending" && u.kycType !== "express").length})
           </button>
@@ -108,7 +108,7 @@ export default function AdminUsers({
           <button
             id="kyc-tab-rejected"
             onClick={() => setKycActiveTab("rejected")}
-            className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "rejected" ? "bg-red-500 text-white font-bold" : "border border-red-500/20 text-red-400 hover:bg-red-500/5"}`}
+            className={`px-3 py-1.5 text-xs font-mono uppercase rounded ${kycActiveTab === "rejected" ? "bg-red-500 text-afri-text font-bold" : "border border-red-500/20 text-red-400 hover:bg-red-500/5"}`}
           >
             Refusées ({users.filter(u => u.kycStatus === "rejected").length})
           </button>
@@ -127,35 +127,35 @@ export default function AdminUsers({
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="p-6 rounded-lg bg-[#050505] border border-[#D4AF37] space-y-4 text-left"
+          className="p-6 rounded-lg bg-afri-bg-sec border border-[#D4AF37] space-y-4 text-left"
         >
           <div className="flex justify-between items-center border-b border-[#D4AF37]/20 pb-3">
             <h4 className="text-sm font-display font-bold text-[#D4AF37] uppercase tracking-wider">
               Editer Héritage Musical & Performance
             </h4>
             <span className="text-[10px] uppercase font-mono text-[#D4AF37] flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" />
+              <span className="w-1.5 h-1.5 rounded-full bg-afri-bg-sec animate-ping" />
               Sauvegarde Automatique active
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Nom Artistique</label>
+              <label className="text-[10px] uppercase text-afri-text/60 font-mono">Nom Artistique</label>
               <input
                 type="text"
                 value={profileForm.artisticName || ""}
                 onChange={(e) => setProfileForm((prev: any) => ({ ...prev, artisticName: e.target.value }))}
-                className="w-full bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs text-white"
+                className="w-full bg-afri-bg-sec border border-[#D4AF37]/20 rounded p-2 text-xs text-afri-text"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Commune</label>
+              <label className="text-[10px] uppercase text-afri-text/60 font-mono">Commune</label>
               <select
                 value={profileForm.commune || ""}
                 onChange={(e) => setProfileForm((prev: any) => ({ ...prev, commune: e.target.value }))}
-                className="w-full bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs text-white"
+                className="w-full bg-afri-bg-sec border border-[#D4AF37]/20 rounded p-2 text-xs text-afri-text"
               >
                 {IVORIAN_COMMUNES.map(com => (
                   <option key={com} value={com}>{com}</option>
@@ -164,50 +164,50 @@ export default function AdminUsers({
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Niveau de Profil (1 - 5)</label>
+              <label className="text-[10px] uppercase text-afri-text/60 font-mono">Niveau de Profil (1 - 5)</label>
               <input
                 type="number"
                 min="1"
                 max="5"
                 value={profileForm.level || 1}
                 onChange={(e) => setProfileForm((prev: any) => ({ ...prev, level: Number(e.target.value) }))}
-                className="w-full bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs text-white"
+                className="w-full bg-afri-bg-sec border border-[#D4AF37]/20 rounded p-2 text-xs text-afri-text"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Score de Progression (0 - 100)</label>
+              <label className="text-[10px] uppercase text-afri-text/60 font-mono">Score de Progression (0 - 100)</label>
               <input
                 type="number"
                 min="0"
                 max="100"
                 value={profileForm.score || 0}
                 onChange={(e) => setProfileForm((prev: any) => ({ ...prev, score: Number(e.target.value) }))}
-                className="w-full bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs text-white"
+                className="w-full bg-afri-bg-sec border border-[#D4AF37]/20 rounded p-2 text-xs text-afri-text"
               />
             </div>
 
             {/* SPECIALTIES TAGS */}
             <div className="space-y-1 md:col-span-2">
-              <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Spécialités</label>
+              <label className="text-[10px] uppercase text-afri-text/60 font-mono">Spécialités</label>
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
                   value={specInput}
                   onChange={(e) => setSpecInput(e.target.value)}
                   placeholder="Créer une spécialité..."
-                  className="flex-1 bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs text-white"
+                  className="flex-1 bg-afri-bg-sec border border-[#D4AF37]/20 rounded p-2 text-xs text-afri-text"
                 />
                 <button
                   onClick={addSpecialty}
-                  className="px-3 bg-[#D4AF37] text-black rounded text-xs cursor-pointer"
+                  className="px-3 bg-afri-bg-sec text-black rounded text-xs cursor-pointer"
                 >
                   Ajouter
                 </button>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {profileForm.specialties?.map((spec: string, i: number) => (
-                  <span key={i} className="px-2.5 py-1 text-[10px] rounded bg-[#D4AF37]/10 text-[#D4AF37] font-mono flex items-center gap-1.5">
+                  <span key={i} className="px-2.5 py-1 text-[10px] rounded bg-afri-bg-sec/10 text-[#D4AF37] font-mono flex items-center gap-1.5">
                     {spec}
                     <button onClick={() => removeSpecialty(i)} className="text-[#EF4444] font-bold cursor-pointer">&times;</button>
                   </span>
@@ -217,25 +217,25 @@ export default function AdminUsers({
 
             {/* GROUPS */}
             <div className="space-y-1 md:col-span-2">
-              <label className="text-[10px] uppercase text-[#F5F5F5]/60 font-mono">Groupes</label>
+              <label className="text-[10px] uppercase text-afri-text/60 font-mono">Groupes</label>
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
                   value={groupInput}
                   onChange={(e) => setGroupInput(e.target.value)}
                   placeholder="Nom du groupe..."
-                  className="flex-1 bg-[#050505] border border-[#D4AF37]/20 rounded p-2 text-xs text-white"
+                  className="flex-1 bg-afri-bg-sec border border-[#D4AF37]/20 rounded p-2 text-xs text-afri-text"
                 />
                 <button
                   onClick={addGroup}
-                  className="px-3 bg-[#D4AF37] text-black rounded text-xs cursor-pointer"
+                  className="px-3 bg-afri-bg-sec text-black rounded text-xs cursor-pointer"
                 >
                   Ajouter
                 </button>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {profileForm.groups?.map((grp: string, i: number) => (
-                  <span key={i} className="px-2.5 py-1 text-[10px] rounded bg-[#D4AF37]/10 text-[#D4AF37] font-mono flex items-center gap-1.5">
+                  <span key={i} className="px-2.5 py-1 text-[10px] rounded bg-afri-bg-sec/10 text-[#D4AF37] font-mono flex items-center gap-1.5">
                     {grp}
                     <button onClick={() => removeGroup(i)} className="text-[#EF4444] font-bold cursor-pointer">&times;</button>
                   </span>
@@ -247,13 +247,13 @@ export default function AdminUsers({
           <div className="flex gap-3 justify-end pt-3">
             <button
               onClick={() => setEditingProfileUserId(null)}
-              className="px-4 py-2 border border-[#D4AF37]/20 text-xs rounded hover:bg-[#D4AF37]/5 transition-all uppercase cursor-pointer"
+              className="px-4 py-2 border border-[#D4AF37]/20 text-xs rounded hover:bg-afri-bg-sec/5 transition-all uppercase cursor-pointer"
             >
               Annuler
             </button>
             <button
               onClick={saveProfileEditing}
-              className="px-5 py-2 bg-[#D4AF37] text-black text-xs font-semibold rounded hover:bg-[#B48F17] transition-all uppercase cursor-pointer"
+              className="px-5 py-2 bg-afri-bg-sec text-black text-xs font-semibold rounded hover:bg-afri-bg-sec transition-all uppercase cursor-pointer"
             >
               Enregistrer
             </button>
@@ -273,10 +273,10 @@ export default function AdminUsers({
             return true;
           })
           .map(user => (
-            <div key={user.id} className="p-5 rounded-lg border border-[#D4AF37]/25 bg-[#050505] space-y-4">
+            <div key={user.id} className="p-5 rounded-lg border border-[#D4AF37]/25 bg-afri-bg-sec space-y-4">
               <div className="flex flex-col lg:flex-row justify-between gap-4 lg:items-center">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full border border-[#D4AF37] bg-black flex items-center justify-center font-bold text-[#D4AF37] text-lg shrink-0">
+                  <div className="w-12 h-12 rounded-full border border-[#D4AF37] bg-afri-bg flex items-center justify-center font-bold text-[#D4AF37] text-lg shrink-0">
                     {user.avatarUrl ? (
                       <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
                     ) : (
@@ -284,10 +284,10 @@ export default function AdminUsers({
                     )}
                   </div>
                   <div>
-                    <h5 className="font-display font-semibold text-md text-[#F5F5F5] flex flex-wrap items-center gap-2">
+                    <h5 className="font-display font-semibold text-md text-afri-text flex flex-wrap items-center gap-2">
                       {user.artisticName}
                       {user.isCertified && (
-                        <span className="text-[9px] bg-[#D4AF37] text-black px-1.5 py-0.5 rounded font-mono font-bold tracking-wider uppercase">
+                        <span className="text-[9px] bg-afri-bg-sec text-black px-1.5 py-0.5 rounded font-mono font-bold tracking-wider uppercase">
                           Elite Certifié
                         </span>
                       )}
@@ -307,8 +307,8 @@ export default function AdminUsers({
                         </span>
                       )}
                     </h5>
-                    <p className="text-xs text-[#F5F5F5]/60 mt-0.5">
-                      {user.name} • Commune : <strong className="text-white">{user.commune}</strong> • Inscrit le : {user.registrationDate || "N/A"}
+                    <p className="text-xs text-afri-text/60 mt-0.5">
+                      {user.name} • Commune : <strong className="text-afri-text">{user.commune}</strong> • Inscrit le : {user.registrationDate || "N/A"}
                     </p>
                     
                     {/* Render dynamic client star ratings for the musician */}
@@ -324,14 +324,14 @@ export default function AdminUsers({
                             {[1, 2, 3, 4, 5].map(star => (
                               <Star 
                                 key={star} 
-                                className={`w-3.5 h-3.5 ${star <= Math.round(avgRating) ? "fill-amber-400 text-amber-400" : "text-white/10"}`}
+                                className={`w-3.5 h-3.5 ${star <= Math.round(avgRating) ? "fill-amber-400 text-amber-400" : "text-afri-text/10"}`}
                               />
                             ))}
                           </div>
                           <span className="text-[10px] font-mono font-bold text-amber-300">
                             {avgRating.toFixed(1)} / 5.0
                           </span>
-                          <span className="text-[9px] text-[#F5F5F5]/40 font-mono">
+                          <span className="text-[9px] text-afri-text/40 font-mono">
                             ({hasReviews ? `${artistReviews.length} avis` : "Pas encore d'évaluations"})
                           </span>
                         </div>
@@ -344,7 +344,7 @@ export default function AdminUsers({
                 {user.gomboIdNumber && (
                   <div className="flex flex-col items-start lg:items-end shrink-0">
                     <span className="text-[8px] font-mono uppercase text-[#D4AF37] font-semibold tracking-widest">Identifiant GOMBO ID</span>
-                    <span className="font-mono text-xs font-bold text-white bg-[#D4AF37]/15 border border-[#D4AF37]/35 px-2.5 py-0.5 rounded mt-1">
+                    <span className="font-mono text-xs font-bold text-afri-text bg-afri-bg-sec/15 border border-[#D4AF37]/35 px-2.5 py-0.5 rounded mt-1">
                       {user.gomboIdNumber}
                     </span>
                   </div>
@@ -352,7 +352,7 @@ export default function AdminUsers({
               </div>
 
               {/* Documents Preview Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-black/40 border border-white/5 p-4 rounded-xl">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-afri-bg/40 border border-afri-border p-4 rounded-xl">
                 <div className="space-y-1">
                   <span className="text-[9px] uppercase font-mono text-[#D4AF37]/60 block font-semibold">1. Pièce d'Identité</span>
                   {user.kycDocs?.identityCardUrl ? (
@@ -365,7 +365,7 @@ export default function AdminUsers({
                       Voir la Pièce Libre ↗
                     </a>
                   ) : (
-                    <span className="text-xs text-white/30 italic">Aucune pièce (Simulation active)</span>
+                    <span className="text-xs text-afri-text/30 italic">Aucune pièce (Simulation active)</span>
                   )}
                 </div>
 
@@ -381,7 +381,7 @@ export default function AdminUsers({
                       Voir le Selfie Libre ↗
                     </a>
                   ) : (
-                    <span className="text-xs text-white/30 italic">Aucun selfie (Simulation active)</span>
+                    <span className="text-xs text-afri-text/30 italic">Aucun selfie (Simulation active)</span>
                   )}
                 </div>
 
@@ -397,7 +397,7 @@ export default function AdminUsers({
                       Voir la Preuve en Ligne ↗
                     </a>
                   ) : (
-                    <span className="text-xs text-white/30 italic">Aucune preuve (Simulation active)</span>
+                    <span className="text-xs text-afri-text/30 italic">Aucune preuve (Simulation active)</span>
                   )}
                 </div>
               </div>
@@ -406,12 +406,12 @@ export default function AdminUsers({
               {user.kycStatus === "info_required" && user.kycComplementaryInfo && (
                 <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs">
                   <span className="font-bold text-amber-400 block font-mono text-[10px] uppercase">↺ Message d'information demandée :</span>
-                  <p className="text-white/80 mt-1 italic">"{user.kycComplementaryInfo}"</p>
+                  <p className="text-afri-text/80 mt-1 italic">"{user.kycComplementaryInfo}"</p>
                 </div>
               )}
 
               {/* Administrative Actions */}
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-t border-white/5 pt-4">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-t border-afri-border pt-4">
                 <div className="flex flex-wrap gap-2">
                   {user.kycStatus !== "approved" && (
                     <button
@@ -425,7 +425,7 @@ export default function AdminUsers({
                   {user.kycStatus !== "rejected" && (
                     <button
                       onClick={() => handleRejectKYC(user.id)}
-                      className="bg-[#EF4444]/20 border border-[#EF4444]/30 hover:bg-[#EF4444]/40 text-[#EF4444] font-semibold text-[10px] uppercase px-3 py-1.5 rounded transition-all cursor-pointer"
+                      className="bg-afri-bg-sec/20 border border-[#EF4444]/30 hover:bg-afri-bg-sec/40 text-[#EF4444] font-semibold text-[10px] uppercase px-3 py-1.5 rounded transition-all cursor-pointer"
                     >
                       Refuser Dossier
                     </button>
@@ -433,7 +433,7 @@ export default function AdminUsers({
 
                   <button
                     onClick={() => startEditingProfile(user)}
-                    className="bg-transparent border border-white/10 hover:border-[#D4AF37] text-white hover:text-[#D4AF37] text-[10px] uppercase font-mono px-3 py-1.5 rounded transition-all cursor-pointer"
+                    className="bg-transparent border border-afri-border hover:border-[#D4AF37] text-afri-text hover:text-[#D4AF37] text-[10px] uppercase font-mono px-3 py-1.5 rounded transition-all cursor-pointer"
                   >
                     Éditer Profil
                   </button>
@@ -447,7 +447,7 @@ export default function AdminUsers({
                       placeholder="Motif d'information manquante..."
                       value={infoMessages[user.id] || ""}
                       onChange={(e) => setInfoMessages((prev: any) => ({ ...prev, [user.id]: e.target.value }))}
-                      className="flex-1 bg-black border border-white/15 focus:border-[#D4AF37] focus:outline-none rounded p-1.5 text-xs text-white"
+                      className="flex-1 bg-afri-bg border border-white/15 focus:border-[#D4AF37] focus:outline-none rounded p-1.5 text-xs text-afri-text"
                     />
                     <button
                       onClick={() => {
@@ -463,12 +463,12 @@ export default function AdminUsers({
               </div>
 
               {/* PROFILE PROGRESS BAR SLITS */}
-              <div className="p-3.5 bg-white/5 border border-white/5 rounded grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+              <div className="p-3.5 bg-white/5 border border-afri-border rounded grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                 <div>
-                  <span className="text-[10px] font-mono uppercase text-[#F5F5F5]/50 block">Spécialités de l'artiste</span>
+                  <span className="text-[10px] font-mono uppercase text-afri-text/50 block">Spécialités de l'artiste</span>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     {(user.specialties || []).map((spec: string, idx: number) => (
-                      <span key={idx} className="bg-[#D4AF37]/10 text-[#D4AF37] px-2 py-0.5 rounded text-[10px] font-mono">
+                      <span key={idx} className="bg-afri-bg-sec/10 text-[#D4AF37] px-2 py-0.5 rounded text-[10px] font-mono">
                         {spec}
                       </span>
                     ))}
@@ -477,14 +477,14 @@ export default function AdminUsers({
 
                 <div>
                   <div className="flex justify-between items-center text-[10px] font-mono mb-1">
-                    <span className="uppercase text-[#F5F5F5]/50 flex items-center gap-1">
+                    <span className="uppercase text-afri-text/50 flex items-center gap-1">
                       <Award className="w-3.5 h-3.5 text-[#D4AF37]" />
                       Niveau de Profil
                     </span>
                     <span className="font-bold text-[#D4AF37]">Niv. {user.performance?.level || 1} (Score: {user.performance?.score || 0}/100)</span>
                   </div>
                   {/* Glowing horizontal premium gold progress bar */}
-                  <div className="w-full bg-[#D4AF37]/10 rounded-full h-2 overflow-hidden border border-[#D4AF37]/10">
+                  <div className="w-full bg-afri-bg-sec/10 rounded-full h-2 overflow-hidden border border-[#D4AF37]/10">
                     <div
                       className="bg-gradient-to-r from-[#D4AF37] to-[#B48F17] h-full shadow-[0_0_8px_rgba(212,175,55,0.8)]"
                       style={{ width: `${user.performance?.score || 0}%` }}
@@ -498,30 +498,30 @@ export default function AdminUsers({
                 const artistReviews = reviews.filter(r => r.revieweeId === user.id);
                 if (artistReviews.length === 0) return null;
                 return (
-                  <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
+                  <div className="p-4 rounded-xl bg-afri-bg/40 border border-afri-border space-y-3">
                     <span className="text-[10px] font-mono uppercase font-black text-[#D4AF37] block tracking-widest text-left">
                       💬 Témoignages & Évaluations du Réseau ({artistReviews.length})
                     </span>
                     <div className="space-y-2 max-h-40 overflow-y-auto pr-1 scrollbar-thin text-left">
                       {artistReviews.map(rev => (
-                        <div key={rev.id} className="p-3 rounded-lg bg-white/5 border border-white/5 space-y-1.5 animate-fadeIn">
+                        <div key={rev.id} className="p-3 rounded-lg bg-white/5 border border-afri-border space-y-1.5 animate-fadeIn">
                           <div className="flex justify-between items-center flex-wrap gap-2 text-[10px]">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-semibold text-white">{rev.reviewerName}</span>
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] font-mono">
+                              <span className="font-semibold text-afri-text">{rev.reviewerName}</span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-afri-bg-sec/10 text-[#D4AF37] font-mono">
                                 {rev.type === "client_to_musician" ? "Client ➜ Musicien" : "Musicien ➜ Client"}
                               </span>
                             </div>
-                            <span className="text-zinc-500 font-mono text-[9px]">{rev.timestamp.split("T")[0]}</span>
+                            <span className="text-afri-text-sec font-mono text-[9px]">{rev.timestamp.split("T")[0]}</span>
                           </div>
                           
                           <div className="flex items-center gap-1">
                             {[1, 2, 3, 4, 5].map(star => (
-                              <Star key={star} className={`w-3 h-3 ${star <= rev.rating ? "fill-amber-400 text-amber-400" : "text-white/20"}`} />
+                              <Star key={star} className={`w-3 h-3 ${star <= rev.rating ? "fill-amber-400 text-amber-400" : "text-afri-text/20"}`} />
                             ))}
                           </div>
 
-                          <p className="text-xs text-[#F5F5F5]/85 italic leading-relaxed">
+                          <p className="text-xs text-afri-text/85 italic leading-relaxed">
                             "{rev.comment}"
                           </p>
                         </div>

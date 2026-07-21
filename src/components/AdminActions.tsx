@@ -29,7 +29,7 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
         <button
           onClick={() => handleMenuChange("users")}
           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-            activeMenu === "users" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017] shadow-md shadow-[#D4A017]/20" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+            activeMenu === "users" ? "bg-afri-bg-sec border-[#D4A017] text-[#D4A017] shadow-md shadow-[#D4A017]/20" : "bg-afri-bg-sec hover:bg-afri-bg-sec border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-afri-text"
           }`}
         >
           <ShieldCheck className="w-5 h-5 text-[#D4A017]" />
@@ -39,7 +39,7 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
         <button
           onClick={() => handleMenuChange("reports")}
           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-            activeMenu === "reports" ? "bg-[#0A0A0A] border-red-500 text-red-500 shadow-md shadow-red-500/20" : "bg-[#0A0A0A] hover:bg-red-950/20 border-[rgba(212,160,23,0.25)] hover:border-red-500/40 text-[#FFFFFF]"
+            activeMenu === "reports" ? "bg-afri-bg-sec border-red-500 text-red-500 shadow-md shadow-red-500/20" : "bg-afri-bg-sec hover:bg-red-950/20 border-[rgba(212,160,23,0.25)] hover:border-red-500/40 text-afri-text"
           }`}
         >
           <AlertTriangle className="w-5 h-5 text-red-400" />
@@ -49,7 +49,7 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
         <button
           onClick={() => handleMenuChange("users")}
           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-            activeMenu === "users" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+            activeMenu === "users" ? "bg-afri-bg-sec border-[#D4A017] text-[#D4A017]" : "bg-afri-bg-sec hover:bg-afri-bg-sec border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-afri-text"
           }`}
         >
           <Users className="w-5 h-5 text-[#D4A017]" />
@@ -59,7 +59,7 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
         <button
           onClick={() => handleMenuChange("reports")}
           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-            activeMenu === "reports" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+            activeMenu === "reports" ? "bg-afri-bg-sec border-[#D4A017] text-[#D4A017]" : "bg-afri-bg-sec hover:bg-afri-bg-sec border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-afri-text"
           }`}
         >
           <MessageSquare className="w-5 h-5 text-emerald-400" />
@@ -68,7 +68,7 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
 
         <button
           onClick={() => handleMenuChange("reports")}
-          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-yellow-500/40 text-[#FFFFFF]"
+          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-afri-bg-sec hover:bg-afri-bg-sec border-[rgba(212,160,23,0.25)] hover:border-yellow-500/40 text-afri-text"
         >
           <Briefcase className="w-5 h-5 text-yellow-500" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Modérer publication</span>
@@ -77,7 +77,7 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
         <button
           onClick={() => handleMenuChange("notifications")}
           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-            activeMenu === "notifications" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+            activeMenu === "notifications" ? "bg-afri-bg-sec border-[#D4A017] text-[#D4A017]" : "bg-afri-bg-sec hover:bg-afri-bg-sec border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-afri-text"
           }`}
         >
           <Megaphone className="w-5 h-5 text-[#D4A017]" />
@@ -86,7 +86,7 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
 
         <button
           onClick={() => handleMenuChange("reports")}
-          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4AF37] text-[#FFFFFF]"
+          className="p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 bg-afri-bg-sec hover:bg-afri-bg-sec border-[rgba(212,160,23,0.25)] hover:border-[#D4AF37] text-afri-text"
         >
           <Send className="w-5 h-5 text-[#D4AF37]" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Support utilisateurs</span>
@@ -95,7 +95,7 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
         <button
           onClick={() => handleMenuChange("security")}
           className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
-            activeMenu === "security" ? "bg-[#0A0A0A] border-[#D4A017] text-[#D4A017]" : "bg-[#0A0A0A] hover:bg-[#111111] border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-[#FFFFFF]"
+            activeMenu === "security" ? "bg-afri-bg-sec border-[#D4A017] text-[#D4A017]" : "bg-afri-bg-sec hover:bg-afri-bg-sec border-[rgba(212,160,23,0.25)] hover:border-[#D4A017] text-afri-text"
           }`}
         >
           <Activity className="w-5 h-5 text-[#D4A017]" />

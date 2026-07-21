@@ -160,16 +160,16 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
   const videos = mediaGallery.filter(m => m.type === "video" || m.type === "youtube");
 
   return (
-    <div id="section-medias" className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
+    <div id="section-medias" className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-sm font-black uppercase text-gray-500 tracking-wider">🌟 Section Médias / Galerie Artiste</h3>
-          <p className="text-[10px] font-bold text-gray-400 mt-0.5">Photos, démos audios, vidéos et liens YouTube.</p>
+          <h3 className="text-sm font-black uppercase text-afri-text-sec tracking-wider">🌟 Section Médias / Galerie Artiste</h3>
+          <p className="text-[10px] font-bold text-afri-text-sec mt-0.5">Photos, démos audios, vidéos et liens YouTube.</p>
         </div>
         <button
           id="btn-add-media-portfolio"
           onClick={() => setIsOpen(true)}
-          className="px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+          className="px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-afri-text rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
           Ajouter
@@ -189,11 +189,11 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
             className={`pb-2.5 transition-all relative cursor-pointer ${
               activeTab === t.id 
                 ? "text-orange-550 border-b-2 border-orange-500 font-extrabold" 
-                : "text-gray-400 font-bold hover:text-gray-650"
+                : "text-afri-text-sec font-bold hover:text-gray-650"
             }`}
           >
             <span>{t.label}</span>
-            <span className="ml-1.5 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-[10px] text-gray-500 dark:text-gray-400 rounded-full font-bold">{t.count}</span>
+            <span className="ml-1.5 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-[10px] text-afri-text-sec dark:text-afri-text-sec rounded-full font-bold">{t.count}</span>
           </button>
         ))}
       </div>
@@ -203,7 +203,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
         {activeTab === "youtube" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {videos.length === 0 ? (
-              <div className="col-span-full py-8 text-center text-xs font-bold text-gray-400 italic">
+              <div className="col-span-full py-8 text-center text-xs font-bold text-afri-text-sec italic">
                 Aucun lien vidéo ou démo YouTube configuré.
               </div>
             ) : (
@@ -216,12 +216,12 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                 
                 return (
                   <div key={vid.id} className="relative group overflow-hidden bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 rounded-2xl flex flex-col">
-                    <div className="aspect-video w-full bg-black relative flex items-center justify-center overflow-hidden">
+                    <div className="aspect-video w-full bg-afri-bg relative flex items-center justify-center overflow-hidden">
                       {isRawVideo ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 p-4 font-mono text-center select-none">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-afri-bg-sec p-4 font-mono text-center select-none">
                           <Video className="w-8 h-8 text-orange-550 mb-2 animate-pulse" />
                           <span className="text-[10px] font-black tracking-wider text-orange-400 uppercase">Vidéo de Démo Directe</span>
-                          <span className="text-[8px] text-zinc-500 break-all truncate max-w-full mt-1 px-2">{vid.title}</span>
+                          <span className="text-[8px] text-afri-text-sec break-all truncate max-w-full mt-1 px-2">{vid.title}</span>
                         </div>
                       ) : (
                         <img src={thumb} alt={vid.title} className="w-full h-full object-cover opacity-85 hover:scale-102 transition-transform" />
@@ -235,15 +235,15 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                             setLightboxVideoUrl(vid.url);
                           }
                         }}
-                        className="absolute p-3 bg-orange-600 hover:bg-orange-500 text-white rounded-full shadow-lg transform transition-all hover:scale-110 cursor-pointer"
+                        className="absolute p-3 bg-orange-600 hover:bg-orange-500 text-afri-text rounded-full shadow-lg transform transition-all hover:scale-110 cursor-pointer"
                       >
-                        <Play className="w-6 h-6 fill-current text-white" />
+                        <Play className="w-6 h-6 fill-current text-afri-text" />
                       </button>
                     </div>
                     <div className="p-3 flex items-center justify-between">
                       <div className="truncate">
-                        <span className="text-xs font-black truncate block text-gray-850 dark:text-white uppercase">{vid.title}</span>
-                        <span className="text-[10px] font-bold text-gray-400 truncate block font-mono">{vid.url}</span>
+                        <span className="text-xs font-black truncate block text-gray-850 dark:text-afri-text uppercase">{vid.title}</span>
+                        <span className="text-[10px] font-bold text-afri-text-sec truncate block font-mono">{vid.url}</span>
                       </div>
                       <button
                         onClick={() => handleDelete(vid.id)}
@@ -263,26 +263,26 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
         {activeTab === "audio" && (
           <div className="space-y-2.5">
             {audios.length === 0 ? (
-              <div className="py-8 text-center text-xs font-bold text-gray-400 italic">
+              <div className="py-8 text-center text-xs font-bold text-afri-text-sec italic">
                 Aucun fichier audio ni démo vocale configurée.
               </div>
             ) : (
               audios.map((aud) => (
-                <div key={aud.id} className="p-3 bg-gray-50 dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-xl flex items-center justify-between gap-4">
+                <div key={aud.id} className="p-3 bg-gray-50 dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-800 rounded-xl flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3- w-full truncate">
                     <button
                       onClick={() => toggleAudio(aud.url)}
-                      className="p-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-xs cursor-pointer flex items-center justify-center"
+                      className="p-2.5 bg-orange-500 hover:bg-orange-600 text-afri-text rounded-full shadow-xs cursor-pointer flex items-center justify-center"
                     >
                       {playingUrl === aud.url ? (
-                        <Pause className="w-4 h-4 fill-current text-white" />
+                        <Pause className="w-4 h-4 fill-current text-afri-text" />
                       ) : (
-                        <Play className="w-4 h-4 fill-current text-white" />
+                        <Play className="w-4 h-4 fill-current text-afri-text" />
                       )}
                     </button>
                     <div className="truncate pl-2">
-                      <span className="text-xs font-black text-gray-850 dark:text-white block uppercase max-w-sm truncate">{aud.title}</span>
-                      <span className="text-[9px] font-mono font-bold text-gray-400 block truncate">{aud.url}</span>
+                      <span className="text-xs font-black text-gray-850 dark:text-afri-text block uppercase max-w-sm truncate">{aud.title}</span>
+                      <span className="text-[9px] font-mono font-bold text-afri-text-sec block truncate">{aud.url}</span>
                     </div>
                   </div>
                   <button
@@ -300,23 +300,23 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
         {activeTab === "photo" && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {photos.length === 0 ? (
-              <div className="col-span-full py-8 text-center text-xs font-bold text-gray-400 italic">
+              <div className="col-span-full py-8 text-center text-xs font-bold text-afri-text-sec italic">
                 Aucune photo de scène ajoutée dans la photothèque.
               </div>
             ) : (
               photos.map((ph) => (
                 <div key={ph.id} className="relative group overflow-hidden aspect-square border border-gray-100 dark:border-gray-800 rounded-xl bg-gray-100">
                   <img src={ph.url} alt={ph.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex flex-col justify-between p-2.5">
+                  <div className="absolute inset-0 bg-afri-bg/60 opacity-0 hover:opacity-100 transition-opacity flex flex-col justify-between p-2.5">
                     <div className="flex justify-end">
                       <button
                         onClick={() => handleDelete(ph.id)}
-                        className="p-1.5 bg-rose-600 text-white rounded-lg hover:bg-rose-505 shadow-sm cursor-pointer"
+                        className="p-1.5 bg-rose-600 text-afri-text rounded-lg hover:bg-rose-505 shadow-sm cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <span className="text-[10px] font-black text-white uppercase block truncate">{ph.title}</span>
+                    <span className="text-[10px] font-black text-afri-text uppercase block truncate">{ph.title}</span>
                   </div>
                 </div>
               ))
@@ -327,17 +327,17 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
 
       {/* Upload lightboxes popup additions Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs font-sans">
-          <div className="w-full max-w-md bg-white dark:bg-[#121214] border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-2xl relative space-y-4 animate-scaleUp">
-            <h4 className="text-sm font-black uppercase tracking-wider text-gray-900 dark:text-white">🚀 Ajouter un élément de portfolio</h4>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/70 backdrop-blur-xs font-sans">
+          <div className="w-full max-w-md bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-2xl relative space-y-4 animate-scaleUp">
+            <h4 className="text-sm font-black uppercase tracking-wider text-gray-900 dark:text-afri-text">🚀 Ajouter un élément de portfolio</h4>
             
             <form onSubmit={handleAddMedia} className="space-y-3.5">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Type de Média</label>
+                <label className="block text-[10px] uppercase font-bold text-afri-text-sec mb-1">Type de Média</label>
                 <select
                   value={mediaType}
                   onChange={(e) => setMediaType(e.target.value as any)}
-                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold dark:text-white"
+                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold dark:text-afri-text"
                 >
                   <option value="youtube">👁️‍🗨️ Lien Vidéo YouTube / Vidéothèque</option>
                   <option value="video">🎥 Importer Fichier Vidéo (MP4, WebM)</option>
@@ -347,20 +347,20 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Titre de la démo</label>
+                <label className="block text-[10px] uppercase font-bold text-afri-text-sec mb-1">Titre de la démo</label>
                 <input
                   type="text"
                   placeholder="Ex: Solo Batterie Concert, Maquette Voix-Off..."
                   required
                   value={mediaTitle}
                   onChange={(e) => setMediaTitle(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold dark:text-white"
+                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold dark:text-afri-text"
                 />
               </div>
 
               {mediaType !== "youtube" ? (
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Sélectionner un fichier</label>
+                  <label className="block text-[10px] uppercase font-bold text-afri-text-sec mb-1">Sélectionner un fichier</label>
                   <div className="border-2 border-dashed border-gray-200 dark:border-gray-850 rounded-xl p-4 text-center space-y-2 hover:bg-gray-50/50 transition-all">
                     <input
                       type="file"
@@ -379,27 +379,27 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                       <span className="text-xs font-black block text-gray-700 dark:text-gray-300">
                         {mediaFile ? `✅ ${mediaFile.name}` : "Choisir un fichier sur mon appareil"}
                       </span>
-                      <span className="text-[10px] text-gray-400 block">Fichiers max 10MB pour un streaming rapide</span>
+                      <span className="text-[10px] text-afri-text-sec block">Fichiers max 10MB pour un streaming rapide</span>
                     </label>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Lien URL YouTube</label>
+                  <label className="block text-[10px] uppercase font-bold text-afri-text-sec mb-1">Lien URL YouTube</label>
                   <input
                     type="url"
                     placeholder="https://www.youtube.com/watch?v=..."
                     required
                     value={mediaUrl}
                     onChange={(e) => setMediaUrl(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold dark:text-white font-mono"
+                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-850 border border-gray-100 rounded-xl text-xs font-bold dark:text-afri-text font-mono"
                   />
                 </div>
               )}
 
               {uploading && (
                 <div className="space-y-1 pt-1">
-                  <div className="flex justify-between text-[11px] font-bold text-gray-500">
+                  <div className="flex justify-between text-[11px] font-bold text-afri-text-sec">
                     <span>Téléversement sécurisé...</span>
                     <span>{progress}%</span>
                   </div>
@@ -420,7 +420,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
+                  className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-afri-text text-xs font-black rounded-xl shadow-md transition-all cursor-pointer"
                 >
                   {uploading ? "Patienter..." : "Valider et Ajouter"}
                 </button>
@@ -432,11 +432,11 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
 
       {/* Video YouTube Lightbox player */}
       {lightboxVideoId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-          <div className="w-full max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden relative border border-gray-850">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/90 backdrop-blur-md">
+          <div className="w-full max-w-3xl aspect-video bg-afri-bg rounded-2xl overflow-hidden relative border border-gray-850">
             <button
               onClick={() => setLightboxVideoId(null)}
-              className="absolute top-3 right-3 z-10 p-2 bg-black/60 hover:bg-black/90 text-white rounded-full text-xs font-bold border border-white/20 hover:scale-105 cursor-pointer leading-none"
+              className="absolute top-3 right-3 z-10 p-2 bg-afri-bg/60 hover:bg-afri-bg/90 text-afri-text rounded-full text-xs font-bold border border-white/20 hover:scale-105 cursor-pointer leading-none"
             >
               Fermer ✖
             </button>
@@ -454,11 +454,11 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
 
       {/* Raw Video Lightbox player */}
       {lightboxVideoUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
-          <div className="w-full max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden relative border border-gray-850 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-afri-bg/90 backdrop-blur-md animate-fadeIn">
+          <div className="w-full max-w-3xl aspect-video bg-afri-bg rounded-2xl overflow-hidden relative border border-gray-850 flex items-center justify-center">
             <button
               onClick={() => setLightboxVideoUrl(null)}
-              className="absolute top-3 right-3 z-10 p-2 bg-black/60 hover:bg-black/90 text-white rounded-full text-xs font-bold border border-white/20 hover:scale-105 cursor-pointer leading-none"
+              className="absolute top-3 right-3 z-10 p-2 bg-afri-bg/60 hover:bg-afri-bg/90 text-afri-text rounded-full text-xs font-bold border border-white/20 hover:scale-105 cursor-pointer leading-none"
             >
               Fermer ✖
             </button>

@@ -9,19 +9,25 @@
 .imperial, .dark {
   --afri-bg: #050505;
   --afri-bg-sec: #111111;
+  --afri-bg-ter: #181818;
+  --afri-bg-action: #222222;
+  --afri-bar: #0B0B0C;
   --afri-text: #FFFFFF;
   --afri-text-sec: #B9B9B9;
+  --afri-text-muted: #777777;
   --afri-border: rgba(212, 175, 55, 0.2);
 }
 
 .light {
-  --afri-bg: #F8F6F1;
+  --afri-bg: #F9F8F6;
   --afri-bg-sec: #FFFFFF;
-  --afri-bg-ter: #F2EFE8;
-  --afri-text: #111111;
-  --afri-text-sec: #555555;
-  --afri-text-muted: #777777;
-  --afri-border: rgba(0, 0, 0, 0.08);
+  --afri-bg-ter: #FAF0E6;
+  --afri-bg-action: #EAE0D5;
+  --afri-bar: #E2E2E2;
+  --afri-text: #333333;
+  --afri-text-sec: #737373;
+  --afri-text-muted: #999999;
+  --afri-border: #E5E5E5;
 }
 
 /* Smooth 250-300ms transitions for colors, backgrounds, borders and shadows when theme is changed */
@@ -51,6 +57,8 @@ html.text-size-grand {
   --color-afri-bg: var(--afri-bg);
   --color-afri-bg-sec: var(--afri-bg-sec);
   --color-afri-bg-ter: var(--afri-bg-ter);
+  --color-afri-bg-action: var(--afri-bg-action);
+  --color-afri-bar: var(--afri-bar);
   --color-afri-gold: var(--afri-gold);
   --color-afri-gold-light: var(--afri-gold-light);
   --color-afri-text: var(--afri-text);

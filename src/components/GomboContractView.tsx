@@ -408,7 +408,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-4">
         <Loader2 className="w-12 h-12 text-[#D4AF37] animate-spin" />
-        <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest">Chargement du contrat sécurisé...</p>
+        <p className="text-afri-text-sec font-mono text-xs uppercase tracking-widest">Chargement du contrat sécurisé...</p>
       </div>
     );
   }
@@ -417,7 +417,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
     return (
       <div className="text-center py-24 space-y-4">
         <AlertTriangle className="w-16 h-16 text-red-500 mx-auto" />
-        <h3 className="text-white font-bold">Contrat introuvable</h3>
+        <h3 className="text-afri-text font-bold">Contrat introuvable</h3>
         <button onClick={onBack} className="text-[#D4AF37] text-sm underline">Retour</button>
       </div>
     );
@@ -428,15 +428,15 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
       case "generated": return { label: "En attente de signatures", color: "text-amber-500", bg: "bg-amber-500/10" };
       case "accepted_client": return { label: "Signé par le client", color: "text-blue-500", bg: "bg-blue-500/10" };
       case "accepted_artist": return { label: "Signé par l'artiste", color: "text-blue-500", bg: "bg-blue-500/10" };
-      case "signed": return { label: "Signé & Scellé (Attente dépôt)", color: "text-[#D4AF37]", bg: "bg-[#D4AF37]/10" };
+      case "signed": return { label: "Signé & Scellé (Attente dépôt)", color: "text-[#D4AF37]", bg: "bg-afri-bg-sec/10" };
       case "payment_held": return { label: "Dépôt Sécurisé (Mission active)", color: "text-emerald-500", bg: "bg-emerald-500/10" };
       case "arrived": return { label: "Artiste Arrivé 📍", color: "text-teal-400", bg: "bg-teal-500/10" };
       case "in_progress": return { label: "Prestation en Cours ⚡", color: "text-purple-400", bg: "bg-purple-500/10" };
       case "completed_artist": return { label: "Terminé par l'artiste (Attente validation)", color: "text-orange-400", bg: "bg-orange-500/10" };
       case "completed": return { label: "Mission Terminée & Validée ✨", color: "text-emerald-500", bg: "bg-emerald-500/10" };
       case "disputed": return { label: "En Litige Bloqué 🚨", color: "text-red-500", bg: "bg-red-500/10" };
-      case "cancelled": return { label: "Annulé", color: "text-zinc-600", bg: "bg-zinc-900" };
-      default: return { label: contract.status, color: "text-zinc-400", bg: "bg-zinc-800" };
+      case "cancelled": return { label: "Annulé", color: "text-afri-text-sec", bg: "bg-afri-bg-sec" };
+      default: return { label: contract.status, color: "text-afri-text-sec", bg: "bg-afri-bg-ter" };
     }
   };
 
@@ -448,7 +448,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
       <div className="flex items-center justify-between">
         <button 
           onClick={onBack}
-          className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-afri-text-sec hover:text-afri-text transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-xs font-bold uppercase tracking-widest">Retour</span>
@@ -456,13 +456,13 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setShowHistory(!showHistory)}
-            className="p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-[#D4AF37] transition-colors"
+            className="p-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-afri-text-sec hover:text-[#D4AF37] transition-colors"
             title="Historique permanent"
           >
             <History className="w-5 h-5" />
           </button>
           <button 
-            className="p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-[#D4AF37] transition-colors"
+            className="p-2.5 bg-afri-bg-sec border border-afri-border rounded-xl text-afri-text-sec hover:text-[#D4AF37] transition-colors"
             title="Télécharger PDF (Bientôt)"
           >
             <Download className="w-5 h-5" />
@@ -474,7 +474,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative bg-[#080808] border border-zinc-800 rounded-[2.5rem] shadow-2xl overflow-hidden"
+        className="relative bg-afri-bg-sec border border-afri-border rounded-[2.5rem] shadow-2xl overflow-hidden"
       >
         {/* Document Header Decor */}
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent" />
@@ -484,14 +484,14 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
         <div className="p-8 md:p-12 space-y-12">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 border-b border-zinc-800 pb-12">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 border-b border-afri-border pb-12">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#D4AF37]/10 rounded-xl">
+                <div className="p-2.5 bg-afri-bg-sec/10 rounded-xl">
                   <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-sans font-black text-white uppercase tracking-tighter">CONTRAT NUMÉRIQUE</h1>
+                  <h1 className="text-2xl font-sans font-black text-afri-text uppercase tracking-tighter">CONTRAT NUMÉRIQUE</h1>
                   {contract.firebaseSignature && (
                     <div className="mt-2 inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
                       <ShieldCheck className="w-3 h-3 text-emerald-400" />
@@ -508,68 +508,68 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
             </div>
             
             <div className="text-left md:text-right space-y-1">
-              <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Émis par</p>
-              <p className="text-white text-lg font-black tracking-tighter">AFRIGOMBO ELITE</p>
+              <p className="text-afri-text-sec text-[10px] font-bold uppercase tracking-widest">Émis par</p>
+              <p className="text-afri-text text-lg font-black tracking-tighter">AFRIGOMBO ELITE</p>
               <p className="text-[#D4AF37] text-[9px] font-mono">Tiers de Confiance Impérial</p>
-              <p className="text-zinc-600 text-[9px] font-mono mt-1">{new Date(contract.createdAt).toLocaleDateString()}</p>
+              <p className="text-afri-text-sec text-[9px] font-mono mt-1">{new Date(contract.createdAt).toLocaleDateString()}</p>
             </div>
           </div>
 
           {/* Parties */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">ORGANISATEUR (CLIENT)</h3>
-              <div className="p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800/50">
-                <p className="text-white font-bold">{contract.clientName}</p>
-                <p className="text-zinc-500 text-[10px] font-mono mt-1">ID: {contract.clientId.substring(0, 8)}...</p>
+              <h3 className="text-afri-text-sec text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">ORGANISATEUR (CLIENT)</h3>
+              <div className="p-4 bg-afri-bg-sec/50 rounded-2xl border border-afri-border/50">
+                <p className="text-afri-text font-bold">{contract.clientName}</p>
+                <p className="text-afri-text-sec text-[10px] font-mono mt-1">ID: {contract.clientId.substring(0, 8)}...</p>
               </div>
             </div>
             <div className="space-y-4">
-              <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">ARTISTE (PRESTATAIRE)</h3>
-              <div className="p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800/50">
-                <p className="text-white font-bold">{contract.artistName}</p>
-                <p className="text-zinc-500 text-[10px] font-mono mt-1">ID: {contract.artistId.substring(0, 8)}...</p>
+              <h3 className="text-afri-text-sec text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">ARTISTE (PRESTATAIRE)</h3>
+              <div className="p-4 bg-afri-bg-sec/50 rounded-2xl border border-afri-border/50">
+                <p className="text-afri-text font-bold">{contract.artistName}</p>
+                <p className="text-afri-text-sec text-[10px] font-mono mt-1">ID: {contract.artistId.substring(0, 8)}...</p>
               </div>
             </div>
           </div>
 
           {/* Mission Details */}
           <div className="space-y-6">
-            <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">DÉTAILS DE LA PRESTATION</h3>
+            <h3 className="text-afri-text-sec text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">DÉTAILS DE LA PRESTATION</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-zinc-900/30 rounded-2xl border border-zinc-800/30 space-y-1">
-                <div className="flex items-center gap-2 text-zinc-500 mb-1">
+              <div className="p-4 bg-afri-bg-sec/30 rounded-2xl border border-afri-border/30 space-y-1">
+                <div className="flex items-center gap-2 text-afri-text-sec mb-1">
                   <MapPin className="w-3 h-3" />
                   <span className="text-[9px] font-bold uppercase tracking-widest">Lieu (Commune)</span>
                 </div>
-                <p className="text-zinc-200 text-sm font-medium">{contract.commune || "Non spécifié"}</p>
+                <p className="text-afri-text text-sm font-medium">{contract.commune || "Non spécifié"}</p>
               </div>
-              <div className="p-4 bg-zinc-900/30 rounded-2xl border border-zinc-800/30 space-y-1">
-                <div className="flex items-center gap-2 text-zinc-500 mb-1">
+              <div className="p-4 bg-afri-bg-sec/30 rounded-2xl border border-afri-border/30 space-y-1">
+                <div className="flex items-center gap-2 text-afri-text-sec mb-1">
                   <Calendar className="w-3 h-3" />
                   <span className="text-[9px] font-bold uppercase tracking-widest">Date</span>
                 </div>
-                <p className="text-zinc-200 text-sm font-medium">{contract.date || "Non spécifiée"}</p>
+                <p className="text-afri-text text-sm font-medium">{contract.date || "Non spécifiée"}</p>
               </div>
-              <div className="p-4 bg-zinc-900/30 rounded-2xl border border-zinc-800/30 space-y-1">
-                <div className="flex items-center gap-2 text-zinc-500 mb-1">
+              <div className="p-4 bg-afri-bg-sec/30 rounded-2xl border border-afri-border/30 space-y-1">
+                <div className="flex items-center gap-2 text-afri-text-sec mb-1">
                   <Clock className="w-3 h-3" />
                   <span className="text-[9px] font-bold uppercase tracking-widest">Heure</span>
                 </div>
-                <p className="text-zinc-200 text-sm font-medium">{contract.time || "Non spécifiée"}</p>
+                <p className="text-afri-text text-sm font-medium">{contract.time || "Non spécifiée"}</p>
               </div>
-              <div className="p-4 bg-zinc-900/30 rounded-2xl border border-zinc-800/30 space-y-1">
-                <div className="flex items-center gap-2 text-zinc-500 mb-1">
+              <div className="p-4 bg-afri-bg-sec/30 rounded-2xl border border-afri-border/30 space-y-1">
+                <div className="flex items-center gap-2 text-afri-text-sec mb-1">
                   <BadgeCheck className="w-3 h-3" />
                   <span className="text-[9px] font-bold uppercase tracking-widest">Durée</span>
                 </div>
-                <p className="text-zinc-200 text-sm font-medium">{contract.duration || "3 heures"}</p>
+                <p className="text-afri-text text-sm font-medium">{contract.duration || "3 heures"}</p>
               </div>
             </div>
 
-            <div className="p-6 bg-zinc-900/20 border border-zinc-800/50 rounded-2xl space-y-3">
-              <h4 className="text-white text-xs font-bold uppercase tracking-wider">{contract.title}</h4>
-              <p className="text-zinc-400 text-xs leading-relaxed italic">
+            <div className="p-6 bg-afri-bg-sec/20 border border-afri-border/50 rounded-2xl space-y-3">
+              <h4 className="text-afri-text text-xs font-bold uppercase tracking-wider">{contract.title}</h4>
+              <p className="text-afri-text-sec text-xs leading-relaxed italic">
                 "{contract.description}"
               </p>
             </div>
@@ -577,8 +577,8 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
           {/* ACTIVE PROTOCOL PROGRESS TRACKER */}
           {["payment_held", "arrived", "in_progress", "completed_artist", "completed", "disputed"].includes(contract.status) && (
-            <div className="space-y-6 border-t border-zinc-900 pt-8">
-              <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">
+            <div className="space-y-6 border-t border-afri-border pt-8">
+              <h3 className="text-afri-text-sec text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">
                 PROTOCOLE DE SÉCURITÉ AFRIGOMBO (TIERS DE CONFIANCE)
               </h3>
               
@@ -586,31 +586,31 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 {/* LEFT SIDE: STEPS & STATUS TIMELINE */}
                 <div className="lg:col-span-1 space-y-6">
                   {/* Geolocation & Arrival */}
-                  <div className={`p-5 rounded-2xl border ${contract.arrivalTime ? "border-emerald-500/20 bg-emerald-500/5" : "border-zinc-800 bg-zinc-900/20"} space-y-3`}>
+                  <div className={`p-5 rounded-2xl border ${contract.arrivalTime ? "border-emerald-500/20 bg-emerald-500/5" : "border-afri-border bg-afri-bg-sec/20"} space-y-3`}>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-white">1. Arrivée de l'artiste</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-afri-text">1. Arrivée de l'artiste</span>
                       {contract.arrivalTime ? (
                         <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded text-[9px] font-mono">ENREGISTRÉ</span>
                       ) : (
-                        <span className="px-2 py-0.5 bg-zinc-800 text-zinc-500 rounded text-[9px] font-mono">ATTENTE</span>
+                        <span className="px-2 py-0.5 bg-afri-bg-ter text-afri-text-sec rounded text-[9px] font-mono">ATTENTE</span>
                       )}
                     </div>
                     {contract.arrivalTime ? (
                       <div className="space-y-1.5 text-xs">
-                        <p className="text-zinc-300 font-bold">📍 Arrivé à : <span className="text-emerald-400 font-mono font-black">{contract.arrivalTime}</span></p>
-                        <p className="text-zinc-500 text-[10px] font-mono flex items-center gap-1">
-                          <Compass className="w-3.5 h-3.5 text-zinc-600" />
+                        <p className="text-afri-text font-bold">📍 Arrivé à : <span className="text-emerald-400 font-mono font-black">{contract.arrivalTime}</span></p>
+                        <p className="text-afri-text-sec text-[10px] font-mono flex items-center gap-1">
+                          <Compass className="w-3.5 h-3.5 text-afri-text-sec" />
                           {contract.arrivalGPS || "GPS Non activé"}
                         </p>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <p className="text-zinc-500 text-[10px]">L'artiste doit certifier sa présence une fois arrivé sur le lieu du Gombo.</p>
+                        <p className="text-afri-text-sec text-[10px]">L'artiste doit certifier sa présence une fois arrivé sur le lieu du Gombo.</p>
                         {isArtist && (
                           <button 
                             onClick={handleArrival}
                             disabled={processing}
-                            className="w-full py-2 bg-[#D4AF37] hover:bg-[#B8860B] text-black font-black uppercase text-[9px] tracking-wider rounded-xl transition-colors disabled:opacity-50"
+                            className="w-full py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-black uppercase text-[9px] tracking-wider rounded-xl transition-colors disabled:opacity-50"
                           >
                             📍 Je suis arrivé sur place
                           </button>
@@ -620,17 +620,17 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   </div>
 
                   {/* Prestation Status Timeline */}
-                  <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20 space-y-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-white">2. Exécution & Statut</span>
+                  <div className="p-5 rounded-2xl border border-afri-border bg-afri-bg-sec/20 space-y-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-afri-text">2. Exécution & Statut</span>
                     <div className="space-y-2 text-xs">
                       {contract.status === "payment_held" && (
                         <div className="space-y-2">
-                          <p className="text-zinc-500 text-[10px]">Prestation prête. Une fois l'artiste arrivé, la prestation peut débuter.</p>
+                          <p className="text-afri-text-sec text-[10px]">Prestation prête. Une fois l'artiste arrivé, la prestation peut débuter.</p>
                           {isArtist && contract.arrivalTime && (
                             <button
                               onClick={handleStartPrestation}
                               disabled={processing}
-                              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[9px] tracking-widest rounded-xl transition-all"
+                              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-afri-text font-black uppercase text-[9px] tracking-widest rounded-xl transition-all"
                             >
                               🎬 Commencer la prestation
                             </button>
@@ -639,12 +639,12 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                       )}
                       {contract.status === "arrived" && (
                         <div className="space-y-2">
-                          <p className="text-zinc-500 text-[10px]">Artiste arrivé sur les lieux. Cliquez pour démarrer la prestation.</p>
+                          <p className="text-afri-text-sec text-[10px]">Artiste arrivé sur les lieux. Cliquez pour démarrer la prestation.</p>
                           {isArtist && (
                             <button
                               onClick={handleStartPrestation}
                               disabled={processing}
-                              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[9px] tracking-widest rounded-xl transition-all animate-bounce"
+                              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-afri-text font-black uppercase text-[9px] tracking-widest rounded-xl transition-all animate-bounce"
                             >
                               🎬 Commencer la prestation
                             </button>
@@ -658,7 +658,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                             <button
                               onClick={handleEndPrestation}
                               disabled={processing}
-                              className="w-full py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-black uppercase text-[9px] tracking-widest rounded-xl transition-all"
+                              className="w-full py-2.5 bg-orange-600 hover:bg-orange-500 text-afri-text font-black uppercase text-[9px] tracking-widest rounded-xl transition-all"
                             >
                               ✨ Marquer comme terminée
                             </button>
@@ -668,7 +668,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                       {["completed_artist", "completed", "disputed"].includes(contract.status) && (
                         <div className="space-y-1 font-mono text-[10px]">
                           {contract.artistFinishedAt && (
-                            <p className="text-zinc-400">🏁 Fin prestation : {new Date(contract.artistFinishedAt).toLocaleTimeString()}</p>
+                            <p className="text-afri-text-sec">🏁 Fin prestation : {new Date(contract.artistFinishedAt).toLocaleTimeString()}</p>
                           )}
                           {contract.clientConformedAt && (
                             <p className="text-emerald-400">✅ Validation client : {new Date(contract.clientConformedAt).toLocaleTimeString()}</p>
@@ -683,19 +683,19 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
                 {/* RIGHT SIDE: SECURE PROOFS PROTOCOL */}
                 <div className="lg:col-span-2 space-y-6">
-                  <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/10 space-y-6">
+                  <div className="p-5 rounded-2xl border border-afri-border bg-afri-bg-sec/10 space-y-6">
                     <div>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-white mb-1">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-afri-text mb-1">
                         📸 PROTOCOLE DE PREUVES SÉCURISÉES (COFFRE-FORT)
                       </h4>
-                      <p className="text-[10px] text-zinc-500 font-mono">
+                      <p className="text-[10px] text-afri-text-sec font-mono">
                         Preuves visuelles d'exécution stockées sur Firebase Storage. Aucun lien externe ou téléphone.
                       </p>
                     </div>
 
                     {/* Promoter controls: demand custom proofs */}
                     {isClient && (
-                      <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-900 space-y-3">
+                      <div className="bg-afri-bg p-4 rounded-xl border border-afri-border space-y-3">
                         <span className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-wider">
                           🛠️ PREUVES EXIGÉES PAR LE PROMOTEUR
                         </span>
@@ -715,11 +715,11 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                                 className={`py-2 px-3 rounded-xl border text-[10px] font-mono font-bold uppercase text-left transition-all flex items-center justify-between ${
                                   isRequested 
                                     ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
-                                    : "bg-black border-zinc-900 text-zinc-500 hover:border-zinc-800"
+                                    : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-afri-border"
                                 } ${pt.disabled ? "opacity-75 cursor-not-allowed" : "cursor-pointer"}`}
                               >
                                 <span>{pt.label}</span>
-                                <span className="text-[8px] font-mono px-1.5 py-0.5 bg-black/40 rounded">
+                                <span className="text-[8px] font-mono px-1.5 py-0.5 bg-afri-bg/40 rounded">
                                   {isRequested ? "REQUIS" : "FACULTATIF"}
                                 </span>
                               </button>
@@ -745,11 +745,11 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                         return (
                           <div 
                             key={pt.id} 
-                            className={`p-4 rounded-xl border ${photosList.length > 0 ? "border-emerald-500/10 bg-emerald-500/5" : "border-zinc-900 bg-black/20"} space-y-3`}
+                            className={`p-4 rounded-xl border ${photosList.length > 0 ? "border-emerald-500/10 bg-emerald-500/5" : "border-afri-border bg-afri-bg/20"} space-y-3`}
                           >
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-mono font-black text-white uppercase tracking-wider">{pt.label}</span>
-                              <span className="text-[8px] font-mono bg-zinc-900 text-zinc-500 px-2 py-0.5 rounded-full font-bold">
+                              <span className="text-[10px] font-mono font-black text-afri-text uppercase tracking-wider">{pt.label}</span>
+                              <span className="text-[8px] font-mono bg-afri-bg-sec text-afri-text-sec px-2 py-0.5 rounded-full font-bold">
                                 {photosList.length}/3 MAX
                               </span>
                             </div>
@@ -760,25 +760,25 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                                   <button 
                                     key={i} 
                                     onClick={() => setLocalPreviewUrl(url)} 
-                                    className="relative aspect-square rounded-lg overflow-hidden border border-zinc-800 block hover:border-[#D4AF37] transition-all"
+                                    className="relative aspect-square rounded-lg overflow-hidden border border-afri-border block hover:border-[#D4AF37] transition-all"
                                   >
                                     <img referrerPolicy="no-referrer" src={url} alt={`Preuve ${i+1}`} className="w-full h-full object-cover" />
                                   </button>
                                 ))}
                                 {isArtist && photosList.length < 3 && (
-                                  <label className="aspect-square rounded-lg border-2 border-dashed border-zinc-800 hover:border-[#D4AF37]/50 flex items-center justify-center cursor-pointer transition-colors">
+                                  <label className="aspect-square rounded-lg border-2 border-dashed border-afri-border hover:border-[#D4AF37]/50 flex items-center justify-center cursor-pointer transition-colors">
                                     <input type="file" accept="image/*" className="hidden" onChange={(e) => handleSpecificPhotoUpload(pt.id as any, e)} disabled={processing} />
-                                    <Plus className="w-4 h-4 text-zinc-600" />
+                                    <Plus className="w-4 h-4 text-afri-text-sec" />
                                   </label>
                                 )}
                               </div>
                             ) : (
                               <div className="space-y-2">
-                                <p className="text-zinc-500 text-[9px] font-mono">
+                                <p className="text-afri-text-sec text-[9px] font-mono">
                                   {isArtist ? "Vous devez uploader une photo pour attester de cette étape." : "En attente du dépôt de l'artiste..."}
                                 </p>
                                 {isArtist && (
-                                  <label className="flex items-center justify-center gap-2 w-full py-2 bg-zinc-950 border border-zinc-900 hover:border-[#D4AF37]/35 text-zinc-300 font-bold uppercase text-[9px] tracking-wider rounded-xl cursor-pointer transition-all">
+                                  <label className="flex items-center justify-center gap-2 w-full py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/35 text-afri-text font-bold uppercase text-[9px] tracking-wider rounded-xl cursor-pointer transition-all">
                                     <input type="file" accept="image/*" className="hidden" onChange={(e) => handleSpecificPhotoUpload(pt.id as any, e)} disabled={processing} />
                                     <Camera className="w-3.5 h-3.5 text-[#D4AF37]" />
                                     Uploader la photo
@@ -798,35 +798,35 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
           {/* Financials / Transparence Économique */}
           <div className="space-y-6">
-            <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">
+            <h3 className="text-afri-text-sec text-[10px] font-black uppercase tracking-widest border-l-2 border-[#D4AF37] pl-3">
               TRANSPARENCE ÉCONOMIQUE & FINANCIÈRE
             </h3>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main Transparency Card */}
-              <div className="lg:col-span-2 p-6 bg-zinc-950 border border-zinc-850 rounded-3xl space-y-5 shadow-inner">
-                <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+              <div className="lg:col-span-2 p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-5 shadow-inner">
+                <div className="flex items-center justify-between border-b border-afri-border pb-3">
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-mono uppercase text-zinc-500 tracking-wider">Base de négociation</span>
-                    <span className="text-zinc-200 font-bold text-xs">Cachet de Prestation</span>
+                    <span className="text-[9px] font-mono uppercase text-afri-text-sec tracking-wider">Base de négociation</span>
+                    <span className="text-afri-text font-bold text-xs">Cachet de Prestation</span>
                   </div>
-                  <span className="text-white font-mono text-base font-extrabold">{contract.amount.toLocaleString()} FCFA</span>
+                  <span className="text-afri-text font-mono text-base font-extrabold">{contract.amount.toLocaleString()} FCFA</span>
                 </div>
 
                 {/* Promoter details */}
-                <div className="flex items-center justify-between bg-zinc-900/40 p-3.5 rounded-2xl border border-zinc-900">
+                <div className="flex items-center justify-between bg-afri-bg-sec/40 p-3.5 rounded-2xl border border-afri-border">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-zinc-300">Commission Promoteur (Client)</span>
+                      <span className="text-xs font-bold text-afri-text">Commission Promoteur (Client)</span>
                       {contract.isClientPremium ? (
-                        <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase tracking-widest border border-[#D4AF37]/20">💎 Premium (1.5%)</span>
+                        <span className="bg-afri-bg-sec/10 text-[#D4AF37] px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase tracking-widest border border-[#D4AF37]/20">💎 Premium (1.5%)</span>
                       ) : (
-                        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-widest">Standard (2.5%)</span>
+                        <span className="bg-afri-bg-ter text-afri-text-sec px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-widest">Standard (2.5%)</span>
                       )}
                     </div>
-                    <p className="text-[9px] text-zinc-500">Ajoutée au cachet de base</p>
+                    <p className="text-[9px] text-afri-text-sec">Ajoutée au cachet de base</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-zinc-300 font-mono font-bold">+{contract.commissionClient.toLocaleString()} FCFA</span>
+                    <span className="text-afri-text font-mono font-bold">+{contract.commissionClient.toLocaleString()} FCFA</span>
                     {contract.savingsClient > 0 && (
                       <p className="text-[8.5px] text-emerald-400 font-mono font-medium mt-0.5">Économie de {contract.savingsClient.toLocaleString()} FCFA incluse</p>
                     )}
@@ -834,20 +834,20 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 </div>
 
                 {/* Musician details */}
-                <div className="flex items-center justify-between bg-zinc-900/40 p-3.5 rounded-2xl border border-zinc-900">
+                <div className="flex items-center justify-between bg-afri-bg-sec/40 p-3.5 rounded-2xl border border-afri-border">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-zinc-300">Commission Musicien (Artiste)</span>
+                      <span className="text-xs font-bold text-afri-text">Commission Musicien (Artiste)</span>
                       {contract.isArtistPremium ? (
-                        <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase tracking-widest border border-[#D4AF37]/20">💎 Premium (1.5%)</span>
+                        <span className="bg-afri-bg-sec/10 text-[#D4AF37] px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase tracking-widest border border-[#D4AF37]/20">💎 Premium (1.5%)</span>
                       ) : (
-                        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-widest">Standard (2.5%)</span>
+                        <span className="bg-afri-bg-ter text-afri-text-sec px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-widest">Standard (2.5%)</span>
                       )}
                     </div>
-                    <p className="text-[9px] text-zinc-500">Déduite du cachet de base</p>
+                    <p className="text-[9px] text-afri-text-sec">Déduite du cachet de base</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-zinc-400 font-mono font-bold">-{contract.commissionArtist.toLocaleString()} FCFA</span>
+                    <span className="text-afri-text-sec font-mono font-bold">-{contract.commissionArtist.toLocaleString()} FCFA</span>
                     {contract.savingsArtist > 0 && (
                       <p className="text-[8.5px] text-emerald-400 font-mono font-medium mt-0.5">Économie de {contract.savingsArtist.toLocaleString()} FCFA incluse</p>
                     )}
@@ -855,47 +855,47 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 </div>
 
                 {/* Total AFRIGOMBO commission */}
-                <div className="flex items-center justify-between border-t border-zinc-900 pt-4 px-1">
+                <div className="flex items-center justify-between border-t border-afri-border pt-4 px-1">
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-mono uppercase text-zinc-500 tracking-wider">Service de confiance sécurisé</span>
-                    <span className="text-zinc-400 text-xs">Commission totale AFRIGOMBO</span>
+                    <span className="text-[9px] font-mono uppercase text-afri-text-sec tracking-wider">Service de confiance sécurisé</span>
+                    <span className="text-afri-text-sec text-xs">Commission totale AFRIGOMBO</span>
                   </div>
-                  <span className="text-zinc-300 font-mono font-bold">
+                  <span className="text-afri-text font-mono font-bold">
                     {(contract.commissionClient + contract.commissionArtist).toLocaleString()} FCFA 
-                    <span className="text-[10px] text-zinc-500 ml-1.5 font-normal">
+                    <span className="text-[10px] text-afri-text-sec ml-1.5 font-normal">
                       ({parseFloat((((contract.commissionClientRate || 0.025) + (contract.commissionArtistRate || 0.025)) * 100).toFixed(1))}%)
                     </span>
                   </span>
                 </div>
 
                 {/* Final amounts for each side */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-zinc-900 pt-4">
-                  <div className={`p-4 rounded-2xl border ${isClient ? 'bg-[#D4AF37]/5 border-[#D4AF37]/25' : 'bg-zinc-900/20 border-zinc-850'}`}>
-                    <p className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-widest leading-none mb-1">Montant Net Promoteur (À Régler)</p>
-                    <p className={`text-sm font-black font-sans tracking-tight ${isClient ? 'text-[#D4AF37]' : 'text-zinc-300'}`}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-afri-border pt-4">
+                  <div className={`p-4 rounded-2xl border ${isClient ? 'bg-afri-bg-sec/5 border-[#D4AF37]/25' : 'bg-afri-bg-sec/20 border-afri-border'}`}>
+                    <p className="text-[8.5px] font-mono text-afri-text-sec uppercase tracking-widest leading-none mb-1">Montant Net Promoteur (À Régler)</p>
+                    <p className={`text-sm font-black font-sans tracking-tight ${isClient ? 'text-[#D4AF37]' : 'text-afri-text'}`}>
                       {contract.totalClientPaid.toLocaleString()} FCFA
                     </p>
-                    <p className="text-[7.5px] text-zinc-500 mt-1">Cachet ({contract.amount.toLocaleString()}) + Comm ({contract.commissionClient.toLocaleString()})</p>
+                    <p className="text-[7.5px] text-afri-text-sec mt-1">Cachet ({contract.amount.toLocaleString()}) + Comm ({contract.commissionClient.toLocaleString()})</p>
                   </div>
 
-                  <div className={`p-4 rounded-2xl border ${isArtist ? 'bg-[#D4AF37]/5 border-[#D4AF37]/25' : 'bg-zinc-900/20 border-zinc-850'}`}>
-                    <p className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-widest leading-none mb-1">Montant Net Musicien (Reçu)</p>
-                    <p className={`text-sm font-black font-sans tracking-tight ${isArtist ? 'text-[#D4AF37]' : 'text-zinc-300'}`}>
+                  <div className={`p-4 rounded-2xl border ${isArtist ? 'bg-afri-bg-sec/5 border-[#D4AF37]/25' : 'bg-afri-bg-sec/20 border-afri-border'}`}>
+                    <p className="text-[8.5px] font-mono text-afri-text-sec uppercase tracking-widest leading-none mb-1">Montant Net Musicien (Reçu)</p>
+                    <p className={`text-sm font-black font-sans tracking-tight ${isArtist ? 'text-[#D4AF37]' : 'text-afri-text'}`}>
                       {contract.totalArtistReceives.toLocaleString()} FCFA
                     </p>
-                    <p className="text-[7.5px] text-zinc-500 mt-1">Cachet ({contract.amount.toLocaleString()}) - Comm ({contract.commissionArtist.toLocaleString()})</p>
+                    <p className="text-[7.5px] text-afri-text-sec mt-1">Cachet ({contract.amount.toLocaleString()}) - Comm ({contract.commissionArtist.toLocaleString()})</p>
                   </div>
                 </div>
               </div>
 
               {/* Trust block */}
-              <div className="p-6 bg-[#D4AF37]/5 border border-[#D4AF37]/15 rounded-3xl flex flex-col justify-between space-y-4 text-xs">
+              <div className="p-6 bg-afri-bg-sec/5 border border-[#D4AF37]/15 rounded-3xl flex flex-col justify-between space-y-4 text-xs">
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <Lock className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-zinc-200 font-bold">Paiement Sécurisé par AFRIGOMBO</p>
-                      <p className="text-zinc-500 text-[10px] leading-relaxed">
+                      <p className="text-afri-text font-bold">Paiement Sécurisé par AFRIGOMBO</p>
+                      <p className="text-afri-text-sec text-[10px] leading-relaxed">
                         Les fonds sont bloqués dès le dépôt et ne sont libérés qu'après validation mutuelle de la prestation.
                       </p>
                     </div>
@@ -903,16 +903,16 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   <div className="flex items-start gap-3">
                     <BadgeCheck className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-zinc-200 font-bold">Garantie de Prestation</p>
-                      <p className="text-zinc-500 text-[10px] leading-relaxed">
+                      <p className="text-afri-text font-bold">Garantie de Prestation</p>
+                      <p className="text-afri-text-sec text-[10px] leading-relaxed">
                         Le contrat fait foi en cas de litige. AFRIGOMBO intervient comme tiers de confiance souverain.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-zinc-900/60 p-3 rounded-2xl border border-zinc-850 text-[9.5px] text-zinc-400">
-                  <p className="font-bold text-zinc-200 mb-1">💡 Avantage Économique Premium</p>
+                <div className="bg-afri-bg-sec/60 p-3 rounded-2xl border border-afri-border text-[9.5px] text-afri-text-sec">
+                  <p className="font-bold text-afri-text mb-1">💡 Avantage Économique Premium</p>
                   <p className="leading-normal">
                     Les membres Premium bénéficient d'un taux réduit à <span className="text-[#D4AF37] font-bold">4%</span> au lieu de 6%, économisant sur chaque gombo validé.
                   </p>
@@ -922,9 +922,9 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
           </div>
 
           {/* Signatures */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-zinc-800 pt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-afri-border pt-12">
             <div className="space-y-4 text-center">
-              <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.2em] mb-4">SIGNATURE CLIENT</p>
+              <p className="text-afri-text-sec text-[9px] font-black uppercase tracking-[0.2em] mb-4">SIGNATURE CLIENT</p>
               {contract.clientSignedAt ? (
                 <div className="space-y-2">
                   <div className="h-16 flex items-center justify-center italic font-serif text-[#D4AF37] text-xl opacity-80">
@@ -935,13 +935,13 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   </div>
                 </div>
               ) : (
-                <div className="h-16 border-2 border-dashed border-zinc-850 rounded-2xl flex items-center justify-center">
+                <div className="h-16 border-2 border-dashed border-afri-border rounded-2xl flex items-center justify-center">
                   <span className="text-zinc-700 text-[10px] font-bold uppercase tracking-widest">En attente de signature</span>
                 </div>
               )}
             </div>
             <div className="space-y-4 text-center">
-              <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.2em] mb-4">SIGNATURE ARTISTE</p>
+              <p className="text-afri-text-sec text-[9px] font-black uppercase tracking-[0.2em] mb-4">SIGNATURE ARTISTE</p>
               {contract.artistSignedAt ? (
                 <div className="space-y-2">
                   <div className="h-16 flex items-center justify-center italic font-serif text-[#D4AF37] text-xl opacity-80">
@@ -952,7 +952,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   </div>
                 </div>
               ) : (
-                <div className="h-16 border-2 border-dashed border-zinc-850 rounded-2xl flex items-center justify-center">
+                <div className="h-16 border-2 border-dashed border-afri-border rounded-2xl flex items-center justify-center">
                   <span className="text-zinc-700 text-[10px] font-bold uppercase tracking-widest">En attente de signature</span>
                 </div>
               )}
@@ -960,19 +960,19 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
           </div>
 
           {/* Action Footer */}
-          <div className="border-t border-zinc-800 pt-12">
+          <div className="border-t border-afri-border pt-12">
             {!contract.clientSignedAt && isClient || !contract.artistSignedAt && isArtist ? (
               <div className="space-y-6">
-                <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-3xl flex items-start gap-4">
+                <div className="p-6 bg-afri-bg-sec border border-afri-border rounded-3xl flex items-start gap-4">
                   <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                  <p className="text-zinc-400 text-[11px] leading-relaxed">
+                  <p className="text-afri-text-sec text-[11px] leading-relaxed">
                     En cliquant sur "Signer numériquement", vous acceptez les termes du contrat et les conditions générales d'AFRIGOMBO ELITE. Cette action est irréversible, sécurisée et horodatée dans Firestore.
                   </p>
                 </div>
                 <button 
                   onClick={handleSign}
                   disabled={processing}
-                  className="w-full py-5 bg-[#D4AF37] hover:bg-[#B8860B] text-black font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-[#D4AF37]/10 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                  className="w-full py-5 bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-[#D4AF37]/10 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
                 >
                   {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileSignature className="w-5 h-5" />}
                   Signer numériquement
@@ -983,24 +983,24 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl flex items-start gap-4 text-center justify-center">
                   <div>
                     <CreditCard className="w-10 h-10 text-emerald-500 mx-auto mb-3 animate-pulse" />
-                    <h4 className="text-white font-bold mb-1">Prêt pour le dépôt de garantie</h4>
-                    <p className="text-zinc-500 text-[11px]">Le contrat est signé et scellé. Veuillez effectuer le dépôt sécurisé d'un montant total de <span className="text-white font-bold font-mono">{contract.totalClientPaid?.toLocaleString()} FCFA</span> pour engager la mission en toute sécurité.</p>
+                    <h4 className="text-afri-text font-bold mb-1">Prêt pour le dépôt de garantie</h4>
+                    <p className="text-afri-text-sec text-[11px]">Le contrat est signé et scellé. Veuillez effectuer le dépôt sécurisé d'un montant total de <span className="text-afri-text font-bold font-mono">{contract.totalClientPaid?.toLocaleString()} FCFA</span> pour engager la mission en toute sécurité.</p>
                   </div>
                 </div>
                 <button 
                   onClick={handleDeposit}
                   disabled={processing}
-                  className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-emerald-600/10 active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-afri-text font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-emerald-600/10 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Effectuer le dépôt sécurisé"}
                 </button>
               </div>
             ) : contract.status === "signed" && isArtist ? (
-              <div className="p-6 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-3xl text-center space-y-3">
+              <div className="p-6 bg-afri-bg-sec/5 border border-[#D4AF37]/20 rounded-3xl text-center space-y-3">
                 <Clock className="w-8 h-8 text-[#D4AF37] mx-auto animate-pulse" />
-                <h4 className="text-white font-bold text-xs uppercase tracking-wider">En attente du Dépôt Sécurisé</h4>
-                <p className="text-zinc-500 text-[11px] leading-relaxed max-w-md mx-auto">
-                  Le contrat est signé et scellé par les deux parties. L'organisateur doit maintenant effectuer le dépôt de garantie de <span className="text-white font-bold font-mono">{contract.totalClientPaid?.toLocaleString()} FCFA</span>. Ne commencez pas la mission avant cette confirmation.
+                <h4 className="text-afri-text font-bold text-xs uppercase tracking-wider">En attente du Dépôt Sécurisé</h4>
+                <p className="text-afri-text-sec text-[11px] leading-relaxed max-w-md mx-auto">
+                  Le contrat est signé et scellé par les deux parties. L'organisateur doit maintenant effectuer le dépôt de garantie de <span className="text-afri-text font-bold font-mono">{contract.totalClientPaid?.toLocaleString()} FCFA</span>. Ne commencez pas la mission avant cette confirmation.
                 </p>
               </div>
             ) : (contract.status === "completed_artist" || contract.status === "payment_held") && isClient ? (
@@ -1008,7 +1008,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 <div className="p-6 bg-gradient-to-r from-emerald-950/40 to-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-3xl text-center space-y-3 animate-fadeIn">
                   <ShieldCheck className="w-12 h-12 text-[#D4AF37] mx-auto animate-bounce" />
                   <h4 className="text-[#D4AF37] font-sans font-black uppercase tracking-widest text-sm">Validation de Prestation</h4>
-                  <p className="text-zinc-400 text-[11px] leading-relaxed max-w-lg mx-auto">
+                  <p className="text-afri-text-sec text-[11px] leading-relaxed max-w-lg mx-auto">
                     La prestation a été marquée comme terminée par l'artiste. Veuillez certifier la conformité de la prestation d'artiste ou signaler un problème pour ouvrir un litige et bloquer le paiement.
                   </p>
                 </div>
@@ -1017,7 +1017,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   <button 
                     onClick={() => handleValidation(true)}
                     disabled={processing || contract.clientValidation}
-                    className="flex-1 py-5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 cursor-pointer"
+                    className="flex-1 py-5 bg-emerald-600 hover:bg-emerald-500 text-afri-text font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 cursor-pointer"
                   >
                     <CheckCircle2 className="w-5 h-5" />
                     {contract.clientValidation ? "Déjà Validé" : "Prestation conforme (Libérer)"}
@@ -1025,7 +1025,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   <button 
                     onClick={() => handleValidation(false)}
                     disabled={processing}
-                    className="flex-1 py-5 bg-zinc-900 border border-red-500/30 text-red-500 font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 cursor-pointer"
+                    className="flex-1 py-5 bg-afri-bg-sec border border-red-500/30 text-red-500 font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3 cursor-pointer"
                   >
                     <XCircle className="w-5 h-5" />
                     Signaler un problème / Litige
@@ -1033,10 +1033,10 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 </div>
               </div>
             ) : contract.status === "completed_artist" && isArtist ? (
-              <div className="p-6 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-3xl text-center space-y-3">
+              <div className="p-6 bg-afri-bg-sec/5 border border-[#D4AF37]/20 rounded-3xl text-center space-y-3">
                 <Loader2 className="w-8 h-8 text-[#D4AF37] mx-auto animate-spin" />
-                <h4 className="text-white font-bold text-xs uppercase tracking-wider">En attente de validation client</h4>
-                <p className="text-zinc-500 text-[11px] leading-relaxed max-w-md mx-auto">
+                <h4 className="text-afri-text font-bold text-xs uppercase tracking-wider">En attente de validation client</h4>
+                <p className="text-afri-text-sec text-[11px] leading-relaxed max-w-md mx-auto">
                   Vous avez marqué la prestation comme terminée. L'organisateur vérifie actuellement la conformité. Les fonds restent bloqués en séquestre jusqu'à sa confirmation.
                 </p>
               </div>
@@ -1044,21 +1044,21 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
               <div className="space-y-6">
                 <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-3xl text-center">
                   <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
-                  <h4 className="text-white font-bold mb-1">Arbitrage Impérial du Litige</h4>
-                  <p className="text-zinc-500 text-[11px] mb-3">En tant que Fondateur / Centre de Commandement, vous pouvez examiner les preuves de présence, les horaires, les photos de présence, et trancher souverainement ce litige.</p>
+                  <h4 className="text-afri-text font-bold mb-1">Arbitrage Impérial du Litige</h4>
+                  <p className="text-afri-text-sec text-[11px] mb-3">En tant que Fondateur / Centre de Commandement, vous pouvez examiner les preuves de présence, les horaires, les photos de présence, et trancher souverainement ce litige.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button 
                     onClick={() => handleValidation(true)}
                     disabled={processing}
-                    className="flex-1 py-5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl transition-all"
+                    className="flex-1 py-5 bg-emerald-600 hover:bg-emerald-500 text-afri-text font-black uppercase tracking-widest rounded-2xl transition-all"
                   >
                     Valider (Libérer Fonds à l'artiste)
                   </button>
                   <button 
                     onClick={() => handleValidation(false)}
                     disabled={processing}
-                    className="flex-1 py-5 bg-zinc-900 border border-red-500 text-red-500 font-black uppercase tracking-widest rounded-2xl transition-all"
+                    className="flex-1 py-5 bg-afri-bg-sec border border-red-500 text-red-500 font-black uppercase tracking-widest rounded-2xl transition-all"
                   >
                     Rembourser l'organisateur
                   </button>
@@ -1067,11 +1067,11 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
             ) : contract.status === "completed" ? (
               <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl text-center space-y-3 animate-fadeIn">
                 <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
-                <h4 className="text-white font-bold text-xs uppercase tracking-wider">PRESTATION TERMINÉE ET VALIDÉE</h4>
+                <h4 className="text-afri-text font-bold text-xs uppercase tracking-wider">PRESTATION TERMINÉE ET VALIDÉE</h4>
                 <p className="text-[#D4AF37] text-sm font-black uppercase tracking-widest">
                   {isClient ? "Fonds libérés à l'artiste." : "Fonds libérés sur votre compte."}
                 </p>
-                <p className="text-zinc-500 text-[11px] leading-relaxed max-w-md mx-auto">
+                <p className="text-afri-text-sec text-[11px] leading-relaxed max-w-md mx-auto">
                   Merci d'avoir fait confiance à AFRIGOMBO ELITE, votre tiers de confiance souverain pour des prestations artistiques sécurisées.
                 </p>
               </div>
@@ -1079,7 +1079,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
             {/* Section Annulation de Contrat - Règles de Séquestre AFRIGOMBO */}
             {contract.status !== "completed" && contract.status !== "cancelled" && (
-              <div className="mt-8 pt-6 border-t border-zinc-900/60 flex flex-col items-center gap-2">
+              <div className="mt-8 pt-6 border-t border-afri-border/60 flex flex-col items-center gap-2">
                 <button
                   onClick={async () => {
                     const confirmMsg = contract.clientSigned && contract.artistSigned
@@ -1099,11 +1099,11 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                     }
                   }}
                   disabled={processing}
-                  className="px-6 py-3 bg-zinc-950 hover:bg-red-950/20 text-zinc-500 hover:text-red-400 border border-zinc-900 hover:border-red-950/40 text-[9px] font-mono font-black uppercase tracking-widest rounded-xl transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  className="px-6 py-3 bg-afri-bg hover:bg-red-950/20 text-afri-text-sec hover:text-red-400 border border-afri-border hover:border-red-950/40 text-[9px] font-mono font-black uppercase tracking-widest rounded-xl transition-all duration-200 cursor-pointer disabled:opacity-50"
                 >
                   Annuler le contrat (Règles Séquestre)
                 </button>
-                <p className="text-[8px] font-mono text-zinc-600 max-w-xs text-center leading-relaxed">
+                <p className="text-[8px] font-mono text-afri-text-sec max-w-xs text-center leading-relaxed">
                   Avant signature : 100% remboursé. Après signature : Pénalité de 10% reversée à l'artiste. Annulation artiste : 100% remboursé au promoteur.
                 </p>
               </div>
@@ -1114,7 +1114,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
         {/* Official Seal Overlay */}
         <div className="absolute bottom-12 right-12 opacity-40 pointer-events-none">
           <div className="relative">
-            <div className="absolute inset-0 bg-[#D4AF37] blur-2xl opacity-10 rounded-full" />
+            <div className="absolute inset-0 bg-afri-bg-sec blur-2xl opacity-10 rounded-full" />
             <div className="w-24 h-24 border-4 border-[#D4AF37] rounded-full flex items-center justify-center flex-col p-2 text-center rotate-[-15deg]">
               <p className="text-[#D4AF37] text-[7px] font-black uppercase tracking-tighter mb-0.5 leading-[1]">AFRIGOMBO ELITE</p>
               <ShieldCheck className="w-8 h-8 text-[#D4AF37]" />
@@ -1126,27 +1126,27 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
       {/* History Side Panel (Overlay when open) */}
       {showHistory && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end">
+        <div className="fixed inset-0 z-50 bg-afri-bg/80 backdrop-blur-sm flex justify-end">
           <motion.div 
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
-            className="w-full max-w-md bg-[#050505] border-l border-zinc-800 h-full p-8 overflow-y-auto text-left"
+            className="w-full max-w-md bg-afri-bg-sec border-l border-afri-border h-full p-8 overflow-y-auto text-left"
           >
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-[#D4AF37] font-black uppercase tracking-widest flex items-center gap-2">
                 <History className="w-5 h-5" /> Historique Actions
               </h3>
-              <button onClick={() => setShowHistory(false)} className="text-zinc-500 hover:text-white">
+              <button onClick={() => setShowHistory(false)} className="text-afri-text-sec hover:text-afri-text">
                 <XCircle className="w-6 h-6" />
               </button>
             </div>
             
             <div className="space-y-6">
               {contract.history?.map((entry, idx) => (
-                <div key={idx} className="relative pl-6 border-l border-zinc-800 space-y-1">
-                  <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-zinc-800 border border-zinc-700" />
-                  <p className="text-zinc-200 text-xs font-bold">{entry.action}</p>
-                  <p className="text-zinc-500 text-[10px] font-mono">
+                <div key={idx} className="relative pl-6 border-l border-afri-border space-y-1">
+                  <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-afri-bg-ter border border-afri-border" />
+                  <p className="text-afri-text text-xs font-bold">{entry.action}</p>
+                  <p className="text-afri-text-sec text-[10px] font-mono">
                     {new Date(entry.timestamp).toLocaleString()} • ID: {entry.userId.substring(0, 8)}
                   </p>
                 </div>
@@ -1163,12 +1163,12 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
             {contract.status === "completed" && (
               <div className="space-y-6 animate-fadeIn mt-6">
                 {/* FICHE DE RÉPUTATION OF THE COUNTERPARTY */}
-                <div className="bg-black/80 backdrop-blur-md border border-[#D4AF37]/30 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-[0_8px_32px_rgba(212,175,55,0.05)]">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-2xl rounded-full pointer-events-none"></div>
+                <div className="bg-afri-bg/80 backdrop-blur-md border border-[#D4AF37]/30 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-[0_8px_32px_rgba(212,175,55,0.05)]">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-afri-bg-sec/5 blur-2xl rounded-full pointer-events-none"></div>
                   
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-zinc-800/60">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-afri-border/60">
                     <div className="flex items-center gap-4 text-left">
-                      <div className="w-16 h-16 rounded-2xl border-2 border-[#D4AF37]/50 overflow-hidden shrink-0 bg-zinc-950 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+                      <div className="w-16 h-16 rounded-2xl border-2 border-[#D4AF37]/50 overflow-hidden shrink-0 bg-afri-bg shadow-[0_0_15px_rgba(212,175,55,0.1)]">
                         <img 
                           src={partnerProfile?.avatarUrl || partnerProfile?.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&fit=crop&q=80"} 
                           alt={partnerProfile?.firstName || "Membre Afrigombo"} 
@@ -1176,20 +1176,20 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                         />
                       </div>
                       <div>
-                        <span className="text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-md font-bold">
+                        <span className="text-[9px] uppercase font-mono tracking-widest text-[#D4AF37] bg-afri-bg-sec/10 px-2.5 py-1 rounded-md font-bold">
                           Réputation Partenaire
                         </span>
-                        <h4 className="text-white text-lg font-black mt-1.5 font-sans leading-none">
+                        <h4 className="text-afri-text text-lg font-black mt-1.5 font-sans leading-none">
                           {partnerProfile?.firstName} {partnerProfile?.lastName} {partnerProfile?.artistName && `(${partnerProfile.artistName})`}
                         </h4>
-                        <p className="text-zinc-500 text-xs mt-1 font-mono">
+                        <p className="text-afri-text-sec text-xs mt-1 font-mono">
                           {partnerProfile?.specialty || partnerProfile?.role === "client" ? "Organisateur d'Événements" : "Artiste Professionnel"}
                         </p>
                       </div>
                     </div>
 
                     <div className="text-center md:text-right">
-                      <span className="text-[9px] uppercase font-mono text-zinc-500 block font-black tracking-widest">
+                      <span className="text-[9px] uppercase font-mono text-afri-text-sec block font-black tracking-widest">
                         BADGE DE QUALITÉ :
                       </span>
                       <strong className="text-[#D4AF37] text-base font-black uppercase tracking-widest font-sans block mt-1 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">
@@ -1204,47 +1204,47 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
-                    <div className="bg-zinc-950/60 border border-zinc-900 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-                      <span className="text-[8px] font-mono tracking-widest uppercase text-zinc-500 font-bold mb-1">⭐ Note Moyenne</span>
-                      <strong className="text-xl text-white font-sans font-black">
+                    <div className="bg-afri-bg/60 border border-afri-border rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                      <span className="text-[8px] font-mono tracking-widest uppercase text-afri-text-sec font-bold mb-1">⭐ Note Moyenne</span>
+                      <strong className="text-xl text-afri-text font-sans font-black">
                         {partnerProfile?.averageRating !== undefined ? partnerProfile.averageRating : "4.5"} / 5
                       </strong>
-                      <span className="text-[8px] text-zinc-600 font-mono mt-1">({partnerProfile?.ratingCount || 0} avis reçus)</span>
+                      <span className="text-[8px] text-afri-text-sec font-mono mt-1">({partnerProfile?.ratingCount || 0} avis reçus)</span>
                     </div>
 
-                    <div className="bg-zinc-950/60 border border-zinc-900 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-                      <span className="text-[8px] font-mono tracking-widest uppercase text-zinc-500 font-bold mb-1">📈 Indice Confiance</span>
+                    <div className="bg-afri-bg/60 border border-afri-border rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                      <span className="text-[8px] font-mono tracking-widest uppercase text-afri-text-sec font-bold mb-1">📈 Indice Confiance</span>
                       <strong className="text-xl text-emerald-400 font-sans font-black drop-shadow-[0_0_8px_rgba(52,211,153,0.2)]">
                         {partnerProfile?.trustScore !== undefined ? partnerProfile.trustScore : "100"} %
                       </strong>
-                      <span className="text-[8px] text-zinc-600 font-mono mt-1">AFRIGOMBO SECURE</span>
+                      <span className="text-[8px] text-afri-text-sec font-mono mt-1">AFRIGOMBO SECURE</span>
                     </div>
 
-                    <div className="bg-zinc-950/60 border border-zinc-900 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-                      <span className="text-[8px] font-mono tracking-widest uppercase text-zinc-500 font-bold mb-1">🎼 Gombos Réalisés</span>
-                      <strong className="text-xl text-white font-sans font-black">
+                    <div className="bg-afri-bg/60 border border-afri-border rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                      <span className="text-[8px] font-mono tracking-widest uppercase text-afri-text-sec font-bold mb-1">🎼 Gombos Réalisés</span>
+                      <strong className="text-xl text-afri-text font-sans font-black">
                         {partnerProfile?.gombosCompleted || partnerProfile?.gomboId?.prestationsTerminees || 0}
                       </strong>
-                      <span className="text-[8px] text-zinc-600 font-mono mt-1">Missions validées</span>
+                      <span className="text-[8px] text-afri-text-sec font-mono mt-1">Missions validées</span>
                     </div>
 
-                    <div className="bg-zinc-950/60 border border-zinc-900 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-                      <span className="text-[8px] font-mono tracking-widest uppercase text-zinc-500 font-bold mb-1">❌ Annulations</span>
+                    <div className="bg-afri-bg/60 border border-afri-border rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                      <span className="text-[8px] font-mono tracking-widest uppercase text-afri-text-sec font-bold mb-1">❌ Annulations</span>
                       <strong className="text-xl text-red-400 font-sans font-black">
                         {partnerProfile?.cancelledContracts || partnerProfile?.gomboId?.annulations || 0}
                       </strong>
-                      <span className="text-[8px] text-zinc-600 font-mono mt-1">Contrats annulés</span>
+                      <span className="text-[8px] text-afri-text-sec font-mono mt-1">Contrats annulés</span>
                     </div>
                   </div>
                 </div>
 
                 {/* DETAILED AVIS / EVALUATION FORM */}
-                <div className="bg-zinc-900 border border-zinc-850/80 rounded-3xl p-6 sm:p-8 space-y-6">
+                <div className="bg-afri-bg-sec border border-afri-border/80 rounded-3xl p-6 sm:p-8 space-y-6">
                   <div>
-                    <h4 className="text-white font-black uppercase tracking-wider font-sans text-sm">
+                    <h4 className="text-afri-text font-black uppercase tracking-wider font-sans text-sm">
                       Évaluer le Partenaire d'Excellence
                     </h4>
-                    <p className="text-zinc-400 text-xs mt-1 leading-relaxed">
+                    <p className="text-afri-text-sec text-xs mt-1 leading-relaxed">
                       Conformément aux directives d'Afrigombo, attribuez une note objective pour influencer en temps réel l'Indice de Confiance de votre partenaire. Aucune note n'est manipulable.
                     </p>
                   </div>
@@ -1252,18 +1252,18 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                   {alreadyReviewed ? (
                     <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 text-center space-y-2">
                       <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-                      <h5 className="text-white font-black text-xs uppercase font-sans">ÉVALUATION ENREGISTRÉE AVEC SUCCÈS</h5>
-                      <p className="text-zinc-400 text-xs">
+                      <h5 className="text-afri-text font-black text-xs uppercase font-sans">ÉVALUATION ENREGISTRÉE AVEC SUCCÈS</h5>
+                      <p className="text-afri-text-sec text-xs">
                         Vous avez déjà évalué cette prestation d'excellence. Merci de contribuer à la sécurité et à la qualité d'AFRIGOMBO !
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-6 text-left">
                       {/* Global Rating & Star metric stack */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/40 border border-zinc-850 p-5 rounded-2xl">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-afri-bg/40 border border-afri-border p-5 rounded-2xl">
                         {/* Star global score */}
                         <div className="space-y-2 flex flex-col justify-center">
-                          <label className="text-xs font-mono font-black text-zinc-300 uppercase tracking-wider">
+                          <label className="text-xs font-mono font-black text-afri-text uppercase tracking-wider">
                             ⭐ Note globale d'expérience :
                           </label>
                           <div className="flex gap-1.5 mt-1">
@@ -1273,7 +1273,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                                 type="button"
                                 onClick={() => setEvalRating(star)} 
                                 className={`p-1.5 rounded-lg transition-all ${
-                                  star <= evalRating ? "text-yellow-500 hover:scale-110" : "text-zinc-600 hover:text-yellow-500/50"
+                                  star <= evalRating ? "text-yellow-500 hover:scale-110" : "text-afri-text-sec hover:text-yellow-500/50"
                                 }`}
                               >
                                 <LucideStar className="w-7 h-7 fill-current" />
@@ -1286,7 +1286,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                         <div className="space-y-4 font-mono">
                           {/* Ponctualité */}
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">⏰ Ponctualité :</span>
+                            <span className="text-[10px] font-black text-afri-text-sec uppercase tracking-widest">⏰ Ponctualité :</span>
                             <div className="flex gap-1">
                               {[1, 2, 3, 4, 5].map(star => (
                                 <button key={star} type="button" onClick={() => setEvalPunctuality(star)} className={`p-0.5 text-xs transition ${star <= evalPunctuality ? "text-[#D4AF37]" : "text-zinc-700"}`}>
@@ -1298,7 +1298,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
                           {/* Professionnalisme */}
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">💼 Pro :</span>
+                            <span className="text-[10px] font-black text-afri-text-sec uppercase tracking-widest">💼 Pro :</span>
                             <div className="flex gap-1">
                               {[1, 2, 3, 4, 5].map(star => (
                                 <button key={star} type="button" onClick={() => setEvalProfessionalism(star)} className={`p-0.5 text-xs transition ${star <= evalProfessionalism ? "text-[#D4AF37]" : "text-zinc-700"}`}>
@@ -1310,7 +1310,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
                           {/* Communication */}
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">🗣️ Communication :</span>
+                            <span className="text-[10px] font-black text-afri-text-sec uppercase tracking-widest">🗣️ Communication :</span>
                             <div className="flex gap-1">
                               {[1, 2, 3, 4, 5].map(star => (
                                 <button key={star} type="button" onClick={() => setEvalCommunication(star)} className={`p-0.5 text-xs transition ${star <= evalCommunication ? "text-[#D4AF37]" : "text-zinc-700"}`}>
@@ -1322,7 +1322,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
                           {/* Qualité */}
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">🎵 Qualité Prestation :</span>
+                            <span className="text-[10px] font-black text-afri-text-sec uppercase tracking-widest">🎵 Qualité Prestation :</span>
                             <div className="flex gap-1">
                               {[1, 2, 3, 4, 5].map(star => (
                                 <button key={star} type="button" onClick={() => setEvalQuality(star)} className={`p-0.5 text-xs transition ${star <= evalQuality ? "text-[#D4AF37]" : "text-zinc-700"}`}>
@@ -1334,7 +1334,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
                           {/* Respect */}
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">🤝 Respect & Droits :</span>
+                            <span className="text-[10px] font-black text-afri-text-sec uppercase tracking-widest">🤝 Respect & Droits :</span>
                             <div className="flex gap-1">
                               {[1, 2, 3, 4, 5].map(star => (
                                 <button key={star} type="button" onClick={() => setEvalRespect(star)} className={`p-0.5 text-xs transition ${star <= evalRepeat ? "text-[#D4AF37]" : "text-zinc-700"}`}>
@@ -1348,14 +1348,14 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
                       {/* Comment text */}
                       <div className="space-y-2">
-                        <label className="text-[10px] font-mono font-black text-zinc-400 uppercase tracking-widest">
+                        <label className="text-[10px] font-mono font-black text-afri-text-sec uppercase tracking-widest">
                           Commentaire sur l'expérience (Facultatif) :
                         </label>
                         <textarea 
                           value={evalComment}
                           onChange={(e) => setEvalComment(e.target.value)}
                           placeholder="Parlez de l'ambiance, de la qualité scénique, du respect des horaires, etc. pour aider la communauté d'Abidjan..." 
-                          className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white text-xs h-24 focus:border-[#D4AF37] focus:outline-none transition-all resize-none"
+                          className="w-full bg-afri-bg border border-afri-border rounded-2xl p-4 text-afri-text text-xs h-24 focus:border-[#D4AF37] focus:outline-none transition-all resize-none"
                         />
                       </div>
 
@@ -1398,7 +1398,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                           }
                         }}
                         disabled={reviewLoading}
-                        className="w-full py-4 bg-[#D4AF37] text-black font-black uppercase text-xs rounded-2xl hover:bg-[#F3E5AB] transition-colors shadow-lg shadow-[#D4AF37]/10 flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="w-full py-4 bg-afri-bg-sec text-black font-black uppercase text-xs rounded-2xl hover:bg-afri-bg-sec transition-colors shadow-lg shadow-[#D4AF37]/10 flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         {reviewLoading ? (
                           <>
@@ -1416,36 +1416,36 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
             )}
 
       {showDisputeModal && (
-        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] bg-afri-bg/90 backdrop-blur-xl flex items-center justify-center p-4">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg bg-[#050505] border border-red-500/30 rounded-3xl p-8 space-y-6 shadow-2xl shadow-red-500/5"
+            className="w-full max-w-lg bg-afri-bg-sec border border-red-500/30 rounded-3xl p-8 space-y-6 shadow-2xl shadow-red-500/5"
           >
             <div className="text-center space-y-2">
               <AlertTriangle className="w-12 h-12 text-red-500 mx-auto" />
-              <h3 className="text-xl font-black text-white uppercase tracking-tighter">OUVERTURE DE LITIGE</h3>
-              <p className="text-zinc-500 text-xs">Veuillez expliquer précisément la raison du litige. Le centre de commandement AFRIGOMBO analysera votre dossier.</p>
+              <h3 className="text-xl font-black text-afri-text uppercase tracking-tighter">OUVERTURE DE LITIGE</h3>
+              <p className="text-afri-text-sec text-xs">Veuillez expliquer précisément la raison du litige. Le centre de commandement AFRIGOMBO analysera votre dossier.</p>
             </div>
             
             <textarea 
               value={disputeReason}
               onChange={(e) => setDisputeReason(e.target.value)}
               placeholder="Décrivez le problème rencontré (retard, prestation non conforme, etc.)..."
-              className="w-full h-32 bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-zinc-200 text-sm focus:outline-none focus:border-[#D4AF37]/50 resize-none"
+              className="w-full h-32 bg-afri-bg-sec border border-afri-border rounded-2xl p-4 text-afri-text text-sm focus:outline-none focus:border-[#D4AF37]/50 resize-none"
             />
 
             <div className="flex gap-4">
               <button 
                 onClick={() => setShowDisputeModal(false)}
-                className="flex-1 py-4 bg-zinc-900 text-zinc-400 font-bold uppercase tracking-widest rounded-2xl hover:bg-zinc-800 transition-colors"
+                className="flex-1 py-4 bg-afri-bg-sec text-afri-text-sec font-bold uppercase tracking-widest rounded-2xl hover:bg-afri-bg-ter transition-colors"
               >
                 Annuler
               </button>
               <button 
                 onClick={submitDispute}
                 disabled={!disputeReason || processing}
-                className="flex-1 py-4 bg-red-600 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 transition-all disabled:opacity-50"
+                className="flex-1 py-4 bg-red-600 text-afri-text font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 transition-all disabled:opacity-50"
               >
                 {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Ouvrir le litige"}
               </button>
@@ -1456,13 +1456,13 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
       {/* Lightbox / Local Image Preview Overlay */}
       {localPreviewUrl && (
-        <div className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
-          <div className="max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl border border-zinc-800">
+        <div className="fixed inset-0 z-[70] bg-afri-bg/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
+          <div className="max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl border border-afri-border">
             <img referrerPolicy="no-referrer" src={localPreviewUrl} alt="Visualisation Preuve" className="w-full h-auto max-h-[80vh] object-contain" />
           </div>
           <button 
             onClick={() => setLocalPreviewUrl(null)} 
-            className="mt-6 px-6 py-2.5 bg-zinc-900 border border-zinc-800 hover:border-[#D4AF37] text-white font-black uppercase text-xs tracking-widest rounded-full transition-all"
+            className="mt-6 px-6 py-2.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text font-black uppercase text-xs tracking-widest rounded-full transition-all"
           >
             Fermer l'aperçu
           </button>

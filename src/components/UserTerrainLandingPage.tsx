@@ -605,7 +605,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           1. BARRE DE RECHERCHE UNIVERSELLE
          ========================================== */}
       <div className="relative">
-        <div className="flex items-center gap-3 bg-[#050505] border border-[#D4AF37]/30 rounded-3xl p-3 px-4 shadow-[0_2px_15px_rgba(212,175,55,0.05)] focus-within:border-[#D4AF37]/80 transition-all">
+        <div className="flex items-center gap-3 bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl p-3 px-4 shadow-[0_2px_15px_rgba(212,175,55,0.05)] focus-within:border-[#D4AF37]/80 transition-all">
           <Search className="w-5 h-5 text-[#D4AF37] shrink-0" />
           <input
             type="text"
@@ -618,14 +618,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               }
             }}
             placeholder="Rechercher une opportunité, artiste, événement..."
-            className="w-full bg-transparent text-[#F5F5F5] font-bold text-sm placeholder-zinc-500 focus:outline-none font-sans"
+            className="w-full bg-transparent text-afri-text font-bold text-sm placeholder-zinc-500 focus:outline-none font-sans"
           />
           <button
             onClick={() => {
               setIsFiltersOpen(!isFiltersOpen);
               try { audioSynth.playTamTam(false); } catch (_) {}
             }}
-            className={`transition p-1 cursor-pointer ${isFiltersOpen ? "text-[#F1C40F]" : "text-[#D4AF37] hover:text-[#F1C40F]"}`}
+            className={`transition p-1 cursor-pointer ${isFiltersOpen ? "text-afri-text" : "text-[#D4AF37] hover:text-afri-text"}`}
             title="Filtres avancés"
           >
             <Sliders className="w-5 h-5" />
@@ -637,13 +637,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-3 bg-[#0a0a0c] border border-zinc-800 rounded-2xl p-4 space-y-4 shadow-2xl z-30 relative text-left"
+            className="mt-3 bg-afri-bg-sec border border-afri-border rounded-2xl p-4 space-y-4 shadow-2xl z-30 relative text-left"
           >
-            <div className="flex justify-between items-center pb-2 border-b border-zinc-900">
+            <div className="flex justify-between items-center pb-2 border-b border-afri-border">
               <span className="text-xs font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-1.5">
                 🎛️ Filtres de Recherche Réels
               </span>
-              <span className="text-[10px] font-mono text-zinc-500">
+              <span className="text-[10px] font-mono text-afri-text-sec">
                 {GombosToRender.length} Gombos trouvés
               </span>
             </div>
@@ -651,11 +651,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Commune select */}
               <div className="space-y-1">
-                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Commune / Ville</label>
+                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Commune / Ville</label>
                 <select
                   value={filterCommune}
                   onChange={(e) => setFilterCommune(e.target.value)}
-                  className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                 >
                   <option value="all">Toutes les communes</option>
                   {IVORIAN_COMMUNES.map(c => (
@@ -666,11 +666,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
               {/* Category select */}
               <div className="space-y-1">
-                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Catégorie / Style</label>
+                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Catégorie / Style</label>
                 <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
-                  className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                 >
                   <option value="all">Toutes les catégories</option>
                   <option value="Zouglou">Zouglou 🇨🇮</option>
@@ -683,11 +683,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
               {/* Type select */}
               <div className="space-y-1">
-                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Type de Gombo</label>
+                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Type de Gombo</label>
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="w-full bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                 >
                   <option value="all">Tous les types</option>
                   <option value="concert">🎵 Concert & Live Show</option>
@@ -699,36 +699,36 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
               {/* Budget Min & Max */}
               <div className="space-y-1">
-                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Budget (FCFA)</label>
+                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Budget (FCFA)</label>
                 <div className="flex gap-2">
                   <input
                     type="number"
                     placeholder="Min"
                     value={filterMinBudget || ""}
                     onChange={(e) => setFilterMinBudget(Number(e.target.value))}
-                    className="w-1/2 bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                    className="w-1/2 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                   />
                   <input
                     type="number"
                     placeholder="Max"
                     value={filterMaxBudget || ""}
                     onChange={(e) => setFilterMaxBudget(Number(e.target.value))}
-                    className="w-1/2 bg-[#050505] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                    className="w-1/2 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
 
               {/* Date */}
               <div className="space-y-1 col-span-1 sm:col-span-2">
-                <label className="text-[10px] font-mono font-black uppercase text-zinc-400">Date de l'événement</label>
+                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Date de l'événement</label>
                 <div className="flex gap-1.5 flex-wrap">
                   <button
                     type="button"
                     onClick={() => setFilterDateMode("all")}
                     className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
                       filterDateMode === "all"
-                        ? "bg-[#D4AF37] border-[#D4AF37] text-black"
-                        : "bg-[#050505] border-zinc-800 text-zinc-400 hover:text-white"
+                        ? "bg-afri-bg-sec border-[#D4AF37] text-black"
+                        : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
                     }`}
                   >
                     Tout
@@ -738,8 +738,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     onClick={() => setFilterDateMode("today")}
                     className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
                       filterDateMode === "today"
-                        ? "bg-[#D4AF37] border-[#D4AF37] text-black"
-                        : "bg-[#050505] border-zinc-800 text-zinc-400 hover:text-white"
+                        ? "bg-afri-bg-sec border-[#D4AF37] text-black"
+                        : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
                     }`}
                   >
                     Aujourd'hui
@@ -749,8 +749,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     onClick={() => setFilterDateMode("week")}
                     className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
                       filterDateMode === "week"
-                        ? "bg-[#D4AF37] border-[#D4AF37] text-black"
-                        : "bg-[#050505] border-zinc-800 text-zinc-400 hover:text-white"
+                        ? "bg-afri-bg-sec border-[#D4AF37] text-black"
+                        : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
                     }`}
                   >
                     Cette semaine
@@ -760,8 +760,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     onClick={() => setFilterDateMode("month")}
                     className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
                       filterDateMode === "month"
-                        ? "bg-[#D4AF37] border-[#D4AF37] text-black"
-                        : "bg-[#050505] border-zinc-800 text-zinc-400 hover:text-white"
+                        ? "bg-afri-bg-sec border-[#D4AF37] text-black"
+                        : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
                     }`}
                   >
                     Ce mois
@@ -778,9 +778,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   type="checkbox"
                   checked={filterPremium}
                   onChange={(e) => setFilterPremium(e.target.checked)}
-                  className="rounded bg-[#050505] border-zinc-800 text-[#D4AF37] focus:ring-[#D4AF37]"
+                  className="rounded bg-afri-bg-sec border-afri-border text-[#D4AF37] focus:ring-[#D4AF37]"
                 />
-                <span className="text-[11px] font-bold text-zinc-300">★ Uniquement Premium</span>
+                <span className="text-[11px] font-bold text-afri-text">★ Uniquement Premium</span>
               </label>
 
               {/* Express toggle */}
@@ -789,9 +789,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   type="checkbox"
                   checked={filterExpress}
                   onChange={(e) => setFilterExpress(e.target.checked)}
-                  className="rounded bg-[#050505] border-zinc-800 text-[#D4AF37] focus:ring-[#D4AF37]"
+                  className="rounded bg-afri-bg-sec border-afri-border text-[#D4AF37] focus:ring-[#D4AF37]"
                 />
-                <span className="text-[11px] font-bold text-zinc-300">🚨 Renfort Express</span>
+                <span className="text-[11px] font-bold text-afri-text">🚨 Renfort Express</span>
               </label>
 
               {/* Verified users only toggle */}
@@ -800,9 +800,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   type="checkbox"
                   checked={filterVerifiedOnly}
                   onChange={(e) => setFilterVerifiedOnly(e.target.checked)}
-                  className="rounded bg-[#050505] border-zinc-800 text-[#D4AF37] focus:ring-[#D4AF37]"
+                  className="rounded bg-afri-bg border-afri-border text-[#D4AF37] focus:ring-[#D4AF37]"
                 />
-                <span className="text-[11px] font-bold text-zinc-300">✔ Profils d'Artistes vérifiés</span>
+                <span className="text-[11px] font-bold text-afri-text-muted">✔ Profils d'Artistes vérifiés</span>
               </label>
 
               {/* With Photo toggle */}
@@ -811,9 +811,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   type="checkbox"
                   checked={filterHasPhoto}
                   onChange={(e) => setFilterHasPhoto(e.target.checked)}
-                  className="rounded bg-[#050505] border-zinc-800 text-[#D4AF37] focus:ring-[#D4AF37]"
+                  className="rounded bg-afri-bg border-afri-border text-[#D4AF37] focus:ring-[#D4AF37]"
                 />
-                <span className="text-[11px] font-bold text-zinc-300">🖼️ Avec photo</span>
+                <span className="text-[11px] font-bold text-afri-text-muted">🖼️ Avec photo</span>
               </label>
 
               {/* With Audio toggle */}
@@ -822,14 +822,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   type="checkbox"
                   checked={filterHasAudio}
                   onChange={(e) => setFilterHasAudio(e.target.checked)}
-                  className="rounded bg-[#050505] border-zinc-800 text-[#D4AF37] focus:ring-[#D4AF37]"
+                  className="rounded bg-afri-bg border-afri-border text-[#D4AF37] focus:ring-[#D4AF37]"
                 />
-                <span className="text-[11px] font-bold text-zinc-300">🔊 Avec audio</span>
+                <span className="text-[11px] font-bold text-afri-text-muted">🔊 Avec audio</span>
               </label>
             </div>
 
             {/* Close / Apply / Reset Actions */}
-            <div className="flex justify-between items-center pt-3 border-t border-zinc-900">
+            <div className="flex justify-between items-center pt-3 border-t border-afri-border">
               <button
                 type="button"
                 onClick={() => {
@@ -846,7 +846,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   setFilterHasAudio(false);
                   try { audioSynth.playTamTam(false); } catch (_) {}
                 }}
-                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
+                className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
               >
                 Réinitialiser
               </button>
@@ -858,7 +858,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     setIsFiltersOpen(false);
                     try { audioSynth.playTamTam(false); } catch (_) {}
                   }}
-                  className="px-4 py-2 bg-[#050505] border border-zinc-850 hover:bg-zinc-950 text-zinc-300 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
+                  className="px-4 py-2 bg-afri-bg border border-afri-border hover:bg-afri-bg-sec text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
                 >
                   Fermer
                 </button>
@@ -868,7 +868,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     setIsFiltersOpen(false);
                     try { audioSynth.playTamTam(true); } catch (_) {}
                   }}
-                  className="px-5 py-2 bg-[#D4AF37] hover:bg-[#F3C43F] text-black rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-md"
+                  className="px-5 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-black rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-md"
                 >
                   Appliquer ({GombosToRender.length})
                 </button>
@@ -879,8 +879,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
         {/* Dynamic Inline Search Results Dropdown Overlay */}
         {globalSearchTerm.trim().length > 0 && (
-          <div className="absolute top-14 left-0 right-0 bg-[#050505] border border-[#D4AF37]/30 rounded-2xl p-4 z-50 max-h-72 overflow-y-auto space-y-2.5 shadow-2xl">
-            <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 font-bold">
+          <div className="absolute top-14 left-0 right-0 bg-afri-bg-sec border border-afri-border rounded-2xl p-4 z-50 max-h-72 overflow-y-auto space-y-2.5 shadow-2xl">
+            <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-sec font-bold">
               <span>SANS FILTRE (TEMPS RÉEL)</span>
               <button onClick={() => setGlobalSearchTerm("")} className="text-[#D4AF37] font-black uppercase">Fermer</button>
             </div>
@@ -891,13 +891,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   handleOpenGomboDetails(g);
                   setGlobalSearchTerm("");
                 }}
-                className="p-2 hover:bg-zinc-900 rounded-xl cursor-pointer flex justify-between items-center transition"
+                className="p-2 hover:bg-afri-bg-sec rounded-xl cursor-pointer flex justify-between items-center transition"
               >
                 <div className="text-left">
-                  <span className="text-xs text-zinc-100 font-bold block truncate max-w-[200px]">{g.title}</span>
+                  <span className="text-xs text-afri-text font-bold block truncate max-w-[200px]">{g.title}</span>
                   <span className="text-[9.5px] text-[#D4AF37] font-mono leading-none">📍 {g.location} • {(g.budget || 0).toLocaleString("fr-FR")} FCFA</span>
                 </div>
-                <span className="text-[9px] font-mono text-zinc-500 uppercase font-bold shrink-0">Ouvrir →</span>
+                <span className="text-[9px] font-mono text-afri-text-sec uppercase font-bold shrink-0">Ouvrir →</span>
               </div>
             ))}
           </div>
@@ -907,7 +907,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       {/* ==========================================
           SEGMENTED NAVIGATION & DRAG GUIDE (Requirement 2)
          ========================================== */}
-      <div className="flex justify-center items-center gap-1.5 p-1 bg-[#111113]/85 border border-zinc-900 rounded-2xl w-fit mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.5)] select-none">
+      <div className="flex justify-center items-center gap-1.5 p-1 bg-afri-bg-sec/85 border border-afri-border rounded-2xl w-fit mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.5)] select-none">
         <button
           onClick={() => {
             setCurrentSection("home");
@@ -915,8 +915,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           }}
           className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
             currentSection === "home"
-              ? "bg-[#D4AF37] text-black shadow-md scale-[1.02]"
-              : "text-zinc-400 hover:text-white hover:bg-zinc-900/40"
+              ? "bg-afri-bg-sec text-black shadow-md scale-[1.02]"
+              : "text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec/40"
           }`}
         >
           <span>🌟 Tendances & Gombos</span>
@@ -928,8 +928,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           }}
           className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer relative ${
             currentSection === "reels"
-              ? "bg-[#D4A017] text-black shadow-md scale-[1.02]"
-              : "text-zinc-400 hover:text-white hover:bg-zinc-900/40"
+              ? "bg-afri-bg-sec text-black shadow-md scale-[1.02]"
+              : "text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec/40"
           }`}
         >
           <span>🔥 Fil Réels</span>
@@ -937,7 +937,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         </button>
       </div>
 
-      <div className="text-center text-[8.5px] font-mono tracking-wider font-extrabold text-zinc-600 uppercase flex items-center justify-center gap-1 sm:hidden select-none -translate-y-2 mt-1">
+      <div className="text-center text-[8.5px] font-mono tracking-wider font-extrabold text-afri-text-sec uppercase flex items-center justify-center gap-1 sm:hidden select-none -translate-y-2 mt-1">
         {currentSection === "home" ? (
           <>
             <span>Faites glisser vers la droite</span>
@@ -965,10 +965,10 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           }}
           className="w-full flex justify-between items-center text-left focus:outline-none cursor-pointer hover:opacity-90 select-none"
         >
-          <h3 className="afri-title-sm sm:afri-title-md text-white flex items-center gap-1.5">
+          <h3 className="afri-title-sm sm:afri-title-md text-afri-text flex items-center gap-1.5">
             <span>⚡ ACTIONS RAPIDES</span>
           </h3>
-          <span className="text-[8px] xs:text-[10px] font-mono font-black text-[#D4AF37] bg-black border border-[#D4AF37]/20 w-4.5 h-4.5 xs:w-5 xs:h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center transition-all">
+          <span className="text-[8px] xs:text-[10px] font-mono font-black text-[#D4AF37] bg-afri-bg border border-[#D4AF37]/20 w-4.5 h-4.5 xs:w-5 xs:h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center transition-all">
             {isQuickActionsOpen ? "▲" : "▼"}
           </span>
         </button>
@@ -1004,7 +1004,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                  label: "Contrats",
                  emoji: "🤝",
                  badge: activeContractsCount > 0 ? activeContractsCount : undefined,
-                 badgeColor: "bg-emerald-500 text-white",
+                 badgeColor: "bg-emerald-500 text-afri-text",
                  action: () => requireAuthThen(() => { setActiveMenu("user_contracts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
                },
                {
@@ -1012,7 +1012,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                  label: "Calendrier",
                  emoji: "📅",
                  badge: todayEventsCount > 0 ? todayEventsCount : undefined,
-                 badgeColor: "bg-[#D4AF37] text-black",
+                 badgeColor: "bg-afri-bg-sec text-black",
                  action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
                },
                {
@@ -1020,7 +1020,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                  label: t('messages_tab') || "Messages",
                  emoji: "💬",
                  badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
-                 badgeColor: "bg-red-600 text-white animate-pulse",
+                 badgeColor: "bg-red-600 text-afri-text animate-pulse",
                  action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
                },
                {
@@ -1069,37 +1069,37 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                    onClick={action.action}
                    className={`aspect-square ${
                      isWallet 
-                       ? "bg-gradient-to-br from-[#121214] via-[#08080a] to-[#040405] border-[#D4AF37]/50 shadow-[0_8px_32px_rgba(212,175,55,0.12)]" 
-                       : "bg-[#050505] border-[#D4AF37]/25 shadow-[0_8px_30px_rgba(0,0,0,0.85)]"
-                   } border rounded-xl xs:rounded-2xl p-1 xs:p-1.5 sm:p-3 flex flex-col items-center justify-center gap-0.5 xs:gap-1 sm:gap-2.5 hover:bg-[#D4AF37]/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0`}
+                       ? "bg-gradient-to-br from-afri-bg-sec via-afri-bg-ter to-afri-bg-action border-[#D4AF37]/50 shadow-[0_8px_32px_rgba(212,175,55,0.12)]" 
+                       : "bg-afri-bg-sec border-[#D4AF37]/25 shadow-md"
+                   } border rounded-xl xs:rounded-2xl p-1 xs:p-1.5 sm:p-3 flex flex-col items-center justify-center gap-0.5 xs:gap-1 sm:gap-2.5 hover:bg-afri-bg-sec/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0`}
                  >
                    {/* Top Badge */}
                    {action.badge !== undefined && (
-                     <span className={`absolute -top-1.5 -right-1.5 ${action.badgeColor} text-[7.5px] xs:text-[8.5px] font-black w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border border-zinc-950 shadow-md z-10`}>
+                     <span className={`absolute -top-1.5 -right-1.5 ${action.badgeColor} text-[7.5px] xs:text-[8.5px] font-black w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border border-afri-border shadow-md z-10`}>
                        {action.badge}
                      </span>
                    )}
 
                    {/* Verified GOMBO ID Badge */}
                    {action.id === "gombo_id" && isVerified && (
-                     <span className="absolute -top-1 -right-1 bg-[#D4AF37] text-black w-4.5 h-4.5 xs:w-5 xs:h-5 rounded-full flex items-center justify-center border border-zinc-950 shadow-[0_0_8px_rgba(212,175,55,0.6)] z-10 animate-fadeIn">
+                     <span className="absolute -top-1 -right-1 bg-afri-bg-sec text-black w-4.5 h-4.5 xs:w-5 xs:h-5 rounded-full flex items-center justify-center border border-afri-border shadow-[0_0_8px_rgba(212,175,55,0.6)] z-10 animate-fadeIn">
                        <ShieldCheck className="w-2.5 h-2.5 xs:w-3 xs:h-3 text-black stroke-[3.5]" />
                      </span>
                    )}
 
                    {/* Icon Wrapper */}
-                   <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-14 sm:h-14 rounded-full bg-[#D4AF37]/8 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] group-hover:bg-[#D4AF37]/15 transition shrink-0 shadow-[0_4px_12px_rgba(212,175,55,0.05)]">
+                   <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-14 sm:h-14 rounded-full bg-afri-bg-sec/8 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] group-hover:bg-afri-bg-sec/15 transition shrink-0 shadow-[0_4px_12px_rgba(212,175,55,0.05)]">
                      <span className="text-[17px] xs:text-lg sm:text-2xl font-bold leading-none select-none">{action.emoji}</span>
                    </div>
 
                    {/* Label */}
-                   <span className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] text-[#F5F5F5]/90 group-hover:text-white font-sans font-black tracking-wider uppercase text-center leading-[1.1] w-full px-0 mt-0.5 sm:mt-1 break-words line-clamp-2">
+                   <span className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] text-afri-text/90 group-hover:text-afri-text font-sans font-black tracking-wider uppercase text-center leading-[1.1] w-full px-0 mt-0.5 sm:mt-1 break-words line-clamp-2">
                      {action.label === "Renfort Express" ? "Renfort" : (action.label === "Mon GOMBO ID" ? "GOMBO ID" : action.label)}
                    </span>
 
                    {/* Bottom Badge for Wallet */}
                    {action.badgeBottom !== undefined && (
-                     <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-[#050505] border-2 border-[#D4AF37]/40 text-[#D4AF37] text-[6.5px] xs:text-[7.5px] sm:text-[9px] font-mono font-black py-0.5 px-2 rounded-full whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.8)] z-10 group-hover:border-[#D4AF37]">
+                     <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-afri-bg border-2 border-[#D4AF37]/40 text-[#D4AF37] text-[6.5px] xs:text-[7.5px] sm:text-[9px] font-mono font-black py-0.5 px-2 rounded-full whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.8)] z-10 group-hover:border-[#D4AF37]">
                        {action.badgeBottom.toLocaleString("fr-FR")} F
                      </span>
                    )}
@@ -1116,18 +1116,18 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           onClick={() => {
             globalAudioManager.playHymne();
           }}
-          className="w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-zinc-950 to-zinc-900 border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 rounded-xl text-xs font-bold text-white shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer group"
+          className="w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-afri-bg-action to-afri-bg-action border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 rounded-xl text-xs font-bold text-afri-text shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/30 group-hover:bg-[#D4AF37]/20 transition-colors shrink-0">
+            <div className="w-8 h-8 rounded-full bg-afri-bg-sec/10 flex items-center justify-center border border-[#D4AF37]/30 group-hover:bg-afri-bg-sec/20 transition-colors shrink-0">
               <Play className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37] ml-0.5" />
             </div>
             <div className="flex flex-col">
-              <span className="font-black text-[13px] sm:text-[14.5px] text-[#F2F2F2] tracking-tight group-hover:text-[#D4AF37] transition-colors leading-none">Hymne officiel AFRIGOMBO</span>
-              <span className="text-[9.5px] font-normal text-zinc-400 mt-1.5">Écouter l’hymne officiel d’AFRIGOMBO</span>
+              <span className="font-black text-[13px] sm:text-[14.5px] text-afri-text tracking-tight group-hover:text-[#D4AF37] transition-colors leading-none">Hymne officiel AFRIGOMBO</span>
+              <span className="text-[9.5px] font-normal text-afri-text-sec mt-1.5">Écouter l’hymne officiel d’AFRIGOMBO</span>
             </div>
           </div>
-          <span className="text-[7.5px] font-mono text-zinc-500 border border-zinc-800/80 px-1.5 py-0.5 rounded uppercase font-bold tracking-widest bg-zinc-900/40">
+          <span className="text-[7.5px] font-mono text-afri-text-sec border border-afri-border/80 px-1.5 py-0.5 rounded uppercase font-bold tracking-widest bg-afri-bg-sec/40">
             SOUVERAINETÉ
           </span>
         </button>
@@ -1140,7 +1140,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1.5">
             <span className="text-amber-500 animate-pulse text-sm">⚡</span>
-            <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
+            <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
               RENFORT EXPRESS
             </h3>
           </div>
@@ -1162,8 +1162,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             
             if (expressItems.length === 0) {
               return (
-                <div className="col-span-full py-4 text-center border border-zinc-900/60 rounded-xl bg-zinc-950/20">
-                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">🚨 Encore aucune donnée.</p>
+                <div className="col-span-full py-4 text-center border border-afri-border/60 rounded-xl bg-afri-bg-sec/40">
+                  <p className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest">🚨 Encore aucune donnée.</p>
                 </div>
               );
             }
@@ -1176,14 +1176,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   setActiveMenu("user_renforts");
                   try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
                 }}
-                className="bg-[#111113]/65 border border-zinc-900 rounded-xl p-3 flex flex-col justify-between text-left cursor-pointer transition-all hover:bg-zinc-900/50"
+                className="bg-afri-bg-sec/65 border border-afri-border rounded-xl p-3 flex flex-col justify-between text-left cursor-pointer transition-all hover:bg-afri-bg-sec/50"
               >
                 <div className="space-y-1">
-                  <h4 className="text-[10.5px] font-sans font-black text-white leading-snug line-clamp-1 flex items-center gap-1">
+                  <h4 className="text-[10.5px] font-sans font-black text-afri-text leading-snug line-clamp-1 flex items-center gap-1">
                     <span className="text-red-500 shrink-0">🚨</span>
                     {item.title}
                   </h4>
-                  <div className="flex items-center justify-between text-[9px] text-zinc-400 font-mono pt-1">
+                  <div className="flex items-center justify-between text-[9px] text-afri-text-sec font-mono pt-1">
                     <span className="flex items-center gap-0.5">
                       <span>📍</span> {item.commune || "Abidjan"}
                     </span>
@@ -1208,7 +1208,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
          ========================================== */}
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-center">
-          <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
+          <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
             🔥 TENDANCES & COUPS DE PROJECTEUR
           </h3>
           <button
@@ -1228,7 +1228,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           onTouchStart={handleSliderTouchStart}
           onTouchMove={handleSliderTouchMove}
           onTouchEnd={handleSliderTouchEnd}
-          className="relative h-[220px] rounded-[24px] overflow-hidden group shadow-2xl border border-zinc-900 cursor-grab active:cursor-grabbing"
+          className="relative h-[220px] rounded-[24px] overflow-hidden group shadow-2xl border border-afri-border cursor-grab active:cursor-grabbing"
         >
           <img
             src={optimizeImageUrl(currentSlideData.imageUrl, isDataSaveActive)}
@@ -1236,19 +1236,19 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             loading="lazy"
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/25" />
+          <div className="absolute inset-0 bg-gradient-to-t from-afri-bg via-afri-bg/45 to-afri-bg/25" />
 
           {/* Content overlay */}
           <div className="absolute inset-0 p-5 flex flex-col justify-between text-left">
             <div className="flex justify-between items-start">
               {currentSlideData.isPremium && (
-                <span className="text-[9.5px] font-bold bg-[#D4AF37] text-black px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center shadow-md font-sans">
+                <span className="text-[9.5px] font-bold bg-afri-bg-sec text-black px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center shadow-md font-sans">
                   ★ PREMIUM
                 </span>
               )}
               <button
                 onClick={() => toggleLike(currentSlideData.id)}
-                className="text-white transition-colors p-1"
+                className="text-afri-text transition-colors p-1"
                 title="Honneur"
               >
                 <span className="text-[18px]">{isLiked(currentSlideData.id) ? "🪘" : "🪘"}</span>
@@ -1257,22 +1257,22 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
             <div className="space-y-3">
               <div className="space-y-1">
-                <h2 className="text-xl font-black text-white tracking-wider font-sans">
+                <h2 className="text-xl font-black text-afri-text tracking-wider font-sans">
                   {currentSlideData.title}
                 </h2>
-                <p className="text-xs text-white/95 line-clamp-1">
+                <p className="text-xs text-afri-text/95 line-clamp-1">
                   {currentSlideData.description}
                 </p>
-                <div className="flex items-center gap-3 text-[10px] text-white/70 font-mono">
+                <div className="flex items-center gap-3 text-[10px] text-afri-text/70 font-mono">
                   <span>📍 {currentSlideData.location}</span>
                   <span>📅 {currentSlideData.date}</span>
                 </div>
               </div>
 
               {/* Price and Action button */}
-              <div className="flex justify-between items-end border-t border-white/10 pt-2.5">
+              <div className="flex justify-between items-end border-t border-afri-border pt-2.5">
                 <div>
-                  <span className="text-[8px] uppercase text-white/50 tracking-wider block font-mono">Paiement</span>
+                  <span className="text-[8px] uppercase text-afri-text/50 tracking-wider block font-mono">Paiement</span>
                   <span className="text-[15px] font-bold text-[#D4AF37]">{currentSlideData.budget}</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1282,12 +1282,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       const matchingReal = gombos.find(g => g.id === "gombo_1") || gombos[0];
                       handleOpenGomboDetails(matchingReal);
                     }}
-                    className="px-3.5 py-1.5 border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black text-[9.5px] font-bold rounded-lg transition uppercase duration-150"
+                    className="px-3.5 py-1.5 border border-[#D4AF37] text-[#D4AF37] hover:bg-afri-bg-sec hover:text-black text-[9.5px] font-bold rounded-lg transition uppercase duration-150"
                   >
                     DÉTAILS
                   </button>
                   {currentSlideData.isNew && (
-                    <span className="text-[8px] font-bold bg-[#050505] border border-emerald-500/25 text-emerald-400 px-2 py-1 rounded uppercase tracking-wider font-mono">
+                    <span className="text-[8px] font-bold bg-afri-bg-sec border border-emerald-500/25 text-emerald-400 px-2 py-1 rounded uppercase tracking-wider font-mono">
                       NOUVEAU
                     </span>
                   )}
@@ -1307,7 +1307,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 try { audioSynth.playTamTam(false); } catch (_) {}
               }}
               className={`h-1.5 transition-all rounded-full ${
-                currentSlide === idx ? "w-5 bg-[#D4AF37]" : "w-1.5 bg-zinc-700/80 hover:bg-zinc-650"
+                currentSlide === idx ? "w-5 bg-afri-bg-sec" : "w-1.5 bg-afri-text-muted/30 hover:bg-afri-text-muted/50"
               }`}
             />
           ))}
@@ -1321,7 +1321,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1.5">
             <span className="text-[#D4AF37]">🎼</span>
-            <h3 className="text-[11px] font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
+            <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
               GOMBOS RÉCENTS
             </h3>
           </div>
@@ -1340,7 +1340,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         {/* List representation */}
         <div className="space-y-3.5">
           {allRecentItems.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-[#050505] border border-[#D4AF37]/20 text-[#D4AF37]/60 text-xs font-mono shadow-[0_2px_15px_rgba(212,175,55,0.03)]">
+            <div className="p-8 text-center rounded-2xl bg-afri-bg-sec border border-afri-border text-[#D4AF37]/60 text-xs font-mono shadow-[0_2px_15px_rgba(212,175,55,0.03)]">
               Encore aucune donnée.
             </div>
           ) : (
@@ -1356,17 +1356,17 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   const foundReal = gombos.find(g => g.id === item.id) || gombos[0];
                   handleOpenGomboDetails(foundReal);
                 }}
-                className="flex bg-[#050505] border border-zinc-900 hover:border-[#D4AF37]/40 rounded-2xl p-3 items-center gap-3 transition-colors cursor-pointer relative group"
+                className="flex bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/40 rounded-2xl p-3 items-center gap-3 transition-colors cursor-pointer relative group"
               >
                 {/* Left Thumbnail with Gold G logo overlay */}
-                <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-[#050505] border border-[#D4AF37]/10 flex items-center justify-center">
+                <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-afri-bg border border-afri-border flex items-center justify-center">
                   <img
                     src={optimizeImageUrl(item.imageUrl, isDataSaveActive)}
                     alt={item.title}
                     loading="lazy"
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute bottom-0.5 left-0.5 w-4 h-4 bg-[#D4AF37] border border-black rounded-full flex items-center justify-center shadow">
+                  <div className="absolute bottom-0.5 left-0.5 w-4 h-4 bg-afri-bg-sec border border-afri-border rounded-full flex items-center justify-center shadow">
                     <span className="text-[7px] font-black text-black">G</span>
                   </div>
                 </div>
@@ -1382,17 +1382,17 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                           </span>
                         )}
                         {item.isPremium && (
-                          <span className="text-[6.5px] font-bold bg-[#D4AF37]/10 border border-[#D4AF37]/35 text-[#D4AF37] px-1 py-0.5 rounded uppercase font-mono tracking-wider">
+                          <span className="text-[6.5px] font-bold bg-afri-bg-sec/10 border border-[#D4AF37]/35 text-[#D4AF37] px-1 py-0.5 rounded uppercase font-mono tracking-wider">
                             PREMIUM
                           </span>
                         )}
                       </div>
                       
-                      <h4 className="text-xs font-black text-white hover:text-zinc-300 transition-all cursor-pointer tracking-wide mt-0.5 truncate max-w-[190px] sm:max-w-xs uppercase">
+                      <h4 className="text-xs font-black text-afri-text hover:text-afri-text transition-all cursor-pointer tracking-wide mt-0.5 truncate max-w-[190px] sm:max-w-xs uppercase">
                         {item.title}
                       </h4>
                       
-                      <p className="text-[9px] text-zinc-400 truncate max-w-[190px] sm:max-w-xs mt-0.5 font-sans leading-none">
+                      <p className="text-[9px] text-afri-text-sec truncate max-w-[190px] sm:max-w-xs mt-0.5 font-sans leading-none">
                         {item.description}
                       </p>
                     </div>
@@ -1410,14 +1410,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   </div>
 
                   {/* Location under description */}
-                  <div className="flex justify-between items-end mt-1.5 pt-1 border-t border-zinc-900/40">
-                    <span className="text-[8.5px] text-zinc-500 font-medium font-sans">
+                  <div className="flex justify-between items-end mt-1.5 pt-1 border-t border-afri-border/40">
+                    <span className="text-[8.5px] text-afri-text-sec font-medium font-sans">
                       📍 {item.location}
                     </span>
 
                     {/* Budget & Date beneath it */}
                     <div className="text-right flex items-center gap-2">
-                      <span className="text-[8px] text-zinc-500 font-mono tracking-tight leading-none">
+                      <span className="text-[8px] text-afri-text-sec font-mono tracking-tight leading-none">
                         {item.date}
                       </span>
                       <span className="text-[11px] font-bold text-[#D4AF37] leading-none">
@@ -1439,11 +1439,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="text-red-500 animate-pulse text-sm">🔥</span>
-            <h3 className="text-[11px] font-sans font-black tracking-widest text-white uppercase">
+            <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
               OPPORTUNITÉS URGENTES
             </h3>
           </div>
-          <span className="text-[8px] font-mono text-zinc-500 tracking-wider">
+          <span className="text-[8px] font-mono text-afri-text-sec tracking-wider">
             SYNCHRONISÉ LIVE 📡
           </span>
         </div>
@@ -1454,8 +1454,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             
             if (urgentItems.length === 0) {
               return (
-                <div className="col-span-full py-6 text-center border border-zinc-900/60 rounded-2xl bg-zinc-950/20">
-                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">🔥 Encore aucune donnée.</p>
+                <div className="col-span-full py-6 text-center border border-afri-border/60 rounded-2xl bg-afri-bg-sec/40">
+                  <p className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest">🔥 Encore aucune donnée.</p>
                 </div>
               );
             }
@@ -1477,22 +1477,22 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 
                 <div className="space-y-1.5 relative">
                   <div className="flex justify-between items-center">
-                    <span className="text-[7.5px] font-black bg-red-500 text-white px-2 py-0.5 rounded-lg uppercase tracking-widest font-mono">
+                    <span className="text-[7.5px] font-black bg-red-500 text-afri-text px-2 py-0.5 rounded-lg uppercase tracking-widest font-mono">
                       URGENT
                     </span>
                     <span className="text-[10px] font-black text-[#D4AF37] font-sans">
                       {item.budget}
                     </span>
                   </div>
-                  <h4 className="text-xs font-black text-white group-hover:text-[#D4AF37] transition-colors leading-snug uppercase">
+                  <h4 className="text-xs font-black text-afri-text group-hover:text-[#D4AF37] transition-colors leading-snug uppercase">
                     {item.title}
                   </h4>
-                  <p className="text-[9.5px] text-zinc-400 line-clamp-2 leading-relaxed">
+                  <p className="text-[9.5px] text-afri-text-sec line-clamp-2 leading-relaxed">
                     {item.description}
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between text-[8.5px] text-zinc-500 font-mono pt-3 mt-2 border-t border-zinc-900/60 relative">
+                <div className="flex items-center justify-between text-[8.5px] text-afri-text-sec font-mono pt-3 mt-2 border-t border-afri-border/60 relative">
                   <span>📍 {item.location}</span>
                   <span className="text-red-400 font-black flex items-center gap-1">
                     <span>⏱</span> {item.date}
@@ -1511,7 +1511,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="text-[#D4AF37]">📹</span>
-            <h3 className="text-[11px] font-sans font-black tracking-widest text-white uppercase">
+            <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
               RÉELS D'ARTISTES
             </h3>
           </div>
@@ -1560,28 +1560,28 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 setReelsVideoUrl(reel.url);
                 try { audioSynth.playValidationSuccess(); } catch(_) {}
               }}
-              className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-900 group cursor-pointer"
+              className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-afri-bg-sec border border-afri-border group cursor-pointer"
             >
               <img
                 src={reel.thumbnail}
                 alt={reel.title}
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-60"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-afri-bg via-afri-bg/35 to-transparent" />
               
               {/* Play icon overlay */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-7 h-7 rounded-full bg-black/60 border border-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <div className="w-7 h-7 rounded-full bg-afri-bg/60 border border-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                   <span className="text-[#D4AF37] text-[10px] pl-0.5">▶</span>
                 </div>
               </div>
 
               {/* Bottom text overlays */}
               <div className="absolute bottom-2 left-2 right-2 text-left">
-                <p className="text-[7.5px] font-sans font-black text-white uppercase leading-none truncate mb-0.5">
+                <p className="text-[7.5px] font-sans font-black text-afri-text uppercase leading-none truncate mb-0.5">
                   {reel.title}
                 </p>
-                <p className="text-[6.5px] text-zinc-400 font-mono truncate leading-none">
+                <p className="text-[6.5px] text-afri-text-sec font-mono truncate leading-none">
                   {reel.artist}
                 </p>
               </div>
@@ -1594,11 +1594,11 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <div className="space-y-6 animate-fadeIn pb-12 select-none text-left">
           {/* Header Banner */}
           <div className="p-5 rounded-2xl bg-gradient-to-br from-[#D4AF37]/10 via-[#D4AF37]/5 to-transparent border border-[#D4AF37]/25 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
-            <h2 className="text-sm font-sans font-black uppercase tracking-wider text-white">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-afri-bg-sec/5 rounded-full blur-2xl pointer-events-none" />
+            <h2 className="text-sm font-sans font-black uppercase tracking-wider text-afri-text">
               📱 L'ÉCHO DU SHOWBIZ & RÉELS
             </h2>
-            <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+            <p className="text-[11px] text-afri-text-sec mt-1 leading-relaxed">
               Découvrez en continu les performances, démos d'orchestres, extraits audios et actualités chaudes de nos maîtres de la scène d'Afrique de l'Ouest.
             </p>
           </div>
@@ -1620,8 +1620,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 }}
                 className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase transition shrink-0 flex items-center gap-1 cursor-pointer border ${
                   reelsFilter === pill.id
-                    ? "bg-[#D4AF37] text-white border-[#D4AF37] shadow-sm scale-105"
-                    : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
+                    ? "bg-afri-bg-sec text-afri-text border-[#D4AF37] shadow-sm scale-105"
+                    : "bg-afri-bg text-afri-text-muted border-afri-border hover:bg-afri-bg-sec hover:text-afri-text"
                 }`}
               >
                 <span>{pill.icon}</span>
@@ -1676,14 +1676,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       {/* ==========================================
           6. SÉCURITÉ ET COPYRIGHT FOOTER
          ========================================== */}
-      <footer className="mt-12 border-t border-zinc-900 pt-6 pb-4 space-y-4 text-center">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[9px] font-mono text-zinc-500 uppercase tracking-widest leading-none">
+      <footer className="mt-12 border-t border-afri-border pt-6 pb-4 space-y-4 text-center">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[9px] font-mono text-afri-text-sec uppercase tracking-widest leading-none">
           <div className="flex gap-4">
-            <button onClick={() => setActiveMenu("terms")} className="hover:text-white">CGU</button>
+            <button onClick={() => setActiveMenu("terms")} className="hover:text-afri-text">CGU</button>
             <span>•</span>
-            <button onClick={() => setActiveMenu("privacy")} className="hover:text-white">Confidentialité</button>
+            <button onClick={() => setActiveMenu("privacy")} className="hover:text-afri-text">Confidentialité</button>
           </div>
-          <p className="text-zinc-600">© 2026. AFRIGOMBO SHOWBIZ • SOUVERAINETÉ ARTISTIQUE</p>
+          <p className="text-afri-text-sec">© 2026. AFRIGOMBO SHOWBIZ • SOUVERAINETÉ ARTISTIQUE</p>
         </div>
       </footer>
 
@@ -1691,15 +1691,15 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           INTERACTIVE ACTIONS MODAL OVERLAYS (SOUVERAIN COMMANDE CENTRE)
          ========================================================================= */}
       {activeQuickActionModal && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className={`bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-4 sm:p-6 w-full ${activeQuickActionModal === "search_member" ? "max-w-6xl h-[90vh] overflow-y-auto" : "max-w-md"} my-8 relative overflow-hidden select-none shadow-[0_15px_50px_rgba(0,0,0,0.95)]`}>
+        <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className={`bg-afri-bg-sec border border-afri-border rounded-3xl p-4 sm:p-6 w-full ${activeQuickActionModal === "search_member" ? "max-w-6xl h-[90vh] overflow-y-auto" : "max-w-md"} my-8 relative overflow-hidden select-none shadow-xl`}>
             
             <button
               onClick={() => {
                 setActiveQuickActionModal(null);
                 try { audioSynth.playTamTam(false); } catch (_) {}
               }}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 text-[#D4AF37] hover:text-white border border-white/5 flex items-center justify-center cursor-pointer transition focus:outline-none z-50"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-afri-bg-sec hover:bg-afri-bg-ter text-[#D4AF37] hover:text-afri-text border border-afri-border flex items-center justify-center cursor-pointer transition focus:outline-none z-50"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1707,13 +1707,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             {/* MODAL I: COMPREHENSIVE TALENTS DIRECTORY OVER INTERNAL MEMBERS */}
             {activeQuickActionModal === "search_member" && (
               <div className="space-y-4 text-left font-sans">
-                <div className="pb-2 border-b border-zinc-900">
-                  <h3 className="text-sm font-sans font-black tracking-widest text-[#FFFFFF] uppercase flex items-center gap-2">
+                <div className="pb-2 border-b border-afri-border">
+                  <h3 className="text-sm font-sans font-black tracking-widest text-afri-text uppercase flex items-center gap-2">
                     👥 RECHERCHER ET DÉCOUVRIR UN MAÎTRE DE SCÈNE
                   </h3>
-                  <p className="text-[11px] text-zinc-400 mt-1">Sélecteur de performance certifié d'Afrique de l'Ouest. Explorez librement leur parcours en toute confidentialité.</p>
+                  <p className="text-[11px] text-afri-text-sec mt-1">Sélecteur de performance certifié d'Afrique de l'Ouest. Explorez librement leur parcours en toute confidentialité.</p>
                 </div>
-                <div className="bg-[#0b0b0c] p-2 rounded-2xl border border-zinc-900/60 transition-all">
+                <div className="bg-afri-bg-sec p-2 rounded-2xl border border-afri-border/60 transition-all">
                   <AnnuaireTalents
                     currentUserProfile={users.find(u => u.uid === "logged_in_uid") as any || null}
                     onNavigateView={(view) => {
@@ -1733,10 +1733,10 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             {activeQuickActionModal === "verify_gombo_id" && (
               <div className="space-y-4 text-left">
                 <div>
-                  <h3 className="text-sm font-sans font-black tracking-widest text-[#FFFFFF] uppercase flex items-center gap-2">
+                  <h3 className="text-sm font-sans font-black tracking-widest text-afri-text uppercase flex items-center gap-2">
                     🛡️ VÉRIFICATION ACADÉMIQUE DU COMPTE
                   </h3>
-                  <p className="text-[11px] text-zinc-400 mt-1">Vérification de l'intégrité nationale des musiciens.</p>
+                  <p className="text-[11px] text-afri-text-sec mt-1">Vérification de l'intégrité nationale des musiciens.</p>
                 </div>
 
                 <div className="space-y-3">
@@ -1746,7 +1746,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       placeholder="Ex: GMB-4859-CI"
                       value={verifyGomboIdInput}
                       onChange={(e) => setVerifyGomboIdInput(e.target.value)}
-                      className="flex-1 bg-black border border-zinc-800 text-xs text-[#D4AF37] p-2.5 rounded-xl font-mono focus:outline-none"
+                      className="flex-1 bg-afri-bg border border-afri-border text-xs text-[#D4AF37] p-2.5 rounded-xl font-mono focus:outline-none"
                     />
                     <button
                       onClick={() => {
@@ -1769,19 +1769,19 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                         }
                         try { audioSynth.playTamTam(true); } catch (_) {}
                       }}
-                      className="bg-[#D4AF37] text-black px-4 text-xs font-bold rounded-xl"
+                      className="bg-afri-bg-sec text-black px-4 text-xs font-bold rounded-xl"
                     >
                       Valider
                     </button>
                   </div>
 
                   {verifyGomboIdResult && (
-                    <div className="p-4 bg-black border border-zinc-800 rounded-xl space-y-1">
+                    <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-1">
                       {verifyGomboIdResult.success ? (
                         <>
                           <span className="text-[9.5px] font-mono text-emerald-400 uppercase font-black">✓ COMPTE RECONNU INTÈGRE</span>
-                          <p className="text-xs text-white font-bold">{verifyGomboIdResult.artisticName} ({verifyGomboIdResult.name})</p>
-                          <p className="text-[10px] text-zinc-400">Score d'Afrique de l'Ouest : <span className="text-[#D4AF37] font-bold">{verifyGomboIdResult.score}% garantis</span></p>
+                          <p className="text-xs text-afri-text font-bold">{verifyGomboIdResult.artisticName} ({verifyGomboIdResult.name})</p>
+                          <p className="text-[10px] text-afri-text-sec">Score d'Afrique de l'Ouest : <span className="text-[#D4AF37] font-bold">{verifyGomboIdResult.score}% garantis</span></p>
                         </>
                       ) : (
                         <p className="text-xs text-red-400 font-semibold">✗ {verifyGomboIdResult.message}</p>
@@ -1796,21 +1796,21 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             {activeQuickActionModal === "send_notification" && (
               <div className="space-y-4 text-left">
                 <div>
-                  <h3 className="text-sm font-sans font-black tracking-widest text-[#FFFFFF] uppercase">
+                  <h3 className="text-sm font-sans font-black tracking-widest text-afri-text uppercase">
                     📢 DIFFUSER URGENCE NATIONALE
                   </h3>
-                  <p className="text-[11px] text-zinc-400 mt-1">Transmettre par vibration sonore de Tam-tam sur le Terrain.</p>
+                  <p className="text-[11px] text-afri-text-sec mt-1">Transmettre par vibration sonore de Tam-tam sur le Terrain.</p>
                 </div>
 
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <label className="text-[9px] font-mono text-zinc-550 uppercase font-black">Sujet principal</label>
+                    <label className="text-[9px] font-mono text-afri-text-sec uppercase font-black">Sujet principal</label>
                     <input
                       type="text"
                       placeholder="Ex: Session acoustique studio urgente"
                       value={newNoticeTitle}
                       onChange={(e) => setNewNoticeTitle(e.target.value)}
-                      className="w-full bg-black border border-zinc-800 text-xs text-white p-2.5 rounded-xl focus:outline-none"
+                      className="w-full bg-afri-bg border border-afri-border text-xs text-afri-text p-2.5 rounded-xl focus:outline-none"
                     />
                   </div>
 
@@ -1819,7 +1819,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     <select
                       value={newNoticeCategory}
                       onChange={(e) => setNewNoticeCategory(e.target.value)}
-                      className="w-full bg-black border border-zinc-800 text-xs text-[#D4AF37] p-2.5 rounded-xl focus:outline-none font-bold"
+                      className="w-full bg-afri-bg border border-afri-border text-xs text-[#D4AF37] p-2.5 rounded-xl focus:outline-none font-bold"
                     >
                       <option value="INFO">INFORMATION générale</option>
                       <option value="URGENT">URGENT (Alerte vibration rouge)</option>
@@ -1828,13 +1828,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[9px] font-mono text-zinc-550 uppercase font-black">Annonce</label>
+                    <label className="text-[9px] font-mono text-afri-text-sec uppercase font-black">Annonce</label>
                     <textarea
                       rows={3}
                       placeholder="Quel est le message pour la communauté ?"
                       value={newNoticeBody}
                       onChange={(e) => setNewNoticeBody(e.target.value)}
-                      className="w-full bg-black border border-zinc-800 text-xs text-white p-2.5 rounded-xl focus:outline-none font-sans"
+                      className="w-full bg-afri-bg border border-afri-border text-xs text-afri-text p-2.5 rounded-xl focus:outline-none font-sans"
                     />
                   </div>
 
@@ -1858,7 +1858,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                         addToTerminal("[ERREUR] Veuillez remplir l'annonce souveraine.");
                       }
                     }}
-                    className="w-full py-2.5 bg-[#D4AF37] text-black font-black text-xs rounded-xl hover:opacity-90 transition uppercase font-sans tracking-widest mt-1"
+                    className="w-full py-2.5 bg-afri-bg-sec text-black font-black text-xs rounded-xl hover:opacity-90 transition uppercase font-sans tracking-widest mt-1"
                   >
                     Lancer la propagation ⚡
                   </button>
@@ -1882,7 +1882,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               animate={{ opacity: 0.75 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsPlusMenuOpen(false)}
-              className="fixed inset-0 bg-black/85 z-50 cursor-pointer backdrop-blur-md"
+              className="fixed inset-0 bg-afri-bg/85 z-50 cursor-pointer backdrop-blur-md"
             />
 
             {/* Bottom Sheet wrapper */}
@@ -1891,28 +1891,28 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 24, stiffness: 180 }}
-              className="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-[#030303] border-t-4 border-[#D4AF37] rounded-t-[2.5rem] z-50 p-6 sm:p-8 shadow-[0_-15px_45px_rgba(212,175,55,0.2)] flex flex-col space-y-6 select-none"
+              className="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-afri-bg-sec border-t-4 border-[#D4AF37] rounded-t-[2.5rem] z-50 p-6 sm:p-8 shadow-[0_-15px_45px_rgba(212,175,55,0.2)] flex flex-col space-y-6 select-none"
             >
               {/* Decorative premium grab handle */}
               <div 
-                className="w-16 h-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-full mx-auto shrink-0 cursor-pointer transition-all mb-1" 
+                className="w-16 h-1.5 bg-afri-bg-ter hover:bg-afri-text-muted rounded-full mx-auto shrink-0 cursor-pointer transition-all mb-1" 
                 onClick={() => setIsPlusMenuOpen(false)} 
               />
 
               {/* Title Header */}
-              <div className="flex justify-between items-center border-b border-zinc-900 pb-4">
+              <div className="flex justify-between items-center border-b border-afri-border pb-4">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🌟</span>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
+                    <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
                       AFRIGOMBO PLUS COCKPIT
                     </h3>
-                    <p className="text-[9px] font-mono text-zinc-550 uppercase tracking-wider mt-1.5 font-bold">Tableau des Commandes Avancées</p>
+                    <p className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider mt-1.5 font-bold">Tableau des Commandes Avancées</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsPlusMenuOpen(false)}
-                  className="w-9 h-9 rounded-full bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
+                  className="w-9 h-9 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-afri-text-muted hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1929,13 +1929,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       try { audioSynth?.playValidationSuccess(); } catch (_) {}
                     });
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
+                  <div className="w-8 h-8 rounded-xl bg-afri-bg-sec/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
                     <span className="text-sm">⭐</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Booster une annonce</div>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Booster une annonce</div>
                     <span className="text-[7.5px] font-mono text-amber-500 uppercase tracking-widest block leading-none mt-1 font-bold">GOMBO PLUS</span>
                   </div>
                 </button>
@@ -1949,13 +1949,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       try { audioSynth?.playValidationSuccess(); } catch (_) {}
                     });
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500/55 transition">
                     <span className="text-sm">🎼</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Mon Portfolio</div>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mon Portfolio</div>
                     <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">HÉRITAGE</span>
                   </div>
                 </button>
@@ -1967,14 +1967,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     setIsFavoritesModalOpen(true);
                     try { audioSynth?.playValidationSuccess(); } catch (_) {}
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500/55 transition">
                     <span className="text-sm">❤️</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Mes Favoris</div>
-                    <span className="text-[7.5px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-1 font-bold">ENREGISTRÉS</span>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mes Favoris</div>
+                    <span className="text-[7.5px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-1 font-bold">ENREGISTRÉS</span>
                   </div>
                 </button>
 
@@ -1985,14 +1985,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     setIsHistoryModalOpen(true);
                     try { audioSynth?.playValidationSuccess(); } catch (_) {}
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500/55 transition">
                     <span className="text-sm">🕓</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Historique</div>
-                    <span className="text-[7.5px] font-mono text-zinc-500 uppercase tracking-widest block leading-none mt-1 font-bold">MÉMOIRE</span>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Historique</div>
+                    <span className="text-[7.5px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-1 font-bold">MÉMOIRE</span>
                   </div>
                 </button>
 
@@ -2005,13 +2005,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       try { audioSynth?.playValidationSuccess(); } catch (_) {}
                     });
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 group-hover:border-indigo-500/55 transition">
                     <span className="text-sm">📢</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Mes Publications</div>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mes Publications</div>
                     <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">GOMBO ENGINE</span>
                   </div>
                 </button>
@@ -2025,13 +2025,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       try { audioSynth?.playValidationSuccess(); } catch (_) {}
                     });
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20 group-hover:border-pink-500/55 transition">
                     <span className="text-sm">🎥</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Mes Réels</div>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mes Réels</div>
                     <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">DISPO</span>
                   </div>
                 </button>
@@ -2045,13 +2045,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       try { audioSynth?.playValidationSuccess(); } catch (_) {}
                     });
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500/55 transition">
                     <span className="text-sm">📍</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Opportunités proches</div>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Opportunités proches</div>
                     <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">GEOLOC</span>
                   </div>
                 </button>
@@ -2063,13 +2063,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     setIsLeaderboardModalOpen(true);
                     try { audioSynth?.playValidationSuccess(); } catch (_) {}
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500/55 transition">
                     <span className="text-sm">🏆</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Classements</div>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Classements</div>
                     <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">LEADERBOARD</span>
                   </div>
                 </button>
@@ -2083,13 +2083,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       try { audioSynth?.playValidationSuccess(); } catch (_) {}
                     });
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500/55 transition">
                     <span className="text-sm">❤️</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Soutenir AFRIGOMBO</div>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Soutenir AFRIGOMBO</div>
                     <span className="text-[7.5px] font-mono text-red-500 uppercase tracking-widest block leading-none mt-1 font-bold">BÂTISSEURS</span>
                   </div>
                 </button>
@@ -2103,13 +2103,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       try { audioSynth?.playValidationSuccess(); } catch (_) {}
                     });
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-zinc-600/10 flex items-center justify-center border border-zinc-600/20 group-hover:border-zinc-600/55 transition">
+                  <div className="w-8 h-8 rounded-xl bg-afri-bg-ter/50 flex items-center justify-center border border-afri-border group-hover:border-afri-border/70 transition">
                     <span className="text-sm">⚙</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Paramètres</div>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Paramètres</div>
                     <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">PREFERENCES</span>
                   </div>
                 </button>
@@ -2123,13 +2123,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                       try { audioSynth?.playValidationSuccess(); } catch (_) {}
                     });
                   }}
-                  className="bg-black border border-zinc-900/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-[#D4AF37]/5 transition-all group relative cursor-pointer col-span-2"
+                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer col-span-2"
                 >
                   <div className="w-8 h-8 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 group-hover:border-sky-500/55 transition">
                     <span className="text-sm">❓</span>
                   </div>
                   <div>
-                    <div className="text-[11px] font-sans font-black text-white tracking-wide">Centre d'aide</div>
+                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Centre d'aide</div>
                     <span className="text-[7.5px] font-mono text-sky-400 uppercase tracking-widest block leading-none mt-1 font-bold">SUPPORT CLIENT</span>
                   </div>
                 </button>
@@ -2151,7 +2151,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               animate={{ opacity: 0.8 }}
               exit={{ opacity: 0 }}
               onClick={() => setLocalComingSoonKey(null)}
-              className="absolute inset-0 bg-black/90 backdrop-blur-md"
+              className="absolute inset-0 bg-afri-bg/90 backdrop-blur-md"
             />
 
             {/* Modal Dialog */}
@@ -2159,10 +2159,10 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-[#050505] border-2 border-[#D4AF37] p-6 sm:p-8 rounded-[2rem] shadow-[0_15px_40px_rgba(212,175,55,0.25)] max-w-sm w-full relative z-10 text-center space-y-5"
+              className="bg-afri-bg-sec border-2 border-[#D4AF37] p-6 sm:p-8 rounded-[2rem] shadow-xl max-w-sm w-full relative z-10 text-center space-y-5"
             >
               {/* Header Badge */}
-              <div className="w-14 h-14 bg-[#D4AF37]/10 rounded-full flex items-center justify-center border border-[#D4AF37]/30 mx-auto">
+              <div className="w-14 h-14 bg-afri-bg-sec/10 rounded-full flex items-center justify-center border border-[#D4AF37]/30 mx-auto">
                 <span className="text-2xl animate-bounce">
                   {localComingSoonKey === "menu_favorites" ? "⭐" : localComingSoonKey === "menu_history" ? "🕓" : "🏆"}
                 </span>
@@ -2170,12 +2170,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
               {/* Title & Desc */}
               <div className="space-y-2">
-                <h3 className="text-base font-sans font-black uppercase text-white tracking-widest">
+                <h3 className="text-base font-sans font-black uppercase text-afri-text tracking-widest">
                   {localComingSoonKey === "menu_favorites" && "Favoris Élite 🌟"}
                   {localComingSoonKey === "menu_history" && "Historique Complet 🕓"}
                   {localComingSoonKey === "menu_classement" && "Classement d'Or 🏆"}
                 </h3>
-                <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                <p className="text-xs text-afri-text-sec leading-relaxed font-medium">
                   {localComingSoonKey === "menu_favorites" && "Enregistrez vos artistes et opportunités préférées pour ne plus jamais manquer un Gombo en Or !"}
                   {localComingSoonKey === "menu_history" && "Consultez l'historique de vos gombos, contrats, transactions et performances en un clin d'œil."}
                   {localComingSoonKey === "menu_classement" && "Découvrez le Top 10 des meilleurs artistes et recruteurs du pays. Grimpez dans la hiérarchie !"}
@@ -2186,7 +2186,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               {waitlistStatus === "success" ? (
                 <div className="bg-emerald-500/10 border border-emerald-500/25 p-4 rounded-2xl text-center space-y-1 animate-fadeIn">
                   <span className="text-emerald-400 text-xs font-black block">✓ VIBRATION BIEN REÇUE</span>
-                  <p className="text-[10px] text-zinc-300 font-medium">Vous serez notifié en exclusivité dès l'ouverture de l'accès ! 🎉</p>
+                  <p className="text-[10px] text-afri-text font-medium">Vous serez notifié en exclusivité dès l'ouverture de l'accès ! 🎉</p>
                   <button
                     onClick={() => setLocalComingSoonKey(null)}
                     className="mt-3 text-[10px] font-bold text-[#D4AF37] hover:underline uppercase bg-transparent"
@@ -2203,20 +2203,20 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                     placeholder="Entrez votre email d'or..."
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
-                    className="w-full bg-black border border-zinc-900 rounded-xl px-3.5 py-2.5 text-xs text-white text-center font-bold focus:outline-none focus:border-[#D4AF37] placeholder-zinc-700"
+                    className="w-full bg-afri-bg border border-afri-border rounded-xl px-3.5 py-2.5 text-xs text-afri-text text-center font-bold focus:outline-none focus:border-[#D4AF37] placeholder-zinc-700"
                   />
                   <div className="flex gap-2.5">
                     <button
                       type="button"
                       onClick={() => setLocalComingSoonKey(null)}
-                      className="flex-1 py-2.5 bg-zinc-950 border border-zinc-900 hover:bg-zinc-900 rounded-xl text-zinc-400 font-bold text-xs uppercase transition tracking-wider"
+                      className="flex-1 py-2.5 bg-afri-bg border border-afri-border hover:bg-afri-bg-sec rounded-xl text-afri-text-muted font-bold text-xs uppercase transition tracking-wider"
                     >
                       Retour
                     </button>
                     <button
                       type="submit"
                       disabled={waitlistStatus === "loading"}
-                      className="flex-1 py-2.5 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black text-xs rounded-xl uppercase transition tracking-wider flex items-center justify-center"
+                      className="flex-1 py-2.5 bg-afri-bg-sec hover:bg-afri-bg-sec/90 text-black font-black text-xs rounded-xl uppercase transition tracking-wider flex items-center justify-center"
                     >
                       {waitlistStatus === "loading" ? "Envoi..." : "M'inscrire ⚡"}
                     </button>
@@ -2231,27 +2231,27 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       {/* 1. REAL FAVORITES MODAL */}
       <AnimatePresence>
         {isFavoritesModalOpen && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-[0_20px_50px_rgba(212,175,55,0.12)] relative max-h-[85vh] flex flex-col"
+              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-xl relative max-h-[85vh] flex flex-col"
             >
               {/* Header */}
-              <div className="flex justify-between items-center border-b border-zinc-900 pb-3 mb-4 shrink-0">
+              <div className="flex justify-between items-center border-b border-afri-border pb-3 mb-4 shrink-0">
                 <div className="flex items-center gap-2.5">
                   <span className="text-xl">❤️</span>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
+                    <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
                       Mes Favoris
                     </h3>
-                    <p className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-wider mt-1 font-bold">Vos opportunités enregistrées</p>
+                    <p className="text-[8.5px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Vos opportunités enregistrées</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsFavoritesModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-afri-text-muted hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -2261,12 +2261,12 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               <div className="overflow-y-auto flex-1 space-y-3.5 pr-1">
                 {likedGombos.length === 0 ? (
                   <div className="py-12 px-4 text-center space-y-4">
-                    <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center mx-auto animate-pulse">
+                    <div className="w-12 h-12 rounded-full bg-afri-bg-sec/10 border border-[#D4AF37]/30 flex items-center justify-center mx-auto animate-pulse">
                       <Heart className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37]" />
                     </div>
                     <div className="space-y-1.5">
-                      <p className="text-xs font-bold text-white uppercase tracking-wider">Aucun favori enregistré</p>
-                      <p className="text-[10px] text-zinc-500 max-w-xs mx-auto leading-relaxed">
+                      <p className="text-xs font-bold text-afri-text uppercase tracking-wider">Aucun favori enregistré</p>
+                      <p className="text-[10px] text-afri-text-sec max-w-xs mx-auto leading-relaxed">
                         Enregistrez des opportunités en clicking sur l'icône de trophée/coeur de vos Gombos préférés pour les retrouver ici en un instant.
                       </p>
                     </div>
@@ -2280,14 +2280,14 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                           feedEl.scrollIntoView({ behavior: "smooth" });
                         }
                       }}
-                      className="px-4 py-2 bg-[#D4AF37] hover:bg-[#F3C43F] text-black text-[10px] font-black rounded-lg uppercase tracking-wider transition active:scale-95 mx-auto"
+                      className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-black text-[10px] font-black rounded-lg uppercase tracking-wider transition active:scale-95 mx-auto"
                     >
                       Parcourir les Gombos ⚡
                     </button>
                   </div>
                 ) : (
                   gombos.filter(g => g.id && likedGombos.includes(g.id)).length === 0 ? (
-                    <div className="py-12 text-center text-zinc-500 text-xs font-mono">
+                    <div className="py-12 text-center text-afri-text-sec text-xs font-mono">
                       Aucune des opportunités aimées n'est disponible actuellement.
                     </div>
                   ) : (
@@ -2300,18 +2300,18 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                             handleOpenGomboDetails(g);
                             setIsFavoritesModalOpen(false);
                           }}
-                          className="p-3 bg-zinc-950 border border-zinc-900 hover:border-[#D4AF37]/45 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition animate-fadeIn"
+                          className="p-3 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/45 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition animate-fadeIn"
                         >
                           <div className="min-w-0 flex-1 text-left">
                             <span className="text-[9.5px] font-mono text-[#D4AF37] uppercase tracking-wider block font-bold leading-none mb-1">
                               📍 {g.location || "Abidjan"} • {g.category || "Général"}
                             </span>
-                            <h4 className="text-xs text-white font-bold truncate leading-snug">{g.title}</h4>
-                            <p className="text-[10px] text-zinc-400 font-mono font-medium mt-1">
+                            <h4 className="text-xs text-afri-text font-bold truncate leading-snug">{g.title}</h4>
+                            <p className="text-[10px] text-afri-text-sec font-mono font-medium mt-1">
                               {(g.budget || 0).toLocaleString("fr-FR")} FCFA
                             </p>
                           </div>
-                          <span className="text-[9px] font-mono text-zinc-550 shrink-0 uppercase font-bold hover:text-[#D4AF37]">
+                          <span className="text-[9px] font-mono text-afri-text-sec shrink-0 uppercase font-bold hover:text-[#D4AF37]">
                             Ouvrir →
                           </span>
                         </div>
@@ -2327,27 +2327,27 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       {/* 2. REAL HISTORY MODAL */}
       <AnimatePresence>
         {isHistoryModalOpen && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-[0_20px_50px_rgba(212,175,55,0.12)] relative max-h-[85vh] flex flex-col"
+              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-xl relative max-h-[85vh] flex flex-col"
             >
               {/* Header */}
-              <div className="flex justify-between items-center border-b border-zinc-900 pb-3 mb-4 shrink-0">
+              <div className="flex justify-between items-center border-b border-afri-border pb-3 mb-4 shrink-0">
                 <div className="flex items-center gap-2.5">
                   <span className="text-xl">🕓</span>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
+                    <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
                       Historique
                     </h3>
-                    <p className="text-[8.5px] font-mono text-zinc-550 uppercase tracking-wider mt-1 font-bold">Vos récentes consultations</p>
+                    <p className="text-[8.5px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Vos récentes consultations</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsHistoryModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-afri-text-muted hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -2373,8 +2373,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                           <History className="w-5 h-5 text-blue-400" />
                         </div>
                         <div className="space-y-1.5">
-                          <p className="text-xs font-bold text-white uppercase tracking-wider">Aucun historique disponible</p>
-                          <p className="text-[10px] text-zinc-500 max-w-xs mx-auto leading-relaxed">
+                          <p className="text-xs font-bold text-afri-text uppercase tracking-wider">Aucun historique disponible</p>
+                          <p className="text-[10px] text-afri-text-sec max-w-xs mx-auto leading-relaxed">
                             Les opportunités et Gombos que vous ouvrirez s'afficheront ici automatiquement pour vous permettre de les retrouver facilement.
                           </p>
                         </div>
@@ -2388,7 +2388,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                               feedEl.scrollIntoView({ behavior: "smooth" });
                             }
                           }}
-                          className="px-4 py-2 bg-[#D4AF37] hover:bg-[#F3C43F] text-black text-[10px] font-black rounded-lg uppercase tracking-wider transition active:scale-95 mx-auto"
+                          className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-black text-[10px] font-black rounded-lg uppercase tracking-wider transition active:scale-95 mx-auto"
                         >
                           Explorer les Gombos ⚡
                         </button>
@@ -2403,18 +2403,18 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                         handleOpenGomboDetails(g);
                         setIsHistoryModalOpen(false);
                       }}
-                      className="p-3 bg-zinc-950 border border-zinc-900 hover:border-blue-500/35 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition text-left animate-fadeIn"
+                      className="p-3 bg-afri-bg border border-afri-border hover:border-blue-500/35 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition text-left animate-fadeIn"
                     >
                       <div className="min-w-0 flex-1">
-                        <span className="text-[9.5px] font-mono text-zinc-500 uppercase tracking-wider block font-bold leading-none mb-1">
+                        <span className="text-[9.5px] font-mono text-afri-text-sec uppercase tracking-wider block font-bold leading-none mb-1">
                           📍 {g.location || "Abidjan"} • consulté récemment
                         </span>
-                        <h4 className="text-xs text-white font-bold truncate leading-snug">{g.title}</h4>
+                        <h4 className="text-xs text-afri-text font-bold truncate leading-snug">{g.title}</h4>
                         <p className="text-[10px] text-[#D4AF37] font-mono font-medium mt-1">
                           {(g.budget || 0).toLocaleString("fr-FR")} FCFA
                         </p>
                       </div>
-                      <span className="text-[9px] font-mono text-zinc-550 shrink-0 uppercase font-bold hover:text-[#D4AF37]">
+                      <span className="text-[9px] font-mono text-afri-text-sec shrink-0 uppercase font-bold hover:text-[#D4AF37]">
                         Ouvrir →
                       </span>
                     </div>
@@ -2429,27 +2429,27 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       {/* 3. REAL LEADERBOARD MODAL */}
       <AnimatePresence>
         {isLeaderboardModalOpen && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-afri-bg/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#050505] border border-[#D4AF37]/35 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-[0_20px_50px_rgba(212,175,55,0.12)] relative max-h-[85vh] flex flex-col"
+              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-xl relative max-h-[85vh] flex flex-col"
             >
               {/* Header */}
-              <div className="flex justify-between items-center border-b border-zinc-900 pb-3 mb-3 shrink-0">
+              <div className="flex justify-between items-center border-b border-afri-border pb-3 mb-3 shrink-0">
                 <div className="flex items-center gap-2.5">
                   <span className="text-xl">🏆</span>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-sans font-black text-white uppercase tracking-widest leading-none">
+                    <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
                       Top Talents
                     </h3>
-                    <p className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-wider mt-1 font-bold">Classements d'Or AFRIGOMBO</p>
+                    <p className="text-[8.5px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Classements d'Or AFRIGOMBO</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsLeaderboardModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-afri-text-muted hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -2479,20 +2479,20 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   <>
                     {/* Search inside leaderboard */}
                     <div className="relative mb-3.5 shrink-0">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600 pointer-events-none" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-afri-text-sec pointer-events-none" />
                       <input
                         type="text"
                         placeholder="Rechercher un talent, une commune..."
                         value={leaderboardSearch}
                         onChange={(e) => setLeaderboardSearch(e.target.value)}
-                        className="w-full bg-zinc-950 border border-zinc-900 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-700 font-bold focus:outline-none focus:border-[#D4AF37]"
+                        className="w-full bg-afri-bg border border-afri-border rounded-xl pl-9 pr-4 py-2 text-xs text-afri-text placeholder-afri-text-muted/50 font-bold focus:outline-none focus:border-[#D4AF37]"
                       />
                     </div>
 
                     {/* Users list */}
                     <div className="overflow-y-auto flex-1 space-y-2.5 pr-1">
                       {filteredUsers.length === 0 ? (
-                        <div className="py-12 text-center text-zinc-600 text-xs font-mono">
+                        <div className="py-12 text-center text-afri-text-sec text-xs font-mono">
                           Aucun talent ne correspond à votre recherche.
                         </div>
                       ) : (
@@ -2500,8 +2500,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                           const rankNum = idx + 1;
                           
                           let medalIcon = "";
-                          let rankBorder = "border-zinc-900";
-                          let bgClass = "bg-zinc-950/40";
+                          let rankBorder = "border-afri-border";
+                          let bgClass = "bg-afri-bg-sec/40";
                           
                           if (rankNum === 1) {
                             medalIcon = "🥇";
@@ -2509,7 +2509,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                             bgClass = "bg-gradient-to-r from-[#D4AF37]/5 to-transparent";
                           } else if (rankNum === 2) {
                             medalIcon = "🥈";
-                            rankBorder = "border-zinc-400/30";
+                            rankBorder = "border-afri-border";
                           } else if (rankNum === 3) {
                             medalIcon = "🥉";
                             rankBorder = "border-amber-700/30";
@@ -2524,7 +2524,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                             >
                               <div className="flex items-center gap-3 min-w-0">
                                 {/* Rank */}
-                                <div className="w-6 shrink-0 text-center font-mono text-xs font-black text-zinc-400">
+                                <div className="w-6 shrink-0 text-center font-mono text-xs font-black text-afri-text-sec">
                                   {medalIcon || `#${rankNum}`}
                                 </div>
 
@@ -2532,7 +2532,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                                 <img
                                   src={userAvatar}
                                   referrerPolicy="no-referrer"
-                                  className="w-9 h-9 rounded-xl object-cover border border-white/10 shrink-0"
+                                  className="w-9 h-9 rounded-xl object-cover border border-afri-border shrink-0"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/bottts/svg?seed=${idx}`;
                                   }}
@@ -2542,16 +2542,16 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                                 {/* Info */}
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-sans font-black text-white truncate">
+                                    <span className="text-xs font-sans font-black text-afri-text truncate">
                                       {u.artisticName || u.name}
                                     </span>
                                     {u.isCertified && (
-                                      <span className="text-[8px] bg-[#D4AF37]/15 text-[#D4AF37] px-1 py-0.5 rounded-md font-mono font-black border border-[#D4AF37]/25 shrink-0 uppercase tracking-widest leading-none">
+                                      <span className="text-[8px] bg-afri-bg-sec/15 text-[#D4AF37] px-1 py-0.5 rounded-md font-mono font-black border border-[#D4AF37]/25 shrink-0 uppercase tracking-widest leading-none">
                                         PRO
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-[9.5px] text-zinc-500 font-mono font-bold leading-none mt-1">
+                                  <p className="text-[9.5px] text-afri-text-sec font-mono font-bold leading-none mt-1">
                                     📍 {u.commune || "Abidjan"} • Niv. {u.level}
                                   </p>
                                 </div>
@@ -2562,7 +2562,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                                 <span className="text-xs font-mono font-black text-[#D4AF37] block leading-none">
                                   {u.score} pts
                                 </span>
-                                <span className="text-[9px] font-mono text-zinc-500 block mt-1 font-bold">
+                                <span className="text-[9px] font-mono text-afri-text-sec block mt-1 font-bold">
                                   ⭐ {u.rating.toFixed(1)}
                                 </span>
                               </div>

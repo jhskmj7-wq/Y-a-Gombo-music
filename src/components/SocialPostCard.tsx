@@ -435,7 +435,7 @@ export default function SocialPostCard({
     if (gigsCount >= 3) {
       return { label: "🥈 Talent Actif", style: "text-afri-gold bg-afri-gold/10 border border-afri-gold/25" };
     }
-    return { label: "🥉 Nouveau Talent", style: "text-zinc-500 bg-afri-bg-sec border border-afri-border" };
+    return { label: "🥉 Nouveau Talent", style: "text-afri-text-sec bg-afri-bg-sec border border-afri-border" };
   };
 
   return (
@@ -463,7 +463,7 @@ export default function SocialPostCard({
           </div>
           <div>
              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-extrabold text-sm text-gray-950 dark:text-white leading-tight">
+                <span className="font-extrabold text-sm text-gray-950 dark:text-afri-text leading-tight">
                   {authorProfile?.artistName || authorProfile?.displayName || post.userName || "Artiste Gombo"}
                 </span>
                 {(() => {
@@ -478,11 +478,11 @@ export default function SocialPostCard({
                 })()}
              </div>
              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-               <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-bold block">
+               <span className="text-[10px] text-afri-text-sec dark:text-afri-text-sec font-bold block">
                  📍 {post.commune || authorProfile?.commune || "Abidjan, CIV"}
                </span>
                <span className="text-gray-300 dark:text-zinc-700 font-black">•</span>
-               <span className="text-[10px] font-semibold italic text-gray-400 dark:text-zinc-550">
+               <span className="text-[10px] font-semibold italic text-afri-text-sec dark:text-zinc-550">
                  {getElapsedTime(post.createdAt)}
                </span>
                {post.userRole && (
@@ -498,10 +498,10 @@ export default function SocialPostCard({
                    <span className="text-[9px] text-gray-300 dark:text-zinc-700">|</span>
                    <span className={`text-[9px] uppercase font-black px-1.5 py-0.5 rounded-md ${
                      post.type === "gombo" 
-                       ? "bg-[#D4AF37]/10 text-[#D4AF37]" 
+                       ? "bg-afri-bg-sec/10 text-[#D4AF37]" 
                        : post.type === "demo"
-                       ? "bg-[#D4AF37]/10 text-[#D4AF37]"
-                       : "bg-[#D4AF37]/10 text-[#D4AF37]"
+                       ? "bg-afri-bg-sec/10 text-[#D4AF37]"
+                       : "bg-afri-bg-sec/10 text-[#D4AF37]"
                    }`}>
                      {post.type === "gombo" ? "💼 GOMBO" : post.type === "demo" ? "🎵 DÉMO" : "📢 ANNONCE"}
                    </span>
@@ -522,8 +522,8 @@ export default function SocialPostCard({
               onClick={handleFollowToggle}
               className={`px-3 py-1.5 text-[10px] font-black rounded-full transition-all border active:scale-95 cursor-pointer ${
                 followed 
-                  ? "bg-gray-100 border-gray-200 text-gray-500 dark:bg-zinc-800 dark:border-zinc-700" 
-                  : "bg-[#D4AF37] border-[#D4AF37] text-black hover:bg-[#be992c]"
+                  ? "bg-gray-100 border-gray-200 text-afri-text-sec dark:bg-afri-bg-ter dark:border-afri-border" 
+                  : "bg-afri-bg-sec border-[#D4AF37] text-black hover:bg-afri-bg-sec"
               }`}
             >
               {followed ? "Abonné" : "+ Suivre"}
@@ -538,7 +538,7 @@ export default function SocialPostCard({
               className={`p-1.5 rounded-xl transition-all border active:scale-90 flex items-center justify-center cursor-pointer ${
                 hasReported
                   ? "bg-red-500/10 border-red-550/25 text-red-500"
-                  : "bg-gray-50 hover:bg-red-50 dark:bg-zinc-850/60 dark:border-zinc-800 text-gray-400 hover:text-red-500"
+                  : "bg-gray-50 hover:bg-red-50 dark:bg-afri-bg-sec/60 dark:border-afri-border text-afri-text-sec hover:text-red-500"
               }`}
               title="Signaler cette publication"
             >
@@ -564,7 +564,7 @@ export default function SocialPostCard({
          })()}
  
          {post.title && (
-           <h4 className="text-xs font-black text-gray-950 dark:text-white uppercase tracking-tight flex items-center gap-1">
+           <h4 className="text-xs font-black text-gray-950 dark:text-afri-text uppercase tracking-tight flex items-center gap-1">
              {post.type === "gombo" && <Briefcase className="w-3.5 h-3.5 text-[#D4AF37]" />}
              {post.type === "demo" && <Music className="w-3.5 h-3.5 text-[#D4AF37]" />}
              {post.type === "annonce" && <MessageSquare className="w-3.5 h-3.5 text-[#D4AF37]" />}
@@ -578,7 +578,7 @@ export default function SocialPostCard({
  
          {/* TYPE 1: GOMBO METADATA BLOCK */}
          {(post.type === "gombo" || post.type === "opportunite") && (
-           <div className="grid grid-cols-2 gap-2 bg-[#D4AF37]/5 p-3.5 rounded-2xl border border-[#D4AF37]/20 text-[11px] font-bold text-gray-750 dark:text-gray-350">
+           <div className="grid grid-cols-2 gap-2 bg-afri-bg-sec/5 p-3.5 rounded-2xl border border-[#D4AF37]/20 text-[11px] font-bold text-gray-750 dark:text-gray-350">
              <div className="flex items-center gap-1.5 col-span-2">
                <span className="text-gray-405 font-bold uppercase text-[9px]">Recherche:</span>
                <span className="font-extrabold text-[#D4AF37] uppercase tracking-wide">{post.specialty || "Musicien"}</span>
@@ -592,7 +592,7 @@ export default function SocialPostCard({
                <span className="font-extrabold">{post.commune || "Abidjan"}</span>
              </div>
              {post.urgent && (
-               <div className="col-span-2 flex items-center gap-1 text-[9px] font-black text-[#D4AF37] bg-[#D4AF37]/10 w-fit px-2 py-0.5 rounded-md uppercase tracking-widest mt-1 animate-pulse">
+               <div className="col-span-2 flex items-center gap-1 text-[9px] font-black text-[#D4AF37] bg-afri-bg-sec/10 w-fit px-2 py-0.5 rounded-md uppercase tracking-widest mt-1 animate-pulse">
                  🔥 Urgent
                </div>
              )}
@@ -601,24 +601,24 @@ export default function SocialPostCard({
  
          {/* TYPE 2: DÉMO METADATA BADGE */}
          {post.type === "demo" && post.genre && (
-           <div className="inline-flex items-center gap-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-3 py-1 rounded-full text-[10px] font-black text-[#D4AF37] uppercase tracking-wide">
+           <div className="inline-flex items-center gap-1.5 bg-afri-bg-sec/10 border border-[#D4AF37]/20 px-3 py-1 rounded-full text-[10px] font-black text-[#D4AF37] uppercase tracking-wide">
              🎵 Style: {post.genre}
            </div>
          )}
  
          {/* TYPE 3: ANNONCE METADATA BLOCK */}
          {post.type === "annonce" && (
-           <div className="grid grid-cols-2 gap-2 bg-[#D4AF37]/5 p-3.5 rounded-2xl border border-[#D4AF37]/20 text-[11px] font-bold text-gray-750 dark:text-gray-300 font-sans">
+           <div className="grid grid-cols-2 gap-2 bg-afri-bg-sec/5 p-3.5 rounded-2xl border border-[#D4AF37]/20 text-[11px] font-bold text-gray-750 dark:text-gray-300 font-sans">
              <div className="flex items-center gap-1.5">
-               <span className="text-gray-400 font-semibold">Spécialité:</span>
+               <span className="text-afri-text-sec font-semibold">Spécialité:</span>
                <span className="font-extrabold text-[#D4AF37] uppercase tracking-wide">{post.specialty || "Artiste"}</span>
              </div>
              <div className="flex items-center gap-1.5">
-               <span className="text-gray-400 font-semibold">Dispo:</span>
+               <span className="text-afri-text-sec font-semibold">Dispo:</span>
                <span className="font-extrabold text-[#D4AF37]">{post.availability || "Disponible"}</span>
              </div>
              <div className="flex items-center gap-1.5 col-span-2">
-               <span className="text-gray-400 font-semibold">Commune:</span>
+               <span className="text-afri-text-sec font-semibold">Commune:</span>
                <span className="font-extrabold">{post.commune || "Abidjan"}</span>
              </div>
            </div>
@@ -626,7 +626,7 @@ export default function SocialPostCard({
   
          <div className="flex flex-wrap gap-1.5 pt-1">
            {post.tags?.filter(Boolean).map((tag) => (
-             <span key={tag} className="text-[10px] font-black bg-gray-50 dark:bg-zinc-850 text-gray-500 rounded px-2 py-0.5 border border-gray-105 dark:border-zinc-800">
+             <span key={tag} className="text-[10px] font-black bg-gray-50 dark:bg-afri-bg-sec text-afri-text-sec rounded px-2 py-0.5 border border-gray-105 dark:border-afri-border">
                #{tag}
              </span>
            ))}
@@ -655,13 +655,13 @@ export default function SocialPostCard({
              />
              
              {/* Premium blur soundtrack visual shadow */}
-             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-4">
+             <div className="absolute inset-0 bg-gradient-to-t from-afri-bg/85 via-afri-bg/30 to-transparent flex flex-col justify-end p-4">
                
                <div className="flex items-center gap-3">
                  {/* Round play control button */}
                  <button
                    onClick={handlePlayPause}
-                   className="w-11 h-11 rounded-full bg-[#D4AF37] hover:scale-105 active:scale-95 text-black flex items-center justify-center shadow-lg transition-transform shrink-0 cursor-pointer"
+                   className="w-11 h-11 rounded-full bg-afri-bg-sec hover:scale-105 active:scale-95 text-black flex items-center justify-center shadow-lg transition-transform shrink-0 cursor-pointer"
                  >
                    {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current translate-x-0.5" />}
                  </button>
@@ -672,7 +672,7 @@ export default function SocialPostCard({
                      <Music className="w-3 h-3 animate-pulse text-[#D4AF37]" />
                      DÉMO MUSICALE
                    </span>
-                   <p className="text-white text-sm font-bold truncate leading-snug">
+                   <p className="text-afri-text text-sm font-bold truncate leading-snug">
                      {post.title || "Titre de Démo"}
                    </p>
                    {post.beatProd && (
@@ -707,7 +707,7 @@ export default function SocialPostCard({
              controls 
              preload="metadata"
              
-             className="w-full max-h-80 bg-black rounded-2xl border border-gray-150 dark:border-[#2B2B2B] object-contain shadow-xs"
+             className="w-full max-h-80 bg-afri-bg rounded-2xl border border-gray-150 dark:border-[#2B2B2B] object-contain shadow-xs"
            />
          </div>
        ) : post.imageUrl ? (
@@ -722,7 +722,7 @@ export default function SocialPostCard({
        ) : null}
  
       {/* 4. Footer interactions buttons (Likes, Comments, Shares, Saves, Reports, Répondre) */}
-      <div className="px-3 sm:px-5 py-4 bg-gray-50/50 dark:bg-[#121212] border-t border-gray-100 dark:border-[#2B2B2B]">
+      <div className="px-3 sm:px-5 py-4 bg-gray-50/50 dark:bg-afri-bg-sec border-t border-gray-100 dark:border-[#2B2B2B]">
         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:flex md:flex-wrap items-center gap-3 w-full">
           {/* Honour button - 🪘 Honneur reçu */}
           <button
@@ -730,8 +730,8 @@ export default function SocialPostCard({
             onClick={handleHonourToggle}
             className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer ${
               hasHonoured 
-                ? "bg-[#D4AF37]/10 border-[#D4AF37]/20 text-[#D4AF37]" 
-                : "bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-gray-500 dark:text-zinc-400 hover:text-[#D4AF37]"
+                ? "bg-afri-bg-sec/10 border-[#D4AF37]/20 text-[#D4AF37]" 
+                : "bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-afri-text-sec dark:text-afri-text-sec hover:text-[#D4AF37]"
             }`}
           >
             <span className="text-[14px]">{hasHonoured ? "🪘" : "🪘"}</span>
@@ -744,8 +744,8 @@ export default function SocialPostCard({
             onClick={() => setShowComments(!showComments)}
             className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer ${
               showComments 
-                ? "bg-[#D4AF37]/10 border-[#D4AF37]/40 text-[#D4AF37]" 
-                : "bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-gray-500 dark:text-zinc-400 hover:text-[#D4AF37]"
+                ? "bg-afri-bg-sec/10 border-[#D4AF37]/40 text-[#D4AF37]" 
+                : "bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-afri-text-sec dark:text-afri-text-sec hover:text-[#D4AF37]"
             }`}
           >
             <MessageSquare className="w-4 h-4" />
@@ -758,8 +758,8 @@ export default function SocialPostCard({
             onClick={handleSaveToggle}
             className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer ${
               hasSaved 
-                ? "bg-[#D4AF37]/10 border-[#D4AF37]/40 text-[#D4AF37]" 
-                : "bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-gray-500 dark:text-zinc-400 hover:text-[#D4AF37]"
+                ? "bg-afri-bg-sec/10 border-[#D4AF37]/40 text-[#D4AF37]" 
+                : "bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-afri-text-sec dark:text-afri-text-sec hover:text-[#D4AF37]"
             }`}
           >
             <Bookmark className={`w-4 h-4 ${hasSaved ? "fill-current text-[#D4AF37]" : ""}`} />
@@ -770,7 +770,7 @@ export default function SocialPostCard({
           <button
             id="btn-fais-tourner"
             onClick={handleShare}
-            className="flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-gray-500 dark:text-zinc-400 hover:text-[#D4AF37] focus:outline-none active:scale-95 text-[11px] font-black uppercase cursor-pointer"
+            className="flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-[#D4AF37]/50 text-afri-text-sec dark:text-afri-text-sec hover:text-[#D4AF37] focus:outline-none active:scale-95 text-[11px] font-black uppercase cursor-pointer"
           >
             <Share2 className="w-4 h-4" />
             <span>📢 Fais tourner</span>
@@ -783,7 +783,7 @@ export default function SocialPostCard({
             className={`flex items-center justify-center md:justify-start gap-1.5 px-3 py-2.5 rounded-xl border transition-all active:scale-95 text-[11px] font-black uppercase cursor-pointer ${
               hasReported 
                 ? "bg-red-500/10 border-red-550/25 text-red-500" 
-                : "bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-red-500 text-gray-500 dark:text-zinc-400 hover:text-red-500"
+                : "bg-transparent border-gray-100 dark:border-[#2B2B2B] hover:border-red-500 text-afri-text-sec dark:text-afri-text-sec hover:text-red-500"
             }`}
           >
             <Flag className="w-4 h-4" />
@@ -794,7 +794,7 @@ export default function SocialPostCard({
           <button
             id="btn-repondre"
             onClick={handleRespondToGombo}
-            className="col-span-2 xs:col-span-1 sm:col-span-1 flex items-center justify-center md:justify-start gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c29e2c] text-black font-black active:scale-95 transition-all text-[11px] uppercase cursor-pointer md:ml-auto shadow-sm"
+            className="col-span-2 xs:col-span-1 sm:col-span-1 flex items-center justify-center md:justify-start gap-1.5 px-3.5 py-2.5 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-black active:scale-95 transition-all text-[11px] uppercase cursor-pointer md:ml-auto shadow-sm"
           >
             <Music className="w-4 h-4 text-black animate-pulse" />
             <span>🎤 Répondre</span>
@@ -809,7 +809,7 @@ export default function SocialPostCard({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0 }}
-            className="px-4 py-2 bg-[#D4AF37] text-black text-[11px] font-black text-center uppercase"
+            className="px-4 py-2 bg-afri-bg-sec text-black text-[11px] font-black text-center uppercase"
           >
             Lien de la publication copié ! Partagez-le avec vos collègues artistes 📋
           </motion.div>
@@ -823,21 +823,21 @@ export default function SocialPostCard({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0 }}
-            className="bg-gray-100/30 dark:bg-zinc-900/40 border-t border-gray-100 dark:border-zinc-800 px-4 sm:px-5 py-4"
+            className="bg-gray-100/30 dark:bg-afri-bg-sec/40 border-t border-gray-100 dark:border-afri-border px-4 sm:px-5 py-4"
           >
-            <span className="text-[10px] font-bold uppercase text-gray-400 tracking-wider block mb-3">
+            <span className="text-[10px] font-bold uppercase text-afri-text-sec tracking-wider block mb-3">
               Palabres de l'arène ({commentsList.length})
             </span>
  
             {/* List scroll panel */}
             <div className="space-y-3 max-h-48 overflow-y-auto mb-4 pr-1 scrollbar-thin scrollbar-thumb-[#D4AF37]">
               {commentsList.length === 0 ? (
-                <p className="text-[11px] text-gray-500 text-center py-2 italic font-semibold">
+                <p className="text-[11px] text-afri-text-sec text-center py-2 italic font-semibold">
                   Aucun commentaire. Soyez le premier à donner votre avis de pro ! 🗣️
                 </p>
               ) : (
                 commentsList.map((com) => (
-                  <div key={com.id} className="text-xs flex items-start gap-2.5 bg-white dark:bg-[#1a1a1f] p-3 rounded-2xl border border-gray-50 dark:border-zinc-800">
+                  <div key={com.id} className="text-xs flex items-start gap-2.5 bg-white dark:bg-afri-bg-sec p-3 rounded-2xl border border-gray-50 dark:border-afri-border">
                     <img 
                       referrerPolicy="no-referrer"
                       src={
@@ -849,7 +849,7 @@ export default function SocialPostCard({
                       className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5 border border-[#D4AF37]/50" 
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-extrabold text-gray-950 dark:text-white leading-normal">
+                      <p className="font-extrabold text-gray-950 dark:text-afri-text leading-normal">
                         {com.userName}
                       </p>
                       <p className="text-gray-650 dark:text-gray-300 mt-1 leading-relaxed font-semibold">
@@ -868,11 +868,11 @@ export default function SocialPostCard({
                 placeholder="Exprimez-vous (conseil showbiz, palabre...)"
                 value={commentInput}
                 onChange={(e) => setCommentInput(e.target.value)}
-                className="flex-1 px-3.5 py-2.5 bg-white dark:bg-[#121212]/50 border border-gray-150 dark:border-zinc-800 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-white font-semibold"
+                className="flex-1 px-3.5 py-2.5 bg-white dark:bg-afri-bg-sec/50 border border-gray-150 dark:border-afri-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-afri-text font-semibold"
               />
               <button
                 type="submit"
-                className="p-2.5 bg-[#D4AF37] hover:bg-[#c29e2c] text-black font-bold rounded-xl active:scale-95 transition-transform cursor-pointer"
+                className="p-2.5 bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-bold rounded-xl active:scale-95 transition-transform cursor-pointer"
               >
                 <Send className="w-4 h-4 text-black" />
               </button>

@@ -305,9 +305,9 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
         };
       case "Concert":
         return {
-          bg: "bg-[#D4AF37]/10 border-[#D4AF37]/30 text-[#D4AF37]",
+          bg: "bg-afri-bg-sec/10 border-[#D4AF37]/30 text-[#D4AF37]",
           icon: Sparkles,
-          dotColor: "bg-[#D4AF37]"
+          dotColor: "bg-afri-bg-sec"
         };
       case "Casting":
         return {
@@ -335,7 +335,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
         };
       default:
         return {
-          bg: "bg-zinc-500/10 border-zinc-500/30 text-zinc-400",
+          bg: "bg-zinc-500/10 border-zinc-500/30 text-afri-text-sec",
           icon: CalendarIcon,
           dotColor: "bg-zinc-500"
         };
@@ -351,27 +351,27 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
       case "En attente":
         return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
       case "Clôturé":
-        return "bg-zinc-800 text-zinc-500 border border-zinc-700/55";
+        return "bg-afri-bg-ter text-afri-text-sec border border-afri-border/55";
     }
   };
 
   return (
     <div className="flex flex-col space-y-6 w-full max-w-5xl mx-auto px-4 pb-24 text-left animate-fadeIn">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-900 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-afri-border pb-5">
         <div className="flex items-center gap-3">
           <button 
             onClick={onBack}
-            className="w-10 h-10 rounded-full bg-zinc-950 border border-zinc-900 flex items-center justify-center text-zinc-400 hover:text-white hover:border-[#D4AF37] cursor-pointer transition-all shrink-0"
+            className="w-10 h-10 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text hover:border-[#D4AF37] cursor-pointer transition-all shrink-0"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-tight flex items-center gap-2">
               <span className="text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]">📅</span>
               Événements Élite
             </h1>
-            <p className="text-[10px] sm:text-xs font-mono text-zinc-400 uppercase tracking-wider">
+            <p className="text-[10px] sm:text-xs font-mono text-afri-text-sec uppercase tracking-wider">
               Agenda & Calendrier Souverain d'Alliance
             </p>
           </div>
@@ -379,7 +379,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
 
         <button
           onClick={() => setIsFormOpen(!isFormOpen)}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#D4AF37] hover:bg-[#B48F17] text-[#050505] font-black text-xs uppercase tracking-wider rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-afri-bg-sec hover:bg-afri-bg-sec text-[#050505] font-black text-xs uppercase tracking-wider rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
           {isFormOpen ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           {isFormOpen ? "Fermer Formulaire" : "Planifier un Gombo"}
@@ -393,34 +393,34 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden bg-[#0A0A0C] border-2 border-[#D4AF37]/50 rounded-2xl shadow-[0_4px_30px_rgba(212,175,55,0.15)]"
+            className="overflow-hidden bg-afri-bg-sec border-2 border-[#D4AF37]/50 rounded-2xl shadow-[0_4px_30px_rgba(212,175,55,0.15)]"
           >
             <form onSubmit={handleCreateEvent} className="p-5 sm:p-6 space-y-4">
-              <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest flex items-center gap-2 border-b border-zinc-900 pb-2">
+              <h3 className="text-sm font-black text-[#D4AF37] uppercase tracking-widest flex items-center gap-2 border-b border-afri-border pb-2">
                 <Sparkles className="w-4 h-4" /> PLANIFIER UN NOUVEL ÉVÉNEMENT
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Title */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-zinc-400 uppercase font-black">Titre de l'événement *</label>
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase font-black">Titre de l'événement *</label>
                   <input
                     type="text"
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
                     placeholder="ex: Concert live de fin d'année"
-                    className="w-full bg-zinc-950 border border-zinc-850 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-600 outline-none transition-all"
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-afri-text placeholder-zinc-600 outline-none transition-all"
                     required
                   />
                 </div>
 
                 {/* Category */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-zinc-400 uppercase font-black">Catégorie</label>
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase font-black">Catégorie</label>
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value as EventItem["category"])}
-                    className="w-full bg-zinc-950 border border-zinc-850 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white outline-none transition-all"
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-afri-text outline-none transition-all"
                   >
                     <option value="Concert">🎤 Concert</option>
                     <option value="Répétition">🎸 Répétition</option>
@@ -433,61 +433,61 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
 
                 {/* Date */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-zinc-400 uppercase font-black">Date de l'événement *</label>
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase font-black">Date de l'événement *</label>
                   <input
                     type="date"
                     value={formDate}
                     onChange={(e) => setFormDate(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-850 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white outline-none transition-all"
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-afri-text outline-none transition-all"
                     required
                   />
                 </div>
 
                 {/* Time */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-zinc-400 uppercase font-black">Heure *</label>
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase font-black">Heure *</label>
                   <input
                     type="time"
                     value={formTime}
                     onChange={(e) => setFormTime(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-850 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white outline-none transition-all"
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-afri-text outline-none transition-all"
                     required
                   />
                 </div>
 
                 {/* Lieu */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-zinc-400 uppercase font-black">Lieu (Salle / Commune) *</label>
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase font-black">Lieu (Salle / Commune) *</label>
                   <input
                     type="text"
                     value={formLieu}
                     onChange={(e) => setFormLieu(e.target.value)}
                     placeholder="ex: Palais de la Culture, Treichville"
-                    className="w-full bg-zinc-950 border border-zinc-850 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-600 outline-none transition-all"
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-afri-text placeholder-zinc-600 outline-none transition-all"
                     required
                   />
                 </div>
 
                 {/* Organizer */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-zinc-400 uppercase font-black">Organisateur / Promoteur *</label>
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase font-black">Organisateur / Promoteur *</label>
                   <input
                     type="text"
                     value={formOrganisateur}
                     onChange={(e) => setFormOrganisateur(e.target.value)}
                     placeholder="ex: Gaou Productions"
-                    className="w-full bg-zinc-950 border border-zinc-850 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-600 outline-none transition-all"
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-afri-text placeholder-zinc-600 outline-none transition-all"
                     required
                   />
                 </div>
 
                 {/* Status */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-zinc-400 uppercase font-black">Statut initial</label>
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase font-black">Statut initial</label>
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as EventItem["status"])}
-                    className="w-full bg-zinc-950 border border-zinc-850 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white outline-none transition-all"
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-afri-text outline-none transition-all"
                   >
                     <option value="Confirmé">🟢 Confirmé</option>
                     <option value="En attente">🟡 En attente</option>
@@ -497,29 +497,29 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
 
                 {/* Description */}
                 <div className="space-y-1 md:col-span-2">
-                  <label className="text-[10px] font-mono text-zinc-400 uppercase font-black">Description détaillée</label>
+                  <label className="text-[10px] font-mono text-afri-text-sec uppercase font-black">Description détaillée</label>
                   <textarea
                     value={formDescription}
                     onChange={(e) => setFormDescription(e.target.value)}
                     placeholder="Indiquez les détails importants, le matériel à apporter, le cachet indicatif..."
                     rows={3}
-                    className="w-full bg-zinc-950 border border-zinc-850 focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-600 outline-none transition-all resize-none"
+                    className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-xl px-4 py-2.5 text-xs text-afri-text placeholder-zinc-600 outline-none transition-all resize-none"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-zinc-900">
+              <div className="flex justify-end gap-3 pt-3 border-t border-afri-border">
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-zinc-850 text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all text-xs font-bold uppercase"
+                  className="px-4 py-2.5 rounded-xl border border-afri-border text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec transition-all text-xs font-bold uppercase"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#B48F17] text-black text-xs font-black uppercase transition-all disabled:opacity-50"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-afri-bg-sec hover:bg-afri-bg-sec text-black text-xs font-black uppercase transition-all disabled:opacity-50"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Publier l'événement
@@ -532,9 +532,9 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
 
       {/* LOADING STATE */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-zinc-950/40 rounded-3xl border border-zinc-900 text-center min-h-[300px]">
+        <div className="flex flex-col items-center justify-center p-12 bg-afri-bg/40 rounded-3xl border border-afri-border text-center min-h-[300px]">
           <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin mb-3" />
-          <p className="text-xs text-zinc-400 font-mono uppercase">Synchronisation avec l'agenda Firestore Élite...</p>
+          <p className="text-xs text-afri-text-sec font-mono uppercase">Synchronisation avec l'agenda Firestore Élite...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -543,21 +543,21 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
           <div className="lg:col-span-5 space-y-6">
             
             {/* MONTHLY CALENDAR CARD */}
-            <div className="bg-[#0A0A0C] border border-zinc-900 rounded-3xl p-5 shadow-lg space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-                <h3 className="text-xs font-black text-white uppercase tracking-wider font-mono">
+            <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 shadow-lg space-y-4">
+              <div className="flex items-center justify-between border-b border-afri-border pb-3">
+                <h3 className="text-xs font-black text-afri-text uppercase tracking-wider font-mono">
                   {monthsList[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </h3>
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={handlePrevMonth}
-                    className="w-7 h-7 bg-zinc-950 hover:bg-zinc-900 border border-zinc-850 text-zinc-400 hover:text-white rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-7 h-7 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text rounded-lg flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={handleNextMonth}
-                    className="w-7 h-7 bg-zinc-950 hover:bg-zinc-900 border border-zinc-850 text-zinc-400 hover:text-white rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-7 h-7 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text rounded-lg flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -565,7 +565,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
               </div>
 
               {/* Day headers */}
-              <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-mono font-black text-zinc-500 uppercase">
+              <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-mono font-black text-afri-text-sec uppercase">
                 <span>Lu</span><span>Ma</span><span>Me</span><span>Je</span><span>Ve</span><span>Sa</span><span>Di</span>
               </div>
 
@@ -602,10 +602,10 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
                       }}
                       className={`h-9 rounded-xl flex flex-col items-center justify-center relative cursor-pointer text-xs font-mono font-bold transition-all ${
                         isSelected 
-                          ? "bg-[#D4AF37] text-black scale-105 font-black shadow-[0_0_12px_rgba(212,175,55,0.4)]" 
+                          ? "bg-afri-bg-sec text-black scale-105 font-black shadow-[0_0_12px_rgba(212,175,55,0.4)]" 
                           : isToday 
-                            ? "bg-zinc-900 border border-[#D4AF37]/50 text-white font-black"
-                            : "hover:bg-zinc-900 text-zinc-300"
+                            ? "bg-afri-bg-sec border border-[#D4AF37]/50 text-afri-text font-black"
+                            : "hover:bg-afri-bg-sec text-afri-text"
                       }`}
                     >
                       <span>{dayNumber}</span>
@@ -631,8 +631,8 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
 
               {/* Clear Filter Prompt */}
               {selectedDate && (
-                <div className="flex items-center justify-between bg-zinc-950 p-2.5 rounded-xl border border-zinc-850 mt-2">
-                  <span className="text-[10px] font-mono text-zinc-400">
+                <div className="flex items-center justify-between bg-afri-bg p-2.5 rounded-xl border border-afri-border mt-2">
+                  <span className="text-[10px] font-mono text-afri-text-sec">
                     Filtre actif : {selectedDate}
                   </span>
                   <button
@@ -647,7 +647,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
 
             {/* CATEGORY CHIPS */}
             <div className="space-y-2">
-              <h4 className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest font-black">
+              <h4 className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest font-black">
                 Filtrer par Catégorie
               </h4>
               <div className="flex flex-wrap gap-1.5">
@@ -665,8 +665,8 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
                       }}
                       className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase transition-all cursor-pointer border ${
                         isActive 
-                          ? "bg-[#D4AF37] border-[#D4AF37] text-[#050505]" 
-                          : "bg-[#0A0A0C] border-zinc-900 text-zinc-400 hover:text-white hover:border-zinc-700"
+                          ? "bg-afri-bg-sec border-[#D4AF37] text-[#050505]" 
+                          : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text hover:border-afri-border"
                       }`}
                     >
                       {cat === "All" ? "🔥 Tout" : cat}
@@ -680,8 +680,8 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
 
           {/* RIGHT: REAL-TIME EVENTS LIST */}
           <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
-              <h3 className="text-xs font-black text-white uppercase tracking-wider font-mono">
+            <div className="flex items-center justify-between border-b border-afri-border pb-2">
+              <h3 className="text-xs font-black text-afri-text uppercase tracking-wider font-mono">
                 Événements Trouvés ({filteredEvents.length})
               </h3>
               {selectedDate && (
@@ -692,18 +692,18 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
             </div>
 
             {filteredEvents.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-12 bg-zinc-950/40 rounded-3xl border border-dashed border-zinc-900 text-center min-h-[300px] space-y-3">
-                <CalendarIcon className="w-10 h-10 text-zinc-600 animate-pulse" />
+              <div className="flex flex-col items-center justify-center p-12 bg-afri-bg/40 rounded-3xl border border-dashed border-afri-border text-center min-h-[300px] space-y-3">
+                <CalendarIcon className="w-10 h-10 text-afri-text-sec animate-pulse" />
                 <div>
-                  <h4 className="text-xs font-black text-zinc-300 uppercase">Aucun événement de ce type</h4>
-                  <p className="text-[10px] text-zinc-500 mt-1 max-w-xs mx-auto leading-relaxed">
+                  <h4 className="text-xs font-black text-afri-text uppercase">Aucun événement de ce type</h4>
+                  <p className="text-[10px] text-afri-text-sec mt-1 max-w-xs mx-auto leading-relaxed">
                     Essayez de changer de catégorie, de sélectionner un autre jour dans le calendrier ou créez un nouvel événement !
                   </p>
                 </div>
                 {selectedDate && (
                   <button
                     onClick={() => setSelectedDate(null)}
-                    className="px-4 py-2 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded-xl text-[10px] font-mono text-white uppercase font-black cursor-pointer"
+                    className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec border border-afri-border rounded-xl text-[10px] font-mono text-afri-text uppercase font-black cursor-pointer"
                   >
                     Afficher tous les jours
                   </button>
@@ -724,7 +724,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
                       key={evt.id}
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-5 rounded-2xl bg-[#0A0A0C] border border-zinc-900 hover:border-[#D4AF37]/30 transition-all space-y-4 relative group"
+                      className="p-5 rounded-2xl bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/30 transition-all space-y-4 relative group"
                     >
                       {/* Top Header Card */}
                       <div className="flex items-start justify-between gap-4">
@@ -737,7 +737,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
                               {evt.status}
                             </span>
                           </div>
-                          <h4 className="text-sm font-black text-white group-hover:text-[#D4AF37] transition-colors uppercase leading-snug">
+                          <h4 className="text-sm font-black text-afri-text group-hover:text-[#D4AF37] transition-colors uppercase leading-snug">
                             {evt.title}
                           </h4>
                         </div>
@@ -748,12 +748,12 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
                       </div>
 
                       {/* Description */}
-                      <p className="text-[11px] leading-relaxed text-zinc-400">
+                      <p className="text-[11px] leading-relaxed text-afri-text-sec">
                         {evt.description}
                       </p>
 
                       {/* Meta information row */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-zinc-950 p-3 rounded-xl border border-zinc-900 text-[10px] font-mono text-zinc-400">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-afri-bg p-3 rounded-xl border border-afri-border text-[10px] font-mono text-afri-text-sec">
                         <div className="flex items-center gap-2">
                           <Clock className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                           <span>
@@ -776,11 +776,11 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
 
                       {/* Participants list drawer on hover or always */}
                       {evt.participants && evt.participants.length > 0 && (
-                        <div className="text-[9px] font-mono text-zinc-500 border-t border-zinc-900 pt-3">
-                          <span className="uppercase font-black text-zinc-400 block mb-1">Confirmés :</span>
+                        <div className="text-[9px] font-mono text-afri-text-sec border-t border-afri-border pt-3">
+                          <span className="uppercase font-black text-afri-text-sec block mb-1">Confirmés :</span>
                           <div className="flex flex-wrap gap-1.5 mt-1">
                             {evt.participants.map((part, pIdx) => (
-                              <span key={pIdx} className="px-2 py-0.5 bg-zinc-900 border border-zinc-850 rounded text-zinc-300">
+                              <span key={pIdx} className="px-2 py-0.5 bg-afri-bg-sec border border-afri-border rounded text-afri-text">
                                 @{part}
                               </span>
                             ))}
@@ -789,8 +789,8 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
                       )}
 
                       {/* Action buttons */}
-                      <div className="flex items-center justify-between pt-2 border-t border-zinc-900/40">
-                        <span className="text-[9px] text-zinc-500 uppercase font-mono font-bold">
+                      <div className="flex items-center justify-between pt-2 border-t border-afri-border/40">
+                        <span className="text-[9px] text-afri-text-sec uppercase font-mono font-bold">
                           Statut de participation
                         </span>
                         <button
@@ -799,7 +799,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
                           className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                             isUserParticipating 
                               ? "bg-emerald-500 text-[#050505] shadow-[0_0_12px_rgba(16,185,129,0.3)]" 
-                              : "bg-zinc-950 border border-zinc-850 hover:border-[#D4AF37] text-zinc-300 hover:text-white"
+                              : "bg-afri-bg border border-afri-border hover:border-[#D4AF37] text-afri-text hover:text-afri-text"
                           }`}
                         >
                           {isUserParticipating ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : <Plus className="w-3.5 h-3.5" />}

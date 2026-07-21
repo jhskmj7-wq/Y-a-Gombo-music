@@ -136,11 +136,11 @@ export default function GriotIA() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-5 py-3.5 bg-black hover:bg-zinc-950 text-[#D4AF37] hover:text-[#FFD700] rounded-full border border-[#D4AF37]/50 shadow-[0_4px_25px_rgba(212,175,55,0.25)] transition-all font-mono font-bold text-xs uppercase tracking-wider"
+        className="flex items-center gap-2 px-5 py-3.5 bg-afri-bg-sec hover:bg-afri-bg text-[#D4AF37] hover:text-afri-text rounded-full border border-[#D4AF37]/50 shadow-[0_4px_25px_rgba(212,175,55,0.25)] transition-all font-mono font-bold text-xs uppercase tracking-wider"
       >
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4AF37] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4AF37]"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-afri-bg-sec opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-afri-bg-sec"></span>
         </span>
         🧠 GRIOT IA
       </motion.button>
@@ -154,19 +154,19 @@ export default function GriotIA() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
             transition={{ type: "spring", duration: 0.35 }}
-            className="absolute bottom-16 right-0 w-[92vw] sm:w-[420px] h-[580px] bg-[#0A0A0A] border border-[#D4AF37]/40 rounded-3xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.85)] flex flex-col"
+            className="absolute bottom-16 right-0 w-[92vw] sm:w-[420px] h-[580px] bg-afri-bg-sec border border-[#D4AF37]/40 rounded-3xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.85)] flex flex-col"
           >
             {/* Elegant Header */}
-            <div className="p-4 bg-gradient-to-r from-[#030303] via-zinc-950 to-zinc-900 border-b border-[#D4AF37]/25 flex items-center justify-between">
+            <div className="p-4 bg-gradient-to-r from-[#030303] via-afri-bg to-afri-bg-action border-b border-[#D4AF37]/25 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 bg-[#D4AF37]/10 rounded-xl border border-[#D4AF37]/25">
+                <div className="p-1.5 bg-afri-bg-sec/10 rounded-xl border border-[#D4AF37]/25">
                   <Cpu className="w-5 h-5 text-[#D4AF37]" />
                 </div>
                 <div>
                   <h3 className="font-mono text-xs font-black uppercase tracking-widest text-[#D4AF37]">
                     GRIOT IA V1
                   </h3>
-                  <p className="text-[10px] text-zinc-500 font-mono">
+                  <p className="text-[10px] text-afri-text-sec font-mono">
                     Temple de la Connaissance Impériale
                   </p>
                 </div>
@@ -175,7 +175,7 @@ export default function GriotIA() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1 text-zinc-500 hover:text-white rounded-lg hover:bg-zinc-900 transition-colors"
+                  className="p-1 text-afri-text-sec hover:text-afri-text rounded-lg hover:bg-afri-bg-sec transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -183,13 +183,13 @@ export default function GriotIA() {
             </div>
 
             {/* Quick Access Mode Tabs */}
-            <div className="flex bg-[#030303] border-b border-zinc-900/40 text-xs text-zinc-500 font-mono">
+            <div className="flex bg-afri-bg-sec border-b border-afri-border/40 text-xs text-afri-text-sec font-mono">
               <button
                 onClick={() => setActiveTab("chat")}
                 className={`flex-1 py-2.5 text-center transition-colors border-b ${
                   activeTab === "chat" 
                     ? "text-[#D4AF37] border-[#D4AF37] font-bold" 
-                    : "border-transparent hover:text-zinc-300"
+                    : "border-transparent hover:text-afri-text"
                 }`}
               >
                 💬 Conseil du Griot
@@ -199,7 +199,7 @@ export default function GriotIA() {
                 className={`flex-1 py-2.5 text-center transition-colors border-b flex items-center justify-center gap-1.5 ${
                   activeTab === "v2" 
                     ? "text-[#D4AF37] border-[#D4AF37] font-bold" 
-                    : "border-transparent hover:text-zinc-300"
+                    : "border-transparent hover:text-afri-text"
                 }`}
               >
                 ⚙️ Architecture V2
@@ -227,7 +227,7 @@ export default function GriotIA() {
                           className={`max-w-[85%] px-4 py-3 rounded-2xl text-xs leading-relaxed ${
                             msg.sender === "user"
                               ? "bg-gradient-to-r from-[#D4AF37] to-[#B48F17] text-black font-semibold rounded-tr-none shadow-md"
-                              : "bg-[#111111] border border-zinc-900 text-zinc-200 rounded-tl-none shadow-sm"
+                              : "bg-afri-bg-sec border border-afri-border text-afri-text rounded-tl-none shadow-sm"
                           }`}
                         >
                           {msg.text}
@@ -237,12 +237,12 @@ export default function GriotIA() {
                   </div>
 
                   {/* Knowledge Base Core Suggestion Prompts */}
-                  <div className="px-4 py-2 bg-[#050505] border-t border-zinc-900/60 overflow-x-auto whitespace-nowrap flex gap-2 scrollbar-none shrink-0">
+                  <div className="px-4 py-2 bg-afri-bg-sec border-t border-afri-border/60 overflow-x-auto whitespace-nowrap flex gap-2 scrollbar-none shrink-0">
                     {KNOWLEDGE_BASE.map((item, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleQuery(item.question)}
-                        className="inline-block px-3 py-1.5 bg-[#111111] hover:bg-[#1A1A1A] border border-[#D4AF37]/15 hover:border-[#D4AF37]/35 rounded-full text-[10px] text-zinc-400 hover:text-white transition-all font-mono"
+                        className="inline-block px-3 py-1.5 bg-afri-bg-sec hover:bg-afri-bg-sec border border-[#D4AF37]/15 hover:border-[#D4AF37]/35 rounded-full text-[10px] text-afri-text-sec hover:text-afri-text transition-all font-mono"
                       >
                         ❓ {item.question}
                       </button>
@@ -255,18 +255,18 @@ export default function GriotIA() {
                       e.preventDefault();
                       handleQuery(inputQuery);
                     }}
-                    className="p-3 bg-[#030303] border-t border-zinc-950 flex gap-2"
+                    className="p-3 bg-afri-bg-sec border-t border-zinc-950 flex gap-2"
                   >
                     <input
                       type="text"
                       value={inputQuery}
                       onChange={(e) => setInputQuery(e.target.value)}
                       placeholder="Demander la sagesse du Griot..."
-                      className="flex-1 bg-[#111111] border border-zinc-900 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-700 font-sans focus:outline-none focus:border-[#D4AF37] transition-all"
+                      className="flex-1 bg-afri-bg-sec border border-afri-border rounded-xl px-3.5 py-2.5 text-xs text-afri-text placeholder-zinc-700 font-sans focus:outline-none focus:border-[#D4AF37] transition-all"
                     />
                     <button
                       type="submit"
-                      className="p-2.5 bg-[#D4AF37] text-black hover:bg-[#FFD700] rounded-xl font-bold transition-all shrink-0 flex items-center justify-center shadow-lg"
+                      className="p-2.5 bg-afri-bg-sec text-black hover:bg-afri-bg-sec rounded-xl font-bold transition-all shrink-0 flex items-center justify-center shadow-lg"
                     >
                       <Send className="w-4 h-4" />
                     </button>
@@ -274,44 +274,44 @@ export default function GriotIA() {
                 </>
               ) : (
                 /* Architecture V2 specifications (Enterprise grade blueprint) */
-                <div className="flex-1 overflow-y-auto p-5 text-zinc-300 font-mono text-[11px] leading-relaxed space-y-6 scrollbar-thin">
-                  <div className="p-4 bg-[#111111] border border-[#D4AF37]/15 rounded-2xl space-y-3">
-                    <div className="flex items-center gap-2 border-b border-zinc-900 pb-2">
+                <div className="flex-1 overflow-y-auto p-5 text-afri-text font-mono text-[11px] leading-relaxed space-y-6 scrollbar-thin">
+                  <div className="p-4 bg-afri-bg-sec border border-[#D4AF37]/15 rounded-2xl space-y-3">
+                    <div className="flex items-center gap-2 border-b border-afri-border pb-2">
                       <Sparkles className="w-5 h-5 text-[#D4AF37]" />
                       <span className="text-[#D4AF37] font-black uppercase text-xs">
                         PLAN DE VOL GRIOT V2
                       </span>
                     </div>
-                    <p className="font-sans text-zinc-400">
+                    <p className="font-sans text-afri-text-sec">
                       Spécifications de la V2 entièrement modélisée et prête à être raccordée aux services Cloud d'Afrisystems.
                     </p>
                   </div>
 
                   {/* Architecture Diagram */}
                   <div className="space-y-4">
-                    <strong className="text-white text-xs block uppercase border-b border-zinc-900 pb-1">
+                    <strong className="text-afri-text text-xs block uppercase border-b border-afri-border pb-1">
                       🛠️ Éco-Système des Composants
                     </strong>
                     
                     <div className="space-y-3">
-                      <div className="p-3 bg-black border border-zinc-900 rounded-xl">
+                      <div className="p-3 bg-afri-bg border border-afri-border rounded-xl">
                         <span className="text-[#D4AF37] font-bold">1. Firebase Trigger Cloud Function</span>
-                        <p className="text-[10px] text-zinc-500 mt-1 font-sans">
+                        <p className="text-[10px] text-afri-text-sec mt-1 font-sans">
                           Un microservice Node.js déporté sur Google Cloud Run réagit aux modifications de documents.
                         </p>
                       </div>
 
-                      <div className="p-3 bg-black border border-zinc-900 rounded-xl">
+                      <div className="p-3 bg-afri-bg border border-afri-border rounded-xl">
                         <span className="text-[#D4AF37] font-bold">2. OpenAI Assistant Engine</span>
-                        <p className="text-[10px] text-zinc-500 mt-1 font-sans">
+                        <p className="text-[10px] text-afri-text-sec mt-1 font-sans">
                           Raccordé à l'API OpenAI Assistants spécifiée avec instanciation du modèle gpt-4o ou gemini-2.5-pro, ancré dans le corpus doctrinal d'AFRIGOMBO.
                         </p>
                       </div>
 
-                      <div className="p-3 bg-black border border-zinc-900 rounded-xl">
+                      <div className="p-3 bg-afri-bg border border-afri-border rounded-xl">
                         <span className="text-[#D4AF37] font-bold">3. Stockage Documentaire</span>
-                        <p className="text-[10px] text-zinc-500 mt-1 font-sans">
-                          Indexation immédiate des dialogues de sagesse dans la collection Firebase Firestore <code className="text-white bg-zinc-900 px-1 rounded">/griot_session</code>.
+                        <p className="text-[10px] text-afri-text-sec mt-1 font-sans">
+                          Indexation immédiate des dialogues de sagesse dans la collection Firebase Firestore <code className="text-afri-text bg-afri-bg-sec px-1 rounded">/griot_session</code>.
                         </p>
                       </div>
                     </div>
@@ -319,13 +319,13 @@ export default function GriotIA() {
 
                   {/* Preview Code snippet */}
                   <div className="space-y-2">
-                    <strong className="text-white text-xs block uppercase">
+                    <strong className="text-afri-text text-xs block uppercase">
                       📂 Modèle de Cloud Function (Stubs)
                     </strong>
-                    <div className="p-3.5 bg-[#030303] text-zinc-400 rounded-xl border border-zinc-900 overflow-x-auto text-[9.5px]">
+                    <div className="p-3.5 bg-afri-bg-sec text-afri-text-sec rounded-xl border border-afri-border overflow-x-auto text-[9.5px]">
                       <span className="text-amber-500">// Cloud Function V2 Trigger template</span><br />
                       <span className="text-teal-400">export const</span> <span className="text-blue-400">griotChatV2</span> = functions.https.onCall(<span className="text-purple-400">async</span> (data, context) =&gt; &#123;<br />
-                      &nbsp;&nbsp;<span className="text-zinc-600">// Securing auth context</span><br />
+                      &nbsp;&nbsp;<span className="text-afri-text-sec">// Securing auth context</span><br />
                       &nbsp;&nbsp;<span className="text-teal-400">if</span> (!context.auth) <span className="text-teal-400">throw</span> <span className="text-teal-400">new</span> Error(<span className="text-amber-600">"Non authentifié."</span>);<br />
                       &nbsp;&nbsp;<br />
                       &nbsp;&nbsp;<span className="text-teal-450">const</span> openai = <span className="text-teal-400">new</span> OpenAI(&#123; apiKey: process.env.OPENAI_API_KEY &#125;);<br />

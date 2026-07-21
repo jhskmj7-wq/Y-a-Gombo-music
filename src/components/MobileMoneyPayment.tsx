@@ -150,10 +150,10 @@ export default function MobileMoneyPayment({
   };
 
   return (
-    <div className="bg-[#09090B] border border-zinc-800/80 rounded-3xl overflow-hidden shadow-2xl relative select-none">
+    <div className="bg-afri-bg-sec border border-afri-border/80 rounded-3xl overflow-hidden shadow-2xl relative select-none">
       
       {/* HEADER */}
-      <div className="bg-zinc-950 px-5 py-4 border-b border-zinc-900 flex justify-between items-center">
+      <div className="bg-afri-bg px-5 py-4 border-b border-afri-border flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-yellow-500/10 text-yellow-500 rounded-lg">
             <ShieldCheck className="w-4 h-4" />
@@ -162,13 +162,13 @@ export default function MobileMoneyPayment({
             <h4 className="text-xs font-mono uppercase tracking-widest text-[#D4AF37] font-black">
               Simulateur Mobile Money
             </h4>
-            <span className="text-[9px] text-zinc-500 font-mono">CADRE SÉCURISÉ AFRIGOMBO</span>
+            <span className="text-[9px] text-afri-text-sec font-mono">CADRE SÉCURISÉ AFRIGOMBO</span>
           </div>
         </div>
         {onClose && (
           <button 
             onClick={onClose}
-            className="text-zinc-500 hover:text-white transition-colors cursor-pointer"
+            className="text-afri-text-sec hover:text-afri-text transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -189,7 +189,7 @@ export default function MobileMoneyPayment({
           >
             {/* Operator choice toggle */}
             <div>
-              <label className="block text-[10px] font-mono tracking-wider text-zinc-400 uppercase mb-2">
+              <label className="block text-[10px] font-mono tracking-wider text-afri-text-sec uppercase mb-2">
                 Sélectionner l'Opérateur :
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -199,16 +199,16 @@ export default function MobileMoneyPayment({
                   onClick={() => { setOperator("wave"); triggerTickSound(); }}
                   className={`relative p-3.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 border transition-all cursor-pointer ${
                     operator === "wave" 
-                      ? "bg-[#1B90FF]/15 border-[#1B90FF] text-white animate-fadeIn" 
-                      : "bg-zinc-900/40 border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                      ? "bg-afri-bg-sec/15 border-[#1B90FF] text-afri-text animate-fadeIn" 
+                      : "bg-afri-bg-sec/40 border-afri-border text-afri-text-sec hover:text-afri-text"
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#1B90FF] flex items-center justify-center text-white text-lg font-black font-sans shadow-lg shadow-[#1B90FF]/20">
+                  <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center text-afri-text text-lg font-black font-sans shadow-lg shadow-[#1B90FF]/20">
                     🌊
                   </div>
                   <span className="text-xs font-bold tracking-wide">WAVE</span>
                   {operator === "wave" && (
-                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#1B90FF]" />
+                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-afri-bg-sec" />
                   )}
                 </button>
 
@@ -218,16 +218,16 @@ export default function MobileMoneyPayment({
                   onClick={() => { setOperator("orange"); triggerTickSound(); }}
                   className={`relative p-3.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 border transition-all cursor-pointer ${
                     operator === "orange" 
-                      ? "bg-[#FF6600]/15 border-[#FF6600] text-white animate-fadeIn" 
-                      : "bg-zinc-900/40 border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                      ? "bg-afri-bg-sec/15 border-[#FF6600] text-afri-text animate-fadeIn" 
+                      : "bg-afri-bg-sec/40 border-afri-border text-afri-text-sec hover:text-afri-text"
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#FF6600] flex items-center justify-center text-white text-lg font-black font-sans shadow-lg shadow-[#FF6600]/20">
+                  <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center text-afri-text text-lg font-black font-sans shadow-lg shadow-[#FF6600]/20">
                     🍊
                   </div>
                   <span className="text-xs font-bold tracking-wide">ORANGE MONEY</span>
                   {operator === "orange" && (
-                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#FF6600]" />
+                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-afri-bg-sec" />
                   )}
                 </button>
 
@@ -237,16 +237,16 @@ export default function MobileMoneyPayment({
                   onClick={() => { setOperator("mtn"); triggerTickSound(); }}
                   className={`relative p-3.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 border transition-all cursor-pointer ${
                     operator === "mtn" 
-                      ? "bg-[#FFCC00]/15 border-[#FFCC00] text-white animate-fadeIn" 
-                      : "bg-zinc-900/40 border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                      ? "bg-afri-bg-sec/15 border-[#FFCC00] text-afri-text animate-fadeIn" 
+                      : "bg-afri-bg-sec/40 border-afri-border text-afri-text-sec hover:text-afri-text"
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#FFCC00] flex items-center justify-center text-black text-lg font-black font-sans shadow-lg shadow-[#FFCC00]/20">
+                  <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center text-black text-lg font-black font-sans shadow-lg shadow-[#FFCC00]/20">
                     🟡
                   </div>
                   <span className="text-xs font-bold tracking-wide">MTN MONEY</span>
                   {operator === "mtn" && (
-                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#FFCC00]" />
+                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-afri-bg-sec" />
                   )}
                 </button>
 
@@ -256,16 +256,16 @@ export default function MobileMoneyPayment({
                   onClick={() => { setOperator("moov"); triggerTickSound(); }}
                   className={`relative p-3.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 border transition-all cursor-pointer ${
                     operator === "moov" 
-                      ? "bg-[#00A859]/15 border-[#00A859] text-white animate-fadeIn" 
-                      : "bg-zinc-900/40 border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                      ? "bg-afri-bg-sec/15 border-[#00A859] text-afri-text animate-fadeIn" 
+                      : "bg-afri-bg-sec/40 border-afri-border text-afri-text-sec hover:text-afri-text"
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#00A859] flex items-center justify-center text-white text-lg font-black font-sans shadow-lg shadow-[#00A859]/20">
+                  <div className="w-10 h-10 rounded-full bg-afri-bg-sec flex items-center justify-center text-afri-text text-lg font-black font-sans shadow-lg shadow-[#00A859]/20">
                     🧩
                   </div>
                   <span className="text-xs font-bold tracking-wide">MOOV MONEY</span>
                   {operator === "moov" && (
-                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#00A859]" />
+                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-afri-bg-sec" />
                   )}
                 </button>
               </div>
@@ -280,11 +280,11 @@ export default function MobileMoneyPayment({
 
             {/* Phone Number Entry */}
             <div>
-              <label className="block text-[10px] font-mono tracking-wider text-zinc-400 uppercase mb-1.5">
+              <label className="block text-[10px] font-mono tracking-wider text-afri-text-sec uppercase mb-1.5">
                 Numéro de Scellage Mobile Money (Côte d'Ivoire) :
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-600">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-afri-text-sec">
                   <Smartphone className="w-4 h-4" />
                 </span>
                 <input
@@ -293,26 +293,26 @@ export default function MobileMoneyPayment({
                   placeholder="07 00 00 00 00"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-black border border-zinc-850 rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] text-white font-mono"
+                  className="w-full pl-10 pr-4 py-2.5 bg-afri-bg border border-afri-border rounded-xl text-sm focus:outline-none focus:border-[#D4AF37] text-afri-text font-mono"
                 />
               </div>
             </div>
 
             {/* Transaction breakdown */}
-            <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-900 space-y-2 text-xs font-mono">
-              <div className="flex justify-between text-zinc-500">
+            <div className="bg-afri-bg p-4 rounded-2xl border border-afri-border space-y-2 text-xs font-mono">
+              <div className="flex justify-between text-afri-text-sec">
                 <span>Description :</span>
-                <span className="text-zinc-300 truncate max-w-[180px]">{gomboTitle}</span>
+                <span className="text-afri-text truncate max-w-[180px]">{gomboTitle}</span>
               </div>
-              <div className="flex justify-between text-zinc-500">
+              <div className="flex justify-between text-afri-text-sec">
                 <span>Cachet réservé :</span>
-                <span className="text-zinc-300">{amount.toLocaleString()} FCFA</span>
+                <span className="text-afri-text">{amount.toLocaleString()} FCFA</span>
               </div>
-              <div className="flex justify-between text-zinc-500">
+              <div className="flex justify-between text-afri-text-sec">
                 <span>Frais de scellage (1%) :</span>
-                <span className="text-zinc-300">{fee.toLocaleString()} FCFA</span>
+                <span className="text-afri-text">{fee.toLocaleString()} FCFA</span>
               </div>
-              <div className="h-[1px] bg-zinc-900 my-1" />
+              <div className="h-[1px] bg-afri-bg-sec my-1" />
               <div className="flex justify-between text-[#D4AF37] font-bold">
                 <span>MONTANT DE BLOCAGE :</span>
                 <span>{totalAmount.toLocaleString()} FCFA</span>
@@ -323,17 +323,17 @@ export default function MobileMoneyPayment({
             <button
               type="submit"
               className={`w-full py-3 rounded-xl font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all ${
-                operator === "wave" ? "bg-[#1B90FF] text-white hover:bg-[#1579D9] shadow-lg shadow-[#1B90FF]/15" :
-                operator === "orange" ? "bg-[#FF6600] text-white hover:bg-[#E05900] shadow-lg shadow-[#FF6600]/15" :
-                operator === "mtn" ? "bg-[#FFCC00] text-black hover:bg-[#E5B500] shadow-lg shadow-[#FFCC00]/15" :
-                "bg-[#00A859] text-white hover:bg-[#008A49] shadow-lg shadow-[#00A859]/15"
+                operator === "wave" ? "bg-afri-bg-sec text-afri-text hover:bg-afri-bg-sec shadow-lg shadow-[#1B90FF]/15" :
+                operator === "orange" ? "bg-afri-bg-sec text-afri-text hover:bg-afri-bg-sec shadow-lg shadow-[#FF6600]/15" :
+                operator === "mtn" ? "bg-afri-bg-sec text-black hover:bg-afri-bg-sec shadow-lg shadow-[#FFCC00]/15" :
+                "bg-afri-bg-sec text-afri-text hover:bg-afri-bg-sec shadow-lg shadow-[#00A859]/15"
               }`}
             >
               <span>DEPOSER CACHET PAR {getOperatorLabel(operator)}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
 
-            <div className="flex items-center justify-center gap-1.5 text-[10px] text-zinc-600 font-mono">
+            <div className="flex items-center justify-center gap-1.5 text-[10px] text-afri-text-sec font-mono">
               <Lock className="w-3 h-3 text-[#D4AF37]" />
               <span>Crypter avec la norme de protection AfriGombo escrow v2.1</span>
             </div>
@@ -350,17 +350,17 @@ export default function MobileMoneyPayment({
             className="p-8 text-center flex flex-col items-center justify-center space-y-4"
           >
             <div className={`p-4 rounded-full ${
-              operator === "wave" ? "bg-[#1B90FF]/10 text-[#1B90FF]" :
-              operator === "orange" ? "bg-[#FF6600]/10 text-[#FF6600]" :
-              operator === "mtn" ? "bg-[#FFCC00]/10 text-[#FFCC00]" :
-              "bg-[#00A859]/10 text-[#00A859]"
+              operator === "wave" ? "bg-afri-bg-sec/10 text-[#1B90FF]" :
+              operator === "orange" ? "bg-afri-bg-sec/10 text-afri-text" :
+              operator === "mtn" ? "bg-afri-bg-sec/10 text-afri-text" :
+              "bg-afri-bg-sec/10 text-[#00A859]"
             } animate-pulse`}>
               <Loader2 className="w-8 h-8 animate-spin" />
             </div>
             
             <div className="space-y-1">
-              <h5 className="font-sans font-bold text-sm text-white">Connexion aux systèmes de paiement...</h5>
-              <p className="text-xs text-zinc-500 font-mono uppercase tracking-wider">
+              <h5 className="font-sans font-bold text-sm text-afri-text">Connexion aux systèmes de paiement...</h5>
+              <p className="text-xs text-afri-text-sec font-mono uppercase tracking-wider">
                 Initiation du protocole {
                   operator === "wave" ? "Wave CI API" :
                   operator === "orange" ? "Orange Money CI USSD" :
@@ -370,7 +370,7 @@ export default function MobileMoneyPayment({
               </p>
             </div>
 
-            <p className="max-w-xs text-[10px] text-zinc-600 leading-normal font-mono">
+            <p className="max-w-xs text-[10px] text-afri-text-sec leading-normal font-mono">
               Nous interrogeons les relais financiers d'Abidjan pour acheminer en toute sécurité la demande de blocage au numéro {phoneNumber}.
             </p>
           </motion.div>
@@ -386,7 +386,7 @@ export default function MobileMoneyPayment({
             className="p-6 space-y-5"
           >
             {/* Visual Phone push notification mimic */}
-            <div className="border border-zinc-850 bg-black rounded-2xl p-4 text-center relative overflow-hidden">
+            <div className="border border-afri-border bg-afri-bg rounded-2xl p-4 text-center relative overflow-hidden">
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-yellow-500 via-orange-500 to-amber-600 animate-pulse" />
               
               <div className="flex justify-center mb-2">
@@ -397,16 +397,16 @@ export default function MobileMoneyPayment({
                 Notification Push simulée envoyée !
               </h6>
               
-              <p className="text-xs text-zinc-300 font-sans max-w-sm mx-auto leading-relaxed">
+              <p className="text-xs text-afri-text font-sans max-w-sm mx-auto leading-relaxed">
                 {operator === "wave" && `Ouvrez votre application Wave sur le téléphone et validez le paiement de ${totalAmount.toLocaleString()} FCFA.`}
                 {operator === "orange" && `Tapez votre code secret Orange Money suite au prompt USSD reçu directement sur votre mobile de ${totalAmount.toLocaleString()} FCFA.`}
                 {operator === "mtn" && `Validez la demande de retrait MTN MoMo de ${totalAmount.toLocaleString()} FCFA reçue directement sur votre téléphone avec votre code secret.`}
                 {operator === "moov" && `Faites le code *155# pour approuver l'opération de consignation Moov Money de ${totalAmount.toLocaleString()} FCFA.`}
               </p>
 
-              <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-900 rounded-full font-mono text-[10px] text-zinc-500">
+              <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 bg-afri-bg-sec rounded-full font-mono text-[10px] text-afri-text-sec">
                 <span>Validation automatique dans :</span>
-                <strong className="text-white text-xs">{countdown}s</strong>
+                <strong className="text-afri-text text-xs">{countdown}s</strong>
               </div>
             </div>
 
@@ -414,14 +414,14 @@ export default function MobileMoneyPayment({
             <div className="space-y-2">
               <button
                 onClick={handleForceValidate}
-                className="w-full py-2.5 bg-[#D4AF37] hover:bg-[#B48F17] text-black rounded-xl font-mono text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+                className="w-full py-2.5 bg-afri-bg-sec hover:bg-afri-bg-sec text-black rounded-xl font-mono text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
               >
                 Simuler Succès de Validation Direct (OK) ⚡
               </button>
 
               <button
                 onClick={() => { triggerTickSound(); setStep("configure"); }}
-                className="w-full py-2 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl font-mono text-[10px] uppercase transition-colors cursor-pointer"
+                className="w-full py-2 border border-afri-border text-afri-text-sec hover:text-afri-text rounded-xl font-mono text-[10px] uppercase transition-colors cursor-pointer"
               >
                 Annuler et modifier les informations
               </button>
@@ -453,7 +453,7 @@ export default function MobileMoneyPayment({
                 <h5 className="font-sans font-black uppercase tracking-wide text-xs text-zinc-900 mt-1">
                   BLOCAGE SCELLÉ AVEC SUCCÈS
                 </h5>
-                <span className="text-[9px] font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full uppercase">
+                <span className="text-[9px] font-mono text-afri-text-sec bg-zinc-100 px-2 py-0.5 rounded-full uppercase">
                   RECU DE TRANSACTION NUMÉRIQUE SÉCURISÉ
                 </span>
               </div>
@@ -461,27 +461,27 @@ export default function MobileMoneyPayment({
               {/* Transaction Detail Lines */}
               <div className="space-y-2.5 font-mono text-[11px] text-zinc-805">
                 <div className="flex justify-between">
-                  <span className="text-zinc-400">ID TRANSACTION :</span>
+                  <span className="text-afri-text-sec">ID TRANSACTION :</span>
                   <strong className="text-zinc-900 font-bold font-mono">{transactionId}</strong>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-zinc-400 font-mono">CODE RÉSERVATION :</span>
+                  <span className="text-afri-text-sec font-mono">CODE RÉSERVATION :</span>
                   <strong className="text-zinc-900 font-mono">{reservationId}</strong>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-zinc-400">PLAN MUSICAL :</span>
+                  <span className="text-afri-text-sec">PLAN MUSICAL :</span>
                   <strong className="text-zinc-900 truncate max-w-[150px] font-mono">{gomboTitle}</strong>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-zinc-400">ARTISTE SCELLÉ :</span>
+                  <span className="text-afri-text-sec">ARTISTE SCELLÉ :</span>
                   <strong className="text-zinc-900 font-mono">{musicianName}</strong>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-zinc-400">VIA MOBILE :</span>
+                  <span className="text-afri-text-sec">VIA MOBILE :</span>
                   <strong className="text-zinc-900 font-mono uppercase">
                     {operator === "wave" && "🌊 WAVE"}
                     {operator === "orange" && "🍊 ORANGE MONEY"}
@@ -491,7 +491,7 @@ export default function MobileMoneyPayment({
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-zinc-400">DATE & HEURE :</span>
+                  <span className="text-afri-text-sec">DATE & HEURE :</span>
                   <span className="text-zinc-900 font-mono">{paymentDate || "16/06/2026 à 12:00"}</span>
                 </div>
 
@@ -509,7 +509,7 @@ export default function MobileMoneyPayment({
                   <span className="text-[14px]">🛡️</span>
                   <div className="flex flex-col text-left">
                     <span className="text-[8px] font-bold text-emerald-800 leading-none">CONSIGNATION GARANTIE</span>
-                    <span className="text-[7px] text-zinc-400 leading-none mt-0.5 font-mono">Dépôt séquestre de confiance</span>
+                    <span className="text-[7px] text-afri-text-sec leading-none mt-0.5 font-mono">Dépôt séquestre de confiance</span>
                   </div>
                 </div>
                 <div className="border border-emerald-600/30 text-emerald-700 bg-emerald-50/60 font-mono text-[7px] font-black tracking-widest uppercase py-1 px-1.5 rounded rotate-3 select-none">
@@ -526,7 +526,7 @@ export default function MobileMoneyPayment({
                   triggerSuccessSound();
                   alert("Simulation de téléchargement du PDF de transaction réussie !");
                 }}
-                className="py-2.5 bg-zinc-900 hover:bg-zinc-850 text-white border border-zinc-800 rounded-xl font-mono text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                className="py-2.5 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text border border-afri-border rounded-xl font-mono text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Télécharger Reçu</span>
@@ -534,7 +534,7 @@ export default function MobileMoneyPayment({
 
               <button
                 onClick={onClose}
-                className="py-2.5 bg-[#D4AF37] hover:bg-[#B48F17] text-black rounded-xl font-mono text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                className="py-2.5 bg-afri-bg-sec hover:bg-afri-bg-sec text-black rounded-xl font-mono text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
               >
                 <span>Fermer le Portail</span>
               </button>

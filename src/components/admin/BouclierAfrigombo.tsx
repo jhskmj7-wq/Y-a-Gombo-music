@@ -90,8 +90,8 @@ export default function BouclierAfrigombo() {
         <div className="text-[#D4AF37] font-mono text-xs font-black uppercase tracking-widest">
           Initialisation Bouclier AFRIGOMBO...
         </div>
-        <div className="w-48 h-1 bg-zinc-900 rounded-full overflow-hidden">
-          <div className="h-full bg-[#D4AF37] w-full animate-[progress_2s_ease-in-out]" />
+        <div className="w-48 h-1 bg-afri-bg-sec rounded-full overflow-hidden">
+          <div className="h-full bg-afri-bg-sec w-full animate-[progress_2s_ease-in-out]" />
         </div>
       </div>
     );
@@ -108,21 +108,21 @@ export default function BouclierAfrigombo() {
   );
 
   const StatItem = ({ label, value, icon: Icon }: any) => (
-    <div className="p-4 bg-black border border-zinc-900 rounded-xl flex flex-col items-center justify-center text-center">
+    <div className="p-4 bg-afri-bg border border-afri-border rounded-xl flex flex-col items-center justify-center text-center">
       <Icon className="w-5 h-5 text-[#D4AF37] mb-2" />
-      <span className="text-xl font-black text-white">{value}</span>
-      <span className="text-[9px] font-mono uppercase text-zinc-500 mt-1">{label}</span>
+      <span className="text-xl font-black text-afri-text">{value}</span>
+      <span className="text-[9px] font-mono uppercase text-afri-text-sec mt-1">{label}</span>
     </div>
   );
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="border-b border-white/5 pb-4 flex justify-between items-end">
+      <div className="border-b border-afri-border pb-4 flex justify-between items-end">
         <div>
           <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">
             <Shield className="w-4 h-4" /> Bouclier AFRIGOMBO
           </h3>
-          <p className="text-[10px] text-zinc-400 mt-1 uppercase font-mono tracking-wider">
+          <p className="text-[10px] text-afri-text-sec mt-1 uppercase font-mono tracking-wider">
             Diagnostic & Santé en temps réel. Données certifiées Firebase.
           </p>
         </div>
@@ -130,7 +130,7 @@ export default function BouclierAfrigombo() {
           <div className={`text-3xl font-black font-mono ${healthScore > 80 ? "text-emerald-400" : healthScore > 50 ? "text-yellow-500" : "text-red-500"}`}>
             {healthScore}%
           </div>
-          <div className="text-[9px] font-mono uppercase text-zinc-500 mt-1">Santé AFRIGOMBO</div>
+          <div className="text-[9px] font-mono uppercase text-afri-text-sec mt-1">Santé AFRIGOMBO</div>
         </div>
       </div>
 
@@ -150,25 +150,25 @@ export default function BouclierAfrigombo() {
         <StatItem label="Alertes Critiques" value={stats.alerts} icon={HeartPulse} />
       </div>
 
-      <div className="bg-[#030304] border border-zinc-900 rounded-xl p-4 flex flex-wrap gap-6 items-center">
+      <div className="bg-afri-bg-sec border border-afri-border rounded-xl p-4 flex flex-wrap gap-6 items-center">
         <div className="flex items-center gap-2">
-          <RefreshCw className="w-4 h-4 text-zinc-500" />
+          <RefreshCw className="w-4 h-4 text-afri-text-sec" />
           <div>
-            <div className="text-[9px] text-zinc-500 uppercase font-mono">Dernière synchro</div>
-            <div className="text-[11px] font-mono text-white">{lastSync.toLocaleTimeString()}</div>
+            <div className="text-[9px] text-afri-text-sec uppercase font-mono">Dernière synchro</div>
+            <div className="text-[11px] font-mono text-afri-text">{lastSync.toLocaleTimeString()}</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-emerald-500" />
           <div>
-            <div className="text-[9px] text-zinc-500 uppercase font-mono">Temps de réponse</div>
+            <div className="text-[9px] text-afri-text-sec uppercase font-mono">Temps de réponse</div>
             <div className="text-[11px] font-mono text-emerald-400">{responseTime}ms</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Database className="w-4 h-4 text-blue-400" />
           <div>
-            <div className="text-[9px] text-zinc-500 uppercase font-mono">Sauvegarde</div>
+            <div className="text-[9px] text-afri-text-sec uppercase font-mono">Sauvegarde</div>
             <div className="text-[11px] font-mono text-blue-400">Automatique (GCP)</div>
           </div>
         </div>

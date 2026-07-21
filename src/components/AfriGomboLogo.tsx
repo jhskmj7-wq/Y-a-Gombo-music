@@ -5,7 +5,7 @@ export const AfriGomboLogo: React.FC<{ className?: string }> = ({ className = ""
   return (
     <div className={`relative flex items-center justify-center ${className} select-none`}>
       {/* BACKGROUND GLOW */}
-      <div className="absolute inset-0 bg-[#D4AF37]/15 blur-lg rounded-full scale-50 animate-pulse pointer-events-none" />
+      <div className="absolute inset-0 bg-afri-bg-sec/15 blur-lg rounded-full scale-50 animate-pulse pointer-events-none" />
       
       <svg 
         viewBox="0 0 100 100" 

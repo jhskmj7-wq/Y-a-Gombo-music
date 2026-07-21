@@ -59,7 +59,7 @@ export const Carousel: React.FC<CarouselProps> = ({ items, autoSlideInterval = 3
         {items.map((_, i) => (
           <div 
             key={i} 
-            className={`w-2 h-2 rounded-full transition-all ${i === index ? "bg-[#D4AF37] w-4" : "bg-white/50"}`} 
+            className={`w-2 h-2 rounded-full transition-all ${i === index ? "bg-afri-bg-sec w-4" : "bg-white/50"}`} 
           />
         ))}
       </div>

@@ -18,13 +18,13 @@ export default function ThroneCinematicIntro({ onComplete }: ThroneCinematicIntr
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-[999] bg-black select-none overflow-hidden flex flex-col items-center justify-center font-sans">
+    <div className="fixed inset-0 z-[999] bg-afri-bg select-none overflow-hidden flex flex-col items-center justify-center font-sans">
       {/* 1. Black Fade (starts immediately, 150ms) */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15, ease: "easeOut" }}
-        className="absolute inset-0 bg-black flex flex-col items-center justify-center"
+        className="absolute inset-0 bg-afri-bg flex flex-col items-center justify-center"
       >
         {/* Container for animations to ensure hardware acceleration */}
         <div className="relative w-full max-w-md h-96 flex flex-col items-center justify-center transform-gpu">
@@ -49,7 +49,7 @@ export default function ThroneCinematicIntro({ onComplete }: ThroneCinematicIntr
                     delay: delay,
                     ease: "easeOut",
                   }}
-                  className="absolute w-2.5 h-2.5 rounded-full bg-[#D4AF37] shadow-[0_0_10px_#D4AF37]"
+                  className="absolute w-2.5 h-2.5 rounded-full bg-afri-bg-sec shadow-[0_0_10px_#D4AF37]"
                   style={{ transform: "translate3d(0,0,0)" }}
                 />
               );
@@ -65,7 +65,7 @@ export default function ThroneCinematicIntro({ onComplete }: ThroneCinematicIntr
               delay: 0.45,
               ease: "easeOut",
             }}
-            className="w-24 h-24 rounded-full bg-gradient-to-b from-zinc-950 to-black border border-[#D4AF37]/40 flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.4)] relative z-10"
+            className="w-24 h-24 rounded-full bg-gradient-to-b from-afri-bg-action to-afri-bg border border-[#D4AF37]/40 flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.4)] relative z-10"
           >
             <Crown className="w-12 h-12 text-[#D4AF37] drop-shadow-[0_0_15px_rgba(212,175,55,0.6)]" />
           </motion.div>
@@ -85,7 +85,7 @@ export default function ThroneCinematicIntro({ onComplete }: ThroneCinematicIntr
               TRÔNE DU FONDATEUR
             </h1>
             <div className="h-[1px] w-32 bg-gradient-to-r from-transparent via-[#D4AF37]/60 to-transparent mx-auto" />
-            <p className="text-[9px] font-mono tracking-[0.3em] uppercase text-zinc-400">
+            <p className="text-[9px] font-mono tracking-[0.3em] uppercase text-afri-text-sec">
               SOUVERAINETÉ & CONTRÔLE
             </p>
           </motion.div>
