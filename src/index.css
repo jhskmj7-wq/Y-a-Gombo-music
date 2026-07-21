@@ -19,15 +19,15 @@
 }
 
 .light {
-  --afri-bg: #F9F8F6;
-  --afri-bg-sec: #FFFFFF;
-  --afri-bg-ter: #FAF0E6;
-  --afri-bg-action: #EAE0D5;
-  --afri-bar: #E2E2E2;
-  --afri-text: #333333;
-  --afri-text-sec: #737373;
-  --afri-text-muted: #999999;
-  --afri-border: #E5E5E5;
+  --afri-bg: #EAEAEA;
+  --afri-bg-sec: #F5F5F5;
+  --afri-bg-ter: #DCDCDC;
+  --afri-bg-action: #CCCCCC;
+  --afri-bar: #BDBDBD;
+  --afri-text: #222222;
+  --afri-text-sec: #555555;
+  --afri-text-muted: #888888;
+  --afri-border: #D1D1D1;
 }
 
 /* Smooth 250-300ms transitions for colors, backgrounds, borders and shadows when theme is changed */

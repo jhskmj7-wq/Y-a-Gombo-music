@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
 
 const AdminStats = lazyWithRetry(() => import("./AdminStats"));
+const AfrigomboHelpCenter = lazyWithRetry(() => import("./AfrigomboHelpCenter"));
 const AdminReports = lazyWithRetry(() => import("./admin/AdminReports"));
 const AdminActions = lazyWithRetry(() => import("./AdminActions"));
 const AdminDashboard = lazyWithRetry(() => import("./admin/AdminDashboard"));
@@ -55,7 +56,7 @@ import AboutAfrigombo from "./AboutAfrigombo";
 import { AfriGomboLogo } from "./AfriGomboLogo";
 import SupportAfrigombo from "./SupportAfrigombo";
 import WhatsNew from "./WhatsNew";
-import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
+// const AfrigomboHelpCenter = lazyWithRetry(() => import("./AfrigomboHelpCenter"));
 import FirebaseDiagnostic from "./FirebaseDiagnostic";
 import { gomboDB } from "../firebase";
 import { usePerformance } from "../services/performanceService";
@@ -2973,7 +2974,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
-                className="h-full w-full overflow-y-auto overflow-x-hidden afri-container afri-section scrollbar-none scroll-smooth [-webkit-overflow-scrolling:touch]"
+                className={`h-full w-full overflow-y-auto overflow-x-hidden afri-container scrollbar-none scroll-smooth [-webkit-overflow-scrolling:touch] ${
+                  activeMenu === "super_admin" ? "pt-0 pb-32 space-y-6" : "afri-section"
+                }`}
                 style={{ overscrollBehaviorY: "contain" }}
               >
                 

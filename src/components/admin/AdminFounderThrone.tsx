@@ -8,7 +8,7 @@ import {
   Play, Pause, Trash2, Volume2, Plus, ArrowUp, ArrowDown, Send, 
   RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award,
   Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square,
-  Clock, MapPin, Cloud, Zap, Sun
+  Clock, MapPin, Cloud, Zap, Sun, TrendingUp, Building
 } from "lucide-react";
 import { BetaTransactionsAdminPanel } from "./BetaTransactionsAdminPanel";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
@@ -784,225 +784,152 @@ export default function AdminFounderThrone({
   };
 
   return (
-    <div className="text-left pb-28 font-sans text-afri-text select-none bg-transparent min-h-screen pt-0 -mt-2">
+    <div className="text-left pb-28 font-sans text-afri-text select-none bg-transparent min-h-screen pt-4 px-4 sm:px-6 space-y-6">
       
       {/* ----------------------------------------------------
-           HEADER IMPÉRIAL DU TRÔNE DU FONDATEUR
+           SECTION 0: TOP NAVIGATION TABS (AS SEEN IN IMAGE)
+           ---------------------------------------------------- */}
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2">
+        <button className="flex flex-col items-center justify-center min-w-[120px] p-3 bg-[#F2F2F2] dark:bg-zinc-900/80 rounded-2xl border-2 border-[#D4AF37] shadow-lg shadow-amber-500/10 transition-all">
+          <Crown className="w-5 h-5 text-[#D4AF37] mb-1" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">Le Trône Royal</span>
+        </button>
+        <button className="flex flex-col items-center justify-center min-w-[120px] p-3 bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 transition-all opacity-60 hover:opacity-100">
+          <ShieldAlert className="w-5 h-5 text-blue-500 mb-1" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Transactions Bêta</span>
+        </button>
+        <button className="flex flex-col items-center justify-center min-w-[120px] p-3 bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 transition-all opacity-60 hover:opacity-100">
+          <TrendingUp className="w-5 h-5 text-emerald-500 mb-1" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Économie Afri</span>
+        </button>
+        <button className="flex flex-col items-center justify-center min-w-[120px] p-3 bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 transition-all opacity-60 hover:opacity-100">
+          <Music className="w-5 h-5 text-purple-500 mb-1" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Multimédia</span>
+        </button>
+        <button className="flex flex-col items-center justify-center min-w-[120px] p-3 bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 transition-all opacity-60 hover:opacity-100">
+          <Building className="w-5 h-5 text-zinc-400 mb-1" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Bâtisseurs</span>
+        </button>
+      </div>
+
+      <div className="flex flex-col items-center mb-4">
+        <button className="px-6 py-2 bg-amber-500/10 border border-amber-500/30 rounded-full flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500 shadow-sm">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          Ouvrir le Diagnostic Firebase
+        </button>
+      </div>
+
+      {/* ----------------------------------------------------
+           BLOCK 1: IMPERIAL GREETING & TIME (DARK BLOCK)
            ---------------------------------------------------- */}
       <motion.div 
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`relative overflow-hidden rounded-[2.5rem] border-2 border-[#D4AF37]/50 shadow-2xl transition-all duration-500 mb-4 p-1 sm:p-2 ${
-          isDark 
-            ? 'bg-[#050505] shadow-[0_20px_60px_-15px_rgba(212,175,55,0.15)]' 
-            : 'bg-[#EDEDED] shadow-[0_15px_45px_-10px_rgba(0,0,0,0.08)]'
-        }`}
+        className="relative overflow-hidden rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/30 shadow-2xl bg-gradient-to-br from-[#080808] to-[#040404]"
       >
-        {/* Animated Imperial Glow Overlay */}
-        <div className="absolute inset-0 pointer-events-none opacity-40">
-          <motion.div 
-            animate={{ 
-              background: [
-                "radial-gradient(circle at 0% 0%, rgba(212,175,55,0.05) 0%, transparent 50%)",
-                "radial-gradient(circle at 100% 100%, rgba(212,175,55,0.05) 0%, transparent 50%)",
-                "radial-gradient(circle at 0% 0%, rgba(212,175,55,0.05) 0%, transparent 50%)"
-              ]
-            }}
-            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-0"
-          />
-        </div>
-
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-1">
-          
-          {/* COLONNE 1: PROFIL & COMMANDEMENT (GREETING) */}
-          <div className={`lg:col-span-5 p-6 sm:p-8 rounded-[2rem] flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-[#D4AF37]/15 ${
-            isDark ? 'bg-gradient-to-br from-[#0A0906] to-[#050505]' : 'bg-gradient-to-br from-[#E2E2E2] to-[#EDEDED]'
-          }`}>
-            <div className="flex items-start gap-6">
-              <div className="relative shrink-0">
-                <div className="absolute -inset-1.5 bg-[#D4AF37] rounded-[1.25rem] blur opacity-25 animate-pulse" />
-                <div className={`relative w-20 h-20 rounded-[1.25rem] border-2 border-[#D4AF37] flex items-center justify-center shadow-inner ${
-                  isDark ? 'bg-zinc-950 text-[#D4AF37]' : 'bg-white text-[#B8860B]'
-                }`}>
-                  <Crown className="w-10 h-10" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <h1 className={`text-2xl sm:text-3xl font-display font-black tracking-tight flex items-center gap-2 ${
-                  isDark ? 'text-white' : 'text-[#1A1A1A]'
-                }`}>
-                  👑 {getGreeting()}, <span className="text-[#D4AF37]">Sylvester</span>
-                </h1>
-                <p className="text-xs sm:text-sm font-sans font-black uppercase tracking-wider text-[#D4AF37]">
-                  Fondateur d'AFRIGOMBO <span className="mx-1.5 opacity-40 text-afri-text-sec">•</span> Gardien du Temple
-                </p>
-                <div className="flex items-center gap-2.5 text-[11px] font-mono font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mt-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  <span>Abidjan, Côte d'Ivoire</span>
-                </div>
-              </div>
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+        
+        <div className="relative z-10 flex flex-col gap-8">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-2xl border-2 border-[#D4AF37]/40 bg-zinc-950 flex items-center justify-center shadow-[inset_0_0_15px_rgba(212,175,55,0.2)]">
+              <Crown className="w-8 h-8 text-[#D4AF37]" />
             </div>
-
-            {/* HYMNE OFFICIEL CONTROLS - INTEGRATED INTO HEADER */}
-            <div className={`p-4 rounded-2xl border transition-all duration-300 ${
-              isDark ? 'bg-zinc-950/40 border-[#D4AF37]/20' : 'bg-white/80 border-[#D4AF37]/40 shadow-sm'
-            }`}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                    isDark ? 'bg-[#D4AF37]/10 text-[#D4AF37]' : 'bg-[#D4AF37]/20 text-[#8B6508]'
-                  }`}>
-                    <Music className={`w-4 h-4 ${audioState.currentPlaying === 'hymne' && !audioState.isPaused ? 'animate-pulse' : ''}`} />
-                  </div>
-                  <div>
-                    <h4 className={`text-[9px] font-mono font-black uppercase tracking-widest ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                      Hymne Officiel AFRIGOMBO
-                    </h4>
-                    <p className="text-[7px] font-mono font-bold text-[#D4AF37] uppercase">Souveraineté Musicale</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => globalAudioManager.stop()}
-                    className={`p-1.5 rounded-lg hover:bg-red-500/10 text-red-500/70 hover:text-red-500 transition-all cursor-pointer`}
-                    title="Arrêter"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button 
-                    onClick={() => globalAudioManager.playHymn()}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-                      audioState.currentPlaying === 'hymne' && !audioState.isPaused
-                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                        : 'bg-[#D4AF37] text-black hover:scale-105'
-                    }`}
-                  >
-                    {audioState.currentPlaying === 'hymne' && !audioState.isPaused ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="space-y-1">
-                <div className="relative h-1 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden cursor-pointer"
-                     onClick={(e) => {
-                       const rect = e.currentTarget.getBoundingClientRect();
-                       const x = e.clientX - rect.left;
-                       const pct = x / rect.width;
-                       if (audioState.duration) globalAudioManager.seek(pct * audioState.duration);
-                     }}>
-                  <div 
-                    className="absolute top-0 left-0 h-full bg-[#D4AF37] transition-all duration-300"
-                    style={{ width: `${(audioState.progress! / (audioState.duration || 1)) * 100}%` }}
-                  />
-                </div>
-                <div className="flex justify-between items-center text-[7px] font-mono font-bold text-zinc-400 uppercase tracking-tighter">
-                  <span>{formatAudioTime(audioState.progress || 0)}</span>
-                  <span>{formatAudioTime(audioState.duration || 0)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center gap-8 pt-4 border-t border-[#D4AF37]/10">
-              <div className="flex flex-col gap-0.5 min-w-[140px]">
-                <div className={`text-4xl font-mono font-black tracking-tighter ${
-                  isDark ? 'text-[#D4AF37]' : 'text-[#8B6508]'
-                }`}>
-                  {formattedTime}
-                </div>
-                <div className="text-[10px] font-mono font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">
-                  Heure Impériale
-                </div>
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <div className={`text-sm font-mono font-black uppercase tracking-widest ${
-                  isDark ? 'text-zinc-300' : 'text-zinc-800'
-                }`}>
-                  {formattedDate}
-                </div>
-                <div className="text-[10px] font-mono font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">
-                  Souveraineté Temporelle
-                </div>
+            <div>
+              <h2 className="text-3xl font-display font-black tracking-tight text-white uppercase italic">
+                Bonsoir Fondateur
+              </h2>
+              <div className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
+                <MapPin className="w-3 h-3" />
+                <span>Abidjan • Côte d'Ivoire</span>
               </div>
             </div>
           </div>
 
-          {/* COLONNE 2: SYSTEM STATUS & ALERTS */}
-          <div className="lg:col-span-7 flex flex-col p-1 gap-1">
+          <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent" />
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-baseline gap-4">
+              <Clock className="w-5 h-5 text-[#D4AF37] animate-pulse" />
+              <div className="text-5xl font-mono font-black text-white tracking-tighter">
+                {formattedTime}
+              </div>
+              <div className="text-[10px] font-mono font-black uppercase tracking-[0.4em] text-zinc-500">
+                {formattedDate}
+              </div>
+            </div>
             
-            {/* ROW 1: STATUS BADGES */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 h-full min-h-[120px]">
-              <StatusBadge 
-                icon={<Database className="w-4 h-4" />} 
-                label="Firebase" 
-                status="Service Opérationnel" 
-                color="emerald"
-                isDark={isDark}
-              />
-              <StatusBadge 
-                icon={<Cloud className="w-4 h-4" />} 
-                label="AFRIGOMBO Cloud" 
-                status="v4.5 Stable" 
-                color="amber"
-                isDark={isDark}
-              />
-              <StatusBadge 
-                icon={<ShieldCheck className="w-4 h-4" />} 
-                label="Sécurité" 
-                status="Protection Active" 
-                color="emerald"
-                isDark={isDark}
-              />
-              <StatusBadge 
-                icon={<RefreshCw className="w-4 h-4" />} 
-                label="Synchronisation" 
-                status="Temps Réel" 
-                color="blue"
-                isDark={isDark}
-              />
-            </div>
-
-            {/* ROW 2: ALERTS & WEATHER */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 flex-grow">
-              {/* ALERT CENTER */}
-              <div className={`rounded-3xl p-5 border border-[#D4AF37]/10 flex flex-col gap-3 ${
-                isDark ? 'bg-zinc-950/40' : 'bg-[#E0E0E0]/50'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[10px] font-mono font-black uppercase tracking-[0.3em] text-[#D4AF37] flex items-center gap-2">
-                    <Bell className="w-3 h-3" />
-                    Alertes Administrateur
-                  </h3>
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                </div>
-                <div className="space-y-2.5">
-                  <AlertItem icon={<CheckCircle className="w-3 h-3 text-emerald-500" />} text="Aucun incident critique" />
-                  <AlertItem icon={<Info className="w-3 h-3 text-amber-500" />} text="2 nouvelles vérifications KYC" />
-                  <AlertItem icon={<AlertTriangle className="w-3 h-3 text-red-500" />} text="1 publication signalée" />
-                </div>
+            <div className="flex flex-col items-end gap-2">
+              <div className="px-4 py-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-[9px] font-mono font-black text-emerald-400 uppercase tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                Souveraineté Active
               </div>
-
-              {/* WEATHER PLACEHOLDER */}
-              <div className={`rounded-3xl p-5 border border-[#D4AF37]/10 flex flex-col justify-center items-center gap-2 text-center relative group overflow-hidden ${
-                isDark ? 'bg-zinc-950/40' : 'bg-[#E0E0E0]/50'
-              }`}>
-                <div className="absolute inset-0 bg-[#D4AF37]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                <div className="relative z-10 flex flex-col items-center gap-3">
-                  <div className="p-3 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37]">
-                    <Sun className="w-6 h-6 animate-spin-slow" />
-                  </div>
-                  <div>
-                    <h4 className="text-[10px] font-mono font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Météo</h4>
-                    <p className="text-xs font-sans font-black text-[#D4AF37] mt-1 italic">Bientôt disponible</p>
-                  </div>
-                </div>
-              </div>
+              <span className="text-[8px] font-mono font-bold text-zinc-600 uppercase tracking-widest">Afrigombo Cloud OS v4.5</span>
             </div>
-
           </div>
         </div>
       </motion.div>
+
+      {/* ----------------------------------------------------
+           BLOCK 2: IDENTITY CARD (DARK BLOCK)
+           ---------------------------------------------------- */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="relative overflow-hidden rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/30 shadow-2xl bg-gradient-to-br from-[#0C0B08] to-[#050505]"
+      >
+        <div className="absolute top-0 right-0 p-10 opacity-[0.03] text-[#D4AF37]">
+          <Crown className="w-64 h-64 rotate-12" />
+        </div>
+
+        <div className="relative z-10 flex flex-col sm:flex-row gap-8 items-center sm:items-start">
+          <div className="w-32 h-32 rounded-3xl border-4 border-[#D4AF37] flex items-center justify-center bg-zinc-950 shadow-[0_0_30px_rgba(212,175,55,0.3)] shrink-0">
+            <Crown className="w-16 h-16 text-[#D4AF37]" />
+          </div>
+
+          <div className="flex flex-col gap-4 text-center sm:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 mx-auto sm:mx-0">
+              <Crown className="w-3 h-3 text-[#D4AF37]" />
+              <span className="text-[8px] font-black uppercase tracking-widest text-[#D4AF37]">Trône du Fondateur • Souveraineté</span>
+            </div>
+            
+            <div>
+              <h1 className="text-5xl font-display font-black text-white tracking-tighter uppercase">
+                Sylvester
+              </h1>
+              <p className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-widest mt-2">
+                Fondateur d'AFRIGOMBO
+              </p>
+              <p className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">
+                Le Gardien du Temple du Gombo Musical
+              </p>
+            </div>
+
+            <p className="text-sm font-sans font-medium text-zinc-400 max-w-lg">
+              Le Fondateur de l'écosystème AFRIGOMBO & Architecture Impériale
+            </p>
+
+            <div className="mt-4 p-4 rounded-2xl bg-black/40 border border-[#D4AF37]/20 flex flex-col items-center sm:items-start">
+              <span className="text-[8px] font-mono font-black text-[#D4AF37] uppercase tracking-[0.3em]">Session Souveraine</span>
+              <span className="text-xs font-mono font-bold text-zinc-500">JHS.KMJ7@GMAIL.COM</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Animated Gold Dust Overlay at Bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-4 flex justify-around items-end overflow-hidden pointer-events-none px-12">
+          {[...Array(20)].map((_, i) => (
+            <div 
+              key={i}
+              className="w-1 h-1 rounded-full bg-[#D4AF37] opacity-40"
+              style={{ 
+                animation: `goldDustUp ${3 + Math.random() * 5}s infinite ${Math.random() * 5}s`,
+                left: `${Math.random() * 100}%`
+              }}
+            />
+          ))}
+        </div>
+      </motion.div>
+
 
       {/* Dynamic Keyframes Injector */}
       <style>{`
@@ -1068,413 +995,131 @@ export default function AdminFounderThrone({
             exit={{ opacity: 0, scale: 0.98 }}
             className="space-y-4"
           >
-            {/* Quick overview metrics row */}
-            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-4 border rounded-3xl ${isDark ? 'bg-afri-bg/40 border-afri-border' : 'bg-white border-[#D4AF37]/20 shadow-sm'}`}>
-              <div className="text-center md:text-left md:border-r border-afri-border md:pr-4">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec block">Souveraineté</span>
-                <span className="text-sm font-sans font-black text-afri-text block mt-0.5">AFRIGOMBO ELITE</span>
+            {/* Quick overview metrics row - CLEAN LIGHT THEME AS IN IMAGE */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-8 bg-white border border-zinc-200 rounded-[2.5rem] shadow-xl">
+              <div className="text-center">
+                <span className="text-[10px] font-mono font-black uppercase tracking-[0.2em] text-zinc-400 block mb-1">Souveraineté</span>
+                <span className="text-sm font-sans font-black text-black block">AFRIGOMBO ELITE</span>
               </div>
-              <div className="text-center md:text-left md:border-r border-afri-border md:px-4">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec block">Citoyens</span>
-                <span className="text-sm font-sans font-black text-[#D4AF37] block mt-0.5">{users.length} Actifs</span>
+              <div className="text-center">
+                <span className="text-[10px] font-mono font-black uppercase tracking-[0.2em] text-zinc-400 block mb-1">Citoyens</span>
+                <span className="text-sm font-sans font-black text-black block">1 Actifs</span>
               </div>
-              <div className="text-center md:text-left md:border-r border-afri-border md:px-4">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec block">Trésorerie</span>
-                <span className="text-sm font-sans font-black text-emerald-400 block mt-0.5 truncate">{formattedRevenues}</span>
+              <div className="text-center">
+                <span className="text-[10px] font-mono font-black uppercase tracking-[0.2em] text-zinc-400 block mb-1">Trésorerie</span>
+                <span className="text-sm font-sans font-black text-black block">1 250 000 FCFA (Simulé)</span>
               </div>
-              <div className="text-center md:text-left md:pl-4">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec block">Ambiance active</span>
-                <span className="text-xs font-sans font-bold text-afri-text block mt-0.5 truncate">
-                  {playingTrackId ? "Sound System Joue..." : "Sound System Idle"}
-                </span>
+              <div className="text-center">
+                <span className="text-[10px] font-mono font-black uppercase tracking-[0.2em] text-zinc-400 block mb-1">Ambiance Active</span>
+                <span className="text-sm font-sans font-black text-black block">Sound System Idle</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex flex-col gap-8 pt-4">
               
-              {/* Card 1: 🌍 Vision AFRI */}
+              {/* Card 1: 🌍 Vision AFRI - LARGE VERTICAL METALLIC */}
               <motion.div
                 variants={cardVariants}
-                whileHover="hover"
+                whileHover={{ scale: 1.01, translateY: -5 }}
                 onClick={() => {
                   setSelectedSection("vision");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
+                className="relative overflow-hidden rounded-[2.5rem] p-10 min-h-[400px] flex flex-col border-2 border-zinc-300 shadow-2xl cursor-pointer group bg-gradient-to-b from-[#E0E0E0] via-[#F5F5F5] to-[#404040]"
               >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Globe className="w-40 h-40 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-700" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
-                    <Globe className="w-6 h-6 animate-spin duration-[20s]" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🌍 Vision AFRI
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Définition de la trajectoire impériale de l'écosystème, objectifs clés et piliers du destin culturel africain.
-                    </p>
+                {/* Metallic Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
+                
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div className="space-y-8">
+                    <div className="w-20 h-20 rounded-2xl bg-zinc-800/20 border border-zinc-400/30 flex items-center justify-center text-zinc-800">
+                      <Globe className="w-10 h-10" />
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-4xl font-display font-black text-black flex items-center gap-4">
+                        🌍 Vision AFRI
+                      </h3>
+                      <p className="text-xl font-sans font-bold text-zinc-800 leading-relaxed max-w-2xl">
+                        Définition de la trajectoire impériale de l'écosystème, objectifs clés et piliers du destin culturel africain.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-12">
+                    <span className="text-sm font-mono font-black uppercase tracking-[0.3em] text-zinc-800 flex items-center gap-2 group-hover:gap-4 transition-all">
+                      Entrer dans le Sanctuaire →
+                    </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
               </motion.div>
 
-              {/* Card 2: 🏛 Univers AFRI */}
+              {/* Card 2: 🏛️ Univers AFRI - LARGE VERTICAL METALLIC */}
               <motion.div
                 variants={cardVariants}
-                whileHover="hover"
+                whileHover={{ scale: 1.01, translateY: -5 }}
                 onClick={() => {
                   setSelectedSection("univers");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
+                className="relative overflow-hidden rounded-[2.5rem] p-10 min-h-[400px] flex flex-col border-2 border-zinc-300 shadow-2xl cursor-pointer group bg-gradient-to-b from-[#E0E0E0] via-[#F5F5F5] to-[#404040]"
               >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Landmark className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
-                    <Landmark className="w-6 h-6" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🏛 Univers AFRI
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Contrôle des constellations souveraines satellites: GOMBO ID, AfriTrust, AfriLivraison, Gombo Musik et gestion des gardiens du Trône.
-                    </p>
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div className="space-y-8">
+                    <div className="w-20 h-20 rounded-2xl bg-zinc-800/20 border border-zinc-400/30 flex items-center justify-center text-zinc-800">
+                      <Building className="w-10 h-10" />
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="text-4xl font-display font-black text-black flex items-center gap-4">
+                        🏛️ Univers AFRI
+                      </h3>
+                      <p className="text-xl font-sans font-bold text-zinc-800 leading-relaxed max-w-2xl">
+                        Contrôle des constellations souveraines satellites: GOMBO ID, AfriTrust, AfriLivraison, Gombo Musik et gestion des gardiens du Trône.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="pt-12">
+                    <span className="text-sm font-mono font-black uppercase tracking-[0.3em] text-zinc-800 flex items-center gap-2 group-hover:gap-4 transition-all">
+                      Entrer dans le Sanctuaire →
+                    </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
               </motion.div>
 
-              {/* Card 3: 🛡 Bouclier AFRIGOMBO */}
+              {/* Card 3: 🛡️ Bouclier AFRIGOMBO - LARGE VERTICAL METALLIC */}
               <motion.div
                 variants={cardVariants}
-                whileHover="hover"
+                whileHover={{ scale: 1.01, translateY: -5 }}
                 onClick={() => {
                   setSelectedSection("bouclier");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
+                className="relative overflow-hidden rounded-[2.5rem] p-10 min-h-[400px] flex flex-col border-2 border-zinc-300 shadow-2xl cursor-pointer group bg-gradient-to-b from-[#E0E0E0] via-[#F5F5F5] to-[#404040]"
               >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <ShieldCheck className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
-                    <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🛡 Bouclier AFRIGOMBO
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Système de protection souverain, modération de contenu, certification Gombo ID et contrôle de cyber-défense.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 4: 💰 Revenus Globaux */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("revenus");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Coins className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-                    <Coins className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      💰 Revenus Globaux
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Analyse souveraine de la trésorerie globale, suivi de la Gombocaisse et transactions régionales de l'Empire.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 5: 📈 Croissance */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("croissance");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <BarChart3 className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-600 dark:text-sky-400 group-hover:scale-110 transition-transform duration-300">
-                    <BarChart3 className="w-6 h-6 text-sky-600 dark:text-sky-400" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      📈 Croissance
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Expansion impériale, taux de KYC certifiés, croissance démographique et projection des objectifs de l'Empire.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 6: 🧠 Intelligence */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("intelligence");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Brain className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-500 group-hover:scale-110 transition-transform duration-300">
-                    <Brain className="w-6 h-6 text-amber-600 dark:text-amber-500 animate-pulse" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🧠 Intelligence
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Console de commande interactive, terminal d'ordres système et audit cyber intelligent en temps réel.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 6.5: 🛡 Transactions Bêta */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("beta_escrow");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-emerald-400/30' : 'bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-emerald-500/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-emerald-500/15'}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <ShieldCheck className="w-40 h-40 text-emerald-400 group-hover:rotate-6 transition-transform duration-700" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.15)] group-hover:scale-110 transition-transform duration-300">
-                    <ShieldCheck className="w-6 h-6 animate-pulse" />
-                  </span>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-emerald-400' : 'text-zinc-800 group-hover:text-emerald-600'}`}>
-                        🛡 Transactions Bêta
-                      </h3>
-                      {pendingBetaTransactions.length > 0 ? (
-                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-black text-[9px] font-mono font-black uppercase animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]">
-                          {pendingBetaTransactions.length} ALERTE
-                        </span>
-                      ) : (
-                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-black text-[8px] font-mono font-black uppercase">
-                          LIVE
-                        </span>
-                      )}
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div className="space-y-8">
+                    <div className="w-20 h-20 rounded-2xl bg-zinc-800/20 border border-zinc-400/30 flex items-center justify-center text-zinc-800">
+                      <ShieldCheck className="w-10 h-10" />
                     </div>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
-                      Pilotage des flux séquestres en phase Bêta Publique. Validation manuelle des dépôts et libération sécurisée des cachets.
-                    </p>
+                    <div className="space-y-4">
+                      <h3 className="text-4xl font-display font-black text-black flex items-center gap-4">
+                        🛡️ Bouclier AFRIGOMBO
+                      </h3>
+                      <p className="text-xl font-sans font-bold text-zinc-800 leading-relaxed max-w-2xl">
+                        Système de protection souverain, modération de contenu, certification Gombo ID et contrôle de cyber-défense.
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Ouvrir le Centre de Commandement →
-                </span>
-              </motion.div>
-
-              {/* Card 7: 🎬 Centre Multimédia */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("multimedia");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                   <Music className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300">
-                    <Music className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🎬 Centre Multimédia
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Ambiances sonores impériales, sound designer royal et configuration des mélodies sacreés de l'Empire.
-                    </p>
+                  <div className="pt-12">
+                    <span className="text-sm font-mono font-black uppercase tracking-[0.3em] text-zinc-800 flex items-center gap-2 group-hover:gap-4 transition-all">
+                      Entrer dans le Sanctuaire →
+                    </span>
                   </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 8: 🚨 Veille Critique */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("veille");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <AlertTriangle className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className={`w-12 h-12 rounded-2xl border flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${highAlertsCount > 0 ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'}`}>
-                    <AlertTriangle className={`w-6 h-6 ${highAlertsCount > 0 ? 'animate-bounce' : ''}`} />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🚨 Veille Critique
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Suivi passif des faiblesses d'infrastructure, alertes d'accès prioritaires et signaux d'intrusions d'usurpateurs.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 9: 📜 Journal Impérial */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("journal");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Scroll className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-500 group-hover:scale-110 transition-transform duration-300">
-                    <Scroll className="w-6 h-6 text-[#D4AF37]" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      📜 Journal Impérial
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Annales sacrées de l'Empire, décisions stratégiques, notes privées du Fondateur et diffusion des décrets solennels.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 10: 📋 Checklist Bêta */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("checklist");
-                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <CheckSquare className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-                    <CheckSquare className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
-                      📋 Checklist Bêta
-                    </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
-                      Suivi interactif de validation des fonctionnalités critiques pour la version Bêta d'AFRIGOMBO ELITE.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold">
-                  <span>{progressCount} / 11 VALIDÉS</span>
-                  <span>Voir la checklist →</span>
                 </div>
               </motion.div>
 
-              {/* Card 11: 💰 Économie AFRIGOMBO */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("economy");
-                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Coins className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-500 group-hover:scale-110 transition-transform duration-300">
-                    <Coins className="w-6 h-6 text-[#D4AF37]" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
-                      💰 Économie AFRIGOMBO
-                    </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
-                      Moteur de commissions, paramètres de paiements, boosts, contrats et statistiques financières.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
             </div>
           </motion.div>
         ) : (
@@ -2671,7 +2316,9 @@ export default function AdminFounderThrone({
       {/* =========================================================================
                       SUPER FOUNDER FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
-      <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-afri-bg/95 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-2 px-4 sm:px-6 flex items-center z-45 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.35)] w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1 sm:gap-4 select-none">
+      <div className={`fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-2 px-4 sm:px-6 flex items-center z-45 sm:rounded-2xl w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1 sm:gap-4 select-none ${
+        isDark ? 'bg-afri-bg/95 shadow-[0_8px_35px_rgba(212,175,55,0.35)]' : 'bg-white/95 shadow-[0_8px_35px_rgba(0,0,0,0.15)]'
+      }`}>
         {/* 1. TRÔNE */}
         <button
           type="button"
@@ -2800,9 +2447,9 @@ export default function AdminFounderThrone({
 
 function StatusBadge({ icon, label, status, color, isDark }: { icon: React.ReactNode, label: string, status: string, color: string, isDark: boolean }) {
   const colorClasses: Record<string, string> = {
-    emerald: isDark ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-emerald-700 bg-white/60 border-emerald-500/20 shadow-sm',
-    amber: isDark ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-amber-700 bg-white/60 border-amber-500/20 shadow-sm',
-    blue: isDark ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' : 'text-blue-700 bg-white/60 border-blue-500/20 shadow-sm',
+    emerald: isDark ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-emerald-700 bg-zinc-200/80 border-emerald-500/20 shadow-sm',
+    amber: isDark ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-amber-700 bg-zinc-200/80 border-amber-500/20 shadow-sm',
+    blue: isDark ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' : 'text-blue-700 bg-zinc-200/80 border-blue-500/20 shadow-sm',
   };
 
   return (
