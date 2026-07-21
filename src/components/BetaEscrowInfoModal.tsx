@@ -41,7 +41,7 @@ export const BetaEscrowInfoModal: React.FC<BetaEscrowInfoModalProps> = ({
             </div>
             <div>
               <span className="text-[10px] font-mono uppercase tracking-widest text-[#D4AF37] font-bold block">
-                AFRIGOMBO BÊTA PRIVÉE
+                AFRIGOMBO BÊTA PUBLIQUE
               </span>
               <h3 className="text-lg font-black text-afri-text font-sans leading-tight">
                 Dépôt sécurisé – Phase Bêta
@@ -52,7 +52,7 @@ export const BetaEscrowInfoModal: React.FC<BetaEscrowInfoModalProps> = ({
           {/* Main Body Text (Exact required copy) */}
           <div className="p-4 bg-afri-bg/80 border border-afri-border rounded-2xl space-y-3 text-xs text-afri-text-sec leading-relaxed font-sans">
             <p className="font-medium text-afri-text">
-              Bienvenue dans la phase Bêta Privée d'AFRIGOMBO.
+              Bienvenue dans la phase Bêta Publique d'AFRIGOMBO.
             </p>
             <p>
               Notre système de dépôt sécurisé (Escrow) est actuellement en phase de validation.

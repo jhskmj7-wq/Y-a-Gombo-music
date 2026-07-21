@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Settings, Save, Sliders, RefreshCw, CheckCircle } from "lucide-react";
-import { globalAudioManager } from "../../lib/audioManager";
+import React, { useState, useEffect } from "react";
+import { Settings, Save, Sliders, RefreshCw, CheckCircle, Play, Pause, Square } from "lucide-react";
+import { globalAudioManager, AudioState } from "../../lib/audioManager";
 
 import AfrigomboGlobalSettings from "./AfrigomboGlobalSettings";
 
@@ -20,9 +20,19 @@ export default function AdminSettings({
   const [success, setSuccess] = useState(false);
 
   // Global Audio states
-  const [musicVolume, setMusicVolume] = useState(() => globalAudioManager.getVolume());
-  const [musicMuted, setMusicMuted] = useState(() => globalAudioManager.getIsMuted());
-  const [activeMusicPlay, setActiveMusicPlay] = useState<"none" | "intro" | "hymne">("none");
+  const [audioState, setAudioState] = useState<AudioState>(globalAudioManager.getState());
+
+  useEffect(() => {
+    const unsub = globalAudioManager.subscribe((state) => {
+      setAudioState(state);
+    });
+    return () => unsub();
+  }, []);
+
+  const musicVolume = audioState.volume;
+  const musicMuted = audioState.isMuted;
+  const activeMusicPlay = audioState.currentPlaying;
+  const isPaused = audioState.isPaused;
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,29 +145,34 @@ export default function AdminSettings({
                 type="button"
                 onClick={() => {
                   globalAudioManager.playIntro(true);
-                  setActiveMusicPlay("intro");
                 }}
-                className={`py-3 px-4 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
+                className={`py-3 px-4 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   activeMusicPlay === "intro"
                     ? "bg-afri-bg-sec/20 border-[#D4AF37] text-afri-text"
                     : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-text"
                 }`}
               >
-                ▶ Réécouter l'introduction
+                {activeMusicPlay === "intro" ? (isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />) : <Play className="w-3 h-3" />}
+                Réécouter l'introduction
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  globalAudioManager.playHymne();
-                  setActiveMusicPlay("hymne");
+                  if (activeMusicPlay === "hymne") {
+                    if (isPaused) globalAudioManager.resume();
+                    else globalAudioManager.pause();
+                  } else {
+                    globalAudioManager.playHymn();
+                  }
                 }}
-                className={`py-3 px-4 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
+                className={`py-3 px-4 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   activeMusicPlay === "hymne"
                     ? "bg-afri-bg-sec/20 border-[#D4AF37] text-afri-text"
                     : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-text"
                 }`}
               >
-                ▶ Hymne officiel
+                {activeMusicPlay === "hymne" ? (isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />) : <Play className="w-3 h-3" />}
+                Hymne officiel
               </button>
             </div>
 
@@ -166,12 +181,12 @@ export default function AdminSettings({
               <button
                 type="button"
                 onClick={() => {
-                  globalAudioManager.stopAll();
-                  setActiveMusicPlay("none");
+                  globalAudioManager.stop();
                 }}
-                className="w-full py-2 bg-red-950/20 hover:bg-red-950/35 border border-red-900/30 text-red-400 rounded-xl text-xs font-bold uppercase transition-all cursor-pointer"
+                className="w-full py-2 bg-red-950/20 hover:bg-red-950/35 border border-red-900/30 text-red-400 rounded-xl text-xs font-bold uppercase transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                ■ Arrêter la musique
+                <Square className="w-3 h-3 fill-current" />
+                Arrêter la musique
               </button>
             )}
 
@@ -187,10 +202,6 @@ export default function AdminSettings({
                 onChange={(e) => {
                   const isEnabled = e.target.checked;
                   globalAudioManager.setIsMuted(!isEnabled);
-                  setMusicMuted(!isEnabled);
-                  if (!isEnabled) {
-                    setActiveMusicPlay("none");
-                  }
                 }}
                 className="sr-only peer"
               />
@@ -211,7 +222,6 @@ export default function AdminSettings({
                 onChange={(e) => {
                   const vol = parseFloat(e.target.value) / 100;
                   globalAudioManager.setVolume(vol);
-                  setMusicVolume(vol);
                 }}
                 className="w-full h-1.5 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
               />

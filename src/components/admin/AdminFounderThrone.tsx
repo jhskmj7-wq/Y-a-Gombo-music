@@ -7,8 +7,11 @@ import {
   Sparkles, Wallet, CreditCard, Bell, BarChart3, Brain, DatabaseBackup, ListCollapse,
   Play, Pause, Trash2, Volume2, Plus, ArrowUp, ArrowDown, Send, 
   RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award,
-  Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square
+  Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square,
+  Clock, MapPin
 } from "lucide-react";
+import { BetaTransactionsAdminPanel } from "./BetaTransactionsAdminPanel";
+import { globalAudioManager, isDirectAudioFile } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
 import { 
@@ -16,6 +19,7 @@ import {
 } from "firebase/firestore";
 
 interface AdminFounderThroneProps {
+  theme?: string;
   founders: string[];
   superAdmins: string[];
   adminEmail: string;
@@ -57,6 +61,7 @@ interface MusicSpots {
 }
 
 export default function AdminFounderThrone({
+  theme,
   founders = [],
   superAdmins = [],
   adminEmail,
@@ -70,6 +75,7 @@ export default function AdminFounderThrone({
   alerts = [],
   onExit
 }: AdminFounderThroneProps) {
+  const isDark = theme !== "light";
   const { currentUser, profile } = useAuth();
   // Navigation: null shows the 9 cards, string shows specific section view
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -77,6 +83,8 @@ export default function AdminFounderThrone({
   // Feedback States
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  const pendingBetaTransactions = transactions.filter((t: any) => t.status === "en_attente_validation");
 
   // Satellite states from Firestore
   const [universeStates, setUniverseStates] = useState<Record<string, string>>({
@@ -287,25 +295,21 @@ export default function AdminFounderThrone({
     };
   }, [currentAudio]);
 
-  const handlePlayPauseTrack = (track: ThroneMusicTrack) => {
+  const handlePlayPauseTrack = async (track: ThroneMusicTrack) => {
     try { audioSynth?.playValidationSuccess(); } catch (_) {}
-    if (playingTrackId === track.id && currentAudio) {
-      currentAudio.pause();
+    
+    if (playingTrackId === track.id) {
+      globalAudioManager.stop();
       setPlayingTrackId(null);
     } else {
-      if (currentAudio) {
-        currentAudio.pause();
-      }
-      const audioObj = new Audio(track.url);
-      audioObj.volume = volume;
-      audioObj.loop = true;
-      audioObj.play().catch(e => {
-        console.warn("Could not play audio", e);
-        setErrorMsg("Lecture impossible. Vérifiez l'accessibilité de l'URL du fichier audio.");
+      try {
+        await globalAudioManager.playCustomTrack(track.id, track.url, track.title);
+        setPlayingTrackId(track.id);
+      } catch (err: any) {
+        console.warn("Could not play audio", err);
+        setErrorMsg(err.message || "Lecture impossible. Vérifiez l'accessibilité de l'URL du fichier audio.");
         setTimeout(() => setErrorMsg(""), 4000);
-      });
-      setCurrentAudio(audioObj);
-      setPlayingTrackId(track.id);
+      }
     }
   };
 
@@ -317,6 +321,11 @@ export default function AdminFounderThrone({
     }
     if (!newTrackTitle.trim() || !newTrackUrl.trim()) {
       setErrorMsg("Le titre et l'adresse URL absolue du fichier audio sont requis.");
+      return;
+    }
+
+    if (!(await isDirectAudioFile(newTrackUrl.trim()))) {
+      setErrorMsg("Cette URL ne correspond pas à un fichier audio lisible (MP3, OGG, WAV). Les pages web (Suno, etc.) ne sont pas acceptées.");
       return;
     }
     try {
@@ -694,7 +703,32 @@ export default function AdminFounderThrone({
     return () => clearInterval(interval);
   }, []);
 
-  // 9. METRICS DEDUCTIONS
+  // 10. REAL-TIME CLOCK & IMPERIAL GREETING
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getGreeting = () => {
+    const hour = currentDateTime.getHours();
+    if (hour >= 5 && hour < 18) return "Bonjour";
+    return "Bonsoir";
+  };
+
+  const formattedDate = currentDateTime.toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long"
+  });
+
+  const formattedTime = currentDateTime.toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  // 11. METRICS DEDUCTIONS
   const totalRevenues = (transactions || [])
     .reduce((acc: number, item: any) => acc + Number(item.amount || 0), 0);
   const formattedRevenues = totalRevenues > 0 
@@ -733,8 +767,78 @@ export default function AdminFounderThrone({
   };
 
   return (
-    <div className="space-y-6 text-left pb-28 font-sans text-afri-text select-none bg-transparent min-h-screen pt-0 sm:pt-1">
+    <div className="text-left pb-28 font-sans text-afri-text select-none bg-transparent min-h-screen pt-0">
       
+      {/* ----------------------------------------------------
+           IMPÉRIALE WELCOME BAR (NOUVEAU - FIX ZONE VIDE)
+           ---------------------------------------------------- */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-[#FFFFFF] via-[#FAF9F6] to-[#FFFFFF] dark:from-[#080808] dark:via-[#121212] dark:to-[#080808] border border-[#D4AF37]/40 p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-6 shadow-xl shadow-amber-900/5 dark:shadow-none mb-6 mt-0"
+      >
+        {/* Subtle Moving Gold Halo Effect */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+           <motion.div 
+             animate={{ 
+               x: ["-150%", "150%"],
+               opacity: [0, 0.2, 0]
+             }}
+             transition={{ 
+               duration: 15, 
+               repeat: Infinity, 
+               ease: "linear" 
+             }}
+             className="absolute top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-[#D4AF37]/15 to-transparent skew-x-[-25deg]"
+           />
+           
+           {/* Discrete Sparkles Halo */}
+           <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#D4AF37]/5 blur-[120px] rounded-full animate-pulse pointer-events-none" />
+           <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-[#D4AF37]/5 blur-[100px] rounded-full animate-pulse pointer-events-none" />
+        </div>
+
+        <div className="flex items-center gap-6 relative z-10 w-full sm:w-auto">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#D4AF37] to-amber-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+            <div className="relative w-14 h-14 rounded-2xl bg-white dark:bg-zinc-950 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] shadow-inner">
+              <Crown className="w-7 h-7" />
+            </div>
+          </div>
+          
+          <div className="flex flex-col text-center sm:text-left">
+            <h1 className="text-xl sm:text-2xl font-display font-black text-[#1A1A1A] dark:text-white tracking-widest uppercase">
+              {getGreeting()} <span className="text-[#D4AF37]">Fondateur</span>.
+            </h1>
+            <div className="flex items-center justify-center sm:justify-start gap-2 text-xs font-mono text-[#555555] dark:text-afri-text-sec uppercase font-bold tracking-tight mt-0.5">
+              <MapPin className="w-3.5 h-3.5 text-[#D4AF37] animate-bounce" />
+              <span>Abidjan • Côte d'Ivoire</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between sm:justify-end gap-8 relative z-10 w-full sm:w-auto pr-2 border-t sm:border-t-0 border-[#D4AF37]/10 pt-4 sm:pt-0">
+          <div className="text-left sm:text-right">
+             <div className="text-3xl font-mono font-black text-[#000000] dark:text-white tracking-tighter flex items-center gap-2">
+               <Clock className="w-5 h-5 text-[#D4AF37] opacity-60" />
+               {formattedTime}
+             </div>
+             <div className="text-[11px] font-mono text-[#D4AF37] dark:text-[#D4AF37] uppercase font-black tracking-[0.2em] text-left sm:text-right mt-0.5">
+               {formattedDate}
+             </div>
+          </div>
+          
+          <div className="hidden md:block h-12 w-[1px] bg-gradient-to-b from-transparent via-[#D4AF37]/30 to-transparent mx-2" />
+          
+          <div className="flex flex-col items-end shrink-0">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
+              <span className="text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-tighter">Souveraineté Active</span>
+            </div>
+            <span className="text-[9px] font-mono text-[#888888] dark:text-zinc-500 uppercase tracking-widest mt-1.5 font-bold">Afrigombo Cloud OS v4.5</span>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Dynamic Keyframes Injector */}
       <style>{`
         @keyframes goldSweep {
@@ -756,7 +860,7 @@ export default function AdminFounderThrone({
       {/* ----------------------------------------------------
            PREMIUM TRÔNE DU FONDATEUR HEADER (220-260px)
            ---------------------------------------------------- */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FAF8F5] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#0A0906] dark:via-[#14120C] dark:to-[#0A0906] border-2 border-[#D4AF37]/45 p-6 md:p-8 min-h-[220px] md:min-h-[250px] flex flex-col justify-between shadow-[0_12px_45px_rgba(212,175,55,0.22)] dark:shadow-[0_12px_45px_rgba(212,175,55,0.15)] transition-all">
+      <div className={`relative overflow-hidden rounded-3xl p-6 md:p-8 min-h-[220px] md:min-h-[250px] flex flex-col justify-between transition-all border-2 border-[#D4AF37]/45 ${isDark ? 'bg-gradient-to-br from-[#0A0906] via-[#14120C] to-[#0A0906] shadow-[0_12px_45px_rgba(212,175,55,0.15)]' : 'bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] shadow-[0_12px_45px_rgba(212,175,55,0.12)]'}`}>
         
         {/* Giant Translucent Background Crown */}
         <div className="absolute -right-8 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-10 dark:opacity-15 text-[#D4AF37] select-none">
@@ -886,7 +990,7 @@ export default function AdminFounderThrone({
             className="space-y-8"
           >
             {/* Quick overview metrics row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-afri-bg/40 p-4 border border-afri-border rounded-3xl">
+            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-4 border rounded-3xl ${isDark ? 'bg-afri-bg/40 border-afri-border' : 'bg-white border-[#D4AF37]/20 shadow-sm'}`}>
               <div className="text-center md:text-left md:border-r border-afri-border md:pr-4">
                 <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec block">Souveraineté</span>
                 <span className="text-sm font-sans font-black text-afri-text block mt-0.5">AFRIGOMBO ELITE</span>
@@ -917,7 +1021,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("vision");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Globe className="w-40 h-40 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-700" />
@@ -948,7 +1052,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("univers");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Landmark className="w-40 h-40 text-[#D4AF37]" />
@@ -979,7 +1083,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("bouclier");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <ShieldCheck className="w-40 h-40 text-[#D4AF37]" />
@@ -1010,7 +1114,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("revenus");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Coins className="w-40 h-40 text-[#D4AF37]" />
@@ -1041,7 +1145,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("croissance");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <BarChart3 className="w-40 h-40 text-[#D4AF37]" />
@@ -1072,7 +1176,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("intelligence");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Brain className="w-40 h-40 text-[#D4AF37]" />
@@ -1095,6 +1199,48 @@ export default function AdminFounderThrone({
                 </span>
               </motion.div>
 
+              {/* Card 6.5: 🛡 Transactions Bêta */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("beta_escrow");
+                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                }}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-emerald-400/30' : 'bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-emerald-500/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-emerald-500/15'}`}
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <ShieldCheck className="w-40 h-40 text-emerald-400 group-hover:rotate-6 transition-transform duration-700" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.15)] group-hover:scale-110 transition-transform duration-300">
+                    <ShieldCheck className="w-6 h-6 animate-pulse" />
+                  </span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-emerald-400 transition-colors">
+                        🛡 Transactions Bêta
+                      </h3>
+                      {pendingBetaTransactions.length > 0 ? (
+                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-black text-[9px] font-mono font-black uppercase animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                          {pendingBetaTransactions.length} ALERTE
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-black text-[8px] font-mono font-black uppercase">
+                          LIVE
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                      Pilotage des flux séquestres en phase Bêta Publique. Validation manuelle des dépôts et libération sécurisée des cachets.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Ouvrir le Centre de Commandement →
+                </span>
+              </motion.div>
+
               {/* Card 7: 🎬 Centre Multimédia */}
               <motion.div
                 variants={cardVariants}
@@ -1103,7 +1249,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("multimedia");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Music className="w-40 h-40 text-[#D4AF37]" />
@@ -1134,7 +1280,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("veille");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <AlertTriangle className="w-40 h-40 text-[#D4AF37]" />
@@ -1165,7 +1311,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("journal");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Scroll className="w-40 h-40 text-[#D4AF37]" />
@@ -1196,7 +1342,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("checklist");
                   try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <CheckSquare className="w-40 h-40 text-[#D4AF37]" />
@@ -1228,7 +1374,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("economy");
                   try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
                 }}
-                className="bg-gradient-to-br from-[#F7F5EF] via-[#F2EEE4] to-[#ECE7DB] dark:from-[#080808] dark:to-[#0D0D0D] border border-[#D4AF37]/40 dark:border-[#D4AF37]/25 rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between shadow-md shadow-amber-900/5 dark:shadow-none hover:shadow-xl hover:shadow-amber-500/15"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Coins className="w-40 h-40 text-[#D4AF37]" />
@@ -1765,6 +1911,30 @@ export default function AdminFounderThrone({
                     </div>
                   </div>
 
+                </div>
+              </div>
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 🛡 Transactions Bêta (Escrow Pilotage)
+                 ========================================================= */}
+            {selectedSection === "beta_escrow" && (
+              <div className="space-y-6">
+                <div className="p-6 bg-afri-bg/80 border border-emerald-500/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(52,211,153,0.05)]">
+                  <ShieldCheck className="w-8 h-8 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
+                    <strong>PILOTAGE SÉQUESTRE — TRANSACTIONS BÊTA :</strong> Bienvenue dans le Centre de Commandement Bêta. Ici, vous validez manuellement les dépôts après vérification du paiement Mobile Money et libérez les fonds une fois la prestation accomplie.
+                  </div>
+                </div>
+
+                <div className="p-1 sm:p-4 bg-afri-bg border border-afri-border rounded-3xl">
+                  <BetaTransactionsAdminPanel 
+                    currentUser={profile} 
+                    onOpenSupportChat={(targetUser) => {
+                      // Switch to intelligence for terminal support or just show toast
+                      setSelectedSection("intelligence");
+                    }}
+                  />
                 </div>
               </div>
             )}

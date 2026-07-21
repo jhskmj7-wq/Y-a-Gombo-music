@@ -1006,6 +1006,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [showDashboardIntro, setShowDashboardIntro] = useState<boolean>(true);
   const [dashboardStep, setDashboardStep] = useState<number>(1);
   const [superAdminTab, setSuperAdminTab] = useState<"throne" | "beta_transactions" | "media" | "economie" | "batisseurs">("throne");
+  const pendingBetaCount = transactions.filter((t: any) => t.status === "en_attente_validation").length;
 
   // --- STATE FOR ACTIONS RAPIDES AND RECHERCHE UNIVERSELLE ---
   const [universalSearchTerm, setUniversalSearchTerm] = useState("");
@@ -6122,9 +6123,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <ThroneCinematicIntro onComplete={() => setShowThroneCinematic(false)} />
                   </Suspense>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="">
                     {/* Tab Switcher for Super Founder */}
-                    <div className="flex gap-2 pb-1 border-b border-afri-border">
+                    <div className="flex gap-2 pb-1 border-b border-afri-border mb-4">
                       <button
                         onClick={() => {
                           setSuperAdminTab("throne");
@@ -6143,13 +6144,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           setSuperAdminTab("beta_transactions");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border flex items-center gap-2 ${
                           superAdminTab === "beta_transactions"
                             ? "bg-emerald-500/20 border-emerald-400 text-emerald-400 font-black shadow-lg"
                             : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text hover:border-afri-border"
                         }`}
                       >
-                        🛡️ Transactions Bêta
+                        <span>🛡️ Transactions Bêta</span>
+                        {pendingBetaCount > 0 && (
+                          <span className="bg-emerald-500 text-black text-[9px] px-1.5 py-0.5 rounded-full font-black animate-pulse">
+                            {pendingBetaCount}
+                          </span>
+                        )}
                       </button>
                       <button
                         onClick={() => {
@@ -6192,23 +6198,26 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       </button>
                     </div>
 
-                    {/* DIAGNOSTIC BOUTON */}
-                    <div className="flex justify-end px-2">
-                      <button
-                        onClick={() => {
-                          setIsDiagnosticOpen(true);
-                          try { audioSynth.playValidationSuccess(); } catch (_) {}
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-xl text-[10px] font-mono font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all cursor-pointer"
-                      >
-                        <ShieldCheck className="w-3 h-3" />
-                        Ouvrir le diagnostic Firebase
-                      </button>
-                    </div>
+                    {/* DIAGNOSTIC BOUTON (Positionné plus bas ou masqué si trône actif pour réduire l'espace) */}
+                    {superAdminTab !== "throne" && (
+                      <div className="flex justify-end px-2 mb-4">
+                        <button
+                          onClick={() => {
+                            setIsDiagnosticOpen(true);
+                            try { audioSynth.playValidationSuccess(); } catch (_) {}
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-xl text-[10px] font-mono font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all cursor-pointer"
+                        >
+                          <ShieldCheck className="w-3 h-3" />
+                          Ouvrir le diagnostic Firebase
+                        </button>
+                      </div>
+                    )}
 
                     <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement de la Console...</div>}>
                       {superAdminTab === "throne" ? (
                         <AdminFounderThrone
+                          theme={theme}
                           founders={dynamicFounders}
                           superAdmins={dynamicSuperAdmins}
                           adminEmail={userEmail || ""}

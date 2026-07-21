@@ -80,7 +80,7 @@ export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProp
               transition={{ delay: 0.05 }}
               className="inline-flex items-center px-2 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-md"
             >
-              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Bêta Privée V2.0</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Bêta Publique V2.0</span>
             </motion.div>
           </div>
           

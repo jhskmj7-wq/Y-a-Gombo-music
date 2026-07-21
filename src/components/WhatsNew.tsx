@@ -28,7 +28,7 @@ export default function WhatsNew({ onBack }: WhatsNewProps) {
           setUpdates([
             {
               id: "1",
-              title: "Lancement de la Bêta Privée",
+              title: "Lancement de la Bêta Publique",
               content: "Bienvenue sur la version Bêta d'AFRIGOMBO. Explorez le terrain, publiez des gombos libres et aidez-nous à construire le Temple.",
               version: "v0.9.0",
               date: new Date().toISOString(),

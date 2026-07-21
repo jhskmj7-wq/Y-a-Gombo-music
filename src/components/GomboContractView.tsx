@@ -160,7 +160,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
 
       try { audioSynth.playValidationSuccess(); } catch(_) {}
 
-      // 4. Trigger support redirection for manual accompaniment in Phase Bêta Privée
+      // 4. Trigger support redirection for manual accompaniment in Phase Bêta Publique
       supportConfig.openSupport(
         `Dépôt Bêta de ${(contract.totalClientPaid || contract.amount || 0).toLocaleString()} FCFA pour le contrat ${contract.id}`
       );

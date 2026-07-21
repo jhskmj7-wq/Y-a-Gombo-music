@@ -5,7 +5,7 @@ import {
   User, Lock, Trash2, Smartphone, Eye,
   Globe, FileText, Star, LogOut, Settings, 
   Database, Video, Radio, Sparkles, MessageSquare, 
-  ChevronRight, AlertTriangle, Play, HelpCircle as HelpIcon,
+  ChevronRight, AlertTriangle, Play, Pause, Square, HelpCircle as HelpIcon,
   Smartphone as PhoneIcon, Mail, Laptop
 } from "lucide-react";
 import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
@@ -16,7 +16,7 @@ import { gomboDB } from "../firebase";
 import { audioSynth } from "../lib/audio";
 import { playSound } from "../services/audioService";
 import { triggerSettingsSaved } from "../services/performanceService";
-import { globalAudioManager } from "../lib/audioManager";
+import { globalAudioManager, AudioState } from "../lib/audioManager";
 import { supportConfig } from "../supportConfig";
 import { useTheme } from "../context/ThemeContext";
 
@@ -263,8 +263,19 @@ export default function SettingsModal({
   const [audioQuality, setAudioQuality] = useState(() => localStorage.getItem("gombo_pref_audio_quality") || "standard");
 
   // Audio volume / Muted
-  const [musicVolume, setMusicVolume] = useState(() => globalAudioManager.getVolume());
-  const [activeMusicPlay, setActiveMusicPlay] = useState<"none" | "intro" | "hymne">("none");
+  const [audioState, setAudioState] = useState<AudioState>(globalAudioManager.getState());
+
+  useEffect(() => {
+    const unsub = globalAudioManager.subscribe((state) => {
+      setAudioState(state);
+    });
+    return () => unsub();
+  }, []);
+
+  const musicVolume = audioState.volume;
+  const musicMuted = audioState.isMuted;
+  const activeMusicPlay = audioState.currentPlaying;
+  const isPaused = audioState.isPaused;
 
   // Delete Account Confirmation overlay
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -944,28 +955,33 @@ export default function SettingsModal({
                   type="button"
                   onClick={() => {
                     globalAudioManager.playIntro(true);
-                    setActiveMusicPlay("intro");
                   }}
-                  className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeMusicPlay === "intro"
                       ? "bg-afri-gold/20 border-afri-gold text-afri-text"
                       : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-gold"
                   }`}
                 >
+                  {activeMusicPlay === "intro" ? (isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />) : <Play className="w-3 h-3" />}
                   {mt("play_intro")}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    globalAudioManager.playHymne();
-                    setActiveMusicPlay("hymne");
+                    if (activeMusicPlay === "hymne") {
+                      if (isPaused) globalAudioManager.resume();
+                      else globalAudioManager.pause();
+                    } else {
+                      globalAudioManager.playHymn();
+                    }
                   }}
-                  className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeMusicPlay === "hymne"
                       ? "bg-afri-gold/20 border-afri-gold text-afri-text"
                       : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-gold"
                   }`}
                 >
+                  {activeMusicPlay === "hymne" ? (isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />) : <Play className="w-3 h-3" />}
                   {mt("play_hymne")}
                 </button>
               </div>
@@ -974,11 +990,11 @@ export default function SettingsModal({
                 <button
                   type="button"
                   onClick={() => {
-                    globalAudioManager.stopAll();
-                    setActiveMusicPlay("none");
+                    globalAudioManager.stop();
                   }}
-                  className="w-full py-1.5 bg-red-950/20 hover:bg-red-950/35 border border-red-900/30 text-red-400 rounded-lg text-[9.5px] font-bold uppercase transition-all cursor-pointer"
+                  className="w-full py-1.5 bg-red-950/20 hover:bg-red-950/35 border border-red-900/30 text-red-400 rounded-lg text-[9.5px] font-bold uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5 mt-3"
                 >
+                  <Square className="w-3 h-3 fill-current" />
                   {mt("stop_music")}
                 </button>
               )}
@@ -997,7 +1013,6 @@ export default function SettingsModal({
                   onChange={(e) => {
                     const vol = parseFloat(e.target.value) / 100;
                     globalAudioManager.setVolume(vol);
-                    setMusicVolume(vol);
                   }}
                   className="w-full h-1.5 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-afri-gold"
                 />

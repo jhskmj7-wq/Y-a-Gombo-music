@@ -388,10 +388,12 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
       </div>
 
       {/* Category Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none select-none">
+      <div className="flex flex-wrap items-center justify-center gap-2 pb-2 select-none">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
             onClick={() => {
               setActiveTab(tab.id);
               try { audioSynth?.playTamTam?.(false); } catch (_) {}

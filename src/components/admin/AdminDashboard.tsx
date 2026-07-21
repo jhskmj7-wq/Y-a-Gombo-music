@@ -343,6 +343,7 @@ export default function AdminDashboard({
           setActiveMenu={setActiveMenu} 
           setIsBroadcastModalOpen={setIsBroadcastModalOpen} 
           audioSynth={audioSynth} 
+          pendingBetaCount={transactions.filter((t: any) => t.status === "en_attente_validation").length}
         />
       </Suspense>
 

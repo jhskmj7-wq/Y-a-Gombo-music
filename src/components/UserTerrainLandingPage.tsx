@@ -4,13 +4,13 @@ import {
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
   RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy,
   PenTool, UserCheck, MessageCircle, History, Headphones, HelpCircle, Video,
-  Sparkles, BarChart3, FileSignature, Zap, Play
+  Sparkles, BarChart3, FileSignature, Zap, Play, Pause, Square
 } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { Gombo, User, Post, Renfort } from "../types";
 import AnnuaireTalents from "./AnnuaireTalents";
 import { usePerformance } from "../services/performanceService";
-import { globalAudioManager } from "../lib/audioManager";
+import { globalAudioManager, AudioState } from "../lib/audioManager";
 import PremiumEmptyState from "./PremiumEmptyState";
 import TendancesSection from "./TendancesSection";
 import { useAuth } from "../AuthContext";
@@ -146,6 +146,36 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   // Collapsible regions states
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(true);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  // 🎵 AUDIO SYSTEM INTEGRATION
+  const [audioState, setAudioState] = useState<AudioState>(globalAudioManager.getState());
+
+  useEffect(() => {
+    const unsub = globalAudioManager.subscribe((state) => {
+      setAudioState(state);
+    });
+    return () => unsub();
+  }, []);
+
+  const isAnthemPlaying = audioState.currentPlaying === "hymne";
+  const isAnthemPaused = isAnthemPlaying && audioState.isPaused;
+
+  const handleAnthemClick = () => {
+    if (isAnthemPlaying) {
+      if (isAnthemPaused) {
+        globalAudioManager.resume();
+      } else {
+        globalAudioManager.pause();
+      }
+    } else {
+      globalAudioManager.playHymn();
+    }
+  };
+
+  const handleStopAnthem = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    globalAudioManager.stop();
+  };
 
   // --- REAL-TIME PORT COCKPIT STATE & LISTENERS ---
   const { currentUser, profile } = useAuth();
@@ -910,6 +940,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
          ========================================== */}
       <div className="flex justify-center items-center gap-1.5 p-1 bg-afri-bg-sec/85 border border-afri-border rounded-2xl w-fit mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.5)] select-none">
         <button
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
           onClick={() => {
             setCurrentSection("home");
             try { audioSynth?.playTamTam?.(false); } catch(_) {}
@@ -923,6 +955,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           <span>🌟 Tendances & Gombos</span>
         </button>
         <button
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
           onClick={() => {
             setCurrentSection("reels");
             try { audioSynth?.playTamTam?.(false); } catch(_) {}
@@ -1066,6 +1100,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                      boxShadow: isFav ? "0 8px 24px rgba(212,175,55,0.18)" : "0 6px 20px rgba(212,175,55,0.12)"
                    }}
                    whileTap={{ scale: 0.92, y: 1 }}
+                   onTouchStart={(e) => e.stopPropagation()}
+                   onTouchMove={(e) => e.stopPropagation()}
                    onClick={action.action}
                    className={`aspect-square ${
                      isFav 
@@ -1104,25 +1140,73 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       </div>
 
       {/* BOUTON HYMNE OFFICIEL AFRIGOMBO */}
-      <div className="mt-2 text-left select-none">
+      <div className="mt-2 text-left select-none relative">
         <button
-          onClick={() => {
-            globalAudioManager.playHymne();
-          }}
-          className="w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-afri-bg-action to-afri-bg-action border border-[#D4AF37]/20 hover:border-[#D4AF37]/45 rounded-xl text-xs font-bold text-afri-text shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer group"
+          onClick={handleAnthemClick}
+          className={`w-full flex items-center justify-between p-3.5 border rounded-xl text-xs font-bold shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer group ${
+            isAnthemPlaying 
+              ? "bg-afri-bg-sec border-[#D4AF37] ring-1 ring-[#D4AF37]/50" 
+              : "bg-gradient-to-r from-afri-bg-action to-afri-bg-action border-[#D4AF37]/20 hover:border-[#D4AF37]/45"
+          }`}
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-afri-bg-sec/10 flex items-center justify-center border border-[#D4AF37]/30 group-hover:bg-afri-bg-sec/20 transition-colors shrink-0">
-              <Play className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37] ml-0.5" />
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all shrink-0 ${
+              isAnthemPlaying 
+                ? "bg-[#D4AF37] border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.4)]" 
+                : "bg-afri-bg-sec/10 border-[#D4AF37]/30 group-hover:bg-afri-bg-sec/20"
+            }`}>
+              {isAnthemPlaying ? (
+                isAnthemPaused ? (
+                  <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                ) : (
+                  <Pause className="w-5 h-5 text-white fill-white" />
+                )
+              ) : (
+                <Play className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37] ml-0.5" />
+              )}
             </div>
-            <div className="flex flex-col">
-              <span className="font-black text-[13px] sm:text-[14.5px] text-afri-text tracking-tight group-hover:text-[#D4AF37] transition-colors leading-none">Hymne officiel AFRIGOMBO</span>
-              <span className="text-[9.5px] font-normal text-afri-text-sec mt-1.5">Écouter l’hymne officiel d’AFRIGOMBO</span>
+            <div className="flex flex-col text-left">
+              <span className={`font-black text-[14px] sm:text-[15.5px] tracking-tight transition-colors leading-none ${
+                isAnthemPlaying ? "text-[#D4AF37]" : "text-afri-text group-hover:text-[#D4AF37]"
+              }`}>
+                {isAnthemPlaying ? (isAnthemPaused ? "Hymne en pause" : "Hymne en lecture...") : "Hymne officiel AFRIGOMBO"}
+              </span>
+              <div className="flex items-center gap-2 mt-1.5">
+                {isAnthemPlaying && !isAnthemPaused && (
+                   <div className="flex gap-0.5">
+                     {[1, 2, 3, 4].map(i => (
+                       <motion.div
+                         key={i}
+                         animate={{ height: [4, 12, 4] }}
+                         transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
+                         className="w-0.5 bg-[#D4AF37] rounded-full"
+                       />
+                     ))}
+                   </div>
+                )}
+                <span className={`text-[10px] font-normal ${isAnthemPlaying ? "text-afri-text" : "text-afri-text-sec"}`}>
+                  {isAnthemPlaying ? "Fierté nationale d’AFRIGOMBO" : "Écouter l’hymne officiel d’AFRIGOMBO"}
+                </span>
+              </div>
             </div>
           </div>
-          <span className="text-[7.5px] font-mono text-afri-text-sec border border-afri-border/80 px-1.5 py-0.5 rounded uppercase font-bold tracking-widest bg-afri-bg-sec/40">
-            SOUVERAINETÉ
-          </span>
+          
+          <div className="flex items-center gap-2">
+            {isAnthemPlaying && (
+              <button
+                onClick={handleStopAnthem}
+                className="p-2 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition-colors cursor-pointer"
+                title="Arrêter"
+              >
+                <Square className="w-4 h-4 fill-current" />
+              </button>
+            )}
+            <span className={`text-[8px] font-mono border px-1.5 py-0.5 rounded uppercase font-bold tracking-widest bg-afri-bg-sec/40 ${
+              isAnthemPlaying ? "text-[#D4AF37] border-[#D4AF37]/40" : "text-afri-text-sec border-afri-border/80"
+            }`}>
+              SOUVERAINETÉ
+            </span>
+          </div>
         </button>
       </div>
 
@@ -1165,6 +1249,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               <motion.div
                 key={item.id}
                 whileHover={{ scale: 1.01, borderColor: "rgba(212,175,55,0.4)" }}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
                 onClick={() => {
                   setActiveMenu("user_renforts");
                   try { audioSynth?.playValidationSuccess?.(); } catch (_) {}

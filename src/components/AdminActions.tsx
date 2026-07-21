@@ -6,9 +6,10 @@ interface AdminActionsProps {
   setActiveMenu: (menu: string) => void;
   setIsBroadcastModalOpen: (isOpen: boolean) => void;
   audioSynth?: any;
+  pendingBetaCount?: number;
 }
 
-export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiveMenu, setIsBroadcastModalOpen, audioSynth }) => {
+export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiveMenu, setIsBroadcastModalOpen, audioSynth, pendingBetaCount = 0 }) => {
   const handleMenuChange = (menu: string) => {
     setActiveMenu(menu);
     try {
@@ -28,12 +29,27 @@ export const AdminActions: React.FC<AdminActionsProps> = ({ activeMenu, setActiv
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <button
           onClick={() => handleMenuChange("beta_transactions")}
-          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 ${
+          className={`p-4 rounded-xl border transition-all duration-200 flex items-center gap-3 relative overflow-hidden ${
             activeMenu === "beta_transactions" ? "bg-emerald-500/20 border-emerald-400 text-emerald-400 shadow-md shadow-emerald-500/20" : "bg-afri-bg-sec hover:bg-emerald-950/20 border-emerald-500/30 text-emerald-400"
           }`}
         >
           <ShieldCheck className="w-5 h-5 text-emerald-400 animate-pulse" />
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Transactions Bêta</span>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-left leading-tight">Transactions Bêta</span>
+            {pendingBetaCount > 0 && (
+              <span className="text-[8px] font-mono font-black text-emerald-500 uppercase animate-pulse">
+                {pendingBetaCount} EN ATTENTE
+              </span>
+            )}
+          </div>
+          {pendingBetaCount > 0 && (
+            <div className="absolute top-0 right-0 p-1">
+              <span className="flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+            </div>
+          )}
         </button>
 
         <button

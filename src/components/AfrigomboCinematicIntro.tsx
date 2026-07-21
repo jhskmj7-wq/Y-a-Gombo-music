@@ -71,14 +71,14 @@ export default function AfrigomboCinematicIntro({ onComplete }: AfrigomboCinemat
   const handleSkip = () => {
     // Skip to end or complete immediately
     try {
-      globalAudioManager.stopAll();
+      globalAudioManager.stop();
     } catch (_) {}
     onComplete();
   };
 
   const handleEnter = () => {
     try {
-      globalAudioManager.stopAll();
+      globalAudioManager.stop();
     } catch (_) {}
     onComplete();
   };

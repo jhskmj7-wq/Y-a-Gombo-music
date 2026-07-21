@@ -147,7 +147,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
         participants: ["Alpha Blondy (Special Guest)"],
         status: "Confirmé",
         category: "Concert",
-        description: "Soirée acoustique haut de gamme pour célébrer l'intégration de la bêta privée AFRIGOMBO."
+        description: "Soirée acoustique haut de gamme pour célébrer l'intégration de la bêta publique AFRIGOMBO."
       },
       {
         title: "Signature Contrat d'Alliance Souverain",
