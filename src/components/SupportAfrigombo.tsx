@@ -97,22 +97,22 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-afri-bg flex items-center justify-center p-6 text-center transition-colors">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full space-y-8 bg-zinc-950 border border-zinc-900 p-12 rounded-[3rem]"
+          className="max-w-md w-full space-y-8 bg-afri-bg-sec border border-afri-border p-12 rounded-[3rem] shadow-xl"
         >
           <div className="w-24 h-24 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-500">
             <CheckCircle2 className="w-12 h-12" />
           </div>
           <div className="space-y-4">
-            <h2 className="text-3xl font-black font-mono uppercase tracking-tighter">MERCI INFINIMENT !</h2>
-            <p className="text-zinc-400 font-medium">Votre soutien a été enregistré dans les archives du Temple. Vous faites désormais partie des Bâtisseurs d'AFRIGOMBO.</p>
+            <h2 className="text-3xl font-black font-sans uppercase tracking-tighter text-afri-text">MERCI INFINIMENT !</h2>
+            <p className="text-afri-text-sec font-medium text-sm">Votre soutien a été enregistré dans les archives du Temple. Vous faites désormais partie des Bâtisseurs d'AFRIGOMBO.</p>
           </div>
           <button
             onClick={() => window.location.href = "/"}
-            className="w-full bg-[#D4AF37] text-black py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_10px_30px_rgba(212,175,55,0.3)]"
+            className="w-full bg-[#D4AF37] hover:bg-opacity-95 text-black py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all shadow-[0_10px_30px_rgba(212,175,55,0.3)] cursor-pointer text-xs"
           >
             Retour au Terrain
           </button>
@@ -122,67 +122,67 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pb-32">
-      {/* Header */}
+    <div className="min-h-screen bg-afri-bg text-afri-text pb-32 transition-colors">
+      {/* Header Back Button */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 pointer-events-none">
         <button 
           onClick={onBack}
-          className="p-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-full text-white pointer-events-auto hover:bg-zinc-800 transition-all active:scale-95"
+          className="p-3 bg-afri-bg-sec/90 backdrop-blur-md border border-afri-border rounded-full text-afri-text pointer-events-auto hover:bg-afri-bg-ter transition-all active:scale-95 shadow-md cursor-pointer"
         >
           <ArrowRight className="w-5 h-5 rotate-180" />
         </button>
       </div>
 
-      <div className="pt-24 pb-12 px-6 text-center space-y-6">
+      <div className="pt-24 pb-16 px-6 text-center space-y-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-black uppercase tracking-widest"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-black uppercase tracking-widest"
         >
-          <Star className="w-3 h-3 fill-current" />
+          <Star className="w-3.5 h-3.5 fill-current" />
           Construction du Temple
         </motion.div>
-        <h1 className="text-4xl md:text-6xl font-black font-mono tracking-tighter uppercase leading-none">
+        <h1 className="text-4xl md:text-6xl font-black font-sans tracking-tighter uppercase leading-none text-afri-text">
           SOUTENIR <span className="text-[#D4AF37]">AFRIGOMBO</span>
         </h1>
-        <p className="text-zinc-500 max-w-xl mx-auto text-sm font-medium">
+        <p className="text-afri-text-sec max-w-2xl mx-auto text-sm sm:text-base font-medium leading-relaxed">
           Aidez-nous à bâtir la première plateforme de confiance pour la musique africaine. Votre soutien finance le développement des outils de sécurité et de séquestre.
         </p>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16">
         {/* Levels List */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-black font-mono uppercase tracking-tight">Choisissez votre niveau</h2>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">5 Rangs disponibles</div>
+        <div className="lg:col-span-7 space-y-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-black font-sans uppercase tracking-tight text-afri-text">Choisissez votre niveau</h2>
+            <div className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest">5 Rangs disponibles</div>
           </div>
           
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-4">
             {levels.map((level) => (
               <button
                 key={level.id}
                 onClick={() => setSelectedLevel(level)}
-                className={`flex items-center gap-6 p-6 rounded-3xl border transition-all text-left relative overflow-hidden group ${
+                className={`flex items-center gap-6 p-8 rounded-[2rem] border transition-all text-left relative overflow-hidden group cursor-pointer ${
                   selectedLevel?.id === level.id 
-                    ? "bg-zinc-900 border-[#D4AF37] shadow-[0_10px_30px_rgba(0,0,0,0.5)]" 
-                    : "bg-zinc-950 border-zinc-900 hover:border-zinc-700"
+                    ? "bg-afri-bg-ter border-[#D4AF37] shadow-lg" 
+                    : "bg-afri-bg-sec border-afri-border hover:border-[#D4AF37]/40 hover:shadow-md"
                 }`}
               >
                 {selectedLevel?.id === level.id && (
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#D4AF37]" />
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#D4AF37]" />
                 )}
                 
                 <div className={`w-16 h-16 rounded-2xl ${level.bg} flex items-center justify-center ${level.color} shrink-0 group-hover:scale-105 transition-transform`}>
                   <level.icon className="w-8 h-8" />
                 </div>
                 
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-black font-mono uppercase">{level.name}</span>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-lg font-black font-sans uppercase text-afri-text">{level.name}</span>
                     <span className="text-xl">{level.badge}</span>
                   </div>
-                  <p className="text-xs text-zinc-500 font-medium leading-relaxed">{level.description}</p>
+                  <p className="text-xs text-afri-text-sec font-medium leading-relaxed">{level.description}</p>
                 </div>
 
                 <div className={`opacity-0 group-hover:opacity-100 transition-opacity ${selectedLevel?.id === level.id ? "opacity-100" : ""}`}>
@@ -204,62 +204,62 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   onSubmit={handleSubmit}
-                  className="bg-zinc-950 border border-zinc-900 p-8 rounded-[2.5rem] space-y-6"
+                  className="bg-afri-bg-sec border border-afri-border p-10 rounded-[2.5rem] space-y-8 shadow-xl text-left"
                 >
-                  <div className="flex items-center gap-4 pb-6 border-bottom border-zinc-900">
-                    <div className={`w-12 h-12 rounded-xl ${selectedLevel.bg} flex items-center justify-center ${selectedLevel.color}`}>
-                      <selectedLevel.icon className="w-6 h-6" />
+                  <div className="flex items-center gap-4 pb-6 border-b border-afri-border">
+                    <div className={`w-14 h-14 rounded-2xl ${selectedLevel.bg} flex items-center justify-center ${selectedLevel.color}`}>
+                      <selectedLevel.icon className="w-7 h-7" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Niveau sélectionné</p>
-                      <p className="text-lg font-black font-mono uppercase text-white">{selectedLevel.name}</p>
+                      <p className="text-[10px] font-black text-afri-text-sec uppercase tracking-widest">Rang Sélectionné</p>
+                      <p className="text-xl font-black font-sans uppercase text-afri-text">{selectedLevel.name}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Montant symbolique (FCFA)</label>
+                  <div className="space-y-6">
+                    <div className="space-y-2.5">
+                      <label className="text-[10px] font-black text-afri-text-sec uppercase tracking-widest ml-1">Montant symbolique (FCFA)</label>
                       <div className="relative">
-                        <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600" />
+                        <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#D4AF37]" />
                         <input
                           type="number"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
                           placeholder="Ex: 5000"
-                          className="w-full bg-black border border-zinc-800 rounded-2xl py-4 pl-12 pr-4 text-white font-mono font-bold focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all"
+                          className="w-full bg-afri-bg border border-afri-border rounded-2xl py-4.5 pl-12 pr-4 text-afri-text font-mono font-extrabold focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all text-sm"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Message pour l'équipe (Optionnel)</label>
+                    <div className="space-y-2.5">
+                      <label className="text-[10px] font-black text-afri-text-sec uppercase tracking-widest ml-1">Message d'encouragement (Optionnel)</label>
                       <textarea
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Un petit mot d'encouragement..."
-                        rows={3}
-                        className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-medium text-sm focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all resize-none"
+                        placeholder="Votre mot d'encouragement pour le Conseil..."
+                        rows={4}
+                        className="w-full bg-afri-bg border border-afri-border rounded-2xl p-4 text-afri-text font-medium text-sm focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none transition-all resize-none"
                       />
                     </div>
 
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isAnonymous ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-black border-zinc-800 group-hover:border-zinc-600"}`}>
+                    <label className="flex items-center gap-3 cursor-pointer group select-none">
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isAnonymous ? "bg-[#D4AF37] border-[#D4AF37]" : "bg-afri-bg border-afri-border group-hover:border-[#D4AF37]"}`}>
                         <input
                           type="checkbox"
                           className="hidden"
                           checked={isAnonymous}
                           onChange={(e) => setIsAnonymous(e.target.checked)}
                         />
-                        {isAnonymous && <CheckCircle2 className="w-3 h-3 text-black fill-current" />}
+                        {isAnonymous && <CheckCircle2 className="w-3.5 h-3.5 text-black fill-current" />}
                       </div>
-                      <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wide">Faire un don anonyme</span>
+                      <span className="text-[11px] font-bold text-afri-text-sec uppercase tracking-wide group-hover:text-afri-text transition-colors">Faire un don anonyme</span>
                     </label>
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading || !amount}
-                    className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-[#D4AF37] transition-all disabled:opacity-50 disabled:hover:bg-white group"
+                    className="w-full bg-[#D4AF37] hover:bg-opacity-95 text-black py-4.5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-[0.98] transition-all disabled:opacity-50 group shadow-lg shadow-[#D4AF37]/15 text-xs cursor-pointer"
                   >
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
@@ -271,7 +271,7 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
                     )}
                   </button>
 
-                  <p className="text-[9px] text-center text-zinc-600 font-medium uppercase tracking-tight">
+                  <p className="text-[9px] text-center text-afri-text-muted font-bold uppercase tracking-wide leading-relaxed">
                     * Le paiement réel sera intégré lors du lancement officiel. Pour l'instant, votre promesse de soutien est enregistrée.
                   </p>
                 </motion.form>
@@ -280,14 +280,14 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
                   key="empty"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-zinc-950 border border-zinc-900 p-12 rounded-[2.5rem] text-center space-y-6"
+                  className="bg-afri-bg-sec border border-afri-border p-12 rounded-[2.5rem] text-center space-y-6 shadow-md"
                 >
-                  <div className="w-20 h-20 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-700">
-                    <Sparkles className="w-10 h-10" />
+                  <div className="w-20 h-20 rounded-full bg-afri-bg-ter border border-afri-border flex items-center justify-center mx-auto text-afri-text-sec">
+                    <Sparkles className="w-10 h-10 text-[#D4AF37]" />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-lg font-black font-mono uppercase text-zinc-400 leading-tight">Sélectionnez un niveau pour commencer</p>
-                    <p className="text-xs text-zinc-600 font-medium italic">Chaque contribution compte pour la musique.</p>
+                    <p className="text-lg font-black font-sans uppercase text-afri-text leading-tight">Sélectionnez un niveau pour commencer</p>
+                    <p className="text-xs text-afri-text-sec font-medium italic">Chaque contribution compte pour la musique.</p>
                   </div>
                 </motion.div>
               )}

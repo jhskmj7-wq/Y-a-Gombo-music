@@ -32,13 +32,13 @@ export const themeColors: Record<Theme, { bg: string; bgSec: string; bgTer?: str
     gold: "#D4AF37"
   },
   light: {
-    bg: "#F8F6F1",
-    bgSec: "#FFFFFF",
-    bgTer: "#F2EFE8",
-    text: "#111111",
-    textSec: "#555555",
-    textMuted: "#777777",
-    border: "#E2DDD3",
+    bg: "#F8F6F2",
+    bgSec: "#ECE8E1",
+    bgTer: "#FFFFFF",
+    text: "#222222",
+    textSec: "#666666",
+    textMuted: "#666666",
+    border: "#DDD8CF",
     gold: "#D4AF37"
   },
   royal: {

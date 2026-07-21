@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { initializeFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -19,6 +19,11 @@ export const app = getApps().length
   : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
+
+// Explicitly set persistence
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.error("Failed to set auth persistence:", err);
+});
 
 export const db = initializeFirestore(app, {});
 

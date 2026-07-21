@@ -31,6 +31,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let profileUnsub: (() => void) | null = null;
 
+    // Handle Google redirect sign-in result when returning to the application
+    const checkRedirect = async () => {
+      try {
+        const { getRedirectResult } = await import("firebase/auth");
+        await getRedirectResult(auth);
+      } catch (err) {
+        console.error("Error retrieving Google redirect sign-in result:", err);
+      }
+    };
+    checkRedirect();
+
     const unsubscribe = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
       
       if (profileUnsub) {
@@ -78,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
           } else {
             // Ensure founder role is set for existing profile if email matches
-            if (firebaseUser.email === "jhs.kmj7@gmail.com" && (!uProfile.isFounder || uProfile.role !== "founder")) {
+            if (firebaseUser.email === "jhs.kmj7@gmail.com" && (!uProfile.isFounder || uProfile.role !== "founder" || !uProfile.isVip || !uProfile.isPro)) {
               const founderPermissions = [
                 "admin",
                 "founder",
@@ -91,21 +102,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               ];
               uProfile.role = "founder";
               uProfile.isFounder = true;
+              uProfile.isVip = true;
+              uProfile.isPro = true;
               uProfile.permissions = founderPermissions;
               await gomboDB.updateUserProfile(firebaseUser.uid, { 
                 role: "founder", 
                 isFounder: true,
+                isVip: true,
+                isPro: true,
                 permissions: founderPermissions
               });
             }
           }
           
+          if (firebaseUser.email === "jhs.kmj7@gmail.com") {
+            uProfile.isFounder = true;
+            uProfile.role = "founder";
+            uProfile.isVip = true;
+            uProfile.isPro = true;
+          }
           setProfile(uProfile);
           setCurrentUser(firebaseUser);
 
           // Now listen in real-time to keep wallet and other attributes synced
           profileUnsub = gomboDB.listenUserProfile(firebaseUser.uid, (realtimeProfile) => {
             if (realtimeProfile) {
+              if (firebaseUser.email === "jhs.kmj7@gmail.com") {
+                realtimeProfile.isFounder = true;
+                realtimeProfile.role = "founder";
+                realtimeProfile.isVip = true;
+                realtimeProfile.isPro = true;
+              }
               setProfile(realtimeProfile);
             }
           });

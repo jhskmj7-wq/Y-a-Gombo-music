@@ -164,85 +164,83 @@ export default function MessagesView({
     localStorage.setItem(`afrigombo_charter_accepted_${currentUser.uid}`, "true");
     setHasReadCharter(true);
     setShowCharter(false);
-    try { gomboDB.updateUserProfile(currentUser.uid, { charterAccepted: true }); } catch(_) {}
+    try { gomboDB.updateUserProfile(currentUser.uid, { charterAccepted: true, hasAcceptedChatCGU: true }); } catch(_) {}
   };
+
+  useEffect(() => {
+    if (currentProfile?.hasAcceptedChatCGU === true) {
+      setHasReadCharter(true);
+      setShowCharter(false);
+    }
+  }, [currentProfile]);
 
   if (showCharter) {
     return (
-      <div className="w-full max-w-4xl mx-auto my-8 p-6 sm:p-10 bg-[#050505] rounded-3xl border border-[#D4AF37]/20 shadow-[0_0_50px_rgba(212,175,55,0.08)] relative overflow-hidden flex flex-col items-center">
+      <div className="w-full max-w-3xl mx-auto my-6 p-6 sm:p-10 bg-afri-bg-sec rounded-3xl border border-afri-border shadow-xl relative overflow-hidden flex flex-col items-center">
         {/* Background Accent */}
         <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#D4AF37]/10 blur-3xl rounded-full pointer-events-none" />
         <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-[#D4AF37]/10 blur-3xl rounded-full pointer-events-none" />
 
-        <div className="relative w-full max-w-2xl space-y-10 z-10">
+        <div className="relative w-full max-w-2xl space-y-8 z-10">
           <div className="text-center space-y-3">
-            <div className="w-20 h-20 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-3xl flex items-center justify-center mx-auto mb-6 transform -rotate-3 shadow-lg shadow-[#D4AF37]/10">
-              <ShieldAlert className="w-10 h-10 text-[#D4AF37]" />
+            <div className="w-16 h-16 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl flex items-center justify-center mx-auto mb-4 transform -rotate-3 shadow-lg shadow-[#D4AF37]/10">
+              <ShieldCheck className="w-8 h-8 text-[#D4AF37]" />
             </div>
-            <h2 className="text-3xl font-sans font-black text-[#D4AF37] uppercase tracking-tighter">
-              Communication sécurisée AFRIGOMBO
+            <h2 className="text-2xl sm:text-3xl font-sans font-black text-[#D4AF37] uppercase tracking-tighter">
+              Conditions d'utilisation de la messagerie
             </h2>
-            <div className="h-1 w-16 bg-[#D4AF37] mx-auto rounded-full mt-4" />
+            <p className="text-xs text-afri-text-sec font-medium uppercase tracking-widest">Afrigombo Showbiz Security</p>
+            <div className="h-0.5 w-12 bg-[#D4AF37] mx-auto rounded-full mt-2" />
           </div>
 
-          <div className="space-y-6 text-zinc-300">
-            <p className="text-sm font-medium leading-relaxed text-center px-4">
-              La messagerie AFRIGOMBO protège les artistes, les organisateurs, les contrats et les paiements. Notre priorité est de vous garantir une prestation et une transaction 100% sécurisées.
+          <div className="space-y-6 text-afri-text">
+            <p className="text-xs sm:text-sm font-medium leading-relaxed text-center px-2 text-afri-text-sec">
+              Afin de préserver la confiance et la sérénité au sein de l'arène musicale, l'accès à la messagerie AFRIGOMBO est soumis à l'acceptation de nos CGU de bonne conduite.
             </p>
 
-            <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl space-y-4">
-              <h3 className="text-red-400 text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" /> RÈGLES DE COMMUNICATION
-              </h3>
-              <ul className="space-y-3 text-xs leading-relaxed font-medium">
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 shrink-0 mt-0.5">•</span>
-                  <span>Interdiction de partager un <strong>numéro de téléphone</strong>.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 shrink-0 mt-0.5">•</span>
-                  <span>Interdiction de partager un <strong>lien externe</strong> ou des <strong>réseaux sociaux</strong>.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 shrink-0 mt-0.5">•</span>
-                  <span>Interdiction de partager un <strong>email</strong>.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-500 shrink-0 mt-0.5">•</span>
-                  <span>Interdiction de tenter de <strong>contourner la plateforme</strong>.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 shrink-0 mt-0.5">✓</span>
-                  <span className="text-emerald-50">Toutes les transactions doivent obligatoirement <strong>rester sur AFRIGOMBO</strong>.</span>
-                </li>
-              </ul>
-              <div className="pt-2 border-t border-red-500/10">
-                <p className="text-red-400/80 text-[10px] font-bold italic">
-                  * Une surveillance IA est active. Des sanctions (suspension, baisse du score de confiance) peuvent être appliquées en cas de fraude.
-                </p>
-              </div>
+            <div className="grid grid-cols-1 gap-4">
+              {[
+                {
+                  title: "Respect entre utilisateurs",
+                  desc: "Chaque artiste, instrumentiste, organisateur et promoteur est un pilier de notre héritage. La courtoisie et le respect mutuel sont les clés de voûte de nos palabres.",
+                  icon: Target
+                },
+                {
+                  title: "Zéro Insulte & Harcèlement",
+                  desc: "Les injures, comportements menaçants ou agressifs ainsi que le harcèlement systématique feront l'objet d'un bannissement immédiat et irrévocable du compte.",
+                  icon: AlertCircle
+                },
+                {
+                  title: "Sécurité & Contenus Interdits",
+                  desc: "Le partage de liens frauduleux, de logiciels malveillants, d'images inappropriées ou de tentatives d'hameçonnage est strictement interdit et analysé par nos modérateurs.",
+                  icon: ShieldAlert
+                },
+                {
+                  title: "Protection des Données Personnelles",
+                  desc: "Protégez votre vie privée. Ne transmettez jamais d'identifiants bancaires ou de documents sensibles en texte clair. Vos coordonnées restent sécurisées.",
+                  icon: Lock
+                },
+                {
+                  title: "Signalement en Un Clic",
+                  desc: "En cas de comportement louche, abusif ou suspect, utilisez le bouton de signalement pour alerter sur-le-champ le Conseil des Anciens d'AFRIGOMBO.",
+                  icon: Trash2
+                }
+              ].map((rule, idx) => (
+                <div key={idx} className="flex gap-4 p-4 rounded-2xl bg-afri-text/5 border border-afri-border transition-all">
+                  <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] shrink-0 mt-0.5">
+                    <rule.icon className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold uppercase tracking-wide text-afri-text">{rule.title}</h4>
+                    <p className="text-[11px] text-afri-text-sec leading-relaxed">{rule.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="pt-6 space-y-5 border-t border-zinc-900">
-            <label className="flex items-start gap-4 cursor-pointer group p-2 hover:bg-zinc-900/40 rounded-xl transition-colors">
-              <div className="relative mt-0.5 shrink-0">
-                <input 
-                  type="checkbox" 
-                  checked={hasReadCharter}
-                  onChange={(e) => setHasReadCharter(e.target.checked)}
-                  className="peer sr-only"
-                />
-                <div className="w-6 h-6 border-2 border-zinc-700 rounded-md bg-zinc-900 peer-checked:bg-[#D4AF37] peer-checked:border-[#D4AF37] transition-all flex items-center justify-center">
-                  <Check className="w-4 h-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity" />
-                </div>
-              </div>
-              <span className="text-xs text-zinc-300 font-medium leading-relaxed pt-0.5 group-hover:text-white transition-colors">
-                J'ai lu les règles.
-              </span>
-            </label>
-            
-            <label className="flex items-start gap-4 cursor-pointer group p-2 hover:bg-zinc-900/40 rounded-xl transition-colors">
+          <div className="pt-4 border-t border-afri-border space-y-6">
+            <label className="flex items-start gap-3 cursor-pointer group justify-center py-2 select-none">
               <div className="relative mt-0.5 shrink-0">
                 <input 
                   type="checkbox" 
@@ -250,21 +248,22 @@ export default function MessagesView({
                   onChange={(e) => setCharterAccepted(e.target.checked)}
                   className="peer sr-only"
                 />
-                <div className="w-6 h-6 border-2 border-zinc-700 rounded-md bg-zinc-900 peer-checked:bg-[#D4AF37] peer-checked:border-[#D4AF37] transition-all flex items-center justify-center">
-                  <Check className="w-4 h-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity" />
+                <div className="w-5 h-5 border-2 border-afri-border rounded-md bg-afri-bg peer-checked:bg-[#D4AF37] peer-checked:border-[#D4AF37] transition-all flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5 text-black opacity-0 peer-checked:opacity-100 transition-opacity" />
                 </div>
               </div>
-              <span className="text-xs text-zinc-300 font-medium leading-relaxed pt-0.5 group-hover:text-white transition-colors">
-                J'accepte les conditions.
+              <span className="text-xs text-afri-text-sec font-bold group-hover:text-afri-text transition-colors">
+                J'ai lu et j'accepte les conditions de la messagerie.
               </span>
             </label>
 
             <button
               onClick={handleAcceptCharter}
-              disabled={!charterAccepted || !hasReadCharter}
-              className="w-full py-5 mt-4 bg-gradient-to-r from-[#D4AF37] to-[#F1C40F] hover:from-[#E06C00] hover:to-[#D4AF37] disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-black font-black uppercase tracking-widest rounded-2xl transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] disabled:shadow-none active:scale-95 text-sm"
+              disabled={!charterAccepted}
+              className="w-full py-4 bg-[#D4AF37] hover:bg-opacity-90 disabled:bg-afri-text/5 disabled:text-afri-text-sec/40 text-black font-black uppercase tracking-widest rounded-2xl transition-all shadow-[0_10px_30px_rgba(212,175,55,0.15)] active:scale-[0.98] text-xs cursor-pointer flex items-center justify-center gap-2"
             >
-              Continuer
+              <span>Entrer dans la messagerie</span>
+              <MessageSquare className="w-4 h-4" />
             </button>
           </div>
         </div>

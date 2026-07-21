@@ -27,13 +27,15 @@ interface GomboIdUserDashboardProps {
   onUpdateUser: (userData: Partial<User>) => Promise<void>;
   onCreateTransaction: (amount: number, type: any, description: string) => Promise<void>;
   addToTerminal?: (msg: string) => void;
+  onBack?: () => void;
 }
 
 export default function GomboIdUserDashboard({
   currentUser,
   onUpdateUser,
   onCreateTransaction,
-  addToTerminal = () => {}
+  addToTerminal = () => {},
+  onBack
 }: GomboIdUserDashboardProps) {
   if (!currentUser) return null;
 
@@ -242,6 +244,14 @@ export default function GomboIdUserDashboard({
 
   return (
     <div className="space-y-4 sm:space-y-6 afri-container afri-section">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="text-xs font-black uppercase tracking-wider text-afri-text-sec hover:text-afri-text inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#121214] rounded-xl border border-afri-border transition cursor-pointer"
+        >
+          &larr; Retour
+        </button>
+      )}
       {/* =========================================================================
                                  GOMBO ID CARD (AFRITRUST TRUST ID STYLE)
          ========================================================================= */}

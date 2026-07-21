@@ -13,13 +13,15 @@ interface NotificationCenterProps {
   notifications: (GomboNotification | AppNotification)[];
   onRefreshProfile: () => void;
   onNavigateHome: () => void;
+  onBack?: () => void;
 }
 
 export default function NotificationCenter({ 
   currentUserProfile, 
   notifications, 
   onRefreshProfile,
-  onNavigateHome 
+  onNavigateHome,
+  onBack
 }: NotificationCenterProps) {
   const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
 
@@ -75,6 +77,14 @@ export default function NotificationCenter({
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 min-h-screen">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="text-xs font-black uppercase tracking-wider text-afri-text-sec hover:text-afri-text inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 rounded-xl border border-afri-border transition cursor-pointer"
+        >
+          &larr; Retour
+        </button>
+      )}
       {/* IMPERIAL HEADER */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}

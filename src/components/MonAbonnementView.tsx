@@ -4,9 +4,10 @@ import { ShieldCheck, History, RefreshCcw, ArrowRight, Check, Sparkles } from 'l
 interface Props {
   isPremium: boolean;
   onUpgrade: () => void;
+  onBack?: () => void;
 }
 
-export const MonAbonnementView: React.FC<Props> = ({ isPremium, onUpgrade }) => {
+export const MonAbonnementView: React.FC<Props> = ({ isPremium, onUpgrade, onBack }) => {
   const [showComparison, setShowComparison] = useState(false);
 
   if (showComparison) {
@@ -50,6 +51,14 @@ export const MonAbonnementView: React.FC<Props> = ({ isPremium, onUpgrade }) => 
 
   return (
     <div className="afri-container space-y-6 animate-fadeIn pb-32 text-left py-4 xs:py-6 max-w-2xl mx-auto">
+      {onBack && (
+        <button 
+          onClick={onBack}
+          className="text-xs font-black uppercase tracking-wider text-afri-text-sec hover:text-afri-text inline-flex items-center gap-1.5 px-3 py-1.5 bg-afri-bg-sec rounded-xl border border-afri-border transition cursor-pointer hover:border-afri-text-sec/40"
+        >
+          &larr; Retour
+        </button>
+      )}
       
       <div className="text-center mb-8">
         <h2 className="text-2xl font-black text-afri-text uppercase tracking-tighter mb-2">Abonnements</h2>

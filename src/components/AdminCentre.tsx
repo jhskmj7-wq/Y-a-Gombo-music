@@ -9,7 +9,8 @@ import {
   updateDoc,
   query,
   limit,
-  where
+  where,
+  orderBy
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
@@ -5377,6 +5378,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     onUpdateUser={handleUpdateUser}
                     onCreateTransaction={handleCreateTransaction}
                     addToTerminal={(msg: string) => addToTerminal(msg)}
+                    onBack={() => goBackMenu()}
                   />
                 );
               })()}
@@ -5819,6 +5821,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         setActiveMenu("user_terrain");
                         try { audioSynth.playValidationSuccess(); } catch (err) {}
                       }}
+                      onBack={() => goBackMenu()}
                     />
                   </div>
                 );
@@ -5827,7 +5830,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_about" && (
                 <div className="animate-fadeIn">
                   <AboutAfrigombo 
-                    onBack={() => setActiveMenu("user_terrain")} 
+                    onBack={() => goBackMenu()} 
                     onSupport={() => setActiveMenu("user_support")}
                   />
                 </div>
@@ -5836,7 +5839,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_support" && (
                 <div className="animate-fadeIn">
                   <SupportAfrigombo 
-                    onBack={() => setActiveMenu("user_terrain")} 
+                    onBack={() => goBackMenu()} 
                   />
                 </div>
               )}
@@ -5844,7 +5847,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_whats_new" && (
                 <div className="animate-fadeIn">
                   <WhatsNew 
-                    onBack={() => setActiveMenu("user_terrain")} 
+                    onBack={() => goBackMenu()} 
                   />
                 </div>
               )}
@@ -5882,6 +5885,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <MonAbonnementView 
                       isPremium={profile?.isPro || profile?.isVip || (profile?.balance !== undefined) || false}
                       onUpgrade={() => setActiveMenu("user_gombo_plus")}
+                      onBack={() => goBackMenu()}
                     />
                   </div>
                 )}
@@ -7471,7 +7475,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       {/* =========================================================================
                                      FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED)
          ========================================================================= */}
-      {perspective === "user" && ["user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_heritage"].includes(activeMenu) && (
+      {perspective === "user" && [
+        "user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_heritage",
+        "user_notifications", "user_settings", "user_wallet", "user_contracts", "user_messages",
+        "user_about", "user_support", "user_whats_new", "user_abonnement", "user_gombo_dashboard"
+      ].includes(activeMenu) && (
         <div className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 w-[94%] xs:w-[92%] max-w-[425px] h-[64px] sm:h-[72px] bg-afri-bg-sec/95 backdrop-blur-xl border border-afri-border p-1 px-2 xs:px-3 sm:px-4 flex justify-between items-center z-40 rounded-[24px] sm:rounded-[28px] shadow-[0_12px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none">
           {/* 1. ACCUEIL */}
           <button
