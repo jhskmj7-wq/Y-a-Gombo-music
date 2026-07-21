@@ -6101,20 +6101,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {/* ----------------------------------------------------
-                                VIEW: TRANSACTIONS BÊTA (ADMIN)
-                  ---------------------------------------------------- */}
-              {activeMenu === "beta_transactions" && (
-                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
-                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement des Transactions Bêta...</div>}>
-                    <BetaTransactionsAdminPanel 
-                      currentUser={profile}
-                      onOpenSupportChat={() => setActiveMenu("messages")}
-                    />
-                  </Suspense>
-                </div>
-              )}
-
-              {/* ----------------------------------------------------
                                 VIEW: CABINET SUPRÊME PRIVÉ (LE TRÔNE DU FONDATEUR / CENTRE MULTIMÉDIA)
                   ---------------------------------------------------- */}
               {activeMenu === "super_admin" && (
@@ -6123,18 +6109,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <ThroneCinematicIntro onComplete={() => setShowThroneCinematic(false)} />
                   </Suspense>
                 ) : (
-                  <div className="">
-                    {/* Tab Switcher for Super Founder */}
-                    <div className="flex gap-2 pb-1 border-b border-afri-border mb-4">
+                  <div className="flex flex-col">
+                    {/* Tab Switcher for Super Founder - Directly attached at the top */}
+                    <div className="flex gap-2 pb-2 border-b border-afri-border sticky top-0 bg-afri-bg/95 backdrop-blur-md z-30 pt-0">
                       <button
                         onClick={() => {
                           setSuperAdminTab("throne");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
                           superAdminTab === "throne"
                             ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text hover:border-afri-border"
+                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
                         }`}
                       >
                         👑 Le Trône Royal
@@ -6144,15 +6130,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           setSuperAdminTab("beta_transactions");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border flex items-center gap-2 ${
+                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border flex items-center gap-1.5 ${
                           superAdminTab === "beta_transactions"
                             ? "bg-emerald-500/20 border-emerald-400 text-emerald-400 font-black shadow-lg"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text hover:border-afri-border"
+                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
                         }`}
                       >
                         <span>🛡️ Transactions Bêta</span>
                         {pendingBetaCount > 0 && (
-                          <span className="bg-emerald-500 text-black text-[9px] px-1.5 py-0.5 rounded-full font-black animate-pulse">
+                          <span className="bg-emerald-500 text-black text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse">
                             {pendingBetaCount}
                           </span>
                         )}
@@ -6162,57 +6148,55 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           setSuperAdminTab("economie");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
                           superAdminTab === "economie"
                             ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text hover:border-afri-border"
+                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
                         }`}
                       >
-                        📊 Économie AFRIGOMBO
+                        📊 Économie
                       </button>
                       <button
                         onClick={() => {
                           setSuperAdminTab("media");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
                           superAdminTab === "media"
                             ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text hover:border-afri-border"
+                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
                         }`}
                       >
-                        🎵 Centre Multimédia
+                        🎵 Multimédia
                       </button>
                       <button
                         onClick={() => {
                           setSuperAdminTab("batisseurs");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
                           superAdminTab === "batisseurs"
                             ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
-                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text hover:border-afri-border"
+                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
                         }`}
                       >
                         🏛 Bâtisseurs
                       </button>
                     </div>
 
-                    {/* DIAGNOSTIC BOUTON (Positionné plus bas ou masqué si trône actif pour réduire l'espace) */}
-                    {superAdminTab !== "throne" && (
-                      <div className="flex justify-end px-2 mb-4">
-                        <button
-                          onClick={() => {
-                            setIsDiagnosticOpen(true);
-                            try { audioSynth.playValidationSuccess(); } catch (_) {}
-                          }}
-                          className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-xl text-[10px] font-mono font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all cursor-pointer"
-                        >
-                          <ShieldCheck className="w-3 h-3" />
-                          Ouvrir le diagnostic Firebase
-                        </button>
-                      </div>
-                    )}
+                    {/* DIAGNOSTIC BOUTON - Small and discreet */}
+                    <div className="flex justify-end px-2 pt-1 pb-1">
+                      <button
+                        onClick={() => {
+                          setIsDiagnosticOpen(true);
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-lg text-[8px] font-mono font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all cursor-pointer"
+                      >
+                        <ShieldCheck className="w-2.5 h-2.5" />
+                        Diagnostic
+                      </button>
+                    </div>
 
                     <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement de la Console...</div>}>
                       {superAdminTab === "throne" ? (

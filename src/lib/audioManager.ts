@@ -7,9 +7,13 @@
 import { db } from "../firebase";
 import { collection, onSnapshot, query, limit } from "firebase/firestore";
 
-// Official local paths (from public folder)
-const introAsset = "/audio/intro.mp3";
-const anthemAsset = "/audio/hymne-afrigombo.mp3";
+// Official GitHub Assets Configuration
+export const AudioConfig = {
+  // Replace these URLs with the actual public raw GitHub links when available
+  INTRO_URL: "https://raw.githubusercontent.com/AFRIGOMBO/assets/main/audio/intro-officielle.mp3",
+  HYMN_URL: "https://raw.githubusercontent.com/AFRIGOMBO/assets/main/audio/hymne-afrigombo-officiel.mp3",
+  BASE_UI_SOUNDS: "https://raw.githubusercontent.com/AFRIGOMBO/assets/main/audio/ui/"
+};
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -40,16 +44,13 @@ export async function isDirectAudioFile(url: string): Promise<boolean> {
   if (hasAudioExtension) return true;
 
   try {
-    // Try to check Content-Type via fetch
-    // We use a AbortController to timeout quickly
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
 
     const response = await fetch(url, { 
       method: 'HEAD',
       signal: controller.signal
     }).catch(() => {
-        // Fallback to GET if HEAD is not allowed
         return fetch(url, { 
           method: 'GET', 
           headers: { 'Range': 'bytes=0-0' },
@@ -61,17 +62,9 @@ export async function isDirectAudioFile(url: string): Promise<boolean> {
 
     if (response.ok) {
       const contentType = response.headers.get('Content-Type');
-      if (contentType && (contentType.startsWith('audio/') || contentType.startsWith('video/'))) {
-        return true;
-      }
-      // If it's text/html, it's definitely not a direct audio file
-      if (contentType && contentType.includes('text/html')) {
-        return false;
-      }
+      return !!(contentType && (contentType.startsWith('audio/') || contentType.startsWith('video/')));
     }
   } catch (e) {
-    console.warn("Direct audio check failed (likely CORS):", e);
-    // If fetch fails (CORS), we have to rely on extension
     return hasAudioExtension;
   }
 
@@ -87,7 +80,7 @@ export async function getCachedAudioUrl(url: string): Promise<string> {
     if (typeof window === "undefined" || !("caches" in window)) {
       return url;
     }
-    const cacheName = "afrigombo-audio-cache";
+    const cacheName = "afrigombo-audio-cache-v2";
     const cache = await caches.open(cacheName);
     const cachedResponse = await cache.match(url);
 
@@ -97,9 +90,7 @@ export async function getCachedAudioUrl(url: string): Promise<string> {
     }
 
     const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to download audio file: ${response.statusText}`);
-    }
+    if (!response.ok) return url;
 
     await cache.put(url, response.clone());
     const blob = await response.blob();
@@ -115,6 +106,8 @@ export type AudioState = {
   currentTrackId: string | null;
   volume: number;
   isMuted: boolean;
+  progress?: number;
+  duration?: number;
 };
 
 class AudioManager {
@@ -125,7 +118,6 @@ class AudioManager {
   private currentTrackId: string | null = null;
 
   private mediaElements: Record<string, HTMLAudioElement> = {};
-  private mediaData: Record<string, any> = {};
   private listeners: ((state: AudioState) => void)[] = [];
 
   constructor() {
@@ -134,64 +126,51 @@ class AudioManager {
       const savedVol = safeGetItem("gombo_pref_music_volume");
       this.volume = savedVol !== "" ? parseFloat(savedVol) : 0.7;
 
-      this.initializeMediaSync();
+      this.initializeAudioSystem();
     }
   }
 
   private notify() {
+    const activeId = this.getActiveElementId();
+    const activeEl = activeId ? this.mediaElements[activeId] : null;
+
     const state: AudioState = {
       currentPlaying: this.currentPlaying,
       isPaused: this.isPaused,
       currentTrackId: this.currentTrackId,
       volume: this.volume,
-      isMuted: this.isMuted
+      isMuted: this.isMuted,
+      progress: activeEl ? activeEl.currentTime : 0,
+      duration: activeEl ? (isNaN(activeEl.duration) ? 0 : activeEl.duration) : 0
     };
     this.listeners.forEach(l => l(state));
   }
 
+  private getActiveElementId(): string | null {
+    if (this.currentPlaying === "intro") return "intro";
+    if (this.currentPlaying === "hymne") return "hymn";
+    if (this.currentPlaying === "custom") return this.currentTrackId;
+    return null;
+  }
+
   public subscribe(listener: (state: AudioState) => void) {
     this.listeners.push(listener);
-    // Initial call
     listener(this.getState());
     return () => {
       this.listeners = this.listeners.filter(l => l !== listener);
     };
   }
 
-  private initializeMediaSync() {
-    // Load local defaults first
-    this.loadAudio("intro", introAsset, false, 0.8);
-    this.loadAudio("anthem", anthemAsset, true, 0.7);
-
-    try {
-      // Sync official media (intro, anthem) from Firestore (overwrites local if exists)
-      const mediaCollection = collection(db, "media");
-      onSnapshot(mediaCollection, (snapshot) => {
-        snapshot.forEach(async (doc) => {
-          const data = doc.data();
-          const id = doc.id; 
-          this.mediaData[id] = data;
-
-          if (data.downloadURL && await isDirectAudioFile(data.downloadURL)) {
-            this.loadAudio(id, data.downloadURL, !!data.loop, data.volume ?? 1);
-          }
-        });
-      });
-    } catch (err) {
-      console.error("AudioManager sync failed:", err);
-    }
+  private async initializeAudioSystem() {
+    // Pre-cache official tracks
+    this.loadAudio("intro", AudioConfig.INTRO_URL, false, 0.8);
+    this.loadAudio("hymn", AudioConfig.HYMN_URL, true, 0.7);
   }
 
   private async loadAudio(id: string, url: string, loop: boolean, relativeVolume: number) {
-    const currentAudio = this.mediaElements[id];
-    if (currentAudio && currentAudio.src === url) {
-      currentAudio.loop = loop;
-      currentAudio.volume = (this.isMuted ? 0 : this.volume) * relativeVolume;
-      return;
-    }
-
-    if (currentAudio) {
-      try { currentAudio.pause(); } catch (_) {}
+    if (this.mediaElements[id]) {
+      const el = this.mediaElements[id];
+      if (el.src.includes(url) || url.includes(el.src)) return el;
     }
 
     try {
@@ -199,42 +178,42 @@ class AudioManager {
       const audioObj = new Audio(cachedUrl);
       audioObj.loop = loop;
       audioObj.volume = (this.isMuted ? 0 : this.volume) * relativeVolume;
+      
       audioObj.onended = () => {
-        if (this.currentPlaying === id) {
+        if (this.currentPlaying === id || (id === "hymn" && this.currentPlaying === "hymne")) {
           this.currentPlaying = "none";
           this.isPaused = false;
           this.notify();
         }
       };
+
+      audioObj.ontimeupdate = () => this.notify();
+
       this.mediaElements[id] = audioObj;
+      return audioObj;
     } catch (err) {
-      const audioObj = new Audio(url);
-      audioObj.loop = loop;
-      audioObj.volume = (this.isMuted ? 0 : this.volume) * relativeVolume;
-      this.mediaElements[id] = audioObj;
+      console.warn(`Failed to load audio ${id}:`, err);
+      return null;
     }
   }
 
   public getVolume(): number { return this.volume; }
+  public getIsMuted(): boolean { return this.isMuted; }
 
   public setVolume(vol: number) {
     this.volume = Math.max(0, Math.min(1, vol));
     safeSetItem("gombo_pref_music_volume", this.volume.toString());
-    Object.entries(this.mediaElements).forEach(([id, audio]) => {
-      const itemVol = this.mediaData[id]?.volume ?? 1;
-      audio.volume = (this.isMuted ? 0 : this.volume) * itemVol;
+    Object.values(this.mediaElements).forEach((audio) => {
+      audio.volume = (this.isMuted ? 0 : this.volume);
     });
     this.notify();
   }
 
-  public getIsMuted(): boolean { return this.isMuted; }
-
   public setIsMuted(muted: boolean) {
     this.isMuted = muted;
     safeSetItem("gombo_pref_music_muted", this.isMuted.toString());
-    Object.entries(this.mediaElements).forEach(([id, audio]) => {
-      const itemVol = this.mediaData[id]?.volume ?? 1;
-      audio.volume = (this.isMuted ? 0 : this.volume) * itemVol;
+    Object.values(this.mediaElements).forEach((audio) => {
+      audio.volume = (this.isMuted ? 0 : this.volume);
     });
     this.notify();
   }
@@ -253,83 +232,101 @@ class AudioManager {
   }
 
   public pause() {
-    Object.values(this.mediaElements).forEach(audio => {
-      if (!audio.paused) audio.pause();
-    });
-    this.isPaused = true;
-    this.notify();
-  }
-
-  public resume() {
-    if (this.currentPlaying !== "none") {
-      const id = this.currentPlaying === "hymne" ? "anthem" : 
-                 this.currentPlaying === "intro" ? "intro" : 
-                 this.currentTrackId;
-      if (id && this.mediaElements[id]) {
-        this.mediaElements[id].play().catch(() => {});
-        this.isPaused = false;
-        this.notify();
-      }
+    const activeId = this.getActiveElementId();
+    if (activeId && this.mediaElements[activeId]) {
+      this.mediaElements[activeId].pause();
+      this.isPaused = true;
+      this.notify();
     }
   }
 
-  public playIntro(force = false) {
+  public resume() {
+    const activeId = this.getActiveElementId();
+    if (activeId && this.mediaElements[activeId]) {
+      this.mediaElements[activeId].play().catch(() => {});
+      this.isPaused = false;
+      this.notify();
+    }
+  }
+
+  public async playIntro(force = false) {
     if (typeof window === "undefined") return;
-    if (!force && safeGetItem("gombo_intro_played") === "true") return;
+    if (!force && safeGetItem("gombo_intro_played_v2") === "true") return;
 
     this.stop();
     this.currentPlaying = "intro";
     this.isPaused = false;
-    safeSetItem("gombo_intro_played", "true");
+    safeSetItem("gombo_intro_played_v2", "true");
     
-    const audio = this.mediaElements["intro"];
+    const audio = await this.loadAudio("intro", AudioConfig.INTRO_URL, false, 0.8);
     if (audio) {
-      audio.play().catch(e => console.warn("Intro play failed:", e));
+      audio.play().catch(() => {
+        console.warn("L'audio officiel est momentanément indisponible.");
+      });
     }
     this.notify();
   }
 
-  public playHymn() {
+  public async playHymn() {
     if (typeof window === "undefined") return;
+    
+    // If already playing or paused, toggle
+    if (this.currentPlaying === "hymne") {
+      if (this.isPaused) this.resume();
+      else this.pause();
+      return;
+    }
+
     this.stop();
     this.currentPlaying = "hymne";
     this.isPaused = false;
-    const audio = this.mediaElements["anthem"];
+    const audio = await this.loadAudio("hymn", AudioConfig.HYMN_URL, true, 0.7);
     if (audio) {
-      audio.play().catch(e => console.warn("Hymn play failed:", e));
+      audio.play().catch(() => {
+        console.warn("L'hymne officiel est momentanément indisponible.");
+      });
     }
     this.notify();
   }
 
-  public async playCustomTrack(id: string, url: string, title: string) {
-    if (typeof window === "undefined") return;
-    
-    if (!(await isDirectAudioFile(url))) {
-      throw new Error("L'URL fournie n'est pas un fichier audio direct (MP3, OGG, WAV).");
-    }
-
+  public async playCustomTrack(id: string, url: string, title?: string) {
     this.stop();
     this.currentPlaying = "custom";
     this.currentTrackId = id;
     this.isPaused = false;
-
-    await this.loadAudio(id, url, false, 1);
-    const audio = this.mediaElements[id];
+    
+    const audio = await this.loadAudio(id, url, true, 1.0);
     if (audio) {
-      audio.play().catch(e => console.error("Custom track play failed:", e));
+      await audio.play().catch((err) => {
+        console.warn(`L'audio personnalisé ${title || id} est momentanément indisponible:`, err);
+        throw new Error("Le fichier audio officiel est momentanément indisponible.");
+      });
     }
     this.notify();
   }
 
+  public seek(seconds: number) {
+    const activeId = this.getActiveElementId();
+    if (activeId && this.mediaElements[activeId]) {
+      this.mediaElements[activeId].currentTime = seconds;
+      this.notify();
+    }
+  }
+
   public getState(): AudioState {
+    const activeId = this.getActiveElementId();
+    const activeEl = activeId ? this.mediaElements[activeId] : null;
     return {
       currentPlaying: this.currentPlaying,
       isPaused: this.isPaused,
       currentTrackId: this.currentTrackId,
       volume: this.volume,
-      isMuted: this.isMuted
+      isMuted: this.isMuted,
+      progress: activeEl ? activeEl.currentTime : 0,
+      duration: activeEl ? (isNaN(activeEl.duration) ? 0 : activeEl.duration) : 0
     };
   }
 }
 
 export const globalAudioManager = new AudioManager();
+

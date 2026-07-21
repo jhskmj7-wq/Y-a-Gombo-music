@@ -30,7 +30,7 @@ export default function NotificationCenter({
   
   // Push Notification Simulation / Preparation states
   const [pushPermission, setPushPermission] = useState<NotificationPermission>(
-    typeof window !== "undefined" ? (Notification.permission || "default") : "default"
+    typeof window !== "undefined" && "Notification" in window ? (window.Notification.permission || "default") : "default"
   );
   const [fcmToken, setFcmToken] = useState<string>(() => localStorage.getItem("gombo_sim_fcm_token") || "");
   const [isRequestingPush, setIsRequestingPush] = useState(false);
@@ -82,7 +82,7 @@ export default function NotificationCenter({
 
     setIsRequestingPush(true);
     try {
-      const permission = await Notification.requestPermission();
+      const permission = await window.Notification.requestPermission();
       setPushPermission(permission);
       
       if (permission === "granted") {

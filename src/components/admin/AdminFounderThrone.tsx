@@ -8,10 +8,10 @@ import {
   Play, Pause, Trash2, Volume2, Plus, ArrowUp, ArrowDown, Send, 
   RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award,
   Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square,
-  Clock, MapPin
+  Clock, MapPin, Cloud, Zap, Sun
 } from "lucide-react";
 import { BetaTransactionsAdminPanel } from "./BetaTransactionsAdminPanel";
-import { globalAudioManager, isDirectAudioFile } from "../../lib/audioManager";
+import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
 import { 
@@ -77,6 +77,21 @@ export default function AdminFounderThrone({
 }: AdminFounderThroneProps) {
   const isDark = theme !== "light";
   const { currentUser, profile } = useAuth();
+  const [audioState, setAudioState] = useState<AudioState>(globalAudioManager.getState());
+
+  useEffect(() => {
+    return globalAudioManager.subscribe((state) => {
+      setAudioState(state);
+    });
+  }, []);
+
+  const formatAudioTime = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return "00:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
   // Navigation: null shows the 9 cards, string shows specific section view
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   
@@ -720,12 +735,14 @@ export default function AdminFounderThrone({
   const formattedDate = currentDateTime.toLocaleDateString("fr-FR", {
     weekday: "long",
     day: "numeric",
-    month: "long"
+    month: "long",
+    year: "numeric"
   });
 
   const formattedTime = currentDateTime.toLocaleTimeString("fr-FR", {
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    second: "2-digit"
   });
 
   // 11. METRICS DEDUCTIONS
@@ -767,74 +784,222 @@ export default function AdminFounderThrone({
   };
 
   return (
-    <div className="text-left pb-28 font-sans text-afri-text select-none bg-transparent min-h-screen pt-0">
+    <div className="text-left pb-28 font-sans text-afri-text select-none bg-transparent min-h-screen pt-0 -mt-2">
       
       {/* ----------------------------------------------------
-           IMPÉRIALE WELCOME BAR (NOUVEAU - FIX ZONE VIDE)
+           HEADER IMPÉRIAL DU TRÔNE DU FONDATEUR
            ---------------------------------------------------- */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-[#FFFFFF] via-[#FAF9F6] to-[#FFFFFF] dark:from-[#080808] dark:via-[#121212] dark:to-[#080808] border border-[#D4AF37]/40 p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-6 shadow-xl shadow-amber-900/5 dark:shadow-none mb-6 mt-0"
+        className={`relative overflow-hidden rounded-[2.5rem] border-2 border-[#D4AF37]/50 shadow-2xl transition-all duration-500 mb-4 p-1 sm:p-2 ${
+          isDark 
+            ? 'bg-[#050505] shadow-[0_20px_60px_-15px_rgba(212,175,55,0.15)]' 
+            : 'bg-[#EDEDED] shadow-[0_15px_45px_-10px_rgba(0,0,0,0.08)]'
+        }`}
       >
-        {/* Subtle Moving Gold Halo Effect */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-           <motion.div 
-             animate={{ 
-               x: ["-150%", "150%"],
-               opacity: [0, 0.2, 0]
-             }}
-             transition={{ 
-               duration: 15, 
-               repeat: Infinity, 
-               ease: "linear" 
-             }}
-             className="absolute top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-[#D4AF37]/15 to-transparent skew-x-[-25deg]"
-           />
-           
-           {/* Discrete Sparkles Halo */}
-           <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#D4AF37]/5 blur-[120px] rounded-full animate-pulse pointer-events-none" />
-           <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-[#D4AF37]/5 blur-[100px] rounded-full animate-pulse pointer-events-none" />
+        {/* Animated Imperial Glow Overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-40">
+          <motion.div 
+            animate={{ 
+              background: [
+                "radial-gradient(circle at 0% 0%, rgba(212,175,55,0.05) 0%, transparent 50%)",
+                "radial-gradient(circle at 100% 100%, rgba(212,175,55,0.05) 0%, transparent 50%)",
+                "radial-gradient(circle at 0% 0%, rgba(212,175,55,0.05) 0%, transparent 50%)"
+              ]
+            }}
+            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0"
+          />
         </div>
 
-        <div className="flex items-center gap-6 relative z-10 w-full sm:w-auto">
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#D4AF37] to-amber-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-            <div className="relative w-14 h-14 rounded-2xl bg-white dark:bg-zinc-950 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] shadow-inner">
-              <Crown className="w-7 h-7" />
-            </div>
-          </div>
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-1">
           
-          <div className="flex flex-col text-center sm:text-left">
-            <h1 className="text-xl sm:text-2xl font-display font-black text-[#1A1A1A] dark:text-white tracking-widest uppercase">
-              {getGreeting()} <span className="text-[#D4AF37]">Fondateur</span>.
-            </h1>
-            <div className="flex items-center justify-center sm:justify-start gap-2 text-xs font-mono text-[#555555] dark:text-afri-text-sec uppercase font-bold tracking-tight mt-0.5">
-              <MapPin className="w-3.5 h-3.5 text-[#D4AF37] animate-bounce" />
-              <span>Abidjan • Côte d'Ivoire</span>
+          {/* COLONNE 1: PROFIL & COMMANDEMENT (GREETING) */}
+          <div className={`lg:col-span-5 p-6 sm:p-8 rounded-[2rem] flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-[#D4AF37]/15 ${
+            isDark ? 'bg-gradient-to-br from-[#0A0906] to-[#050505]' : 'bg-gradient-to-br from-[#E2E2E2] to-[#EDEDED]'
+          }`}>
+            <div className="flex items-start gap-6">
+              <div className="relative shrink-0">
+                <div className="absolute -inset-1.5 bg-[#D4AF37] rounded-[1.25rem] blur opacity-25 animate-pulse" />
+                <div className={`relative w-20 h-20 rounded-[1.25rem] border-2 border-[#D4AF37] flex items-center justify-center shadow-inner ${
+                  isDark ? 'bg-zinc-950 text-[#D4AF37]' : 'bg-white text-[#B8860B]'
+                }`}>
+                  <Crown className="w-10 h-10" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <h1 className={`text-2xl sm:text-3xl font-display font-black tracking-tight flex items-center gap-2 ${
+                  isDark ? 'text-white' : 'text-[#1A1A1A]'
+                }`}>
+                  👑 {getGreeting()}, <span className="text-[#D4AF37]">Sylvester</span>
+                </h1>
+                <p className="text-xs sm:text-sm font-sans font-black uppercase tracking-wider text-[#D4AF37]">
+                  Fondateur d'AFRIGOMBO <span className="mx-1.5 opacity-40 text-afri-text-sec">•</span> Gardien du Temple
+                </p>
+                <div className="flex items-center gap-2.5 text-[11px] font-mono font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mt-1">
+                  <MapPin className="w-3.5 h-3.5 text-[#D4AF37]" />
+                  <span>Abidjan, Côte d'Ivoire</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-8 relative z-10 w-full sm:w-auto pr-2 border-t sm:border-t-0 border-[#D4AF37]/10 pt-4 sm:pt-0">
-          <div className="text-left sm:text-right">
-             <div className="text-3xl font-mono font-black text-[#000000] dark:text-white tracking-tighter flex items-center gap-2">
-               <Clock className="w-5 h-5 text-[#D4AF37] opacity-60" />
-               {formattedTime}
-             </div>
-             <div className="text-[11px] font-mono text-[#D4AF37] dark:text-[#D4AF37] uppercase font-black tracking-[0.2em] text-left sm:text-right mt-0.5">
-               {formattedDate}
-             </div>
-          </div>
-          
-          <div className="hidden md:block h-12 w-[1px] bg-gradient-to-b from-transparent via-[#D4AF37]/30 to-transparent mx-2" />
-          
-          <div className="flex flex-col items-end shrink-0">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-              <span className="text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-tighter">Souveraineté Active</span>
+            {/* HYMNE OFFICIEL CONTROLS - INTEGRATED INTO HEADER */}
+            <div className={`p-4 rounded-2xl border transition-all duration-300 ${
+              isDark ? 'bg-zinc-950/40 border-[#D4AF37]/20' : 'bg-white/80 border-[#D4AF37]/40 shadow-sm'
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                    isDark ? 'bg-[#D4AF37]/10 text-[#D4AF37]' : 'bg-[#D4AF37]/20 text-[#8B6508]'
+                  }`}>
+                    <Music className={`w-4 h-4 ${audioState.currentPlaying === 'hymne' && !audioState.isPaused ? 'animate-pulse' : ''}`} />
+                  </div>
+                  <div>
+                    <h4 className={`text-[9px] font-mono font-black uppercase tracking-widest ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                      Hymne Officiel AFRIGOMBO
+                    </h4>
+                    <p className="text-[7px] font-mono font-bold text-[#D4AF37] uppercase">Souveraineté Musicale</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => globalAudioManager.stop()}
+                    className={`p-1.5 rounded-lg hover:bg-red-500/10 text-red-500/70 hover:text-red-500 transition-all cursor-pointer`}
+                    title="Arrêter"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button 
+                    onClick={() => globalAudioManager.playHymn()}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                      audioState.currentPlaying === 'hymne' && !audioState.isPaused
+                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                        : 'bg-[#D4AF37] text-black hover:scale-105'
+                    }`}
+                  >
+                    {audioState.currentPlaying === 'hymne' && !audioState.isPaused ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-1">
+                <div className="relative h-1 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden cursor-pointer"
+                     onClick={(e) => {
+                       const rect = e.currentTarget.getBoundingClientRect();
+                       const x = e.clientX - rect.left;
+                       const pct = x / rect.width;
+                       if (audioState.duration) globalAudioManager.seek(pct * audioState.duration);
+                     }}>
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-[#D4AF37] transition-all duration-300"
+                    style={{ width: `${(audioState.progress! / (audioState.duration || 1)) * 100}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[7px] font-mono font-bold text-zinc-400 uppercase tracking-tighter">
+                  <span>{formatAudioTime(audioState.progress || 0)}</span>
+                  <span>{formatAudioTime(audioState.duration || 0)}</span>
+                </div>
+              </div>
             </div>
-            <span className="text-[9px] font-mono text-[#888888] dark:text-zinc-500 uppercase tracking-widest mt-1.5 font-bold">Afrigombo Cloud OS v4.5</span>
+
+            <div className="flex flex-col sm:flex-row items-center gap-8 pt-4 border-t border-[#D4AF37]/10">
+              <div className="flex flex-col gap-0.5 min-w-[140px]">
+                <div className={`text-4xl font-mono font-black tracking-tighter ${
+                  isDark ? 'text-[#D4AF37]' : 'text-[#8B6508]'
+                }`}>
+                  {formattedTime}
+                </div>
+                <div className="text-[10px] font-mono font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">
+                  Heure Impériale
+                </div>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <div className={`text-sm font-mono font-black uppercase tracking-widest ${
+                  isDark ? 'text-zinc-300' : 'text-zinc-800'
+                }`}>
+                  {formattedDate}
+                </div>
+                <div className="text-[10px] font-mono font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">
+                  Souveraineté Temporelle
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* COLONNE 2: SYSTEM STATUS & ALERTS */}
+          <div className="lg:col-span-7 flex flex-col p-1 gap-1">
+            
+            {/* ROW 1: STATUS BADGES */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 h-full min-h-[120px]">
+              <StatusBadge 
+                icon={<Database className="w-4 h-4" />} 
+                label="Firebase" 
+                status="Service Opérationnel" 
+                color="emerald"
+                isDark={isDark}
+              />
+              <StatusBadge 
+                icon={<Cloud className="w-4 h-4" />} 
+                label="AFRIGOMBO Cloud" 
+                status="v4.5 Stable" 
+                color="amber"
+                isDark={isDark}
+              />
+              <StatusBadge 
+                icon={<ShieldCheck className="w-4 h-4" />} 
+                label="Sécurité" 
+                status="Protection Active" 
+                color="emerald"
+                isDark={isDark}
+              />
+              <StatusBadge 
+                icon={<RefreshCw className="w-4 h-4" />} 
+                label="Synchronisation" 
+                status="Temps Réel" 
+                color="blue"
+                isDark={isDark}
+              />
+            </div>
+
+            {/* ROW 2: ALERTS & WEATHER */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 flex-grow">
+              {/* ALERT CENTER */}
+              <div className={`rounded-3xl p-5 border border-[#D4AF37]/10 flex flex-col gap-3 ${
+                isDark ? 'bg-zinc-950/40' : 'bg-[#E0E0E0]/50'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-mono font-black uppercase tracking-[0.3em] text-[#D4AF37] flex items-center gap-2">
+                    <Bell className="w-3 h-3" />
+                    Alertes Administrateur
+                  </h3>
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                </div>
+                <div className="space-y-2.5">
+                  <AlertItem icon={<CheckCircle className="w-3 h-3 text-emerald-500" />} text="Aucun incident critique" />
+                  <AlertItem icon={<Info className="w-3 h-3 text-amber-500" />} text="2 nouvelles vérifications KYC" />
+                  <AlertItem icon={<AlertTriangle className="w-3 h-3 text-red-500" />} text="1 publication signalée" />
+                </div>
+              </div>
+
+              {/* WEATHER PLACEHOLDER */}
+              <div className={`rounded-3xl p-5 border border-[#D4AF37]/10 flex flex-col justify-center items-center gap-2 text-center relative group overflow-hidden ${
+                isDark ? 'bg-zinc-950/40' : 'bg-[#E0E0E0]/50'
+              }`}>
+                <div className="absolute inset-0 bg-[#D4AF37]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="relative z-10 flex flex-col items-center gap-3">
+                  <div className="p-3 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37]">
+                    <Sun className="w-6 h-6 animate-spin-slow" />
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-mono font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Météo</h4>
+                    <p className="text-xs font-sans font-black text-[#D4AF37] mt-1 italic">Bientôt disponible</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </motion.div>
@@ -855,98 +1020,12 @@ export default function AdminFounderThrone({
         .animate-goldSweep {
           animation: goldSweep 12s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
+        .animate-spin-slow {
+          animation: spin 8s linear infinite;
+        }
       `}</style>
 
-      {/* ----------------------------------------------------
-           PREMIUM TRÔNE DU FONDATEUR HEADER (220-260px)
-           ---------------------------------------------------- */}
-      <div className={`relative overflow-hidden rounded-3xl p-6 md:p-8 min-h-[220px] md:min-h-[250px] flex flex-col justify-between transition-all border-2 border-[#D4AF37]/45 ${isDark ? 'bg-gradient-to-br from-[#0A0906] via-[#14120C] to-[#0A0906] shadow-[0_12px_45px_rgba(212,175,55,0.15)]' : 'bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] shadow-[0_12px_45px_rgba(212,175,55,0.12)]'}`}>
-        
-        {/* Giant Translucent Background Crown */}
-        <div className="absolute -right-8 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-10 dark:opacity-15 text-[#D4AF37] select-none">
-          <Crown className="w-64 h-64 sm:w-80 sm:h-80 stroke-[1.2]" />
-        </div>
 
-        {/* AFRIGOMBO Watermark Motif */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.04] dark:opacity-[0.06] flex items-center justify-center font-display font-black text-5xl sm:text-7xl md:text-8xl tracking-[0.25em] text-[#D4AF37] select-none whitespace-nowrap rotate-[-4deg]">
-          AFRIGOMBO IMPERIAL
-        </div>
-
-        {/* Golden glow halos */}
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-60 h-60 rounded-full bg-[#D4AF37]/15 blur-3xl pointer-events-none" />
-
-        {/* Slow moving light beam */}
-        <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent animate-goldSweep pointer-events-none" />
-
-        {/* Rising Gold Dust Particles */}
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-          {Array.from({ length: 18 }).map((_, idx) => {
-            const randomX = Math.random() * 100;
-            const randomDelay = Math.random() * 8;
-            const randomDur = Math.random() * 6 + 6;
-            const randomSize = Math.random() * 3.5 + 1.5;
-            return (
-              <div
-                key={idx}
-                className="absolute rounded-full bg-[#D4AF37]"
-                style={{
-                  width: `${randomSize}px`,
-                  height: `${randomSize}px`,
-                  left: `${randomX}%`,
-                  bottom: "0px",
-                  opacity: 0,
-                  animation: `goldDustUp ${randomDur}s linear infinite`,
-                  animationDelay: `${randomDelay}s`
-                }}
-              />
-            );
-          })}
-        </div>
-
-        {/* Header content */}
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 my-auto w-full">
-          <div className="flex items-center gap-4 sm:gap-6">
-            <span className="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-[#D4AF37]/35 via-[#D4AF37]/20 to-[#D4AF37]/10 border-2 border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.4)] shrink-0">
-              <Crown className="w-10 h-10 sm:w-12 sm:h-12 text-[#B8860B] dark:text-[#D4AF37] animate-pulse" />
-            </span>
-            <div className="space-y-1 text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 text-[#8B6508] dark:text-[#D4AF37] text-[10px] sm:text-xs font-mono font-black uppercase tracking-widest shadow-sm">
-                👑 TRÔNE DU FONDATEUR • SOUVERAINETÉ
-              </div>
-              
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-black uppercase tracking-[0.18em] text-[#8B6508] dark:text-[#D4AF37] drop-shadow-sm">
-                SYLVESTER
-              </h2>
-              
-              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 pt-0.5">
-                <span className="text-xs sm:text-sm font-sans font-black uppercase tracking-wider text-zinc-900 dark:text-amber-100">
-                  Fondateur d'AFRIGOMBO
-                </span>
-                <span className="hidden sm:inline text-[#D4AF37] font-black">•</span>
-                <span className="text-xs sm:text-sm font-sans font-bold text-zinc-700 dark:text-zinc-300 tracking-wide">
-                  Le Gardien du Temple du Gombo Musical
-                </span>
-              </div>
-
-              <p className="text-[11px] sm:text-xs font-mono font-semibold text-amber-900/80 dark:text-amber-300/90 pt-0.5">
-                Le Fondateur de l'écosystème AFRIGOMBO & Architecture Impériale
-              </p>
-            </div>
-          </div>
-
-          {/* Unique Guardian Badge */}
-          <div className="flex items-center gap-3 bg-white/95 dark:bg-black/85 border-2 border-[#D4AF37]/60 rounded-2xl px-5 py-3.5 text-xs shadow-lg shadow-amber-900/10 shrink-0 self-stretch md:self-auto justify-center backdrop-blur-md">
-            <span className="w-3 h-3 bg-emerald-500 rounded-full animate-ping shrink-0" />
-            <div className="text-left">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 block font-bold">session souveraine</span>
-              <span className="font-mono text-xs uppercase font-black text-zinc-900 dark:text-[#D4AF37]">
-                {adminEmail || "jhs.kmj7@gmail.com"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* ERROR / SUCCESS FEEDBACK ALERTS */}
       <AnimatePresence mode="wait">
@@ -987,7 +1066,7 @@ export default function AdminFounderThrone({
             initial="hidden"
             animate="visible"
             exit={{ opacity: 0, scale: 0.98 }}
-            className="space-y-8"
+            className="space-y-4"
           >
             {/* Quick overview metrics row */}
             <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-4 border rounded-3xl ${isDark ? 'bg-afri-bg/40 border-afri-border' : 'bg-white border-[#D4AF37]/20 shadow-sm'}`}>
@@ -1021,7 +1100,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("vision");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Globe className="w-40 h-40 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-700" />
@@ -1031,10 +1110,10 @@ export default function AdminFounderThrone({
                     <Globe className="w-6 h-6 animate-spin duration-[20s]" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
                       🌍 Vision AFRI
                     </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
                       Définition de la trajectoire impériale de l'écosystème, objectifs clés et piliers du destin culturel africain.
                     </p>
                   </div>
@@ -1052,7 +1131,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("univers");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Landmark className="w-40 h-40 text-[#D4AF37]" />
@@ -1062,10 +1141,10 @@ export default function AdminFounderThrone({
                     <Landmark className="w-6 h-6" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
                       🏛 Univers AFRI
                     </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
                       Contrôle des constellations souveraines satellites: GOMBO ID, AfriTrust, AfriLivraison, Gombo Musik et gestion des gardiens du Trône.
                     </p>
                   </div>
@@ -1083,7 +1162,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("bouclier");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <ShieldCheck className="w-40 h-40 text-[#D4AF37]" />
@@ -1093,10 +1172,10 @@ export default function AdminFounderThrone({
                     <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
                       🛡 Bouclier AFRIGOMBO
                     </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
                       Système de protection souverain, modération de contenu, certification Gombo ID et contrôle de cyber-défense.
                     </p>
                   </div>
@@ -1114,7 +1193,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("revenus");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Coins className="w-40 h-40 text-[#D4AF37]" />
@@ -1124,10 +1203,10 @@ export default function AdminFounderThrone({
                     <Coins className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
                       💰 Revenus Globaux
                     </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
                       Analyse souveraine de la trésorerie globale, suivi de la Gombocaisse et transactions régionales de l'Empire.
                     </p>
                   </div>
@@ -1145,7 +1224,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("croissance");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <BarChart3 className="w-40 h-40 text-[#D4AF37]" />
@@ -1155,10 +1234,10 @@ export default function AdminFounderThrone({
                     <BarChart3 className="w-6 h-6 text-sky-600 dark:text-sky-400" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
                       📈 Croissance
                     </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
                       Expansion impériale, taux de KYC certifiés, croissance démographique et projection des objectifs de l'Empire.
                     </p>
                   </div>
@@ -1176,7 +1255,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("intelligence");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Brain className="w-40 h-40 text-[#D4AF37]" />
@@ -1186,10 +1265,10 @@ export default function AdminFounderThrone({
                     <Brain className="w-6 h-6 text-amber-600 dark:text-amber-500 animate-pulse" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
                       🧠 Intelligence
                     </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
                       Console de commande interactive, terminal d'ordres système et audit cyber intelligent en temps réel.
                     </p>
                   </div>
@@ -1207,7 +1286,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("beta_escrow");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-emerald-400/30' : 'bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-emerald-500/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-emerald-500/15'}`}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-emerald-400/30' : 'bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-emerald-500/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-emerald-500/15'}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <ShieldCheck className="w-40 h-40 text-emerald-400 group-hover:rotate-6 transition-transform duration-700" />
@@ -1218,7 +1297,7 @@ export default function AdminFounderThrone({
                   </span>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-emerald-400 transition-colors">
+                      <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-emerald-400' : 'text-zinc-800 group-hover:text-emerald-600'}`}>
                         🛡 Transactions Bêta
                       </h3>
                       {pendingBetaTransactions.length > 0 ? (
@@ -1249,20 +1328,20 @@ export default function AdminFounderThrone({
                   setSelectedSection("multimedia");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Music className="w-40 h-40 text-[#D4AF37]" />
+                   <Music className="w-40 h-40 text-[#D4AF37]" />
                 </div>
                 <div className="space-y-4">
                   <span className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300">
                     <Music className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
                       🎬 Centre Multimédia
                     </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
                       Ambiances sonores impériales, sound designer royal et configuration des mélodies sacreés de l'Empire.
                     </p>
                   </div>
@@ -1280,7 +1359,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("veille");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <AlertTriangle className="w-40 h-40 text-[#D4AF37]" />
@@ -1290,10 +1369,10 @@ export default function AdminFounderThrone({
                     <AlertTriangle className={`w-6 h-6 ${highAlertsCount > 0 ? 'animate-bounce' : ''}`} />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
                       🚨 Veille Critique
                     </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
                       Suivi passif des faiblesses d'infrastructure, alertes d'accès prioritaires et signaux d'intrusions d'usurpateurs.
                     </p>
                   </div>
@@ -1311,7 +1390,7 @@ export default function AdminFounderThrone({
                   setSelectedSection("journal");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F6] to-[#F2EEE4] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#FAF9F6] via-[#FAF9F6] to-[#F5F2EA] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
               >
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
                   <Scroll className="w-40 h-40 text-[#D4AF37]" />
@@ -1321,10 +1400,10 @@ export default function AdminFounderThrone({
                     <Scroll className="w-6 h-6 text-[#D4AF37]" />
                   </span>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
                       📜 Journal Impérial
                     </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
                       Annales sacrées de l'Empire, décisions stratégiques, notes privées du Fondateur et diffusion des décrets solennels.
                     </p>
                   </div>
@@ -1954,8 +2033,29 @@ export default function AdminFounderThrone({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   
                   {/* Sound list */}
-                  <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4">
+                  <div className="space-y-4">
                     <h4 className="text-xs font-mono uppercase font-black text-afri-text border-b border-afri-border pb-2">Patrimoine Musical Actif</h4>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <button 
+                        onClick={() => globalAudioManager.playIntro(true)}
+                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border flex items-center gap-2 ${
+                          audioState.currentPlaying === 'intro' ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]' : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-afri-text-sec'
+                        }`}
+                      >
+                        <Zap className="w-3 h-3" />
+                        Réécouter l'Introduction
+                      </button>
+                      <button 
+                        onClick={() => globalAudioManager.playHymn()}
+                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border flex items-center gap-2 ${
+                          audioState.currentPlaying === 'hymne' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-afri-text-sec'
+                        }`}
+                      >
+                        <Music className="w-3 h-3" />
+                        Hymne Officiel
+                      </button>
+                    </div>
 
                     {musicTracks.length === 0 ? (
                       <p className="text-afri-text-sec font-mono text-center py-10 text-xs">Aucune mélodie royale chargée dans le cluster.</p>
@@ -2690,6 +2790,37 @@ export default function AdminFounderThrone({
         </button>
       </div>
 
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------------------------------------
+// HELPER COMPONENTS FOR IMPERIAL HEADER
+// ------------------------------------------------------------------------------------------------
+
+function StatusBadge({ icon, label, status, color, isDark }: { icon: React.ReactNode, label: string, status: string, color: string, isDark: boolean }) {
+  const colorClasses: Record<string, string> = {
+    emerald: isDark ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-emerald-700 bg-white/60 border-emerald-500/20 shadow-sm',
+    amber: isDark ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-amber-700 bg-white/60 border-amber-500/20 shadow-sm',
+    blue: isDark ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' : 'text-blue-700 bg-white/60 border-blue-500/20 shadow-sm',
+  };
+
+  return (
+    <div className={`flex flex-col justify-center items-center gap-1.5 p-3 rounded-3xl border transition-all duration-300 hover:scale-[1.02] cursor-default ${colorClasses[color] || ''}`}>
+      <div className="opacity-70">{icon}</div>
+      <div className="flex flex-col items-center">
+        <span className="text-[8px] font-mono font-black uppercase tracking-widest opacity-60">{label}</span>
+        <span className="text-[10px] font-sans font-black uppercase tracking-tighter whitespace-nowrap">{status}</span>
+      </div>
+    </div>
+  );
+}
+
+function AlertItem({ icon, text }: { icon: React.ReactNode, text: string }) {
+  return (
+    <div className="flex items-center gap-2.5 group cursor-default">
+      <div className="shrink-0 transition-transform group-hover:scale-125 duration-300">{icon}</div>
+      <span className="text-[10px] font-mono font-bold text-zinc-500 dark:text-zinc-400 group-hover:text-afri-text transition-colors truncate">{text}</span>
     </div>
   );
 }
