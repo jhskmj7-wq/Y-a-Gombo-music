@@ -44,11 +44,9 @@ service cloud.firestore {
 
     // --- VALIDATION HELPERS ---
 
-    function isValidUser(data) {
+        function isValidUser(data) {
       return data.uid == request.auth.uid &&
-             data.email is string &&
-             data.role in ['client', 'musicien', 'admin', 'Artiste', 'Producteur', 'Beatmaker', 'Manager', 'Promoteur', 'Organisateur événement', 'Studio', 'Média', 'Passionné musique', 'Autre'] &&
-             data.createdAt == request.time;
+             data.email is string;
     }
 
     function isValidGombo(data) {
@@ -74,7 +72,7 @@ service cloud.firestore {
     // USERS
     match /users/{userId} {
       allow read: if isSignedIn(); // Allow users to see each other's basic profile
-      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().isVerified == false;
+      allow create: if isOwner(userId) && isValidUser(incoming());
       allow update: if (isOwner(userId) && (
         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'firstName', 'lastName', 'photoURL', 'avatarUrl', 'bio', 'phone', 'commune', 'orangeMoneyNumber', 'moovMoneyNumber', 'waveNumber', 'paymentMethods'])
       )) || isFounder();

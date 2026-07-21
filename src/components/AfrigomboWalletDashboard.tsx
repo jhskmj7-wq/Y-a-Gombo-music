@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { db, gomboDB } from "../firebase";
 import { collection, query, where, getDocs, addDoc, onSnapshot, doc, getDoc, setDoc } from "firebase/firestore";
+import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
 
 interface AfrigomboWalletDashboardProps {
   currentUserProfile: any;
@@ -374,10 +375,13 @@ export default function AfrigomboWalletDashboard({
               </button>
             )}
           </div>
-          <h2 className="afri-title-lg text-afri-text flex items-center gap-2">
-            <Wallet className="w-5 h-5 xs:w-6 xs:h-6 text-[#D4AF37]" />
-            WALLET AFRIGOMBO
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="afri-title-lg text-afri-text flex items-center gap-2">
+              <Wallet className="w-5 h-5 xs:w-6 xs:h-6 text-[#D4AF37]" />
+              WALLET AFRIGOMBO
+            </h2>
+            <BetaEscrowInfoButton variant="badge" />
+          </div>
           <p className="afri-text-tiny text-afri-text-muted">
             Solde souverain crypté & gestion séquestre
           </p>

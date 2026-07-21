@@ -12,6 +12,7 @@ import { gomboDB } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { AfriGomboLogo } from "./AfriGomboLogo";
+import AuthDiagnosticModal from "./AuthDiagnosticModal";
 
 interface AuthScreenProps {
   onSuccess: () => void;
@@ -19,6 +20,7 @@ interface AuthScreenProps {
 }
 
 function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
   const [isLogoFailed, setIsLogoFailed] = useState(false);
 
@@ -443,6 +445,21 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
         <p className="text-[10px] text-afri-text-sec font-mono mt-8 uppercase tracking-widest">
           SÉCURISÉ PAR FIREBASE AUTHENTIFICATION • 2026
         </p>
+
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setShowDiagnostic(true)}
+            className="text-[9px] font-mono text-zinc-500 hover:text-amber-400 underline tracking-wider cursor-pointer uppercase transition-colors"
+          >
+            🔍 Outil Diagnostic Auth & Session
+          </button>
+        </div>
+
+        <AuthDiagnosticModal
+          isOpen={showDiagnostic}
+          onClose={() => setShowDiagnostic(false)}
+        />
       </motion.div>
     </div>
   );

@@ -9,6 +9,7 @@ import {
 import { gomboDB } from "../firebase";
 import { GomboSafeContract, UserProfile } from "../types";
 import GomboContractView from "./GomboContractView";
+import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
 
 interface GomboContractsDashboardProps {
   currentUser: UserProfile;
@@ -121,9 +122,12 @@ export default function GomboContractsDashboard({ currentUser }: GomboContractsD
       {/* Title block */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
-          <h2 className="text-2xl font-sans font-black text-afri-text uppercase tracking-tighter">
-            {isAdminView ? "TABLEAU DE BORD DES CONTRATS" : "CONTRATS AFRIGOMBO"}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-sans font-black text-afri-text uppercase tracking-tighter">
+              {isAdminView ? "TABLEAU DE BORD DES CONTRATS" : "CONTRATS AFRIGOMBO"}
+            </h2>
+            <BetaEscrowInfoButton variant="badge" />
+          </div>
           <p className="text-afri-text-sec text-xs font-medium uppercase tracking-widest">
             {isAdminView ? "CONTRÔLE ET SOUVERAINETÉ DE LA PRESTATION IMPÉRIALE" : "Gérez vos engagements sécurisés et vos paiements"}
           </p>

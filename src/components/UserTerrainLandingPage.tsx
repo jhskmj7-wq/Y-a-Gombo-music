@@ -12,6 +12,7 @@ import AnnuaireTalents from "./AnnuaireTalents";
 import { usePerformance } from "../services/performanceService";
 import { globalAudioManager } from "../lib/audioManager";
 import PremiumEmptyState from "./PremiumEmptyState";
+import TendancesSection from "./TendancesSection";
 import { useAuth } from "../AuthContext";
 import { db } from "../lib/firebase";
 import { gomboDB } from "../firebase";
@@ -995,13 +996,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
              {[
                {
                  id: "publier",
-                 label: "Publier",
+                 label: t('qa_publier', "Publier"),
                  emoji: "🎤",
                  action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
                },
                {
                  id: "contrats",
-                 label: "Contrats",
+                 label: t('qa_contrats', "Contrats"),
                  emoji: "🤝",
                  badge: activeContractsCount > 0 ? activeContractsCount : undefined,
                  badgeColor: "bg-emerald-500 text-afri-text",
@@ -1009,7 +1010,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                },
                {
                  id: "calendrier",
-                 label: "Calendrier",
+                 label: t('qa_calendrier', "Calendrier"),
                  emoji: "📅",
                  badge: todayEventsCount > 0 ? todayEventsCount : undefined,
                  badgeColor: "bg-afri-bg-sec text-black",
@@ -1017,34 +1018,33 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                },
                {
                  id: "messages",
-                 label: t('messages_tab') || "Messages",
+                 label: t('qa_messages', "Messages"),
                  emoji: "💬",
                  badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
                  badgeColor: "bg-red-600 text-afri-text animate-pulse",
                  action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
                },
                {
-                 id: "wallet",
-                 label: "Wallet",
-                 emoji: "💼",
-                 badgeBottom: profile ? (profile.balance !== undefined ? profile.balance : 0) : 125000,
-                 action: () => requireAuthThen(() => { setActiveMenu("user_wallet"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
-               },
-               {
                  id: "renfort",
-                 label: "Renfort Express",
+                 label: t('qa_renfort', "Renfort Express"),
                  emoji: "⚡",
                  action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
                },
                {
                  id: "gombo_id",
-                 label: "Mon GOMBO ID",
+                 label: t('qa_gombo_id', "Mon GOMBO ID"),
                  emoji: "🎼",
                  action: () => requireAuthThen(() => { setActiveMenu("user_gombo_id"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
                },
                {
+                 id: "favoris",
+                 label: t('qa_favoris', "Favoris"),
+                 emoji: "⭐",
+                 action: () => requireAuthThen(() => { setActiveMenu("user_favorites"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
+               },
+               {
                  id: "plus",
-                 label: "Plus",
+                 label: t('qa_plus', "Plus"),
                  emoji: "➕",
                  badge: unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined,
                  badgeColor: "bg-amber-500 text-black",
@@ -1052,7 +1052,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                }
              ].map(action => {
                const isVerified = profile?.isCertified || profile?.kycStatus === "approved";
-               const isWallet = action.id === "wallet";
+               const isFav = action.id === "favoris";
                return (
                  <motion.button
                    key={action.id}
@@ -1062,13 +1062,13 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                    }}
                    whileHover={{
                      scale: 1.04,
-                     borderColor: isWallet ? "rgba(212,175,55,0.95)" : "rgba(212,175,55,0.75)",
-                     boxShadow: isWallet ? "0 8px 24px rgba(212,175,55,0.18)" : "0 6px 20px rgba(212,175,55,0.12)"
+                     borderColor: isFav ? "rgba(212,175,55,0.95)" : "rgba(212,175,55,0.75)",
+                     boxShadow: isFav ? "0 8px 24px rgba(212,175,55,0.18)" : "0 6px 20px rgba(212,175,55,0.12)"
                    }}
                    whileTap={{ scale: 0.92, y: 1 }}
                    onClick={action.action}
                    className={`aspect-square ${
-                     isWallet 
+                     isFav 
                        ? "bg-gradient-to-br from-afri-bg-sec via-afri-bg-ter to-afri-bg-action border-[#D4AF37]/50 shadow-[0_8px_32px_rgba(212,175,55,0.12)]" 
                        : "bg-afri-bg-sec border-[#D4AF37]/25 shadow-md"
                    } border rounded-xl xs:rounded-2xl p-1 xs:p-1.5 sm:p-3 flex flex-col items-center justify-center gap-0.5 xs:gap-1 sm:gap-2.5 hover:bg-afri-bg-sec/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0`}
@@ -1094,15 +1094,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
 
                    {/* Label */}
                    <span className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] text-afri-text/90 group-hover:text-afri-text font-sans font-black tracking-wider uppercase text-center leading-[1.1] w-full px-0 mt-0.5 sm:mt-1 break-words line-clamp-2">
-                     {action.label === "Renfort Express" ? "Renfort" : (action.label === "Mon GOMBO ID" ? "GOMBO ID" : action.label)}
+                     {action.id === "renfort" ? (t('qa_renfort_short', "Renfort")) : (action.id === "gombo_id" ? (t('qa_gombo_id_short', "GOMBO ID")) : action.label)}
                    </span>
-
-                   {/* Bottom Badge for Wallet */}
-                   {action.badgeBottom !== undefined && (
-                     <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-afri-bg border-2 border-[#D4AF37]/40 text-[#D4AF37] text-[6.5px] xs:text-[7.5px] sm:text-[9px] font-mono font-black py-0.5 px-2 rounded-full whitespace-nowrap shadow-[0_4px_10px_rgba(0,0,0,0.8)] z-10 group-hover:border-[#D4AF37]">
-                       {action.badgeBottom.toLocaleString("fr-FR")} F
-                     </span>
-                   )}
                  </motion.button>
                );
              })}
@@ -1204,114 +1197,18 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       {/* Search block completely removed to save space */}
 
       {/* ==========================================
-          4. OPPORTUNITÉS À LA UNE (SPOTLIGHT / TENDANCES)
+          4. OPPORTUNITÉS & LOGIQUE OFFICIELLE DES TENDANCES
          ========================================== */}
-      <div className="space-y-3 pt-2">
-        <div className="flex justify-between items-center">
-          <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-            🔥 TENDANCES & COUPS DE PROJECTEUR
-          </h3>
-          <button
-            onClick={() => {
-              setGlobalSearchTerm("");
-              setSelectedCategory("all");
-              try { audioSynth.playTamTam(false); } catch (_) {}
-            }}
-            className="text-xs text-[#D4AF37] font-bold"
-          >
-            {t('voir_tout')}
-          </button>
-        </div>
-
-        {/* Feature Spotlight Card banner with swiping */}
-        <div 
-          onTouchStart={handleSliderTouchStart}
-          onTouchMove={handleSliderTouchMove}
-          onTouchEnd={handleSliderTouchEnd}
-          className="relative h-[220px] rounded-[24px] overflow-hidden group shadow-2xl border border-afri-border cursor-grab active:cursor-grabbing"
-        >
-          <img
-            src={optimizeImageUrl(currentSlideData.imageUrl, isDataSaveActive)}
-            alt={currentSlideData.title}
-            loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-afri-bg via-afri-bg/45 to-afri-bg/25" />
-
-          {/* Content overlay */}
-          <div className="absolute inset-0 p-5 flex flex-col justify-between text-left">
-            <div className="flex justify-between items-start">
-              {currentSlideData.isPremium && (
-                <span className="text-[9.5px] font-bold bg-afri-bg-sec text-black px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center shadow-md font-sans">
-                  ★ PREMIUM
-                </span>
-              )}
-              <button
-                onClick={() => toggleLike(currentSlideData.id)}
-                className="text-afri-text transition-colors p-1"
-                title="Honneur"
-              >
-                <span className="text-[18px]">{isLiked(currentSlideData.id) ? "🪘" : "🪘"}</span>
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <h2 className="text-xl font-black text-afri-text tracking-wider font-sans">
-                  {currentSlideData.title}
-                </h2>
-                <p className="text-xs text-afri-text/95 line-clamp-1">
-                  {currentSlideData.description}
-                </p>
-                <div className="flex items-center gap-3 text-[10px] text-afri-text/70 font-mono">
-                  <span>📍 {currentSlideData.location}</span>
-                  <span>📅 {currentSlideData.date}</span>
-                </div>
-              </div>
-
-              {/* Price and Action button */}
-              <div className="flex justify-between items-end border-t border-afri-border pt-2.5">
-                <div>
-                  <span className="text-[8px] uppercase text-afri-text/50 tracking-wider block font-mono">Paiement</span>
-                  <span className="text-[15px] font-bold text-[#D4AF37]">{currentSlideData.budget}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      try { audioSynth.playValidationSuccess(); } catch(_) {}
-                      const matchingReal = gombos.find(g => g.id === "gombo_1") || gombos[0];
-                      handleOpenGomboDetails(matchingReal);
-                    }}
-                    className="px-3.5 py-1.5 border border-[#D4AF37] text-[#D4AF37] hover:bg-afri-bg-sec hover:text-black text-[9.5px] font-bold rounded-lg transition uppercase duration-150"
-                  >
-                    DÉTAILS
-                  </button>
-                  {currentSlideData.isNew && (
-                    <span className="text-[8px] font-bold bg-afri-bg-sec border border-emerald-500/25 text-emerald-400 px-2 py-1 rounded uppercase tracking-wider font-mono">
-                      NOUVEAU
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Carousel slide indicators */}
-        <div className="flex justify-center gap-1.5 mt-2">
-          {spotlightSlides.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setCurrentSlide(idx);
-                try { audioSynth.playTamTam(false); } catch (_) {}
-              }}
-              className={`h-1.5 transition-all rounded-full ${
-                currentSlide === idx ? "w-5 bg-afri-bg-sec" : "w-1.5 bg-afri-text-muted/30 hover:bg-afri-text-muted/50"
-              }`}
-            />
-          ))}
-        </div>
+      <div className="pt-2">
+        <TendancesSection
+          gombos={gombos}
+          posts={posts}
+          users={users}
+          currentUserProfile={profile}
+          onSelectGomboDetails={handleOpenGomboDetails}
+          audioSynth={audioSynth}
+          requireAuthThen={requireAuthThen}
+        />
       </div>
 
       {/* ==========================================

@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="AFRIGOMBO" />
     <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="manifest" href="/manifest.json" />
     <title>AFRIGOMBO ELITE</title>
     <script>
       // Fix for 100vh on mobile browsers
@@ -18,6 +19,17 @@
       setVh();
       window.addEventListener('resize', setVh);
       window.addEventListener('orientationchange', setVh);
+
+      // Register PWA Service Worker cleanly
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then((reg) => {
+            console.log('AFRIGOMBO SW Registered:', reg.scope);
+          }).catch((err) => {
+            console.warn('SW Registration Error:', err);
+          });
+        });
+      }
     </script>
   </head>
   <body class="bg-afri-bg text-afri-text min-h-screen">

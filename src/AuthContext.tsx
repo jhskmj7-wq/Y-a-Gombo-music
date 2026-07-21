@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { Lock } from "lucide-react";
 import { gomboDB, gomboAuth } from "./firebase";
 import { auth } from "./lib/firebase";
+import { serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { UserProfile } from "./types";
 
@@ -23,26 +24,63 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [currentUser, setCurrentUser] = useState<any | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("afrigombo_user_session");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.uid) {
+            return {
+              uid: parsed.uid,
+              email: parsed.email || "",
+              displayName: parsed.displayName || "",
+              photoURL: parsed.photoURL || parsed.avatarUrl || "",
+              emailVerified: true
+            };
+          }
+        }
+      } catch (e) {}
+    }
+    return null;
+  });
+
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("afrigombo_user_session");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.uid) return parsed;
+        }
+      } catch (e) {}
+    }
+    return null;
+  });
+
   const [authLoading, setAuthLoading] = useState(true);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   useEffect(() => {
     let profileUnsub: (() => void) | null = null;
 
+    // Safety timeout to prevent white screens if Firebase Auth hangs on mobile
+    const safetyTimer = setTimeout(() => {
+      setAuthLoading(false);
+    }, 3500);
+
     // Handle Google redirect sign-in result when returning to the application
     const checkRedirect = async () => {
       try {
-        const { getRedirectResult } = await import("firebase/auth");
-        await getRedirectResult(auth);
+        await gomboAuth.handleAuthRedirect();
       } catch (err) {
-        console.error("Error retrieving Google redirect sign-in result:", err);
+        console.error("Error retrieving redirect sign-in result:", err);
       }
     };
     checkRedirect();
 
     const unsubscribe = gomboAuth.onAuthStateChanged(async (firebaseUser) => {
+      clearTimeout(safetyTimer);
       
       if (profileUnsub) {
         profileUnsub();
@@ -50,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (firebaseUser) {
-        setAuthLoading(true);
+        setCurrentUser(firebaseUser);
         try {
           let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
           
@@ -73,23 +111,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: firebaseUser.email || "",
               firstName: names[0] || "",
               lastName: names.slice(1).join(" ") || "",
-              displayName: firebaseUser.displayName || "",
+              displayName: firebaseUser.displayName || names.join(" "),
               photoURL: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
               avatarUrl: firebaseUser.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-              role: isFounder ? "founder" : "user",
+              role: isFounder ? "admin" : "client",
               isFounder: isFounder,
               permissions: isFounder ? founderPermissions : [],
               provider: firebaseUser.providerData?.[0]?.providerId || "google.com",
               isProfileComplete: false,
+              isVerified: false,
               balance: 0,
               totalRevenue: 0,
-              createdAt: new Date().toISOString()
+              createdAt: serverTimestamp() as any
             };
             
             await gomboDB.updateUserProfile(firebaseUser.uid, uProfile);
           } else {
+            // Fill missing avatar or display name in profile if empty
+            if (!uProfile.photoURL && firebaseUser.photoURL) uProfile.photoURL = firebaseUser.photoURL;
+            if (!uProfile.avatarUrl && firebaseUser.photoURL) uProfile.avatarUrl = firebaseUser.photoURL;
+            if (!uProfile.displayName && firebaseUser.displayName) uProfile.displayName = firebaseUser.displayName;
+            if (!uProfile.email && firebaseUser.email) uProfile.email = firebaseUser.email;
+
             // Ensure founder role is set for existing profile if email matches
-            if (firebaseUser.email === "jhs.kmj7@gmail.com" && (!uProfile.isFounder || uProfile.role !== "founder" || !uProfile.isVip || !uProfile.isPro)) {
+            if (firebaseUser.email === "jhs.kmj7@gmail.com" && (!uProfile.isFounder || uProfile.role !== "admin" || !uProfile.isVip || !uProfile.isPro)) {
               const founderPermissions = [
                 "admin",
                 "founder",
@@ -100,13 +145,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 "reports",
                 "settings"
               ];
-              uProfile.role = "founder";
+              uProfile.role = "admin";
               uProfile.isFounder = true;
               uProfile.isVip = true;
               uProfile.isPro = true;
               uProfile.permissions = founderPermissions;
               await gomboDB.updateUserProfile(firebaseUser.uid, { 
-                role: "founder", 
+                role: "admin", 
                 isFounder: true,
                 isVip: true,
                 isPro: true,
@@ -117,23 +162,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (firebaseUser.email === "jhs.kmj7@gmail.com") {
             uProfile.isFounder = true;
-            uProfile.role = "founder";
+            uProfile.role = "admin";
             uProfile.isVip = true;
             uProfile.isPro = true;
           }
+
           setProfile(uProfile);
-          setCurrentUser(firebaseUser);
+          try {
+            localStorage.setItem("afrigombo_user_session", JSON.stringify(uProfile));
+          } catch (e) {}
 
           // Now listen in real-time to keep wallet and other attributes synced
           profileUnsub = gomboDB.listenUserProfile(firebaseUser.uid, (realtimeProfile) => {
             if (realtimeProfile) {
+              if (!realtimeProfile.photoURL && firebaseUser.photoURL) realtimeProfile.photoURL = firebaseUser.photoURL;
+              if (!realtimeProfile.avatarUrl && firebaseUser.photoURL) realtimeProfile.avatarUrl = firebaseUser.photoURL;
+              if (!realtimeProfile.displayName && firebaseUser.displayName) realtimeProfile.displayName = firebaseUser.displayName;
+              
               if (firebaseUser.email === "jhs.kmj7@gmail.com") {
                 realtimeProfile.isFounder = true;
-                realtimeProfile.role = "founder";
+                realtimeProfile.role = "admin";
                 realtimeProfile.isVip = true;
                 realtimeProfile.isPro = true;
               }
               setProfile(realtimeProfile);
+              try {
+                localStorage.setItem("afrigombo_user_session", JSON.stringify(realtimeProfile));
+              } catch (e) {}
             }
           });
         } catch (error) {
@@ -142,12 +197,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setCurrentUser(null);
         setProfile(null);
+        try {
+          localStorage.removeItem("afrigombo_user_session");
+        } catch (e) {}
       }
 
       setAuthLoading(false);
     });
 
     return () => {
+      clearTimeout(safetyTimer);
       unsubscribe();
       if (profileUnsub) profileUnsub();
     };

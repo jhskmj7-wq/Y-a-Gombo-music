@@ -15,22 +15,24 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
 import { useNavigate } from "react-router-dom";
+import { lazyWithRetry } from "../lib/lazyWithRetry";
 
-const AdminStats = lazy(() => import("./AdminStats"));
-const AdminReports = lazy(() => import("./admin/AdminReports"));
-const AdminActions = lazy(() => import("./AdminActions"));
-const AdminDashboard = lazy(() => import("./admin/AdminDashboard"));
-const AdminUsers = lazy(() => import("./admin/AdminUsers"));
-const AdminNotifications = lazy(() => import("./admin/AdminNotifications"));
-const AdminRevenue = lazy(() => import("./admin/AdminRevenue"));
-const AdminSettings = lazy(() => import("./admin/AdminSettings"));
-const AdminSecurity = lazy(() => import("./admin/AdminSecurity"));
-const AdminFounderThrone = lazy(() => import("./admin/AdminFounderThrone"));
-const MultimediaCenter = lazy(() => import("./admin/MultimediaCenter"));
-const AfrigomboEconomieDashboard = lazy(() => import("./AfrigomboEconomieDashboard"));
-const AfrigomboBuilders = lazy(() => import("./AfrigomboBuilders"));
-const AfrigomboBuildersAdminDashboard = lazy(() => import("./AfrigomboBuildersAdminDashboard"));
-const ThroneCinematicIntro = lazy(() => import("./admin/ThroneCinematicIntro"));
+const AdminStats = lazyWithRetry(() => import("./AdminStats"));
+const AdminReports = lazyWithRetry(() => import("./admin/AdminReports"));
+const AdminActions = lazyWithRetry(() => import("./AdminActions"));
+const AdminDashboard = lazyWithRetry(() => import("./admin/AdminDashboard"));
+const AdminUsers = lazyWithRetry(() => import("./admin/AdminUsers"));
+const AdminNotifications = lazyWithRetry(() => import("./admin/AdminNotifications"));
+const AdminRevenue = lazyWithRetry(() => import("./admin/AdminRevenue"));
+const AdminSettings = lazyWithRetry(() => import("./admin/AdminSettings"));
+const AdminSecurity = lazyWithRetry(() => import("./admin/AdminSecurity"));
+const AdminFounderThrone = lazyWithRetry(() => import("./admin/AdminFounderThrone"));
+const MultimediaCenter = lazyWithRetry(() => import("./admin/MultimediaCenter"));
+const AfrigomboEconomieDashboard = lazyWithRetry(() => import("./AfrigomboEconomieDashboard"));
+const AfrigomboBuilders = lazyWithRetry(() => import("./AfrigomboBuilders"));
+const AfrigomboBuildersAdminDashboard = lazyWithRetry(() => import("./AfrigomboBuildersAdminDashboard"));
+const ThroneCinematicIntro = lazyWithRetry(() => import("./admin/ThroneCinematicIntro"));
+const BetaTransactionsAdminPanel = lazyWithRetry(() => import("./admin/BetaTransactionsAdminPanel"));
 
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
@@ -481,31 +483,61 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     };
   }, []);
 
-  const setActiveMenu = (menu: string) => {
-    const rootMenus = [
-      "user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_contracts", "user_heritage", "user_wallet", "user_builders",
-      "dashboard", "users", "posts", "gombos", "verifications", "admin_finances", "contracts",
-      "notifications", "alertes", "reports", "revenue", "settings", "security", "super_admin"
-    ];
+  const defaultBackParents: Record<string, string> = {
+    user_gombo_plus: "user_heritage",
+    user_subscription_management: "user_heritage",
+    terms: "user_settings",
+    privacy: "user_settings",
+    delete_account: "user_settings",
+    user_kyc: "user_heritage",
+    user_gombo_id: "user_heritage",
+    dashboard: "user_heritage",
+    user_command_center: "user_heritage",
+    super_admin: "dashboard",
+    user_throne: "dashboard",
+    user_settings: "user_heritage",
+    settings: "user_heritage",
+    user_edit_profile: "user_heritage",
+    user_help_center: "user_settings",
+    user_about: "user_settings",
+    user_support: "user_settings",
+    user_whats_new: "user_settings",
+    user_notifications: "user_terrain",
+    user_wallet: "user_heritage",
+    user_favorites: "user_terrain",
+    user_publish: "user_terrain",
+    user_contracts: "user_terrain",
+    user_events: "user_terrain",
+    user_messages: "user_terrain",
+    user_renforts: "user_terrain",
+    user_heritage: "user_terrain",
+    user_vibes: "user_terrain",
+    user_reels: "user_terrain",
+    user_mes_gombos: "user_heritage",
+    user_mes_groupes: "user_heritage"
+  };
 
-    if (rootMenus.includes(menu)) {
-      // Clear out the browser history entries of internal sub-menus to start fresh
-      setMenuHistory([menu]);
-    } else {
-      // For any deep sub-menu page (e.g., detail modals), push a state to browser history
-      // so Chrome Android will have a state to "go back" from when swiping back.
+  const setActiveMenu = (menu: string) => {
+    try { audioSynth.playKoraNote(293.66, 0, 0.08, 0.3); } catch (_) {}
+    try {
       window.history.pushState({ menu }, "", "");
-      setMenuHistory(prev => {
-        if (prev[prev.length - 1] === menu) return prev;
-        return [...prev, menu];
-      });
-    }
+    } catch (_) {}
+    setMenuHistory(prev => {
+      if (prev[prev.length - 1] === menu) return prev;
+      return [...prev, menu];
+    });
   };
 
   const goBackMenu = () => {
-    if (menuHistory.length > 1) {
-      window.history.back();
-    }
+    try { audioSynth.playKoraNote(293.66, 0, 0.08, 0.3); } catch (_) {}
+    setMenuHistory(prev => {
+      if (prev.length > 1) {
+        return prev.slice(0, -1);
+      }
+      const current = prev[prev.length - 1] || "user_terrain";
+      const parent = defaultBackParents[current] || "user_terrain";
+      return [parent];
+    });
   };
 
   const [logoUrl, setLogoUrl] = useState<string | null>(() => localStorage.getItem("custom_app_logo"));
@@ -973,7 +1005,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [sonsEnabled, setSonsEnabled] = useState<boolean>(() => localStorage.getItem("afrigombo_sounds") !== "false");
   const [showDashboardIntro, setShowDashboardIntro] = useState<boolean>(true);
   const [dashboardStep, setDashboardStep] = useState<number>(1);
-  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "media" | "economie" | "batisseurs">("throne");
+  const [superAdminTab, setSuperAdminTab] = useState<"throne" | "beta_transactions" | "media" | "economie" | "batisseurs">("throne");
 
   // --- STATE FOR ACTIONS RAPIDES AND RECHERCHE UNIVERSELLE ---
   const [universalSearchTerm, setUniversalSearchTerm] = useState("");
@@ -2421,7 +2453,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               addToTerminal(`[LANGUE] Passage en mode ${nextL === "nouchi" ? "Nouchi" : (nextL === "en" ? "English" : "Français")}`);
                             }, false, (
                               <span className="font-mono text-[8px] uppercase font-bold text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20 scale-90">
-                                {lang === "nouchi" ? "Nouchi 🇨🇮" : (lang === "en" ? "English 🇺🇸" : "Français 🇫🇷")}
+                                {lang === "nouchi" ? "Nouchi 🇨🇮" : (lang === "en" ? "English 🇬🇧" : "Français 🇫🇷")}
                               </span>
                             ))}
                           </div>
@@ -2604,7 +2636,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
                     </button>
 
-                    {menuHistory.length > 1 && (
+                    {activeMenu !== "user_terrain" && (
                       <button
                         onClick={goBackMenu}
                         className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-afri-gold/10 hover:bg-afri-gold/20 border border-afri-gold/40 text-afri-gold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer font-bold text-[9px] sm:text-[11px] uppercase tracking-tight shrink-0"
@@ -2656,7 +2688,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                      {/* Wallet */}
                      <div 
                        onClick={() => setActiveMenu("user_wallet")}
-                       className="hidden xs:flex items-center gap-2 px-2.5 sm:px-4 py-1 sm:py-2 bg-afri-bg-sec/40 border border-afri-border/80 rounded-xl sm:rounded-2xl cursor-pointer hover:border-afri-gold/30 transition-colors shrink-0"
+                       className="flex items-center gap-1.5 xs:gap-2 px-2 xs:px-2.5 sm:px-4 py-1 sm:py-2 bg-afri-bg-sec/40 border border-afri-border/80 rounded-xl sm:rounded-2xl cursor-pointer hover:border-afri-gold/30 transition-colors shrink-0"
                      >
                        <CreditCard className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-afri-gold" />
                        <div className="flex flex-col">
@@ -5840,6 +5872,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   <SettingsModal 
                     isOpen={true} 
                     onClose={() => goBackMenu()}
+                    onNavigateToFounder={() => setActiveMenu("super_admin")}
                   />
                 );
               })()}
@@ -6067,6 +6100,20 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {/* ----------------------------------------------------
+                                VIEW: TRANSACTIONS BÊTA (ADMIN)
+                  ---------------------------------------------------- */}
+              {activeMenu === "beta_transactions" && (
+                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                  <Suspense fallback={<div className="p-12 text-center text-afri-gold font-mono animate-pulse">Chargement des Transactions Bêta...</div>}>
+                    <BetaTransactionsAdminPanel 
+                      currentUser={profile}
+                      onOpenSupportChat={() => setActiveMenu("messages")}
+                    />
+                  </Suspense>
+                </div>
+              )}
+
+              {/* ----------------------------------------------------
                                 VIEW: CABINET SUPRÊME PRIVÉ (LE TRÔNE DU FONDATEUR / CENTRE MULTIMÉDIA)
                   ---------------------------------------------------- */}
               {activeMenu === "super_admin" && (
@@ -6090,6 +6137,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         }`}
                       >
                         👑 Le Trône Royal
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSuperAdminTab("beta_transactions");
+                          try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        }}
+                        className={`px-4 py-2.5 rounded-xl text-[10px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                          superAdminTab === "beta_transactions"
+                            ? "bg-emerald-500/20 border-emerald-400 text-emerald-400 font-black shadow-lg"
+                            : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text hover:border-afri-border"
+                        }`}
+                      >
+                        🛡️ Transactions Bêta
                       </button>
                       <button
                         onClick={() => {
@@ -6164,6 +6224,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             setPerspective("user");
                             setActiveMenu("user_terrain");
                             try { audioSynth.playValidationSuccess(); } catch (_) {}
+                          }}
+                        />
+                      ) : superAdminTab === "beta_transactions" ? (
+                        <BetaTransactionsAdminPanel
+                          currentUser={profile}
+                          onOpenSupportChat={(targetUser) => {
+                            setActiveMenu("messages");
                           }}
                         />
                       ) : superAdminTab === "economie" ? (

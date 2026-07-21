@@ -135,34 +135,164 @@ export const gomboAuth = {
     throw new Error("Service d'authentification indisponible");
   },
 
+  async handleAuthRedirect() {
+    if (auth && db) {
+      try {
+        const res = await getRedirectResult(auth);
+        if (res && res.user) {
+          console.log("Redirect login successful for:", res.user.email);
+          const userRef = doc(db, "users", res.user.uid);
+          const uDoc = await getDoc(userRef);
+          
+          const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Afrigombo"];
+          const isFounder = res.user.email === "jhs.kmj7@gmail.com";
+          const founderPermissions = ["admin", "founder", "dashboard", "users", "verification", "payments", "reports", "settings"];
+
+          if (!uDoc.exists()) {
+            let role: "musicien" | "client" | "admin" = isFounder ? "admin" : "client";
+            let roleSubtype: any = undefined;
+            
+            const storedPending = localStorage.getItem("pendingSignUpRole");
+            if (storedPending) {
+              try {
+                const parsed = JSON.parse(storedPending);
+                if (parsed.role) role = parsed.role;
+                if (parsed.roleSubtype) roleSubtype = parsed.roleSubtype;
+              } catch(e) {}
+              localStorage.removeItem("pendingSignUpRole");
+            }
+
+            const newUser: UserProfile = {
+              uid: res.user.uid,
+              email: res.user.email || "",
+              displayName: res.user.displayName || names.join(" "),
+              firstName: names[0] || "",
+              lastName: names.slice(1).join(" ") || "",
+              artistName: res.user.displayName || "",
+              photoURL: res.user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+              avatarUrl: res.user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+              provider: "google.com",
+              role: role,
+              roleSubtype: roleSubtype,
+              isFounder: isFounder,
+              permissions: isFounder ? founderPermissions : [],
+              isProfileComplete: false,
+              isVerified: false,
+              createdAt: serverTimestamp() as any,
+              balance: 0,
+              reputationScore: 100,
+              kycStatus: "none",
+              isVip: isFounder,
+              isPro: isFounder,
+              stats: {
+                completedGombos: 0,
+                cancelledGombos: 0,
+                totalEarned: 0,
+                averageRating: 0,
+                reviewsCount: 0
+              }
+            };
+            await setDoc(userRef, newUser);
+          } else {
+            // Existing user: ensure missing avatar/displayName/provider fields are merged
+            const currentData = uDoc.data();
+            const updates: any = {};
+            if (!currentData.displayName && res.user.displayName) updates.displayName = res.user.displayName;
+            if (!currentData.photoURL && res.user.photoURL) updates.photoURL = res.user.photoURL;
+            if (!currentData.avatarUrl && res.user.photoURL) updates.avatarUrl = res.user.photoURL;
+            if (!currentData.provider) updates.provider = "google.com";
+            if (isFounder && (!currentData.isFounder || currentData.role !== "admin")) {
+              updates.isFounder = true;
+              updates.role = "admin";
+              updates.permissions = founderPermissions;
+              updates.isVip = true;
+              updates.isPro = true;
+            }
+            if (Object.keys(updates).length > 0) {
+              await updateDoc(userRef, updates);
+            }
+          }
+          return { uid: res.user.uid, email: res.user.email };
+        }
+      } catch (error) {
+        console.error("Auth redirect error:", error);
+      }
+    }
+    return null;
+  },
+
   async loginWithGoogle() {
     if (auth && db) {
       try {
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        if (isMobile) {
-          await signInWithRedirect(auth, GOOGLE_PROVIDER);
-          return; // The page will redirect
+        let res: any = null;
+        try {
+          res = await signInWithPopup(auth, GOOGLE_PROVIDER);
+        } catch (popupErr: any) {
+          console.warn("signInWithPopup error/blocked, attempting signInWithRedirect fallback:", popupErr);
+          if (
+            popupErr.code === "auth/popup-blocked" ||
+            popupErr.code === "auth/popup-closed-by-user" ||
+            popupErr.code === "auth/operation-not-supported-in-this-environment" ||
+            popupErr.code === "auth/cancelled-popup-request" ||
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+          ) {
+            await signInWithRedirect(auth, GOOGLE_PROVIDER);
+            return null;
+          }
+          throw popupErr;
         }
-        const res = await signInWithPopup(auth, GOOGLE_PROVIDER);
+
         if (res && res.user) {
-          const uDoc = await getDoc(doc(db, "users", res.user.uid));
+          const userRef = doc(db, "users", res.user.uid);
+          const uDoc = await getDoc(userRef);
+          const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Afrigombo"];
+          const isFounder = res.user.email === "jhs.kmj7@gmail.com";
+          const founderPermissions = ["admin", "founder", "dashboard", "users", "verification", "payments", "reports", "settings"];
+
           if (!uDoc.exists()) {
             const userProfile: UserProfile = {
               uid: res.user.uid,
-              displayName: res.user.displayName || "",
-              photoURL: res.user.photoURL || "",
+              displayName: res.user.displayName || names.join(" "),
+              firstName: names[0] || "",
+              lastName: names.slice(1).join(" ") || "",
+              photoURL: res.user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+              avatarUrl: res.user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
               email: res.user.email || "",
               provider: "google.com",
-              createdAt: new Date().toISOString(),
-              role: "musicien",
-              isProfileComplete: false
+              createdAt: serverTimestamp() as any,
+              role: isFounder ? "admin" : "client",
+              isFounder: isFounder,
+              permissions: isFounder ? founderPermissions : [],
+              isProfileComplete: false,
+              isVerified: false,
+              balance: 0,
+              totalRevenue: 0,
+              isVip: isFounder,
+              isPro: isFounder
             };
-            await setDoc(doc(db, "users", res.user.uid), userProfile);
+            await setDoc(userRef, userProfile);
+          } else {
+            const currentData = uDoc.data();
+            const updates: any = {};
+            if (!currentData.displayName && res.user.displayName) updates.displayName = res.user.displayName;
+            if (!currentData.photoURL && res.user.photoURL) updates.photoURL = res.user.photoURL;
+            if (!currentData.avatarUrl && res.user.photoURL) updates.avatarUrl = res.user.photoURL;
+            if (!currentData.provider) updates.provider = "google.com";
+            if (isFounder && (!currentData.isFounder || currentData.role !== "admin")) {
+              updates.isFounder = true;
+              updates.role = "admin";
+              updates.permissions = founderPermissions;
+              updates.isVip = true;
+              updates.isPro = true;
+            }
+            if (Object.keys(updates).length > 0) {
+              await updateDoc(userRef, updates);
+            }
           }
           return { uid: res.user.uid, email: res.user.email };
         }
       } catch (e: any) {
-        console.error("Erreur Google :", e);
+        console.error("Erreur Google Login :", e);
         throw e;
       }
     }
@@ -172,11 +302,7 @@ export const gomboAuth = {
   async loginWithFacebook() {
     if (auth && db) {
       try {
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        if (isMobile) {
-          await signInWithRedirect(auth, FACEBOOK_PROVIDER);
-          return;
-        }
+        
         const res = await signInWithPopup(auth, FACEBOOK_PROVIDER);
         const uDoc = await getDoc(doc(db, "users", res.user.uid));
         if (!uDoc.exists()) {
@@ -203,11 +329,7 @@ export const gomboAuth = {
 
   async loginWithGitHub() {
     if (auth && db) {
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (isMobile) {
-        await signInWithRedirect(auth, GITHUB_PROVIDER);
-        return;
-      }
+      
       const res = await signInWithPopup(auth, GITHUB_PROVIDER);
       const uDoc = await getDoc(doc(db, "users", res.user.uid));
       if (!uDoc.exists()) {
@@ -407,7 +529,7 @@ export const gomboDB = {
       // Create new
       const newConvo: Partial<Conversation> = {
         participants: [currentUserId, targetUserId],
-        createdAt: new Date().toISOString(),
+        createdAt: serverTimestamp() as any,
         lastMessageAt: new Date().toISOString(),
         unreadCount: { [currentUserId]: 0, [targetUserId]: 0 },
         gomboId,
@@ -563,7 +685,7 @@ export const gomboDB = {
       const ref = await addDoc(collection(db, "gombos"), {
         ...gombo,
         status: gombo.status || "publie",
-        createdAt: new Date().toISOString(),
+        createdAt: serverTimestamp() as any,
         applicantsCount: 0
       });
       return ref.id;
@@ -1337,7 +1459,7 @@ export const gomboDB = {
         clickCount: 0,
         ...notif,
         id: docRef.id,
-        createdAt: new Date().toISOString(),
+        createdAt: serverTimestamp() as any,
         createdBy: user?.displayName || user?.email || "Fondateur"
       });
       return docRef.id;
@@ -1849,7 +1971,7 @@ export const gomboDB = {
         status: contract.status || "generated",
         history: initialHistory,
         firebaseSignature,
-        createdAt: new Date().toISOString(),
+        createdAt: serverTimestamp() as any,
         updatedAt: new Date().toISOString()
       });
       return id;
@@ -2021,7 +2143,7 @@ export const gomboDB = {
               clientId: data.clientId || "",
               clientName: data.clientName || "",
               amount: data.amount || 0,
-              createdAt: new Date().toISOString(),
+              createdAt: serverTimestamp() as any,
               status: "Mission Réussie Certifiée"
             });
 

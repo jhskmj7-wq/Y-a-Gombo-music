@@ -12,6 +12,9 @@ import { GomboSafeContract, UserProfile } from "../types";
 import { audioSynth } from "../lib/audio";
 import { db } from "../lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
+import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
+import { createBetaTransaction, proceedToSupportAssistance } from "../lib/betaEscrowEngine";
+import { supportConfig } from "../supportConfig";
 
 interface GomboContractViewProps {
   contractId: string;
@@ -126,13 +129,42 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
     if (!contract || processing) return;
     setProcessing(true);
     try {
+      // 1. Create Beta transaction record in Firestore `transactions`
+      const txId = await createBetaTransaction({
+        contractId: contract.id,
+        gomboId: contract.gomboId || "",
+        gomboTitle: contract.gomboTitle || "Dépôt de Cachet - Contrat Gombo",
+        promoterId: currentUser.uid!,
+        promoterName: currentUser.displayName || currentUser.name || "Promoteur",
+        artistId: contract.artistId || "",
+        artistName: contract.artistName || "Artiste Gombo",
+        amount: contract.totalClientPaid || contract.amount || 0
+      });
+
+      // 2. Advance to support validation
+      await proceedToSupportAssistance(
+        txId,
+        currentUser.uid!,
+        currentUser.displayName || currentUser.name || "Promoteur",
+        contract.artistName || "Artiste",
+        contract.totalClientPaid || contract.amount || 0
+      );
+
+      // 3. Keep official Escrow status in sync
       await gomboDB.depositToEscrow(
         contract.id,
         contract.amount || 0,
         currentUser.uid!,
         currentUser.displayName || currentUser.name || "Client"
       );
+
       try { audioSynth.playValidationSuccess(); } catch(_) {}
+
+      // 4. Trigger support redirection for manual accompaniment in Phase Bêta Privée
+      supportConfig.openSupport(
+        `Dépôt Bêta de ${(contract.totalClientPaid || contract.amount || 0).toLocaleString()} FCFA pour le contrat ${contract.id}`
+      );
+
       if (onUpdate) onUpdate();
     } catch (e) {
       console.error("Error holding payment in contract", e);
@@ -983,7 +1015,10 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
                 <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl flex items-start gap-4 text-center justify-center">
                   <div>
                     <CreditCard className="w-10 h-10 text-emerald-500 mx-auto mb-3 animate-pulse" />
-                    <h4 className="text-afri-text font-bold mb-1">Prêt pour le dépôt de garantie</h4>
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <h4 className="text-afri-text font-bold">Prêt pour le dépôt de garantie</h4>
+                      <BetaEscrowInfoButton variant="badge" />
+                    </div>
                     <p className="text-afri-text-sec text-[11px]">Le contrat est signé et scellé. Veuillez effectuer le dépôt sécurisé d'un montant total de <span className="text-afri-text font-bold font-mono">{contract.totalClientPaid?.toLocaleString()} FCFA</span> pour engager la mission en toute sécurité.</p>
                   </div>
                 </div>

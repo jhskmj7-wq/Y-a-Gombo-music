@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { audioSynth } from "./lib/audio";
 import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
-import SuperFounderDebug from "./components/SuperFounderDebug";
 import { BackgroundMusic } from "./components/BackgroundMusic";
 import { LivingInteractions } from "./components/LivingInteractions";
 import { useAuth } from "./AuthContext";
@@ -20,6 +19,8 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { gomboDB } from "./firebase";
 import { app } from "./lib/firebase";
 import { AfriGomboLogo } from "./components/AfriGomboLogo";
+
+import { lazyWithRetry } from "./lib/lazyWithRetry";
 
 const safeGetItem = (key: string, fallback: string = ""): string => {
   try {
@@ -38,7 +39,7 @@ const safeSetItem = (key: string, value: string): void => {
 };
 
 // Lazy load the main Application Layer
-const AdminCentre = lazy(() => import("./components/AdminCentre"));
+const AdminCentre = lazyWithRetry(() => import("./components/AdminCentre"));
 
 const MainAppLayout = React.memo(function MainAppLayout() {
   const { theme, toggleTheme } = useTheme();
@@ -164,33 +165,31 @@ function App() {
     <ErrorBoundary>
       <div className="h-screen overflow-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text">
         
-        {/* Main application layer, rendered in background once auth is ready */}
-        {!authLoading && (
-          <Routes>
-            <Route path="/" element={<Navigate to="/home" replace />} />
-            <Route 
-              path="/home" 
-              element={
-                <ProfileGuard>
-                  <MainAppLayout />
-                </ProfileGuard>
-              } 
-            />
-            <Route 
-              path="/complete-profile" 
-              element={
-                <AuthGuard>
-                  <CompleteProfileView />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/auth" 
-              element={<AuthPage />} 
-            />
-            <Route path="*" element={<Navigate to="/home" replace />} />
-          </Routes>
-        )}
+        {/* Main application layer, rendered cleanly */}
+        <Routes>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route 
+            path="/home" 
+            element={
+              <ProfileGuard>
+                <MainAppLayout />
+              </ProfileGuard>
+            } 
+          />
+          <Route 
+            path="/complete-profile" 
+            element={
+              <AuthGuard>
+                <CompleteProfileView />
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/auth" 
+            element={<AuthPage />} 
+          />
+          <Route path="*" element={<Navigate to="/home" replace />} />
+        </Routes>
 
         {/* 1. PREMIUM UNIFIED SPLASH SCREEN */}
         <AnimatePresence>
@@ -353,9 +352,6 @@ function App() {
       {/* 3. PERSISTENT BACKGROUND MUSIC */}
       <BackgroundMusic />
       <PWAHandler />
-      {((typeof window !== "undefined" && window.location.search.includes("debug=true")) || import.meta.env.DEV) && (
-        <SuperFounderDebug />
-      )}
       </div>
     </ErrorBoundary>
 );

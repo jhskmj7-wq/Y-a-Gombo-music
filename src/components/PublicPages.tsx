@@ -9,6 +9,8 @@ import { gomboDB } from "../firebase";
 import { UserProfile } from "../types";
 import { supportConfig } from "../supportConfig";
 
+import { CGUContent, PrivacyContent } from "./LegalContent";
+
 interface PublicPageProps {
   onBack: () => void;
   darkMode?: boolean;
@@ -16,137 +18,28 @@ interface PublicPageProps {
 
 export function PrivacyPage({ onBack }: PublicPageProps) {
   return (
-    <div className="min-h-screen bg-afri-bg text-afri-text py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
-      <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
+    <div className="min-h-screen bg-afri-bg text-afri-text py-10 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
+      <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
         
         {/* Navigation / Header */}
-        <div className="flex items-center justify-between pb-6 border-b border-afri-border">
+        <div className="flex items-center justify-between pb-4 border-b border-afri-border">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg-sec border border-afri-border rounded-xl transition-all cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg-sec border border-afri-border rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Retour à la scène</span>
+            <span>← Retour</span>
           </button>
           
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
             <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
-            <span>GOMBO PROTÉGÉ</span>
+            <span>AFRIGOMBO • CHARTE</span>
           </div>
         </div>
 
-        {/* Title Block */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex p-3 bg-afri-bg-sec/10 text-[#D4AF37] rounded-2xl">
-            <Shield className="w-8 h-8" />
-          </div>
-          <h1 className="text-3xl font-black text-afri-text tracking-tight uppercase">
-            Charte de Confidentialité
-          </h1>
-          <p className="text-xs text-afri-text-sec max-w-md mx-auto">
-            Dernière mise à jour : Mai 2026. Conforme aux règles de protection du Showbiz de Côte d'Ivoire.
-          </p>
-        </div>
-
-        {/* Core content */}
-        <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-          
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 1. Collecte des données utilisateur
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Pour vous donner accès aux gombos d'Abidjan et vous mettre en relation avec les meilleurs maquis, clubs, promoteurs et festivals, <strong>Y’A GOMBO MUSIC</strong> collecte les données strictement nécessaires au bon déroulement de vos prestations scéniques :
-            </p>
-            <ul className="text-xs text-afri-text-muted pl-5 space-y-1.5 list-disc">
-              <li>Vos informations d'identité (Prénom, Nom, Nom de scène ou d'artiste).</li>
-              <li>Vos coordonnées de communication (Téléphone direct et numéro WhatsApp).</li>
-              <li>Votre localisation générale d'activité (Communes d'Abidjan e.g. Cocody, Yopougon, Marcory).</li>
-              <li>Vos caractéristiques artistiques (Spécialités d'instruments, genres musicaux favoris, années d'expérience).</li>
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 2. Firebase Authentication
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Nous utilisons le service sécurisé de <strong>Firebase Authentication</strong> (fourni par Google Cloud) pour gérer l'accès à votre compte. 
-              Vos identifiants de connexion (adresse email et mot de passe chiffré) sont gérés de manière sécurisée et confidentielle. 
-              Y’A GOMBO MUSIC n'a jamais accès en clair à votre mot de passe ni à vos facteurs d'authentification tiers.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 3. Stockage des données de profil
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Les informations relatives à votre profil showbiz, à vos portefeuilles de rémunérations accumulés et à l'historique de vos candidatures de gombos sont stockées dans une base de données cloud hautement sécurisée <strong>Cloud Firestore</strong> (Firebase).
-              Vos coordonnées Mobile Money (Wave, Orange Money) restent chiffrées et ne sont divulguées à l'autre partie contractante (recruteur ou musicien) <strong>qu'uniquement après validation réciproque du contrat ou du cachet</strong>.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 4. Sécurité renforcée des données
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Nous mettons en œuvre des mesures de sécurité optimales au niveau réseau, applicatif et physique pour garantir l'intégrité de vos informations. Les règles de sécurité strictes préviennent tout accès non autorisé à vos données d'annonceur ou de prestataire.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 5. Suppression immédiate du compte
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Chez Y'A GOMBO MUSIC, vous êtes l'unique propriétaire de vos données de scène. Vous pouvez à tout moment demander, ou exécuter par vous-même, la suppression intégrale de vos informations de notre écosystème :
-            </p>
-            <div className="p-4 bg-afri-bg-sec/5 rounded-2xl text-xs space-y-1.5 border border-[#D4AF37]/20">
-              <p className="font-bold text-[#D4AF37]">⚙️ Procédure de suppression autonome :</p>
-              <p className="text-afri-text-sec">Rendez-vous sur votre espace <strong>Mon Coin</strong>, ouvrez les <strong>Réglages</strong> dans le panneau de contrôle, et cliquez sur <strong>Supprimer mon compte</strong> dans la section Compte. L'ensemble de vos données seront effacées immédiatement.</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 6. Contact support d'Abidjan
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Pour toute question sur la protection de votre vie privée ou pour exercer vos droits d'accès et d'opposition, vous pouvez joindre à tout moment nos experts showbiz au Plateau :
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={() => supportConfig.openSupport("Confidentialité / Protection des données")}
-                className="flex items-center gap-2 px-4 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold rounded-xl border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition-all cursor-pointer"
-              >
-                <MessageSquare className="w-4 h-4 text-[#D4AF37]" />
-                <span>Contacter le Support Officiel ({supportConfig.phoneNumber})</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 7. Assistance & Protection
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              AFRIGOMBO met à votre disposition un Support Officiel accessible via le Centre d'Aide. 
-              Les utilisateurs peuvent contacter librement le Support Officiel AFRIGOMBO. 
-              En revanche, les échanges privés de numéros, WhatsApp, emails, liens, QR Codes ou réseaux sociaux entre utilisateurs sont strictly interdits lorsqu'ils visent à contourner la plateforme et ses sécurités de paiement.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 8. Confidentialité & Coordonnées
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Les coordonnées personnelles (téléphone, email) sont utilisées uniquement pour le fonctionnement sécurisé de la plateforme. Elles ne sont jamais rendues publiques sans consentement explicite. Le numéro WhatsApp du Support Officiel est disponible dans le Centre d'Aide afin d'assister les utilisateurs.
-            </p>
-          </div>
-
+        {/* Content Card */}
+        <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 sm:p-8 shadow-sm">
+          <PrivacyContent />
         </div>
 
       </div>
@@ -156,113 +49,28 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
 
 export function TermsPage({ onBack }: PublicPageProps) {
   return (
-    <div className="min-h-screen bg-afri-bg text-afri-text py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
-      <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
+    <div className="min-h-screen bg-afri-bg text-afri-text py-10 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
+      <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
         
         {/* Navigation / Header */}
-        <div className="flex items-center justify-between pb-6 border-b border-afri-border">
+        <div className="flex items-center justify-between pb-4 border-b border-afri-border">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg-sec border border-afri-border rounded-xl transition-all cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg-sec border border-afri-border rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Retour à la scène</span>
+            <span>← Retour</span>
           </button>
           
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
             <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
-            <span>TERRAIN SAIN</span>
+            <span>AFRIGOMBO • RÈGLEMENT</span>
           </div>
         </div>
 
-        {/* Title Block */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex p-3 bg-afri-bg-sec/10 text-[#D4AF37] rounded-2xl">
-            <FileText className="w-8 h-8" />
-          </div>
-          <h1 className="text-3xl font-black text-afri-text tracking-tight uppercase">
-            Conditions Générales d'Utilisation
-          </h1>
-          <p className="text-xs text-afri-text-sec max-w-sm mx-auto">
-            Règlement officiel de l'arène Y’A GOMBO MUSIC. Applicable à tous les artistes et recruteurs musicaux de Côte d’Ivoire.
-          </p>
-        </div>
-
-        {/* Core content */}
-        <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-          
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 1. Conditions d'utilisation
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              En créant un compte ou en naviguant sur l'application <strong>Y’A GOMBO MUSIC</strong>, vous acceptez sans réserve le présent règlement. L'application a pour vocation exclusive de faciliter la mise en relation showbiz, la publication d'annonces de gombos musicaux (prestations), et la gestion sécurisée des cachets d'artistes.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 2. Responsabilités des utilisateurs
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Chaque utilisateur est personnellement responsable des données qu'il publie, des messages partagés, et des engagements contractuels pris sur la plateforme. 
-              Les artistes s'engagent à se présenter à l'heure aux répétitions ou aux concerts prévus. Les recruteurs contractants s'engagent à respecter l'intégrité physique de nos musiciens et à payer le solde convenu.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 3. Contenu rigoureusement interdit
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Tout contenu sortant du cadre du showbiz et de la musique ivoirienne est strictement prohibé. Notre équipe d'animation effectue des audits réguliers. Sont formellement interdits :
-            </p>
-            <ul className="text-xs text-afri-text-muted pl-5 space-y-1.5 list-disc">
-              <li>Le harcèlement moral, sexuel, ou les injures envers un membre de la corporation artistique.</li>
-              <li>La publication de fausses annonces de gombos ou de tarifs mensongers dans le but de tromper.</li>
-              <li>Les médias à caractère pornographique, violent, politique ou haineux.</li>
-              <li>La publicité ou l'incitation à des services d'arnaque de crédit mobile money.</li>
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 4. Réservations musicales & Engagements
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Une fois qu'un recruteur accepte officiellement une candidature d'artiste pour un gombo, le contrat est réputé conclu. 
-              En cas de désistement injustifié de dernière minute (moins de 24h avant le spectacle sans justificatif de force majeure), l'artiste s'expose à une baisse de sa note artistique ou à une exclusion temporaire de l'application.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 5. Transactions de paiement de cachets
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Les transferts de fonds s'effectuent par le biais des passerelles sécurisées tierces (Wave, Orange Money). Y’A GOMBO MUSIC propose un système de solde virtuel permettant de consolider ses revenus. 
-              Il vous incombe de vérifier l’exactitude de vos numéros de Mobile Money configurés dans les réglages. Nous déclinons toute responsabilité en cas de transfert vers un numéro erroné déjà validé par vos soins.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 6. Tolérance zéro face aux comportements abusifs
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed text-red-600 dark:text-rose-400 font-bold">
-              Y’A GOMBO MUSIC applique une politique de tolérance zéro face aux comportements frauduleux, abusifs ou trompeurs. L'utilisation d'identité d'artistes célèbres usurpés, la création de faux comptes recruteurs, la diffamation publique et le non-paiement répété des artistes mèneront à une suppression immédiate et sans préavis du compte ainsi qu'au blocage de votre adresse IP à Abidjan.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-afri-text uppercase flex items-center gap-2 border-b border-afri-border pb-2">
-              <span className="text-[#D4AF37]">✓</span> 7. Mode Bêta Manuelle
-            </h2>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Pendant la phase Bêta, les paiements sont validés manuellement par AFRIGOMBO. L'utilisateur ne verra jamais de numéro personnel. L'affichage sera exclusivement "Paiement AFRIGOMBO" ou "Paiement en cours de vérification". Les fonctionnalités sont déployées progressivement.
-            </p>
-          </div>
-
+        {/* Content Card */}
+        <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 sm:p-8 shadow-sm">
+          <CGUContent />
         </div>
 
       </div>

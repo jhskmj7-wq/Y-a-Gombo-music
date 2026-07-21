@@ -71,7 +71,9 @@ const statsItemVariants = {
   }
 };
 
-const AdminActions = lazy(() => import('../AdminActions'));
+import { lazyWithRetry } from '../../lib/lazyWithRetry';
+
+const AdminActions = lazyWithRetry(() => import('../AdminActions'));
 
 export default function AdminDashboard({
   users = [],
@@ -445,19 +447,19 @@ export default function AdminDashboard({
       </div>
 
       {/* 5. ACCÈS SUPER FONDATEUR */}
-      {isAuthorizedSuperFounder && (
+      {(userEmail?.toLowerCase() === "jhs.kmj7@gmail.com" || isAuthorizedSuperFounder) && (
         <div className="mt-12 p-8 rounded-3xl bg-gradient-to-r from-[#030303] via-[#0D0D15] to-[#030303] border border-[#D4AF37]/40 shadow-[0_10px_40px_rgba(212,175,55,0.1)] text-center space-y-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 transform rotate-12 opacity-5 pointer-events-none">
             <Crown className="w-64 h-64 text-[#D4AF37]" />
           </div>
           
           <div className="relative z-10 space-y-2">
-            <h4 className="text-sm font-display font-black text-[#D4AF37] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-              <Crown className="w-5 h-5" />
-              Gouvernance Suprême
+            <h4 className="text-sm sm:text-base font-display font-black text-[#D4AF37] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+              <Crown className="w-5 h-5 text-[#D4AF37]" />
+              👑 Accéder au Trône du Fondateur
             </h4>
-            <p className="text-[11px] text-afri-text-sec font-mono">
-              Zone réservée exclusivement au Fondateur de l'Empire AfriGombo.
+            <p className="text-xs text-afri-text-sec font-mono max-w-md mx-auto leading-relaxed">
+              Accédez au niveau de contrôle le plus élevé de l'écosystème AFRIGOMBO.
             </p>
           </div>
 
@@ -467,10 +469,10 @@ export default function AdminDashboard({
               addToTerminal("👑 [SOUVERAINETÉ] Entrée dans le Trône demandée.");
               try { audioSynth.playTamTam(true); } catch (err) {}
             }}
-            className="relative z-10 group px-8 py-4 bg-afri-bg border border-[#D4AF37] hover:bg-afri-bg-sec text-[#D4AF37] hover:text-black font-display font-black text-sm uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-4 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_40px_rgba(212,175,55,0.4)] mx-auto w-full md:w-auto"
+            className="relative z-10 group px-8 py-4 bg-afri-bg border border-[#D4AF37] hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-display font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_40px_rgba(212,175,55,0.4)] mx-auto w-full md:w-auto"
           >
-            <Crown className="w-5 h-5" />
-            <span>👑 Entrer dans le Trône</span>
+            <Crown className="w-4 h-4" />
+            <span>Entrer dans le Trône</span>
           </button>
         </div>
       )}

@@ -638,6 +638,36 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </button>
           </div>
         </div>
+
+        {/* CARTE ACCÈS CENTRE DE COMMANDEMENT (VISIBLE UNIQUEMENT POUR jhs.kmj7@gmail.com) */}
+        {(currentUserProfile?.email || "").toLowerCase() === "jhs.kmj7@gmail.com" && (
+          <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border-2 border-afri-gold/40 shadow-[0_10px_30px_rgba(212,175,55,0.15)] text-center space-y-4 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
+              <Crown className="w-48 h-48 text-afri-gold" />
+            </div>
+            <div className="relative z-10 space-y-1.5">
+              <span className="text-afri-gold text-[10px] font-mono uppercase tracking-[0.25em] font-bold block">
+                Espace Gouvernance Fondateur
+              </span>
+              <h3 className="text-lg sm:text-xl font-display font-black text-afri-text uppercase tracking-wider">
+                👑 Centre de Commandement
+              </h3>
+              <p className="text-xs text-afri-text-sec font-mono max-w-md mx-auto leading-relaxed">
+                Accédez au panneau d'administration central et de pilotage stratégique d'AFRIGOMBO.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                onNavigateView("dashboard");
+                try { audioSynth.playTamTam(true); } catch (_) {}
+              }}
+              className="relative z-10 w-full sm:w-auto px-8 py-3.5 bg-afri-gold hover:bg-amber-400 text-black font-sans font-black text-xs uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-afri-gold/20 active:scale-98 cursor-pointer inline-flex items-center justify-center gap-2"
+            >
+              <Crown className="w-4 h-4" />
+              <span>Accéder au Centre de Commandement</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Interactive QR Code Modal */}

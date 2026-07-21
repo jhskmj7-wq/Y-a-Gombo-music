@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { gomboDB } from "../firebase";
 import { audioSynth } from "../lib/audio";
+import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
 
 interface MobileMoneyPaymentProps {
   reservationId: string;
@@ -159,10 +160,13 @@ export default function MobileMoneyPayment({
             <ShieldCheck className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs font-mono uppercase tracking-widest text-[#D4AF37] font-black">
-              Simulateur Mobile Money
-            </h4>
-            <span className="text-[9px] text-afri-text-sec font-mono">CADRE SÉCURISÉ AFRIGOMBO</span>
+            <div className="flex items-center gap-1.5">
+              <h4 className="text-xs font-mono uppercase tracking-widest text-[#D4AF37] font-black">
+                Simulateur Mobile Money
+              </h4>
+              <BetaEscrowInfoButton variant="badge" />
+            </div>
+            <span className="text-[9px] text-afri-text-sec font-mono">CADRE SÉCURISÉ AFRIGOMBO (PHASE BÊTA)</span>
           </div>
         </div>
         {onClose && (

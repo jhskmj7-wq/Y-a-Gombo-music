@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence, indexedDBLocalPersistence } from "firebase/auth";
 import { initializeFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -20,14 +20,18 @@ export const app = getApps().length
 
 export const auth = getAuth(app);
 
-// Explicitly set persistence
-setPersistence(auth, browserLocalPersistence).catch((err) => {
-  console.error("Failed to set auth persistence:", err);
-});
+// Explicitly set persistent authentication storage (IndexedDB -> LocalStorage)
+if (typeof window !== "undefined") {
+  setPersistence(auth, indexedDBLocalPersistence)
+    .catch(() => setPersistence(auth, browserLocalPersistence))
+    .catch((err) => {
+      console.error("Failed to set auth persistence:", err);
+    });
+}
 
 export const db = initializeFirestore(app, {});
 
-// Enable persistence
+// Enable offline persistence
 if (typeof window !== "undefined") {
   enableIndexedDbPersistence(db).catch((err) => {
     if (err.code === 'failed-precondition') {
@@ -41,5 +45,8 @@ if (typeof window !== "undefined") {
 export const storage = getStorage(app);
 
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 console.log("AUTH READY (Afrigombo Default):", auth.app.options.projectId);
