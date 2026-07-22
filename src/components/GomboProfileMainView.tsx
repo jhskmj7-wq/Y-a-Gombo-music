@@ -175,15 +175,15 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         </div>
       </motion.div>
 
-      {/* 1. GRANDE CARTE PROFIL PREMIUM (SCREENSHOT STYLE) */}
-      <div className="relative overflow-hidden rounded-[28px] border-2 border-afri-gold/35 bg-afri-bg shadow-[0_12px_35px_rgba(0,0,0,0.9)] p-5 xs:p-6 sm:p-7">
+      {/* 1. GRANDE CARTE PROFIL PREMIUM (SCREENSHOT STYLE) - COMPACT ANDROID OPTIMIZED */}
+      <div className="relative overflow-hidden rounded-[24px] border-2 border-afri-gold/35 bg-afri-bg shadow-[0_8px_25px_rgba(0,0,0,0.8)] p-3.5 xs:p-4 sm:p-5">
         {/* Subtle interior gold light */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-afri-gold/5 blur-[50px] rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-0 w-28 h-28 bg-afri-gold/5 blur-[40px] rounded-full pointer-events-none" />
 
-        <div className="flex flex-row items-start gap-4 xs:gap-5 sm:gap-6">
+        <div className="flex flex-row items-start gap-3 xs:gap-4 sm:gap-5">
           {/* LEFT: Premium double-ring avatar frame */}
           <div className="relative shrink-0 select-none">
-            <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 rounded-full border-2 border-afri-gold p-1 bg-afri-bg">
+            <div className="w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 rounded-full border-2 border-afri-gold p-0.5 bg-afri-bg">
               <div className="w-full h-full rounded-full border border-afri-gold/45 overflow-hidden bg-afri-bg">
                 <img 
                   src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
@@ -197,21 +197,21 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               </div>
             </div>
             {/* Crown Badge */}
-            <div className="absolute -top-1 -right-1 bg-gradient-to-br from-[#7e22ce] to-[#a855f7] border border-afri-gold rounded-full w-6.5 h-6.5 flex items-center justify-center shadow-md">
-              <span className="text-[10px] leading-none">👑</span>
+            <div className="absolute -top-1 -right-1 bg-gradient-to-br from-[#7e22ce] to-[#a855f7] border border-afri-gold rounded-full w-5.5 h-5.5 flex items-center justify-center shadow-md">
+              <span className="text-[9px] leading-none">👑</span>
             </div>
           </div>
 
           {/* RIGHT: Stacked Profile Fields */}
-          <div className="flex flex-col text-left space-y-2.5 w-full min-w-0">
+          <div className="flex flex-col text-left space-y-1.5 w-full min-w-0">
             {/* Artist Name & badges row */}
             <div className="flex flex-wrap items-center gap-1.5 xs:gap-2">
-              <h2 className="text-[16px] xs:text-[18px] sm:text-[22px] font-serif font-black italic tracking-wide uppercase leading-none text-afri-text truncate max-w-[140px] xs:max-w-[180px] sm:max-w-[220px]">
+              <h2 className="text-[15px] xs:text-[17px] sm:text-[20px] font-serif font-black italic tracking-wide uppercase leading-none text-afri-text truncate max-w-full">
                 {currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}
               </h2>
               {currentUserProfile.role === "founder" && (
-                <div className="w-full mt-1">
-                  <span className="afri-badge afri-badge-gold px-3 py-1 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.15)] inline-flex items-center gap-1.5">
+                <div className="w-full mt-0.5">
+                  <span className="afri-badge afri-badge-gold px-2.5 py-0.5 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.15)] inline-flex items-center gap-1">
                     👑 Fondateur AFRIGOMBO
                   </span>
                 </div>
@@ -221,13 +221,13 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 <span>STANDARD</span>
               </span>
               <span className="text-[8px] xs:text-[9px] font-bold font-mono text-afri-gold tracking-tight shrink-0">
-                TRUST : {Math.round((currentUserProfile.reputation || 4.8) * 20)}/100 (ARGENT)
+                TRUST : {currentUserProfile.trustScore ?? 96}/100 (ARGENT)
               </span>
               <Flame className="w-3 h-3 text-afri-gold/80 shrink-0 ml-auto animate-pulse" />
             </div>
 
             {/* Elite Subtext */}
-            <div className="flex items-center gap-1 text-[9px] xs:text-[10px] font-black text-afri-gold tracking-[0.15em] uppercase">
+            <div className="flex items-center gap-1 text-[8.5px] xs:text-[9.5px] font-black text-afri-gold tracking-[0.15em] uppercase">
               <span>★ ELITE</span>
             </div>
 
@@ -235,45 +235,45 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             {isKycApproved ? (
               <div 
                 onClick={handleCopyId}
-                className="bg-gradient-to-r from-amber-500 via-afri-gold to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[9px] xs:text-[10px] font-mono font-black tracking-widest px-3 py-1 rounded shadow-md uppercase inline-flex items-center gap-1.5 border border-amber-400/40 w-fit cursor-pointer"
+                className="bg-gradient-to-r from-amber-500 via-afri-gold to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[8.5px] xs:text-[9.5px] font-mono font-black tracking-widest px-2.5 py-0.5 rounded shadow-md uppercase inline-flex items-center gap-1 border border-amber-400/40 w-fit cursor-pointer"
               >
                 <span>🎼 {gomboId}</span>
               </div>
             ) : (
               <div 
                 onClick={handleCopyId}
-                className="bg-gradient-to-r from-amber-500 via-afri-gold to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[9px] xs:text-[10px] font-mono font-black tracking-widest px-3 py-1 rounded shadow-md uppercase inline-flex items-center gap-1.5 border border-amber-400/40 w-fit cursor-pointer"
+                className="bg-gradient-to-r from-amber-500 via-afri-gold to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[8.5px] xs:text-[9.5px] font-mono font-black tracking-widest px-2.5 py-0.5 rounded shadow-md uppercase inline-flex items-center gap-1 border border-amber-400/40 w-fit cursor-pointer"
               >
                 <span>ID NON ATTRIBUÉ</span>
               </div>
             )}
 
             {/* Subscription status */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-afri-border/80 bg-afri-bg-ter text-[8.5px] xs:text-[9.5px] text-afri-text-sec font-bold tracking-wide uppercase w-fit">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-afri-border/80 bg-afri-bg-ter text-[8px] xs:text-[9px] text-afri-text-sec font-bold tracking-wide uppercase w-fit">
               <span className="text-amber-500">👑</span>
               <span>ABONNEMENT : {isPremium ? "PREMIUM ELITE" : "STANDARD (GRATUIT)"}</span>
             </div>
 
             {/* KYC status badge */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-afri-border/80 bg-afri-bg-ter text-[8.5px] xs:text-[9.5px] text-afri-text-sec font-bold tracking-wide uppercase w-fit">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-afri-border/80 bg-afri-bg-ter text-[8px] xs:text-[9px] text-afri-text-sec font-bold tracking-wide uppercase w-fit">
               <span className={isKycApproved ? "text-emerald-400" : "text-amber-500"}>🛡️</span>
               <span>KYC : {isKycApproved ? "VÉRIFIÉ" : "NON VÉRIFIÉ"}</span>
             </div>
 
             {/* Timer status */}
-            <div className="flex items-center gap-1.5 text-[8.5px] font-mono font-bold text-afri-text-sec tracking-wide uppercase">
+            <div className="flex items-center gap-1 text-[8px] font-mono font-bold text-afri-text-sec tracking-wide uppercase">
               <Clock className="w-2.5 h-2.5" />
               <span>0M / 30M (EC)</span>
             </div>
 
             {/* Actions: BIO OK & DEVENIR ELITE */}
-            <div className="flex items-center gap-2 pt-1.5">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-[8.5px] xs:text-[9px] font-black text-emerald-400 uppercase tracking-wider">
+            <div className="flex items-center gap-2 pt-1">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-[8px] xs:text-[8.5px] font-black text-emerald-400 uppercase tracking-wider">
                 ✓ BIO OK
               </span>
               <button 
                 onClick={() => onNavigateView("user_gombo_plus")}
-                className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-afri-gold hover:brightness-115 text-black text-[9px] xs:text-[10px] font-black uppercase tracking-wider shadow-md hover:scale-102 active:scale-98 transition-all cursor-pointer"
+                className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-afri-gold hover:brightness-115 text-black text-[8.5px] xs:text-[9px] font-black uppercase tracking-wider shadow-md hover:scale-102 active:scale-98 transition-all cursor-pointer"
               >
                 DEVENIR ELITE
               </button>
@@ -283,28 +283,28 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       </div>
 
       {/* 2. THREE STATS COLUMNS SIDE-BY-SIDE (SCREENSHOT STYLE) */}
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
-        <div className="bg-afri-bg border border-afri-border/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
-          <span className="text-[17px] xs:text-[20px] sm:text-[24px] font-serif font-black text-afri-gold tracking-tight leading-none">
-            {currentUserProfile.followersCount || currentUserProfile.followers?.length || 142}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-afri-bg border border-afri-border/95 rounded-[16px] p-2.5 flex flex-col items-center justify-center text-center gap-0.5 shadow-md">
+          <span className="text-[16px] xs:text-[18px] sm:text-[22px] font-serif font-black text-afri-gold tracking-tight leading-none">
+            {currentUserProfile.followersCount || currentUserProfile.followers?.length || 0}
           </span>
-          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest mt-1">
+          <span className="text-[7px] xs:text-[8px] font-mono font-black text-afri-text-sec uppercase tracking-widest mt-0.5">
             ABONNÉS
           </span>
         </div>
-        <div className="bg-afri-bg border border-afri-border/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
-          <span className="text-[17px] xs:text-[20px] sm:text-[24px] font-serif font-black text-afri-gold tracking-tight leading-none">
-            {myPosts.length || 12}
+        <div className="bg-afri-bg border border-afri-border/95 rounded-[16px] p-2.5 flex flex-col items-center justify-center text-center gap-0.5 shadow-md">
+          <span className="text-[16px] xs:text-[18px] sm:text-[22px] font-serif font-black text-afri-gold tracking-tight leading-none">
+            {myPosts.length || 0}
           </span>
-          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest mt-1">
+          <span className="text-[7px] xs:text-[8px] font-mono font-black text-afri-text-sec uppercase tracking-widest mt-0.5">
             POSTS
           </span>
         </div>
-        <div className="bg-afri-bg border border-afri-border/95 rounded-[20px] p-3.5 flex flex-col items-center justify-center text-center gap-1 shadow-md">
-          <span className="text-[17px] xs:text-[20px] sm:text-[24px] font-serif font-black text-afri-gold tracking-tight leading-none">
-            {currentUserProfile.engagementRate || "12.4%"}
+        <div className="bg-afri-bg border border-afri-border/95 rounded-[16px] p-2.5 flex flex-col items-center justify-center text-center gap-0.5 shadow-md">
+          <span className="text-[16px] xs:text-[18px] sm:text-[22px] font-serif font-black text-afri-gold tracking-tight leading-none">
+            {currentUserProfile.engagementRate || "0%"}
           </span>
-          <span className="text-[7.5px] xs:text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest mt-1">
+          <span className="text-[7px] xs:text-[8px] font-mono font-black text-afri-text-sec uppercase tracking-widest mt-0.5">
             ENGAGEMENT
           </span>
         </div>

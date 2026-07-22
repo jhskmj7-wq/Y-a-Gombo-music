@@ -157,7 +157,7 @@ export const PrivacyContent: React.FC = () => (
       </h3>
       <p>
         AFRIGOMBO ne vend ni ne loue aucune donnée personnelle à des tiers. Les numéros de téléphone sont exclusivement utilisés pour les notifications de gombos et le support. 
-        Le Support Officiel est joignable directement par WhatsApp au <strong>{supportConfig.phoneNumber}</strong>.
+        Le Support Officiel est joignable directement en cliquant sur <strong>Contacter le Support AFRIGOMBO</strong>.
       </p>
     </div>
 

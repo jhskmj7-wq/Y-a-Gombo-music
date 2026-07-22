@@ -52,8 +52,8 @@ export default function AfrigomboHelpCenter({ onClose }: HelpCenterProps) {
                 <MessageCircle className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-black text-afri-text uppercase text-sm">WhatsApp Officiel AFRIGOMBO</h3>
-                <p className="text-[10px] text-emerald-300">Support humain direct au {supportConfig.phoneNumber}</p>
+                <h3 className="font-black text-afri-text uppercase text-sm">Contacter le Support AFRIGOMBO</h3>
+                <p className="text-[10px] text-emerald-300">Support direct 24h/7</p>
               </div>
             </div>
             <ArrowRight className="w-5 h-5 text-emerald-600 group-hover:translate-x-1 transition-transform" />

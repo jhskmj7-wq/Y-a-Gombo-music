@@ -1222,16 +1222,14 @@ export default function GomboProfile({
             </div>
             
             <div className="space-y-3">
-              <a 
-                href={supportConfig.getLink("Aide générale")} 
-                target="_blank"
-                rel="noreferrer"
-                className="afri-btn-primary py-4 text-center bg-afri-bg-sec border-[#25D366] flex items-center justify-center gap-2"
+              <button 
+                onClick={() => supportConfig.openSupport("Aide générale")} 
+                className="afri-btn-primary py-4 text-center bg-afri-bg-sec border-[#25D366] flex items-center justify-center gap-2 cursor-pointer w-full"
               >
-                <MessageSquare className="w-4 h-4" /> Parler à un Admin sur WhatsApp
-              </a>
+                <MessageSquare className="w-4 h-4" /> Contacter le Support AFRIGOMBO
+              </button>
               <div className="text-center pt-2">
-                <p className="text-[10px] text-[#B9B9B9] font-mono">Assistance AFRIGOMBO : {supportConfig.phoneNumber}</p>
+                <p className="text-[10px] text-[#B9B9B9] font-mono">Assistance AFRIGOMBO 24h/7</p>
               </div>
             </div>
           </div>

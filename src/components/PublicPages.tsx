@@ -348,13 +348,13 @@ export function SupportPage({ onBack }: PublicPageProps) {
             
             <div className="space-y-4 text-xs font-semibold">
               <div className="flex items-start gap-2 pt-1">
-                <span className="text-emerald-550 font-bold shrink-0">🟢 WhatsApp :</span>
+                <span className="text-emerald-550 font-bold shrink-0">🟢 Support :</span>
                 <div>
                   <button 
                     onClick={() => supportConfig.openSupport("Centre d'Assistance")}
                     className="text-[#D4AF37] hover:underline block font-bold text-left cursor-pointer text-afri-gold"
                   >
-                    {supportConfig.phoneNumber}
+                    Contacter le Support AFRIGOMBO
                   </button>
                   <span className="text-[10px] text-afri-text-muted font-medium">Support direct 24h/7</span>
                 </div>

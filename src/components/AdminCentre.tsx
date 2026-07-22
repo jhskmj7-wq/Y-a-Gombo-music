@@ -2702,18 +2702,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                        )}
                      </button>
 
-                     {/* Wallet */}
-                     <div 
-                       onClick={() => setActiveMenu("user_wallet")}
-                       className="flex items-center gap-1.5 xs:gap-2 px-2 xs:px-2.5 sm:px-4 py-1 sm:py-2 bg-afri-bg-sec/40 border border-afri-border/80 rounded-xl sm:rounded-2xl cursor-pointer hover:border-afri-gold/30 transition-colors shrink-0"
-                     >
-                       <CreditCard className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-afri-gold" />
-                       <div className="flex flex-col">
-                         <span className="text-[7px] sm:text-[9px] text-afri-text-sec uppercase font-bold leading-none">Wallet</span>
-                         <span className="text-[10px] sm:text-sm font-black text-afri-text">{(profile?.wallet?.soldeDisponible ?? profile?.balance ?? 0).toLocaleString('fr-FR')} <span className="text-[8px] sm:text-xs font-bold text-afri-gold">F</span></span>
-                       </div>
-                     </div>
-
                      {/* Profile Avatar */}
                      <div 
                        onClick={() => { 

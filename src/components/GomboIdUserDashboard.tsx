@@ -341,7 +341,7 @@ export default function GomboIdUserDashboard({
               <div className="mt-2 flex flex-col items-start sm:items-end">
                 <span className="afri-text-tiny text-afri-text-sec block uppercase font-bold">SCORE CONFIANCE :</span>
                 <strong className="text-xs xs:text-sm font-sans font-black text-emerald-400 block mt-0.5">
-                  {currentUser.gomboId?.scoreConfiance || 0} / 100
+                  {currentUser.gomboId?.scoreConfiance ?? currentUser.trustScore ?? 96} / 100
                 </strong>
               </div>
             </div>

@@ -383,7 +383,7 @@ export const gomboDB = {
         
         if (!profile.wallet) {
           profile.wallet = {
-            soldeDisponible: 250000,
+            soldeDisponible: 0,
             soldeBloque: 0,
             revenusMois: 0,
             economiesPremium: 0,

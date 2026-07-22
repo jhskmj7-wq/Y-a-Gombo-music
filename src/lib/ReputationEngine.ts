@@ -53,34 +53,32 @@ export class ReputationEngine {
     const averageQuality = ratingCount > 0 ? Number((totalQuality / ratingCount).toFixed(1)) : 4.0;
     const averageRespect = ratingCount > 0 ? Number((totalRespect / ratingCount).toFixed(1)) : 4.0;
 
-    // 1. BASE SCORE: Starts at 60
-    let score = 60;
+    // 1. BASE SCORE: Starts at 96%
+    let score = 96;
 
-    // 2. COMPLETED CONTRACTS: +4 points per completed contract, max 20 points
-    score += Math.min(completedGombos * 4, 20);
+    // 2. COMPLETED CONTRACTS: +1 point per completed contract, max 4 points
+    score += Math.min(completedGombos, 4);
 
     // 3. CANCELLED CONTRACTS PENALTY: -10 points per cancellation
     score -= cancelledGombos * 10;
 
-    // 4. AVERAGE RATING WEIGHT: Up to 15 points
+    // 4. AVERAGE RATING WEIGHT: Up to 4 points
     if (ratingCount > 0) {
-      if (averageRating >= 4.5) score += 15;
-      else if (averageRating >= 4.0) score += 10;
-      else if (averageRating >= 3.0) score += 5;
+      if (averageRating >= 4.8) score += 4;
+      else if (averageRating >= 4.5) score += 2;
+      else if (averageRating >= 4.0) score += 0;
       else score -= 15; // Penalty for very poor ratings
-    } else {
-      score += 5; // Slight bonus for standard clean accounts
     }
 
-    // 5. PUNCTUALITY BONUS/PENALTY: Up to 10 points
+    // 5. PUNCTUALITY BONUS/PENALTY
     if (ratingCount > 0) {
-      if (averagePunctuality >= 4.5) score += 10;
+      if (averagePunctuality >= 4.8) score += 2;
       else if (averagePunctuality < 3.5) score -= 10;
     }
 
-    // 6. GOMBO ID VERIFICATION: +15 points
+    // 6. GOMBO ID VERIFICATION: +4 points
     if (kycVerified) {
-      score += 15;
+      score += 4;
     }
 
     // 7. SECURITY INCIDENTS / ALERTS PENALTY: -15 points per active alert
