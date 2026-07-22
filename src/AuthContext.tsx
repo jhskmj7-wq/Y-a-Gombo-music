@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           let uProfile = await gomboDB.getUserProfile(firebaseUser.uid);
           
           if (!uProfile) {
-            const names = firebaseUser.displayName ? firebaseUser.displayName.split(" ") : ["Artiste", "Afrigombo"];
+            const names = typeof firebaseUser.displayName === "string" ? firebaseUser.displayName.split(" ") : ["Artiste", "Afrigombo"];
             const isFounder = firebaseUser.email === "jhs.kmj7@gmail.com";
             const founderPermissions = [
               "admin",

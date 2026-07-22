@@ -171,7 +171,7 @@ export default function GomboMusikEcosystem({
       creatorName: currentUserProfile.displayName || currentUserProfile.email || "Ordo",
       partnerEmail: contractPartnerEmail,
       partnerId: "", // will match on login
-      partnerName: contractPartnerName || contractPartnerEmail.split("@")[0],
+      partnerName: contractPartnerName || (typeof contractPartnerEmail === "string" ? contractPartnerEmail.split("@")[0] : String(contractPartnerEmail ?? "")),
       title: contractTitle,
       amount: contractAmount,
       commission,

@@ -8,6 +8,7 @@ import {
 import { gomboDB } from "../firebase";
 import { UserProfile, SocialPost } from "../types";
 import GomboSecureModal from "./GomboSecureModal";
+import { supportConfig } from "../supportConfig";
 
 const ABIDJAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", "Abobo", 
@@ -52,6 +53,16 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   // States
   const [loading, setLoading] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [depositDetails, setDepositDetails] = useState<{
+    cachet: number;
+    fee: number;
+    total: number;
+    requiresDeposit: boolean;
+    refId: string;
+    typeName: string;
+    authorName: string;
+    title: string;
+  }>({ cachet: 0, fee: 0, total: 0, requiresDeposit: false, refId: "", typeName: "", authorName: "", title: "" });
   const [errorMsg, setErrorMsg] = useState("");
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [uploadingState, setUploadingState] = useState<{ [key: string]: boolean }>({});
@@ -129,6 +140,12 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         setUploadingState(p => ({ ...p, audio: false }));
       }
 
+      const cachetVal = budget ? Number(budget) : (selectedType === "opportunite" || selectedType === "renfort" ? 25000 : 0);
+      const requiresDeposit = cachetVal > 0 || selectedType === "opportunite" || selectedType === "renfort" || selectedType === "casting";
+      const postStatus = requiresDeposit ? "pending_deposit" : "published";
+      const feeAmount = Math.round(cachetVal * 0.025);
+      const totalAmountToDeposit = cachetVal + feeAmount;
+
       const postTag = PUBLICATION_TYPES.find(t => t.id === selectedType)?.label || selectedType;
 
       // 2. Publish in system posts (Le Terrain)
@@ -152,34 +169,76 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         imageUrl: uploadedImageUrl || undefined,
         audioUrl: uploadedAudioUrl || undefined,
         mediaUrl: uploadedImageUrl || uploadedAudioUrl || "",
-        budget: budget ? Number(budget) : undefined,
+        budget: cachetVal || undefined,
         specialty: selectedType === "renfort" ? "Renfort Urgent" : (selectedType === "recherche" ? "Instrumentiste" : undefined),
         urgent: selectedType === "renfort",
-        commentsCount: 0
+        commentsCount: 0,
+        status: postStatus,
+        feeAmount: feeAmount,
+        totalAmountToDeposit: totalAmountToDeposit,
+        depositConfirmed: !requiresDeposit,
+        createdAt: new Date().toISOString()
       };
 
-      await gomboDB.publishSocialPost(postPayload);
+      const createdPostId = await gomboDB.publishSocialPost(postPayload);
 
+      let createdGomboId = "";
       // 3. Dual sync to Gombos marketplace list if type is Opportunité or Renfort Express
-      if (selectedType === "opportunite" || selectedType === "renfort") {
-        await gomboDB.publishGombo({
+      if (selectedType === "opportunite" || selectedType === "renfort" || selectedType === "casting") {
+        createdGomboId = await gomboDB.publishGombo({
           clientId: currentUserProfile.uid,
           clientName: authorName,
           title: title.trim(),
           description: description.trim(),
           location: locationDetail.trim() ? `${locationDetail.trim()}, ${commune}` : `Abidjan, commune de ${commune}`,
           commune: commune,
-          date: date || new Date().toISOString().split("T")[0],
+          date: (typeof date === "string" && date) ? date.split("T")[0] : new Date().toISOString().split("T")[0],
           time: "19:00",
-          budget: budget ? Number(budget) : 25000,
-          eventType: selectedType === "renfort" ? "⚡ Renfort Express" : "💼 Contrat Gombo Pro",
+          budget: cachetVal,
+          eventType: selectedType === "renfort" ? "⚡ Renfort Express" : (selectedType === "casting" ? "🎤 Casting Pro" : "💼 Contrat Gombo Pro"),
           musiciansCount: 1,
           urgent: selectedType === "renfort",
-          type: gomboCategory
-        });
+          type: gomboCategory,
+          status: postStatus,
+          feeAmount: feeAmount,
+          totalAmountToDeposit: totalAmountToDeposit,
+          depositConfirmed: !requiresDeposit
+        }) || "";
       }
 
-      // Show beautiful Success State requested by user
+      // If deposit is required, record transaction in Firestore transactions collection for admin validation
+      if (requiresDeposit) {
+        try {
+          const { createBetaTransaction } = await import("../lib/betaEscrowEngine");
+          await createBetaTransaction({
+            contractId: createdPostId || "",
+            gomboId: createdGomboId || createdPostId || "",
+            gomboTitle: title.trim(),
+            promoterId: currentUserProfile.uid,
+            promoterName: authorName,
+            artistId: "tous_les_musiciens",
+            artistName: "Musiciens AFRIGOMBO",
+            amount: cachetVal,
+            notes: `Dépôt Bêta - Cachet: ${cachetVal} FCFA | Frais (2.5%): ${feeAmount} FCFA | Total: ${totalAmountToDeposit} FCFA`
+          });
+        } catch (txErr) {
+          console.warn("Beta transaction creation notice:", txErr);
+        }
+      }
+
+      // Save calculated details to state for modal overlay
+      setDepositDetails({
+        cachet: cachetVal,
+        fee: feeAmount,
+        total: totalAmountToDeposit,
+        requiresDeposit,
+        refId: createdPostId || createdGomboId || `PUB-${Date.now()}`,
+        typeName: postTag,
+        authorName: authorName,
+        title: title.trim()
+      });
+
+      // Show Overlay state
       setShowSuccessOverlay(true);
     } catch (err) {
       console.error(err);
@@ -199,38 +258,86 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         {/* Gold design bar */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#D4AF37] via-amber-400 to-[#D4AF37]" />
 
-        {/* Success Overlay state */}
+        {/* Overlay state: Beta Public Deposit Required vs Free Success */}
         <AnimatePresence>
           {showSuccessOverlay && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-afri-bg/98 z-50 flex flex-col items-center justify-center text-center p-6 space-y-6"
+              className="absolute inset-0 bg-afri-bg/98 z-50 flex flex-col items-center justify-center text-center p-6 space-y-5 overflow-y-auto"
             >
-              <div className="w-20 h-20 bg-afri-bg-sec/15 border-2 border-[#D4AF37] rounded-full flex items-center justify-center animate-bounce text-4xl">
-                🎶
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-2xl font-black text-[#D4AF37] uppercase tracking-wider">
-                  Ton gombo est lancé ! 🚀
-                </h3>
-                <p className="text-xs text-afri-text-sec max-w-sm px-4">
-                  Il résonne déjà sur les téléphones de tous les instrumentistes et patrons de showbizz d'Abidjan !
-                </p>
-              </div>
+              {depositDetails.requiresDeposit ? (
+                <>
+                  <div className="w-16 h-16 bg-amber-500/10 border-2 border-[#D4AF37] rounded-full flex items-center justify-center text-3xl shadow-lg shadow-[#D4AF37]/20">
+                    🛡️
+                  </div>
+                  
+                  <div className="space-y-3 max-w-md">
+                    <span className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                      BÊTA PUBLIQUE — DÉPÔT DE GARANTIE
+                    </span>
+                    <h3 className="text-xl font-black text-afri-text uppercase tracking-wide">
+                      Dépôt de garantie requis
+                    </h3>
+                    <p className="text-sm font-semibold text-afri-text leading-relaxed">
+                      Votre demande a été enregistrée.
+                    </p>
+                    <p className="text-xs text-afri-text-sec leading-relaxed">
+                      Un conseiller AFRIGOMBO vous accompagnera pour finaliser la publication pendant la Bêta Publique.
+                    </p>
+                  </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setShowSuccessOverlay(false);
-                  onSuccess();
-                }}
-                className="px-8 py-3 bg-afri-bg-sec hover:bg-afri-bg-sec active:scale-95 text-black font-black text-xs uppercase rounded-xl transition-all tracking-widest shadow-lg shadow-[#D4AF37]/25 cursor-pointer"
-              >
-                Super, continuons !
-              </button>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-md pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        supportConfig.openSupport(`Finaliser le dépôt de garantie pour la publication "${depositDetails.title}" (Réf: ${depositDetails.refId})`);
+                      }}
+                      className="w-full sm:flex-1 px-5 py-3.5 bg-[#D4AF37] hover:bg-amber-400 active:scale-95 text-black font-black text-xs uppercase rounded-xl transition-all tracking-wider shadow-lg shadow-[#D4AF37]/25 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <span>💬 Contacter le Support AFRIGOMBO</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSuccessOverlay(false);
+                        onSuccess();
+                      }}
+                      className="w-full sm:w-auto px-6 py-3.5 bg-afri-bg-sec hover:bg-afri-bg-sec/80 border border-afri-border text-afri-text font-bold text-xs uppercase rounded-xl transition-all cursor-pointer"
+                    >
+                      Fermer
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-20 h-20 bg-afri-bg-sec/15 border-2 border-[#D4AF37] rounded-full flex items-center justify-center animate-bounce text-4xl">
+                    🎶
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-black text-[#D4AF37] uppercase tracking-wider">
+                      Ton gombo est lancé ! 🚀
+                    </h3>
+                    <p className="text-xs text-afri-text-sec max-w-sm px-4">
+                      Il résonne déjà sur les téléphones de tous les instrumentistes et patrons de showbizz d'Abidjan !
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSuccessOverlay(false);
+                      onSuccess();
+                    }}
+                    className="px-8 py-3 bg-afri-bg-sec hover:bg-afri-bg-sec active:scale-95 text-black font-black text-xs uppercase rounded-xl transition-all tracking-widest shadow-lg shadow-[#D4AF37]/25 cursor-pointer"
+                  >
+                    Super, continuons !
+                  </button>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

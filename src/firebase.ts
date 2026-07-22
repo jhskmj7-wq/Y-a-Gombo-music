@@ -144,7 +144,7 @@ export const gomboAuth = {
           const userRef = doc(db, "users", res.user.uid);
           const uDoc = await getDoc(userRef);
           
-          const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Afrigombo"];
+          const names = typeof res.user.displayName === "string" ? res.user.displayName.split(" ") : ["Artiste", "Afrigombo"];
           const isFounder = res.user.email === "jhs.kmj7@gmail.com";
           const founderPermissions = ["admin", "founder", "dashboard", "users", "verification", "payments", "reports", "settings"];
 
@@ -245,7 +245,7 @@ export const gomboAuth = {
         if (res && res.user) {
           const userRef = doc(db, "users", res.user.uid);
           const uDoc = await getDoc(userRef);
-          const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Afrigombo"];
+          const names = typeof res.user.displayName === "string" ? res.user.displayName.split(" ") : ["Artiste", "Afrigombo"];
           const isFounder = res.user.email === "jhs.kmj7@gmail.com";
           const founderPermissions = ["admin", "founder", "dashboard", "users", "verification", "payments", "reports", "settings"];
 
@@ -306,7 +306,7 @@ export const gomboAuth = {
         const res = await signInWithPopup(auth, FACEBOOK_PROVIDER);
         const uDoc = await getDoc(doc(db, "users", res.user.uid));
         if (!uDoc.exists()) {
-          const names = res.user.displayName ? res.user.displayName.split(" ") : ["Artiste", "Facebook"];
+          const names = typeof res.user.displayName === "string" ? res.user.displayName.split(" ") : ["Artiste", "Facebook"];
           const userProfile: UserProfile = {
             uid: res.user.uid,
             email: res.user.email || "",
@@ -653,7 +653,9 @@ export const gomboDB = {
     if (db) {
       const q = query(collection(db, "gombos"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
-      return snap.docs.map(d => ({ id: d.id, ...d.data() } as Gombo));
+      return snap.docs
+        .map(d => ({ id: d.id, ...d.data() } as Gombo))
+        .filter(g => g.status !== "pending_deposit" && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected");
     }
     return [];
   },
@@ -662,7 +664,10 @@ export const gomboDB = {
     if (db) {
       const q = query(collection(db, "gombos"), orderBy("createdAt", "desc"));
       return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Gombo)));
+        const publicGombos = snapshot.docs
+          .map(d => ({ id: d.id, ...d.data() } as Gombo))
+          .filter(g => g.status !== "pending_deposit" && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected");
+        callback(publicGombos);
       });
     }
     return () => {};
@@ -871,7 +876,10 @@ export const gomboDB = {
     if (db) {
       const q = query(collection(db, "social_posts"), orderBy("createdAt", "desc"), limit(50));
       return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as SocialPost)));
+        const publicPosts = snapshot.docs
+          .map(d => ({ id: d.id, ...d.data() } as SocialPost))
+          .filter(p => p.status !== "pending_deposit" && p.status !== "draft" && p.status !== "cancelled" && (p as any).status !== "refuse" && (p as any).status !== "rejected");
+        callback(publicPosts);
       });
     }
     return () => {};

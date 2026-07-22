@@ -35,7 +35,8 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
   const [lightboxVideoId, setLightboxVideoId] = useState<string | null>(null);
   const [lightboxVideoUrl, setLightboxVideoUrl] = useState<string | null>(null);
 
-  const getYoutubeId = (url: string) => {
+  const getYoutubeId = (rawUrl: string) => {
+    const url = typeof rawUrl === "string" ? rawUrl : String(rawUrl ?? "");
     let videoId = "";
     if (url.includes("youtube.com/watch")) {
       const parts = url.split("v=");
@@ -84,7 +85,8 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
       setUploading(true);
       setProgress(0);
       try {
-        const ext = mediaFile.name.split(".").pop();
+        const fileName = typeof mediaFile.name === "string" ? mediaFile.name : String(mediaFile.name ?? "");
+        const ext = fileName.split(".").pop();
         const path = `portfolio/${currentUserProfile.uid}/${Date.now()}_portfolio.${ext}`;
         const url = await gomboDB.uploadFile(path, mediaFile, (p) => {
           setProgress(Math.round(p));

@@ -154,6 +154,21 @@ html.text-size-grand {
     @apply pb-24 xs:pb-32;
   }
   
+  /* Independent scroll utility classes for contained card/section scrolling */
+  .independent-scroll {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .independent-scroll-x {
+    overflow-x: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Prevent horizontal scroll issues on very small screens */
   .afri-no-scrollbar {
     -ms-overflow-style: none;
@@ -162,6 +177,10 @@ html.text-size-grand {
   .afri-no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+}
+
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
 }
 
 html, body, #root {

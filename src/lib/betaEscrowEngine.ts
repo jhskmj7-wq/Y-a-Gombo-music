@@ -176,7 +176,7 @@ export async function validateBetaDeposit(
     notes: "Fonds bloqués et sécurisés dans le coffre-fort AFRIGOMBO (Bêta)."
   });
 
-  // 2. If contractId exists, update contract & escrow status
+  // 2. If contractId or gomboId exists, update contract, escrow, social_posts & gombos status to "published"
   if (txData.contractId) {
     try {
       const contractRef = doc(db, "contracts", txData.contractId);
@@ -184,7 +184,7 @@ export async function validateBetaDeposit(
         status: "payment_held",
         escrowStatus: "fonds_bloqués",
         updatedAt: now
-      });
+      }).catch(() => {});
 
       const escrowRef = doc(db, "escrow", txData.contractId);
       await setDoc(escrowRef, {
@@ -194,19 +194,57 @@ export async function validateBetaDeposit(
         validatedBy: adminName,
         validatedAt: now,
         updatedAt: now
-      }, { merge: true });
+      }, { merge: true }).catch(() => {});
+
+      // Update social post to published
+      const postRef = doc(db, "social_posts", txData.contractId);
+      await updateDoc(postRef, {
+        status: "published",
+        depositConfirmed: true,
+        depositConfirmedAt: now
+      }).catch(() => {});
     } catch (e) {
       console.warn("Contract/Escrow sync warning:", e);
     }
+  }
+
+  if (txData.gomboId) {
+    try {
+      const gomboRef = doc(db, "gombos", txData.gomboId);
+      await updateDoc(gomboRef, {
+        status: "published",
+        depositConfirmed: true,
+        depositConfirmedAt: now
+      }).catch(() => {});
+    } catch (e) {
+      console.warn("Gombo sync warning:", e);
+    }
+  }
+
+  // Also query pending_deposit posts for promoterId to ensure release
+  try {
+    const qPosts = query(collection(db, "social_posts"), where("userId", "==", txData.promoterId), where("status", "==", "pending_deposit"));
+    const snapPosts = await getDocs(qPosts);
+    snapPosts.forEach((d) => {
+      updateDoc(d.ref, { status: "published", depositConfirmed: true, depositConfirmedAt: now }).catch(() => {});
+    });
+
+    const qGombos = query(collection(db, "gombos"), where("clientId", "==", txData.promoterId), where("status", "==", "pending_deposit"));
+    const snapGombos = await getDocs(qGombos);
+    snapGombos.forEach((d) => {
+      updateDoc(d.ref, { status: "published", depositConfirmed: true, depositConfirmedAt: now }).catch(() => {});
+    });
+  } catch (e) {
+    console.warn("Bulk release pending_deposit notice:", e);
   }
 
   // 3. Real-time notifications for both promoter and artist
   const notifications = [
     {
       userId: txData.promoterId,
-      title: "🔒 Dépôt Sécurisé Validé !",
-      body: `Le dépôt de ${txData.amount.toLocaleString()} FCFA pour ${txData.artistName} est validé. Les fonds sont sécurisés en séquestre.`,
-      type: "escrow_locked",
+      title: "🎉 Dépôt confirmé !",
+      body: "Votre dépôt a été confirmé. Votre publication est maintenant visible.",
+      type: "deposit_confirmed",
       transactionId,
       read: false,
       createdAt: now

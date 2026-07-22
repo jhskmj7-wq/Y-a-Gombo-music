@@ -901,13 +901,14 @@ export default function MessagesView({
                   ) : (
                     visibleMessages.map((msg) => {
                       const isMe = msg.senderId === currentUser.uid;
-                      const hasQuote = msg.text && msg.text.includes("↳ En réponse à");
+                      const msgText = typeof msg.text === "string" ? msg.text : String(msg.text ?? "");
+                      const hasQuote = msgText.includes("↳ En réponse à");
                       let quoteHeader = "";
                       let quoteBody = "";
-                      let mainText = msg.text || "";
+                      let mainText = msgText;
 
                       if (hasQuote) {
-                        const parts = msg.text.split("\n\n");
+                        const parts = msgText.split("\n\n");
                         if (parts.length >= 2) {
                           const quotePart = parts[0];
                           mainText = parts.slice(1).join("\n\n");

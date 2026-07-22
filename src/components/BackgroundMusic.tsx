@@ -86,7 +86,7 @@ export const BackgroundMusic: React.FC = () => {
               customList.push({
                 id: docSnap.id,
                 title: data.title || "Musique d'ambiance",
-                artist: data.updatedBy ? data.updatedBy.split("@")[0] : "Afrigombo",
+                artist: typeof data.updatedBy === "string" ? data.updatedBy.split("@")[0] : "Afrigombo",
                 url: data.downloadURL,
                 category: "Lounge", // Categorize dynamically-uploaded files as general Lounge
                 volume: data.volume !== undefined ? data.volume : 0.8

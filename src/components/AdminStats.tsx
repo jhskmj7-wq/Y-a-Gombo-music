@@ -27,14 +27,16 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ users = [], gombos = [],
 
     users.forEach(u => {
       if (!u.joinDate) return;
-      const jDate = u.joinDate.split("T")[0];
+      const jDateStr = typeof u.joinDate === "string" ? u.joinDate : (u.joinDate?.toDate ? u.joinDate.toDate().toISOString() : String(u.joinDate ?? ""));
+      const jDate = jDateStr.split("T")[0];
       const match = result.find(r => r.dateStr === jDate);
       if (match) match.registres += 1;
     });
 
     transactions.forEach(t => {
       if (!t.date) return;
-      const tDate = t.date.split("T")[0];
+      const tDateStr = typeof t.date === "string" ? t.date : (t.date?.toDate ? t.date.toDate().toISOString() : String(t.date ?? ""));
+      const tDate = tDateStr.split("T")[0];
       const match = result.find(r => r.dateStr === tDate);
       if (match && t.type === "commission_plateforme") {
         match.commission += t.amount;

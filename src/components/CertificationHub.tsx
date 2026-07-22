@@ -1596,7 +1596,7 @@ export default function CertificationHub({
                             : "bg-gray-50 dark:bg-gray-850 text-afri-text-sec border-gray-100 dark:border-gray-800"
                         }`}
                       >
-                        {n.split(" ")[0]}
+                        {(typeof n === "string" ? n : String(n ?? "")).split(" ")[0]}
                       </button>
                     ))}
                   </div>

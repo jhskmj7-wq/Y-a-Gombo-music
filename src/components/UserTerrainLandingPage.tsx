@@ -478,7 +478,9 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
     // 5. Date filter
     let matchesDate = true;
     if (filterDateMode !== "all") {
-      const gDateStr = g.date || g.timestamp || "";
+      const rawDate = g.date || g.timestamp || "";
+      const rdObj = rawDate as unknown as { toDate?: () => Date };
+      const gDateStr = typeof rawDate === "string" ? rawDate : (rdObj && typeof rdObj.toDate === "function" ? rdObj.toDate().toISOString() : String(rawDate ?? ""));
       if (gDateStr) {
         const gDate = new Date(gDateStr);
         const today = new Date();

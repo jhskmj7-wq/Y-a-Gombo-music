@@ -512,7 +512,7 @@ export default function AdminUsers({
                                 {rev.type === "client_to_musician" ? "Client ➜ Musicien" : "Musicien ➜ Client"}
                               </span>
                             </div>
-                            <span className="text-afri-text-sec font-mono text-[9px]">{rev.timestamp.split("T")[0]}</span>
+                            <span className="text-afri-text-sec font-mono text-[9px]">{typeof rev.timestamp === "string" ? rev.timestamp.split("T")[0] : (rev.timestamp?.toDate ? rev.timestamp.toDate().toISOString().split("T")[0] : String(rev.timestamp ?? "").split("T")[0])}</span>
                           </div>
                           
                           <div className="flex items-center gap-1">

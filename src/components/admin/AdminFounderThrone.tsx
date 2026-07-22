@@ -8,7 +8,7 @@ import {
   Play, Pause, Trash2, Volume2, Plus, ArrowUp, ArrowDown, Send, 
   RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award,
   Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square,
-  Clock, MapPin, Cloud, Zap, Sun, TrendingUp, Building
+  Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye
 } from "lucide-react";
 import { BetaTransactionsAdminPanel } from "./BetaTransactionsAdminPanel";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
@@ -92,12 +92,214 @@ export default function AdminFounderThrone({
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Navigation: null shows the 9 cards, string shows specific section view
+  // Navigation: null shows the main grid, string shows specific section view
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   
   // Feedback States
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Header Folded state
+  const [isHeaderFolded, setIsHeaderFolded] = useState<boolean>(false);
+
+  // REALTIME FIRESTORE SNAPSHOTS FOR THE FOUNDER COMMAND CENTER
+  const [registrationsEnabled, setRegistrationsEnabled] = useState<boolean>(true);
+  const [imperialLogs, setImperialLogs] = useState<any[]>([]);
+  const [liveUsers, setLiveUsers] = useState<any[]>(users);
+  const [livePosts, setLivePosts] = useState<any[]>(posts);
+
+  useEffect(() => {
+    if (!db) return;
+
+    // Registrations status
+    const unsubReg = onSnapshot(doc(db, "system_settings", "registrations"), (snap) => {
+      if (snap.exists()) {
+        setRegistrationsEnabled(snap.data()?.enabled ?? true);
+      }
+    });
+
+    // Imperial logs
+    const unsubLogs = onSnapshot(collection(db, "imperial_logs"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      setImperialLogs(list);
+    });
+
+    // Realtime Users
+    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, uid: d.id, ...d.data() }));
+      if (list.length > 0) setLiveUsers(list);
+    });
+
+    // Realtime Posts
+    const unsubPosts = onSnapshot(collection(db, "posts"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      if (list.length > 0) setLivePosts(list);
+    });
+
+    return () => {
+      unsubReg();
+      unsubLogs();
+      unsubUsers();
+      unsubPosts();
+    };
+  }, []);
+
+  const displayUsers = liveUsers.length > 0 ? liveUsers : users;
+  const displayPosts = livePosts.length > 0 ? livePosts : posts;
+
+  const logImperialAction = async (action: string, description: string) => {
+    if (!db) return;
+    try {
+      await addDoc(collection(db, "imperial_logs"), {
+        action,
+        description,
+        executor: adminEmail || "Sylvester (Fondateur)",
+        timestamp: Date.now()
+      });
+    } catch (e) {
+      console.error("Log Imperial Error", e);
+    }
+  };
+
+  const toggleRegistrations = async () => {
+    const nextVal = !registrationsEnabled;
+    try {
+      await setDoc(doc(db, "system_settings", "registrations"), { enabled: nextVal, updatedAt: Date.now() }, { merge: true });
+      await logImperialAction("Portail Inscriptions", `Inscriptions ${nextVal ? "Activées" : "Désactivées"}`);
+      setSuccessMsg(`Inscriptions ${nextVal ? "activées" : "désactivées"} avec succès.`);
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  // COMMANDES GLOBALES ACTIVE USER SEARCH & ACTIONS
+  const [globalUserSearch, setGlobalUserSearch] = useState("");
+
+  const filteredGlobalUsers = displayUsers.filter((u: any) => {
+    if (!globalUserSearch.trim()) return true;
+    const q = globalUserSearch.toLowerCase();
+    return (
+      (u.displayName && u.displayName.toLowerCase().includes(q)) ||
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.artisticName && u.artisticName.toLowerCase().includes(q)) ||
+      (u.id && u.id.toLowerCase().includes(q))
+    );
+  });
+
+  const handleBanUser = async (u: any) => {
+    try {
+      const nextBanned = !u.isBanned;
+      await updateDoc(doc(db, "users", u.id || u.uid), {
+        isBanned: nextBanned,
+        status: nextBanned ? "banned" : "active"
+      });
+      await logImperialAction("Modération Utilisateur", `${nextBanned ? "Bannissement" : "Débannissement"} de ${u.displayName || u.artisticName || u.email}`);
+      setSuccessMsg(`Utilisateur ${nextBanned ? "banni" : "débanni"} avec succès.`);
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const handleChangeRole = async (u: any, newRole: string) => {
+    try {
+      await updateDoc(doc(db, "users", u.id || u.uid), { role: newRole });
+      await logImperialAction("Attribution Rôle", `Rôle [${newRole.toUpperCase()}] octroyé à ${u.displayName || u.artisticName || u.email}`);
+      setSuccessMsg(`Rôle mis à jour (${newRole}).`);
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const handleTogglePremium = async (u: any) => {
+    try {
+      const nextPrem = !u.isPremium;
+      await updateDoc(doc(db, "users", u.id || u.uid), {
+        isPremium: nextPrem,
+        subscriptionType: nextPrem ? "elite" : "free"
+      });
+      await logImperialAction("Privilège Premium", `Statut Premium Elite ${nextPrem ? "Donné" : "Retiré"} à ${u.displayName || u.artisticName || u.email}`);
+      setSuccessMsg(`Premium Elite ${nextPrem ? "accordé" : "retiré"}.`);
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const handleToggleGomboId = async (u: any) => {
+    try {
+      const currentCert = Boolean(u.isCertified || u.gomboId?.certifie);
+      const nextCert = !currentCert;
+      await updateDoc(doc(db, "users", u.id || u.uid), {
+        isCertified: nextCert,
+        kycStatus: nextCert ? "approved" : "rejected",
+        "gomboId.certifie": nextCert,
+        "gomboId.statut": nextCert ? "CERTIFIÉ ELITE" : "NON CERTIFIÉ"
+      });
+      await logImperialAction("Gombo ID Souverain", `Gombo ID ${nextCert ? "Validé" : "Révoqué"} pour ${u.displayName || u.artisticName || u.email}`);
+      setSuccessMsg(`Gombo ID ${nextCert ? "validé" : "révoqué"}.`);
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  // COMMANDES GLOBALES PUBLICATION MODERATION
+  const [globalPostSearch, setGlobalPostSearch] = useState("");
+
+  const handleApprovePostGlobal = async (p: any) => {
+    try {
+      await updateDoc(doc(db, "posts", p.id), {
+        isFlagged: false,
+        status: "approved",
+        reportsCount: 0
+      });
+      await logImperialAction("Validation Publication", `Publication "${p.title || p.id}" validée.`);
+      setSuccessMsg("Publication validée sur le réseau.");
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const handleSuspendPostGlobal = async (p: any) => {
+    try {
+      await updateDoc(doc(db, "posts", p.id), {
+        isFlagged: true,
+        status: "suspended"
+      });
+      await logImperialAction("Suspension Publication", `Publication "${p.title || p.id}" suspendue.`);
+      setSuccessMsg("Publication suspendue.");
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const handleDeletePostGlobal = async (p: any) => {
+    try {
+      await deleteDoc(doc(db, "posts", p.id));
+      await logImperialAction("Suppression Publication", `Publication "${p.title || p.id}" supprimée définitivement.`);
+      setSuccessMsg("Publication supprimée de Firestore.");
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
 
   const pendingBetaTransactions = transactions.filter((t: any) => t.status === "en_attente_validation");
 
@@ -784,152 +986,176 @@ export default function AdminFounderThrone({
   };
 
   return (
-    <div className="text-left pb-28 font-sans text-afri-text select-none bg-transparent min-h-screen pt-4 px-4 sm:px-6 space-y-6">
+    <div className="text-left pb-28 font-sans text-afri-text select-none bg-transparent min-h-screen pt-0">
       
       {/* ----------------------------------------------------
-           SECTION 0: TOP NAVIGATION TABS (AS SEEN IN IMAGE)
-           ---------------------------------------------------- */}
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2">
-        <button className="flex flex-col items-center justify-center min-w-[120px] p-3 bg-[#F2F2F2] dark:bg-zinc-900/80 rounded-2xl border-2 border-[#D4AF37] shadow-lg shadow-amber-500/10 transition-all">
-          <Crown className="w-5 h-5 text-[#D4AF37] mb-1" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">Le Trône Royal</span>
-        </button>
-        <button className="flex flex-col items-center justify-center min-w-[120px] p-3 bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 transition-all opacity-60 hover:opacity-100">
-          <ShieldAlert className="w-5 h-5 text-blue-500 mb-1" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Transactions Bêta</span>
-        </button>
-        <button className="flex flex-col items-center justify-center min-w-[120px] p-3 bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 transition-all opacity-60 hover:opacity-100">
-          <TrendingUp className="w-5 h-5 text-emerald-500 mb-1" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Économie Afri</span>
-        </button>
-        <button className="flex flex-col items-center justify-center min-w-[120px] p-3 bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 transition-all opacity-60 hover:opacity-100">
-          <Music className="w-5 h-5 text-purple-500 mb-1" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Multimédia</span>
-        </button>
-        <button className="flex flex-col items-center justify-center min-w-[120px] p-3 bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 transition-all opacity-60 hover:opacity-100">
-          <Building className="w-5 h-5 text-zinc-400 mb-1" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Bâtisseurs</span>
-        </button>
-      </div>
-
-      <div className="flex flex-col items-center mb-4">
-        <button className="px-6 py-2 bg-amber-500/10 border border-amber-500/30 rounded-full flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500 shadow-sm">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          Ouvrir le Diagnostic Firebase
-        </button>
-      </div>
-
-      {/* ----------------------------------------------------
-           BLOCK 1: IMPERIAL GREETING & TIME (DARK BLOCK)
+           HEADER IMPÉRIAL DU TRÔNE DU FONDATEUR (PLIABLE)
            ---------------------------------------------------- */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/30 shadow-2xl bg-gradient-to-br from-[#080808] to-[#040404]"
+        className={`relative overflow-hidden rounded-3xl border-2 border-[#D4AF37]/50 shadow-xl transition-all duration-500 mb-4 p-0 ${
+          isDark 
+            ? 'bg-[#050505] shadow-[0_10px_40px_-10px_rgba(212,175,55,0.15)]' 
+            : 'bg-[#EDEDED] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)]'
+        }`}
       >
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
-        
-        <div className="relative z-10 flex flex-col gap-8">
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 rounded-2xl border-2 border-[#D4AF37]/40 bg-zinc-950 flex items-center justify-center shadow-[inset_0_0_15px_rgba(212,175,55,0.2)]">
-              <Crown className="w-8 h-8 text-[#D4AF37]" />
+        {/* Animated Imperial Glow Overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-40">
+          <motion.div 
+            animate={{ 
+              background: [
+                "radial-gradient(circle at 0% 0%, rgba(212,175,55,0.08) 0%, transparent 60%)",
+                "radial-gradient(circle at 100% 100%, rgba(212,175,55,0.08) 0%, transparent 60%)",
+                "radial-gradient(circle at 0% 0%, rgba(212,175,55,0.08) 0%, transparent 60%)"
+              ]
+            }}
+            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0"
+          />
+        </div>
+
+        {/* FOLD / UNFOLD BAR */}
+        <div className="relative z-10 flex items-center justify-between px-5 py-3 border-b border-[#D4AF37]/20 bg-black/30">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/50 flex items-center justify-center text-[#D4AF37]">
+              <Crown className="w-4 h-4 animate-pulse" />
             </div>
             <div>
-              <h2 className="text-3xl font-display font-black tracking-tight text-white uppercase italic">
-                Bonsoir Fondateur
+              <h2 className="text-xs sm:text-sm font-display font-black text-[#D4AF37] tracking-wider uppercase flex items-center gap-2">
+                TRÔNE DU FONDATEUR <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">🔥 SOUVERAIN</span>
               </h2>
-              <div className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
-                <MapPin className="w-3 h-3" />
-                <span>Abidjan • Côte d'Ivoire</span>
-              </div>
             </div>
           </div>
 
-          <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent" />
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-baseline gap-4">
-              <Clock className="w-5 h-5 text-[#D4AF37] animate-pulse" />
-              <div className="text-5xl font-mono font-black text-white tracking-tighter">
-                {formattedTime}
-              </div>
-              <div className="text-[10px] font-mono font-black uppercase tracking-[0.4em] text-zinc-500">
-                {formattedDate}
-              </div>
-            </div>
-            
-            <div className="flex flex-col items-end gap-2">
-              <div className="px-4 py-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-[9px] font-mono font-black text-emerald-400 uppercase tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                Souveraineté Active
-              </div>
-              <span className="text-[8px] font-mono font-bold text-zinc-600 uppercase tracking-widest">Afrigombo Cloud OS v4.5</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsHeaderFolded(!isHeaderFolded)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 border border-[#D4AF37]/40 text-[#D4AF37] rounded-xl text-[10px] font-mono font-bold uppercase transition-all cursor-pointer shadow-sm"
+            >
+              {isHeaderFolded ? (
+                <>
+                  <span>Déplier le Header Impérial</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </>
+              ) : (
+                <>
+                  <span>Plier le Header Impérial</span>
+                  <ChevronUp className="w-3.5 h-3.5" />
+                </>
+              )}
+            </button>
           </div>
         </div>
+
+        {/* EXPANDABLE HEADER CONTENT */}
+        <AnimatePresence>
+          {!isHeaderFolded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="relative z-10 px-5 py-4 space-y-4"
+            >
+              {/* ROW 1: GREETING & LOCATION & FIREBASE */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                
+                {/* PROFILE SECTION */}
+                <div className="flex items-center gap-4">
+                  <div className="relative shrink-0">
+                    <div className="absolute -inset-1 bg-[#D4AF37] rounded-2xl blur-[3px] opacity-25 animate-pulse" />
+                    <div className={`relative w-14 h-14 rounded-2xl border-2 border-[#D4AF37] flex items-center justify-center shadow-lg ${
+                      isDark ? 'bg-zinc-900 text-[#D4AF37]' : 'bg-zinc-200 text-[#B8860B]'
+                    }`}>
+                      <Crown className="w-8 h-8" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <h1 className={`text-lg sm:text-2xl font-display font-black tracking-tight flex items-center gap-2 ${
+                      isDark ? 'text-white' : 'text-[#1A1A1A]'
+                    }`}>
+                      {getGreeting()}, <span className="text-[#D4AF37]">Sylvester</span>
+                    </h1>
+                    <p className="text-[10px] font-mono font-black uppercase tracking-[0.15em] text-[#D4AF37]/90">
+                      Fondateur d'AFRIGOMBO • Gardien du Temple du Gombo Musical
+                    </p>
+                  </div>
+                </div>
+
+                {/* LOCATION & WEATHER */}
+                <div className="flex flex-wrap items-center justify-start md:justify-center gap-2 font-mono text-xs text-afri-text-sec">
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-afri-bg/60 border border-afri-border">
+                    <MapPin className="w-3.5 h-3.5 text-red-400" />
+                    <strong className="text-afri-text">Abidjan — Côte d'Ivoire</strong>
+                  </span>
+
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                    <Sun className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
+                    <strong>28°C — Ensoleillé</strong>
+                  </span>
+                </div>
+
+                {/* FIREBASE & ALERTS BADGES */}
+                <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 font-mono text-xs">
+                  <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    🔥 Firebase : Tous les services opérationnels
+                  </span>
+
+                  <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-bold ${
+                    highAlertsCount > 0 
+                      ? 'bg-red-500/15 border-red-500/40 text-red-400 animate-pulse' 
+                      : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                  }`}>
+                    <Bell className="w-3.5 h-3.5" />
+                    <span>{highAlertsCount} Alertes Admin</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* ROW 2: TIME & DATE & HYMN CONTROLLER */}
+              <div className="pt-3 border-t border-[#D4AF37]/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+                
+                {/* DATE & TIME REALTIME */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-afri-bg/60 border border-[#D4AF37]/30 text-[#D4AF37]">
+                    <Clock className="w-4 h-4 text-[#D4AF37]" />
+                    <span className="font-mono font-black text-sm tracking-widest">{formattedTime}</span>
+                  </div>
+                  <span className="font-mono text-xs text-afri-text-sec capitalize font-bold">
+                    {formattedDate}
+                  </span>
+                </div>
+
+                {/* HYMN CONTROLLER */}
+                <div className="flex items-center gap-4 bg-afri-bg/60 border border-[#D4AF37]/30 px-4 py-2 rounded-2xl">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[9px] font-mono font-black uppercase text-[#D4AF37] tracking-widest">Hymne de l'Empire</span>
+                    <div className="h-1.5 w-24 rounded-full overflow-hidden bg-zinc-800 mt-1">
+                      <div 
+                        className="h-full bg-[#D4AF37] shadow-[0_0_8px_#D4AF37]"
+                        style={{ width: `${(audioState.progress! / (audioState.duration || 1)) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => globalAudioManager.playHymn()}
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer transform hover:scale-105 ${
+                      audioState.currentPlaying === 'hymne' && !audioState.isPaused
+                        ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+                        : 'bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 border border-[#D4AF37]/40'
+                    }`}
+                  >
+                    {audioState.currentPlaying === 'hymne' && !audioState.isPaused ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                  </button>
+                </div>
+
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
-
-      {/* ----------------------------------------------------
-           BLOCK 2: IDENTITY CARD (DARK BLOCK)
-           ---------------------------------------------------- */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="relative overflow-hidden rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/30 shadow-2xl bg-gradient-to-br from-[#0C0B08] to-[#050505]"
-      >
-        <div className="absolute top-0 right-0 p-10 opacity-[0.03] text-[#D4AF37]">
-          <Crown className="w-64 h-64 rotate-12" />
-        </div>
-
-        <div className="relative z-10 flex flex-col sm:flex-row gap-8 items-center sm:items-start">
-          <div className="w-32 h-32 rounded-3xl border-4 border-[#D4AF37] flex items-center justify-center bg-zinc-950 shadow-[0_0_30px_rgba(212,175,55,0.3)] shrink-0">
-            <Crown className="w-16 h-16 text-[#D4AF37]" />
-          </div>
-
-          <div className="flex flex-col gap-4 text-center sm:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 mx-auto sm:mx-0">
-              <Crown className="w-3 h-3 text-[#D4AF37]" />
-              <span className="text-[8px] font-black uppercase tracking-widest text-[#D4AF37]">Trône du Fondateur • Souveraineté</span>
-            </div>
-            
-            <div>
-              <h1 className="text-5xl font-display font-black text-white tracking-tighter uppercase">
-                Sylvester
-              </h1>
-              <p className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-widest mt-2">
-                Fondateur d'AFRIGOMBO
-              </p>
-              <p className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">
-                Le Gardien du Temple du Gombo Musical
-              </p>
-            </div>
-
-            <p className="text-sm font-sans font-medium text-zinc-400 max-w-lg">
-              Le Fondateur de l'écosystème AFRIGOMBO & Architecture Impériale
-            </p>
-
-            <div className="mt-4 p-4 rounded-2xl bg-black/40 border border-[#D4AF37]/20 flex flex-col items-center sm:items-start">
-              <span className="text-[8px] font-mono font-black text-[#D4AF37] uppercase tracking-[0.3em]">Session Souveraine</span>
-              <span className="text-xs font-mono font-bold text-zinc-500">JHS.KMJ7@GMAIL.COM</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Animated Gold Dust Overlay at Bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-4 flex justify-around items-end overflow-hidden pointer-events-none px-12">
-          {[...Array(20)].map((_, i) => (
-            <div 
-              key={i}
-              className="w-1 h-1 rounded-full bg-[#D4AF37] opacity-40"
-              style={{ 
-                animation: `goldDustUp ${3 + Math.random() * 5}s infinite ${Math.random() * 5}s`,
-                left: `${Math.random() * 100}%`
-              }}
-            />
-          ))}
-        </div>
-      </motion.div>
-
 
       {/* Dynamic Keyframes Injector */}
       <style>{`
@@ -961,7 +1187,7 @@ export default function AdminFounderThrone({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="p-4 bg-emerald-500/10 border border-emerald-500/35 text-emerald-400 rounded-2xl text-xs flex items-center gap-2.5 font-mono shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+            className="p-4 bg-emerald-500/10 border border-emerald-500/35 text-emerald-400 rounded-2xl text-xs flex items-center gap-2.5 font-mono shadow-[0_0_15px_rgba(16,185,129,0.1)] mb-4"
           >
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
             <span>{successMsg}</span>
@@ -973,7 +1199,7 @@ export default function AdminFounderThrone({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="p-4 bg-red-500/10 border border-red-500/35 text-red-400 rounded-2xl text-xs flex items-center gap-2.5 font-mono shadow-[0_0_15px_rgba(239,68,68,0.1)]"
+            className="p-4 bg-red-500/10 border border-red-500/35 text-red-400 rounded-2xl text-xs flex items-center gap-2.5 font-mono shadow-[0_0_15px_rgba(239,68,68,0.1)] mb-4"
           >
             <Info className="w-5 h-5 text-red-400" />
             <span>{errorMsg}</span>
@@ -984,7 +1210,7 @@ export default function AdminFounderThrone({
       <AnimatePresence mode="wait">
         
         {/* =========================================================
-             VIEW 1: THE 9 PREMIUM ROYAL CARDS GRID
+             VIEW 1: TABLEAU SOUVERAIN & COMMANDES GLOBALES DU FONDATEUR
              ========================================================= */}
         {selectedSection === null ? (
           <motion.div
@@ -993,133 +1219,708 @@ export default function AdminFounderThrone({
             initial="hidden"
             animate="visible"
             exit={{ opacity: 0, scale: 0.98 }}
-            className="space-y-4"
+            className="space-y-6"
           >
-            {/* Quick overview metrics row - CLEAN LIGHT THEME AS IN IMAGE */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-8 bg-white border border-zinc-200 rounded-[2.5rem] shadow-xl">
-              <div className="text-center">
-                <span className="text-[10px] font-mono font-black uppercase tracking-[0.2em] text-zinc-400 block mb-1">Souveraineté</span>
-                <span className="text-sm font-sans font-black text-black block">AFRIGOMBO ELITE</span>
+            {/* 1. TABLEAU SOUVERAIN / SURVEILLANCE TEMPS RÉEL (KPI SUMMARY) */}
+            <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 border rounded-3xl ${isDark ? 'bg-afri-bg/40 border-afri-border' : 'bg-zinc-100/80 border-[#D4AF37]/20 shadow-sm'}`}>
+              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
+                  <Users className="w-3 h-3 text-[#D4AF37]" /> Citoyens
+                </span>
+                <span className="text-base font-sans font-black text-[#D4AF37] block mt-1">{displayUsers.length} Actifs</span>
+                <span className="text-[8px] font-mono text-emerald-400 block mt-0.5">● Realtime Sync</span>
               </div>
-              <div className="text-center">
-                <span className="text-[10px] font-mono font-black uppercase tracking-[0.2em] text-zinc-400 block mb-1">Citoyens</span>
-                <span className="text-sm font-sans font-black text-black block">1 Actifs</span>
+
+              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
+                  <FileText className="w-3 h-3 text-sky-400" /> Publications
+                </span>
+                <span className="text-base font-sans font-black text-afri-text block mt-1">{displayPosts.length}</span>
+                <span className="text-[8px] font-mono text-sky-400 block mt-0.5">{reportedPosts.length} signalements</span>
               </div>
-              <div className="text-center">
-                <span className="text-[10px] font-mono font-black uppercase tracking-[0.2em] text-zinc-400 block mb-1">Trésorerie</span>
-                <span className="text-sm font-sans font-black text-black block">1 250 000 FCFA (Simulé)</span>
+
+              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
+                  <Award className="w-3 h-3 text-amber-400" /> Certifiés Gombo
+                </span>
+                <span className="text-base font-sans font-black text-amber-400 block mt-1">{certifiedCount}</span>
+                <span className="text-[8px] font-mono text-amber-400/80 block mt-0.5">{pendingCerts.length} en attente</span>
               </div>
-              <div className="text-center">
-                <span className="text-[10px] font-mono font-black uppercase tracking-[0.2em] text-zinc-400 block mb-1">Ambiance Active</span>
-                <span className="text-sm font-sans font-black text-black block">Sound System Idle</span>
+
+              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
+                  <Coins className="w-3 h-3 text-emerald-400" /> Trésorerie
+                </span>
+                <span className="text-base font-sans font-black text-emerald-400 block mt-1 truncate">{formattedRevenues}</span>
+                <span className="text-[8px] font-mono text-emerald-500 block mt-0.5">{allPayments.length} virements</span>
+              </div>
+
+              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
+                  <ShieldAlert className="w-3 h-3 text-red-400" /> Alertes Admin
+                </span>
+                <span className="text-base font-sans font-black text-red-400 block mt-1">{highAlertsCount}</span>
+                <span className="text-[8px] font-mono text-red-400/80 block mt-0.5">Prioritaires</span>
+              </div>
+
+              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
+                  <Zap className="w-3 h-3 text-orange-400" /> Firebase
+                </span>
+                <span className="text-xs font-sans font-bold text-emerald-400 block mt-1 truncate">100% Opérationnel</span>
+                <span className="text-[8px] font-mono text-emerald-400 block mt-0.5">● Ping 12ms</span>
               </div>
             </div>
 
-            <div className="flex flex-col gap-8 pt-4">
+            {/* 2. PANNEAU ⚡ COMMANDES GLOBALES DU FONDATEUR (REAL FIREBASE ACTIONS) */}
+            <div className="p-6 bg-afri-bg border-2 border-[#D4AF37]/40 rounded-3xl space-y-6 shadow-2xl relative overflow-hidden">
               
-              {/* Card 1: 🌍 Vision AFRI - LARGE VERTICAL METALLIC */}
+              {/* Header section of Panel */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-afri-border pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37]">
+                    <Zap className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-display font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
+                      ⚡ Commandes Globales du Fondateur
+                    </h3>
+                    <p className="text-[10px] font-mono text-afri-text-sec">
+                      Contrôle impérial en temps réel direct sur la base de données Firebase Firestore.
+                    </p>
+                  </div>
+                </div>
+
+                {/* REGISTRATIONS TOGGLE BUTTON */}
+                <div className="flex items-center gap-3 bg-afri-bg-sec p-2 rounded-2xl border border-afri-border">
+                  <span className="text-xs font-mono text-afri-text font-bold">Inscriptions :</span>
+                  <button
+                    onClick={toggleRegistrations}
+                    className={`px-3 py-1.5 rounded-xl font-mono text-[10px] font-black uppercase transition-all cursor-pointer flex items-center gap-1.5 ${
+                      registrationsEnabled 
+                        ? 'bg-emerald-500 text-black shadow-[0_0_12px_rgba(16,185,129,0.4)]' 
+                        : 'bg-red-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.4)]'
+                    }`}
+                  >
+                    {registrationsEnabled ? (
+                      <>
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Ouvertes</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-3.5 h-3.5" />
+                        <span>Fermées</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* GRID OF ACTIONS */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* SUB-PANEL 1: GESTION ET POUVOIRS SUR LES UTILISATEURS */}
+                <div className="p-5 bg-afri-bg-sec/50 border border-afri-border rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase flex items-center gap-2">
+                      <Users className="w-4 h-4 text-[#D4AF37]" />
+                      Pouvoirs Utilisateurs & Gombo ID
+                    </h4>
+                    <span className="text-[9px] font-mono text-afri-text-sec">{displayUsers.length} citoyens</span>
+                  </div>
+
+                  {/* Search bar for users */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-afri-text-sec absolute left-3 top-3" />
+                    <input
+                      type="text"
+                      placeholder="Chercher un citoyen (Nom, Email, Artiste)..."
+                      value={globalUserSearch}
+                      onChange={(e) => setGlobalUserSearch(e.target.value)}
+                      className="w-full bg-afri-bg border border-afri-border rounded-xl pl-9 pr-3 py-2 text-xs text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+
+                  {/* Users list for direct action */}
+                  <div className="space-y-2 max-h-56 independent-scroll pr-1">
+                    {filteredGlobalUsers.slice(0, 8).map((u: any) => {
+                      const isCert = Boolean(u.isCertified || u.gomboId?.certifie);
+                      return (
+                        <div key={u.id || u.uid} className="p-3 bg-afri-bg border border-afri-border/60 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                          <div className="min-w-0">
+                            <span className="font-bold text-afri-text block truncate">
+                              {u.displayName || u.artisticName || "Artiste Inconnu"}
+                            </span>
+                            <span className="text-[9px] text-afri-text-sec font-mono block truncate">
+                              {u.email} • Rôle : <strong className="text-[#D4AF37] uppercase">{u.role || "citoyen"}</strong>
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                            {/* Role Dropdown */}
+                            <select
+                              value={u.role || "artiste"}
+                              onChange={(e) => handleChangeRole(u, e.target.value)}
+                              className="bg-afri-bg-sec border border-afri-border text-[9px] font-mono text-afri-text rounded-lg px-2 py-1 focus:outline-none focus:border-[#D4AF37]"
+                            >
+                              <option value="artiste">Artiste</option>
+                              <option value="client">Client</option>
+                              <option value="recruteur">Recruteur</option>
+                              <option value="admin">Admin</option>
+                              <option value="founder">Fondateur</option>
+                            </select>
+
+                            {/* Ban / Unban */}
+                            <button
+                              onClick={() => handleBanUser(u)}
+                              className={`px-2 py-1 rounded-lg text-[8px] font-mono font-bold uppercase transition-all cursor-pointer ${
+                                u.isBanned 
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-black' 
+                                  : 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white'
+                              }`}
+                              title={u.isBanned ? "Débannir cet utilisateur" : "Bannir cet utilisateur"}
+                            >
+                              {u.isBanned ? "Débannir" : "Bannir"}
+                            </button>
+
+                            {/* Premium */}
+                            <button
+                              onClick={() => handleTogglePremium(u)}
+                              className={`px-2 py-1 rounded-lg text-[8px] font-mono font-bold uppercase transition-all cursor-pointer ${
+                                u.isPremium 
+                                  ? 'bg-amber-500 text-black font-black' 
+                                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                              }`}
+                              title="Changer statut Premium"
+                            >
+                              {u.isPremium ? "Elite 👑" : "+Premium"}
+                            </button>
+
+                            {/* Gombo ID */}
+                            <button
+                              onClick={() => handleToggleGomboId(u)}
+                              className={`px-2 py-1 rounded-lg text-[8px] font-mono font-bold uppercase transition-all cursor-pointer ${
+                                isCert 
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                                  : 'bg-zinc-800 text-amber-500 border border-amber-500/30'
+                              }`}
+                              title="Gombo ID"
+                            >
+                              {isCert ? "Certifié ✓" : "Certifier"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* SUB-PANEL 2: MODÉRATION DES PUBLICATIONS & ANNONCES GLOBALES */}
+                <div className="p-5 bg-afri-bg-sec/50 border border-afri-border rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-mono font-black text-sky-400 uppercase flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-sky-400" />
+                      Modération Publications & Décrets
+                    </h4>
+                    <span className="text-[9px] font-mono text-afri-text-sec">{displayPosts.length} posts</span>
+                  </div>
+
+                  {/* Publications quick actions */}
+                  <div className="space-y-2 max-h-40 independent-scroll pr-1 border-b border-afri-border pb-3">
+                    {displayPosts.slice(0, 4).map((p: any) => (
+                      <div key={p.id} className="p-2.5 bg-afri-bg border border-afri-border/60 rounded-xl flex items-center justify-between gap-2 text-xs">
+                        <div className="min-w-0">
+                          <span className="font-bold text-afri-text block truncate">{p.title || p.content || "Publication"}</span>
+                          <span className="text-[8px] text-afri-text-sec font-mono block">Auteur : {p.author || "Anonyme"}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => handleApprovePostGlobal(p)}
+                            className="px-2 py-1 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-black rounded-lg text-[8px] font-mono font-bold uppercase cursor-pointer"
+                          >
+                            Valider
+                          </button>
+                          <button
+                            onClick={() => handleSuspendPostGlobal(p)}
+                            className="px-2 py-1 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-black rounded-lg text-[8px] font-mono font-bold uppercase cursor-pointer"
+                          >
+                            Suspendre
+                          </button>
+                          <button
+                            onClick={() => handleDeletePostGlobal(p)}
+                            className="px-2 py-1 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-[8px] font-mono font-bold uppercase cursor-pointer"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* BROADCAST ANNOUNCEMENT FORM */}
+                  <form onSubmit={handleSendNotice} className="space-y-2 pt-1">
+                    <span className="text-[9px] font-mono uppercase text-[#D4AF37] font-black block flex items-center gap-1">
+                      <Send className="w-3 h-3 text-[#D4AF37]" /> Diffuser une Notification Globale à Tous
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Titre du Décret..."
+                      value={noticeTitle}
+                      onChange={(e) => setNoticeTitle(e.target.value)}
+                      className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-1.5 text-xs text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
+                    />
+                    <textarea
+                      placeholder="Contenu du décret ou annonce générale..."
+                      value={noticeBody}
+                      onChange={(e) => setNoticeBody(e.target.value)}
+                      className="w-full h-16 bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text font-mono focus:outline-none focus:border-[#D4AF37] resize-none"
+                    />
+                    <button
+                      type="submit"
+                      className="w-full py-2 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black font-mono font-black text-[10px] uppercase rounded-xl hover:opacity-90 transition-all cursor-pointer shadow-md"
+                    >
+                      📢 Envoyer Décret Impérial en Temps Réel
+                    </button>
+                  </form>
+                </div>
+
+              </div>
+            </div>
+
+            {/* 3. 📜 JOURNAL IMPÉRIAL EN TEMPS RÉEL (LOGS FIRESTORE) */}
+            <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4 shadow-xl">
+              <div className="flex items-center justify-between border-b border-afri-border pb-3">
+                <h4 className="text-xs font-mono uppercase font-black text-[#D4AF37] flex items-center gap-2">
+                  <Scroll className="w-5 h-5 text-[#D4AF37]" />
+                  Journal Impérial des Actions du Trône (Temps Réel)
+                </h4>
+                <span className="px-2.5 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded-full text-[9px] font-mono">
+                  {imperialLogs.length} enregistrements
+                </span>
+              </div>
+
+              <div className="space-y-2 max-h-56 independent-scroll pr-1">
+                {imperialLogs.length === 0 ? (
+                  <p className="text-afri-text-sec text-center py-6 text-xs font-mono">
+                    Aucune action enregistrée pour l'instant. Les actions du Fondateur s'afficheront automatiquement ici.
+                  </p>
+                ) : (
+                  imperialLogs.map((log: any) => {
+                    const timeStr = log.timestamp ? new Date(log.timestamp).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--";
+                    return (
+                      <div key={log.id} className="p-3 bg-afri-bg-sec/40 border border-afri-border/50 rounded-xl flex items-center justify-between gap-3 text-xs font-mono">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="px-2 py-0.5 bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 rounded text-[9px] font-bold shrink-0">
+                            {timeStr}
+                          </span>
+                          <div className="min-w-0">
+                            <span className="font-bold text-afri-text block truncate">{log.action}</span>
+                            <span className="text-[9px] text-afri-text-sec block truncate">{log.description}</span>
+                          </div>
+                        </div>
+                        <span className="text-[8px] text-zinc-500 uppercase shrink-0">
+                          Exécuteur : {log.executor || "Fondateur"}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* 4. SANCTUAIRES ET CONSTELLATIONS DE L'EMPIRE */}
+            <div className="pt-4 border-t border-afri-border">
+              <h3 className="text-xs font-mono uppercase font-black text-afri-text-sec tracking-widest mb-4 flex items-center gap-2">
+                <Landmark className="w-4 h-4 text-[#D4AF37]" /> Sanctuaires & Modules de Gestion
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              
+              {/* Card 1: 🌍 Vision AFRI */}
               <motion.div
                 variants={cardVariants}
-                whileHover={{ scale: 1.01, translateY: -5 }}
+                whileHover="hover"
                 onClick={() => {
                   setSelectedSection("vision");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="relative overflow-hidden rounded-[2.5rem] p-10 min-h-[400px] flex flex-col border-2 border-zinc-300 shadow-2xl cursor-pointer group bg-gradient-to-b from-[#E0E0E0] via-[#F5F5F5] to-[#404040]"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
               >
-                {/* Metallic Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
-                
-                <div className="relative z-10 flex flex-col h-full justify-between">
-                  <div className="space-y-8">
-                    <div className="w-20 h-20 rounded-2xl bg-zinc-800/20 border border-zinc-400/30 flex items-center justify-center text-zinc-800">
-                      <Globe className="w-10 h-10" />
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <h3 className="text-4xl font-display font-black text-black flex items-center gap-4">
-                        🌍 Vision AFRI
-                      </h3>
-                      <p className="text-xl font-sans font-bold text-zinc-800 leading-relaxed max-w-2xl">
-                        Définition de la trajectoire impériale de l'écosystème, objectifs clés et piliers du destin culturel africain.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-12">
-                    <span className="text-sm font-mono font-black uppercase tracking-[0.3em] text-zinc-800 flex items-center gap-2 group-hover:gap-4 transition-all">
-                      Entrer dans le Sanctuaire →
-                    </span>
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <Globe className="w-40 h-40 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-700" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
+                    <Globe className="w-6 h-6 animate-spin duration-[20s]" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
+                      🌍 Vision AFRI
+                    </h3>
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
+                      Définition de la trajectoire impériale de l'écosystème, objectifs clés et piliers du destin culturel africain.
+                    </p>
                   </div>
                 </div>
+                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Entrer dans le Sanctuaire →
+                </span>
               </motion.div>
 
-              {/* Card 2: 🏛️ Univers AFRI - LARGE VERTICAL METALLIC */}
+              {/* Card 2: 🏛 Univers AFRI */}
               <motion.div
                 variants={cardVariants}
-                whileHover={{ scale: 1.01, translateY: -5 }}
+                whileHover="hover"
                 onClick={() => {
                   setSelectedSection("univers");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="relative overflow-hidden rounded-[2.5rem] p-10 min-h-[400px] flex flex-col border-2 border-zinc-300 shadow-2xl cursor-pointer group bg-gradient-to-b from-[#E0E0E0] via-[#F5F5F5] to-[#404040]"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
               >
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
-                <div className="relative z-10 flex flex-col h-full justify-between">
-                  <div className="space-y-8">
-                    <div className="w-20 h-20 rounded-2xl bg-zinc-800/20 border border-zinc-400/30 flex items-center justify-center text-zinc-800">
-                      <Building className="w-10 h-10" />
-                    </div>
-                    <div className="space-y-4">
-                      <h3 className="text-4xl font-display font-black text-black flex items-center gap-4">
-                        🏛️ Univers AFRI
-                      </h3>
-                      <p className="text-xl font-sans font-bold text-zinc-800 leading-relaxed max-w-2xl">
-                        Contrôle des constellations souveraines satellites: GOMBO ID, AfriTrust, AfriLivraison, Gombo Musik et gestion des gardiens du Trône.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="pt-12">
-                    <span className="text-sm font-mono font-black uppercase tracking-[0.3em] text-zinc-800 flex items-center gap-2 group-hover:gap-4 transition-all">
-                      Entrer dans le Sanctuaire →
-                    </span>
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <Landmark className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
+                    <Landmark className="w-6 h-6" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
+                      🏛 Univers AFRI
+                    </h3>
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
+                      Contrôle des constellations souveraines satellites: GOMBO ID, AfriTrust, AfriLivraison, Gombo Musik et gestion des gardiens du Trône.
+                    </p>
                   </div>
                 </div>
+                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Entrer dans le Sanctuaire →
+                </span>
               </motion.div>
 
-              {/* Card 3: 🛡️ Bouclier AFRIGOMBO - LARGE VERTICAL METALLIC */}
+              {/* Card 3: 🛡 Bouclier AFRIGOMBO */}
               <motion.div
                 variants={cardVariants}
-                whileHover={{ scale: 1.01, translateY: -5 }}
+                whileHover="hover"
                 onClick={() => {
                   setSelectedSection("bouclier");
                   try { audioSynth?.playValidationSuccess(); } catch (_) {}
                 }}
-                className="relative overflow-hidden rounded-[2.5rem] p-10 min-h-[400px] flex flex-col border-2 border-zinc-300 shadow-2xl cursor-pointer group bg-gradient-to-b from-[#E0E0E0] via-[#F5F5F5] to-[#404040]"
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
               >
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
-                <div className="relative z-10 flex flex-col h-full justify-between">
-                  <div className="space-y-8">
-                    <div className="w-20 h-20 rounded-2xl bg-zinc-800/20 border border-zinc-400/30 flex items-center justify-center text-zinc-800">
-                      <ShieldCheck className="w-10 h-10" />
-                    </div>
-                    <div className="space-y-4">
-                      <h3 className="text-4xl font-display font-black text-black flex items-center gap-4">
-                        🛡️ Bouclier AFRIGOMBO
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <ShieldCheck className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
+                    <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
+                      🛡 Bouclier AFRIGOMBO
+                    </h3>
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
+                      Système de protection souverain, modération de contenu, certification Gombo ID et contrôle de cyber-défense.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Entrer dans le Sanctuaire →
+                </span>
+              </motion.div>
+
+              {/* Card 4: 💰 Revenus Globaux */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("revenus");
+                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                }}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <Coins className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
+                    <Coins className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
+                      💰 Revenus Globaux
+                    </h3>
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
+                      Analyse souveraine de la trésorerie globale, suivi de la Gombocaisse et transactions régionales de l'Empire.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Entrer dans le Sanctuaire →
+                </span>
+              </motion.div>
+
+              {/* Card 5: 📈 Croissance */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("croissance");
+                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                }}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <BarChart3 className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-600 dark:text-sky-400 group-hover:scale-110 transition-transform duration-300">
+                    <BarChart3 className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
+                      📈 Croissance
+                    </h3>
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
+                      Expansion impériale, taux de KYC certifiés, croissance démographique et projection des objectifs de l'Empire.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Entrer dans le Sanctuaire →
+                </span>
+              </motion.div>
+
+              {/* Card 6: 🧠 Intelligence */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("intelligence");
+                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                }}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <Brain className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-500 group-hover:scale-110 transition-transform duration-300">
+                    <Brain className="w-6 h-6 text-amber-600 dark:text-amber-500 animate-pulse" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
+                      🧠 Intelligence
+                    </h3>
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
+                      Console de commande interactive, terminal d'ordres système et audit cyber intelligent en temps réel.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Entrer dans le Sanctuaire →
+                </span>
+              </motion.div>
+
+              {/* Card 6.5: 🛡 Transactions Bêta */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("beta_escrow");
+                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                }}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-emerald-400/30' : 'bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-emerald-500/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-emerald-500/15'}`}
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <ShieldCheck className="w-40 h-40 text-emerald-400 group-hover:rotate-6 transition-transform duration-700" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.15)] group-hover:scale-110 transition-transform duration-300">
+                    <ShieldCheck className="w-6 h-6 animate-pulse" />
+                  </span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-emerald-400' : 'text-zinc-800 group-hover:text-emerald-600'}`}>
+                        🛡 Transactions Bêta
                       </h3>
-                      <p className="text-xl font-sans font-bold text-zinc-800 leading-relaxed max-w-2xl">
-                        Système de protection souverain, modération de contenu, certification Gombo ID et contrôle de cyber-défense.
-                      </p>
+                      {pendingBetaTransactions.length > 0 ? (
+                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-black text-[9px] font-mono font-black uppercase animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                          {pendingBetaTransactions.length} ALERTE
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-black text-[8px] font-mono font-black uppercase">
+                          LIVE
+                        </span>
+                      )}
                     </div>
+                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                      Pilotage des flux séquestres en phase Bêta Publique. Validation manuelle des dépôts et libération sécurisée des cachets.
+                    </p>
                   </div>
-                  <div className="pt-12">
-                    <span className="text-sm font-mono font-black uppercase tracking-[0.3em] text-zinc-800 flex items-center gap-2 group-hover:gap-4 transition-all">
-                      Entrer dans le Sanctuaire →
-                    </span>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Ouvrir le Centre de Commandement →
+                </span>
+              </motion.div>
+
+              {/* Card 7: 🎬 Centre Multimédia */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("multimedia");
+                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                }}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                   <Music className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300">
+                    <Music className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
+                      🎬 Centre Multimédia
+                    </h3>
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
+                      Ambiances sonores impériales, sound designer royal et configuration des mélodies sacreés de l'Empire.
+                    </p>
                   </div>
+                </div>
+                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Entrer dans le Sanctuaire →
+                </span>
+              </motion.div>
+
+              {/* Card 8: 🚨 Veille Critique */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("veille");
+                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                }}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <AlertTriangle className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className={`w-12 h-12 rounded-2xl border flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${highAlertsCount > 0 ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'}`}>
+                    <AlertTriangle className={`w-6 h-6 ${highAlertsCount > 0 ? 'animate-bounce' : ''}`} />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
+                      🚨 Veille Critique
+                    </h3>
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
+                      Suivi passif des faiblesses d'infrastructure, alertes d'accès prioritaires et signaux d'intrusions d'usurpateurs.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Entrer dans le Sanctuaire →
+                </span>
+              </motion.div>
+
+              {/* Card 9: 📜 Journal Impérial */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("journal");
+                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
+                }}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <Scroll className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-500 group-hover:scale-110 transition-transform duration-300">
+                    <Scroll className="w-6 h-6 text-[#D4AF37]" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
+                      📜 Journal Impérial
+                    </h3>
+                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
+                      Annales sacrées de l'Empire, décisions stratégiques, notes privées du Fondateur et diffusion des décrets solennels.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Entrer dans le Sanctuaire →
+                </span>
+              </motion.div>
+
+              {/* Card 10: 📋 Checklist Bêta */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("checklist");
+                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+                }}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#F0F0F0] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <CheckSquare className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
+                    <CheckSquare className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                      📋 Checklist Bêta
+                    </h3>
+                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                      Suivi interactif de validation des fonctionnalités critiques pour la version Bêta d'AFRIGOMBO ELITE.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold">
+                  <span>{progressCount} / 11 VALIDÉS</span>
+                  <span>Voir la checklist →</span>
                 </div>
               </motion.div>
 
+              {/* Card 11: 💰 Économie AFRIGOMBO */}
+              <motion.div
+                variants={cardVariants}
+                whileHover="hover"
+                onClick={() => {
+                  setSelectedSection("economy");
+                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+                }}
+                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#F0F0F0] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
+                  <Coins className="w-40 h-40 text-[#D4AF37]" />
+                </div>
+                <div className="space-y-4">
+                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-500 group-hover:scale-110 transition-transform duration-300">
+                    <Coins className="w-6 h-6 text-[#D4AF37]" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                      💰 Économie AFRIGOMBO
+                    </h3>
+                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
+                      Moteur de commissions, paramètres de paiements, boosts, contrats et statistiques financières.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Entrer dans le Sanctuaire →
+                </span>
+              </motion.div>
             </div>
           </motion.div>
         ) : (
@@ -1599,7 +2400,7 @@ export default function AdminFounderThrone({
                     </div>
 
                     <form onSubmit={handleTerminalSubmit} className="flex gap-2">
-                      <span className="font-mono text-[#D4AF37] text-xs self-center font-bold">{adminEmail.split("@")[0]}@throne:~$</span>
+                      <span className="font-mono text-[#D4AF37] text-xs self-center font-bold">{(typeof adminEmail === "string" ? adminEmail : String(adminEmail ?? "")).split("@")[0]}@throne:~$</span>
                       <input
                         type="text"
                         placeholder="Tapez /help pour les ordres..."
@@ -2317,7 +3118,7 @@ export default function AdminFounderThrone({
                       SUPER FOUNDER FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
       <div className={`fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-2 px-4 sm:px-6 flex items-center z-45 sm:rounded-2xl w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1 sm:gap-4 select-none ${
-        isDark ? 'bg-afri-bg/95 shadow-[0_8px_35px_rgba(212,175,55,0.35)]' : 'bg-white/95 shadow-[0_8px_35px_rgba(0,0,0,0.15)]'
+        isDark ? 'bg-afri-bg/95 shadow-[0_8px_35px_rgba(212,175,55,0.35)]' : 'bg-[#EDEDED]/95 shadow-[0_8px_35px_rgba(0,0,0,0.15)]'
       }`}>
         {/* 1. TRÔNE */}
         <button

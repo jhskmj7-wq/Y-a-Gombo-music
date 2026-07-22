@@ -217,7 +217,7 @@ export interface Gombo {
   
   applicantsCount?: number;
   musiciansCount?: number; 
-  status?: "publie" | "candidatures_ouvertes" | "artiste_selectionne" | "contrat_accepte" | "contrat_confirme" | "paiement_recu" | "en_cours" | "mission_terminee" | "mission_annulee" | "paiement_effectue" | "open" | "filled" | "completed" | "reserve" | "termine" | "contrat_refuse";
+  status?: "pending_deposit" | "published" | "refuse" | "rejected" | "publie" | "candidatures_ouvertes" | "artiste_selectionne" | "contrat_accepte" | "contrat_confirme" | "paiement_recu" | "en_cours" | "mission_terminee" | "mission_annulee" | "paiement_effectue" | "open" | "filled" | "completed" | "reserve" | "termine" | "contrat_refuse" | string;
   selectedTalentId?: string;
   selectedTalentName?: string;
   contractId?: string; // Linked contract ID

@@ -18,7 +18,6 @@ import { useNavigate } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
 
 const AdminStats = lazyWithRetry(() => import("./AdminStats"));
-const AfrigomboHelpCenter = lazyWithRetry(() => import("./AfrigomboHelpCenter"));
 const AdminReports = lazyWithRetry(() => import("./admin/AdminReports"));
 const AdminActions = lazyWithRetry(() => import("./AdminActions"));
 const AdminDashboard = lazyWithRetry(() => import("./admin/AdminDashboard"));
@@ -56,7 +55,7 @@ import AboutAfrigombo from "./AboutAfrigombo";
 import { AfriGomboLogo } from "./AfriGomboLogo";
 import SupportAfrigombo from "./SupportAfrigombo";
 import WhatsNew from "./WhatsNew";
-// const AfrigomboHelpCenter = lazyWithRetry(() => import("./AfrigomboHelpCenter"));
+import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
 import FirebaseDiagnostic from "./FirebaseDiagnostic";
 import { gomboDB } from "../firebase";
 import { usePerformance } from "../services/performanceService";
@@ -541,6 +540,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     });
   };
 
+  // Hardware and browser back button support (Chrome Android / PWA)
+  useEffect(() => {
+    const handlePopState = () => {
+      goBackMenu();
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   const [logoUrl, setLogoUrl] = useState<string | null>(() => localStorage.getItem("custom_app_logo"));
   useEffect(() => {
     const handleLogoUpdate = () => {
@@ -688,7 +696,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       
       setUsers(prev => {
         const exists = prev.some(u => u.id === targetId);
-        const name = profile?.displayName || currentUser.displayName || currentUser.email?.split("@")[0] || "Artiste Gombo";
+        const userEmailStr = typeof currentUser?.email === "string" ? currentUser.email : "";
+        const name = profile?.displayName || currentUser.displayName || (userEmailStr ? userEmailStr.split("@")[0] : "") || "Artiste Gombo";
         const email = profile?.email || currentUser.email || "";
         const avatarUrl = profile?.avatarUrl || currentUser.photoURL || "";
         const artisticName = profile?.artisticName || name;
@@ -715,7 +724,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             specialties: profile?.specialties || [], 
             groups: profile?.groups || [] 
           },
-          registrationDate: profile?.createdAt?.split("T")[0] || new Date().toISOString().split("T")[0],
+          registrationDate: (() => {
+            const ca = profile?.createdAt as unknown as { toDate?: () => Date };
+            if (typeof profile?.createdAt === "string") return profile.createdAt.split("T")[0];
+            if (ca && typeof ca.toDate === "function") return ca.toDate().toISOString().split("T")[0];
+            if (typeof profile?.createdAt === "number") return new Date(profile.createdAt).toISOString().split("T")[0];
+            return new Date().toISOString().split("T")[0];
+          })(),
           revenues: profile?.revenues || 0,
           gombosCompleted: profile?.gombosCompleted || 0,
           flagsCount: profile?.flagsCount || 0,
@@ -7186,7 +7201,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       <div className="p-5 rounded-lg border border-afri-gold bg-afri-gold/5 shadow-md">
                         <span className="text-[10px] uppercase font-mono text-afri-gold font-semibold block">Produit Étoile (Leader)</span>
                         <span className="text-xl font-display font-extrabold text-afri-text block mt-1 truncate">
-                          {sortedProducts[0]?.count > 0 ? sortedProducts[0].name.split("(")[0] : "Aucun achat encore"}
+                          {sortedProducts[0]?.count > 0 ? (typeof sortedProducts[0].name === "string" ? sortedProducts[0].name.split("(")[0] : String(sortedProducts[0].name ?? "")) : "Aucun achat encore"}
                         </span>
                         <span className="text-[9px] text-afri-gold font-mono block mt-1">
                           {sortedProducts[0]?.count > 0 ? `${sortedProducts[0].count} activations enregistrées` : "Preneur en attente"}

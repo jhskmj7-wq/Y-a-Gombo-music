@@ -28,6 +28,7 @@ import {
   releaseBetaCachet, 
   openBetaDispute 
 } from "../../lib/betaEscrowEngine";
+import { supportConfig } from "../../supportConfig";
 import { BetaEscrowInfoButton } from "../BetaEscrowInfoModal";
 import { audioSynth } from "../../lib/audio";
 
@@ -368,35 +369,46 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                 </div>
 
                 {/* Middle Info Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs font-mono">
                   
-                  {/* Promoter */}
+                  {/* Auteur */}
                   <div className="p-3 bg-afri-bg/60 rounded-2xl border border-afri-border/60 space-y-1">
                     <span className="text-[9px] text-afri-text-sec uppercase tracking-wider block font-bold">
-                      Promoteur (Client)
+                      👤 Auteur / Client
                     </span>
                     <p className="font-bold text-afri-text text-sm truncate">{tx.promoterName}</p>
-                    <span className="text-[10px] text-afri-text-muted">UID: {tx.promoterId}</span>
+                    <span className="text-[10px] text-afri-text-muted">UID: {tx.promoterId.substring(0, 10)}</span>
                   </div>
 
-                  {/* Artist */}
+                  {/* Type / Titre */}
                   <div className="p-3 bg-afri-bg/60 rounded-2xl border border-afri-border/60 space-y-1">
                     <span className="text-[9px] text-afri-text-sec uppercase tracking-wider block font-bold">
-                      Artiste Bénéficiaire
+                      📋 Type & Titre
                     </span>
-                    <p className="font-bold text-afri-text text-sm truncate">{tx.artistName}</p>
-                    <span className="text-[10px] text-afri-text-muted">UID: {tx.artistId}</span>
+                    <p className="font-bold text-afri-text text-xs truncate">{tx.gomboTitle}</p>
+                    <span className="text-[10px] text-amber-400 font-bold block">{tx.artistName || "Candidats Gombo"}</span>
                   </div>
 
-                  {/* Amount & Title */}
+                  {/* Cachet */}
                   <div className="p-3 bg-afri-bg/60 rounded-2xl border border-afri-border/60 space-y-1">
                     <span className="text-[9px] text-afri-text-sec uppercase tracking-wider block font-bold">
-                      Montant du Cachet
+                      💼 Cachet
                     </span>
-                    <p className="font-black text-[#D4AF37] text-base">
+                    <p className="font-black text-[#D4AF37] text-sm">
                       {tx.amount.toLocaleString()} FCFA
                     </p>
-                    <p className="text-[10px] text-afri-text-sec truncate">{tx.gomboTitle}</p>
+                    <span className="text-[9px] text-afri-text-sec block">Frais (2,5%): {Math.round(tx.amount * 0.025).toLocaleString()} FCFA</span>
+                  </div>
+
+                  {/* Total Attendu */}
+                  <div className="p-3 bg-amber-500/10 rounded-2xl border border-[#D4AF37]/40 space-y-1">
+                    <span className="text-[9px] text-[#D4AF37] uppercase tracking-wider block font-bold">
+                      💰 Total Attendu
+                    </span>
+                    <p className="font-black text-[#D4AF37] text-base">
+                      {(tx.amount + Math.round(tx.amount * 0.025)).toLocaleString()} FCFA
+                    </p>
+                    <span className="text-[9px] text-afri-text-sec block">Dépôt requis</span>
                   </div>
 
                 </div>
@@ -411,16 +423,16 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                 {/* Real Action Buttons */}
                 <div className="pt-2 border-t border-afri-border/60 flex flex-wrap items-center justify-between gap-3">
                   
-                  {/* Optional support conversation button */}
-                  {onOpenSupportChat && (
-                    <button
-                      onClick={() => onOpenSupportChat({ uid: tx.promoterId, displayName: tx.promoterName })}
-                      className="px-3 py-1.5 rounded-xl bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text text-[11px] font-mono font-bold flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5 text-sky-400" />
-                      <span>Ouvrir Chat Assistance</span>
-                    </button>
-                  )}
+                  {/* WhatsApp Contact button */}
+                  <button
+                    onClick={() => {
+                      supportConfig.openSupport(`Suivi du dépôt de garantie pour "${tx.gomboTitle}" (Client: ${tx.promoterName})`);
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 hover:bg-emerald-500 hover:text-white text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Ouvrir WhatsApp</span>
+                  </button>
 
                   {/* Action group based on status */}
                   <div className="flex items-center gap-2 flex-wrap ml-auto">
@@ -443,14 +455,6 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
                           className="px-3 py-2 rounded-xl bg-red-500/15 border border-red-500/40 text-red-400 hover:bg-red-500 hover:text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
                         >
                           Refuser
-                        </button>
-
-                        <button
-                          disabled={isLoading}
-                          onClick={() => setPromptModal({ type: "verification", txId: tx.id, artistName: tx.artistName, promoterName: tx.promoterName })}
-                          className="px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/40 text-purple-300 hover:bg-purple-500 hover:text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          Demander une vérification
                         </button>
                       </>
                     )}

@@ -544,7 +544,8 @@ export default function GomboProfile({
       setMediaUploading(true);
       setMediaUploadProgress(0);
       try {
-        const fileExt = mediaFile.name.split('.').pop();
+        const safeFileName = typeof mediaFile?.name === "string" ? mediaFile.name : String(mediaFile?.name ?? "");
+        const fileExt = safeFileName.split('.').pop();
         const path = `portfolio/${currentUserProfile.uid}/${Date.now()}_media.${fileExt}`;
         const downloadUrl = await gomboDB.uploadFile(mediaFile, path, (progress) => {
           setMediaUploadProgress(Math.round(progress));
@@ -1065,7 +1066,8 @@ export default function GomboProfile({
   const [activeMediaTab, setActiveMediaTab] = useState<"photo" | "audio" | "youtube">("youtube");
   const [selectedYoutubeEmbed, setSelectedYoutubeEmbed] = useState<string | null>(null);
 
-  const getYoutubeId = (url: string) => {
+  const getYoutubeId = (rawUrl: string) => {
+    const url = typeof rawUrl === "string" ? rawUrl : String(rawUrl ?? "");
     let videoId = "";
     if (url.includes("youtube.com/watch")) {
       const parts = url.split("v=");

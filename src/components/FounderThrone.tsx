@@ -360,7 +360,7 @@ export default function FounderThrone({
                            <button key={i} className="flex flex-col items-center justify-center text-center p-2 2xl:p-3 rounded-xl hover:bg-afri-bg-sec border border-transparent hover:border-afri-border transition-all group aspect-square xl:aspect-auto h-full">
                               <Icon className={`w-5 h-5 2xl:w-6 2xl:h-6 mb-2 ${isDanger ? "text-red-500/80 group-hover:text-red-500 group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "text-[#D4AF37]/80 group-hover:text-[#D4AF37] group-hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]"}`} strokeWidth={1.5} />
                               <span className="text-[9px] font-sans font-bold text-afri-text-sec group-hover:text-afri-text leading-tight uppercase tracking-wider block">
-                                {act.label.split(' ')[0]}<br />{act.label.split(' ')[1] || ''}
+                                {(typeof act.label === "string" ? act.label : String(act.label ?? "")).split(' ')[0]}<br />{(typeof act.label === "string" ? act.label : String(act.label ?? "")).split(' ')[1] || ''}
                               </span>
                            </button>
                          );

@@ -475,7 +475,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           updatedAt: new Date().toISOString(),
           updatedBy: adminEmail,
           fileSize: formattedSize,
-          fileType: file.type || file.name.split(".").pop(),
+          fileType: file.type || (typeof file.name === "string" ? file.name.split(".").pop() : ""),
           useCount: existingAsset?.useCount || 0,
           lastPlayed: existingAsset?.lastPlayed || "",
           resolution: existingAsset?.resolution || "",
@@ -1509,7 +1509,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                       {lastUploadItem.title}
                     </span>
                     <span className="text-[8px] font-mono text-zinc-550 block">
-                      {new Date(lastUploadItem.updatedAt).toLocaleDateString()} par {lastUploadItem.updatedBy.split("@")[0]}
+                      {new Date(lastUploadItem.updatedAt).toLocaleDateString()} par {typeof lastUploadItem.updatedBy === "string" ? lastUploadItem.updatedBy.split("@")[0] : String(lastUploadItem.updatedBy ?? "")}
                     </span>
                   </>
                 ) : (

@@ -114,7 +114,8 @@ function AuthScreen({ onSuccess, onClose }: AuthScreenProps) {
 
       } else {
         const now = new Date().toISOString();
-        const names = userEmail ? userEmail.split("@")[0].split(".") : ["Artiste"];
+        const safeUserEmail = typeof userEmail === "string" ? userEmail : String(userEmail ?? "");
+        const names = safeUserEmail ? safeUserEmail.split("@")[0].split(".") : ["Artiste"];
         const computedDisplayName = names.join(" ");
 
         const minimalProfile: any = {

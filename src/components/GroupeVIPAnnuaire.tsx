@@ -168,7 +168,7 @@ export default function GroupeVIPAnnuaire({
     e.preventDefault();
     if (!selectedGroup) return;
     
-    let mediaUrl = newMediaUrl;
+    let mediaUrl = typeof newMediaUrl === "string" ? newMediaUrl : String(newMediaUrl ?? "");
     // Simple youtube conversion
     if (mediaUrl.includes("youtube.com/watch?v=")) {
       const vidId = mediaUrl.split("v=")[1]?.split("&")[0];
