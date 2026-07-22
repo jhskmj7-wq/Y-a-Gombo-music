@@ -1822,6 +1822,73 @@ export const gomboDB = {
     return false;
   },
 
+  async toggleFollowUser(targetUserId: string, currentUserId: string): Promise<boolean> {
+    if (db && targetUserId && currentUserId && targetUserId !== currentUserId) {
+      const targetRef = doc(db, "users", targetUserId);
+      const currentRef = doc(db, "users", currentUserId);
+      const snap = await getDoc(targetRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const followers = data.followers || [];
+        const isFollowing = followers.includes(currentUserId);
+        if (isFollowing) {
+          await updateDoc(targetRef, {
+            followers: arrayRemove(currentUserId),
+            followersCount: increment(-1)
+          });
+          await updateDoc(currentRef, {
+            following: arrayRemove(targetUserId),
+            followingCount: increment(-1)
+          });
+          return false;
+        } else {
+          await updateDoc(targetRef, {
+            followers: arrayUnion(currentUserId),
+            followersCount: increment(1)
+          });
+          await updateDoc(currentRef, {
+            following: arrayUnion(targetUserId),
+            followingCount: increment(1)
+          });
+          return true;
+        }
+      }
+    }
+    return false;
+  },
+
+  async toggleBookmarkUser(targetUserId: string, currentUserId: string): Promise<boolean> {
+    if (db && targetUserId && currentUserId) {
+      const userRef = doc(db, "users", currentUserId);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const savedTalents = data.savedTalents || [];
+        const isSaved = savedTalents.includes(targetUserId);
+        if (isSaved) {
+          await updateDoc(userRef, { savedTalents: arrayRemove(targetUserId) });
+          return false;
+        } else {
+          await updateDoc(userRef, { savedTalents: arrayUnion(targetUserId) });
+          return true;
+        }
+      }
+    }
+    return false;
+  },
+
+  async reportUser(reportData: { targetUserId: string; reporterUserId: string; reason: string; details?: string }) {
+    if (db) {
+      await addDoc(collection(db, "user_reports"), {
+        ...reportData,
+        status: "pending",
+        createdAt: new Date().toISOString()
+      });
+      return true;
+    }
+    return false;
+  },
+
   async getUserInvitations(userId: string): Promise<any[]> {
     if (db) {
       const q = query(collection(db, "group_invitations"), where("userId", "==", userId), where("status", "==", "pending"));
