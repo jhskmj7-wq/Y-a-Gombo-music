@@ -200,6 +200,10 @@ export async function validateBetaDeposit(
       const postRef = doc(db, "social_posts", txData.contractId);
       await updateDoc(postRef, {
         status: "published",
+        paymentStatus: "paid",
+        adminValidated: true,
+        visible: true,
+        publishedAt: now,
         depositConfirmed: true,
         depositConfirmedAt: now
       }).catch(() => {});
@@ -213,6 +217,10 @@ export async function validateBetaDeposit(
       const gomboRef = doc(db, "gombos", txData.gomboId);
       await updateDoc(gomboRef, {
         status: "published",
+        paymentStatus: "paid",
+        adminValidated: true,
+        visible: true,
+        publishedAt: now,
         depositConfirmed: true,
         depositConfirmedAt: now
       }).catch(() => {});
@@ -226,13 +234,29 @@ export async function validateBetaDeposit(
     const qPosts = query(collection(db, "social_posts"), where("userId", "==", txData.promoterId), where("status", "==", "pending_deposit"));
     const snapPosts = await getDocs(qPosts);
     snapPosts.forEach((d) => {
-      updateDoc(d.ref, { status: "published", depositConfirmed: true, depositConfirmedAt: now }).catch(() => {});
+      updateDoc(d.ref, {
+        status: "published",
+        paymentStatus: "paid",
+        adminValidated: true,
+        visible: true,
+        publishedAt: now,
+        depositConfirmed: true,
+        depositConfirmedAt: now
+      }).catch(() => {});
     });
 
     const qGombos = query(collection(db, "gombos"), where("clientId", "==", txData.promoterId), where("status", "==", "pending_deposit"));
     const snapGombos = await getDocs(qGombos);
     snapGombos.forEach((d) => {
-      updateDoc(d.ref, { status: "published", depositConfirmed: true, depositConfirmedAt: now }).catch(() => {});
+      updateDoc(d.ref, {
+        status: "published",
+        paymentStatus: "paid",
+        adminValidated: true,
+        visible: true,
+        publishedAt: now,
+        depositConfirmed: true,
+        depositConfirmedAt: now
+      }).catch(() => {});
     });
   } catch (e) {
     console.warn("Bulk release pending_deposit notice:", e);

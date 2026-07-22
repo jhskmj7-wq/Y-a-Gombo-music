@@ -655,7 +655,7 @@ export const gomboDB = {
       const snap = await getDocs(q);
       return snap.docs
         .map(d => ({ id: d.id, ...d.data() } as Gombo))
-        .filter(g => g.status !== "pending_deposit" && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected");
+        .filter(g => g.status !== "pending_deposit" && g.visible !== false && g.adminValidated !== false && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected");
     }
     return [];
   },
@@ -666,7 +666,7 @@ export const gomboDB = {
       return onSnapshot(q, (snapshot) => {
         const publicGombos = snapshot.docs
           .map(d => ({ id: d.id, ...d.data() } as Gombo))
-          .filter(g => g.status !== "pending_deposit" && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected");
+          .filter(g => g.status !== "pending_deposit" && g.visible !== false && g.adminValidated !== false && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected");
         callback(publicGombos);
       });
     }
@@ -689,7 +689,13 @@ export const gomboDB = {
     if (db) {
       const ref = await addDoc(collection(db, "gombos"), {
         ...gombo,
-        status: gombo.status || "publie",
+        status: gombo.status || "pending_deposit",
+        paymentMethod: gombo.paymentMethod || "manual_beta",
+        paymentStatus: gombo.paymentStatus || "waiting",
+        visible: gombo.visible ?? false,
+        adminValidated: gombo.adminValidated ?? false,
+        publishedAt: gombo.publishedAt || null,
+        paymentProvider: gombo.paymentProvider || "manual_beta",
         createdAt: serverTimestamp() as any,
         applicantsCount: 0
       });
@@ -878,7 +884,7 @@ export const gomboDB = {
       return onSnapshot(q, (snapshot) => {
         const publicPosts = snapshot.docs
           .map(d => ({ id: d.id, ...d.data() } as SocialPost))
-          .filter(p => p.status !== "pending_deposit" && p.status !== "draft" && p.status !== "cancelled" && (p as any).status !== "refuse" && (p as any).status !== "rejected");
+          .filter(p => p.status !== "pending_deposit" && (p as any).visible !== false && (p as any).adminValidated !== false && p.status !== "draft" && p.status !== "cancelled" && (p as any).status !== "refuse" && (p as any).status !== "rejected");
         callback(publicPosts);
       });
     }
@@ -893,6 +899,13 @@ export const gomboDB = {
     if (db) {
       const ref = await addDoc(collection(db, "social_posts"), {
         ...post,
+        status: post.status || "pending_deposit",
+        paymentMethod: post.paymentMethod || "manual_beta",
+        paymentStatus: post.paymentStatus || "waiting",
+        visible: post.visible ?? false,
+        adminValidated: post.adminValidated ?? false,
+        publishedAt: post.publishedAt || null,
+        paymentProvider: post.paymentProvider || "manual_beta",
         likesCount: 0,
         comments: [],
         createdAt: new Date().toISOString()

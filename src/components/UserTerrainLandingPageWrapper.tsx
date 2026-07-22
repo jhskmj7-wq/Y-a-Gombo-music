@@ -50,13 +50,13 @@ export default function UserTerrainLandingPageWrapper() {
     
     // 1. Gombos
     const unsubscribeGombos = gomboDB.listenAllGombos((list) => {
-      const publicGombos = list.filter(g => g.status !== "pending_deposit" && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected");
+      const publicGombos = list.filter(g => g.status !== "pending_deposit" && (g as any).visible !== false && (g as any).adminValidated !== false && g.status !== "draft" && g.status !== "cancelled" && g.status !== "refuse" && g.status !== "rejected");
       setGombos(publicGombos);
     });
 
     // 2. Posts
     const unsubscribePosts = gomboDB.listenSocialPosts((list) => {
-      const publicList = list.filter(social => social.status !== "pending_deposit" && social.status !== "draft" && social.status !== "cancelled" && (social as any).status !== "refuse" && (social as any).status !== "rejected");
+      const publicList = list.filter(social => social.status !== "pending_deposit" && (social as any).visible !== false && (social as any).adminValidated !== false && social.status !== "draft" && social.status !== "cancelled" && (social as any).status !== "refuse" && (social as any).status !== "rejected");
       const mappedPosts: Post[] = publicList.map((social) => ({
         id: social.id,
         userId: social.userId,

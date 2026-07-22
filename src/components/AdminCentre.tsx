@@ -57,6 +57,7 @@ import SupportAfrigombo from "./SupportAfrigombo";
 import WhatsNew from "./WhatsNew";
 import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
 import FirebaseDiagnostic from "./FirebaseDiagnostic";
+import { PublicProfileModal } from "./PublicProfileModal";
 import { gomboDB } from "../firebase";
 import { usePerformance } from "../services/performanceService";
 import {
@@ -575,6 +576,19 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [selectedGomboDetails, setSelectedGomboDetails] = useState<Gombo | null>(null);
   const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
   const [openConvoWithGomboId, setOpenConvoWithGomboId] = useState<string | null>(null);
+  const [publicProfileTargetUserId, setPublicProfileTargetUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleOpenPublicProfile = (e: CustomEvent<{ userId: string }>) => {
+      if (e.detail?.userId) {
+        setPublicProfileTargetUserId(e.detail.userId);
+      }
+    };
+    window.addEventListener("open-public-profile" as any, handleOpenPublicProfile as any);
+    return () => {
+      window.removeEventListener("open-public-profile" as any, handleOpenPublicProfile as any);
+    };
+  }, []);
   
   // Custom states for Le Terrain High Fidelity Experience (Home Page)
   const [currentSlide, setCurrentSlide] = useState<number>(0);
@@ -9102,6 +9116,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       <FirebaseDiagnostic 
         isOpen={isDiagnosticOpen} 
         onClose={() => setIsDiagnosticOpen(false)} 
+      />
+
+      {/* 7. Public Profile / CV Musical Modal */}
+      <PublicProfileModal
+        isOpen={Boolean(publicProfileTargetUserId)}
+        onClose={() => setPublicProfileTargetUserId(null)}
+        targetUserId={publicProfileTargetUserId}
+        currentUser={currentUser}
+        onOpenDirectMessage={(targetUserId, targetName) => {
+          setOpenConvoWithUserId(targetUserId);
+          setActiveMenu("user_messages");
+        }}
       />
 
     </div>
