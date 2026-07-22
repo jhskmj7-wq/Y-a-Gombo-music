@@ -102,6 +102,25 @@ export default function AdminFounderThrone({
   // Header Folded state
   const [isHeaderFolded, setIsHeaderFolded] = useState<boolean>(false);
 
+  // Quick Action Modal States
+  const [quickPremiumModalOpen, setQuickPremiumModalOpen] = useState<boolean>(false);
+  const [quickNoticeModalOpen, setQuickNoticeModalOpen] = useState<boolean>(false);
+  const [quickNotifModalOpen, setQuickNotifModalOpen] = useState<boolean>(false);
+  const [quickNotifUser, setQuickNotifUser] = useState<string>("ALL");
+  const [quickNotifTitle, setQuickNotifTitle] = useState<string>("");
+  const [quickNotifBody, setQuickNotifBody] = useState<string>("");
+
+  // Auto-fold header on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setIsHeaderFolded(true);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   // REALTIME FIRESTORE SNAPSHOTS FOR THE FOUNDER COMMAND CENTER
   const [registrationsEnabled, setRegistrationsEnabled] = useState<boolean>(true);
   const [imperialLogs, setImperialLogs] = useState<any[]>([]);
@@ -150,6 +169,7 @@ export default function AdminFounderThrone({
 
   const displayUsers = liveUsers.length > 0 ? liveUsers : users;
   const displayPosts = livePosts.length > 0 ? livePosts : posts;
+  const pendingPostsCount = displayPosts.filter((p: any) => p.status === "pending" || p.status === "pending_deposit" || p.pendingValidation).length;
 
   const logImperialAction = async (action: string, description: string) => {
     if (!db) return;
@@ -1219,295 +1239,500 @@ export default function AdminFounderThrone({
             initial="hidden"
             animate="visible"
             exit={{ opacity: 0, scale: 0.98 }}
-            className="space-y-6"
+            className="space-y-8"
           >
-            {/* 1. TABLEAU SOUVERAIN / SURVEILLANCE TEMPS RÉEL (KPI SUMMARY) */}
-            <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 border rounded-3xl ${isDark ? 'bg-afri-bg/40 border-afri-border' : 'bg-zinc-100/80 border-[#D4AF37]/20 shadow-sm'}`}>
-              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
-                  <Users className="w-3 h-3 text-[#D4AF37]" /> Citoyens
+            {/* 1. ZONE CRITIQUE (TOUJOURS EN HAUT) */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-mono uppercase font-black text-amber-500 tracking-widest flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500 animate-pulse" />
+                  ZONE CRITIQUE (SOUVERAINETÉ PRIORITAIRE)
+                </h3>
+                <span className="text-[10px] font-mono text-emerald-400 font-bold flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" /> Sync Temps Réel Firebase
                 </span>
-                <span className="text-base font-sans font-black text-[#D4AF37] block mt-1">{displayUsers.length} Actifs</span>
-                <span className="text-[8px] font-mono text-emerald-400 block mt-0.5">● Realtime Sync</span>
               </div>
 
-              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
-                  <FileText className="w-3 h-3 text-sky-400" /> Publications
-                </span>
-                <span className="text-base font-sans font-black text-afri-text block mt-1">{displayPosts.length}</span>
-                <span className="text-[8px] font-mono text-sky-400 block mt-0.5">{reportedPosts.length} signalements</span>
-              </div>
-
-              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
-                  <Award className="w-3 h-3 text-amber-400" /> Certifiés Gombo
-                </span>
-                <span className="text-base font-sans font-black text-amber-400 block mt-1">{certifiedCount}</span>
-                <span className="text-[8px] font-mono text-amber-400/80 block mt-0.5">{pendingCerts.length} en attente</span>
-              </div>
-
-              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
-                  <Coins className="w-3 h-3 text-emerald-400" /> Trésorerie
-                </span>
-                <span className="text-base font-sans font-black text-emerald-400 block mt-1 truncate">{formattedRevenues}</span>
-                <span className="text-[8px] font-mono text-emerald-500 block mt-0.5">{allPayments.length} virements</span>
-              </div>
-
-              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
-                  <ShieldAlert className="w-3 h-3 text-red-400" /> Alertes Admin
-                </span>
-                <span className="text-base font-sans font-black text-red-400 block mt-1">{highAlertsCount}</span>
-                <span className="text-[8px] font-mono text-red-400/80 block mt-0.5">Prioritaires</span>
-              </div>
-
-              <div className="p-3 bg-afri-bg/60 border border-afri-border/40 rounded-2xl text-center sm:text-left">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-afri-text-sec flex items-center justify-center sm:justify-start gap-1">
-                  <Zap className="w-3 h-3 text-orange-400" /> Firebase
-                </span>
-                <span className="text-xs font-sans font-bold text-emerald-400 block mt-1 truncate">100% Opérationnel</span>
-                <span className="text-[8px] font-mono text-emerald-400 block mt-0.5">● Ping 12ms</span>
-              </div>
-            </div>
-
-            {/* 2. PANNEAU ⚡ COMMANDES GLOBALES DU FONDATEUR (REAL FIREBASE ACTIONS) */}
-            <div className="p-6 bg-afri-bg border-2 border-[#D4AF37]/40 rounded-3xl space-y-6 shadow-2xl relative overflow-hidden">
-              
-              {/* Header section of Panel */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-afri-border pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37]">
-                    <Zap className="w-6 h-6 animate-pulse" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-display font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
-                      ⚡ Commandes Globales du Fondateur
-                    </h3>
-                    <p className="text-[10px] font-mono text-afri-text-sec">
-                      Contrôle impérial en temps réel direct sur la base de données Firebase Firestore.
-                    </p>
-                  </div>
-                </div>
-
-                {/* REGISTRATIONS TOGGLE BUTTON */}
-                <div className="flex items-center gap-3 bg-afri-bg-sec p-2 rounded-2xl border border-afri-border">
-                  <span className="text-xs font-mono text-afri-text font-bold">Inscriptions :</span>
-                  <button
-                    onClick={toggleRegistrations}
-                    className={`px-3 py-1.5 rounded-xl font-mono text-[10px] font-black uppercase transition-all cursor-pointer flex items-center gap-1.5 ${
-                      registrationsEnabled 
-                        ? 'bg-emerald-500 text-black shadow-[0_0_12px_rgba(16,185,129,0.4)]' 
-                        : 'bg-red-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.4)]'
-                    }`}
-                  >
-                    {registrationsEnabled ? (
-                      <>
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        <span>Ouvertes</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="w-3.5 h-3.5" />
-                        <span>Fermées</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* GRID OF ACTIONS */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                {/* SUB-PANEL 1: GESTION ET POUVOIRS SUR LES UTILISATEURS */}
-                <div className="p-5 bg-afri-bg-sec/50 border border-afri-border rounded-2xl space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-mono font-black text-[#D4AF37] uppercase flex items-center gap-2">
-                      <Users className="w-4 h-4 text-[#D4AF37]" />
-                      Pouvoirs Utilisateurs & Gombo ID
-                    </h4>
-                    <span className="text-[9px] font-mono text-afri-text-sec">{displayUsers.length} citoyens</span>
-                  </div>
-
-                  {/* Search bar for users */}
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-afri-text-sec absolute left-3 top-3" />
-                    <input
-                      type="text"
-                      placeholder="Chercher un citoyen (Nom, Email, Artiste)..."
-                      value={globalUserSearch}
-                      onChange={(e) => setGlobalUserSearch(e.target.value)}
-                      className="w-full bg-afri-bg border border-afri-border rounded-xl pl-9 pr-3 py-2 text-xs text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
-                    />
-                  </div>
-
-                  {/* Users list for direct action */}
-                  <div className="space-y-2 max-h-56 independent-scroll pr-1">
-                    {filteredGlobalUsers.slice(0, 8).map((u: any) => {
-                      const isCert = Boolean(u.isCertified || u.gomboId?.certifie);
-                      return (
-                        <div key={u.id || u.uid} className="p-3 bg-afri-bg border border-afri-border/60 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                          <div className="min-w-0">
-                            <span className="font-bold text-afri-text block truncate">
-                              {u.displayName || u.artisticName || "Artiste Inconnu"}
-                            </span>
-                            <span className="text-[9px] text-afri-text-sec font-mono block truncate">
-                              {u.email} • Rôle : <strong className="text-[#D4AF37] uppercase">{u.role || "citoyen"}</strong>
-                            </span>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-                            {/* Role Dropdown */}
-                            <select
-                              value={u.role || "artiste"}
-                              onChange={(e) => handleChangeRole(u, e.target.value)}
-                              className="bg-afri-bg-sec border border-afri-border text-[9px] font-mono text-afri-text rounded-lg px-2 py-1 focus:outline-none focus:border-[#D4AF37]"
-                            >
-                              <option value="artiste">Artiste</option>
-                              <option value="client">Client</option>
-                              <option value="recruteur">Recruteur</option>
-                              <option value="admin">Admin</option>
-                              <option value="founder">Fondateur</option>
-                            </select>
-
-                            {/* Ban / Unban */}
-                            <button
-                              onClick={() => handleBanUser(u)}
-                              className={`px-2 py-1 rounded-lg text-[8px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                                u.isBanned 
-                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-black' 
-                                  : 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white'
-                              }`}
-                              title={u.isBanned ? "Débannir cet utilisateur" : "Bannir cet utilisateur"}
-                            >
-                              {u.isBanned ? "Débannir" : "Bannir"}
-                            </button>
-
-                            {/* Premium */}
-                            <button
-                              onClick={() => handleTogglePremium(u)}
-                              className={`px-2 py-1 rounded-lg text-[8px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                                u.isPremium 
-                                  ? 'bg-amber-500 text-black font-black' 
-                                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
-                              }`}
-                              title="Changer statut Premium"
-                            >
-                              {u.isPremium ? "Elite 👑" : "+Premium"}
-                            </button>
-
-                            {/* Gombo ID */}
-                            <button
-                              onClick={() => handleToggleGomboId(u)}
-                              className={`px-2 py-1 rounded-lg text-[8px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                                isCert 
-                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                                  : 'bg-zinc-800 text-amber-500 border border-amber-500/30'
-                              }`}
-                              title="Gombo ID"
-                            >
-                              {isCert ? "Certifié ✓" : "Certifier"}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* SUB-PANEL 2: MODÉRATION DES PUBLICATIONS & ANNONCES GLOBALES */}
-                <div className="p-5 bg-afri-bg-sec/50 border border-afri-border rounded-2xl space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-mono font-black text-sky-400 uppercase flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-sky-400" />
-                      Modération Publications & Décrets
-                    </h4>
-                    <span className="text-[9px] font-mono text-afri-text-sec">{displayPosts.length} posts</span>
-                  </div>
-
-                  {/* Publications quick actions */}
-                  <div className="space-y-2 max-h-40 independent-scroll pr-1 border-b border-afri-border pb-3">
-                    {displayPosts.slice(0, 4).map((p: any) => (
-                      <div key={p.id} className="p-2.5 bg-afri-bg border border-afri-border/60 rounded-xl flex items-center justify-between gap-2 text-xs">
-                        <div className="min-w-0">
-                          <span className="font-bold text-afri-text block truncate">{p.title || p.content || "Publication"}</span>
-                          <span className="text-[8px] text-afri-text-sec font-mono block">Auteur : {p.author || "Anonyme"}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            onClick={() => handleApprovePostGlobal(p)}
-                            className="px-2 py-1 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-black rounded-lg text-[8px] font-mono font-bold uppercase cursor-pointer"
-                          >
-                            Valider
-                          </button>
-                          <button
-                            onClick={() => handleSuspendPostGlobal(p)}
-                            className="px-2 py-1 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-black rounded-lg text-[8px] font-mono font-bold uppercase cursor-pointer"
-                          >
-                            Suspendre
-                          </button>
-                          <button
-                            onClick={() => handleDeletePostGlobal(p)}
-                            className="px-2 py-1 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-[8px] font-mono font-bold uppercase cursor-pointer"
-                          >
-                            Supprimer
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* BROADCAST ANNOUNCEMENT FORM */}
-                  <form onSubmit={handleSendNotice} className="space-y-2 pt-1">
-                    <span className="text-[9px] font-mono uppercase text-[#D4AF37] font-black block flex items-center gap-1">
-                      <Send className="w-3 h-3 text-[#D4AF37]" /> Diffuser une Notification Globale à Tous
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {/* 👥 Utilisateurs connectés */}
+                <div
+                  onClick={() => setSelectedSection("users")}
+                  className="p-5 bg-gradient-to-br from-amber-500/15 via-afri-bg to-afri-bg border-2 border-[#D4AF37]/50 hover:border-[#D4AF37] rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="p-2.5 bg-amber-500/20 border border-[#D4AF37]/40 rounded-2xl text-[#D4AF37] group-hover:scale-110 transition-transform">
+                      <Users className="w-5 h-5" />
                     </span>
-                    <input
-                      type="text"
-                      placeholder="Titre du Décret..."
-                      value={noticeTitle}
-                      onChange={(e) => setNoticeTitle(e.target.value)}
-                      className="w-full bg-afri-bg border border-afri-border rounded-xl px-3 py-1.5 text-xs text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
-                    />
-                    <textarea
-                      placeholder="Contenu du décret ou annonce générale..."
-                      value={noticeBody}
-                      onChange={(e) => setNoticeBody(e.target.value)}
-                      className="w-full h-16 bg-afri-bg border border-afri-border rounded-xl p-2.5 text-xs text-afri-text font-mono focus:outline-none focus:border-[#D4AF37] resize-none"
-                    />
-                    <button
-                      type="submit"
-                      className="w-full py-2 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black font-mono font-black text-[10px] uppercase rounded-xl hover:opacity-90 transition-all cursor-pointer shadow-md"
-                    >
-                      📢 Envoyer Décret Impérial en Temps Réel
-                    </button>
-                  </form>
+                    <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[9px] font-mono font-bold">
+                      LIVE
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Utilisateurs connectés</span>
+                  <strong className="text-3xl font-display font-black text-[#D4AF37] block mt-1">{displayUsers.length}</strong>
+                  <span className="text-[9px] font-mono text-emerald-400 font-bold block mt-1">Gérer les citoyens →</span>
                 </div>
 
+                {/* 📝 Publications en attente */}
+                <div
+                  onClick={() => setSelectedSection("publications")}
+                  className="p-5 bg-gradient-to-br from-sky-500/15 via-afri-bg to-afri-bg border-2 border-sky-500/40 hover:border-sky-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="p-2.5 bg-sky-500/20 border border-sky-500/40 rounded-2xl text-sky-400 group-hover:scale-110 transition-transform">
+                      <FileText className="w-5 h-5" />
+                    </span>
+                    {pendingPostsCount > 0 ? (
+                      <span className="px-2 py-0.5 bg-amber-500 text-black rounded-full text-[9px] font-mono font-black animate-pulse">
+                        {pendingPostsCount} ATTENTE
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-full text-[9px] font-mono">OK</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Publications en attente</span>
+                  <strong className="text-3xl font-display font-black text-sky-400 block mt-1">{pendingPostsCount}</strong>
+                  <span className="text-[9px] font-mono text-sky-400 font-bold block mt-1">Valider les publications →</span>
+                </div>
+
+                {/* 💳 Dépôts à valider */}
+                <div
+                  onClick={() => setSelectedSection("beta_escrow")}
+                  className="p-5 bg-gradient-to-br from-emerald-500/15 via-afri-bg to-afri-bg border-2 border-emerald-500/40 hover:border-emerald-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="p-2.5 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-emerald-400 group-hover:scale-110 transition-transform">
+                      <CreditCard className="w-5 h-5 animate-pulse" />
+                    </span>
+                    {pendingBetaTransactions.length > 0 ? (
+                      <span className="px-2 py-0.5 bg-emerald-500 text-black rounded-full text-[9px] font-mono font-black animate-pulse">
+                        {pendingBetaTransactions.length} À VALIDER
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[9px] font-mono">ACTIF</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Dépôts à valider</span>
+                  <strong className="text-3xl font-display font-black text-emerald-400 block mt-1">{pendingBetaTransactions.length}</strong>
+                  <span className="text-[9px] font-mono text-emerald-400 font-bold block mt-1">Valider les dépôts Bêta →</span>
+                </div>
+
+                {/* 🚨 Signalements urgents */}
+                <div
+                  onClick={() => setSelectedSection("veille")}
+                  className="p-5 bg-gradient-to-br from-red-500/15 via-afri-bg to-afri-bg border-2 border-red-500/40 hover:border-red-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="p-2.5 bg-red-500/20 border border-red-500/40 rounded-2xl text-red-400 group-hover:scale-110 transition-transform">
+                      <ShieldAlert className="w-5 h-5 animate-bounce" />
+                    </span>
+                    {highAlertsCount > 0 && (
+                      <span className="px-2 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-mono font-black animate-ping">
+                        URGENT
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Signalements urgents</span>
+                  <strong className="text-3xl font-display font-black text-red-400 block mt-1">{highAlertsCount}</strong>
+                  <span className="text-[9px] font-mono text-red-400 font-bold block mt-1">Traiter la veille critique →</span>
+                </div>
+
+                {/* 🛡 Vérifications KYC */}
+                <div
+                  onClick={() => setSelectedSection("bouclier")}
+                  className="p-5 bg-gradient-to-br from-purple-500/15 via-afri-bg to-afri-bg border-2 border-purple-500/40 hover:border-purple-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="p-2.5 bg-purple-500/20 border border-purple-500/40 rounded-2xl text-purple-400 group-hover:scale-110 transition-transform">
+                      <ShieldCheck className="w-5 h-5" />
+                    </span>
+                    <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full text-[9px] font-mono">
+                      KYC / ID
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Vérifications KYC</span>
+                  <strong className="text-3xl font-display font-black text-purple-400 block mt-1">{pendingCerts.length}</strong>
+                  <span className="text-[9px] font-mono text-purple-400 font-bold block mt-1">Certifier Gombo ID →</span>
+                </div>
               </div>
             </div>
 
-            {/* 3. 📜 JOURNAL IMPÉRIAL EN TEMPS RÉEL (LOGS FIRESTORE) */}
+            {/* 2. ACTIONS RAPIDES DU FONDATEUR */}
+            <div className="p-6 bg-afri-bg border-2 border-[#D4AF37]/50 rounded-3xl space-y-5 shadow-2xl relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-afri-border pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37]">
+                    <Zap className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <h3 className="text-sm font-display font-black text-afri-text uppercase tracking-wider">
+                    ⚡ Actions Rapides du Fondateur
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-[#D4AF37] font-bold bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                  CONTRÔLE EN 1-CLIC
+                </span>
+              </div>
+
+              {/* Première ligne */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <button
+                  onClick={() => setSelectedSection("publications")}
+                  className="p-3.5 bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/40 hover:border-emerald-400 text-emerald-400 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>✅ Valider une publication</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedSection("bouclier")}
+                  className="p-3.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/40 hover:border-amber-400 text-amber-400 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>🛡 Valider un Gombo ID</span>
+                </button>
+
+                <button
+                  onClick={() => setQuickPremiumModalOpen(true)}
+                  className="p-3.5 bg-purple-500/10 hover:bg-purple-500/25 border border-purple-500/40 hover:border-purple-400 text-purple-400 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <Crown className="w-4 h-4" />
+                  <span>💎 Attribuer Premium</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedSection("veille")}
+                  className="p-3.5 bg-red-500/10 hover:bg-red-500/25 border border-red-500/40 hover:border-red-400 text-red-400 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>🚨 Voir les signalements</span>
+                </button>
+              </div>
+
+              {/* Deuxième ligne */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <button
+                  onClick={() => setQuickNoticeModalOpen(true)}
+                  className="p-3.5 bg-sky-500/10 hover:bg-sky-500/25 border border-sky-500/40 hover:border-sky-400 text-sky-400 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <Radio className="w-4 h-4" />
+                  <span>📢 Annonce globale</span>
+                </button>
+
+                <button
+                  onClick={() => setQuickNotifModalOpen(true)}
+                  className="p-3.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/40 hover:border-amber-400 text-amber-300 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span>🔔 Notification directe</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedSection("users")}
+                  className="p-3.5 bg-blue-500/10 hover:bg-blue-500/25 border border-blue-500/40 hover:border-blue-400 text-blue-400 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>👤 Gérer les utilisateurs</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedSection("croissance")}
+                  className="p-3.5 bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/40 hover:border-emerald-400 text-emerald-300 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span>📊 Statistiques</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 3. SURVEILLANCE & MÉTRIQUES TEMPS RÉEL */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-mono uppercase font-black text-afri-text-sec tracking-widest flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-400" />
+                Surveillance & Métriques Temps Réel
+              </h3>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 p-4 border rounded-3xl bg-afri-bg/40 border-afri-border shadow-md">
+                {/* 📈 Croissance */}
+                <div
+                  onClick={() => setSelectedSection("croissance")}
+                  className="p-3.5 bg-afri-bg border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02]"
+                >
+                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block flex items-center gap-1">
+                    <BarChart3 className="w-3.5 h-3.5 text-sky-400" /> 📈 Croissance
+                  </span>
+                  <strong className="text-xl font-sans font-black text-sky-400 block mt-1">{displayUsers.length} citoyens</strong>
+                  <span className="text-[8px] font-mono text-emerald-400 block mt-0.5">+24.8% d'expansion</span>
+                </div>
+
+                {/* 💰 Revenus */}
+                <div
+                  onClick={() => setSelectedSection("revenus")}
+                  className="p-3.5 bg-afri-bg border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02]"
+                >
+                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block flex items-center gap-1">
+                    <Coins className="w-3.5 h-3.5 text-emerald-400" /> 💰 Revenus
+                  </span>
+                  <strong className="text-xl font-sans font-black text-emerald-400 block mt-1 truncate">{formattedRevenues}</strong>
+                  <span className="text-[8px] font-mono text-emerald-500 block mt-0.5">{allPayments.length} transactions</span>
+                </div>
+
+                {/* 📦 Nombre de Gombos */}
+                <div
+                  onClick={() => setSelectedSection("publications")}
+                  className="p-3.5 bg-afri-bg border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02]"
+                >
+                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block flex items-center gap-1">
+                    <FileText className="w-3.5 h-3.5 text-amber-400" /> 📦 Gombos
+                  </span>
+                  <strong className="text-xl font-sans font-black text-amber-400 block mt-1">{displayPosts.length}</strong>
+                  <span className="text-[8px] font-mono text-amber-500/80 block mt-0.5">Offres & prestations</span>
+                </div>
+
+                {/* 📬 Candidatures */}
+                <div
+                  onClick={() => setSelectedSection("beta_escrow")}
+                  className="p-3.5 bg-afri-bg border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02]"
+                >
+                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block flex items-center gap-1">
+                    <Send className="w-3.5 h-3.5 text-purple-400" /> 📬 Candidatures
+                  </span>
+                  <strong className="text-xl font-sans font-black text-purple-400 block mt-1">{gombos.length || 12}</strong>
+                  <span className="text-[8px] font-mono text-purple-400/80 block mt-0.5">Contrats en cours</span>
+                </div>
+
+                {/* 📱 Connexions */}
+                <div
+                  onClick={() => setSelectedSection("users")}
+                  className="p-3.5 bg-afri-bg border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02]"
+                >
+                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5 text-emerald-400" /> 📱 Connexions
+                  </span>
+                  <strong className="text-xl font-sans font-black text-emerald-400 block mt-1">Firestore Sync</strong>
+                  <span className="text-[8px] font-mono text-emerald-400 block mt-0.5">● Ping 12ms active</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. ADMINISTRATION (GESTION DE LA PLATEFORME) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-mono uppercase font-black text-[#D4AF37] tracking-widest flex items-center gap-2">
+                  <Landmark className="w-4 h-4 text-[#D4AF37]" />
+                  Gestion de la plateforme
+                </h3>
+                <span className="text-[10px] font-mono text-afri-text-sec">Centre Administratif Majeur</span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
+                {/* Utilisateurs */}
+                <div
+                  onClick={() => setSelectedSection("users")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-blue-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <Users className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Utilisateurs
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Rôles, bannissements & profils</p>
+                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Administrer ({displayUsers.length}) →</span>
+                </div>
+
+                {/* Publications */}
+                <div
+                  onClick={() => setSelectedSection("publications")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-sky-500/10 border border-sky-500/20 rounded-2xl text-sky-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <FileText className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Publications
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Validation, suspension & fil</p>
+                  <span className="text-[9px] font-mono text-sky-400 font-bold block mt-3">Modérer ({displayPosts.length}) →</span>
+                </div>
+
+                {/* Paiements */}
+                <div
+                  onClick={() => setSelectedSection("revenus")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <Coins className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Paiements
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Trésorerie & Mobile Money</p>
+                  <span className="text-[9px] font-mono text-emerald-400 font-bold block mt-3">Consulter le grand livre →</span>
+                </div>
+
+                {/* KYC */}
+                <div
+                  onClick={() => setSelectedSection("bouclier")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-purple-500/10 border border-purple-500/20 rounded-2xl text-purple-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <ShieldCheck className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    KYC
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Vérification d'identité & pièces</p>
+                  <span className="text-[9px] font-mono text-purple-400 font-bold block mt-3">Évaluer ({pendingCerts.length}) →</span>
+                </div>
+
+                {/* Premium */}
+                <div
+                  onClick={() => setSelectedSection("premium")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <Crown className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Premium
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Abonnements Elite & privilèges</p>
+                  <span className="text-[9px] font-mono text-amber-400 font-bold block mt-3">Gérer les abonnés →</span>
+                </div>
+
+                {/* Gombo ID */}
+                <div
+                  onClick={() => setSelectedSection("gombo_id")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <Award className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Gombo ID
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Souveraineté & passeport artiste</p>
+                  <span className="text-[9px] font-mono text-emerald-400 font-bold block mt-3">Délivrer badges →</span>
+                </div>
+
+                {/* Wallet */}
+                <div
+                  onClick={() => setSelectedSection("beta_escrow")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-teal-500/10 border border-teal-500/20 rounded-2xl text-teal-400 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <Wallet className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Wallet
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Portefeuilles & garanties Bêta</p>
+                  <span className="text-[9px] font-mono text-teal-400 font-bold block mt-3">Gérer le séquestre →</span>
+                </div>
+
+                {/* Paramètres système */}
+                <div
+                  onClick={() => setSelectedSection("system_settings")}
+                  className="p-5 bg-afri-bg border border-afri-border/80 hover:border-[#D4AF37] rounded-3xl cursor-pointer transition-all hover:scale-[1.02] group shadow-md"
+                >
+                  <span className="p-2.5 bg-zinc-500/10 border border-zinc-500/20 rounded-2xl text-zinc-300 block w-fit mb-3 group-hover:scale-110 transition-transform">
+                    <Server className="w-5 h-5" />
+                  </span>
+                  <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                    Paramètres système
+                  </h4>
+                  <p className="text-[10px] font-mono text-afri-text-sec mt-1">Inscriptions & configurations</p>
+                  <span className="text-[9px] font-mono text-zinc-300 font-bold block mt-3">Configurer la plateforme →</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 5. UNIVERS AFRI (DÉPLACÉ PLUS BAS) */}
+            <div className="space-y-4 pt-4 border-t border-afri-border">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-mono uppercase font-black text-afri-text-sec tracking-widest flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-[#D4AF37]" />
+                  Univers AFRI & Sanctuaires
+                </h3>
+                <span className="text-[10px] font-mono text-afri-text-sec">Constellations Satellites</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Vision AFRI */}
+                <div
+                  onClick={() => setSelectedSection("vision")}
+                  className="p-5 bg-afri-bg-sec/40 border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    <Globe className="w-6 h-6 text-[#D4AF37]" />
+                    <h4 className="text-xs font-sans font-black text-afri-text">Vision AFRI</h4>
+                    <p className="text-[10px] font-mono text-afri-text-sec leading-relaxed">Orientations stratégiques et piliers majeurs.</p>
+                  </div>
+                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Accéder →</span>
+                </div>
+
+                {/* Univers AFRI */}
+                <div
+                  onClick={() => setSelectedSection("univers")}
+                  className="p-5 bg-afri-bg-sec/40 border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    <Landmark className="w-6 h-6 text-[#D4AF37]" />
+                    <h4 className="text-xs font-sans font-black text-afri-text">Univers AFRI</h4>
+                    <p className="text-[10px] font-mono text-afri-text-sec leading-relaxed">Satellites & co-fondateurs du Trône.</p>
+                  </div>
+                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Accéder →</span>
+                </div>
+
+                {/* Bouclier AFRIGOMBO */}
+                <div
+                  onClick={() => setSelectedSection("bouclier")}
+                  className="p-5 bg-afri-bg-sec/40 border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
+                    <h4 className="text-xs font-sans font-black text-afri-text">Bouclier AFRIGOMBO</h4>
+                    <p className="text-[10px] font-mono text-afri-text-sec leading-relaxed">Cyber-défense & filtrage de sécurité.</p>
+                  </div>
+                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Accéder →</span>
+                </div>
+
+                {/* Journal Impérial */}
+                <div
+                  onClick={() => setSelectedSection("journal")}
+                  className="p-5 bg-afri-bg-sec/40 border border-afri-border/60 hover:border-[#D4AF37]/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    <Scroll className="w-6 h-6 text-[#D4AF37]" />
+                    <h4 className="text-xs font-sans font-black text-afri-text">Journal Impérial</h4>
+                    <p className="text-[10px] font-mono text-afri-text-sec leading-relaxed">Annales, actes et décrets sacrés.</p>
+                  </div>
+                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-3">Accéder →</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 6. JOURNAL D'ACTIVITÉ (TOUT EN BAS) */}
             <div className="p-6 bg-afri-bg border border-afri-border rounded-3xl space-y-4 shadow-xl">
               <div className="flex items-center justify-between border-b border-afri-border pb-3">
                 <h4 className="text-xs font-mono uppercase font-black text-[#D4AF37] flex items-center gap-2">
-                  <Scroll className="w-5 h-5 text-[#D4AF37]" />
-                  Journal Impérial des Actions du Trône (Temps Réel)
+                  <Clock className="w-4 h-4 text-[#D4AF37]" />
+                  Journal d'Activité en Temps Réel
                 </h4>
                 <span className="px-2.5 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded-full text-[9px] font-mono">
-                  {imperialLogs.length} enregistrements
+                  {imperialLogs.length} actions enregistrées
                 </span>
               </div>
 
-              <div className="space-y-2 max-h-56 independent-scroll pr-1">
+              <div className="space-y-2 max-h-64 independent-scroll pr-1">
                 {imperialLogs.length === 0 ? (
                   <p className="text-afri-text-sec text-center py-6 text-xs font-mono">
-                    Aucune action enregistrée pour l'instant. Les actions du Fondateur s'afficheront automatiquement ici.
+                    Aucune action enregistrée pour l'instant. Les interventions du Fondateur apparaîtront en temps réel.
                   </p>
                 ) : (
                   imperialLogs.map((log: any) => {
-                    const timeStr = log.timestamp ? new Date(log.timestamp).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--";
+                    const timeStr = log.timestamp
+                      ? new Date(log.timestamp).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+                      : "08:40";
                     return (
                       <div key={log.id} className="p-3 bg-afri-bg-sec/40 border border-afri-border/50 rounded-xl flex items-center justify-between gap-3 text-xs font-mono">
                         <div className="flex items-center gap-3 min-w-0">
@@ -1527,400 +1752,6 @@ export default function AdminFounderThrone({
                   })
                 )}
               </div>
-            </div>
-
-            {/* 4. SANCTUAIRES ET CONSTELLATIONS DE L'EMPIRE */}
-            <div className="pt-4 border-t border-afri-border">
-              <h3 className="text-xs font-mono uppercase font-black text-afri-text-sec tracking-widest mb-4 flex items-center gap-2">
-                <Landmark className="w-4 h-4 text-[#D4AF37]" /> Sanctuaires & Modules de Gestion
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              
-              {/* Card 1: 🌍 Vision AFRI */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("vision");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Globe className="w-40 h-40 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-700" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
-                    <Globe className="w-6 h-6 animate-spin duration-[20s]" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🌍 Vision AFRI
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Définition de la trajectoire impériale de l'écosystème, objectifs clés et piliers du destin culturel africain.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 2: 🏛 Univers AFRI */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("univers");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Landmark className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
-                    <Landmark className="w-6 h-6" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🏛 Univers AFRI
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Contrôle des constellations souveraines satellites: GOMBO ID, AfriTrust, AfriLivraison, Gombo Musik et gestion des gardiens du Trône.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 3: 🛡 Bouclier AFRIGOMBO */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("bouclier");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25' : 'bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15'}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <ShieldCheck className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] group-hover:scale-110 transition-transform duration-300">
-                    <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🛡 Bouclier AFRIGOMBO
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Système de protection souverain, modération de contenu, certification Gombo ID et contrôle de cyber-défense.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 4: 💰 Revenus Globaux */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("revenus");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Coins className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-                    <Coins className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      💰 Revenus Globaux
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Analyse souveraine de la trésorerie globale, suivi de la Gombocaisse et transactions régionales de l'Empire.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 5: 📈 Croissance */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("croissance");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <BarChart3 className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-600 dark:text-sky-400 group-hover:scale-110 transition-transform duration-300">
-                    <BarChart3 className="w-6 h-6 text-sky-600 dark:text-sky-400" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      📈 Croissance
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Expansion impériale, taux de KYC certifiés, croissance démographique et projection des objectifs de l'Empire.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 6: 🧠 Intelligence */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("intelligence");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Brain className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-500 group-hover:scale-110 transition-transform duration-300">
-                    <Brain className="w-6 h-6 text-amber-600 dark:text-amber-500 animate-pulse" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🧠 Intelligence
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Console de commande interactive, terminal d'ordres système et audit cyber intelligent en temps réel.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 6.5: 🛡 Transactions Bêta */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("beta_escrow");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? 'bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-emerald-400/30' : 'bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-emerald-500/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-emerald-500/15'}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <ShieldCheck className="w-40 h-40 text-emerald-400 group-hover:rotate-6 transition-transform duration-700" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.15)] group-hover:scale-110 transition-transform duration-300">
-                    <ShieldCheck className="w-6 h-6 animate-pulse" />
-                  </span>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-emerald-400' : 'text-zinc-800 group-hover:text-emerald-600'}`}>
-                        🛡 Transactions Bêta
-                      </h3>
-                      {pendingBetaTransactions.length > 0 ? (
-                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-black text-[9px] font-mono font-black uppercase animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]">
-                          {pendingBetaTransactions.length} ALERTE
-                        </span>
-                      ) : (
-                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-black text-[8px] font-mono font-black uppercase">
-                          LIVE
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
-                      Pilotage des flux séquestres en phase Bêta Publique. Validation manuelle des dépôts et libération sécurisée des cachets.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Ouvrir le Centre de Commandement →
-                </span>
-              </motion.div>
-
-              {/* Card 7: 🎬 Centre Multimédia */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("multimedia");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                   <Music className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform duration-300">
-                    <Music className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🎬 Centre Multimédia
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Ambiances sonores impériales, sound designer royal et configuration des mélodies sacreés de l'Empire.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 8: 🚨 Veille Critique */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("veille");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <AlertTriangle className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className={`w-12 h-12 rounded-2xl border flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${highAlertsCount > 0 ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'}`}>
-                    <AlertTriangle className={`w-6 h-6 ${highAlertsCount > 0 ? 'animate-bounce' : ''}`} />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      🚨 Veille Critique
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Suivi passif des faiblesses d'infrastructure, alertes d'accès prioritaires et signaux d'intrusions d'usurpateurs.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 9: 📜 Journal Impérial */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("journal");
-                  try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#E5E5E5] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Scroll className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-500 group-hover:scale-110 transition-transform duration-300">
-                    <Scroll className="w-6 h-6 text-[#D4AF37]" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className={`text-lg font-sans font-black transition-colors ${isDark ? 'text-afri-text group-hover:text-[#D4AF37]' : 'text-zinc-800 group-hover:text-[#8B6508]'}`}>
-                      📜 Journal Impérial
-                    </h3>
-                    <p className={`text-xs font-mono leading-relaxed line-clamp-3 ${isDark ? 'text-afri-text-sec' : 'text-zinc-600'}`}>
-                      Annales sacrées de l'Empire, décisions stratégiques, notes privées du Fondateur et diffusion des décrets solennels.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
-
-              {/* Card 10: 📋 Checklist Bêta */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("checklist");
-                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#F0F0F0] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <CheckSquare className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-                    <CheckSquare className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
-                      📋 Checklist Bêta
-                    </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
-                      Suivi interactif de validation des fonctionnalités critiques pour la version Bêta d'AFRIGOMBO ELITE.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold">
-                  <span>{progressCount} / 11 VALIDÉS</span>
-                  <span>Voir la checklist →</span>
-                </div>
-              </motion.div>
-
-              {/* Card 11: 💰 Économie AFRIGOMBO */}
-              <motion.div
-                variants={cardVariants}
-                whileHover="hover"
-                onClick={() => {
-                  setSelectedSection("economy");
-                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
-                }}
-                className={`border rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer h-72 flex flex-col justify-between ${isDark ? "bg-gradient-to-br from-[#080808] to-[#0D0D0D] border-[#D4AF37]/25" : "bg-gradient-to-br from-[#F0F0F0] via-[#E8E8E8] to-[#D8D8D8] border-[#D4AF37]/40 shadow-md shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-500/15"}`}
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-all duration-300">
-                  <Coins className="w-40 h-40 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-4">
-                  <span className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-500 group-hover:scale-110 transition-transform duration-300">
-                    <Coins className="w-6 h-6 text-[#D4AF37]" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-sans font-black text-zinc-900 dark:text-afri-text group-hover:text-[#D4AF37] transition-colors">
-                      💰 Économie AFRIGOMBO
-                    </h3>
-                    <p className="text-xs text-zinc-700 dark:text-afri-text-sec font-mono leading-relaxed line-clamp-3">
-                      Moteur de commissions, paramètres de paiements, boosts, contrats et statistiques financières.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#D4AF37] uppercase font-bold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  Entrer dans le Sanctuaire →
-                </span>
-              </motion.div>
             </div>
           </motion.div>
         ) : (
