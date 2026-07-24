@@ -11,6 +11,7 @@ import {
   Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye
 } from "lucide-react";
 import { BetaTransactionsAdminPanel } from "./BetaTransactionsAdminPanel";
+import { PendingPublicationsAdminPanel } from "./PendingPublicationsAdminPanel";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
@@ -125,7 +126,8 @@ export default function AdminFounderThrone({
   const [registrationsEnabled, setRegistrationsEnabled] = useState<boolean>(true);
   const [imperialLogs, setImperialLogs] = useState<any[]>([]);
   const [liveUsers, setLiveUsers] = useState<any[]>(users);
-  const [livePosts, setLivePosts] = useState<any[]>(posts);
+  const [livePosts, setLivePosts] = useState<any[]>(posts || []);
+  const [liveGombos, setLiveGombos] = useState<any[]>(gombos || []);
 
   useEffect(() => {
     if (!db) return;
@@ -152,24 +154,36 @@ export default function AdminFounderThrone({
       if (list.length > 0) setLiveUsers(list);
     });
 
-    // Realtime Posts
-    const unsubPosts = onSnapshot(collection(db, "posts"), (snap) => {
+    // Realtime Posts & Gombos
+    const unsubSocialPosts = onSnapshot(collection(db, "social_posts"), (snap) => {
       const list: any[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      if (list.length > 0) setLivePosts(list);
+      setLivePosts(list);
+    });
+
+    const unsubGombos = onSnapshot(collection(db, "gombos"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      setLiveGombos(list);
     });
 
     return () => {
       unsubReg();
       unsubLogs();
       unsubUsers();
-      unsubPosts();
+      unsubSocialPosts();
+      unsubGombos();
     };
   }, []);
 
-  const displayUsers = liveUsers.length > 0 ? liveUsers : users;
-  const displayPosts = livePosts.length > 0 ? livePosts : posts;
-  const pendingPostsCount = displayPosts.filter((p: any) => p.status === "pending" || p.status === "pending_deposit" || p.pendingValidation).length;
+  const displayUsers = liveUsers.length > 0 ? liveUsers : (users || []);
+  const displayPosts = livePosts.length > 0 ? livePosts : (posts || []);
+  const displayGombos = liveGombos.length > 0 ? liveGombos : (gombos || []);
+  const pendingPostsCount = [...displayPosts, ...displayGombos].filter(
+    (p: any) => 
+      (p.status === "pending_deposit" || p.status === "pending" || p.adminValidated === false || p.visible === false) &&
+      p.status !== "rejected" && p.status !== "refuse" && p.status !== "cancelled" && p.status !== "published" && p.status !== "publie"
+  ).length;
 
   const logImperialAction = async (action: string, description: string) => {
     if (!db) return;
@@ -2267,6 +2281,24 @@ export default function AdminFounderThrone({
                     </div>
                   </div>
 
+                </div>
+              </div>
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 📢 Publications en attente
+                 ========================================================= */}
+            {selectedSection === "publications" && (
+              <div className="space-y-6">
+                <div className="p-6 bg-afri-bg/80 border border-sky-500/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(14,165,233,0.05)]">
+                  <FileText className="w-8 h-8 text-sky-400 shrink-0 mt-0.5 animate-pulse" />
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
+                    <strong>CENTRE DE COMMANDEMENT — PUBLICATIONS EN ATTENTE :</strong> Validez ou refusez manuellement les demandes de publication enregistrées. Une fois validée par vos soins, la publication est immédiatement publiée et devient visible sur Le Terrain.
+                  </div>
+                </div>
+
+                <div className="p-1 sm:p-4 bg-afri-bg border border-afri-border rounded-3xl">
+                  <PendingPublicationsAdminPanel currentUser={profile} />
                 </div>
               </div>
             )}
