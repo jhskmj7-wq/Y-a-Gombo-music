@@ -311,7 +311,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-afri-bg/98 z-50 flex flex-col p-4 sm:p-6 space-y-4 overflow-y-auto"
+              className="absolute inset-0 bg-afri-bg/98 z-50 flex flex-col p-4 sm:p-6 space-y-4 overflow-y-auto overscroll-contain touch-pan-y"
             >
               {/* Top Banner */}
               <div className="text-center space-y-2 pt-2">
@@ -319,13 +319,13 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   🛡️
                 </div>
                 <span className="inline-block text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
-                  🟡 EN ATTENTE DE PAIEMENT
+                  ⏳ EN ATTENTE DE VALIDATION
                 </span>
                 <h3 className="text-lg sm:text-xl font-black text-afri-text uppercase tracking-wide">
-                  Publication de gombo en attente de paiement
+                  Validation de votre Gombo (Bêta Test)
                 </h3>
-                <p className="text-xs text-afri-text-sec max-w-sm mx-auto">
-                  Votre publication a été créée mais demeure <span className="text-[#D4AF37] font-bold">invisible sur le fil</span> tant que le dépôt n'est pas validé.
+                <p className="text-xs text-afri-text-sec max-w-sm mx-auto leading-relaxed font-medium">
+                  Pour la bêta test, un conseiller vous assistera pour finaliser et valider la publication de votre gombo.
                 </p>
               </div>
 
@@ -335,29 +335,37 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   <span className="text-afri-text-sec">Titre :</span>
                   <span className="font-bold text-afri-text truncate max-w-[180px]">{depositDetails.title}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-afri-text-sec">Cachet :</span>
-                  <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.cachet ? depositDetails.cachet.toLocaleString() : 0} FCFA</span>
-                </div>
+                {depositDetails.cachet ? (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-afri-text-sec">Cachet :</span>
+                    <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.cachet.toLocaleString()} FCFA</span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-afri-text-sec">Réf ID :</span>
                   <span className="font-mono text-[10px] bg-afri-bg px-2 py-0.5 rounded text-afri-text-sec">{depositDetails.refId}</span>
                 </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-afri-text-sec">Statut :</span>
+                  <span className="font-bold text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30 text-[10px] uppercase">
+                    ⏳ En attente de validation
+                  </span>
+                </div>
               </div>
 
-              {/* Action 1: Contact Support WhatsApp */}
+              {/* Action 1: Contact Support / Conseiller */}
               <div className="space-y-2">
                 <button
                   type="button"
                   onClick={() => {
-                    supportConfig.openSupport(`Validation du paiement pour le Gombo "${depositDetails.title}" (Réf: ${depositDetails.refId})`);
+                    supportConfig.openSupport(`Bonjour, je souhaite finaliser et valider la publication de mon gombo "${depositDetails.title}" (Réf: ${depositDetails.refId})`);
                   }}
-                  className="w-full px-4 py-3 bg-[#25D366] hover:bg-[#20bd5a] text-black font-black text-xs uppercase rounded-xl transition-all shadow-md shadow-[#25D366]/20 cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                  className="w-full px-4 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-black font-black text-xs uppercase rounded-xl transition-all shadow-md shadow-[#25D366]/20 cursor-pointer flex items-center justify-center gap-2 active:scale-98"
                 >
-                  <span>💬 Contacter le service client (WhatsApp)</span>
+                  <span>💬 Joindre le support / un conseiller</span>
                 </button>
                 <p className="text-[10px] text-center text-afri-text-sec">
-                  Envoyez votre preuve de paiement à l'équipe Support pour obtenir votre code de validation.
+                  Contactez directement un conseiller pour obtenir votre code de validation ou faire valider votre gombo.
                 </p>
               </div>
 
@@ -367,7 +375,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   <Zap className="w-3.5 h-3.5 text-[#D4AF37]" /> Saisir un Code de Validation
                 </label>
                 <p className="text-[10px] text-afri-text-sec">
-                  Vous possédez un code fourni par le Support ? Entrez-le ci-dessous pour publier votre Gombo immédiatement.
+                  Saisissez le code fourni par votre conseiller pour valider et publier votre gombo dans le fil général.
                 </p>
                 <form onSubmit={handleValidateCode} className="space-y-2 pt-1">
                   <div className="relative">
@@ -412,7 +420,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                   }}
                   className="text-xs font-bold text-afri-text-sec hover:text-white underline cursor-pointer"
                 >
-                  Retourner au Terrain (Dépôt plus tard)
+                  Retourner au Terrain (Validation ultérieure)
                 </button>
               </div>
             </motion.div>

@@ -466,7 +466,7 @@ export default function CompleteProfile({ currentUserProfile, onComplete }: Comp
   };
 
   return (
-    <div className="w-full h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden touch-pan-y [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [-webkit-overflow-scrolling:touch] max-w-xl mx-auto px-4 py-8 select-none box-border" id="onboarding-completion-root" style={{ wordBreak: 'break-word' }}>
+    <div className="w-full h-[100dvh] max-h-[100dvh] overflow-y-auto overscroll-contain overflow-x-hidden touch-pan-y [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [-webkit-overflow-scrolling:touch] max-w-xl mx-auto px-4 py-8 select-none box-border" id="onboarding-completion-root" style={{ wordBreak: 'break-word' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}

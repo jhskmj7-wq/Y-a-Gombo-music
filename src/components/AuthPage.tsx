@@ -6,7 +6,7 @@ export default function AuthPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-afri-bg-sec flex items-center justify-center p-4">
+    <div className="w-full h-screen max-h-screen overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-pan-y bg-afri-bg-sec flex items-center justify-center p-4">
       <div className="w-full max-w-sm relative">
         <AuthScreen 
           onSuccess={() => {

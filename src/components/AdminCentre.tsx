@@ -58,6 +58,8 @@ import SupportAfrigombo from "./SupportAfrigombo";
 import WhatsNew from "./WhatsNew";
 import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
 import FirebaseDiagnostic from "./FirebaseDiagnostic";
+import { supportConfig } from "../supportConfig";
+import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 import { PublicProfileModal } from "./PublicProfileModal";
 import { gomboDB } from "../firebase";
 import { usePerformance } from "../services/performanceService";
@@ -880,6 +882,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [publishAudio, setPublishAudio] = useState<string>("");
   const [publishDraftDetected, setPublishDraftDetected] = useState<boolean>(false);
   const [showHeritageLoginRequired, setShowHeritageLoginRequired] = useState<boolean>(false);
+  
+  // Validation code & beta testing states for user_publish
+  const [pubValidationCode, setPubValidationCode] = useState<string>("");
+  const [pubValidatingCode, setPubValidatingCode] = useState<boolean>(false);
+  const [pubCodeSuccessMsg, setPubCodeSuccessMsg] = useState<string>("");
+  const [pubCodeErrorMsg, setPubCodeErrorMsg] = useState<string>("");
+  const [createdPubRefId, setCreatedPubRefId] = useState<string>("");
+  const [createdPubTitle, setCreatedPubTitle] = useState<string>("");
+  const [createdPubPrice, setCreatedPubPrice] = useState<number>(0);
   
   // Draft restoration and auto-saving logic
   useEffect(() => {
@@ -4586,7 +4597,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       organizerName: activeArtist.artisticName || activeArtist.name,
                       timestamp: new Date().toISOString(),
                       applicantsCount: 0,
-                      status: "open",
+                      status: "pending_deposit",
+                      visible: false,
+                      adminValidated: false,
                       isBoosted: false,
                       date: newGomboDate,
                       time: `${newGomboHeureDebut} - ${newGomboHeureFin}`,
@@ -4629,19 +4642,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     if (publishAudio) (newP as any).audioUrl = publishAudio;
                     setPosts(prev => [newP, ...prev]);
                     await saveToFirestore("posts", newP.id, newP);
+                    setCreatedPubRefId(newPostId || uniqueId);
+                    setCreatedPubTitle(newGomboTitle);
+                    setCreatedPubPrice(newGomboPrice);
                   }
 
-                  // 2. Trigger Success State
+                  // 2. Trigger Pending Validation State
                   setPublishLoading(false);
                   setPublishSuccess(true);
                   try { audioSynth.playValidationSuccess(); } catch (_) {}
-
-                  await new Promise(resolve => setTimeout(resolve, 1500));
-
-                  // Clear draft, reset status, redirect
-                  clearDraft();
-                  setPublishSuccess(false);
-                  setActiveMenu("user_terrain");
                 };
 
                 return (
@@ -4693,16 +4702,142 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       </div>
                     )}
 
-                    {/* Success Overlay Check */}
+                    {/* Validation Intermediate Overlay (Beta Test) */}
                     {publishSuccess && (
-                      <div className="fixed inset-0 bg-afri-bg/95 backdrop-blur-md z-[999] flex flex-col items-center justify-center space-y-4">
-                        <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center text-emerald-400 animate-scaleUp">
-                          <Check className="w-10 h-10 stroke-[3]" />
+                      <div className="fixed inset-0 bg-afri-bg/98 backdrop-blur-md z-[999] flex flex-col items-center justify-center p-4 sm:p-6 space-y-4 overflow-y-auto overscroll-contain touch-pan-y">
+                        <div className="max-w-md w-full bg-afri-bg-sec border border-afri-gold/30 rounded-2xl p-6 space-y-4 text-center shadow-2xl relative">
+                          <div className="w-14 h-14 mx-auto bg-amber-500/10 border border-afri-gold rounded-2xl flex items-center justify-center text-3xl shadow-md">
+                            🛡️
+                          </div>
+                          
+                          <span className="inline-block text-[10px] font-mono font-black text-afri-gold uppercase tracking-widest bg-afri-gold/10 px-3 py-1 rounded-full border border-afri-gold/30">
+                            ⏳ EN ATTENTE DE VALIDATION
+                          </span>
+
+                          <h3 className="text-lg font-black text-afri-text uppercase tracking-wide">
+                            Validation de votre Gombo (Bêta Test)
+                          </h3>
+
+                          <p className="text-xs text-afri-text-sec leading-relaxed">
+                            Pour la bêta test, un conseiller vous assistera pour finaliser et valider la publication de votre gombo.
+                          </p>
+
+                          {/* Summary Box */}
+                          <div className="bg-afri-bg border border-afri-border rounded-xl p-3.5 space-y-2 text-left">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-afri-text-sec">Titre :</span>
+                              <span className="font-bold text-afri-text truncate max-w-[180px]">{createdPubTitle || newGomboTitle}</span>
+                            </div>
+                            {createdPubPrice > 0 && (
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-afri-text-sec">Cachet :</span>
+                                <span className="font-mono font-bold text-afri-gold">{createdPubPrice.toLocaleString()} FCFA</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-afri-text-sec">Réf ID :</span>
+                              <span className="font-mono text-[10px] bg-afri-bg-sec px-2 py-0.5 rounded text-afri-text-sec">{createdPubRefId}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-afri-text-sec">Statut :</span>
+                              <span className="font-bold text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30 text-[10px] uppercase">
+                                ⏳ En attente de validation
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Contact Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              supportConfig.openSupport(`Bonjour, je souhaite finaliser et valider la publication de mon gombo "${createdPubTitle || newGomboTitle}" (Réf: ${createdPubRefId})`);
+                            }}
+                            className="w-full py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-black font-black text-xs uppercase rounded-xl transition-all shadow-md shadow-[#25D366]/20 cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                          >
+                            <span>💬 Joindre le support / un conseiller</span>
+                          </button>
+
+                          {/* Validation Code Form */}
+                          <div className="bg-afri-bg/60 border border-afri-gold/20 rounded-xl p-3.5 space-y-2 text-left">
+                            <label className="block text-[11px] font-black uppercase text-afri-gold tracking-wider flex items-center gap-1.5">
+                              <Zap className="w-3.5 h-3.5 text-afri-gold" /> Code de Validation
+                            </label>
+                            <p className="text-[10px] text-afri-text-sec">
+                              Saisissez le code fourni par votre conseiller pour valider et publier votre gombo dans le fil général.
+                            </p>
+                            <form onSubmit={async (e) => {
+                              e.preventDefault();
+                              if (!pubValidationCode.trim()) {
+                                setPubCodeErrorMsg("Veuillez entrer votre code de validation.");
+                                return;
+                              }
+                              setPubCodeErrorMsg("");
+                              setPubCodeSuccessMsg("");
+                              setPubValidatingCode(true);
+
+                              try {
+                                const res = await validateAndPublishWithCode(pubValidationCode, createdPubRefId, activeArtistId);
+                                if (res.success) {
+                                  setPubCodeSuccessMsg(res.message);
+                                  setTimeout(() => {
+                                    clearDraft();
+                                    setPublishSuccess(false);
+                                    setActiveMenu("user_terrain");
+                                  }, 1500);
+                                } else {
+                                  setPubCodeErrorMsg(res.message);
+                                }
+                              } catch (err) {
+                                setPubCodeErrorMsg("Erreur lors de la vérification du code.");
+                              } finally {
+                                setPubValidatingCode(false);
+                              }
+                            }} className="space-y-2 pt-1">
+                              <input
+                                type="text"
+                                value={pubValidationCode}
+                                onChange={(e) => setPubValidationCode(e.target.value.toUpperCase())}
+                                placeholder="Ex: AG-849201"
+                                className="w-full bg-afri-bg border border-afri-border focus:border-afri-gold rounded-lg px-3 py-2 text-xs font-mono tracking-wider font-bold text-afri-text uppercase outline-none"
+                              />
+
+                              {pubCodeErrorMsg && (
+                                <div className="text-[10px] text-red-400 font-bold bg-red-950/30 p-2 rounded border border-red-900/50">
+                                  ⚠️ {pubCodeErrorMsg}
+                                </div>
+                              )}
+
+                              {pubCodeSuccessMsg && (
+                                <div className="text-[10px] text-emerald-400 font-bold bg-emerald-950/30 p-2 rounded border border-emerald-900/50">
+                                  {pubCodeSuccessMsg}
+                                </div>
+                              )}
+
+                              <button
+                                type="submit"
+                                disabled={pubValidatingCode || !pubValidationCode.trim()}
+                                className="w-full py-2.5 bg-afri-gold hover:bg-amber-400 active:scale-98 text-black font-black text-xs uppercase rounded-lg transition-all shadow-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                              >
+                                {pubValidatingCode ? "Vérification..." : "⚡ Valider et Publier le Gombo"}
+                              </button>
+                            </form>
+                          </div>
+
+                          {/* Close/Return */}
+                          <div className="pt-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                clearDraft();
+                                setPublishSuccess(false);
+                                setActiveMenu("user_terrain");
+                              }}
+                              className="text-xs font-bold text-afri-text-sec hover:text-white underline cursor-pointer"
+                            >
+                              Retourner au Terrain (Validation ultérieure)
+                            </button>
+                          </div>
                         </div>
-                        <h3 className="text-lg font-sans font-black uppercase tracking-widest text-afri-text">
-                          ✅ Publication créée
-                        </h3>
-                        <p className="text-xs text-afri-text-sec">Diffusion instantanée sur Le Terrain !</p>
                       </div>
                     )}
 

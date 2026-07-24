@@ -181,6 +181,36 @@ html.text-size-grand {
     -webkit-overflow-scrolling: touch;
   }
 
+  /* Global automatic isolation for all scroll containers */
+  .overflow-y-auto,
+  .overflow-x-auto,
+  .overflow-auto,
+  [class*="overflow-y-auto"],
+  [class*="overflow-x-auto"],
+  [class*="overflow-auto"],
+  [data-scrollable="true"] {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .overflow-y-auto,
+  [class*="overflow-y-auto"] {
+    touch-action: pan-y;
+  }
+
+  .overflow-x-auto,
+  [class*="overflow-x-auto"] {
+    touch-action: pan-x;
+  }
+
+  /* Modal overlay scroll isolation to prevent background body shifting */
+  .fixed.inset-0,
+  [role="dialog"],
+  .modal-overlay {
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+
   /* Prevent horizontal scroll issues on very small screens */
   .afri-no-scrollbar {
     -ms-overflow-style: none;
