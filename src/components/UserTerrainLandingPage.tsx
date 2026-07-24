@@ -1856,55 +1856,52 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       )}
 
       {/* ==========================================
-          BOTTOM SHEET PLUS (PREMIUM AFRIGOMBO)
+          PLUS COCKPIT POPUP (ANCHORED ABOVE '+' BUTTON)
          ========================================== */}
       <AnimatePresence>
         {isPlusMenuOpen && (
-          <>
+          <div className="fixed inset-0 z-[70] flex items-end justify-center pb-20 sm:pb-24 px-3 sm:px-4 pointer-events-auto">
             {/* Dark premium glass backdrop overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.75 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsPlusMenuOpen(false)}
-              className="fixed inset-0 bg-afri-bg/85 z-50 cursor-pointer backdrop-blur-md"
+              className="absolute inset-0 bg-afri-bg/85 cursor-pointer backdrop-blur-md"
             />
 
-            {/* Bottom Sheet wrapper */}
+            {/* Pop-up card floating directly above '+' button */}
             <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 24, stiffness: 180 }}
-              className="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-afri-bg-sec border-t-4 border-[#D4AF37] rounded-t-[2.5rem] z-50 p-6 sm:p-8 shadow-[0_-15px_45px_rgba(212,175,55,0.2)] flex flex-col space-y-6 select-none"
+              initial={{ scale: 0.85, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.85, y: 30, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              className="relative w-full max-w-lg bg-afri-bg-sec border-2 border-[#D4AF37]/50 rounded-3xl z-10 p-5 sm:p-7 shadow-[0_15px_50px_rgba(212,175,55,0.25)] flex flex-col space-y-4 select-none max-h-[75vh] overflow-hidden"
             >
-              {/* Decorative premium grab handle */}
-              <div 
-                className="w-16 h-1.5 bg-afri-bg-ter hover:bg-afri-text-muted rounded-full mx-auto shrink-0 cursor-pointer transition-all mb-1" 
-                onClick={() => setIsPlusMenuOpen(false)} 
-              />
+              {/* Pointer arrow pointing towards '+' button directly below */}
+              <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-5 bg-afri-bg-sec rotate-45 border-b-2 border-r-2 border-[#D4AF37]/50 pointer-events-none" />
 
               {/* Title Header */}
-              <div className="flex justify-between items-center border-b border-afri-border pb-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🌟</span>
+              <div className="flex justify-between items-center border-b border-afri-border pb-3 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">🌟</span>
                   <div>
                     <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
                       AFRIGOMBO PLUS COCKPIT
                     </h3>
-                    <p className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider mt-1.5 font-bold">Tableau des Commandes Avancées</p>
+                    <p className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Tableau des Commandes Avancées</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsPlusMenuOpen(false)}
-                  className="w-9 h-9 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-afri-text-muted hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-afri-text-muted hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Modern Grid containing 11 Items */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 overflow-y-auto max-h-[50vh] pb-8 pr-1">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 overflow-y-auto max-h-[52vh] pb-3 pr-1">
                 {/* ⭐ Booster une annonce */}
                 <button
                   onClick={() => {
@@ -2120,7 +2117,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                 </button>
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
 

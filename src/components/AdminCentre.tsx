@@ -43,6 +43,7 @@ import HeritagePage from "./HeritagePage";
 import GomboMusikEcosystem from "./GomboMusikEcosystem";
 import { PrivacyPage, TermsPage, DeleteAccountPage } from "./PublicPages";
 import FounderThrone from "./FounderThrone";
+import { PendingPaymentModal } from "./PendingPaymentModal";
 import MessagesView from "./MessagesView";
 import NotificationCenter from "./NotificationCenter";
 import ComingSoon from "./ComingSoon";
@@ -577,6 +578,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [openConvoWithUserId, setOpenConvoWithUserId] = useState<string | null>(null);
   const [openConvoWithGomboId, setOpenConvoWithGomboId] = useState<string | null>(null);
   const [publicProfileTargetUserId, setPublicProfileTargetUserId] = useState<string | null>(null);
+
+  // Pending payment modal state
+  const [showPendingPaymentModal, setShowPendingPaymentModal] = useState(false);
+  const [pendingPaymentItem, setPendingPaymentItem] = useState<{
+    id: string;
+    title: string;
+    budget?: number;
+    collectionName?: string;
+  } | null>(null);
 
   useEffect(() => {
     const handleOpenPublicProfile = (e: CustomEvent<{ userId: string }>) => {
@@ -5512,6 +5522,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                 const getStatusLabel = (status: string | undefined) => {
                   switch(status) {
+                    case "pending_deposit": return "🟡 En attente de dépôt";
                     case "publie": return "🟡 Publié (En attente)";
                     case "candidatures_ouvertes": return "🔵 Candidatures ouvertes";
                     case "artiste_selectionne": return "🟠 Musicien Sélectionné";
@@ -5565,6 +5576,23 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                           {/* Action Buttons if user is organizer or selected talent */}
                           <div className="flex flex-wrap gap-2 pt-2 border-t border-afri-border">
+                            {(gombo.status === "pending_deposit" || gombo.status === "pending" || gombo.adminValidated === false) && gombo.organizerId === currentArtist.id && (
+                              <button 
+                                onClick={() => {
+                                  setPendingPaymentItem({
+                                    id: gombo.id!,
+                                    title: gombo.title,
+                                    budget: gombo.budget,
+                                    collectionName: "gombos"
+                                  });
+                                  setShowPendingPaymentModal(true);
+                                }} 
+                                className="px-3 py-1.5 bg-[#D4AF37] text-black text-[9px] font-black uppercase rounded shadow-md shadow-[#D4AF37]/20 flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
+                              >
+                                🔑 Contacter Support / Activer par Code
+                              </button>
+                            )}
+
                             {(gombo.status === "publie" || gombo.status === "candidatures_ouvertes") && gombo.organizerId === currentArtist.id && (
                               <button onClick={() => setActiveMenu("user_dashboard")} className="px-3 py-1.5 bg-afri-gold text-black text-[9px] font-bold uppercase rounded hover:bg-afri-bg-sec">
                                 Sélectionner un Candidat
@@ -7519,30 +7547,33 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       )}
 
       {/* =========================================================================
-                                     PLUS MENU OVERLAYS
+                                     PLUS MENU OVERLAYS (ANCHORED ABOVE '+' BUTTON)
          ========================================================================= */}
       {isPlusMenuOpen && (
-        <div className="fixed inset-0 z-[60] flex flex-col justify-end bg-afri-bg/60 backdrop-blur-sm sm:items-center sm:justify-center">
+        <div className="fixed inset-0 z-[60] flex items-end justify-center pb-20 sm:pb-24 px-3 sm:px-4 pointer-events-auto">
           {/* Dismiss background */}
-          <div className="absolute inset-0" onClick={() => setIsPlusMenuOpen(false)} />
+          <div className="absolute inset-0 bg-afri-bg/60 backdrop-blur-sm cursor-pointer" onClick={() => setIsPlusMenuOpen(false)} />
           
           <motion.div
-            initial={{ y: "100%", opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-md bg-afri-bg-sec border-t border-x border-afri-gold/20 sm:rounded-3xl sm:border-b p-6 pb-12 shadow-[0_-15px_40px_rgba(0,0,0,0.8)] overflow-hidden"
+            initial={{ scale: 0.85, y: 30, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0.85, y: 30, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 350 }}
+            className="relative w-full max-w-md bg-afri-bg-sec border-2 border-afri-gold/40 rounded-3xl p-5 sm:p-6 shadow-[0_15px_50px_rgba(0,0,0,0.85)] overflow-hidden z-10"
           >
+            {/* Pointer arrow pointing towards the floating '+' button directly below */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-afri-bg-sec rotate-45 border-b-2 border-r-2 border-afri-gold/40 pointer-events-none" />
+
             <div className="absolute top-0 right-0 p-4">
               <button 
                 onClick={() => setIsPlusMenuOpen(false)}
-                className="text-afri-text-sec hover:text-afri-text transition-colors"
+                className="text-afri-text-sec hover:text-afri-text transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <h3 className="text-xl font-display font-black text-afri-text mb-6 tracking-tight">Que souhaitez-vous publier ?</h3>
+            <h3 className="text-xl font-display font-black text-afri-text mb-5 tracking-tight">Que souhaitez-vous publier ?</h3>
             
             <div className="space-y-3">
               <button
@@ -7551,10 +7582,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   setActiveMenu("user_publish");
                   setIsPlusMenuOpen(false);
                 }}
-                className="w-full flex items-center gap-4 bg-gradient-to-r from-afri-gold/10 to-transparent hover:from-afri-gold/20 border border-afri-gold/20 rounded-2xl p-4 text-left transition-all group"
+                className="w-full flex items-center gap-4 bg-gradient-to-r from-afri-gold/10 to-transparent hover:from-afri-gold/20 border border-afri-gold/20 rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-afri-gold to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
-                  <Megaphone className="w-6 h-6" />
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-afri-gold to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
+                  <Megaphone className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Publier un Gombo</h4>
@@ -7568,10 +7599,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   setActiveMenu("user_publish");
                   setIsPlusMenuOpen(false);
                 }}
-                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-4 text-left transition-all group"
+                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
               >
-                <div className="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 group-hover:scale-105 transition-transform">
-                  <Video className="w-6 h-6" />
+                <div className="w-11 h-11 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 group-hover:scale-105 transition-transform">
+                  <Video className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Publier un Réel</h4>
@@ -7585,10 +7616,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   setActiveMenu("user_publish");
                   setIsPlusMenuOpen(false);
                 }}
-                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-4 text-left transition-all group"
+                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
               >
-                <div className="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/30 group-hover:scale-105 transition-transform">
-                  <Mic2 className="w-6 h-6" />
+                <div className="w-11 h-11 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/30 group-hover:scale-105 transition-transform">
+                  <Mic2 className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Démo Musicale</h4>
@@ -7602,10 +7633,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   setActiveMenu("user_publish");
                   setIsPlusMenuOpen(false);
                 }}
-                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-4 text-left transition-all group relative overflow-hidden"
+                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group relative overflow-hidden cursor-pointer"
               >
-                <div className="w-12 h-12 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 border border-red-500/30 group-hover:scale-105 transition-transform">
-                  <Zap className="w-6 h-6" />
+                <div className="w-11 h-11 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 border border-red-500/30 group-hover:scale-105 transition-transform">
+                  <Zap className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5 flex items-center gap-2">
@@ -9127,6 +9158,18 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         onOpenDirectMessage={(targetUserId, targetName) => {
           setOpenConvoWithUserId(targetUserId);
           setActiveMenu("user_messages");
+        }}
+      />
+
+      {/* 8. Pending Payment Modal */}
+      <PendingPaymentModal
+        isOpen={showPendingPaymentModal}
+        onClose={() => setShowPendingPaymentModal(false)}
+        post={pendingPaymentItem}
+        currentUserProfile={(currentUser as any) || { uid: "anon", id: "anon" }}
+        onSuccess={() => {
+          setShowPendingPaymentModal(false);
+          alert("🎉 Publication activée avec succès !");
         }}
       />
 

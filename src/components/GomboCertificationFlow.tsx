@@ -912,14 +912,8 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
 
   return (
     <div className="w-full max-w-xl mx-auto space-y-6 pb-32 pt-2 text-left">
-      {/* Header back navigation */}
+      {/* Header title */}
       <div className="flex items-center gap-3">
-        <button 
-          onClick={onBack}
-          className="p-2 rounded-full hover:bg-afri-bg-sec text-afri-text-sec hover:text-afri-text transition-colors cursor-pointer border border-transparent hover:border-afri-border"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
         <div>
           <h2 className="text-lg font-serif font-black uppercase tracking-wider text-afri-text">Certification GOMBO ID</h2>
           <p className="text-[10px] text-afri-text-sec font-mono uppercase tracking-widest">Le parcours d'excellence et de souveraineté</p>

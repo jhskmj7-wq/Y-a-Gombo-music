@@ -22,15 +22,7 @@ export function PrivacyPage({ onBack }: PublicPageProps) {
       <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
         
         {/* Navigation / Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-afri-border">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg-sec border border-afri-border rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>← Retour</span>
-          </button>
-          
+        <div className="flex items-center justify-end pb-4 border-b border-afri-border">
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
             <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
             <span>AFRIGOMBO • CHARTE</span>
@@ -53,15 +45,7 @@ export function TermsPage({ onBack }: PublicPageProps) {
       <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
         
         {/* Navigation / Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-afri-border">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg-sec border border-afri-border rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>← Retour</span>
-          </button>
-          
+        <div className="flex items-center justify-end pb-4 border-b border-afri-border">
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-[#D4AF37]">
             <Flame className="w-4.5 h-4.5 text-[#D4AF37] fill-current" />
             <span>AFRIGOMBO • RÈGLEMENT</span>
@@ -84,15 +68,7 @@ export function DeleteAccountPage({ onBack }: PublicPageProps) {
       <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
         
         {/* Navigation / Header */}
-        <div className="flex items-center justify-between pb-6 border-b border-afri-border">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-afri-text-sec hover:text-[#D4AF37] bg-afri-bg-sec border border-afri-border rounded-xl transition-all cursor-pointer shadow-xs"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Quitter</span>
-          </button>
-          
+        <div className="flex items-center justify-end pb-6 border-b border-afri-border">
           <div className="flex items-center gap-1.5 font-black uppercase text-xs tracking-widest text-rose-500">
             <AlertTriangle className="w-4.5 h-4.5" />
             <span>SÉCURITÉ</span>

@@ -798,37 +798,37 @@ export default function CertificationHub({
         <div id="premium-membership-panel" className="space-y-8 animate-fadeIn text-left">
           
           {/* Main Premium Card */}
-          <div className="bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#0B0B0B] border-2 border-[#D4AF37] rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#D4AF37]/20 to-transparent blur-3xl pointer-events-none rounded-full" />
+          <div className="bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#0B0B0B] border-2 border-[#D4AF37] rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-lg">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-[#D4AF37]/20 to-transparent blur-2xl pointer-events-none rounded-full" />
             
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
-              <div className="md:col-span-3 space-y-4">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-afri-bg-sec/10 border border-[#D4AF37]/35 text-[#D4AF37] text-xs font-black uppercase rounded-full">
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+              <div className="md:col-span-3 space-y-2.5">
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-afri-bg-sec/10 border border-[#D4AF37]/35 text-[#D4AF37] text-[10px] font-black uppercase rounded-full">
                   <span>👑 ADHESION VIP</span>
                   <span className="w-1.5 h-1.5 bg-afri-bg-sec rounded-full animate-ping" />
                 </div>
-                <h2 className="text-3xl font-black text-afri-text font-sans tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-afri-text font-sans tracking-tight">
                   Premium AFRIGOMBO
                 </h2>
-                <p className="text-afri-text text-xs leading-relaxed">
+                <p className="text-afri-text text-[11px] leading-relaxed">
                   Propulsez votre carrière artistique au sommet de l'Afrique de l'Ouest. Rejoignez le cercle des artistes certifiés prioritaires et maximisez vos cachets.
                 </p>
 
                 {/* Benefits checklist */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-afri-text font-semibold">
-                  <div className="flex items-center gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px] text-afri-text font-semibold">
+                  <div className="flex items-center gap-1.5">
                     <span className="p-0.5 rounded bg-afri-bg-sec/10 text-[#D4AF37]">✓</span>
                     <span>👑 Placement Vedette Annuaire</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <span className="p-0.5 rounded bg-afri-bg-sec/10 text-[#D4AF37]">✓</span>
-                    <span>💎 Pastille de Prestige "Adhérent Premium"</span>
+                    <span>💎 Pastille "Adhérent Premium"</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <span className="p-0.5 rounded bg-afri-bg-sec/10 text-[#D4AF37]">✓</span>
                     <span>⚡ Renfort Express ultra-prioritaire</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <span className="p-0.5 rounded bg-afri-bg-sec/10 text-[#D4AF37]">✓</span>
                     <span>📈 Statistiques pros de votre page</span>
                   </div>
@@ -836,7 +836,7 @@ export default function CertificationHub({
               </div>
 
               {/* Card checkout action */}
-              <div className="md:col-span-2 bg-afri-bg-sec/95 border border-gray-800 rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xl relative">
+              <div className="md:col-span-2 bg-afri-bg-sec/95 border border-gray-800 rounded-xl p-3.5 sm:p-4 space-y-2.5 shadow-xl relative">
                 {currentUserProfile?.badges?.includes("💎 Adhérent Premium") || premiumSuccess ? (
                   <div className="text-center py-6 space-y-3">
                     <div className="text-4xl text-[#D4AF37] animate-bounce">💎</div>

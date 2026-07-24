@@ -165,46 +165,39 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   return (
     <div className="min-h-screen bg-afri-bg text-afri-text font-sans pb-32 transition-colors duration-300">
       {/* HEADER SECTION */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-afri-bg-ter to-afri-bg border-b border-afri-border px-6 pt-12 pb-24 sm:pt-20 sm:pb-36 text-center">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-afri-bg-sec/5 rounded-full blur-[120px] pointer-events-none"></div>
-        <button
-          onClick={onBack}
-          className="absolute top-6 left-6 flex items-center gap-1.5 text-xs font-black text-afri-text-sec hover:text-[#D4AF37] transition-colors cursor-pointer uppercase tracking-widest z-10"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Retour
-        </button>
+      <div className="relative overflow-hidden bg-gradient-to-b from-afri-bg-ter to-afri-bg border-b border-afri-border px-6 pt-6 pb-12 sm:pt-10 sm:pb-16 text-center">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-afri-bg-sec/5 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <div className="max-w-4xl mx-auto space-y-6 relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-afri-bg-sec/10 border border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+        <div className="max-w-4xl mx-auto space-y-3 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-afri-bg-sec/10 border border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
             👑 AFRIGOMBO PREMIUM
           </div>
           
-          <h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-afri-text uppercase leading-[0.95]">
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tighter text-afri-text uppercase leading-[0.95]">
             Développez votre <span className="text-[#D4AF37]">carrière</span>.
           </h1>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 pt-4">
-            <div className="text-afri-text-sec text-xs sm:text-sm font-bold uppercase tracking-wider">Soyez davantage visible.</div>
-            <div className="text-afri-text-sec text-xs sm:text-sm font-bold uppercase tracking-wider">Obtenez plus de Gombos.</div>
-            <div className="text-afri-text-sec text-xs sm:text-sm font-bold uppercase tracking-wider">Économisez sur vos contrats.</div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 pt-2">
+            <div className="text-afri-text-sec text-[11px] sm:text-xs font-bold uppercase tracking-wider">Soyez davantage visible.</div>
+            <div className="text-afri-text-sec text-[11px] sm:text-xs font-bold uppercase tracking-wider">Obtenez plus de Gombos.</div>
+            <div className="text-afri-text-sec text-[11px] sm:text-xs font-bold uppercase tracking-wider">Économisez sur vos contrats.</div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 -mt-20 relative z-20 space-y-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-8 relative z-20 space-y-12">
         {/* BILLING TOGGLE */}
-        <div className="flex justify-center mb-12">
-          <div className="bg-afri-bg-sec p-1.5 rounded-2xl border border-afri-border flex items-center gap-1.5 backdrop-blur-xl shadow-lg">
+        <div className="flex justify-center mb-6">
+          <div className="bg-afri-bg-sec p-1 rounded-xl border border-afri-border flex items-center gap-1 backdrop-blur-xl shadow-md">
             <button 
               onClick={() => setBillingCycle("monthly")}
-              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "monthly" ? "bg-afri-bg-sec text-black shadow-lg" : "text-afri-text-sec hover:text-afri-text"}`}
+              className={`px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "monthly" ? "bg-afri-bg-sec text-black shadow-md" : "text-afri-text-sec hover:text-afri-text"}`}
             >
               Mensuel
             </button>
             <button 
               onClick={() => setBillingCycle("yearly")}
-              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "yearly" ? "bg-afri-bg-sec text-black shadow-lg" : "text-afri-text-sec hover:text-afri-text"}`}
+              className={`px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "yearly" ? "bg-afri-bg-sec text-black shadow-md" : "text-afri-text-sec hover:text-afri-text"}`}
             >
               Annuel <span className="text-[9px] opacity-70 ml-1 font-extrabold">-20%</span>
             </button>
@@ -212,7 +205,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         </div>
 
         {/* CARDS LIST */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {plans.map((p) => {
             const isActive = subscribedPlan === p.name;
             const isSelected = selectedPlan === p.id;
@@ -220,40 +213,40 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
             // Generate clean native theme responsive card styles
             let cardBg = "bg-afri-bg-sec border-afri-border";
             if (p.id === "elite") {
-              cardBg = "bg-afri-bg-sec border-[#D4AF37]/50 shadow-[0_12px_40px_rgba(212,175,55,0.08)]";
+              cardBg = "bg-afri-bg-sec border-[#D4AF37]/50 shadow-[0_8px_30px_rgba(212,175,55,0.08)]";
             } else if (p.id === "pro") {
-              cardBg = "bg-afri-bg-sec border-afri-border hover:border-[#D4AF37]/40 shadow-sm";
+              cardBg = "bg-afri-bg-sec border-afri-border hover:border-[#D4AF37]/40 shadow-xs";
             }
 
             return (
               <div
                 key={p.id}
-                className={`flex flex-col p-10 sm:p-12 rounded-[40px] border transition-all duration-500 group relative ${cardBg} ${
-                  isSelected ? "ring-2 ring-[#D4AF37] scale-105 z-10" : "hover:scale-[1.02]"
+                className={`flex flex-col p-5 sm:p-6 rounded-2xl border transition-all duration-300 group relative ${cardBg} ${
+                  isSelected ? "ring-2 ring-[#D4AF37] scale-102 z-10" : "hover:scale-[1.01]"
                 }`}
               >
-                <div className="space-y-6 flex-1 text-left">
+                <div className="space-y-3 flex-1 text-left">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-xl font-black tracking-tight text-afri-text uppercase">{p.name}</h3>
-                      <p className="text-[10px] text-afri-text-sec uppercase tracking-widest mt-1.5 font-bold">
+                      <h3 className="text-lg font-black tracking-tight text-afri-text uppercase">{p.name}</h3>
+                      <p className="text-[10px] text-afri-text-sec uppercase tracking-widest mt-0.5 font-bold">
                         {p.id === "free" ? "Formule de base" : p.description}
                       </p>
                     </div>
                   </div>
 
-                  <div className="py-4">
+                  <div className="py-2">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-4xl sm:text-5xl font-black text-afri-text tracking-tighter">{p.priceLabel}</span>
-                      <span className="text-xs text-afri-text-sec font-bold uppercase">{p.period}</span>
+                      <span className="text-2xl sm:text-3xl font-black text-afri-text tracking-tighter">{p.priceLabel}</span>
+                      <span className="text-[11px] text-afri-text-sec font-bold uppercase">{p.period}</span>
                     </div>
                   </div>
 
-                  <div className="space-y-4 pt-2 border-t border-afri-border/50">
+                  <div className="space-y-2 pt-2 border-t border-afri-border/50">
                     {p.features.map((feat, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-afri-bg-sec/15 flex items-center justify-center shrink-0 mt-0.5">
-                          <Check className="w-3 h-3 text-[#D4AF37] stroke-[3]" />
+                      <div key={i} className="flex items-start gap-2">
+                        <div className="w-4 h-4 rounded-full bg-afri-bg-sec/15 flex items-center justify-center shrink-0 mt-0.5">
+                          <Check className="w-2.5 h-2.5 text-[#D4AF37] stroke-[3]" />
                         </div>
                         <span className="text-xs font-semibold text-afri-text-sec leading-tight">{feat}</span>
                       </div>
@@ -261,15 +254,15 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                   </div>
                 </div>
 
-                <div className="mt-12">
+                <div className="mt-5">
                   {isActive ? (
-                    <div className="w-full text-center py-4 px-6 rounded-2xl bg-afri-bg text-afri-text-sec font-black text-[10px] uppercase tracking-[0.2em] border border-afri-border">
+                    <div className="w-full text-center py-2.5 px-4 rounded-xl bg-afri-bg text-afri-text-sec font-black text-[10px] uppercase tracking-[0.2em] border border-afri-border">
                       Formule Actuelle
                     </div>
                   ) : (
                     <button
                       onClick={() => handleSubscribeClick(p.id as any)}
-                      className={`w-full py-4.5 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 shadow-xl hover:shadow-[#D4AF37]/10 active:scale-[0.98] cursor-pointer ${
+                      className={`w-full py-2.5 px-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-200 shadow-md hover:shadow-[#D4AF37]/10 active:scale-[0.98] cursor-pointer ${
                         p.id === "free" 
                           ? "bg-afri-bg border border-afri-border text-afri-text hover:bg-afri-bg-ter" 
                           : "bg-afri-bg-sec text-black hover:bg-opacity-95"
@@ -285,13 +278,13 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         </div>
 
         {/* PRÉSENTER LES AVANTAGES (LARGE CARDS) */}
-        <div className="mb-24 space-y-12">
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl font-black text-afri-text uppercase tracking-tighter">Pourquoi devenir Premium ?</h2>
-            <p className="text-afri-text-sec text-sm max-w-xl mx-auto">Découvrez les outils conçus pour propulser votre carrière musicale vers le haut.</p>
+        <div className="mb-12 space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-black text-afri-text uppercase tracking-tighter">Pourquoi devenir Premium ?</h2>
+            <p className="text-afri-text-sec text-xs max-w-xl mx-auto">Découvrez les outils conçus pour propulser votre carrière musicale vers le haut.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               { 
                 title: "Badge Premium", 
@@ -330,14 +323,14 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                 highlight: "Vitesse & Efficacité"
               },
             ].map((adv, idx) => (
-              <div key={idx} className="p-8 sm:p-10 bg-afri-bg-sec border border-afri-border rounded-[32px] space-y-6 hover:border-[#D4AF37]/40 shadow-sm transition-all group">
-                <div className="w-14 h-14 rounded-2xl bg-afri-bg-sec/10 text-[#D4AF37] flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <adv.icon className="w-7 h-7" />
+              <div key={idx} className="p-4 sm:p-5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3 hover:border-[#D4AF37]/40 shadow-xs transition-all group">
+                <div className="w-10 h-10 rounded-xl bg-afri-bg-sec/10 text-[#D4AF37] flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <adv.icon className="w-5 h-5" />
                 </div>
-                <div className="space-y-2 text-left">
+                <div className="space-y-1 text-left">
                   <div className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">{adv.highlight}</div>
-                  <h4 className="text-lg font-black text-afri-text uppercase tracking-tight">{adv.title}</h4>
-                  <p className="text-xs sm:text-sm text-afri-text-sec leading-relaxed">{adv.desc}</p>
+                  <h4 className="text-base font-black text-afri-text uppercase tracking-tight">{adv.title}</h4>
+                  <p className="text-xs text-afri-text-sec leading-snug">{adv.desc}</p>
                 </div>
               </div>
             ))}
@@ -345,18 +338,18 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         </div>
 
         {/* COMPARISON TABLE */}
-        <div className="mb-24 space-y-12 overflow-x-auto">
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl font-black text-afri-text uppercase tracking-tighter">Comparatif des offres</h2>
+        <div className="mb-12 space-y-6 overflow-x-auto">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-black text-afri-text uppercase tracking-tighter">Comparatif des offres</h2>
           </div>
 
-          <table className="w-full text-left border-collapse min-w-[600px]">
+          <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
               <tr className="border-b border-afri-border">
-                <th className="py-6 text-afri-text-sec font-bold uppercase text-[10px] tracking-widest">Avantages</th>
-                <th className="py-6 text-center text-afri-text font-black uppercase text-xs">Free</th>
-                <th className="py-6 text-center text-emerald-500 font-black uppercase text-xs">Pro</th>
-                <th className="py-6 text-center text-[#D4AF37] font-black uppercase text-xs">Elite</th>
+                <th className="py-3 text-afri-text-sec font-bold uppercase text-[10px] tracking-widest">Avantages</th>
+                <th className="py-3 text-center text-afri-text font-black uppercase text-xs">Free</th>
+                <th className="py-3 text-center text-emerald-500 font-black uppercase text-xs">Pro</th>
+                <th className="py-3 text-center text-[#D4AF37] font-black uppercase text-xs">Elite</th>
               </tr>
             </thead>
             <tbody className="text-xs">
@@ -369,10 +362,10 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                 { label: "Candidatures", free: "Standard", pro: "Prioritaires", elite: "Ultra-Prioritaires" },
               ].map((row, i) => (
                 <tr key={i} className="border-b border-afri-border/50 hover:bg-afri-bg-ter/40 transition-colors">
-                  <td className="py-5 font-bold text-afri-text-sec">{row.label}</td>
-                  <td className="py-5 text-center text-afri-text-muted font-mono">{row.free}</td>
-                  <td className="py-5 text-center text-emerald-500 font-mono font-bold">{row.pro}</td>
-                  <td className="py-5 text-center text-afri-text font-mono font-bold">{row.elite}</td>
+                  <td className="py-3 font-bold text-afri-text-sec">{row.label}</td>
+                  <td className="py-3 text-center text-afri-text-muted font-mono">{row.free}</td>
+                  <td className="py-3 text-center text-emerald-500 font-mono font-bold">{row.pro}</td>
+                  <td className="py-3 text-center text-afri-text font-mono font-bold">{row.elite}</td>
                 </tr>
               ))}
             </tbody>
@@ -380,8 +373,8 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         </div>
 
         {/* SECTION : ÉCONOMISEZ SUR VOS CONTRATS */}
-        <div className="mt-16 bg-afri-bg-sec border border-afri-border p-12 sm:p-20 rounded-[48px] space-y-12 relative overflow-hidden shadow-lg">
-          <div className="absolute top-0 left-0 w-64 h-64 bg-afri-bg-sec/5 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="mt-8 bg-afri-bg-sec border border-afri-border p-6 sm:p-10 rounded-3xl space-y-6 relative overflow-hidden shadow-md">
+          <div className="absolute top-0 left-0 w-48 h-48 bg-afri-bg-sec/5 rounded-full blur-[80px] pointer-events-none"></div>
           
           <div className="text-center max-w-2xl mx-auto space-y-4">
             <span className="text-[#D4AF37] text-[10px] uppercase font-black tracking-widest bg-afri-bg-sec/10 px-4 py-1.5 rounded-full border border-[#D4AF37]/20">

@@ -522,7 +522,7 @@ export default function GroupeVIPAnnuaire({
             )}
 
             {/* Simulated Advertising & Plan Showcase */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-2">
               {[
                 { 
                   title: "Plan Standard", 
@@ -536,7 +536,7 @@ export default function GroupeVIPAnnuaire({
                   price: "10 000 FCFA / an", 
                   badge: "Recommandé Ventes", 
                   benefits: ["Badge VIP doré prestigieux", "Indexation prioritaire filtrée", "Gestion exhaustive des musiciens", "Galerie d'audios & vidéos de concerts"], 
-                  color: "border-purple-500/30 bg-purple-500/[0.02] text-[#7C3AED] dark:text-[#A78BFA] scale-[1.01]" 
+                  color: "border-purple-500/30 bg-purple-500/[0.02] text-[#7C3AED] dark:text-[#A78BFA]" 
                 },
                 { 
                   title: "Prestige Premium 👑", 
@@ -546,23 +546,23 @@ export default function GroupeVIPAnnuaire({
                   color: "border-pink-500/30 bg-pink-500/[0.02] text-pink-500" 
                 }
               ].map((plan) => (
-                <div key={plan.title} className={`p-5 rounded-2xl border ${plan.color} space-y-4 shadow-sm relative flex flex-col justify-between bg-white dark:bg-afri-bg-sec`}>
-                  <div className="space-y-3">
+                <div key={plan.title} className={`p-3.5 sm:p-4 rounded-xl border ${plan.color} space-y-2 shadow-xs relative flex flex-col justify-between bg-white dark:bg-afri-bg-sec`}>
+                  <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-extrabold text-xs uppercase tracking-wider">{plan.title}</h3>
-                      <span className="text-[9px] uppercase font-black tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-afri-text-sec">{plan.badge}</span>
+                      <h3 className="font-extrabold text-[11px] uppercase tracking-wider">{plan.title}</h3>
+                      <span className="text-[8px] uppercase font-black tracking-widest px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-afri-text-sec">{plan.badge}</span>
                     </div>
-                    <div className="text-lg font-black">{plan.price}</div>
-                    <ul className="text-xs space-y-2 pt-1 font-medium text-gray-600 dark:text-gray-300">
+                    <div className="text-sm font-black">{plan.price}</div>
+                    <ul className="text-[11px] space-y-1 pt-0.5 font-medium text-gray-600 dark:text-gray-300">
                       {plan.benefits.map((b) => (
                         <li key={b} className="flex items-center gap-1.5 focus:outline-none">
-                          <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <Check className="w-3 h-3 text-emerald-500 shrink-0" />
                           <span>{b}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
-                  <div className="text-[9px] text-afri-text-sec text-center uppercase tracking-widest border-t border-dashed border-gray-100 dark:border-gray-800/80 pt-3 mt-1.5">
+                  <div className="text-[8px] text-afri-text-sec text-center uppercase tracking-widest border-t border-dashed border-gray-100 dark:border-gray-800/80 pt-2 mt-1">
                     Réseau Persistant • Aucun paiement requis
                   </div>
                 </div>

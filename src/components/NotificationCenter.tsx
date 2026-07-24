@@ -294,15 +294,6 @@ export default function NotificationCenter({
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 min-h-screen text-afri-text">
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="text-xs font-black uppercase tracking-wider text-afri-text-sec hover:text-afri-text inline-flex items-center gap-1.5 px-3 py-1.5 bg-afri-bg-sec rounded-xl border border-afri-border transition cursor-pointer"
-        >
-          &larr; Retour
-        </button>
-      )}
-
       {/* IMPERIAL HEADER */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}

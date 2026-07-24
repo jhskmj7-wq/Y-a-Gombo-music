@@ -67,15 +67,8 @@ export default function WhatsNew({ onBack }: WhatsNewProps) {
   return (
     <div className="min-h-screen bg-afri-bg text-afri-text pb-32">
       {/* Header */}
-      <div className="pt-24 pb-12 px-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <button 
-            onClick={onBack}
-            className="flex items-center gap-2 text-afri-text-sec hover:text-[#D4AF37] transition-colors text-xs font-black uppercase tracking-widest"
-          >
-            <ArrowLeft className="w-4 h-4" /> Retour
-          </button>
-          
+      <div className="pt-8 pb-8 px-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           <div className="space-y-2">
             <h1 className="text-4xl md:text-6xl font-black font-mono tracking-tighter uppercase leading-none">
               QUOI DE <span className="text-[#D4AF37]">NEUF</span> ?

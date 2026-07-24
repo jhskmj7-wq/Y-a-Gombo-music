@@ -136,19 +136,6 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
 
   return (
     <div className="w-full text-afri-text pb-20">
-      {/* Top Single Back Button */}
-      {onBack && (
-        <div className="px-4 pt-3">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text text-xs font-mono font-bold transition-all cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4 text-[#D4AF37]" />
-            <span>Retour</span>
-          </button>
-        </div>
-      )}
-
       {/* Header / Hero - Compact & Elegant */}
       <div className="relative pt-4 pb-6 px-4 overflow-hidden border-b border-[#D4AF37]/20">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF37]/20 via-afri-bg to-afri-bg opacity-60"></div>

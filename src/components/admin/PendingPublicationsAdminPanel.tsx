@@ -12,7 +12,8 @@ import {
   ShieldAlert, 
   Sparkles,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Zap
 } from "lucide-react";
 import { db } from "../../lib/firebase";
 import { collection, query, onSnapshot, doc, updateDoc, addDoc, getDocs, where } from "firebase/firestore";
@@ -33,6 +34,7 @@ export interface PendingPublication {
   paymentStatus?: string;
   adminValidated?: boolean;
   visible?: boolean;
+  activationCode?: string;
   commune?: string;
   type?: string;
 }
@@ -90,6 +92,7 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
             paymentStatus: data.paymentStatus || "waiting",
             adminValidated: !!data.adminValidated,
             visible: !!data.visible,
+            activationCode: data.activationCode,
             commune: data.commune || "",
             type: data.type || data.postCategory || "Annonce"
           });
@@ -129,6 +132,7 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
                 paymentStatus: data.paymentStatus || "waiting",
                 adminValidated: !!data.adminValidated,
                 visible: !!data.visible,
+                activationCode: data.activationCode,
                 commune: data.commune || "",
                 type: data.eventType || "Gombo"
               });
@@ -227,6 +231,20 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
       showToast(`✅ Publication "${item.title}" validée avec succès ! Elle est désormais visible.`);
     } catch (err: any) {
       showToast(`❌ Erreur : ${err.message}`);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Generate Code Action
+  const handleGenerateCode = async (item: PendingPublication) => {
+    setActionLoadingId(item.id);
+    try {
+      const { createValidationCodeForPost } = await import("../../lib/validationCodeEngine");
+      const code = await createValidationCodeForPost(item.id, item.collectionName);
+      showToast(`🔑 Code de validation généré : ${code} pour "${item.title}".`);
+    } catch (err: any) {
+      showToast(`❌ Erreur lors de la génération du code : ${err.message}`);
     } finally {
       setActionLoadingId(null);
     }
@@ -419,6 +437,16 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
                   </span>
 
                   <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                    <button
+                      disabled={isProcessing}
+                      onClick={() => handleGenerateCode(item)}
+                      className="flex-1 sm:flex-none px-3.5 py-2.5 bg-purple-500/10 hover:bg-purple-500/25 border border-purple-500/40 text-purple-300 font-mono text-xs font-black uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+                      title="Générer un code de validation à transmettre au client via WhatsApp"
+                    >
+                      <Zap className="w-4 h-4 text-purple-400" />
+                      <span>{item.activationCode ? `Code: ${item.activationCode}` : "Générer Code"}</span>
+                    </button>
+
                     <button
                       disabled={isProcessing}
                       onClick={() => handleRefuse(item)}
