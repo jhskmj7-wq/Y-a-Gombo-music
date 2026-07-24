@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Sparkles, Check, ChevronLeft, CreditCard, Award, Shield, Film, Music, BarChart3, Radio } from "lucide-react";
+import { Sparkles, Check, ChevronLeft, CreditCard, Award, Shield, Music, BarChart3, Radio, X, Zap, Calculator } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { gomboDB } from "../firebase";
 
@@ -14,7 +14,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   const { t } = useLanguage();
   const [selectedPlan, setSelectedPlan] = useState<"free" | "pro" | "elite">("elite");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [paymentOption, setPaymentOption] = useState<string | null>(null);
+  const [paymentOption, setPaymentOption] = useState<string>("wave");
   const [phonePayment, setPhonePayment] = useState("");
   const [paymentStep, setPaymentStep] = useState<"idle" | "processing" | "success">("idle");
   const [simAmount, setSimAmount] = useState<number>(100000);
@@ -24,6 +24,9 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
     }
     return "GOMBO FREE";
   });
+
+  // Modal manager: "compare" | "why" | "savings" | "payment" | null
+  const [activeModal, setActiveModal] = useState<"compare" | "why" | "savings" | "payment" | null>(null);
 
   const plans = [
     {
@@ -36,11 +39,13 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       color: "border-afri-border bg-afri-bg-sec/40",
       accentColor: "text-afri-text-sec",
       badge: "Inclus par défaut",
+      description: "Compte standard sans engagement.",
       features: [
         "Profil artiste standard",
-        "1 publication par semaine",
-        "Messagerie standard",
-        "Voir les gombos de base",
+        "Visibilité standard",
+        "Priorité normale",
+        "Classement normal",
+        "Commission de 2,5%",
       ],
       commission: "2,5%"
     },
@@ -99,11 +104,11 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
     setSelectedPlan(planId);
     setPaymentOption("wave");
     setPaymentStep("idle");
+    setActiveModal("payment");
   };
 
   const processPayment = async () => {
-    // Basic verification
-    if (paymentOption !== "card" && !phonePayment) {
+    if (!phonePayment) {
       alert("Veuillez saisir votre numéro mobile money pour l'autorisation.");
       return;
     }
@@ -114,14 +119,12 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       }
     } catch (_) {}
 
-    // Simulated transaction block with DB hook
     setTimeout(async () => {
       try {
         const matchedPlan = plans.find(p => p.id === selectedPlan);
         const subName = matchedPlan ? matchedPlan.name : "GOMBO ELITE";
         const amount = matchedPlan ? (billingCycle === "monthly" ? matchedPlan.monthlyPrice : matchedPlan.yearlyPrice) : 1000;
         
-        // Publish real transaction record
         if (currentUserProfile?.uid) {
           await gomboDB.publishPayment({
             userId: currentUserProfile.uid,
@@ -133,7 +136,6 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
             status: "success"
           });
 
-          // Persistent database update of Premium profile flags
           const currentBadges = currentUserProfile.badges || [];
           const newBadges = Array.from(new Set([...currentBadges, "💎 Adhérent Premium"]));
           await gomboDB.updateUserProfile(currentUserProfile.uid, {
@@ -162,110 +164,123 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
     }, 2800);
   };
 
-  return (
-    <div className="min-h-screen bg-afri-bg text-afri-text font-sans pb-32 transition-colors duration-300">
-      {/* HEADER SECTION */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-afri-bg-ter to-afri-bg border-b border-afri-border px-6 pt-6 pb-12 sm:pt-10 sm:pb-16 text-center">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-afri-bg-sec/5 rounded-full blur-[100px] pointer-events-none"></div>
+  const currentSelectedPlanObj = plans.find(p => p.id === selectedPlan) || plans[2];
 
-        <div className="max-w-4xl mx-auto space-y-3 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-afri-bg-sec/10 border border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+  return (
+    <div className="min-h-screen bg-afri-bg text-afri-text font-sans pb-16 transition-colors duration-300">
+      {/* HEADER SECTION - COMPACT & EXPRESSIVE */}
+      <div className="relative overflow-hidden bg-gradient-to-b from-afri-bg-ter to-afri-bg border-b border-afri-border px-4 py-6 sm:py-8 text-center">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-[#D4AF37]/5 rounded-full blur-[90px] pointer-events-none"></div>
+
+        <div className="max-w-3xl mx-auto space-y-2.5 relative z-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
             👑 AFRIGOMBO PREMIUM
           </div>
           
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tighter text-afri-text uppercase leading-[0.95]">
-            Développez votre <span className="text-[#D4AF37]">carrière</span>.
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-afri-text uppercase leading-tight">
+            Développez votre <span className="text-[#D4AF37]">carrière</span>
           </h1>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 pt-2">
-            <div className="text-afri-text-sec text-[11px] sm:text-xs font-bold uppercase tracking-wider">Soyez davantage visible.</div>
-            <div className="text-afri-text-sec text-[11px] sm:text-xs font-bold uppercase tracking-wider">Obtenez plus de Gombos.</div>
-            <div className="text-afri-text-sec text-[11px] sm:text-xs font-bold uppercase tracking-wider">Économisez sur vos contrats.</div>
+          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-afri-text-sec text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+            <span>✨ Soyez davantage visible</span>
+            <span>•</span>
+            <span>🚀 Obtenez plus de Gombos</span>
+            <span>•</span>
+            <span>💰 Économisez sur vos contrats</span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-8 relative z-20 space-y-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+        
         {/* BILLING TOGGLE */}
-        <div className="flex justify-center mb-6">
-          <div className="bg-afri-bg-sec p-1 rounded-xl border border-afri-border flex items-center gap-1 backdrop-blur-xl shadow-md">
+        <div className="flex justify-center">
+          <div className="bg-afri-bg-sec p-1 rounded-xl border border-afri-border flex items-center gap-1 shadow-md">
             <button 
               onClick={() => setBillingCycle("monthly")}
-              className={`px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "monthly" ? "bg-afri-bg-sec text-black shadow-md" : "text-afri-text-sec hover:text-afri-text"}`}
+              className={`px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "monthly" ? "bg-[#D4AF37] text-black shadow-md" : "text-afri-text-sec hover:text-afri-text"}`}
             >
               Mensuel
             </button>
             <button 
               onClick={() => setBillingCycle("yearly")}
-              className={`px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "yearly" ? "bg-afri-bg-sec text-black shadow-md" : "text-afri-text-sec hover:text-afri-text"}`}
+              className={`px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "yearly" ? "bg-[#D4AF37] text-black shadow-md" : "text-afri-text-sec hover:text-afri-text"}`}
             >
-              Annuel <span className="text-[9px] opacity-70 ml-1 font-extrabold">-20%</span>
+              Annuel <span className="text-[9px] opacity-80 ml-1 font-extrabold">-20%</span>
             </button>
           </div>
         </div>
 
-        {/* CARDS LIST */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        {/* CARDS LIST - 3 MAIN PLANS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {plans.map((p) => {
             const isActive = subscribedPlan === p.name;
             const isSelected = selectedPlan === p.id;
             
-            // Generate clean native theme responsive card styles
             let cardBg = "bg-afri-bg-sec border-afri-border";
             if (p.id === "elite") {
-              cardBg = "bg-afri-bg-sec border-[#D4AF37]/50 shadow-[0_8px_30px_rgba(212,175,55,0.08)]";
+              cardBg = "bg-afri-bg-sec border-[#D4AF37]/60 shadow-[0_4px_20px_rgba(212,175,55,0.12)]";
             } else if (p.id === "pro") {
-              cardBg = "bg-afri-bg-sec border-afri-border hover:border-[#D4AF37]/40 shadow-xs";
+              cardBg = "bg-afri-bg-sec border-afri-border hover:border-[#D4AF37]/40";
             }
 
             return (
               <div
                 key={p.id}
-                className={`flex flex-col p-5 sm:p-6 rounded-2xl border transition-all duration-300 group relative ${cardBg} ${
-                  isSelected ? "ring-2 ring-[#D4AF37] scale-102 z-10" : "hover:scale-[1.01]"
-                }`}
+                className={`flex flex-col p-5 rounded-2xl border transition-all duration-200 group relative ${cardBg}`}
               >
                 <div className="space-y-3 flex-1 text-left">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-black tracking-tight text-afri-text uppercase">{p.name}</h3>
+                      <h3 className="text-base font-black tracking-tight text-afri-text uppercase">{p.name}</h3>
                       <p className="text-[10px] text-afri-text-sec uppercase tracking-widest mt-0.5 font-bold">
-                        {p.id === "free" ? "Formule de base" : p.description}
+                        {p.id === "free" ? "Compte de base" : p.description}
                       </p>
                     </div>
+                    {p.badge && (
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                        p.id === 'elite' ? 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30' : 
+                        p.id === 'pro' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+                        'bg-afri-bg text-afri-text-sec border-afri-border'
+                      }`}>
+                        {p.badge}
+                      </span>
+                    )}
                   </div>
 
-                  <div className="py-2">
+                  <div className="py-1">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl sm:text-3xl font-black text-afri-text tracking-tighter">{p.priceLabel}</span>
-                      <span className="text-[11px] text-afri-text-sec font-bold uppercase">{p.period}</span>
+                      <span className="text-2xl font-black text-afri-text tracking-tight">{p.priceLabel}</span>
+                      <span className="text-[10px] text-afri-text-sec font-bold uppercase">{p.period}</span>
                     </div>
                   </div>
 
-                  <div className="space-y-2 pt-2 border-t border-afri-border/50">
+                  <div className="space-y-1.5 pt-2 border-t border-afri-border/50">
                     {p.features.map((feat, i) => (
                       <div key={i} className="flex items-start gap-2">
-                        <div className="w-4 h-4 rounded-full bg-afri-bg-sec/15 flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="w-3.5 h-3.5 rounded-full bg-[#D4AF37]/10 flex items-center justify-center shrink-0 mt-0.5">
                           <Check className="w-2.5 h-2.5 text-[#D4AF37] stroke-[3]" />
                         </div>
-                        <span className="text-xs font-semibold text-afri-text-sec leading-tight">{feat}</span>
+                        <span className="text-xs font-semibold text-afri-text-sec leading-snug">{feat}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="mt-5">
+                <div className="mt-4 pt-2">
                   {isActive ? (
-                    <div className="w-full text-center py-2.5 px-4 rounded-xl bg-afri-bg text-afri-text-sec font-black text-[10px] uppercase tracking-[0.2em] border border-afri-border">
+                    <div className="w-full text-center py-2.5 px-3 rounded-xl bg-afri-bg text-afri-text-sec font-black text-[10px] uppercase tracking-widest border border-afri-border">
                       Formule Actuelle
                     </div>
                   ) : (
                     <button
                       onClick={() => handleSubscribeClick(p.id as any)}
-                      className={`w-full py-2.5 px-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-200 shadow-md hover:shadow-[#D4AF37]/10 active:scale-[0.98] cursor-pointer ${
+                      className={`w-full py-2.5 px-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-md active:scale-98 cursor-pointer ${
                         p.id === "free" 
                           ? "bg-afri-bg border border-afri-border text-afri-text hover:bg-afri-bg-ter" 
-                          : "bg-afri-bg-sec text-black hover:bg-opacity-95"
+                          : p.id === "elite"
+                          ? "bg-[#D4AF37] text-black hover:bg-amber-400 shadow-[#D4AF37]/20"
+                          : "bg-emerald-500 text-black hover:bg-emerald-400"
                       }`}
                     >
                       {p.id === "free" ? "Continuer" : `Devenir ${p.id.toUpperCase()}`}
@@ -277,211 +292,292 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
           })}
         </div>
 
-        {/* PRÉSENTER LES AVANTAGES (LARGE CARDS) */}
-        <div className="mb-12 space-y-6">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-black text-afri-text uppercase tracking-tighter">Pourquoi devenir Premium ?</h2>
-            <p className="text-afri-text-sec text-xs max-w-xl mx-auto">Découvrez les outils conçus pour propulser votre carrière musicale vers le haut.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { 
-                title: "Badge Premium", 
-                desc: "Soyez immédiatement reconnu comme un professionnel certifié.", 
-                icon: Award,
-                highlight: "Confiance & Prestige"
-              },
-              { 
-                title: "Plus de visibilité", 
-                desc: "Votre profil apparaît avant les autres dans toutes les recherches.", 
-                icon: Sparkles,
-                highlight: "Top 1% de l'annuaire"
-              },
-              { 
-                title: "Plus d'opportunités", 
-                desc: "Accédez aux meilleurs Gombos et aux contrats exclusifs.", 
-                icon: Music,
-                highlight: "Contrats Premium"
-              },
-              { 
-                title: "Réduction des commissions", 
-                desc: "Payez seulement 1,5% au lieu de 2,5% sur vos revenus.", 
-                icon: Shield,
-                highlight: "Économies directes"
-              },
-              { 
-                title: "Statistiques avancées", 
-                desc: "Comprenez l'évolution de votre carrière avec des rapports précis.", 
-                icon: BarChart3,
-                highlight: "Données analytiques"
-              },
-              { 
-                title: "Priorité absolue", 
-                desc: "Vos publications et candidatures passent avant les comptes standards.", 
-                icon: Radio,
-                highlight: "Vitesse & Efficacité"
-              },
-            ].map((adv, idx) => (
-              <div key={idx} className="p-4 sm:p-5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-3 hover:border-[#D4AF37]/40 shadow-xs transition-all group">
-                <div className="w-10 h-10 rounded-xl bg-afri-bg-sec/10 text-[#D4AF37] flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <adv.icon className="w-5 h-5" />
-                </div>
-                <div className="space-y-1 text-left">
-                  <div className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">{adv.highlight}</div>
-                  <h4 className="text-base font-black text-afri-text uppercase tracking-tight">{adv.title}</h4>
-                  <p className="text-xs text-afri-text-sec leading-snug">{adv.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* COMPARISON TABLE */}
-        <div className="mb-12 space-y-6 overflow-x-auto">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-black text-afri-text uppercase tracking-tighter">Comparatif des offres</h2>
-          </div>
-
-          <table className="w-full text-left border-collapse min-w-[500px]">
-            <thead>
-              <tr className="border-b border-afri-border">
-                <th className="py-3 text-afri-text-sec font-bold uppercase text-[10px] tracking-widest">Avantages</th>
-                <th className="py-3 text-center text-afri-text font-black uppercase text-xs">Free</th>
-                <th className="py-3 text-center text-emerald-500 font-black uppercase text-xs">Pro</th>
-                <th className="py-3 text-center text-[#D4AF37] font-black uppercase text-xs">Elite</th>
-              </tr>
-            </thead>
-            <tbody className="text-xs">
-              {[
-                { label: "Commission sur contrat", free: "2,5%", pro: "1,5%", elite: "1,5%" },
-                { label: "Badge de profil", free: "Standard", pro: "Silver", elite: "Gold Prestige" },
-                { label: "Publications / jour", free: "1 / sem", pro: "3 / jour", elite: "Illimité" },
-                { label: "Visibilité annuaire", free: "Standard", pro: "+40%", elite: "Priorité Maximale" },
-                { label: "Statistiques", free: "Basique", pro: "Standards", elite: "Avancées" },
-                { label: "Candidatures", free: "Standard", pro: "Prioritaires", elite: "Ultra-Prioritaires" },
-              ].map((row, i) => (
-                <tr key={i} className="border-b border-afri-border/50 hover:bg-afri-bg-ter/40 transition-colors">
-                  <td className="py-3 font-bold text-afri-text-sec">{row.label}</td>
-                  <td className="py-3 text-center text-afri-text-muted font-mono">{row.free}</td>
-                  <td className="py-3 text-center text-emerald-500 font-mono font-bold">{row.pro}</td>
-                  <td className="py-3 text-center text-afri-text font-mono font-bold">{row.elite}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* SECTION : ÉCONOMISEZ SUR VOS CONTRATS */}
-        <div className="mt-8 bg-afri-bg-sec border border-afri-border p-6 sm:p-10 rounded-3xl space-y-6 relative overflow-hidden shadow-md">
-          <div className="absolute top-0 left-0 w-48 h-48 bg-afri-bg-sec/5 rounded-full blur-[80px] pointer-events-none"></div>
-          
-          <div className="text-center max-w-2xl mx-auto space-y-4">
-            <span className="text-[#D4AF37] text-[10px] uppercase font-black tracking-widest bg-afri-bg-sec/10 px-4 py-1.5 rounded-full border border-[#D4AF37]/20">
-              ⚡ Économie Directe
+        {/* 3 COMPACT ACTION BUTTONS (MODAL TRIGGERS) */}
+        <div className="pt-2">
+          <div className="text-center mb-3">
+            <span className="text-[10px] font-black uppercase text-afri-text-sec tracking-widest">
+              En savoir plus sur les services Premium
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-afri-text uppercase tracking-tighter">
-              Économisez sur vos contrats
-            </h2>
-            <p className="text-xs sm:text-sm text-afri-text-sec leading-relaxed">
-              Le Premium réduit uniquement <strong className="text-[#D4AF37]">VOS PROPRES commissions</strong> (1,5% au lieu de 2,5%). Chaque partie bénéficie individuellement de son propre abonnement.
-            </p>
           </div>
 
-          {/* Preset Buttons */}
-          <div className="flex flex-wrap justify-center gap-2.5">
-            {[50000, 100000, 250000, 500000].map((presetAmt) => (
-              <button
-                key={presetAmt}
-                type="button"
-                onClick={() => setSimAmount(presetAmt)}
-                className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer border ${
-                  simAmount === presetAmt 
-                    ? "bg-afri-bg-sec/15 border-[#D4AF37] text-[#D4AF37]" 
-                    : "bg-afri-bg-ter border-afri-border text-afri-text-sec hover:border-[#D4AF37]/40 hover:text-afri-text"
-                }`}
-              >
-                {presetAmt.toLocaleString()} FCFA
-              </button>
-            ))}
-          </div>
-
-          {/* Comparative Calculator & Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             
-            {/* Left: Beautiful visual comparison card */}
-            <div className="lg:col-span-7 space-y-4">
-              <h3 className="text-xs font-mono uppercase tracking-wider text-afri-text-sec">Exemple d'un contrat de {simAmount.toLocaleString()} FCFA</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Standard Account */}
-                <div className="p-5 bg-afri-bg-ter border border-afri-border rounded-2xl relative overflow-hidden">
-                  <div className="absolute top-2 right-2 bg-afri-bg/80 text-afri-text-sec text-[8px] font-bold px-1.5 py-0.5 rounded uppercase border border-afri-border">
-                    Standard
-                  </div>
-                  <span className="text-xs font-bold text-afri-text-sec block mb-3">Compte Standard (2.5%)</span>
-                  <div className="space-y-1.5 text-xs font-mono">
-                    <div className="flex justify-between text-afri-text-sec">
-                      <span>Votre commission :</span>
-                      <span className="text-afri-text font-bold">{(simAmount * 0.025).toLocaleString()} FCFA</span>
-                    </div>
-                    <p className="text-[9px] text-afri-text-muted italic mt-1">Calculée uniquement sur votre part (2.5%)</p>
-                    <hr className="border-afri-border/50 my-2" />
-                    <div className="flex justify-between text-[#D4AF37] font-sans font-bold text-xs">
-                      <span>Taux standard :</span>
-                      <span>2.5%</span>
-                    </div>
-                  </div>
-                </div>
+            {/* Button 1: Comparer les avantages */}
+            <button
+              type="button"
+              onClick={() => setActiveModal("compare")}
+              className="p-4 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/50 rounded-2xl flex items-center gap-3 text-left transition-all active:scale-98 group cursor-pointer shadow-sm"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-lg">
+                📊
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-xs font-black uppercase text-afri-text tracking-wide truncate">Comparer les avantages</h4>
+                <p className="text-[10px] text-afri-text-sec truncate">Tableau comparatif détaillé</p>
+              </div>
+            </button>
 
-                {/* Premium Account */}
-                <div className="p-5 bg-afri-bg-sec/10 border border-[#D4AF37]/40 rounded-2xl relative overflow-hidden">
-                  <div className="absolute top-2 right-2 bg-afri-bg-sec/20 text-[#D4AF37] text-[8px] font-black px-1.5 py-0.5 rounded uppercase border border-[#D4AF37]/35">
-                    ★ Premium
-                  </div>
-                  <span className="text-xs font-bold text-[#D4AF37] block mb-3">Compte Premium (1.5%)</span>
-                  <div className="space-y-1.5 text-xs font-mono">
-                    <div className="flex justify-between text-afri-text-sec">
-                      <span>Votre commission :</span>
-                      <span className="text-afri-text font-bold">{(simAmount * 0.015).toLocaleString()} FCFA</span>
-                    </div>
-                    <p className="text-[9px] text-emerald-500 italic mt-1">Économie de {(simAmount * 0.01).toLocaleString()} FCFA acquise !</p>
-                    <hr className="border-[#D4AF37]/20 my-2" />
-                    <div className="flex justify-between text-emerald-500 font-sans font-bold text-xs">
-                      <span>Taux réduit :</span>
-                      <span>1.5%</span>
-                    </div>
-                  </div>
+            {/* Button 2: Pourquoi devenir Premium ? */}
+            <button
+              type="button"
+              onClick={() => setActiveModal("why")}
+              className="p-4 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/50 rounded-2xl flex items-center gap-3 text-left transition-all active:scale-98 group cursor-pointer shadow-sm"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-lg">
+                ⭐
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-xs font-black uppercase text-afri-text tracking-wide truncate">Pourquoi devenir Premium ?</h4>
+                <p className="text-[10px] text-afri-text-sec truncate">Badges, visibilité & priorité</p>
+              </div>
+            </button>
+
+            {/* Button 3: Économiser sur vos contrats */}
+            <button
+              type="button"
+              onClick={() => setActiveModal("savings")}
+              className="p-4 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/50 rounded-2xl flex items-center gap-3 text-left transition-all active:scale-98 group cursor-pointer shadow-sm"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-lg">
+                💰
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-xs font-black uppercase text-afri-text tracking-wide truncate">Économiser sur vos contrats</h4>
+                <p className="text-[10px] text-afri-text-sec truncate">Simulateur de commissions (1,5%)</p>
+              </div>
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* MODAL 1: COMPARATIF DES OFFRES */}
+      {/* ========================================================= */}
+      {activeModal === "compare" && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto overscroll-contain touch-pan-y"
+          onClick={() => setActiveModal(null)}
+        >
+          <div 
+            className="bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-5 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl relative my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-afri-border/60 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📊</span>
+                <h3 className="text-base font-black uppercase text-afri-text tracking-wide">Comparatif des offres</h3>
+              </div>
+              <button 
+                onClick={() => setActiveModal(null)}
+                className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content Table */}
+            <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
+              <table className="w-full text-left border-collapse min-w-[450px]">
+                <thead>
+                  <tr className="border-b border-afri-border">
+                    <th className="py-2.5 text-afri-text-sec font-bold uppercase text-[10px] tracking-widest">Avantages</th>
+                    <th className="py-2.5 text-center text-afri-text font-black uppercase text-xs">Free</th>
+                    <th className="py-2.5 text-center text-emerald-400 font-black uppercase text-xs">Pro</th>
+                    <th className="py-2.5 text-center text-[#D4AF37] font-black uppercase text-xs">Elite</th>
+                  </tr>
+                </thead>
+                <tbody className="text-xs">
+                  {[
+                    { label: "Commission sur contrat", free: "2,5%", pro: "1,5%", elite: "1,5%" },
+                    { label: "Badge de profil", free: "Standard", pro: "Silver", elite: "Gold Prestige" },
+                    { label: "Publications / jour", free: "Illimité (Std)", pro: "3 / jour (Boost)", elite: "Illimité (Priorité)" },
+                    { label: "Visibilité annuaire", free: "Standard", pro: "+40%", elite: "Priorité Maximale" },
+                    { label: "Statistiques", free: "Basique", pro: "Standards", elite: "Avancées" },
+                    { label: "Candidatures", free: "Standard", pro: "Prioritaires", elite: "Ultra-Prioritaires" },
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-afri-border/50 hover:bg-afri-bg-ter/40 transition-colors">
+                      <td className="py-2.5 font-bold text-afri-text-sec">{row.label}</td>
+                      <td className="py-2.5 text-center text-afri-text-sec font-mono">{row.free}</td>
+                      <td className="py-2.5 text-center text-emerald-400 font-mono font-bold">{row.pro}</td>
+                      <td className="py-2.5 text-center text-[#D4AF37] font-mono font-bold">{row.elite}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer button */}
+            <div className="pt-2 border-t border-afri-border/60 text-right">
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 2: POURQUOI DEVENIR PREMIUM ? */}
+      {/* ========================================================= */}
+      {activeModal === "why" && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto overscroll-contain touch-pan-y"
+          onClick={() => setActiveModal(null)}
+        >
+          <div 
+            className="bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-5 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl relative my-auto max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-afri-border/60 pb-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⭐</span>
+                <div>
+                  <h3 className="text-base font-black uppercase text-afri-text tracking-wide">Pourquoi devenir Premium ?</h3>
+                  <p className="text-[10px] text-afri-text-sec">Des outils conçus pour propulser votre carrière musicale</p>
                 </div>
               </div>
+              <button 
+                onClick={() => setActiveModal(null)}
+                className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-              {/* Total economy showcase */}
-              <div className="bg-emerald-500/10 border border-emerald-500/20 p-5 rounded-2xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-sm">
-                    ★
+            {/* Content Cards */}
+            <div className="overflow-y-auto space-y-3 pr-1 flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { 
+                    title: "Badge Premium", 
+                    desc: "Soyez immédiatement reconnu comme un professionnel certifié.", 
+                    icon: Award,
+                    highlight: "Confiance & Prestige"
+                  },
+                  { 
+                    title: "Plus de visibilité", 
+                    desc: "Votre profil apparaît avant les autres dans toutes les recherches.", 
+                    icon: Sparkles,
+                    highlight: "Top 1% de l'annuaire"
+                  },
+                  { 
+                    title: "Plus d'opportunités", 
+                    desc: "Accédez aux meilleurs Gombos et aux contrats exclusifs.", 
+                    icon: Music,
+                    highlight: "Contrats Premium"
+                  },
+                  { 
+                    title: "Réduction des commissions", 
+                    desc: "Payez seulement 1,5% au lieu de 2,5% sur vos revenus.", 
+                    icon: Shield,
+                    highlight: "Économies directes"
+                  },
+                  { 
+                    title: "Statistiques avancées", 
+                    desc: "Comprenez l'évolution de votre carrière avec des rapports précis.", 
+                    icon: BarChart3,
+                    highlight: "Données analytiques"
+                  },
+                  { 
+                    title: "Priorité absolue", 
+                    desc: "Vos publications et candidatures passent avant les comptes standards.", 
+                    icon: Radio,
+                    highlight: "Vitesse & Efficacité"
+                  },
+                ].map((adv, idx) => (
+                  <div key={idx} className="p-3.5 bg-afri-bg border border-afri-border rounded-xl space-y-1.5 hover:border-[#D4AF37]/40 transition-all text-left">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] flex items-center justify-center shrink-0">
+                        <adv.icon className="w-4 h-4" />
+                      </div>
+                      <div className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">{adv.highlight}</div>
+                    </div>
+                    <h4 className="text-xs font-black text-afri-text uppercase tracking-tight">{adv.title}</h4>
+                    <p className="text-[11px] text-afri-text-sec leading-relaxed">{adv.desc}</p>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-afri-text">Économie Immédiate</h4>
-                    <p className="text-[10px] text-afri-text-sec">Sur chaque contrat conclu via AFRIGOMBO</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-emerald-500 text-lg font-black font-mono">-{(simAmount * 0.01).toLocaleString()} FCFA</span>
-                  <span className="text-[9px] text-afri-text-sec block">d'économie nette pour vous</span>
-                </div>
+                ))}
               </div>
             </div>
 
-            {/* Right: Dynamic simulation widget */}
-            <div className="lg:col-span-5 bg-afri-bg-ter border border-afri-border p-8 rounded-[32px] space-y-6">
-              <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">Simulateur d'économies</span>
-              <h4 className="text-sm font-bold text-afri-text">Ajuster le montant</h4>
-              
-              <div className="space-y-4">
+            {/* Footer button */}
+            <div className="pt-2 border-t border-afri-border/60 text-right shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 3: ÉCONOMISER SUR VOS CONTRATS */}
+      {/* ========================================================= */}
+      {activeModal === "savings" && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto overscroll-contain touch-pan-y"
+          onClick={() => setActiveModal(null)}
+        >
+          <div 
+            className="bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-5 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl relative my-auto max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-afri-border/60 pb-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">💰</span>
+                <div>
+                  <h3 className="text-base font-black uppercase text-afri-text tracking-wide">Économiser sur vos contrats</h3>
+                  <p className="text-[10px] text-afri-text-sec">Taux de commission réduit à 1,5% au lieu de 2,5%</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setActiveModal(null)}
+                className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content Calculator */}
+            <div className="overflow-y-auto space-y-4 pr-1 flex-1 text-left">
+              <p className="text-xs text-afri-text-sec leading-relaxed">
+                Le Premium réduit vos propres commissions sur les contrats (<strong className="text-[#D4AF37]">1,5% au lieu de 2,5%</strong>).
+              </p>
+
+              {/* Preset Buttons */}
+              <div className="flex flex-wrap gap-2">
+                {[50000, 100000, 250000, 500000].map((presetAmt) => (
+                  <button
+                    key={presetAmt}
+                    type="button"
+                    onClick={() => setSimAmount(presetAmt)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border ${
+                      simAmount === presetAmt 
+                        ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]" 
+                        : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-[#D4AF37]/40 hover:text-afri-text"
+                    }`}
+                  >
+                    {presetAmt.toLocaleString()} FCFA
+                  </button>
+                ))}
+              </div>
+
+              {/* Slider */}
+              <div className="space-y-2 bg-afri-bg p-3.5 rounded-xl border border-afri-border">
                 <div className="flex justify-between text-xs">
-                  <span className="text-afri-text-sec">Contrat :</span>
-                  <span className="text-[#D4AF37] font-bold font-mono text-base">{simAmount.toLocaleString()} FCFA</span>
+                  <span className="text-afri-text-sec">Montant du contrat :</span>
+                  <span className="text-[#D4AF37] font-bold font-mono text-sm">{simAmount.toLocaleString()} FCFA</span>
                 </div>
                 <input 
                   type="range" 
@@ -490,124 +586,221 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                   step="50000"
                   value={simAmount}
                   onChange={(e) => setSimAmount(Number(e.target.value))}
-                  className="w-full h-1.5 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                  className="w-full h-1.5 bg-afri-bg-sec rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
                 />
               </div>
 
-              <div className="space-y-3 border-t border-afri-border pt-6 text-xs">
-                <div className="flex justify-between text-afri-text-sec">
-                  <span>Frais standard (2.5%) :</span>
-                  <span className="font-mono">{(simAmount * 0.025).toLocaleString()} FCFA</span>
+              {/* Comparison Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Standard Account */}
+                <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-2">
+                  <div className="text-xs font-bold text-afri-text-sec">Compte Standard (2.5%)</div>
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-afri-text-sec">Commission :</span>
+                    <span className="text-afri-text font-bold">{(simAmount * 0.025).toLocaleString()} FCFA</span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-afri-text-sec">
-                  <span>Frais Premium (1.5%) :</span>
-                  <span className="font-mono text-[#D4AF37]">{(simAmount * 0.015).toLocaleString()} FCFA</span>
+
+                {/* Premium Account */}
+                <div className="p-4 bg-afri-bg border border-[#D4AF37]/40 rounded-xl space-y-2">
+                  <div className="text-xs font-bold text-[#D4AF37]">Compte Premium (1.5%)</div>
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-afri-text-sec">Commission :</span>
+                    <span className="text-afri-text font-bold">{(simAmount * 0.015).toLocaleString()} FCFA</span>
+                  </div>
                 </div>
-                <div className="flex justify-between font-black text-emerald-500 pt-3 border-t border-dashed border-afri-border text-sm">
-                  <span>Gain net :</span>
-                  <span className="font-mono">{(simAmount * 0.01).toLocaleString()} FCFA</span>
+              </div>
+
+              {/* Gain Box */}
+              <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-emerald-400">Gain net immédiat</h4>
+                  <p className="text-[10px] text-afri-text-sec">Économie sur ce seul contrat</p>
                 </div>
+                <span className="text-emerald-400 text-base font-black font-mono">+{(simAmount * 0.01).toLocaleString()} FCFA</span>
               </div>
             </div>
 
+            {/* Footer button */}
+            <div className="pt-2 border-t border-afri-border/60 text-right shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* PAYMENT POPUP / INTERACTIVE CARD */}
-        {paymentOption && (
-          <div className="mt-12 max-w-lg mx-auto bg-afri-bg-sec border border-[#D4AF37]/30 p-10 rounded-3xl space-y-6 text-left relative overflow-hidden shadow-2xl animate-slideUp">
-            <h3 className="text-lg font-black uppercase text-[#D4AF37] flex items-center gap-1.5">
-              <CreditCard className="w-5 h-5 text-[#D4AF37]" />
-              Finalisez votre abonnement
-            </h3>
-            <p className="text-xs text-afri-text-sec leading-relaxed">
-              Vous avez choisi la formule <span className="font-bold text-afri-text uppercase">{plans.find(p => p.id === selectedPlan)?.name}</span>. Le paiement commencera immédiatement par déduction sécurisée.
-            </p>
+      {/* ========================================================= */}
+      {/* MODAL 4: INTERACTIVE PAYMENT POPUP */}
+      {/* ========================================================= */}
+      {activeModal === "payment" && (
+        <div 
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto overscroll-contain touch-pan-y"
+          onClick={() => {
+            if (paymentStep !== "processing") {
+              setActiveModal(null);
+            }
+          }}
+        >
+          <div 
+            className="bg-afri-bg-sec border border-[#D4AF37]/50 rounded-2xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl relative my-auto text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-afri-border/60 pb-3">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-[#D4AF37]" />
+                <h3 className="text-base font-black uppercase text-[#D4AF37] tracking-wide">
+                  Abonnement {currentSelectedPlanObj.name}
+                </h3>
+              </div>
+              {paymentStep !== "processing" && (
+                <button 
+                  onClick={() => setActiveModal(null)}
+                  className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
 
             {paymentStep === "idle" && (
               <div className="space-y-4">
-                {/* Method choose */}
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: "wave", label: "Wave Money", badge: "0% frais" },
-                    { id: "orange", label: "Orange Money", badge: "Réseau CI" },
-                    { id: "mtn", label: "MTN MoMo", badge: "Réseau CI" },
-                    { id: "moov", label: "Moov Flooz", badge: "Réseau CI" }
-                  ].map((method) => (
-                    <button
-                      key={method.id}
-                      onClick={() => setPaymentOption(method.id)}
-                      className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
-                        paymentOption === method.id
-                          ? "bg-afri-bg-sec/10 border-[#D4AF37] text-afri-text"
-                          : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-[#D4AF37]/40"
-                      }`}
-                    >
-                      <span className="text-[11px] font-black block">{method.label}</span>
-                      <span className="text-[8px] opacity-60 uppercase">{method.badge}</span>
-                    </button>
-                  ))}
+                {/* Summary card */}
+                <div className="bg-afri-bg border border-afri-border rounded-xl p-3.5 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-afri-text-sec font-medium">Montant :</span>
+                    <span className="font-mono font-bold text-base text-[#D4AF37]">{currentSelectedPlanObj.priceLabel}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-afri-text-sec font-medium">Durée :</span>
+                    <span className="font-bold text-afri-text">{billingCycle === "monthly" ? "1 mois (Mensuel)" : "12 mois (Annuel -20%)"}</span>
+                  </div>
+                  <div className="pt-2 border-t border-afri-border/50">
+                    <span className="text-[10px] font-bold text-afri-text-sec uppercase tracking-wider block mb-1">Avantages inclus :</span>
+                    <ul className="space-y-1">
+                      {currentSelectedPlanObj.features.slice(0, 4).map((f, i) => (
+                        <li key={i} className="text-[11px] text-afri-text flex items-center gap-1.5">
+                          <Check className="w-3 h-3 text-[#D4AF37] shrink-0" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest">Numéro de téléphone mobile money</label>
+                {/* Mobile Money Payment Provider Selector */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
+                    Mode de Paiement
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: "wave", label: "Wave Money", badge: "0% frais" },
+                      { id: "orange", label: "Orange Money", badge: "Réseau CI" },
+                      { id: "mtn", label: "MTN MoMo", badge: "Réseau CI" },
+                      { id: "moov", label: "Moov Flooz", badge: "Réseau CI" }
+                    ].map((method) => (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => setPaymentOption(method.id)}
+                        className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
+                          paymentOption === method.id
+                            ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text"
+                            : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-[#D4AF37]/40"
+                        }`}
+                      >
+                        <span className="text-[11px] font-black block">{method.label}</span>
+                        <span className="text-[8px] opacity-70 uppercase">{method.badge}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Phone Input */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
+                    Numéro Mobile Money
+                  </label>
                   <input
                     type="tel"
                     value={phonePayment}
-                    onChange={(e) => setPhonePhoneValue(e.target.value)}
-                    placeholder="Ex: +225 07 00 00 00 00"
-                    className="w-full bg-afri-bg p-3.5 text-sm rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-wider"
+                    onChange={(e) => setPhonePayment(e.target.value.replace(/[^\d+]/g, ""))}
+                    placeholder="Ex: 0700000000"
+                    className="w-full bg-afri-bg p-3 text-xs rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-wider font-bold"
                   />
-                  {/* helper */}
-                  <span className="text-[9px] text-afri-text-sec block leading-relaxed">Un SMS et une boîte de dialogue apparaîtront sur votre mobile pour confirmation du code secret.</span>
+                  <span className="text-[9px] text-afri-text-sec block leading-tight">
+                    Un SMS de validation vous sera transmis pour autoriser le débit direct.
+                  </span>
                 </div>
 
-                <button
-                  onClick={processPayment}
-                  className="w-full bg-afri-bg-sec text-black font-black uppercase text-xs py-4 tracking-widest rounded-2xl hover:bg-opacity-95 active:scale-95 transition-all cursor-pointer shadow-xl"
-                >
-                  Confirmer le paiement - {plans.find(p => p.id === selectedPlan)?.priceLabel}
-                </button>
+                {/* Confirm & Cancel Buttons */}
+                <div className="space-y-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={processPayment}
+                    disabled={!phonePayment}
+                    className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
+                  >
+                    Confirmer le paiement ({currentSelectedPlanObj.priceLabel})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal(null)}
+                    className="w-full py-2 text-center text-xs font-bold text-afri-text-sec hover:text-white cursor-pointer"
+                  >
+                    Plus tard
+                  </button>
+                </div>
               </div>
             )}
 
             {paymentStep === "processing" && (
               <div className="py-8 text-center space-y-4">
-                {/* Loader */}
                 <div className="w-10 h-10 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p className="text-sm font-bold text-[#D4AF37] animate-pulse">Contactant les serveurs de paiement Mobile Money ({paymentOption?.toUpperCase()})...</p>
-                <p className="text-[10px] text-afri-text-sec">Veuillez autoriser et taper votre code secret sur votre téléphone pour valider l'opération...</p>
+                <p className="text-xs font-bold text-[#D4AF37] animate-pulse">
+                  Connexion au réseau {paymentOption.toUpperCase()} Mobile Money...
+                </p>
+                <p className="text-[10px] text-afri-text-sec max-w-xs mx-auto">
+                  Veuillez confirmer l'autorisation de débit sur votre téléphone portable.
+                </p>
               </div>
             )}
 
             {paymentStep === "success" && (
-              <div className="py-6 text-center space-y-4 animate-scaleIn">
-                <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500 text-emerald-500 rounded-full flex items-center justify-center mx-auto text-xl">
+              <div className="py-4 text-center space-y-4">
+                <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
                   ✓
                 </div>
                 <div>
-                  <h4 className="text-base font-black text-afri-text uppercase tracking-tight">Félicitations, Bienvenue Elite !</h4>
-                  <p className="text-xs text-afri-text-sec mt-1">Votre badge Gold Gombo et votre accès illimité aux statistiques poussées ont été activés instantanément.</p>
+                  <h4 className="text-base font-black text-afri-text uppercase tracking-tight">Félicitations, Bienvenue {currentSelectedPlanObj.name} !</h4>
+                  <p className="text-xs text-afri-text-sec mt-1">
+                    Votre statut Premium et vos avantages ont été activés instantanément sur votre compte.
+                  </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => {
-                    setPaymentOption(null);
+                    setActiveModal(null);
                     onBack();
                   }}
-                  className="bg-afri-bg-ter border border-afri-border text-afri-text-sec font-bold uppercase text-[10px] px-6 py-2.5 rounded-xl hover:text-afri-text"
+                  className="w-full bg-[#D4AF37] text-black font-black uppercase text-xs py-3 rounded-xl hover:bg-amber-400 cursor-pointer"
                 >
                   Fermer
                 </button>
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
     </div>
   );
-
-  function setPhonePhoneValue(val: string) {
-    // Basic formatting helper
-    setPhonePayment(val.replace(/[^\d+]/g, ""));
-  }
 }
