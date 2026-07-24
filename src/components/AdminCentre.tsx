@@ -424,6 +424,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState<boolean>(false);
+  const [isChangelogModalOpen, setIsChangelogModalOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
   const [activeBoostItem, setActiveBoostItem] = useState<{id: string, type: 'gombo' | 'candidature'} | null>(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState<boolean>(false);
@@ -2428,7 +2429,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           {/* SEPARATOR */}
                           <div className="border-t border-afri-border my-1" />
 
-                          {/* SECTION: Univers AFRI */}
+                          {/* SECTION: Univers AFRIGOMBO */}
                           <div className="space-y-1">
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest block mb-1">
                               🏛️ Univers AFRIGOMBO
@@ -2437,13 +2438,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_builders");
-                                try { audioSynth.playValidationSuccess(); } catch (_) {}
-                              });
-                            }, false)}
-                            {renderMenuItem("menu_wallet", "Wallet", "💳", () => {
-                              requireAuthThen(() => {
-                                setPerspective("user");
-                                setActiveMenu("user_wallet");
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false)}
@@ -2464,6 +2458,32 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           {/* SEPARATOR */}
                           <div className="border-t border-afri-border my-1" />
 
+                          {/* SECTION: Outils Bêta */}
+                          <div className="space-y-1">
+                            <span className="px-3.5 text-[8.5px] font-mono font-black text-[#D4AF37] uppercase tracking-widest block mb-1">
+                              🧪 Outils Bêta
+                            </span>
+                            {renderMenuItem("menu_bug_report", "Signaler un bug", "📢", () => {
+                              setIsBetaFeedbackOpen(true);
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false)}
+                            {renderMenuItem("menu_suggestion", "Faire une suggestion", "💡", () => {
+                              setIsBetaFeedbackOpen(true);
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false)}
+                            {renderMenuItem("menu_changelog", "Journal des mises à jour (Bêta)", "📄", () => {
+                              setIsChangelogModalOpen(true);
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false)}
+                            {renderMenuItem("menu_support_beta", "Contacter le support", "🎧", () => {
+                              supportConfig.openSupport("Bêta Publique - Support Client");
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false)}
+                          </div>
+
+                          {/* SEPARATOR */}
+                          <div className="border-t border-afri-border my-1" />
+
                           {/* SECTION: Centre personnel */}
                           <div className="space-y-1">
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest block mb-1">
@@ -2473,12 +2493,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               requireAuthThen(() => {
                                 setPerspective("user");
                                 setActiveMenu("user_heritage");
-                              });
-                            }, false)}
-                            {renderMenuItem("menu_profile", "Mon Profil", "👤", () => {
-                              requireAuthThen(() => {
-                                setPerspective("user");
-                                setActiveMenu("user_edit_profile");
                               });
                             }, false)}
                             {renderMenuItem("menu_pubs", "Publications", "📝", () => {
@@ -8539,6 +8553,52 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isChangelogModalOpen && (
+        <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-afri-bg border border-afri-gold/20 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative max-h-[85vh] flex flex-col">
+            <button 
+              onClick={() => setIsChangelogModalOpen(false)}
+              className="absolute top-4 right-4 p-2 text-afri-text-sec hover:text-afri-text rounded-lg transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-4 shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 text-lg">
+                📄
+              </div>
+              <div>
+                <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase">Journal des Mises à Jour</h3>
+                <p className="text-[10px] text-afri-text-sec font-mono">AFRIGOMBO v1.0.0 — Bêta Publique</p>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto space-y-4 pr-1 text-xs text-afri-text-sec flex-1">
+              <div className="p-3 bg-afri-bg-sec border border-afri-border rounded-xl space-y-2">
+                <div className="flex justify-between items-center text-[11px] font-bold text-afri-text">
+                  <span className="text-[#D4AF37]">v1.0.0 (Bêta Publique)</span>
+                  <span className="text-[9px] font-mono opacity-60">Juillet 2026</span>
+                </div>
+                <ul className="space-y-1.5 list-disc list-inside text-[11px] text-afri-text-sec leading-relaxed">
+                  <li><strong>Menu latéral optimisé :</strong> Suppression des doublons (Wallet, Profil) et ajout des outils Bêta.</li>
+                  <li><strong>Abonnements Premium Bêta :</strong> Processus de souscription sécurisé avec validation par code unique délivré par le support.</li>
+                  <li><strong>Support WhatsApp Intégré :</strong> Assistance directe sans affichage de numéros de téléphone bruts.</li>
+                  <li><strong>Mise à jour en temps réel :</strong> Validation instantanée des statuts Premium, badges et commissions dans Firestore.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-afri-border text-right shrink-0 mt-2">
+              <button
+                onClick={() => setIsChangelogModalOpen(false)}
+                className="px-5 py-2 bg-[#D4AF37] text-black font-black uppercase text-xs rounded-xl cursor-pointer hover:bg-amber-400"
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       )}

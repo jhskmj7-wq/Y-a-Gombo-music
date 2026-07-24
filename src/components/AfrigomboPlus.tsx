@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Sparkles, Check, ChevronLeft, CreditCard, Award, Shield, Music, BarChart3, Radio, X, Zap, Calculator } from "lucide-react";
+import { Sparkles, Check, ChevronLeft, CreditCard, Award, Shield, Music, BarChart3, Radio, X, Zap, Calculator, KeyRound, MessageCircle } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
-import { gomboDB } from "../firebase";
+import { supportConfig } from "../supportConfig";
+import { createPendingSubscriptionRequest, validateAndActivatePremiumCode } from "../lib/premiumSubscriptionEngine";
 
 interface AfrigomboPlusProps {
   onBack: () => void;
@@ -16,17 +17,26 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [paymentOption, setPaymentOption] = useState<string>("wave");
   const [phonePayment, setPhonePayment] = useState("");
-  const [paymentStep, setPaymentStep] = useState<"idle" | "processing" | "success">("idle");
+  const [paymentStep, setPaymentStep] = useState<"idle" | "processing" | "pending_validation">("idle");
   const [simAmount, setSimAmount] = useState<number>(100000);
   const [subscribedPlan, setSubscribedPlan] = useState<string | null>(() => {
+    if (currentUserProfile?.isPremium) {
+      return currentUserProfile.subscriptionPlan || "GOMBO ELITE";
+    }
     if (typeof window !== "undefined" && window.localStorage) {
       return localStorage.getItem("gombo_subscription") || "GOMBO FREE";
     }
     return "GOMBO FREE";
   });
 
-  // Modal manager: "compare" | "why" | "savings" | "payment" | null
-  const [activeModal, setActiveModal] = useState<"compare" | "why" | "savings" | "payment" | null>(null);
+  // Modal manager: "compare" | "why" | "savings" | "payment" | "activation" | null
+  const [activeModal, setActiveModal] = useState<"compare" | "why" | "savings" | "payment" | "activation" | null>(null);
+
+  // Activation code state
+  const [inputActivationCode, setInputActivationCode] = useState("");
+  const [activationError, setActivationError] = useState("");
+  const [activationSuccessMsg, setActivationSuccessMsg] = useState("");
+  const [isActivatingCode, setIsActivatingCode] = useState(false);
 
   const plans = [
     {
@@ -109,7 +119,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
 
   const processPayment = async () => {
     if (!phonePayment) {
-      alert("Veuillez saisir votre numéro mobile money pour l'autorisation.");
+      alert("Veuillez saisir votre numéro mobile money.");
       return;
     }
     setPaymentStep("processing");
@@ -125,43 +135,68 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
         const subName = matchedPlan ? matchedPlan.name : "GOMBO ELITE";
         const amount = matchedPlan ? (billingCycle === "monthly" ? matchedPlan.monthlyPrice : matchedPlan.yearlyPrice) : 1000;
         
-        if (currentUserProfile?.uid) {
-          await gomboDB.publishPayment({
-            userId: currentUserProfile.uid,
-            userName: currentUserProfile.name || currentUserProfile.artistName || "Membre Premium",
-            amount: amount,
-            purpose: `💎 Abonnement ${subName} - Premium AFRIGOMBO`,
-            provider: paymentOption || "wave",
-            phoneNumber: phonePayment,
-            status: "success"
-          });
+        // Mode Bêta: create request with status pending_validation
+        await createPendingSubscriptionRequest({
+          userId: currentUserProfile?.uid || "guest_beta",
+          userName: currentUserProfile?.artistName || currentUserProfile?.firstName || "Membre Bêta",
+          userPhone: phonePayment,
+          plan: selectedPlan,
+          billingCycle: billingCycle,
+          amount: amount
+        });
 
-          const currentBadges = currentUserProfile.badges || [];
-          const newBadges = Array.from(new Set([...currentBadges, "💎 Adhérent Premium"]));
-          await gomboDB.updateUserProfile(currentUserProfile.uid, {
-            isPremium: true,
-            badges: newBadges,
-            subscriptionPlan: subName
-          } as any);
+        // Set step to pending_validation (never auto-activated during beta)
+        setPaymentStep("pending_validation");
 
-          if (onRefreshProfile) {
-            onRefreshProfile();
-          }
+      } catch (err) {
+        console.error("Error creating subscription request:", err);
+        setPaymentStep("idle");
+        alert("Une erreur s'est produite lors de la demande. Veuillez réessayer.");
+      }
+    }, 1200);
+  };
+
+  // Submit activation code handler
+  const handleValidateActivationCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActivationError("");
+    setActivationSuccessMsg("");
+
+    if (!inputActivationCode || inputActivationCode.trim().length < 4) {
+      setActivationError("Code invalide.");
+      return;
+    }
+
+    setIsActivatingCode(true);
+
+    try {
+      const res = await validateAndActivatePremiumCode(
+        inputActivationCode,
+        currentUserProfile?.uid || "guest_user",
+        selectedPlan
+      );
+
+      if (res.success) {
+        setActivationSuccessMsg(res.message);
+        localStorage.setItem("gombo_subscription", res.plan === "elite" ? "GOMBO ELITE" : "GOMBO PRO");
+        setSubscribedPlan(res.plan === "elite" ? "GOMBO ELITE" : "GOMBO PRO");
+
+        if (onRefreshProfile) {
+          onRefreshProfile();
         }
-
-        setPaymentStep("success");
-        localStorage.setItem("gombo_subscription", subName);
-        setSubscribedPlan(subName);
 
         if (window.dispatchEvent) {
           window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } }));
         }
-      } catch (err) {
-        console.error("Error setting premium db profile:", err);
-        alert("Erreur lors de l'enregistrement de votre abonnement. Vos fonds ne sont pas perdus, contactez le support.");
-        setPaymentStep("idle");
+      } else {
+        // Requirement 7: STRICTLY "Code invalide."
+        setActivationError("Code invalide.");
       }
-    }, 2800);
+    } catch (err) {
+      setActivationError("Code invalide.");
+    } finally {
+      setIsActivatingCode(false);
+    }
   };
 
   const currentSelectedPlanObj = plans.find(p => p.id === selectedPlan) || plans[2];
@@ -187,6 +222,23 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
             <span>🚀 Obtenez plus de Gombos</span>
             <span>•</span>
             <span>💰 Économisez sur vos contrats</span>
+          </div>
+
+          {/* Quick trigger for Activation Code */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setActivationError("");
+                setActivationSuccessMsg("");
+                setInputActivationCode("");
+                setActiveModal("activation");
+              }}
+              className="px-4 py-2 bg-[#D4AF37]/15 border border-[#D4AF37]/40 hover:bg-[#D4AF37]/25 text-[#D4AF37] font-black text-[11px] uppercase tracking-wider rounded-xl inline-flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <span>Activer mon abonnement (Saisir un code)</span>
+            </button>
           </div>
         </div>
       </div>
@@ -636,7 +688,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       )}
 
       {/* ========================================================= */}
-      {/* MODAL 4: INTERACTIVE PAYMENT POPUP */}
+      {/* MODAL 4: INTERACTIVE PAYMENT POPUP (BÊTA MODE) */}
       {/* ========================================================= */}
       {activeModal === "payment" && (
         <div 
@@ -735,9 +787,6 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                     placeholder="Ex: 0700000000"
                     className="w-full bg-afri-bg p-3 text-xs rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-wider font-bold"
                   />
-                  <span className="text-[9px] text-afri-text-sec block leading-tight">
-                    Un SMS de validation vous sera transmis pour autoriser le débit direct.
-                  </span>
                 </div>
 
                 {/* Confirm & Cancel Buttons */}
@@ -748,7 +797,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                     disabled={!phonePayment}
                     className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
                   >
-                    Confirmer le paiement ({currentSelectedPlanObj.priceLabel})
+                    Envoyer la demande ({currentSelectedPlanObj.priceLabel})
                   </button>
 
                   <button
@@ -756,7 +805,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
                     onClick={() => setActiveModal(null)}
                     className="w-full py-2 text-center text-xs font-bold text-afri-text-sec hover:text-white cursor-pointer"
                   >
-                    Plus tard
+                    Annuler
                   </button>
                 </div>
               </div>
@@ -766,37 +815,155 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
               <div className="py-8 text-center space-y-4">
                 <div className="w-10 h-10 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
                 <p className="text-xs font-bold text-[#D4AF37] animate-pulse">
-                  Connexion au réseau {paymentOption.toUpperCase()} Mobile Money...
-                </p>
-                <p className="text-[10px] text-afri-text-sec max-w-xs mx-auto">
-                  Veuillez confirmer l'autorisation de débit sur votre téléphone portable.
+                  Enregistrement de votre demande Bêta...
                 </p>
               </div>
             )}
 
-            {paymentStep === "success" && (
+            {paymentStep === "pending_validation" && (
               <div className="py-4 text-center space-y-4">
-                <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-                  ✓
+                <div className="w-12 h-12 bg-[#D4AF37]/10 border border-[#D4AF37]/40 text-[#D4AF37] rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                  📝
                 </div>
-                <div>
-                  <h4 className="text-base font-black text-afri-text uppercase tracking-tight">Félicitations, Bienvenue {currentSelectedPlanObj.name} !</h4>
-                  <p className="text-xs text-afri-text-sec mt-1">
-                    Votre statut Premium et vos avantages ont été activés instantanément sur votre compte.
+
+                <div className="space-y-2">
+                  <h4 className="text-base font-black text-afri-text uppercase tracking-tight">
+                    Votre demande d'abonnement a été enregistrée.
+                  </h4>
+                  <p className="text-xs text-afri-text-sec leading-relaxed">
+                    Contactez le support AFRIGOMBO afin d'obtenir votre code d'activation.
                   </p>
                 </div>
+
+                {/* Single Primary Button: Contacter le support via WhatsApp */}
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveModal(null);
-                    onBack();
+                    supportConfig.openSupport(`Bonjour Support AFRIGOMBO 👋\nJe souhaite obtenir mon code d'activation pour mon abonnement ${currentSelectedPlanObj.name} (Tél: ${phonePayment}).`);
                   }}
-                  className="w-full bg-[#D4AF37] text-black font-black uppercase text-xs py-3 rounded-xl hover:bg-amber-400 cursor-pointer"
+                  className="w-full bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
                 >
-                  Fermer
+                  <MessageCircle className="w-4 h-4 fill-black" />
+                  <span>Contacter le support</span>
                 </button>
+
+                <div className="pt-2 border-t border-afri-border/40 flex justify-between items-center text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivationError("");
+                      setActivationSuccessMsg("");
+                      setInputActivationCode("");
+                      setActiveModal("activation");
+                    }}
+                    className="text-[#D4AF37] hover:underline font-bold text-[11px]"
+                  >
+                    J'ai déjà un code d'activation
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal(null)}
+                    className="text-afri-text-sec hover:text-white font-medium text-[11px]"
+                  >
+                    Fermer
+                  </button>
+                </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 5: CODE ACTIVATION INPUT POPUP ("Activer mon abonnement") */}
+      {/* ========================================================= */}
+      {activeModal === "activation" && (
+        <div 
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto overscroll-contain touch-pan-y"
+          onClick={() => setActiveModal(null)}
+        >
+          <div 
+            className="bg-afri-bg-sec border border-[#D4AF37]/50 rounded-2xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl relative my-auto text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-afri-border/60 pb-3">
+              <div className="flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-[#D4AF37]" />
+                <h3 className="text-base font-black uppercase text-[#D4AF37] tracking-wide">
+                  Activer mon abonnement
+                </h3>
+              </div>
+              <button 
+                onClick={() => setActiveModal(null)}
+                className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleValidateActivationCode} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
+                  Code d'activation
+                </label>
+                <input
+                  type="text"
+                  value={inputActivationCode}
+                  onChange={(e) => {
+                    setInputActivationCode(e.target.value.toUpperCase());
+                    setActivationError("");
+                  }}
+                  placeholder="Ex: AG-PRO-9842"
+                  className="w-full bg-afri-bg p-3.5 text-sm rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-widest font-black uppercase text-center"
+                  autoFocus
+                />
+              </div>
+
+              {/* Requirement 7: If wrong code -> Simply "Code invalide." */}
+              {activationError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold text-center">
+                  {activationError}
+                </div>
+              )}
+
+              {activationSuccessMsg && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold text-center space-y-2">
+                  <p>{activationSuccessMsg}</p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal(null)}
+                    className="w-full bg-[#D4AF37] text-black font-black uppercase text-[10px] py-2 rounded-lg mt-1 cursor-pointer"
+                  >
+                    Accéder à mon espace
+                  </button>
+                </div>
+              )}
+
+              {!activationSuccessMsg && (
+                <div className="space-y-2 pt-1">
+                  <button
+                    type="submit"
+                    disabled={isActivatingCode || !inputActivationCode.trim()}
+                    className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
+                  >
+                    {isActivatingCode ? "Vérification..." : "Valider"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      supportConfig.openSupport("Bonjour Support AFRIGOMBO 👋\nJe n'ai pas encore reçu mon code d'activation d'abonnement.");
+                    }}
+                    className="w-full py-2 text-center text-[11px] font-bold text-afri-text-sec hover:text-[#D4AF37] cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Obtenir un code via le Support</span>
+                  </button>
+                </div>
+              )}
+            </form>
           </div>
         </div>
       )}
