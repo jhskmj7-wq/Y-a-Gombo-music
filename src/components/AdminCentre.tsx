@@ -918,6 +918,27 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   // Plus Menu overlay states
   const [isPlusMenuOpen, setIsPlusMenuOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isPlusMenuOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setIsPlusMenuOpen(false);
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      const handlePopState = () => setIsPlusMenuOpen(false);
+      window.addEventListener("popstate", handlePopState);
+      window.history.pushState({ plusModal: true }, "");
+
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+        window.removeEventListener("popstate", handlePopState);
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isPlusMenuOpen]);
   const [activePublishType, setActivePublishType] = useState<"gombo" | "reel" | "demo" | "renfort" | "recherche">("gombo");
   const [selectedPublishTags, setSelectedPublishTags] = useState<string[]>([]);
   const [multiplePublishPhotos, setMultiplePublishPhotos] = useState<string[]>([]);
@@ -7687,7 +7708,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 setActiveMenu("super_admin");
                 addToTerminal(`[INFO] Cabinet du Fondateur déverrouillé par johnsylvesterh@gmail.com.`);
               }}
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-[#FF6600] text-afri-text hover:opacity-90 font-display font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all"
+              className="w-full py-3 bg-gradient-to-r from-purple-600 to-[#FF6600] text-afri-text hover:opacity-90 font-display font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all cursor-pointer"
             >
               👑 Entrer dans le Trône
             </button>
