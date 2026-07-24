@@ -184,6 +184,34 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const [activeContractsCount, setActiveContractsCount] = useState<number>(0);
   const [todayEventsCount, setTodayEventsCount] = useState<number>(0);
   const [isPlusMenuOpen, setIsPlusMenuOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isPlusMenuOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setIsPlusMenuOpen(false);
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      const handlePopState = () => setIsPlusMenuOpen(false);
+      window.addEventListener("popstate", handlePopState);
+      window.history.pushState({ plusModal: true }, "");
+
+      return () => {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+        window.removeEventListener("keydown", handleKeyDown);
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }
+  }, [isPlusMenuOpen]);
   const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState<boolean>(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState<boolean>(false);
@@ -1860,23 +1888,23 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
          ========================================== */}
       <AnimatePresence>
         {isPlusMenuOpen && (
-          <div className="fixed inset-0 z-[70] flex items-end justify-center pb-20 sm:pb-24 px-3 sm:px-4 pointer-events-auto">
+          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pointer-events-auto">
             {/* Dark premium glass backdrop overlay */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.75 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsPlusMenuOpen(false)}
-              className="absolute inset-0 bg-afri-bg/85 cursor-pointer backdrop-blur-md"
+              className="absolute inset-0 bg-black/80 cursor-pointer backdrop-blur-md"
             />
 
-            {/* Pop-up card floating directly above '+' button */}
+            {/* Pop-up card centered */}
             <motion.div
-              initial={{ scale: 0.85, y: 30, opacity: 0 }}
+              initial={{ scale: 0.9, y: 15, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.85, y: 30, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              className="relative w-full max-w-lg bg-afri-bg-sec border-2 border-[#D4AF37]/50 rounded-3xl z-10 p-5 sm:p-7 shadow-[0_15px_50px_rgba(212,175,55,0.25)] flex flex-col space-y-4 select-none max-h-[75vh] overflow-hidden"
+              exit={{ scale: 0.9, y: 15, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="relative w-full max-w-lg bg-afri-bg-sec border-2 border-[#D4AF37]/50 rounded-3xl z-10 p-5 sm:p-7 shadow-[0_20px_60px_rgba(0,0,0,0.9)] flex flex-col space-y-4 select-none max-h-[85vh] overflow-y-auto"
             >
               {/* Pointer arrow pointing towards '+' button directly below */}
               <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-5 bg-afri-bg-sec rotate-45 border-b-2 border-r-2 border-[#D4AF37]/50 pointer-events-none" />

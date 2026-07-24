@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sparkles, Check, ChevronLeft, CreditCard, Award, Shield, Music, BarChart3, Radio, X, Zap, Calculator, KeyRound, MessageCircle } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { supportConfig } from "../supportConfig";
@@ -31,6 +31,36 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
 
   // Modal manager: "compare" | "why" | "savings" | "payment" | "activation" | null
   const [activeModal, setActiveModal] = useState<"compare" | "why" | "savings" | "payment" | "activation" | null>(null);
+
+  useEffect(() => {
+    if (activeModal !== null) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setActiveModal(null);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      const handlePopState = () => setActiveModal(null);
+      window.addEventListener("popstate", handlePopState);
+      window.history.pushState({ modalOpen: true }, "");
+
+      return () => {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+        window.removeEventListener("keydown", handleKeyDown);
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }
+  }, [activeModal]);
 
   // Activation code state
   const [inputActivationCode, setInputActivationCode] = useState("");
