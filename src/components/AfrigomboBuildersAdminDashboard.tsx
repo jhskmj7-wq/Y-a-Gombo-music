@@ -247,7 +247,7 @@ export default function AfrigomboBuildersAdminDashboard() {
                       <span className="text-[10px] text-afri-text-sec font-mono">{p}%</span>
                     </div>
                     <div className="h-1.5 bg-afri-bg-sec rounded-full overflow-hidden mb-2">
-                      <div className="h-full bg-afri-bg-sec" style={{ width: `${p}%` }} />
+                      <div className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 shadow-[0_0_10px_rgba(212,175,55,0.3)] transition-all duration-500" style={{ width: `${p}%` }} />
                     </div>
                     <div className="flex justify-between text-[9px] font-mono text-afri-text-sec">
                       <span>{c.current.toLocaleString()} FCFA</span>

@@ -76,6 +76,7 @@ export async function isDirectAudioFile(url: string): Promise<boolean> {
  */
 export async function getCachedAudioUrl(url: string): Promise<string> {
   if (!url) return "";
+  if (url.includes("raw.githubusercontent.com")) return url;
   try {
     if (typeof window === "undefined" || !("caches" in window)) {
       return url;

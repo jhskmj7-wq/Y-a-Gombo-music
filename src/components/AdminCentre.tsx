@@ -3069,17 +3069,6 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   STEP I: TABLEAU UTILISATEUR (10 CORE SECTIONS)
                                     ---------------------------------------------------- */}
 
-                {perspective === "user" && ["user_publish", "user_contracts", "user_events", "user_messages", "user_wallet", "user_renforts", "user_gombo_id"].includes(activeMenu) && (
-                  <div className="mb-4">
-                    <button
-                      onClick={() => setActiveMenu("user_terrain")}
-                      className="inline-flex items-center gap-2 text-xs font-bold text-afri-text bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition-all cursor-pointer"
-                    >
-                      <span>&larr;</span> Retour
-                    </button>
-                  </div>
-                )}
-
                 {/* ----------------------------------------------------
                                   NEW CORE EXPERIENCES FOR USER PERSPECTIVE
                                     ---------------------------------------------------- */}
@@ -4751,8 +4740,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                     {/* Validation Intermediate Overlay (Beta Test) */}
                     {publishSuccess && (
-                      <div className="fixed inset-0 bg-afri-bg/98 backdrop-blur-md z-[999] flex flex-col items-center justify-center p-4 sm:p-6 space-y-4 overflow-y-auto overscroll-contain touch-pan-y">
-                        <div className="max-w-md w-full bg-afri-bg-sec border border-afri-gold/30 rounded-2xl p-6 space-y-4 text-center shadow-2xl relative">
+                      <div className="fixed inset-0 bg-afri-bg/98 backdrop-blur-md z-[999] flex flex-col items-center p-4 sm:p-6 pt-24 sm:pt-28 pb-10 space-y-4 overflow-y-auto overscroll-contain touch-pan-y">
+                        <div className="max-w-md w-full bg-afri-bg-sec border border-afri-gold/30 rounded-2xl p-6 space-y-4 text-center shadow-2xl relative shrink-0 overflow-y-auto max-h-[85vh] mt-4">
                           <div className="w-14 h-14 mx-auto bg-amber-500/10 border border-afri-gold rounded-2xl flex items-center justify-center text-3xl shadow-md">
                             🛡️
                           </div>
@@ -7996,7 +7985,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       {/* =========================================================================
                                      ADMIN FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
-      {perspective === "admin" && activeMenu !== "super_admin" && (
+      {perspective === "admin" && activeMenu !== "super_admin" && activeMenu !== "user_settings" && (
         <div className="fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 bg-afri-bg/95 backdrop-blur-md border-t sm:border border-afri-gold/35 p-1.5 sm:p-2 px-2 xs:px-4 sm:px-6 flex items-center z-40 sm:rounded-2xl sm:shadow-[0_8px_35px_rgba(212,175,55,0.2)] w-full sm:w-auto min-w-[300px] xs:min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-0.5 xs:gap-1 sm:gap-4 select-none">
           {/* 1. DASHBOARD */}
           <button

@@ -115,7 +115,21 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
       };
 
       const userRef = doc(db, "users", (currentUser.uid || currentUser.id) as string);
-      await setDoc(userRef, { builderData: newBuilderData }, { merge: true });
+      
+      // Update global badges array to distribute the builder badge automatically
+      const currentBadges = Array.isArray(currentUser.badges) ? currentUser.badges : [];
+      const builderBadgesList = ["👑 Grand Mécène", "💎 Gardien du Temple", "🥇 Protecteur", "🥈 Bâtisseur", "🥉 Ami d'AFRIGOMBO", "Sympathisant"];
+      
+      const otherBadges = currentBadges.filter((b: string) => !builderBadgesList.includes(b));
+      if (newBadge !== "Sympathisant") {
+        otherBadges.push(newBadge);
+      }
+
+      await setDoc(userRef, { 
+        builderData: newBuilderData,
+        badges: otherBadges
+      }, { merge: true });
+
       setUserBuilderData(newBuilderData);
 
       try { audioSynth?.playValidationSuccess(); } catch(e) {}

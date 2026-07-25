@@ -195,7 +195,8 @@ export default function SettingsModal({
 
   // Account Level
   const accountLevel = profile?.isCertified || profile?.isVerified ? "⭐ ARTISTE CERTIFIÉ GOMBO" : "🎵 COMPTE CLASSIQUE";
-  const isPremium = profile?.isPro || profile?.isVip || (profile?.balance !== undefined && profile.balance > 0);
+  const isFounder = currentUser?.email === "jhs.kmj7@gmail.com";
+  const isPremium = profile?.isPro || profile?.isVip || (profile?.balance !== undefined && profile.balance > 0) || isFounder;
   
   // Detect Auth Provider
   let authProvider = "Email";
@@ -393,22 +394,14 @@ export default function SettingsModal({
   return (
     <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-afri-bg text-afri-text font-sans pb-28 pt-4 px-4 sm:px-6 relative select-none">
       
-      {/* 2. HEADER BAR */}
+      {/* 2. HEADER BAR - CLEAN */}
       <div className="max-w-xl mx-auto flex items-center justify-between pb-5 border-b border-afri-border sticky top-0 bg-afri-bg/95 backdrop-blur-md z-30 mb-6">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-afri-gold/10 border border-afri-gold/20 flex items-center justify-center text-afri-gold">
-            <Settings className="w-5 h-5 animate-spin-slow" />
-          </div>
-          <div>
-            <h1 className="text-sm sm:text-base font-black text-afri-text uppercase tracking-tight">{mt("title")}</h1>
-            <p className="text-[10px] font-mono text-afri-text-muted uppercase tracking-wider">{mt("subtitle")}</p>
-          </div>
-        </div>
         <button 
           onClick={onClose}
-          className="px-3.5 py-1.5 bg-afri-bg-sec hover:bg-afri-gold/10 border border-afri-border hover:border-afri-gold/35 rounded-2xl text-[11px] font-bold text-afri-text hover:text-afri-gold transition-all cursor-pointer"
+          className="flex items-center gap-2 text-xs font-bold text-afri-text hover:text-afri-gold transition-colors cursor-pointer"
         >
-          {mt("back")}
+          <ChevronRight className="w-5 h-5 rotate-180" />
+          <h1 className="text-sm sm:text-base font-black uppercase tracking-tight">PARAMÈTRES</h1>
         </button>
       </div>
 
@@ -741,6 +734,10 @@ export default function SettingsModal({
 
                       {isSelected && (
                         <div className="absolute top-0 left-0 w-1 h-full bg-afri-gold" />
+                      )}
+                      
+                      {isFounder && th.premium && (
+                        <span className="absolute bottom-1 right-1 text-[7px] text-afri-gold font-bold uppercase">Accès Fondateur</span>
                       )}
                     </button>
                   );

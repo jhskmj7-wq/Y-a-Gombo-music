@@ -111,6 +111,8 @@ export default function AdminFounderThrone({
   const [quickNotifUser, setQuickNotifUser] = useState<string>("ALL");
   const [quickNotifTitle, setQuickNotifTitle] = useState<string>("");
   const [quickNotifBody, setQuickNotifBody] = useState<string>("");
+  const [simVol, setSimVol] = useState<number>(100);
+  const [simAvgAmount, setSimAvgAmount] = useState<number>(50000);
 
   // Auto-fold header on scroll
   useEffect(() => {
@@ -2417,25 +2419,97 @@ export default function AdminFounderThrone({
                   <div className="space-y-4">
                     <h4 className="text-xs font-mono uppercase font-black text-afri-text border-b border-afri-border pb-2">Patrimoine Musical Actif</h4>
 
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <button 
-                        onClick={() => globalAudioManager.playIntro(true)}
-                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border flex items-center gap-2 ${
-                          audioState.currentPlaying === 'intro' ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]' : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-afri-text-sec'
-                        }`}
-                      >
-                        <Zap className="w-3 h-3" />
-                        Réécouter l'Introduction
-                      </button>
-                      <button 
-                        onClick={() => globalAudioManager.playHymn()}
-                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border flex items-center gap-2 ${
-                          audioState.currentPlaying === 'hymne' ? 'bg-amber-500/20 border-amber-500 text-amber-500' : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-afri-text-sec'
-                        }`}
-                      >
-                        <Music className="w-3 h-3" />
-                        Hymne Officiel
-                      </button>
+                    <div className="flex flex-col gap-3 mb-6">
+                      {/* INTRO */}
+                      <div className="p-3 border rounded-2xl flex items-center justify-between gap-4 text-xs transition-all bg-afri-bg-sec/5 border-[#D4AF37]/40 hover:border-[#D4AF37]">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              if (audioState.currentPlaying === 'intro') {
+                                audioState.isPaused ? globalAudioManager.resume() : globalAudioManager.pause();
+                              } else {
+                                globalAudioManager.playIntro(true);
+                              }
+                            }}
+                            className="w-10 h-10 rounded-full bg-afri-bg-sec/20 hover:bg-afri-bg-sec/40 flex items-center justify-center text-[#D4AF37] cursor-pointer border border-[#D4AF37]/30 shadow-md"
+                          >
+                            {audioState.currentPlaying === 'intro' && !audioState.isPaused ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+                          </button>
+                          <div className="text-left">
+                            <span className="font-sans font-bold text-[#D4AF37] block flex items-center gap-2">
+                              Aperçu Intro
+                              <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-[#D4AF37]/20 border border-[#D4AF37]/30 uppercase tracking-widest">ID: INTRO</span>
+                            </span>
+                            <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">Introduction Officielle (GitHub Raw)</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 w-24">
+                          <Volume2 className="w-3 h-3 text-[#D4AF37]" />
+                          <input
+                            type="range" min="0" max="1" step="0.05"
+                            value={audioState.volume}
+                            onChange={(e) => globalAudioManager.setVolume(parseFloat(e.target.value))}
+                            className="w-full h-1 bg-afri-bg-ter rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* ANTHEM */}
+                      <div className="p-3 border rounded-2xl flex items-center justify-between gap-4 text-xs transition-all bg-afri-bg-sec/5 border-amber-500/40 hover:border-amber-500">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              if (audioState.currentPlaying === 'hymne') {
+                                audioState.isPaused ? globalAudioManager.resume() : globalAudioManager.pause();
+                              } else {
+                                globalAudioManager.playHymn();
+                              }
+                            }}
+                            className="w-10 h-10 rounded-full bg-afri-bg-sec/20 hover:bg-afri-bg-sec/40 flex items-center justify-center text-amber-500 cursor-pointer border border-amber-500/30 shadow-md"
+                          >
+                            {audioState.currentPlaying === 'hymne' && !audioState.isPaused ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+                          </button>
+                          <div className="text-left">
+                            <span className="font-sans font-bold text-amber-500 block flex items-center gap-2">
+                              Aperçu Hymne
+                              <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-amber-500/20 border border-amber-500/30 uppercase tracking-widest">ID: ANTHEM</span>
+                            </span>
+                            <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">Hymne Officiel (GitHub Raw)</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 w-24">
+                          <Volume2 className="w-3 h-3 text-amber-500" />
+                          <input
+                            type="range" min="0" max="1" step="0.05"
+                            value={audioState.volume}
+                            onChange={(e) => globalAudioManager.setVolume(parseFloat(e.target.value))}
+                            className="w-full h-1 bg-afri-bg-ter rounded-lg appearance-none cursor-pointer accent-amber-500"
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* AMBIENT */}
+                      <div className="p-3 border rounded-2xl flex items-center justify-between gap-4 text-xs transition-all bg-afri-bg-sec/5 border-emerald-500/40 hover:border-emerald-500">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                                // Handled externally by BackgroundMusic UI
+                                setSuccessMsg("Veuillez utiliser le bouton Mute/Unmute flottant en bas à droite pour contrôler la musique d'ambiance.");
+                                setTimeout(() => setSuccessMsg(""), 4000);
+                            }}
+                            className="w-10 h-10 rounded-full bg-afri-bg-sec/20 hover:bg-afri-bg-sec/40 flex items-center justify-center text-emerald-500 cursor-pointer border border-emerald-500/30 shadow-md"
+                          >
+                            <Music className="w-4 h-4" />
+                          </button>
+                          <div className="text-left">
+                            <span className="font-sans font-bold text-emerald-500 block flex items-center gap-2">
+                              Aperçu Ambiance
+                              <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-emerald-500/20 border border-emerald-500/30 uppercase tracking-widest">ID: AMBIENT</span>
+                            </span>
+                            <span className="text-[9px] text-afri-text-sec font-mono block mt-0.5">Musique d'ambiance en boucle (Global)</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     {musicTracks.length === 0 ? (
@@ -2978,6 +3052,13 @@ export default function AdminFounderThrone({
                           <label className="text-[10px] font-mono text-zinc-600 dark:text-afri-text-sec uppercase">Prix Renfort Express</label>
                           <input type="number" value={economySettings.renfortExpressPrice} onChange={(e) => setEconomySettings({...economySettings, renfortExpressPrice: Number(e.target.value)})} className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-4 py-2 text-zinc-900 dark:text-afri-text font-mono text-sm focus:outline-none focus:border-[#D4AF37]" />
                         </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <label className="text-[10px] font-mono text-zinc-600 dark:text-afri-text-sec uppercase flex items-center gap-2 text-emerald-500">
+                            <Clock className="w-3 h-3" /> Libération Automatique Séquestre (Heures)
+                          </label>
+                          <input type="number" value={economySettings.autoReleaseHours || 48} onChange={(e) => setEconomySettings({...economySettings, autoReleaseHours: Number(e.target.value)})} className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-4 py-2 text-zinc-900 dark:text-afri-text font-mono text-sm focus:outline-none focus:border-emerald-500" />
+                          <p className="text-[8px] text-afri-text-sec">Débloque automatiquement les fonds en attente vers les prestataires après ce délai d'inactivité post-livraison.</p>
+                        </div>
                         <div className="md:col-span-2 flex justify-end mt-4">
                           <button 
                             onClick={() => {
@@ -2989,7 +3070,7 @@ export default function AdminFounderThrone({
                                 });
                               });
                             }}
-                            className="bg-afri-bg-sec hover:bg-afri-bg-sec text-black px-6 py-2.5 rounded-xl font-bold font-mono text-[10px] uppercase transition-colors"
+                            className="bg-afri-bg-sec hover:bg-afri-bg-sec text-black px-6 py-2.5 rounded-xl font-bold font-mono text-[10px] uppercase transition-colors cursor-pointer"
                           >
                             Sauvegarder les Paramètres
                           </button>
@@ -2998,6 +3079,40 @@ export default function AdminFounderThrone({
                     ) : (
                       <div className="text-afri-text-sec font-mono text-xs animate-pulse">Chargement des paramètres...</div>
                     )}
+                  </div>
+
+                  {/* Simulateur */}
+                  <div className="bg-afri-bg border border-afri-border rounded-3xl p-6 space-y-6 shadow-inner">
+                    <h3 className="text-sm font-sans font-black text-blue-400 uppercase tracking-wider border-b border-afri-border pb-2 flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5" /> Simulateur de Revenus Prévisionnels
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-mono text-zinc-600 dark:text-afri-text-sec uppercase flex justify-between">
+                            <span>Volume Mensuel (Transactions)</span>
+                            <span className="font-bold text-afri-text">{simVol} Tx</span>
+                          </label>
+                          <input type="range" min="10" max="10000" step="10" value={simVol} onChange={(e) => setSimVol(Number(e.target.value))} className="w-full h-1 bg-afri-bg-ter rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-mono text-zinc-600 dark:text-afri-text-sec uppercase flex justify-between">
+                            <span>Montant Moyen / Transaction</span>
+                            <span className="font-bold text-afri-text">{simAvgAmount.toLocaleString()} FCFA</span>
+                          </label>
+                          <input type="range" min="5000" max="1000000" step="5000" value={simAvgAmount} onChange={(e) => setSimAvgAmount(Number(e.target.value))} className="w-full h-1 bg-afri-bg-ter rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                        </div>
+                      </div>
+                      <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4 flex flex-col justify-center">
+                        <div className="text-center space-y-1">
+                          <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest font-black block mb-2">Revenu Mensuel Estimé (Empire)</span>
+                          <span className="text-3xl font-black text-afri-text block">
+                            {Math.round(simVol * simAvgAmount * (economySettings?.commissionRateStandard || 0.12)).toLocaleString()} FCFA
+                          </span>
+                          <span className="text-[9px] text-afri-text-sec block mt-2">Basé sur une commission standard de {((economySettings?.commissionRateStandard || 0.12) * 100).toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
