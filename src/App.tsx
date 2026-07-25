@@ -1,5 +1,5 @@
 import GlobalNotificationBanner from "./components/GlobalNotificationBanner";
-import React, { useState, useEffect, Suspense, lazy } from "react";
+import React, { useState, useEffect, Suspense, lazy, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { audioSynth } from "./lib/audio";
@@ -94,12 +94,16 @@ function App() {
     }
     return false;
   });
+  const isInitialized = useRef(false);
   const [progress, setProgress] = useState(0);
   const [logoUrl, setLogoUrl] = useState<string>(() => safeGetItem("custom_app_logo") || "/public/logo_afrigombo.png");
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
   const [isLogoFailed, setIsLogoFailed] = useState(false);
 
   useEffect(() => {
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+    
     setIsLogoLoaded(false);
     setIsLogoFailed(false);
     const img = new Image();
@@ -198,7 +202,7 @@ function App() {
               initial={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.65, ease: "easeInOut" }}
-              className="fixed inset-0 bg-afri-bg z-[9999] flex flex-col items-center justify-center text-center p-4 xs:p-6 select-none overflow-y-auto sm:overflow-hidden"
+              className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center text-center p-4 xs:p-6 select-none overflow-y-auto sm:overflow-hidden"
             >
               {/* Ambient Gold Dust / Particles */}
               <div className="absolute inset-0 pointer-events-none z-0">
@@ -218,7 +222,7 @@ function App() {
                 ))}
               </div>
 
-              {/* Logo Frame with Golden Halo and Pulsation */}
+              {/* Logo Frame - Simplified */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ 
@@ -234,33 +238,17 @@ function App() {
                     delay: 0.1 
                   }
                 }}
-                className="relative w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center mb-6 rounded-full bg-afri-bg-sec/80 border border-[#D4AF37]/20 shadow-[0_0_50px_rgba(212,175,55,0.08)] z-10 shrink-0 overflow-hidden"
+                className="relative w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center mb-6 z-10 shrink-0"
               >
-                {/* 1. Léger halo doré starting at 600ms (0.6s delay) */}
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: [0, 0.45, 0.3], scale: [0.8, 1.25, 1.2] }}
-                  transition={{ 
-                    delay: 0.6, 
-                    duration: 1.0, 
-                    ease: "easeOut",
-                    repeat: Infinity,
-                    repeatType: "reverse"
-                  }}
-                  className="absolute inset-2 rounded-full bg-gradient-to-tr from-[#D4AF37] to-amber-500 blur-2xl pointer-events-none" 
-                />
-
-                <div className="absolute inset-1.5 border border-dashed border-[#D4AF37]/15 rounded-full animate-spin" style={{ animationDuration: "24s" }} />
-
                 {isLogoLoaded && !isLogoFailed ? (
                   <img
                     src={logoUrl}
                     alt=""
                     aria-hidden="true"
-                    className="w-32 h-32 sm:w-38 sm:h-38 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+                    className="object-contain w-32 h-32 mx-auto relative z-10 drop-shadow-[0_0_15px_rgba(212,175,55,0.2)]"
                   />
                 ) : (
-                  <AfriGomboLogo className="w-32 h-32 sm:w-38 sm:h-38 relative z-10" />
+                  <AfriGomboLogo className="object-contain w-32 h-32 mx-auto relative z-10" />
                 )}
               </motion.div>
 
