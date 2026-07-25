@@ -81,6 +81,17 @@ function CompleteProfileView() {
 function App() {
   const { loading: authLoading } = useAuth();
   const { theme } = useTheme();
+  const location = useLocation();
+  
+  // Global scroll reset on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const scrollableElements = document.querySelectorAll('.overflow-y-auto');
+    scrollableElements.forEach(el => {
+      (el as HTMLElement).scrollTop = 0;
+    });
+  }, [location.pathname]);
+
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search;

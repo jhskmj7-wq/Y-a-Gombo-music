@@ -308,121 +308,128 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         <AnimatePresence>
           {showSuccessOverlay && (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-afri-bg/98 z-50 flex flex-col p-4 sm:p-6 space-y-4 overflow-y-auto overscroll-contain touch-pan-y"
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto overscroll-contain touch-pan-y"
             >
-              {/* Top Banner */}
-              <div className="text-center space-y-2 pt-2">
-                <div className="w-12 h-12 mx-auto bg-amber-500/10 border border-[#D4AF37] rounded-2xl flex items-center justify-center text-2xl shadow-md shadow-[#D4AF37]/20">
-                  🛡️
-                </div>
-                <span className="inline-block text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
-                  ⏳ EN ATTENTE DE VALIDATION
-                </span>
-                <h3 className="text-lg sm:text-xl font-black text-afri-text uppercase tracking-wide">
-                  Validation de votre Gombo (Bêta Test)
-                </h3>
-                <p className="text-xs text-afri-text-sec max-w-sm mx-auto leading-relaxed font-medium">
-                  Pour la bêta test, un conseiller vous assistera pour finaliser et valider la publication de votre gombo.
-                </p>
-              </div>
-
-              {/* Details Summary Card */}
-              <div className="bg-afri-bg-sec border border-afri-border rounded-xl p-3.5 space-y-2 text-left">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-afri-text-sec">Titre :</span>
-                  <span className="font-bold text-afri-text truncate max-w-[180px]">{depositDetails.title}</span>
-                </div>
-                {depositDetails.cachet ? (
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-afri-text-sec">Cachet :</span>
-                    <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.cachet.toLocaleString()} FCFA</span>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl w-full max-w-lg p-6 sm:p-8 overflow-y-auto max-h-[85vh] relative pb-10 shadow-2xl space-y-5 flex flex-col"
+              >
+                {/* Top Banner */}
+                <div className="text-center space-y-2 pt-2 shrink-0">
+                  <div className="w-12 h-12 mx-auto bg-amber-500/10 border border-[#D4AF37] rounded-2xl flex items-center justify-center text-2xl shadow-md shadow-[#D4AF37]/20">
+                    🛡️
                   </div>
-                ) : null}
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-afri-text-sec">Réf ID :</span>
-                  <span className="font-mono text-[10px] bg-afri-bg px-2 py-0.5 rounded text-afri-text-sec">{depositDetails.refId}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-afri-text-sec">Statut :</span>
-                  <span className="font-bold text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30 text-[10px] uppercase">
-                    ⏳ En attente de validation
+                  <span className="inline-block text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                    ⏳ EN ATTENTE DE VALIDATION
                   </span>
+                  <h3 className="text-lg sm:text-xl font-black text-afri-text uppercase tracking-wide">
+                    Validation de votre Gombo (Bêta Test)
+                  </h3>
+                  <p className="text-xs text-afri-text-sec max-w-sm mx-auto leading-relaxed font-medium">
+                    Pour la bêta test, un conseiller vous assistera pour finaliser et valider la publication de votre gombo.
+                  </p>
                 </div>
-              </div>
 
-              {/* Action 1: Contact Support / Conseiller */}
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    supportConfig.openSupport(`Bonjour, je souhaite finaliser et valider la publication de mon gombo "${depositDetails.title}" (Réf: ${depositDetails.refId})`);
-                  }}
-                  className="w-full px-4 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-black font-black text-xs uppercase rounded-xl transition-all shadow-md shadow-[#25D366]/20 cursor-pointer flex items-center justify-center gap-2 active:scale-98"
-                >
-                  <span>💬 Joindre le support / un conseiller</span>
-                </button>
-                <p className="text-[10px] text-center text-afri-text-sec">
-                  Contactez directement un conseiller pour obtenir votre code de validation ou faire valider votre gombo.
-                </p>
-              </div>
-
-              {/* Action 2: Input Validation Code Form */}
-              <div className="bg-afri-bg-sec/70 border border-[#D4AF37]/30 rounded-xl p-3.5 space-y-2 text-left">
-                <label className="block text-[11px] font-black uppercase text-[#D4AF37] tracking-wider flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-[#D4AF37]" /> Saisir un Code de Validation
-                </label>
-                <p className="text-[10px] text-afri-text-sec">
-                  Saisissez le code fourni par votre conseiller pour valider et publier votre gombo dans le fil général.
-                </p>
-                <form onSubmit={handleValidateCode} className="space-y-2 pt-1">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={enteredCode}
-                      onChange={(e) => setEnteredCode(e.target.value.toUpperCase())}
-                      placeholder="Ex: AG-849201"
-                      className="w-full bg-afri-bg border border-afri-border focus:border-[#D4AF37] rounded-lg px-3 py-2 text-xs font-mono tracking-wider font-bold text-afri-text uppercase outline-none"
-                    />
+                {/* Details Summary Card */}
+                <div className="bg-afri-bg border border-afri-border rounded-xl p-4 space-y-3 text-left">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-afri-text-sec">Titre :</span>
+                    <span className="font-bold text-afri-text truncate max-w-[180px]">{depositDetails.title}</span>
                   </div>
-
-                  {codeErrorMsg && (
-                    <div className="text-[10px] text-red-400 font-bold bg-red-950/30 p-2 rounded border border-red-900/50">
-                      ⚠️ {codeErrorMsg}
+                  {depositDetails.cachet ? (
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-afri-text-sec">Cachet :</span>
+                      <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.cachet.toLocaleString()} FCFA</span>
                     </div>
-                  )}
+                  ) : null}
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-afri-text-sec">Réf ID :</span>
+                    <span className="font-mono text-[10px] bg-afri-bg-sec px-2 py-0.5 rounded text-afri-text-sec border border-white/5">{depositDetails.refId}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-afri-text-sec">Statut :</span>
+                    <span className="font-bold text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30 text-[10px] uppercase">
+                      ⏳ En attente de validation
+                    </span>
+                  </div>
+                </div>
 
-                  {codeSuccessMsg && (
-                    <div className="text-[10px] text-emerald-400 font-bold bg-emerald-950/30 p-2 rounded border border-emerald-900/50">
-                      {codeSuccessMsg}
-                    </div>
-                  )}
-
+                {/* Action 1: Contact Support / Conseiller */}
+                <div className="space-y-2.5">
                   <button
-                    type="submit"
-                    disabled={validatingCode || !enteredCode.trim()}
-                    className="w-full py-2.5 bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black text-xs uppercase rounded-lg transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                    type="button"
+                    onClick={() => {
+                      supportConfig.openSupport(`Bonjour, je souhaite finaliser et valider la publication de mon gombo "${depositDetails.title}" (Réf: ${depositDetails.refId})`);
+                    }}
+                    className="w-full px-4 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-black font-black text-xs uppercase rounded-xl transition-all shadow-md shadow-[#25D366]/20 cursor-pointer flex items-center justify-center gap-2 active:scale-98"
                   >
-                    {validatingCode ? "Vérification..." : "⚡ Valider et Publier le Gombo"}
+                    <span>💬 Joindre le support / un conseiller</span>
                   </button>
-                </form>
-              </div>
+                  <p className="text-[10px] text-center text-afri-text-sec font-medium">
+                    Contactez directement un conseiller pour obtenir votre code de validation ou faire valider votre gombo.
+                  </p>
+                </div>
 
-              {/* Secondary return button */}
-              <div className="pt-2 text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowSuccessOverlay(false);
-                    onSuccess();
-                  }}
-                  className="text-xs font-bold text-afri-text-sec hover:text-white underline cursor-pointer"
-                >
-                  Retourner au Terrain (Validation ultérieure)
-                </button>
-              </div>
+                {/* Action 2: Input Validation Code Form */}
+                <div className="bg-afri-bg/50 border border-[#D4AF37]/30 rounded-xl p-4 space-y-3 text-left">
+                  <label className="block text-[11px] font-black uppercase text-[#D4AF37] tracking-wider flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-[#D4AF37]" /> Saisir un Code de Validation
+                  </label>
+                  <p className="text-[10px] text-afri-text-sec leading-relaxed">
+                    Saisissez le code fourni par votre conseiller pour valider et publier votre gombo dans le fil général.
+                  </p>
+                  <form onSubmit={handleValidateCode} className="space-y-3 pt-1">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={enteredCode}
+                        onChange={(e) => setEnteredCode(e.target.value.toUpperCase())}
+                        placeholder="Ex: AG-849201"
+                        className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-lg px-3 py-2.5 text-xs font-mono tracking-wider font-bold text-afri-text uppercase outline-none transition-colors"
+                      />
+                    </div>
+
+                    {codeErrorMsg && (
+                      <div className="text-[10px] text-red-400 font-bold bg-red-950/30 p-2 rounded border border-red-900/50">
+                        ⚠️ {codeErrorMsg}
+                      </div>
+                    )}
+
+                    {codeSuccessMsg && (
+                      <div className="text-[10px] text-emerald-400 font-bold bg-emerald-950/30 p-2 rounded border border-emerald-900/50">
+                        {codeSuccessMsg}
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={validatingCode || !enteredCode.trim()}
+                      className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black text-xs uppercase rounded-lg transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                    >
+                      {validatingCode ? "Vérification..." : "⚡ Valider et Publier le Gombo"}
+                    </button>
+                  </form>
+                </div>
+
+                {/* Secondary return button */}
+                <div className="pt-2 text-center pb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSuccessOverlay(false);
+                      onSuccess();
+                    }}
+                    className="text-xs font-bold text-afri-text-sec hover:text-white underline cursor-pointer transition-colors"
+                  >
+                    Retourner au Terrain (Validation ultérieure)
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

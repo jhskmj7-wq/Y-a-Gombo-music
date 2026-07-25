@@ -138,26 +138,26 @@ export const AfriModal: React.FC<AfriModalProps> = ({
 
           {/* Modal Container */}
           {isBottomSheet ? (
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: "0%" }}
-              exit={{ y: "100%" }}
-              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-              drag="y"
-              dragConstraints={{ top: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 100 || info.velocity.y > 300) {
-                  onClose();
-                }
-              }}
-              className={`relative w-full max-w-[560px] mx-auto bg-afri-bg-sec border-t-2 border-x-2 border-[#D4AF37]/40 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.85)] overflow-hidden z-10 max-h-[88vh] flex flex-col ${className}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Drag Handle */}
-              <div className="pt-3 pb-1 flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing">
-                <div className="w-12 h-1.5 bg-zinc-600/80 rounded-full hover:bg-[#D4AF37]/60 transition-colors" />
-              </div>
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: "0%" }}
+                exit={{ y: "100%" }}
+                transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+                drag="y"
+                dragConstraints={{ top: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(_, info) => {
+                  if (info.offset.y > 100 || info.velocity.y > 300) {
+                    onClose();
+                  }
+                }}
+                className={`relative w-full max-w-[560px] mx-auto bg-afri-bg-sec border-t border-x border-[#D4AF37]/30 rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.85)] overflow-hidden z-10 max-h-[88vh] flex flex-col ${className}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Drag Handle */}
+                <div className="pt-3 pb-2 flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing">
+                  <div className="w-12 h-1.5 bg-gray-600/60 rounded-full mx-auto mb-1 transition-colors" />
+                </div>
 
               {/* Header */}
               {(title || showCloseButton) && (
@@ -179,7 +179,7 @@ export const AfriModal: React.FC<AfriModalProps> = ({
               )}
 
               {/* Body */}
-              <div className="p-5 overflow-y-auto overscroll-contain flex-1 custom-scrollbar">
+              <div className={`overflow-y-auto overscroll-contain flex-1 custom-scrollbar ${isBottomSheet ? 'p-4 sm:p-6 pb-8' : 'p-5'}`}>
                 {renderModalBody(type, children, {
                   icon,
                   onConfirm,

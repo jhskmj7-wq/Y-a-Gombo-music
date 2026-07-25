@@ -3059,8 +3059,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
-                className={`h-full w-full overflow-y-auto overflow-x-hidden afri-container scrollbar-none scroll-smooth [-webkit-overflow-scrolling:touch] ${
-                  activeMenu === "super_admin" ? "pt-0 pb-32 sm:pb-36 space-y-6" : "afri-section"
+                className={`h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container scrollbar-none scroll-smooth [-webkit-overflow-scrolling:touch] ${
+                  activeMenu === "super_admin" ? "pt-0 pb-32 sm:pb-36 space-y-6" : "afri-section pb-24"
                 }`}
                 style={{ overscrollBehaviorY: "contain" }}
               >
@@ -7751,16 +7751,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         onClose={() => setIsPlusMenuOpen(false)}
         title="Que souhaitez-vous publier ?"
       >
-        <div className="space-y-3 pt-2">
+        <div className="space-y-2.5">
           <button
             onClick={() => {
               setActivePublishType("gombo");
               setActiveMenu("user_publish");
               setIsPlusMenuOpen(false);
             }}
-            className="w-full flex items-center gap-4 bg-gradient-to-r from-afri-gold/10 to-transparent hover:from-afri-gold/20 border border-afri-gold/20 rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
+            className="w-full flex items-center gap-4 bg-gradient-to-r from-afri-gold/10 to-transparent hover:from-afri-gold/20 border border-afri-gold/20 rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer"
           >
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-afri-gold to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-afri-gold to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
               <Megaphone className="w-5 h-5" />
             </div>
             <div>
@@ -7775,9 +7775,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               setActiveMenu("user_publish");
               setIsPlusMenuOpen(false);
             }}
-            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
+            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer"
           >
-            <div className="w-11 h-11 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 group-hover:scale-105 transition-transform">
               <Video className="w-5 h-5" />
             </div>
             <div>
@@ -7792,9 +7792,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               setActiveMenu("user_publish");
               setIsPlusMenuOpen(false);
             }}
-            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
+            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group cursor-pointer"
           >
-            <div className="w-11 h-11 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/30 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/30 group-hover:scale-105 transition-transform">
               <Mic2 className="w-5 h-5" />
             </div>
             <div>
@@ -7809,9 +7809,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               setActiveMenu("user_publish");
               setIsPlusMenuOpen(false);
             }}
-            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group relative overflow-hidden cursor-pointer"
+            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl py-3 px-3.5 text-left transition-all group relative overflow-hidden cursor-pointer"
           >
-            <div className="w-11 h-11 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 border border-red-500/30 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 border border-red-500/30 group-hover:scale-105 transition-transform">
               <Zap className="w-5 h-5" />
             </div>
             <div>

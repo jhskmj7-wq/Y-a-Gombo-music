@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { 
   GraduationCap, BookOpen, Play, FileText, Video, Award, CheckCircle2, 
   ShieldCheck, AlertTriangle, Plus, Search, Star, Clock, Users, ChevronRight, 
@@ -174,6 +174,14 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCourse, setSelectedCourse] = useState<AcademyCourse | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Reset scroll on category change or mount
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [selectedCategory, activeTab]);
 
   // Modals
   const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
@@ -284,143 +292,150 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
   };
 
   return (
-    <div className="w-full px-3 sm:px-6 space-y-5 text-left py-2 xs:py-4 pb-32 animate-fadeIn">
-      
-      {/* HEADER SECTION */}
-      <div className="w-full bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
-          <div className="flex items-center gap-3">
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="w-9 h-9 rounded-xl bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center transition-all cursor-pointer shrink-0"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            )}
-            <div>
-              <div className="flex items-center gap-2">
-                <GraduationCap className="w-6 h-6 text-[#D4AF37]" />
-                <h1 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-tight">
-                  L'Académie AFRIGOMBO
-                </h1>
-                <span className="text-[10px] sm:text-xs px-2.5 py-1 whitespace-nowrap overflow-hidden text-ellipsis bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] font-mono font-black uppercase rounded-md tracking-wider">
-                  MASTERCLASSES & GUIDES
-                </span>
+    <div className="fixed inset-0 bg-afri-bg z-10 flex flex-col overflow-hidden animate-fadeIn">
+      {/* HEADER & FILTERS (FIXED) */}
+      <div className="flex-shrink-0 w-full px-3 sm:px-6 pt-4 pb-2 bg-afri-bg space-y-5">
+        {/* HEADER SECTION */}
+        <div className="w-full bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
+            <div className="flex items-center gap-3">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="w-9 h-9 rounded-xl bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center transition-all cursor-pointer shrink-0"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+              )}
+              <div>
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-6 h-6 text-[#D4AF37]" />
+                  <h1 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-tight">
+                    L'Académie AFRIGOMBO
+                  </h1>
+                  <span className="text-[10px] sm:text-xs px-2.5 py-1 whitespace-nowrap overflow-hidden text-ellipsis bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] font-mono font-black uppercase rounded-md tracking-wider">
+                    MASTERCLASSES & GUIDES
+                  </span>
+                </div>
+                <p className="text-xs text-afri-text-sec mt-1">
+                  Formations vidéo, M.A.O, Mixage, Droit d'auteur BURIDA et Music Business par des experts africains.
+                </p>
               </div>
-              <p className="text-xs text-afri-text-sec mt-1">
-                Formations vidéo, M.A.O, Mixage, Droit d'auteur BURIDA et Music Business par des experts africains.
-              </p>
+            </div>
+
+            {/* ACTION BUTTONS */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsInfoModalOpen(true)}
+                className="w-9 h-9 rounded-xl bg-afri-bg-ter border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black transition-all flex items-center justify-center cursor-pointer shadow-sm"
+                title="Règles & Commission de l'Académie"
+              >
+                <Info className="w-4.5 h-4.5" />
+              </button>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-afri-gold hover:brightness-110 text-black font-black uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>Créer un cours (Formateur)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* TABS & FILTERS */}
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-afri-border/60 pb-3">
+            {/* TABS */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveTab("catalog")}
+                className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                  activeTab === "catalog"
+                    ? "bg-[#D4AF37] text-black shadow-md font-black"
+                    : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
+                }`}
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Catalogue</span>
+                <span className="px-1.5 py-0.2 bg-black/20 text-[10px] rounded-full font-mono font-bold">
+                  {courses.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("my_courses")}
+                className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                  activeTab === "my_courses"
+                    ? "bg-[#D4AF37] text-black shadow-md font-black"
+                    : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
+                }`}
+              >
+                <Award className="w-4 h-4" />
+                <span>Mes Cours</span>
+                <span className="px-1.5 py-0.2 bg-black/20 text-[10px] rounded-full font-mono font-bold">
+                  {myEnrolledCourses.length}
+                </span>
+              </button>
+            </div>
+
+            {/* SEARCH BAR */}
+            <div className="relative w-full sm:w-64">
+              <Search className="w-4 h-4 text-afri-text-sec absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Rechercher une masterclass..."
+                className="w-full bg-afri-bg-sec border border-afri-border rounded-xl pl-9 pr-3 py-2 text-xs text-afri-text focus:border-[#D4AF37] focus:outline-none"
+              />
             </div>
           </div>
 
-          {/* ACTION BUTTONS */}
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setIsInfoModalOpen(true)}
-              className="w-9 h-9 rounded-xl bg-afri-bg-ter border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black transition-all flex items-center justify-center cursor-pointer shadow-sm"
-              title="Règles & Commission de l'Académie"
-            >
-              <Info className="w-4.5 h-4.5" />
-            </button>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-afri-gold hover:brightness-110 text-black font-black uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg flex items-center gap-2 cursor-pointer"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>Créer un cours (Formateur)</span>
-            </button>
-          </div>
+          {/* CATEGORY CHIPS */}
+          {activeTab === "catalog" && (
+            <div className="flex overflow-x-auto afri-no-scrollbar gap-2 pt-1 pb-2 whitespace-nowrap text-xs">
+              {[
+                { id: "all", label: "Toutes les formations" },
+                { id: "mao", label: "🎹 M.A.O & Beatmaking" },
+                { id: "mixage", label: "🎛️ Mixage & Mastering" },
+                { id: "burida", label: "⚖️ Droit & BURIDA" },
+                { id: "vocal", label: "🎙️ Vocaux & Chant" },
+                { id: "business", label: "💼 Music Business" },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                    selectedCategory === cat.id
+                      ? "bg-afri-bg-ter border-[#D4AF37] text-[#D4AF37] shadow-xs"
+                      : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* TABS & FILTERS */}
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-afri-border/60 pb-3">
-          {/* TABS */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab("catalog")}
-              className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
-                activeTab === "catalog"
-                  ? "bg-[#D4AF37] text-black shadow-md font-black"
-                  : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
-              }`}
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>Catalogue</span>
-              <span className="px-1.5 py-0.2 bg-black/20 text-[10px] rounded-full font-mono font-bold">
-                {courses.length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("my_courses")}
-              className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
-                activeTab === "my_courses"
-                  ? "bg-[#D4AF37] text-black shadow-md font-black"
-                  : "bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text"
-              }`}
-            >
-              <Award className="w-4 h-4" />
-              <span>Mes Cours</span>
-              <span className="px-1.5 py-0.2 bg-black/20 text-[10px] rounded-full font-mono font-bold">
-                {myEnrolledCourses.length}
-              </span>
-            </button>
-          </div>
-
-          {/* SEARCH BAR */}
-          <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 text-afri-text-sec absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher une masterclass..."
-              className="w-full bg-afri-bg-sec border border-afri-border rounded-xl pl-9 pr-3 py-2 text-xs text-afri-text focus:border-[#D4AF37] focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {/* CATEGORY CHIPS */}
-        {activeTab === "catalog" && (
-          <div className="flex overflow-x-auto afri-no-scrollbar gap-2 pt-1 pb-2 whitespace-nowrap text-xs">
-            {[
-              { id: "all", label: "Toutes les formations" },
-              { id: "mao", label: "🎹 M.A.O & Beatmaking" },
-              { id: "mixage", label: "🎛️ Mixage & Mastering" },
-              { id: "burida", label: "⚖️ Droit & BURIDA" },
-              { id: "vocal", label: "🎙️ Vocaux & Chant" },
-              { id: "business", label: "💼 Music Business" },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-                  selectedCategory === cat.id
-                    ? "bg-afri-bg-ter border-[#D4AF37] text-[#D4AF37] shadow-xs"
-                    : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* CONTENT AREA */}
-      {activeTab === "catalog" ? (
-        filteredCourses.length === 0 ? (
-          <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-12 text-center space-y-3">
-            <GraduationCap className="w-10 h-10 text-afri-text-sec mx-auto opacity-40" />
-            <p className="text-sm font-bold text-afri-text uppercase">Aucune formation disponible</p>
-            <p className="text-xs text-afri-text-sec">Essayez une autre recherche ou modifiez les filtres de catégorie.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
-            {filteredCourses.map((course) => {
+      {/* INDEPENDENT SCROLLABLE CONTENT */}
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-6 pb-32 afri-no-scrollbar"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        {activeTab === "catalog" ? (
+          filteredCourses.length === 0 ? (
+            <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-12 text-center space-y-3 mt-2">
+              <GraduationCap className="w-10 h-10 text-afri-text-sec mx-auto opacity-40" />
+              <p className="text-sm font-bold text-afri-text uppercase">Aucune formation disponible</p>
+              <p className="text-xs text-afri-text-sec">Essayez une autre recherche ou modifiez les filtres de catégorie.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full pt-2">
+              {filteredCourses.map((course) => {
               const isEnrolled = enrolledCourseIds.includes(course.id);
               return (
                 <div
@@ -583,6 +598,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
           </div>
         )
       )}
+    </div>
 
       {/* COURSE DETAIL MODAL */}
       <AfriModal
