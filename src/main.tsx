@@ -5,6 +5,7 @@ import { AuthProvider } from "./AuthContext";
 import { LanguageProvider } from "./LanguageContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ModalProvider } from "./components/common/AfriModal";
+import { AudioProvider } from "./context/AudioContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import App from "./App";
 import "./index.css";
@@ -41,7 +42,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <LanguageProvider>
             <ThemeProvider>
               <ModalProvider>
-                <App />
+                <AudioProvider>
+                  <App />
+                </AudioProvider>
               </ModalProvider>
             </ThemeProvider>
           </LanguageProvider>

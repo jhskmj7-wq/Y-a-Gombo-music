@@ -12,6 +12,7 @@ import { UserProfile, PaymentProvider } from "../types";
 import { gomboDB, gomboAuth, db, isFirebaseMock } from "../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { audioSynth } from "../lib/audio";
+import { useAudio } from "../context/AudioContext";
 import { ProfileCompletionScore } from "./ProfileCompletionScore";
 import { MediaGalleryManager } from "./MediaGalleryManager";
 import { GomboProfileMainView } from "./GomboProfileMainView";
@@ -76,6 +77,8 @@ export default function GomboProfile({
   initialPanelView = "main",
   onViewPublicPortfolio
 }: GomboProfileProps) {
+  const { currentTrack, isPlaying, playTrack, pause: pauseAudio } = useAudio();
+
   // Current Panel view: "main" | "edit" | "settings" | "support" | "certification"
   const [panelView, setPanelView] = useState<"main" | "edit" | "settings" | "support" | "certification">(initialPanelView);
 
@@ -1034,36 +1037,19 @@ export default function GomboProfile({
     setTimeout(() => setUidCopied(false), 2000);
   };
 
-  const [playingAudioUrl, setPlayingAudioUrl] = useState<string | null>(null);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
-
-  const toggleAudioPlay = (url: string) => {
-    if (playingAudioUrl === url) {
-      if (audioElement) {
-        audioElement.pause();
-        setPlayingAudioUrl(null);
-      }
+  const toggleAudioPlay = (url: string, title?: string) => {
+    if (currentTrack?.url === url && isPlaying) {
+      pauseAudio();
     } else {
-      if (audioElement) {
-        audioElement.pause();
-      }
-      const audio = new Audio(url);
-      audio.play();
-      setAudioElement(audio);
-      setPlayingAudioUrl(url);
-      audio.onended = () => {
-        setPlayingAudioUrl(null);
-      };
+      playTrack({
+        id: url,
+        url,
+        title: title || "Démo Portfolio Audio",
+        artist: currentUserProfile.artistName || currentUserProfile.fullName || "Afrigombo Artiste",
+        artwork: currentUserProfile.avatarUrl || currentUserProfile.photoURL || undefined
+      });
     }
   };
-
-  useEffect(() => {
-    return () => {
-      if (audioElement) {
-        audioElement.pause();
-      }
-    };
-  }, [audioElement]);
 
   const [activeMediaTab, setActiveMediaTab] = useState<"photo" | "audio" | "youtube">("youtube");
   const [selectedYoutubeEmbed, setSelectedYoutubeEmbed] = useState<string | null>(null);

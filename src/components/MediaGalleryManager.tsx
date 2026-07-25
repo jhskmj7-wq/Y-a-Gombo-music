@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Plus, Trash2, Play, Pause, ExternalLink, Video, FileText, Camera } from "lucide-react";
 import { UserProfile } from "../types";
 import { gomboDB } from "../firebase";
+import { useAudio } from "../context/AudioContext";
 
 interface MediaGalleryManagerProps {
   currentUserProfile: UserProfile;
@@ -27,9 +28,7 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Audio Playback states
-  const [playingUrl, setPlayingUrl] = useState<string | null>(null);
-  const [audioItem, setAudioItem] = useState<HTMLAudioElement | null>(null);
+  const { currentTrack, isPlaying, playTrack, pause } = useAudio();
   
   // YouTube Lightbox states
   const [lightboxVideoId, setLightboxVideoId] = useState<string | null>(null);
@@ -51,33 +50,19 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
     return videoId;
   };
 
-  const toggleAudio = (url: string) => {
-    if (playingUrl === url) {
-      if (audioItem) {
-        audioItem.pause();
-        setPlayingUrl(null);
-      }
+  const toggleAudio = (url: string, title?: string) => {
+    if (currentTrack?.url === url && isPlaying) {
+      pause();
     } else {
-      if (audioItem) {
-        audioItem.pause();
-      }
-      const newAudio = new Audio(url);
-      newAudio.play().catch(e => console.warn("Audio autoplay blocked or failed:", e));
-      setAudioItem(newAudio);
-      setPlayingUrl(url);
-      newAudio.onended = () => {
-        setPlayingUrl(null);
-      };
+      playTrack({
+        id: url,
+        url,
+        title: title || "Démo Audio",
+        artist: currentUserProfile.fullName || "Artiste Afrigombo",
+        artwork: currentUserProfile.avatarURL || undefined
+      });
     }
   };
-
-  useEffect(() => {
-    return () => {
-      if (audioItem) {
-        audioItem.pause();
-      }
-    };
-  }, [audioItem]);
 
   const handleAddMedia = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,10 +258,10 @@ export const MediaGalleryManager: React.FC<MediaGalleryManagerProps> = ({
                 <div key={aud.id} className="p-3 bg-gray-50 dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-800 rounded-xl flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3- w-full truncate">
                     <button
-                      onClick={() => toggleAudio(aud.url)}
+                      onClick={() => toggleAudio(aud.url, aud.title)}
                       className="p-2.5 bg-orange-500 hover:bg-orange-600 text-afri-text rounded-full shadow-xs cursor-pointer flex items-center justify-center"
                     >
-                      {playingUrl === aud.url ? (
+                      {currentTrack?.url === aud.url && isPlaying ? (
                         <Pause className="w-4 h-4 fill-current text-afri-text" />
                       ) : (
                         <Play className="w-4 h-4 fill-current text-afri-text" />

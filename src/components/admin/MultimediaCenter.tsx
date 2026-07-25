@@ -36,6 +36,7 @@ import {
   Maximize2
 } from "lucide-react";
 import { db, gomboDB } from "../../firebase";
+import { useAudio } from "../../context/AudioContext";
 import { getAudioUrl } from "../../lib/audioUtils";
 import { SystemMedia, SourceType } from "../../types";
 import {
@@ -160,6 +161,7 @@ const SYSTEM_SPOTS = [
 ];
 
 export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder }: MultimediaCenterProps) {
+  const { currentTrack, isPlaying: isCentralPlaying, playTrack, pause } = useAudio();
   const [activeTab, setActiveTab] = useState<ActiveSection>("dashboard");
   const [mediaAssets, setMediaAssets] = useState<Record<string, MediaAsset>>({});
   const [systemMedia, setSystemMedia] = useState<SystemMedia[]>([]);
@@ -214,8 +216,6 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
   const [editStatus, setEditStatus] = useState<"draft" | "published" | "archived">("published");
 
   // Audio / Video Preview state
-  const [activePreviewId, setActivePreviewId] = useState<string | null>(null);
-  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const [videoModalUrl, setVideoModalUrl] = useState<string | null>(null);
 
   // Image comparison state
@@ -324,34 +324,18 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
   const togglePlayAudio = (asset: MediaAsset) => {
     const id = asset.id;
     const url = getAudioUrl(asset.sourceType, asset.githubPath || asset.externalUrl || asset.storagePath);
-    const customVolume = asset.volume;
 
     incrementPlayCount(id);
 
-    if (activePreviewId === id) {
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-      }
-      setActivePreviewId(null);
+    if (currentTrack?.id === id && isCentralPlaying) {
+      pause();
     } else {
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-      }
-      try {
-        const audioObj = new Audio(url);
-        audioObj.crossOrigin = "anonymous";
-        audioObj.volume = customVolume !== undefined ? customVolume : 0.8;
-        audioObj.preload = "auto";
-        audioObj.play().catch((err) => {
-          console.warn("Playback blocked or failed:", err);
-          alert("Erreur lors de la lecture audio. L'URL est peut-être inaccessible.");
-        });
-        audioObj.onended = () => setActivePreviewId(null);
-        audioPlayerRef.current = audioObj;
-        setActivePreviewId(id);
-      } catch (err) {
-        console.error("Audio initialization error:", err);
-      }
+      playTrack({
+        id: id,
+        url,
+        title: asset.title || "Prestation Audio",
+        artist: "Système Média Afrigombo"
+      });
     }
   };
 
@@ -764,9 +748,8 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     if (!window.confirm(`Voulez-vous supprimer définitivement le média "${asset.title}" ?`)) return;
 
     try {
-      if (activePreviewId === id) {
-        if (audioPlayerRef.current) audioPlayerRef.current.pause();
-        setActivePreviewId(null);
+      if (currentTrack?.id === id) {
+        pause();
       }
 
       await gomboDB.deleteSystemMedia(id);
@@ -928,7 +911,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
           const hasError = status?.state === 'error';
           const errorMessage = status?.error;
           const isEditing = editingAsset?.id === spot.id;
-          const isPlaying = activePreviewId === spot.id;
+          const isPlaying = currentTrack?.id === spot.id && isCentralPlaying;
 
           return (
             <div

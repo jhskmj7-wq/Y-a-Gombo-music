@@ -10,6 +10,7 @@ import { collection, query, where, getDocs, doc, getDoc, onSnapshot, orderBy } f
 import { db } from "../lib/firebase";
 import { gomboDB } from "../firebase";
 import { UserProfile, Post, Gombo, GomboSafeContract } from "../types";
+import { useAudio } from "../context/AudioContext";
 
 interface PublicProfileModalProps {
   isOpen: boolean;
@@ -48,8 +49,7 @@ export function PublicProfileModal({
   const [reportSubmitted, setReportSubmitted] = useState<boolean>(false);
 
   // Audio player state
-  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const { currentTrack, isPlaying, playTrack, pause } = useAudio();
 
   // Fetch target user data whenever targetUserId changes
   useEffect(() => {
@@ -167,21 +167,18 @@ export function PublicProfileModal({
   };
 
   // Audio preview playback toggle
-  const toggleAudio = (audioUrl: string, id: string) => {
-    if (playingAudioId === id) {
-      if (audioElement) {
-        audioElement.pause();
-      }
-      setPlayingAudioId(null);
+  const toggleAudio = (audioUrl: string, id: string, title?: string) => {
+    if (currentTrack?.id === id && isPlaying) {
+      pause();
     } else {
-      if (audioElement) {
-        audioElement.pause();
-      }
-      const newAudio = new Audio(audioUrl);
-      newAudio.play().catch(console.error);
-      newAudio.onended = () => setPlayingAudioId(null);
-      setAudioElement(newAudio);
-      setPlayingAudioId(id);
+      const displayArtistName = profile?.artisticName || profile?.artistName || profile?.displayName || `${profile?.firstName || "Artiste"} ${profile?.lastName || ""}`.trim();
+      playTrack({
+        id: id,
+        url: audioUrl,
+        title: title || "Extrait Audio",
+        artist: displayArtistName || "Afrigombo Artiste",
+        artwork: profile?.avatarUrl || profile?.photoURL || undefined
+      });
     }
   };
 
@@ -569,10 +566,10 @@ export function PublicProfileModal({
                           >
                             <div className="flex items-center gap-3 min-w-0">
                               <button
-                                onClick={() => toggleAudio(a.url, a.id || String(idx))}
+                                onClick={() => toggleAudio(a.url, a.id || String(idx), a.title)}
                                 className="w-10 h-10 rounded-full bg-afri-gold text-black flex items-center justify-center shrink-0 cursor-pointer shadow-md hover:scale-105 transition-transform"
                               >
-                                {playingAudioId === (a.id || String(idx)) ? (
+                                {currentTrack?.id === (a.id || String(idx)) && isPlaying ? (
                                   <Pause className="w-5 h-5 fill-current" />
                                 ) : (
                                   <Play className="w-5 h-5 fill-current ml-0.5" />

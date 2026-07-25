@@ -5,6 +5,7 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-
 import { audioSynth } from "./lib/audio";
 import { Music, Award, ShieldCheck, Sparkles } from "lucide-react";
 import { BackgroundMusic } from "./components/BackgroundMusic";
+import { FloatingAudioPlayer } from "./components/FloatingAudioPlayer";
 import { LivingInteractions } from "./components/LivingInteractions";
 import { useAuth } from "./AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
@@ -350,6 +351,7 @@ function App() {
 
       {/* 3. PERSISTENT BACKGROUND MUSIC */}
       <BackgroundMusic />
+      <FloatingAudioPlayer />
       <PWAHandler />
       </div>
     </ErrorBoundary>

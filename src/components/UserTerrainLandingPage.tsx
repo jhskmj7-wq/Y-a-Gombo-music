@@ -7,6 +7,7 @@ import {
   Sparkles, BarChart3, FileSignature, Zap, Play, Pause, Square
 } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
+import { useAudio } from "../context/AudioContext";
 import { Gombo, User, Post, Renfort } from "../types";
 import AnnuaireTalents from "./AnnuaireTalents";
 import { usePerformance } from "../services/performanceService";
@@ -131,6 +132,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   renforts = []
 }) => {
   const { t } = useLanguage();
+  const { currentTrack, isPlaying, playTrack, pause } = useAudio();
   const { isDataSaveActive, areAnimationsReduced } = usePerformance();
   const searchStr = globalSearchTerm.toLowerCase();
 
@@ -361,39 +363,19 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [selectedExploreArtist, setSelectedExploreArtist] = useState<any | null>(null);
   const [reelsFilter, setReelsFilter] = useState("all");
-  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
-
   const handleTogglePreview = (track: any) => {
-    if (playingTrackId === track.id) {
-      if (audioElement) {
-        audioElement.pause();
-      }
-      setPlayingTrackId(null);
-      // Resume background music if wanted, but simpler to just leave it paused or user toggles it
+    if (currentTrack?.id === track.id && isPlaying) {
+      pause();
     } else {
-      if (audioElement) {
-        audioElement.pause();
-      }
-      
-      // PAUSE BACKGROUND AMBIENT MUSIC TO AVOID DISORGANIZATION
-      window.dispatchEvent(new CustomEvent('gombo_music_toggle', { detail: { play: false } }));
-
-      const audio = new Audio(track.url);
-      audio.loop = true;
-      audio.play().catch(() => {});
-      setAudioElement(audio);
-      setPlayingTrackId(track.id);
+      playTrack({
+        id: track.id,
+        url: track.url,
+        title: track.title || "Aperçu de la piste",
+        artist: track.artist || "Artiste Afrigombo",
+        artwork: track.artwork || undefined
+      });
     }
   };
-
-  useEffect(() => {
-    return () => {
-      if (audioElement) {
-        audioElement.pause();
-      }
-    };
-  }, [audioElement]);
 
   // Spotlight Auto-sliding timer (every 3 seconds)
   useEffect(() => {
