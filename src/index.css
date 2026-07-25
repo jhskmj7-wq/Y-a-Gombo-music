@@ -99,7 +99,7 @@ html.text-size-grand {
   }
   
   .afri-section {
-    @apply pt-4 pb-20 space-y-6;
+    @apply pt-4 pb-32 sm:pb-36 space-y-6;
   }
   
   .afri-card {
@@ -163,7 +163,7 @@ html.text-size-grand {
   }
 
   .afri-scroll-safe {
-    @apply pb-20;
+    @apply pb-32 sm:pb-36;
   }
   
   /* Independent scroll utility classes for contained card/section scrolling */

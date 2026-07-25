@@ -58,6 +58,8 @@ import { AfriGomboLogo } from "./AfriGomboLogo";
 import SupportAfrigombo from "./SupportAfrigombo";
 import WhatsNew from "./WhatsNew";
 import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
+import GrandMarcheView from "./GrandMarcheView";
+import AcademieView from "./AcademieView";
 import FirebaseDiagnostic from "./FirebaseDiagnostic";
 import { supportConfig } from "../supportConfig";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
@@ -171,8 +173,10 @@ import {
   Download,
   CreditCard,
   ChevronRight,
+  ChevronLeft,
   Handshake,
-  ArrowLeft
+  ArrowLeft,
+  Lightbulb
 } from "lucide-react";
 import {
   AreaChart,
@@ -425,10 +429,13 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState<boolean>(false);
+  const [isBugModalOpen, setIsBugModalOpen] = useState<boolean>(false);
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState<boolean>(false);
   const [isChangelogModalOpen, setIsChangelogModalOpen] = useState<boolean>(false);
   const [showGoogleLoginRequiredModal, setShowGoogleLoginRequiredModal] = useState<boolean>(false);
   const [activeBoostItem, setActiveBoostItem] = useState<{id: string, type: 'gombo' | 'candidature'} | null>(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState<boolean>(false);
+  const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(false);
 
   // Scroll Position Memory Engine for Independent Scroll Preservation
   const scrollPositionsRef = useRef<Record<string, number>>({});
@@ -2484,6 +2491,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             <span className="px-3.5 text-[8.5px] font-mono font-black text-afri-text-sec uppercase tracking-widest block mb-1">
                               🏛️ Univers AFRIGOMBO
                             </span>
+                            {renderMenuItem("menu_grand_marche", "Le Grand Marché", "🛍️", () => {
+                              setPerspective("user");
+                              setActiveMenu("user_grand_marche");
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-[#D4AF37]/10 text-[#D4AF37] rounded border border-[#D4AF37]/20 uppercase font-black">MARCHÉ</span>)}
+                            {renderMenuItem("menu_academie", "L'Académie", "🎓", () => {
+                              setPerspective("user");
+                              setActiveMenu("user_academie");
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
+                            }, false, <span className="text-[7px] font-mono py-0.5 px-1.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20 uppercase font-black">COURS</span>)}
                             {renderMenuItem("menu_builders_1", "Soutenir AFRIGOMBO ❤️", "❤️", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
@@ -2491,11 +2508,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 try { audioSynth.playValidationSuccess(); } catch (_) {}
                               });
                             }, false)}
-                            {renderMenuItem("menu_help", "Centre d'aide", "🛟", () => {
-                              setPerspective("user");
-                              setActiveMenu("user_help_center");
-                              try { audioSynth.playValidationSuccess(); } catch (_) {}
-                            }, false)}
+                            
+
                             {renderMenuItem("menu_gombo_id", "GOMBO ID", "🆔", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
@@ -2612,6 +2626,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 setPerspective("user");
                                 setActiveMenu("user_backups");
                               });
+                            }, false)}
+                            {renderMenuItem("menu_help", "Centre d'aide", "🛟", () => {
+                              setPerspective("user");
+                              setActiveMenu("user_help_center");
+                              try { audioSynth.playValidationSuccess(); } catch (_) {}
                             }, false)}
                             
                             {currentUser && renderMenuItem("menu_logout", "Déconnexion", "🚪", async () => {
@@ -2962,27 +2981,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               if (el) {
                 const menuId = "user_terrain";
                 const savedPos = scrollPositionsRef.current[menuId] || 0;
-                if (el.scrollTop !== savedPos) {
+                if (savedPos > 0 && Math.abs(el.scrollTop - savedPos) > 15) {
                   el.scrollTop = savedPos;
                 }
-
-                // Clean up old observer
-                if ((el as any)._scrollObserver) {
-                  (el as any)._scrollObserver.disconnect();
-                }
-
-                // Setup ResizeObserver to restore scroll as dynamic elements render
-                const observer = new ResizeObserver(() => {
-                  const currentSaved = scrollPositionsRef.current[menuId] || 0;
-                  if (el.scrollTop !== currentSaved) {
-                    el.scrollTop = currentSaved;
-                  }
-                });
-                observer.observe(el);
-                if (el.firstElementChild) {
-                  observer.observe(el.firstElementChild);
-                }
-                (el as any)._scrollObserver = observer;
               }
             }}
             onScroll={(e) => {
@@ -3046,27 +3047,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   if (el) {
                     const menuId = activeMenu;
                     const savedPos = scrollPositionsRef.current[menuId] || 0;
-                    if (el.scrollTop !== savedPos) {
+                    if (savedPos > 0 && Math.abs(el.scrollTop - savedPos) > 15) {
                       el.scrollTop = savedPos;
                     }
-
-                    // Clean up old observer
-                    if ((el as any)._scrollObserver) {
-                      (el as any)._scrollObserver.disconnect();
-                    }
-
-                    // Setup ResizeObserver to restore scroll as dynamic elements render
-                    const observer = new ResizeObserver(() => {
-                      const currentSaved = scrollPositionsRef.current[menuId] || 0;
-                      if (el.scrollTop !== currentSaved) {
-                        el.scrollTop = currentSaved;
-                      }
-                    });
-                    observer.observe(el);
-                    if (el.firstElementChild) {
-                      observer.observe(el.firstElementChild);
-                    }
-                    (el as any)._scrollObserver = observer;
                   }
                 }}
                 onScroll={(e) => {
@@ -3077,7 +3060,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className={`h-full w-full overflow-y-auto overflow-x-hidden afri-container scrollbar-none scroll-smooth [-webkit-overflow-scrolling:touch] ${
-                  activeMenu === "super_admin" ? "pt-0 pb-20 space-y-6" : "afri-section"
+                  activeMenu === "super_admin" ? "pt-0 pb-32 sm:pb-36 space-y-6" : "afri-section"
                 }`}
                 style={{ overscrollBehaviorY: "contain" }}
               >
@@ -5640,9 +5623,34 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 </div>
               )}
 
+              {activeMenu === "user_grand_marche" && (
+                <div className="afri-container space-y-6 animate-fadeIn text-left py-2 xs:py-4">
+                  <GrandMarcheView
+                    currentUserProfile={profile}
+                    onNavigateView={(view) => setActiveMenu(view as any)}
+                    onBack={() => goBackMenu()}
+                  />
+                </div>
+              )}
+
+              {activeMenu === "user_academie" && (
+                <div className="afri-container space-y-6 animate-fadeIn text-left py-2 xs:py-4">
+                  <AcademieView
+                    currentUserProfile={profile}
+                    onNavigateView={(view) => setActiveMenu(view as any)}
+                    onBack={() => goBackMenu()}
+                  />
+                </div>
+              )}
+
               {activeMenu === "user_help_center" && (
                 <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
-                  <AfrigomboHelpCenter onClose={() => goBackMenu()} />
+                  <AfrigomboHelpCenter 
+                    onClose={() => goBackMenu()} 
+                    currentUser={currentUser}
+                    profile={profile}
+                    audioSynth={audioSynth}
+                  />
                 </div>
               )}
 
@@ -5673,6 +5681,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     }}
                     darkMode={darkMode}
                     setDarkMode={setDarkMode}
+                    onViewPublicPortfolio={(userId) => setPublicProfileTargetUserId(userId)}
                   />
                 </div>
               )}
@@ -6258,9 +6267,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 {activeMenu === "user_subscription_management" && (
                   <div className="animate-fadeIn">
                     <MonAbonnementView 
-                      isPremium={profile?.isPro || profile?.isVip || (profile?.balance !== undefined) || false}
+                      isPremium={profile?.isPremium || profile?.isPro || profile?.isVip || false}
                       onUpgrade={() => setActiveMenu("user_gombo_plus")}
                       onBack={() => goBackMenu()}
+                      currentUserProfile={profile}
+                      onRefreshProfile={refreshProfile}
                     />
                   </div>
                 )}
@@ -7849,112 +7860,137 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       </AndroidCenteredDialog>
 
       {/* =========================================================================
-                                     FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED)
+                                     FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED & COLLAPSIBLE)
          ========================================================================= */}
       {perspective === "user" && [
         "user_terrain", "user_vibes", "user_publish", "user_mes_gombos", "user_heritage",
         "user_notifications", "user_settings", "user_wallet", "user_contracts", "user_messages",
         "user_about", "user_support", "user_whats_new", "user_abonnement", "user_gombo_dashboard"
       ].includes(activeMenu) && (
-        <div className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 w-[94%] xs:w-[92%] max-w-[425px] h-[64px] sm:h-[72px] bg-afri-bg-sec/95 backdrop-blur-xl border border-afri-border p-1 px-2 xs:px-3 sm:px-4 flex justify-between items-center z-40 rounded-[24px] sm:rounded-[28px] shadow-[0_12px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none">
-          {/* 1. ACCUEIL */}
-          <button
-            id="user-nav-terrain"
-            onClick={() => {
-              setActiveMenu("user_terrain");
-              try { audioSynth.playValidationSuccess(); } catch (err) {}
-            }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_terrain" ? "text-afri-gold scale-102" : "text-afri-text-sec hover:text-zinc-350"
-            }`}
-          >
-            <Home className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_terrain" ? "text-afri-gold" : "text-afri-text"}`}>Accueil</span>
-          </button>
+        <>
+          {/* COLLAPSED RE-OPEN BUTTON (when collapsed, stays on bottom-left) */}
+          {isNavCollapsed && (
+            <button
+              onClick={() => setIsNavCollapsed(false)}
+              className="fixed bottom-3 sm:bottom-4 left-3 sm:left-6 z-40 w-11 h-11 rounded-2xl bg-afri-bg-sec/95 backdrop-blur-xl border border-[#D4AF37]/60 text-afri-gold shadow-[0_8px_25px_rgba(212,175,55,0.3)] flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-all"
+              title="Déplier la barre de navigation"
+            >
+              <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+            </button>
+          )}
 
+          {/* MAIN FLOATING BOTTOM NAVIGATION BAR */}
+          <div className={`fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 w-[94%] xs:w-[92%] max-w-[425px] h-[64px] sm:h-[72px] bg-afri-bg-sec/95 backdrop-blur-xl border border-afri-border p-1 px-2 xs:px-3 sm:px-4 flex justify-between items-center z-40 rounded-[24px] sm:rounded-[28px] shadow-[0_12px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none transition-transform duration-300 ease-in-out ${
+            isNavCollapsed ? "-translate-x-[150%] opacity-0 pointer-events-none" : "translate-x-[-50%] opacity-100"
+          }`}>
+            {/* TOGGLE COLLAPSE BUTTON ON THE SIDE (Left edge) */}
+            <button
+              onClick={() => setIsNavCollapsed(true)}
+              className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-afri-bg-sec border border-afri-gold text-afri-gold shadow-md flex items-center justify-center cursor-pointer hover:bg-afri-gold hover:text-black transition-all z-50"
+              title="Replier la barre vers la gauche"
+            >
+              <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+            </button>
 
-          {/* 2. VIBES */}
-          <button
-            id="user-nav-vibes"
-            onClick={() => {
-              requireAuthThen(() => {
-                setActiveMenu("user_vibes");
+            {/* 1. ACCUEIL */}
+            <button
+              id="user-nav-terrain"
+              onClick={() => {
+                setActiveMenu("user_terrain");
                 try { audioSynth.playValidationSuccess(); } catch (err) {}
-              });
-            }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_vibes" ? "text-afri-gold scale-102" : "text-afri-text-sec hover:text-zinc-350"
-            }`}
-          >
-            <Music className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_vibes" ? "text-afri-gold" : "text-afri-text"}`}>Vibes</span>
-          </button>
+              }}
+              className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+                activeMenu === "user_terrain" ? "text-afri-gold scale-102" : "text-afri-text-sec hover:text-zinc-350"
+              }`}
+            >
+              <Home className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_terrain" ? "text-afri-gold" : "text-afri-text"}`}>Accueil</span>
+            </button>
 
-          {/* 3. PUBLIER */}
-          <button
-            id="user-nav-publish"
-            onClick={() => {
-              requireAuthThen(() => {
-                setIsPlusMenuOpen(true);
-                try { audioSynth.playValidationSuccess(); } catch (err) {}
-              });
-            }}
-            className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-1.5 xs:px-2 select-none shrink-0"
-            title="Publier"
-          >
-            <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center bg-gradient-to-tr from-afri-gold to-[#F1C40F] text-black rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3.5]" />
-            </div>
-            <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-afri-text mt-0.5">Publier</span>
-          </button>
 
-          {/* 4. MES GOMBOS */}
-          <button
-            id="user-nav-mes-gombos"
-            onClick={() => {
-              requireAuthThen(() => {
-                setActiveMenu("user_mes_gombos");
-                try { audioSynth.playValidationSuccess(); } catch (err) {}
-              });
-            }}
-            className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_mes_gombos" ? "text-afri-gold scale-102" : "text-afri-text-sec hover:text-zinc-350"
-            }`}
-          >
-            <Megaphone className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_mes_gombos" ? "text-afri-gold" : "text-afri-text"}`}>Gombos</span>
-          </button>
+            {/* 2. VIBES */}
+            <button
+              id="user-nav-vibes"
+              onClick={() => {
+                requireAuthThen(() => {
+                  setActiveMenu("user_vibes");
+                  try { audioSynth.playValidationSuccess(); } catch (err) {}
+                });
+              }}
+              className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+                activeMenu === "user_vibes" ? "text-afri-gold scale-102" : "text-afri-text-sec hover:text-zinc-350"
+              }`}
+            >
+              <Music className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_vibes" ? "text-afri-gold" : "text-afri-text"}`}>Vibes</span>
+            </button>
 
-          {/* 6. MON HÉRITAGE */}
-          <button
-            id="user-nav-heritage"
-            onClick={() => {
-              if (!currentUser) {
-                setShowHeritageLoginRequired(true);
-              } else {
-                setActiveMenu("user_heritage");
-                setViewingGomboIdDetail(false);
-                try { audioSynth.playValidationSuccess(); } catch (err) {}
-              }
-            }}
-            className={`flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
-              activeMenu === "user_heritage" ? "scale-105" : "text-afri-text-sec hover:text-zinc-350"
-            }`}
-          >
-            {activeMenu === "user_heritage" ? (
-              <div className="w-10 h-10 rounded-full bg-afri-gold text-black flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.55)] border border-afri-bg transition-all duration-300 -mt-2">
-                <UserIcon className="w-5 h-5 text-black stroke-[2.5]" />
+            {/* 3. PUBLIER */}
+            <button
+              id="user-nav-publish"
+              onClick={() => {
+                requireAuthThen(() => {
+                  setIsPlusMenuOpen(true);
+                  try { audioSynth.playValidationSuccess(); } catch (err) {}
+                });
+              }}
+              className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none px-1.5 xs:px-2 select-none shrink-0"
+              title="Publier"
+            >
+              <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center bg-gradient-to-tr from-afri-gold to-[#F1C40F] text-black rounded-full shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all">
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3.5]" />
               </div>
-            ) : (
-              <UserIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-afri-text-sec hover:text-zinc-350 transition-colors" />
-            )}
-            <span className={`text-[6.5px] xs:text-[7px] font-mono font-black uppercase tracking-widest mt-1 ${
-              activeMenu === "user_heritage" ? "text-afri-gold" : "text-afri-text"
-            }`}>
-              MON HÉRITAGE
-            </span>
-          </button>
-        </div>
+              <span className="text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider text-afri-text mt-0.5">Publier</span>
+            </button>
+
+            {/* 4. MES GOMBOS */}
+            <button
+              id="user-nav-mes-gombos"
+              onClick={() => {
+                requireAuthThen(() => {
+                  setActiveMenu("user_mes_gombos");
+                  try { audioSynth.playValidationSuccess(); } catch (err) {}
+                });
+              }}
+              className={`flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+                activeMenu === "user_mes_gombos" ? "text-afri-gold scale-102" : "text-afri-text-sec hover:text-zinc-350"
+              }`}
+            >
+              <Megaphone className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              <span className={`text-[7px] xs:text-[7.5px] font-sans font-black uppercase tracking-wider ${activeMenu === "user_mes_gombos" ? "text-afri-gold" : "text-afri-text"}`}>Gombos</span>
+            </button>
+
+            {/* 6. MON HÉRITAGE */}
+            <button
+              id="user-nav-heritage"
+              onClick={() => {
+                if (!currentUser) {
+                  setShowHeritageLoginRequired(true);
+                } else {
+                  setActiveMenu("user_heritage");
+                  setViewingGomboIdDetail(false);
+                  try { audioSynth.playValidationSuccess(); } catch (err) {}
+                }
+              }}
+              className={`flex flex-col items-center justify-center cursor-pointer transition-all duration-200 outline-none flex-1 py-1 ${
+                activeMenu === "user_heritage" ? "scale-105" : "text-afri-text-sec hover:text-zinc-350"
+              }`}
+            >
+              {activeMenu === "user_heritage" ? (
+                <div className="w-10 h-10 rounded-full bg-afri-gold text-black flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.55)] border border-afri-bg transition-all duration-300 -mt-2">
+                  <UserIcon className="w-5 h-5 text-black stroke-[2.5]" />
+                </div>
+              ) : (
+                <UserIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-afri-text-sec hover:text-zinc-350 transition-colors" />
+              )}
+              <span className={`text-[6.5px] xs:text-[7px] font-mono font-black uppercase tracking-widest mt-1 ${
+                activeMenu === "user_heritage" ? "text-afri-gold" : "text-afri-text"
+              }`}>
+                MON HÉRITAGE
+              </span>
+            </button>
+          </div>
+        </>
       )}
 
       {/* =========================================================================
@@ -8621,6 +8657,176 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 Fermer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {isBugModalOpen && (
+        <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-afri-bg border border-afri-gold/20 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button 
+              onClick={() => setIsBugModalOpen(false)}
+              className="absolute top-4 right-4 p-2 text-afri-text-sec hover:text-afri-text rounded-lg transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase">Signaler un Bug</h3>
+                <p className="text-[10px] text-afri-text-sec font-mono">Rapport transmis au Superfondateur</p>
+              </div>
+            </div>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const form = e.target as HTMLFormElement;
+              const issueType = (form.elements.namedItem("issueType") as HTMLSelectElement).value;
+              const desc = (form.elements.namedItem("description") as HTMLTextAreaElement).value;
+              const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+              
+              if (!desc.trim()) return;
+              btn.disabled = true;
+              btn.innerHTML = '<span class="animate-pulse">Envoi du rapport...</span>';
+              
+              try {
+                await gomboDB.submitBetaFeedback({
+                  type: 'bug',
+                  category: issueType,
+                  description: desc,
+                  userId: profile?.uid || currentUser?.uid || "anonymous",
+                  userName: profile?.nomArtistique || profile?.displayName || "Anonyme",
+                  createdAt: new Date().toISOString()
+                });
+                
+                setIsBugModalOpen(false);
+                addToTerminal("[BUG] Rapport de bug enregistré et transmis avec succès.");
+                try { audioSynth.playValidationSuccess(); } catch(e){}
+                form.reset();
+              } catch (err) {
+                console.error(err);
+                btn.disabled = false;
+                btn.innerText = "Erreur - Réessayer";
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Type de Problème</label>
+                <select name="issueType" className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none">
+                  <option value="Affichage">📱 Affichage & Interface</option>
+                  <option value="Validation">⚖️ Validation & Paiement</option>
+                  <option value="Audio">🎵 Audio & Musique</option>
+                  <option value="Autre">⚙️ Autre dysfonctionnement</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Description du bug</label>
+                <textarea 
+                  name="description" 
+                  rows={4} 
+                  required
+                  placeholder="Décrivez précisément le bug rencontré..."
+                  className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsBugModalOpen(false)}
+                  className="flex-1 py-3 border border-gray-800 hover:bg-gray-800 rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 py-3 bg-afri-gold hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Envoyer le rapport
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isSuggestionModalOpen && (
+        <div className="fixed inset-0 bg-afri-bg/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-afri-bg border border-afri-gold/20 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button 
+              onClick={() => setIsSuggestionModalOpen(false)}
+              className="absolute top-4 right-4 p-2 text-afri-text-sec hover:text-afri-text rounded-lg transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                <Lightbulb className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black tracking-widest text-afri-gold uppercase">Faire une suggestion</h3>
+                <p className="text-[10px] text-afri-text-sec font-mono">Partagez vos idées d'amélioration</p>
+              </div>
+            </div>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const form = e.target as HTMLFormElement;
+              const desc = (form.elements.namedItem("suggestion") as HTMLTextAreaElement).value;
+              const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+              
+              if (!desc.trim()) return;
+              btn.disabled = true;
+              btn.innerHTML = '<span class="animate-pulse">Envoi...</span>';
+              
+              try {
+                await gomboDB.submitBetaFeedback({
+                  type: 'suggestion',
+                  description: desc,
+                  userId: profile?.uid || currentUser?.uid || "anonymous",
+                  userName: profile?.nomArtistique || profile?.displayName || "Anonyme",
+                  createdAt: new Date().toISOString()
+                });
+                
+                setIsSuggestionModalOpen(false);
+                addToTerminal("[SUGGESTION] Suggestion enregistrée avec succès. Merci !");
+                try { audioSynth.playValidationSuccess(); } catch(e){}
+                form.reset();
+              } catch (err) {
+                console.error(err);
+                btn.disabled = false;
+                btn.innerText = "Erreur - Réessayer";
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Quelle fonctionnalité ou amélioration aimeriez-vous voir dans l'application ?</label>
+                <textarea 
+                  name="suggestion" 
+                  rows={4} 
+                  required
+                  placeholder="Ex: J'aimerais voir un classement par commune..."
+                  className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600 resize-none"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsSuggestionModalOpen(false)}
+                  className="flex-1 py-3 border border-gray-800 hover:bg-gray-800 rounded-xl text-xs font-bold text-afri-text-sec transition-colors cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 py-3 bg-afri-gold hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Envoyer la suggestion
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

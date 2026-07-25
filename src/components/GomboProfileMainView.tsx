@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   ShieldCheck, Star, Briefcase, Wallet, Users, Target, Heart,
   MessageSquare, Edit3, Share2, Crown, Award, Copy, QrCode, Check, X, ShieldAlert,
-  Fingerprint, Flame, ChevronRight, Clock, Shield, Download
+  Fingerprint, Flame, ChevronRight, Clock, Shield, Download, Store, GraduationCap, Eye
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { audioSynth } from "../lib/audio";
+import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
 
 interface GomboProfileMainViewProps {
   currentUserProfile: UserProfile;
@@ -25,6 +26,7 @@ interface GomboProfileMainViewProps {
   verifyingIdentity?: boolean;
   kycProgress?: number;
   handleIdentityVerifyUpload?: (file: File) => Promise<void>;
+  onViewPublicPortfolio?: (userId: string) => void;
 }
 
 export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
@@ -37,10 +39,12 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
   verifyingIdentity = false,
   kycProgress = 0,
   handleIdentityVerifyUpload,
+  onViewPublicPortfolio,
 }) => {
   const [copiedId, setCopiedId] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const [showCertModal, setShowCertModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
 
   if (!currentUserProfile) return null;
@@ -160,10 +164,10 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         
         <div className="flex flex-col sm:flex-row gap-3 mt-4 relative z-10">
           <button 
-            onClick={() => onNavigateView("user_subscription_management")}
-            className="flex-1 py-3 bg-afri-gold hover:bg-afri-bg-sec text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+            onClick={() => onNavigateView("user_gombo_plus")}
+            className="flex-1 py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            Découvrir les offres
+            <span>✨ Découvrir Premium</span>
           </button>
           
           <button 
@@ -266,16 +270,23 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               <span>0M / 30M (EC)</span>
             </div>
 
-            {/* Actions: BIO OK & DEVENIR ELITE */}
-            <div className="flex items-center gap-2 pt-1">
+            {/* Actions: BIO OK & MON STATUT & Portfolio Public */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-[8px] xs:text-[8.5px] font-black text-emerald-400 uppercase tracking-wider">
                 ✓ BIO OK
               </span>
               <button 
-                onClick={() => onNavigateView("user_gombo_plus")}
-                className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-afri-gold hover:brightness-115 text-black text-[8.5px] xs:text-[9px] font-black uppercase tracking-wider shadow-md hover:scale-102 active:scale-98 transition-all cursor-pointer"
+                onClick={() => setShowStatusModal(true)}
+                className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 via-afri-gold to-amber-300 hover:brightness-115 text-black text-[8.5px] xs:text-[9px] font-black uppercase tracking-wider shadow-md hover:scale-102 active:scale-98 transition-all cursor-pointer inline-flex items-center gap-1"
               >
-                DEVENIR ELITE
+                <span>👑 Mon Statut</span>
+              </button>
+              <button 
+                onClick={() => onViewPublicPortfolio?.(currentUserProfile.uid)}
+                className="px-3 py-1 rounded-full bg-afri-bg-sec border border-afri-gold text-afri-gold hover:bg-afri-gold/10 text-[8.5px] xs:text-[9px] font-black uppercase tracking-wider shadow-md hover:scale-102 active:scale-98 transition-all cursor-pointer inline-flex items-center gap-1"
+              >
+                <Eye className="w-3 h-3 text-afri-gold" />
+                <span>Voir mon Portfolio Public (Vitrine)</span>
               </button>
             </div>
           </div>
@@ -636,6 +647,22 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 <span className="block text-[8px] text-afri-text-sec font-mono">Mes dates</span>
               </div>
             </button>
+
+            <button onClick={() => onNavigateView("user_grand_marche")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-[#D4AF37]/40 hover:bg-afri-bg-ter/80 transition-colors text-left">
+              <Store className="w-4 h-4 text-[#D4AF37] shrink-0" />
+              <div className="truncate">
+                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Grand Marché</span>
+                <span className="block text-[8px] text-[#D4AF37] font-mono">Achat/Vente</span>
+              </div>
+            </button>
+
+            <button onClick={() => onNavigateView("user_academie")} className="flex items-center gap-2.5 p-3 rounded-xl bg-afri-bg-sec/40 border border-emerald-500/40 hover:bg-afri-bg-ter/80 transition-colors text-left">
+              <GraduationCap className="w-4 h-4 text-emerald-400 shrink-0" />
+              <div className="truncate">
+                <span className="block text-[10px] font-bold text-afri-text uppercase tracking-wider truncate">Académie</span>
+                <span className="block text-[8px] text-emerald-400 font-mono">Formations</span>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -856,6 +883,147 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 👑 MON STATUT DIALOG */}
+      <AndroidCenteredDialog
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        title={
+          <div className="flex items-center gap-2">
+            <span className="text-xl">👑</span>
+            <span>Mon Statut AFRIGOMBO</span>
+          </div>
+        }
+        subtitle="Votre positionnement & avantages au sein de l'Alliance"
+      >
+        {(() => {
+          const planName = currentUserProfile?.subscriptionPlan || (currentUserProfile?.isPremium ? "GOMBO ELITE" : "GOMBO FREE");
+          const planLower = planName.toLowerCase();
+          const currentTier = planLower.includes("elite") ? "elite" : planLower.includes("pro") ? "pro" : "free";
+          const progressPercent = currentTier === "elite" ? 100 : currentTier === "pro" ? 66 : 33;
+          const expiryLabel = currentUserProfile?.subscriptionExpiryDate || "25 Août 2026";
+
+          return (
+            <div className="space-y-4 text-left">
+              {/* TIER BADGES DISPLAY */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className={`p-3 rounded-xl border text-center space-y-1 ${
+                  currentTier === 'free' 
+                    ? 'bg-afri-bg-sec border-[#D4AF37] ring-1 ring-[#D4AF37]/50' 
+                    : 'bg-afri-bg border-afri-border opacity-60'
+                }`}>
+                  <span className="text-xs font-black block text-afri-text uppercase">Compte Free</span>
+                  <span className="text-[9px] font-mono font-bold text-afri-text-sec block">Gratuit</span>
+                  {currentTier === 'free' && (
+                    <span className="inline-block px-1.5 py-0.5 bg-[#D4AF37]/20 text-[#D4AF37] text-[8px] font-black rounded uppercase">Actif</span>
+                  )}
+                </div>
+
+                <div className={`p-3 rounded-xl border text-center space-y-1 ${
+                  currentTier === 'pro' 
+                    ? 'bg-emerald-500/10 border-emerald-500 ring-1 ring-emerald-500/50' 
+                    : 'bg-afri-bg border-afri-border opacity-60'
+                }`}>
+                  <span className="text-xs font-black block text-emerald-400 uppercase">Compte Pro</span>
+                  <span className="text-[9px] font-mono font-bold text-afri-text-sec block">Silver</span>
+                  {currentTier === 'pro' && (
+                    <span className="inline-block px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-black rounded uppercase">Actif</span>
+                  )}
+                </div>
+
+                <div className={`p-3 rounded-xl border text-center space-y-1 ${
+                  currentTier === 'elite' 
+                    ? 'bg-[#D4AF37]/15 border-[#D4AF37] ring-1 ring-[#D4AF37]/50' 
+                    : 'bg-afri-bg border-afri-border opacity-60'
+                }`}>
+                  <span className="text-xs font-black block text-[#D4AF37] uppercase">Compte Elite</span>
+                  <span className="text-[9px] font-mono font-bold text-afri-text-sec block">Gold Prestige</span>
+                  {currentTier === 'elite' && (
+                    <span className="inline-block px-1.5 py-0.5 bg-[#D4AF37]/20 text-[#D4AF37] text-[8px] font-black rounded uppercase">Actif</span>
+                  )}
+                </div>
+              </div>
+
+              {/* METRICS & STATUS */}
+              <div className="p-3.5 bg-afri-bg border border-afri-border rounded-xl space-y-2.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-afri-text-sec font-medium">Abonnement actif :</span>
+                  <span className="font-bold text-afri-text">{currentTier === 'free' ? 'Compte Gratuit' : planName}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-afri-text-sec font-medium">Date d'expiration :</span>
+                  <span className="font-mono font-bold text-[#D4AF37]">{expiryLabel}</span>
+                </div>
+
+                <div className="space-y-1 pt-1 border-t border-afri-border/50">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-afri-text-sec">Progression du statut :</span>
+                    <span className="text-[#D4AF37] font-mono">{progressPercent}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-afri-bg-sec rounded-full overflow-hidden border border-afri-border/60">
+                    <div 
+                      className="h-full bg-gradient-to-r from-amber-500 to-afri-gold rounded-full transition-all duration-500"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* UNLOCKED ADVANTAGES */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono font-black text-afri-text-sec uppercase tracking-widest block">
+                  Avantages Débloqués
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {[
+                    { label: "Commission réduite à 1.5%", unlocked: currentTier !== 'free' },
+                    { label: "Badge de certification", unlocked: currentTier !== 'free' },
+                    { label: "Priorité Renfort Express", unlocked: currentTier === 'elite' },
+                    { label: "Publications illimitées", unlocked: currentTier === 'elite' },
+                    { label: "Rapports statistiques", unlocked: true },
+                    { label: "Assistance client prioritaire", unlocked: currentTier !== 'free' },
+                  ].map((item, idx) => (
+                    <div key={idx} className={`p-2.5 rounded-lg border flex items-center gap-2 ${
+                      item.unlocked 
+                        ? 'bg-afri-bg border-[#D4AF37]/30 text-afri-text' 
+                        : 'bg-afri-bg/40 border-afri-border/40 text-afri-text-sec/50'
+                    }`}>
+                      <Check className={`w-3.5 h-3.5 shrink-0 ${item.unlocked ? 'text-[#D4AF37]' : 'text-zinc-600'}`} />
+                      <span className="text-[11px] font-semibold">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* IF FREE: "Passer à PRO" BUTTON */}
+              {currentTier === 'free' && (
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      setShowStatusModal(false);
+                      onNavigateView("user_gombo_plus");
+                    }}
+                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-afri-gold hover:brightness-110 text-black font-black uppercase text-xs tracking-widest rounded-xl transition-all shadow-lg flex justify-center items-center gap-2 cursor-pointer"
+                  >
+                    <span>Passer à PRO</span>
+                    <ChevronRight className="w-4 h-4 stroke-[3]" />
+                  </button>
+                </div>
+              )}
+
+              <div className="pt-2 text-right border-t border-afri-border/50">
+                <button
+                  onClick={() => setShowStatusModal(false)}
+                  className="px-4 py-2 bg-afri-bg border border-afri-border text-afri-text text-xs font-bold uppercase rounded-xl cursor-pointer"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+      </AndroidCenteredDialog>
 
     </motion.div>
   );

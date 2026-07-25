@@ -1,173 +1,243 @@
 import React, { useState } from 'react';
-import { ShieldCheck, History, RefreshCcw, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { 
+  ShieldCheck, History, RefreshCcw, ArrowRight, Check, Sparkles, 
+  KeyRound, MessageCircle, Crown, Calendar, CreditCard, ArrowLeft,
+  AlertCircle, ChevronRight, CheckCircle2
+} from 'lucide-react';
+import { supportConfig } from '../supportConfig';
+import { validateAndActivatePremiumCode } from '../lib/premiumSubscriptionEngine';
 
 interface Props {
   isPremium: boolean;
   onUpgrade: () => void;
   onBack?: () => void;
+  currentUserProfile?: any;
+  onRefreshProfile?: () => void;
 }
 
-export const MonAbonnementView: React.FC<Props> = ({ isPremium, onUpgrade, onBack }) => {
-  const [showComparison, setShowComparison] = useState(false);
+export const MonAbonnementView: React.FC<Props> = ({ 
+  isPremium, 
+  onUpgrade, 
+  onBack,
+  currentUserProfile,
+  onRefreshProfile
+}) => {
+  // Activation code local state
+  const [inputCode, setInputCode] = useState("");
+  const [activationError, setActivationError] = useState("");
+  const [activationSuccess, setActivationSuccess] = useState("");
+  const [isActivating, setIsActivating] = useState(false);
 
-  if (showComparison) {
-    return (
-      <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6 max-w-2xl mx-auto">
-        <button 
-          onClick={() => setShowComparison(false)}
-          className="text-xs font-bold uppercase tracking-wider text-afri-text-sec hover:text-afri-text mb-4 inline-flex items-center gap-1"
-        >
-          &larr; Retour
-        </button>
-        <h2 className="text-xl font-black text-afri-text uppercase tracking-tight mb-6">Comparaison des offres</h2>
-        
-        <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 shadow-sm space-y-4">
-           {/* Detail logic here, can be simple for now */}
-           <div className="grid grid-cols-4 gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-center border-b border-afri-border pb-2">
-             <div className="text-left text-afri-text-sec">Fonctionnalité</div>
-             <div>FREE</div>
-             <div className="text-afri-text">PRO</div>
-             <div className="text-afri-gold">ELITE</div>
-           </div>
-           
-           {[
-             { name: "Publications", free: "1/jour", pro: "5/jour", elite: "Illimité" },
-             { name: "Commission", free: "2.5%", pro: "1.5%", elite: "1.5%" },
-             { name: "Priorité Renfort", free: "-", pro: "-", elite: "Oui" },
-             { name: "Badge", free: "-", pro: "Silver", elite: "Gold" },
-             { name: "Thèmes Premium", free: "-", pro: "Oui", elite: "Oui" },
-           ].map((row, i) => (
-             <div key={i} className="grid grid-cols-4 gap-2 text-[10px] sm:text-xs font-mono text-center border-b border-afri-border/50 py-2 items-center">
-               <div className="text-left text-afri-text-sec font-sans font-bold">{row.name}</div>
-               <div className="text-afri-text-muted">{row.free}</div>
-               <div className="text-afri-text font-bold">{row.pro}</div>
-               <div className="text-afri-gold font-bold">{row.elite}</div>
-             </div>
-           ))}
-        </div>
-      </div>
-    );
-  }
+  // Derive current plan name
+  const currentPlan = currentUserProfile?.subscriptionPlan || 
+    (isPremium ? "GOMBO ELITE" : "GOMBO FREE");
+  
+  const isFree = !isPremium && (!currentUserProfile?.subscriptionPlan || currentUserProfile?.subscriptionPlan === "GOMBO FREE");
+  
+  // Format expiry date
+  const expiryDate = currentUserProfile?.subscriptionExpiryDate || "25 Août 2026";
+
+  const handleActivateCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActivationError("");
+    setActivationSuccess("");
+
+    if (!inputCode || inputCode.trim().length < 4) {
+      setActivationError("Code invalide.");
+      return;
+    }
+
+    setIsActivating(true);
+
+    try {
+      const res = await validateAndActivatePremiumCode(
+        inputCode,
+        currentUserProfile?.uid || "guest_user",
+        "elite"
+      );
+
+      if (res.success) {
+        setActivationSuccess(res.message);
+        setInputCode("");
+        if (onRefreshProfile) {
+          onRefreshProfile();
+        }
+        if (window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('gombo_play_sound', { detail: { name: 'premium' } }));
+        }
+      } else {
+        setActivationError("Code invalide.");
+      }
+    } catch (err) {
+      setActivationError("Code invalide.");
+    } finally {
+      setIsActivating(false);
+    }
+  };
 
   return (
-    <div className="afri-container space-y-3.5 animate-fadeIn text-left py-2 xs:py-4 max-w-2xl mx-auto">
-      <div className="text-center mb-4">
-        <h2 className="text-xl font-black text-afri-text uppercase tracking-tighter mb-1">Abonnements</h2>
-        <p className="text-[10px] text-afri-text-sec uppercase tracking-widest font-mono">Choisissez l'offre qui vous correspond.</p>
+    <div className="afri-container space-y-5 animate-fadeIn text-left py-2 xs:py-4 max-w-2xl mx-auto">
+      
+      {/* HEADER WITH BACK BUTTON */}
+      <div className="flex items-center justify-between border-b border-afri-border/60 pb-3">
+        {onBack && (
+          <button 
+            onClick={onBack}
+            className="px-3 py-1.5 rounded-xl bg-afri-bg-sec border border-afri-border text-afri-text-sec hover:text-afri-text text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Retour</span>
+          </button>
+        )}
+        <h2 className="text-lg xs:text-xl font-black text-afri-text uppercase tracking-tight flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
+          <span>Gestion de l'Abonnement</span>
+        </h2>
+        <div className="w-12" /> {/* Spacer */}
       </div>
 
-      {/* FREE */}
-      <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 sm:p-5 shadow-xs relative">
-        <div className="flex justify-between items-start mb-2">
+      {/* 1. FORMULE ACTUELLE ET STATUT */}
+      <div className="bg-gradient-to-b from-afri-bg-sec to-afri-bg border border-[#D4AF37]/30 rounded-2xl p-5 shadow-lg relative overflow-hidden space-y-4">
+        <div className="flex flex-wrap justify-between items-start gap-3 border-b border-afri-border/50 pb-4">
           <div>
-            <h3 className="text-base font-black text-afri-text uppercase tracking-tight">GOMBO FREE</h3>
-            <p className="text-[11px] text-afri-text-sec font-mono mt-0.5">0 FCFA</p>
-          </div>
-        </div>
-        
-        <ul className="space-y-1.5 mb-3">
-          {["Profil standard", "Messagerie", "1 publication par jour"].map((feature, i) => (
-            <li key={i} className="flex items-center gap-2 text-xs text-afri-text-sec font-medium">
-              <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              {feature}
-            </li>
-          ))}
-        </ul>
-        
-        <button className="w-full py-2 rounded-xl bg-afri-bg border border-afri-border text-afri-text text-[11px] font-black uppercase tracking-wider opacity-70 cursor-default">
-          Formule actuelle
-        </button>
-      </div>
-
-      {/* PRO */}
-      <div className="bg-afri-bg-sec border border-zinc-400/30 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-zinc-300/10 blur-2xl rounded-full pointer-events-none" />
-        <div className="flex justify-between items-start mb-2">
-          <div>
-            <h3 className="text-lg font-black text-zinc-700 uppercase tracking-tight flex items-center gap-2">
-              GOMBO PRO
-              <span className="px-2 py-0.5 bg-zinc-200 text-zinc-700 text-[8px] font-black uppercase rounded-md tracking-wider">Silver</span>
+            <span className="text-[9px] font-mono font-black text-afri-text-sec uppercase tracking-[0.2em] block mb-1">
+              Formule Actuelle
+            </span>
+            <h3 className="text-xl font-black text-afri-text uppercase tracking-tight flex items-center gap-2">
+              {currentPlan}
+              {currentPlan.includes("ELITE") && (
+                <span className="px-2.5 py-0.5 bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-[9px] font-black uppercase rounded-md tracking-wider inline-flex items-center gap-1 shadow-xs">
+                  <Crown className="w-3 h-3 text-[#D4AF37]" /> Gold Prestige
+                </span>
+              )}
+              {currentPlan.includes("PRO") && (
+                <span className="px-2.5 py-0.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[9px] font-black uppercase rounded-md tracking-wider">
+                  Silver
+                </span>
+              )}
             </h3>
-            <div className="flex items-end gap-1.5 mt-0.5">
-              <span className="text-base font-black text-afri-text">500 FCFA</span>
-              <span className="text-[10px] text-afri-text-sec font-mono pb-0.5">/ mois</span>
-            </div>
-            <p className="text-[9px] text-afri-text-sec font-mono mt-0.5">Ou 5 000 FCFA / an</p>
+          </div>
+
+          <div className="flex items-center gap-2 bg-afri-bg px-3 py-1.5 rounded-xl border border-afri-border/80">
+            <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${isFree ? 'bg-zinc-500' : 'bg-emerald-400'}`} />
+            <span className="text-xs font-bold uppercase tracking-wider text-afri-text">
+              Statut : <strong className={isFree ? 'text-afri-text-sec' : 'text-emerald-400'}>{isFree ? 'Compte Gratuit' : 'Actif'}</strong>
+            </span>
           </div>
         </div>
 
-        <div className="mb-2 inline-block px-2.5 py-1 bg-emerald-50 rounded-md border border-emerald-100">
-           <p className="text-[9px] font-bold text-emerald-700 uppercase">Commission réduite : <span className="line-through opacity-50 ml-0.5">2,5%</span> <ArrowRight className="inline w-2.5 h-2.5 mx-0.5" /> 1,5%</p>
-        </div>
-        
-        <ul className="space-y-1.5 mb-3">
-          {["5 publications par jour", "Statistiques", "Plus de visibilité", "Portfolio enrichi"].map((feature, i) => (
-            <li key={i} className="flex items-center gap-2 text-xs text-afri-text font-medium">
-              <Check className="w-3.5 h-3.5 text-afri-text-sec shrink-0" />
-              {feature}
-            </li>
-          ))}
-        </ul>
-        
-        <button 
-          onClick={onUpgrade}
-          className="w-full py-2 rounded-xl bg-afri-bg-ter hover:bg-zinc-700 text-afri-text text-[11px] font-black uppercase tracking-wider transition-all shadow-sm active:scale-98"
-        >
-          Devenir PRO
-        </button>
-      </div>
-
-      {/* ELITE */}
-      <div className="bg-gradient-to-b from-afri-bg-sec to-afri-gold/5 border-2 border-afri-gold/50 rounded-2xl p-4 sm:p-5 shadow-sm relative overflow-hidden transition-transform">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-afri-gold/20 blur-2xl rounded-full pointer-events-none" />
-        
-        <div className="flex justify-between items-start mb-2 relative z-10">
-          <div>
-            <h3 className="text-xl font-black text-afri-gold uppercase tracking-tight flex items-center gap-2">
-              GOMBO ELITE
-              <span className="px-2 py-0.5 bg-afri-gold/20 border border-afri-gold/30 text-afri-gold text-[8px] font-black uppercase rounded-md tracking-wider flex items-center gap-1 shadow-xs">
-                <Sparkles className="w-2.5 h-2.5" /> Gold
-              </span>
-            </h3>
-            <div className="flex items-end gap-1.5 mt-0.5">
-              <span className="text-lg font-black text-afri-text">1 000 FCFA</span>
-              <span className="text-[10px] text-afri-text-sec font-mono pb-0.5">/ mois</span>
+        {/* DETAILS: DATES & RENOUVELLEMENT */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div className="p-3 bg-afri-bg rounded-xl border border-afri-border/80 space-y-1">
+            <div className="flex items-center gap-1.5 text-afri-text-sec font-mono text-[10px] uppercase font-bold">
+              <Calendar className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <span>Date d'expiration</span>
             </div>
-            <p className="text-[9px] text-afri-text-sec font-mono mt-0.5">Ou 10 000 FCFA / an</p>
+            <p className="font-bold text-afri-text font-mono text-sm">{expiryDate}</p>
+          </div>
+
+          <div className="p-3 bg-afri-bg rounded-xl border border-afri-border/80 space-y-1">
+            <div className="flex items-center gap-1.5 text-afri-text-sec font-mono text-[10px] uppercase font-bold">
+              <RefreshCcw className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <span>Renouvellement</span>
+            </div>
+            <p className="font-bold text-afri-text font-mono text-sm">Automatique (Inclus Bêta)</p>
           </div>
         </div>
 
-        <div className="mb-2 inline-block px-2.5 py-1 bg-emerald-50 rounded-md border border-emerald-100 relative z-10">
-           <p className="text-[9px] font-bold text-emerald-700 uppercase">Commission réduite : <span className="line-through opacity-50 ml-0.5">2,5%</span> <ArrowRight className="inline w-2.5 h-2.5 mx-0.5" /> 1,5%</p>
+        {/* BUTTON CHANGER DE FORMULE */}
+        <div className="pt-1">
+          <button
+            onClick={onUpgrade}
+            className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs tracking-widest rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>Changer de formule</span>
+            <ChevronRight className="w-4 h-4 stroke-[3]" />
+          </button>
         </div>
-        
-        <ul className="space-y-1.5 mb-3 relative z-10">
-          {["Publications illimitées", "Priorité Renfort Express", "Visibilité maximale", "Profil recommandé", "Statistiques avancées", "Opportunités Premium"].map((feature, i) => (
-            <li key={i} className="flex items-center gap-2 text-xs text-afri-text font-bold">
-              <Check className="w-3.5 h-3.5 text-afri-gold shrink-0" />
-              {feature}
-            </li>
-          ))}
-        </ul>
-        
-        <button 
-          onClick={onUpgrade}
-          className="relative z-10 w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-afri-gold hover:brightness-110 text-black text-[11px] font-black uppercase tracking-widest transition-all shadow-md active:scale-98 flex justify-center items-center gap-1.5"
-        >
-          Devenir ELITE <ArrowRight className="w-3.5 h-3.5" />
-        </button>
       </div>
 
-      <div className="pt-4 pb-8 flex justify-center">
-        <button 
-          onClick={() => setShowComparison(true)}
-          className="text-xs font-bold text-afri-text-sec hover:text-afri-text uppercase tracking-wider underline underline-offset-4"
-        >
-          Comparer toutes les fonctionnalités
-        </button>
+      {/* 2. ACTIVER UN CODE BÊTA / CODE D'ACTIVATION */}
+      <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+        <div className="flex items-center gap-2 text-afri-text">
+          <KeyRound className="w-4 h-4 text-[#D4AF37]" />
+          <h3 className="text-xs font-black uppercase tracking-wider">Activer un code Bêta / Pass Premium</h3>
+        </div>
+
+        <form onSubmit={handleActivateCode} className="space-y-3">
+          <div className="flex gap-2">
+            <input 
+              type="text"
+              value={inputCode}
+              onChange={(e) => {
+                setInputCode(e.target.value.toUpperCase());
+                setActivationError("");
+              }}
+              placeholder="Ex: AG-PRO-9842"
+              className="flex-1 bg-afri-bg p-3 text-xs rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-wider font-bold uppercase"
+            />
+            <button
+              type="submit"
+              disabled={isActivating || !inputCode.trim()}
+              className="px-5 py-3 bg-afri-bg-ter border border-[#D4AF37]/50 hover:bg-[#D4AF37] hover:text-black text-[#D4AF37] text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer disabled:opacity-50 shrink-0"
+            >
+              {isActivating ? "..." : "Activer"}
+            </button>
+          </div>
+
+          {activationError && (
+            <p className="text-xs font-bold text-red-400 bg-red-500/10 p-2.5 rounded-xl border border-red-500/30 text-center">
+              {activationError}
+            </p>
+          )}
+
+          {activationSuccess && (
+            <p className="text-xs font-bold text-emerald-400 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/30 text-center">
+              {activationSuccess}
+            </p>
+          )}
+        </form>
+      </div>
+
+      {/* 3. HISTORIQUE DES SOUSCRIPTIONS */}
+      <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+        <div className="flex items-center gap-2 text-afri-text border-b border-afri-border/50 pb-2">
+          <History className="w-4 h-4 text-[#D4AF37]" />
+          <h3 className="text-xs font-black uppercase tracking-wider">Historique de souscription</h3>
+        </div>
+
+        <div className="space-y-2 text-xs">
+          <div className="flex justify-between items-center p-3 bg-afri-bg rounded-xl border border-afri-border/60">
+            <div>
+              <p className="font-bold text-afri-text">{currentPlan}</p>
+              <span className="text-[10px] text-afri-text-sec font-mono">Actif depuis le 25/07/2026</span>
+            </div>
+            <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-[10px] rounded-lg">
+              Validé
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. SUPPORT CLIENT */}
+      <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+        <div className="flex justify-between items-center">
+          <div className="space-y-0.5">
+            <h4 className="text-xs font-black text-afri-text uppercase tracking-wide">Besoin d'aide sur votre abonnement ?</h4>
+            <p className="text-[10px] text-afri-text-sec">Notre assistance client est disponible 24/7 sur WhatsApp</p>
+          </div>
+          <button
+            onClick={() => {
+              supportConfig.openSupport(`Bonjour Support AFRIGOMBO 👋\nJe vous contacte concernant la gestion de mon abonnement ${currentPlan}.`);
+            }}
+            className="px-4 py-2 bg-emerald-500/15 border border-emerald-500/30 hover:bg-emerald-500/25 text-emerald-400 text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            <MessageCircle className="w-3.5 h-3.5 fill-emerald-400" />
+            <span>Support</span>
+          </button>
+        </div>
       </div>
 
     </div>
   );
 };
-

@@ -39,6 +39,8 @@ export interface BetaTransaction {
   type?: string;
   notes?: string;
   paymentMethod?: string;
+  buyerPhoneNumber?: string;
+  paymentPhoneNumber?: string;
 }
 
 /**

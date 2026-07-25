@@ -8,10 +8,11 @@ import {
   Play, Pause, Trash2, Volume2, Plus, ArrowUp, ArrowDown, Send, 
   RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award,
   Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square,
-  Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye
+  Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye, Bot
 } from "lucide-react";
 import { BetaTransactionsAdminPanel } from "./BetaTransactionsAdminPanel";
 import { PendingPublicationsAdminPanel } from "./PendingPublicationsAdminPanel";
+import { ImperialMessageModal } from "./ImperialMessageModal";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
@@ -124,6 +125,7 @@ export default function AdminFounderThrone({
 
   // REALTIME FIRESTORE SNAPSHOTS FOR THE FOUNDER COMMAND CENTER
   const [registrationsEnabled, setRegistrationsEnabled] = useState<boolean>(true);
+  const [autoPilotEnabled, setAutoPilotEnabled] = useState<boolean>(false);
   const [imperialLogs, setImperialLogs] = useState<any[]>([]);
   const [liveUsers, setLiveUsers] = useState<any[]>(users);
   const [livePosts, setLivePosts] = useState<any[]>(posts || []);
@@ -136,6 +138,12 @@ export default function AdminFounderThrone({
     const unsubReg = onSnapshot(doc(db, "system_settings", "registrations"), (snap) => {
       if (snap.exists()) {
         setRegistrationsEnabled(snap.data()?.enabled ?? true);
+      }
+    });
+
+    const unsubAutoPilot = onSnapshot(doc(db, "system_settings", "autopilot"), (snap) => {
+      if (snap.exists()) {
+        setAutoPilotEnabled(snap.data()?.enabled ?? false);
       }
     });
 
@@ -169,6 +177,7 @@ export default function AdminFounderThrone({
 
     return () => {
       unsubReg();
+      unsubAutoPilot();
       unsubLogs();
       unsubUsers();
       unsubSocialPosts();
@@ -179,10 +188,43 @@ export default function AdminFounderThrone({
   const displayUsers = liveUsers.length > 0 ? liveUsers : (users || []);
   const displayPosts = livePosts.length > 0 ? livePosts : (posts || []);
   const displayGombos = liveGombos.length > 0 ? liveGombos : (gombos || []);
+  const getGrowthMetrics = (list: any[], dateField: string = "createdAt") => {
+    if (!list || list.length === 0) return { dailyVolume: 0, growthPercent: "0" };
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const dailyVolume = list.filter(item => {
+      const date = item[dateField];
+      if (!date) return false;
+      const t = typeof date === "number" ? date : (date.toMillis ? date.toMillis() : new Date(date).getTime());
+      return (now - t) <= oneDay;
+    }).length;
+    const previousVolume = list.filter(item => {
+      const date = item[dateField];
+      if (!date) return false;
+      const t = typeof date === "number" ? date : (date.toMillis ? date.toMillis() : new Date(date).getTime());
+      return (now - t) > oneDay && (now - t) <= 2 * oneDay;
+    }).length;
+
+    let growthPercent = "0";
+    if (previousVolume > 0) {
+      growthPercent = (((dailyVolume - previousVolume) / previousVolume) * 100).toFixed(1);
+    } else if (dailyVolume > 0) {
+      growthPercent = "100.0";
+    }
+
+    return { dailyVolume, growthPercent: Number(growthPercent) > 0 ? `+${growthPercent}` : growthPercent };
+  };
+
   const pendingPostsCount = [...displayPosts, ...displayGombos].filter(
-    (p: any) => 
-      (p.status === "pending_deposit" || p.status === "pending" || p.adminValidated === false || p.visible === false) &&
-      p.status !== "rejected" && p.status !== "refuse" && p.status !== "cancelled" && p.status !== "published" && p.status !== "publie"
+    (p: any) => {
+      const isPending = (p.status === "pending_deposit" || p.status === "pending" || p.adminValidated === false || p.visible === false) &&
+        p.status !== "rejected" && p.status !== "refuse" && p.status !== "cancelled" && p.status !== "published" && p.status !== "publie";
+      if (!isPending) return false;
+      if (autoPilotEnabled) {
+        return p.isFlagged || p.reportsCount > 0; // Seules les alertes remontent
+      }
+      return true;
+    }
   ).length;
 
   const logImperialAction = async (action: string, description: string) => {
@@ -205,6 +247,19 @@ export default function AdminFounderThrone({
       await setDoc(doc(db, "system_settings", "registrations"), { enabled: nextVal, updatedAt: Date.now() }, { merge: true });
       await logImperialAction("Portail Inscriptions", `Inscriptions ${nextVal ? "Activées" : "Désactivées"}`);
       setSuccessMsg(`Inscriptions ${nextVal ? "activées" : "désactivées"} avec succès.`);
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const toggleAutoPilot = async () => {
+    const nextVal = !autoPilotEnabled;
+    try {
+      await setDoc(doc(db, "system_settings", "autopilot"), { enabled: nextVal, updatedAt: Date.now() }, { merge: true });
+      await logImperialAction("Modération Automatique", `Auto-Pilotage ${nextVal ? "Activé" : "Désactivé"}`);
+      setSuccessMsg(`Auto-Pilotage ${nextVal ? "activé" : "désactivé"} avec succès.`);
       setTimeout(() => setSuccessMsg(""), 3000);
       try { audioSynth?.playValidationSuccess(); } catch (_) {}
     } catch (err: any) {
@@ -1455,6 +1510,17 @@ export default function AdminFounderThrone({
                   <span>📊 Statistiques</span>
                 </button>
               </div>
+
+              {/* Troisième ligne */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <button
+                  onClick={toggleAutoPilot}
+                  className={`p-3.5 border rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95 ${autoPilotEnabled ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'bg-afri-bg-sec/5 border-afri-border/60 hover:bg-afri-bg-sec/20 hover:border-[#D4AF37]/50 text-afri-text'}`}
+                >
+                  <Bot className="w-4 h-4" />
+                  <span>🤖 Mode Auto-Pilotage : {autoPilotEnabled ? "ACTIF" : "INACTIF"}</span>
+                </button>
+              </div>
             </div>
 
             {/* 3. SURVEILLANCE & MÉTRIQUES TEMPS RÉEL */}
@@ -1474,7 +1540,9 @@ export default function AdminFounderThrone({
                     <BarChart3 className="w-3.5 h-3.5 text-sky-400" /> 📈 Croissance
                   </span>
                   <strong className="text-xl font-sans font-black text-sky-400 block mt-1">{displayUsers.length} citoyens</strong>
-                  <span className="text-[8px] font-mono text-emerald-400 block mt-0.5">+24.8% d'expansion</span>
+                  <span className={`text-[8px] font-mono block mt-0.5 ${getGrowthMetrics(displayUsers, "createdAt").growthPercent.startsWith('+') ? 'text-emerald-400' : 'text-afri-text-sec'}`}>
+                    {getGrowthMetrics(displayUsers, "createdAt").growthPercent}% d'expansion ({getGrowthMetrics(displayUsers, "createdAt").dailyVolume} nouv./24h)
+                  </span>
                 </div>
 
                 {/* 💰 Revenus */}
@@ -1486,7 +1554,9 @@ export default function AdminFounderThrone({
                     <Coins className="w-3.5 h-3.5 text-emerald-400" /> 💰 Revenus
                   </span>
                   <strong className="text-xl font-sans font-black text-emerald-400 block mt-1 truncate">{formattedRevenues}</strong>
-                  <span className="text-[8px] font-mono text-emerald-500 block mt-0.5">{allPayments.length} transactions</span>
+                  <span className={`text-[8px] font-mono block mt-0.5 ${getGrowthMetrics(allPayments, "createdAt").growthPercent.startsWith('+') ? 'text-emerald-500' : 'text-afri-text-sec'}`}>
+                    {allPayments.length} trans. ({getGrowthMetrics(allPayments, "createdAt").dailyVolume} ce jour)
+                  </span>
                 </div>
 
                 {/* 📦 Nombre de Gombos */}
@@ -1498,7 +1568,9 @@ export default function AdminFounderThrone({
                     <FileText className="w-3.5 h-3.5 text-amber-400" /> 📦 Gombos
                   </span>
                   <strong className="text-xl font-sans font-black text-amber-400 block mt-1">{displayPosts.length}</strong>
-                  <span className="text-[8px] font-mono text-amber-500/80 block mt-0.5">Offres & prestations</span>
+                  <span className={`text-[8px] font-mono block mt-0.5 ${getGrowthMetrics(displayPosts, "createdAt").growthPercent.startsWith('+') ? 'text-amber-500/80' : 'text-afri-text-sec'}`}>
+                    Offres & prest. ({getGrowthMetrics(displayPosts, "createdAt").growthPercent}%)
+                  </span>
                 </div>
 
                 {/* 📬 Candidatures */}
@@ -2298,7 +2370,7 @@ export default function AdminFounderThrone({
                 </div>
 
                 <div className="p-1 sm:p-4 bg-afri-bg border border-afri-border rounded-3xl">
-                  <PendingPublicationsAdminPanel currentUser={profile} />
+                  <PendingPublicationsAdminPanel currentUser={profile} autoPilotEnabled={autoPilotEnabled} />
                 </div>
               </div>
             )}
@@ -3100,6 +3172,18 @@ export default function AdminFounderThrone({
           <span className="text-[9px] font-mono uppercase tracking-wider">Quitter</span>
         </button>
       </div>
+
+      {/* MODALS */}
+      <ImperialMessageModal 
+        isOpen={quickNoticeModalOpen} 
+        onClose={() => setQuickNoticeModalOpen(false)}
+        title="Annonce Globale (Pop-up Impérial)"
+      />
+      <ImperialMessageModal 
+        isOpen={quickNotifModalOpen} 
+        onClose={() => setQuickNotifModalOpen(false)}
+        title="Notification Directe (Push/Pop-up)"
+      />
 
     </div>
   );

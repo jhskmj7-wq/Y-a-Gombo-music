@@ -397,18 +397,18 @@ export const BackgroundMusic: React.FC = () => {
 
   return (
     <div 
-      className="fixed bottom-4 left-4 z-[9999] flex flex-col items-start gap-1.5"
+      className="fixed top-16 right-3 sm:top-20 sm:right-5 z-[9999] flex flex-col items-end gap-1.5"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-row-reverse">
         <motion.button 
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={togglePlay}
           className={`w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-all duration-500 border ${
             isPlaying 
-              ? 'bg-afri-bg-sec/90 border-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/25' 
+              ? 'bg-afri-bg-sec/90 border-[#D4AF37] text-[#D4AF37] shadow-lg shadow-[#D4AF37]/25' 
               : 'bg-afri-bg/80 border-afri-border text-afri-text/55 hover:text-afri-text hover:border-white/35'
           }`}
           title={isPlaying ? "Couper l'ambiance musicale" : "Activer l'ambiance musicale"}
@@ -426,9 +426,9 @@ export const BackgroundMusic: React.FC = () => {
         <AnimatePresence>
           {(showNotification || isHovered || isOpenDrawer) && (
             <motion.div 
-              initial={{ opacity: 0, x: -12 }}
+              initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -8 }}
+              exit={{ opacity: 0, x: 8 }}
               onClick={() => setIsOpenDrawer(!isOpenDrawer)}
               className="flex items-center gap-3.5 bg-afri-bg/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-afri-border/80 shadow-2xl cursor-pointer hover:border-[#D4AF37]/45 transition-all select-none"
             >
@@ -464,10 +464,10 @@ export const BackgroundMusic: React.FC = () => {
       <AnimatePresence>
         {isOpenDrawer && (
           <motion.div
-            initial={{ opacity: 0, y: 15, scale: 0.95 }}
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15, scale: 0.95 }}
-            className="w-72 bg-afri-bg/95 backdrop-blur-xl border border-afri-border rounded-2xl p-4 shadow-[0_10px_35px_rgba(0,0,0,0.8)] overflow-hidden text-left relative mt-1"
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="w-72 bg-afri-bg/95 backdrop-blur-xl border border-afri-border rounded-2xl p-4 shadow-[0_10px_35px_rgba(0,0,0,0.8)] overflow-hidden text-left relative mt-1 origin-top-right"
           >
             <div className="flex justify-between items-center pb-2 border-b border-afri-border mb-3">
               <div className="flex items-center gap-1.5">

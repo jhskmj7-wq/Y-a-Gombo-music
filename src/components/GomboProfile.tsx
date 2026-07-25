@@ -27,6 +27,7 @@ interface GomboProfileProps {
   darkMode?: boolean;
   setDarkMode?: (val: boolean) => void;
   initialPanelView?: "main" | "edit" | "settings" | "support" | "certification";
+  onViewPublicPortfolio?: (userId: string) => void;
 }
 
 const ABIDJAN_COMMUNES = [
@@ -72,7 +73,8 @@ export default function GomboProfile({
   onLogout,
   darkMode,
   setDarkMode,
-  initialPanelView = "main"
+  initialPanelView = "main",
+  onViewPublicPortfolio
 }: GomboProfileProps) {
   // Current Panel view: "main" | "edit" | "settings" | "support" | "certification"
   const [panelView, setPanelView] = useState<"main" | "edit" | "settings" | "support" | "certification">(initialPanelView);
@@ -1110,6 +1112,7 @@ export default function GomboProfile({
         verifyingIdentity={verifyingIdentity}
         kycProgress={kycProgress}
         handleIdentityVerifyUpload={handleIdentityVerifyUpload}
+        onViewPublicPortfolio={onViewPublicPortfolio}
       />
     );
   }

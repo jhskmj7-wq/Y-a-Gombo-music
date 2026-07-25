@@ -175,7 +175,10 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
       (tx.promoterName || "").toLowerCase().includes(term) ||
       (tx.artistName || "").toLowerCase().includes(term) ||
       (tx.gomboTitle || "").toLowerCase().includes(term) ||
-      (tx.id || "").toLowerCase().includes(term);
+      (tx.id || "").toLowerCase().includes(term) ||
+      (tx.status || "").toLowerCase().includes(term) ||
+      (tx.buyerPhoneNumber || "").toLowerCase().includes(term) ||
+      (tx.paymentPhoneNumber || "").toLowerCase().includes(term);
 
     const matchesStatus = selectedStatusFilter === "all" || tx.status === selectedStatusFilter;
 

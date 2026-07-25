@@ -7,9 +7,10 @@ interface HeritagePageProps {
   darkMode?: boolean;
   setDarkMode?: (val: boolean) => void;
   initialPanelView?: "main" | "edit" | "settings" | "support" | "certification";
+  onViewPublicPortfolio?: (userId: string) => void;
 }
 
-export default function HeritagePage({ onNavigateView, darkMode, setDarkMode, initialPanelView }: HeritagePageProps) {
+export default function HeritagePage({ onNavigateView, darkMode, setDarkMode, initialPanelView, onViewPublicPortfolio }: HeritagePageProps) {
   const { profile, refreshProfile, logout } = useAuth();
 
   return (
@@ -23,6 +24,7 @@ export default function HeritagePage({ onNavigateView, darkMode, setDarkMode, in
           darkMode={darkMode}
           setDarkMode={setDarkMode}
           initialPanelView={initialPanelView}
+          onViewPublicPortfolio={onViewPublicPortfolio}
         />
       ) : (
         <div className="flex justify-center items-center h-[50vh] text-afri-text-sec">

@@ -37,14 +37,18 @@ export interface PendingPublication {
   activationCode?: string;
   commune?: string;
   type?: string;
+  isFlagged?: boolean;
+  reportsCount?: number;
 }
 
 interface PendingPublicationsAdminPanelProps {
   currentUser?: any;
+  autoPilotEnabled?: boolean;
 }
 
 export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPanelProps> = ({
-  currentUser
+  currentUser,
+  autoPilotEnabled
 }) => {
   const [items, setItems] = useState<PendingPublication[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -94,7 +98,9 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
             visible: !!data.visible,
             activationCode: data.activationCode,
             commune: data.commune || "",
-            type: data.type || data.postCategory || "Annonce"
+            type: data.type || data.postCategory || "Annonce",
+            isFlagged: !!data.isFlagged,
+            reportsCount: Number(data.reportsCount || 0)
           });
         }
       });
@@ -134,7 +140,9 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
                 visible: !!data.visible,
                 activationCode: data.activationCode,
                 commune: data.commune || "",
-                type: data.eventType || "Gombo"
+                type: data.eventType || "Gombo",
+                isFlagged: !!data.isFlagged,
+                reportsCount: Number(data.reportsCount || 0)
               });
             }
           }
@@ -160,6 +168,41 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
 
     return () => unsubPosts();
   }, []);
+
+  // Mode Auto-Pilotage Effect
+  useEffect(() => {
+    if (!autoPilotEnabled || !db || items.length === 0) return;
+
+    const autoValidateItems = async () => {
+      for (const item of items) {
+        // Skip flagged items
+        if (item.isFlagged || (item.reportsCount && item.reportsCount > 0)) {
+          continue;
+        }
+
+        try {
+          const docRef = doc(db, item.collectionName, item.id);
+          await updateDoc(docRef, {
+            status: "published",
+            adminValidated: true,
+            visible: true,
+            publishedAt: new Date().toISOString()
+          });
+
+          await addDoc(collection(db, "imperial_logs"), {
+            action: "Auto-Validation",
+            description: `Publication ${item.title} validée automatiquement (Auto-Pilotage).`,
+            timestamp: Date.now(),
+            executor: "Système"
+          });
+        } catch (err) {
+          console.error("Auto-validation failed for", item.id, err);
+        }
+      }
+    };
+
+    autoValidateItems();
+  }, [autoPilotEnabled, items]);
 
   // Validation Action
   const handleValidate = async (item: PendingPublication) => {
@@ -292,7 +335,9 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
     return (
       item.title.toLowerCase().includes(q) ||
       item.authorName.toLowerCase().includes(q) ||
-      item.commune.toLowerCase().includes(q)
+      item.commune?.toLowerCase().includes(q) ||
+      item.id.toLowerCase().includes(q) ||
+      item.status.toLowerCase().includes(q)
     );
   });
 

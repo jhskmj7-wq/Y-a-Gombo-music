@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
-import { Star, Award } from "lucide-react";
+import { Star, Award, Search } from "lucide-react";
 import { User } from "../../types";
 
 const IVORIAN_COMMUNES = [
@@ -63,8 +63,35 @@ export default function AdminUsers({
   infoMessages,
   setInfoMessages,
 }: AdminUsersProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const displayedUsers = filteredUsers.filter((u) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    const name = u.displayName?.toLowerCase() || u.artisticName?.toLowerCase() || "";
+    const id = u.id?.toLowerCase() || u.uid?.toLowerCase() || "";
+    const phone = u.phone?.toLowerCase() || "";
+    const status = u.kycStatus?.toLowerCase() || "";
+    
+    return name.includes(q) || id.includes(q) || phone.includes(q) || status.includes(q);
+  });
+
   return (
     <div className="space-y-6">
+      {/* SEARCH BAR */}
+      <div className="relative mb-2">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search className="h-4 w-4 text-[#D4AF37]/60" />
+        </div>
+        <input
+          type="text"
+          placeholder="Rechercher par Nom, ID, Numéro ou Statut..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-afri-bg-sec/5 border border-[#D4AF37]/20 rounded-lg pl-10 pr-4 py-3 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37] font-mono shadow-[0_2px_10px_rgba(212,175,55,0.05)] transition-colors"
+        />
+      </div>
+
       {/* SLOGAN & PROFILE SEARCH */}
       <div className="flex justify-between items-center bg-afri-bg-sec/5 p-5 border border-[#D4AF37]/10 rounded-lg text-left">
         <div>
@@ -263,7 +290,7 @@ export default function AdminUsers({
 
       {/* PROFILES & CERTIFICATION REQUESTS LIST */}
       <div className="space-y-3 text-left">
-        {filteredUsers
+        {displayedUsers
           .filter(u => {
             if (kycActiveTab === "standard") return u.kycStatus === "pending" && u.kycType !== "express";
             if (kycActiveTab === "express") return u.kycStatus === "pending" && u.kycType === "express";

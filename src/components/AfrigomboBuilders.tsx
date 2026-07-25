@@ -135,74 +135,125 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
   const currentBadge = getBadgeForAmount(userBuilderData?.totalAmount || 0);
 
   return (
-    <div className="w-full text-afri-text pb-20">
-      {/* Header / Hero - Compact & Elegant */}
-      <div className="relative pt-4 pb-6 px-4 overflow-hidden border-b border-[#D4AF37]/20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF37]/20 via-afri-bg to-afri-bg opacity-60"></div>
+    <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 text-afri-text pb-32">
+      {/* Header / Hero - Warm & Engaging */}
+      <div className="relative pt-6 pb-8 px-4 overflow-hidden border-b border-[#D4AF37]/30 bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec rounded-3xl mt-2 mb-4 shadow-xl">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF37]/25 via-afri-bg to-afri-bg opacity-70"></div>
 
-        <div className="relative z-10 max-w-3xl mx-auto text-center space-y-2">
+        <div className="relative z-10 max-w-2xl mx-auto text-center space-y-3">
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="w-14 h-14 mx-auto bg-gradient-to-br from-[#D4AF37]/20 to-afri-bg border border-[#D4AF37]/40 rounded-2xl flex items-center justify-center transform rotate-6 shadow-lg shadow-[#D4AF37]/20"
+            className="w-16 h-16 mx-auto bg-gradient-to-br from-[#D4AF37]/30 to-afri-bg border-2 border-[#D4AF37]/60 rounded-2xl flex items-center justify-center transform rotate-3 shadow-lg shadow-[#D4AF37]/30"
           >
-            <Crown className="w-7 h-7 text-[#D4AF37] -rotate-6" />
+            <Crown className="w-8 h-8 text-[#D4AF37] -rotate-3" />
           </motion.div>
           
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-amber-200">
-            Le Temple du Gombo
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-amber-200 to-[#D4AF37]">
+            Le Temple du Gombo & Bâtisseurs
           </h1>
-          <p className="text-xs text-afri-text-sec font-mono max-w-lg mx-auto">
-            "Chaque soutien construit l'avenir des artistes africains."
+          <p className="text-xs sm:text-sm text-afri-text-sec font-medium max-w-lg mx-auto leading-relaxed">
+            Soutenez l'écosystème musical africain et propulsez les artistes de scène vers l'excellence.
           </p>
-          <p className="text-[10px] text-afri-text-sec/80 max-w-md mx-auto">
-            Le programme Les Bâtisseurs est volontaire et soutient le développement de la plateforme.
-          </p>
+
+          {/* COMMUNITY GOAL PROGRESS BAR */}
+          <div className="bg-afri-bg/95 border border-[#D4AF37]/40 rounded-2xl p-4 shadow-lg text-left space-y-2 mt-4">
+            <div className="flex justify-between items-center text-xs font-mono font-bold">
+              <span className="text-afri-text flex items-center gap-1.5">
+                <Flame className="w-4 h-4 text-[#D4AF37]" /> Objectif Bêta Communautaire
+              </span>
+              <span className="text-[#D4AF37]">65% Atteint</span>
+            </div>
+            <div className="w-full h-2.5 bg-afri-bg-sec rounded-full overflow-hidden p-0.5 border border-afri-border">
+              <div className="h-full bg-gradient-to-r from-amber-500 to-[#D4AF37] rounded-full" style={{ width: "65%" }}></div>
+            </div>
+            <div className="flex justify-between text-[10px] text-afri-text-sec font-mono">
+              <span>1,300,000 FCFA récoltés</span>
+              <span>Objectif : 2,000,000 FCFA</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4">
+      <div className="w-full space-y-4">
         
-        {/* User Profile Mini-Dashboard - Compact */}
-        <div className="bg-afri-bg-sec/50 border border-afri-border rounded-2xl p-3.5 mb-4 flex flex-col sm:flex-row items-center gap-3">
-          <div className={`w-12 h-12 rounded-full border-2 ${currentBadge.border} ${currentBadge.bg} flex items-center justify-center shrink-0`}>
+        {/* User Profile Mini-Dashboard */}
+        <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4 shadow-md">
+          <div className={`w-14 h-14 rounded-full border-2 ${currentBadge.border} ${currentBadge.bg} flex items-center justify-center shrink-0 shadow-sm`}>
             {currentUser.photoURL ? (
-              <img src={currentUser.photoURL} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
+              <img src={currentUser.photoURL} alt="Avatar" className="w-12 h-12 rounded-full object-cover" />
             ) : (
-              <Users className={`w-5 h-5 ${currentBadge.color}`} />
+              <Users className={`w-6 h-6 ${currentBadge.color}`} />
             )}
           </div>
           <div className="flex-1 text-center sm:text-left space-y-1">
-            <h3 className="text-sm font-bold">{currentUser.name || currentUser.displayName || "Artiste"}</h3>
-            <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${currentBadge.bg} ${currentBadge.color} ${currentBadge.border} border`}>
+            <h3 className="text-sm font-black text-afri-text">{currentUser.name || currentUser.displayName || "Artiste Bâtisseur"}</h3>
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${currentBadge.bg} ${currentBadge.color} ${currentBadge.border} border shadow-xs`}>
               {currentBadge.label}
             </div>
-            {userBuilderData?.totalAmount > 0 && (
-              <p className="text-[10px] text-afri-text-sec font-mono">
+            {userBuilderData?.totalAmount > 0 ? (
+              <p className="text-[11px] text-afri-text-sec font-mono pt-0.5">
                 Bâtisseur depuis {userBuilderData.joinYear} • {userBuilderData.count} contribution(s) • Total: <span className="text-[#D4AF37] font-bold">{userBuilderData.totalAmount.toLocaleString()} FCFA</span>
+              </p>
+            ) : (
+              <p className="text-[11px] text-afri-text-sec font-mono pt-0.5">
+                Faites un don pour débloquer votre badge de Bâtisseur officiel.
               </p>
             )}
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
+        {/* PERKS & REWARDS CARD (Encouraging donations) */}
+        <div className="bg-gradient-to-br from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-[#D4AF37]/30 rounded-2xl p-4 space-y-3 shadow-md">
+          <h4 className="text-xs font-black text-[#D4AF37] uppercase tracking-wider flex items-center gap-2">
+            <Sparkles className="w-4 h-4" /> Avantages & Contreparties Exclusives des Bâtisseurs
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+            <div className="bg-afri-bg/80 border border-afri-border rounded-xl p-3 space-y-1">
+              <div className="font-bold text-afri-text flex items-center gap-1.5">
+                <span>✨</span> Badge Doré Exclusif
+              </div>
+              <p className="text-[11px] text-afri-text-sec leading-relaxed">
+                Affiché fièrement sur votre profil public et toutes vos annonces.
+              </p>
+            </div>
+            <div className="bg-afri-bg/80 border border-afri-border rounded-xl p-3 space-y-1">
+              <div className="font-bold text-afri-text flex items-center gap-1.5">
+                <span>🚀</span> Priorité Gombos
+              </div>
+              <p className="text-[11px] text-afri-text-sec leading-relaxed">
+                Priorité absolue sur l'attribution des bookings et castings premium.
+              </p>
+            </div>
+            <div className="bg-afri-bg/80 border border-afri-border rounded-xl p-3 space-y-1">
+              <div className="font-bold text-afri-text flex items-center gap-1.5">
+                <span>👑</span> Accès VIP 2.0
+              </div>
+              <p className="text-[11px] text-afri-text-sec leading-relaxed">
+                Accès en avant-première aux fonctionnalités et outils exclusifs.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation - FLEX WRAP (NO HORIZONTAL SCROLL) */}
+        <div className="flex flex-wrap items-center gap-2 pt-2">
           <button
             onClick={() => setActiveTab("soutenir")}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeTab === "soutenir" ? "bg-afri-bg-sec text-[#D4AF37] border border-[#D4AF37]/40" : "bg-afri-bg-sec text-afri-text-sec hover:bg-afri-bg-ter hover:text-afri-text"}`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === "soutenir" ? "bg-[#D4AF37] text-black shadow-md font-black" : "bg-afri-bg-sec text-afri-text-sec border border-afri-border hover:text-afri-text"}`}
           >
             Soutenir AFRIGOMBO
           </button>
           <button
             onClick={() => setActiveTab("defis")}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeTab === "defis" ? "bg-afri-bg-sec text-[#D4AF37] border border-[#D4AF37]/40" : "bg-afri-bg-sec text-afri-text-sec hover:bg-afri-bg-ter hover:text-afri-text"}`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === "defis" ? "bg-[#D4AF37] text-black shadow-md font-black" : "bg-afri-bg-sec text-afri-text-sec border border-afri-border hover:text-afri-text"}`}
           >
             Défis du Temple
           </button>
           <button
             onClick={() => setActiveTab("mur")}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeTab === "mur" ? "bg-afri-bg-sec text-[#D4AF37] border border-[#D4AF37]/40" : "bg-afri-bg-sec text-afri-text-sec hover:bg-afri-bg-ter hover:text-afri-text"}`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === "mur" ? "bg-[#D4AF37] text-black shadow-md font-black" : "bg-afri-bg-sec text-afri-text-sec border border-afri-border hover:text-afri-text"}`}
           >
             Mur d'Honneur
           </button>
