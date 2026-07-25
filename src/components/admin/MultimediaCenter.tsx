@@ -215,7 +215,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
   // Audio / Video Preview state
   const [activePreviewId, setActivePreviewId] = useState<string | null>(null);
-  const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const [videoModalUrl, setVideoModalUrl] = useState<string | null>(null);
 
   // Image comparison state
@@ -298,11 +298,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     return () => {
       unsubMedia();
       unsubLogs();
-      if (audioPlayer) {
-        audioPlayer.pause();
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
       }
     };
-  }, [audioPlayer]);
+  }, []);
 
   // Log action to Firestore
   const logAudit = async (mediaId: string, mediaTitle: string, action: string, details: string) => {
@@ -329,22 +329,29 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     incrementPlayCount(id);
 
     if (activePreviewId === id) {
-      if (audioPlayer) {
-        audioPlayer.pause();
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
       }
       setActivePreviewId(null);
     } else {
-      if (audioPlayer) {
-        audioPlayer.pause();
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
       }
-      const audioObj = new Audio(url);
-      audioObj.crossOrigin = "anonymous";
-      audioObj.volume = customVolume !== undefined ? customVolume : 0.8;
-      audioObj.preload = "metadata"; // Progressive streaming preload
-      audioObj.play().catch((err) => console.warn("Playback blocked:", err));
-      audioObj.onended = () => setActivePreviewId(null);
-      setAudioPlayer(audioObj);
-      setActivePreviewId(id);
+      try {
+        const audioObj = new Audio(url);
+        audioObj.crossOrigin = "anonymous";
+        audioObj.volume = customVolume !== undefined ? customVolume : 0.8;
+        audioObj.preload = "auto";
+        audioObj.play().catch((err) => {
+          console.warn("Playback blocked or failed:", err);
+          alert("Erreur lors de la lecture audio. L'URL est peut-être inaccessible.");
+        });
+        audioObj.onended = () => setActivePreviewId(null);
+        audioPlayerRef.current = audioObj;
+        setActivePreviewId(id);
+      } catch (err) {
+        console.error("Audio initialization error:", err);
+      }
     }
   };
 
@@ -758,19 +765,29 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
     try {
       if (activePreviewId === id) {
-        if (audioPlayer) audioPlayer.pause();
+        if (audioPlayerRef.current) audioPlayerRef.current.pause();
         setActivePreviewId(null);
       }
 
       await gomboDB.deleteSystemMedia(id);
+      
+      // Mise à jour de l'état local pour rafraîchir l'écran immédiatement
+      setMediaAssets(prev => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
+
       await logAudit(
         id,
         asset.title,
         "Suppression",
         `Média système définitivement supprimé du catalogue`
       );
+      alert("Média supprimé avec succès !");
     } catch (err) {
       console.error("Delete failed:", err);
+      alert("Erreur lors de la suppression.");
     }
   };
 
@@ -1004,6 +1021,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                 <div className="space-y-3 pt-3 border-t border-zinc-950">
                   {/* Preview Display Based on Asset Type */}
                   {sectionName === "audio" || sectionName === "sounds" ? (
+                    <>
                     <div className="flex items-center justify-between bg-afri-bg/40 p-2.5 rounded-lg border border-zinc-950">
                       <span className="text-[10px] font-mono text-afri-text-sec truncate max-w-[70%]" title={asset.title}>
                         🎵 {asset.title}
@@ -1020,6 +1038,13 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                         {isPlaying ? <Square className="w-3.5 h-3.5 fill-black" /> : <Play className="w-3.5 h-3.5 fill-[#D4AF37]" />}
                       </button>
                     </div>
+                    {/* NATIVE AUDIO PLAYER FOR MOBILE */}
+                    <audio 
+                      controls 
+                      className="w-full h-8 mt-2"
+                      src={getAudioUrl(asset.sourceType, asset.githubPath || asset.externalUrl || asset.storagePath)}
+                    />
+                    </>
                   ) : sectionName === "images" || sectionName === "notifications" || sectionName === "system" ? (
                     <div className="h-28 w-full bg-afri-bg border border-afri-border rounded-lg overflow-hidden flex items-center justify-center relative bg-grid-pattern">
                       {asset.downloadURL ? (

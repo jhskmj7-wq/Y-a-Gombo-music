@@ -135,7 +135,7 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="afri-scroll-safe afri-container"
+      className="afri-scroll-safe afri-container pb-28 sm:pb-36"
     >
       <div className="afri-section">
         
@@ -359,13 +359,13 @@ export const GomboProfileEditView: React.FC<GomboProfileEditViewProps> = ({
                   <p className="text-[9px] font-black text-center text-[#D4AF37] animate-pulse">ENVOI EN COURS...</p>
                 </div>
               ) : (
-                <div className="flex gap-2">
-                  <label className="afri-btn-secondary py-2 text-[10px] flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                  <label className="afri-btn-secondary py-2 text-[10px] w-full flex items-center justify-center gap-2">
                     <Upload className="w-3 h-3" />
                     Album
                     <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onIdentityUpload(f); }} />
                   </label>
-                  <button type="button" onClick={startCamera} className="afri-btn-secondary py-2 text-[10px] flex-1">
+                  <button type="button" onClick={startCamera} className="afri-btn-secondary py-2 text-[10px] w-full flex items-center justify-center gap-2">
                     <Camera className="w-3 h-3" />
                     Caméra
                   </button>

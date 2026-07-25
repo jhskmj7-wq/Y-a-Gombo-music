@@ -9,10 +9,9 @@ import { collection, onSnapshot, query, limit } from "firebase/firestore";
 
 // Official GitHub Assets Configuration
 export const AudioConfig = {
-  // Replace these URLs with the actual public raw GitHub links when available
-  INTRO_URL: "https://raw.githubusercontent.com/AFRIGOMBO/assets/main/audio/intro-officielle.mp3",
-  HYMN_URL: "https://raw.githubusercontent.com/AFRIGOMBO/assets/main/audio/hymne-afrigombo-officiel.mp3",
-  BASE_UI_SOUNDS: "https://raw.githubusercontent.com/AFRIGOMBO/assets/main/audio/ui/"
+  INTRO_URL: "https://raw.githubusercontent.com/jhskmj7-wq/Y-a-Gombo-music/principal/public/audio/AFRIGOMBO%20%E2%80%94%20Th%C3%A8me%20d'introduction%20officiel.mp3",
+  HYMN_URL: "https://raw.githubusercontent.com/jhskmj7-wq/Y-a-Gombo-music/principal/public/audio/AFRIGOMBO%20%E2%80%94%20Hymne%20officiel.mp3",
+  BASE_UI_SOUNDS: "https://raw.githubusercontent.com/jhskmj7-wq/Y-a-Gombo-music/principal/public/sounds/"
 };
 
 const safeGetItem = (key: string, fallback: string = ""): string => {

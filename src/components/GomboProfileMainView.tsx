@@ -342,7 +342,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       {!isKycApproved ? (
         currentUserProfile.kycStatus === "pending" ? (
           /* Demande en cours d'analyse */
-          <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-afri-bg border-2 border-amber-500/30 shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center space-y-4">
+          <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-[#111111] border-2 border-amber-500/30 shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10">
             <div className="absolute inset-0 bg-afri-gold/2 opacity-[0.03] pointer-events-none" />
             <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center animate-pulse">
               <Clock className="w-7 h-7 text-amber-400 stroke-[1.8]" />
@@ -381,7 +381,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           </div>
         ) : (
           /* OBTENIR MON GOMBO ID */
-          <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-afri-bg border-2 border-afri-gold shadow-[0_15px_30px_rgba(212,175,55,0.08)] text-center space-y-4">
+          <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-[#111111] border-2 border-afri-gold shadow-[0_15px_30px_rgba(212,175,55,0.08)] text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10">
             {/* Elegant glowing lights in margins */}
             <div className="absolute -top-10 -right-10 w-28 h-28 bg-afri-gold/5 rounded-full blur-2xl pointer-events-none" />
             
@@ -421,7 +421,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         )
       ) : (
         /* VERIFIED / CERTIFIED GOMBO ID CARD */
-        <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-afri-bg border-2 border-emerald-500/35 shadow-[0_15px_30px_rgba(16,185,129,0.08)] text-center space-y-4">
+        <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-[#111111] border-2 border-emerald-500/35 shadow-[0_15px_30px_rgba(16,185,129,0.08)] text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10">
           <div className="absolute inset-0 bg-emerald-500/[0.01] pointer-events-none" />
           
           {/* Golden Shield & Verified Badge */}
