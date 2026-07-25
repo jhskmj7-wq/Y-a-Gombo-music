@@ -477,6 +477,15 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [menuHistory, setMenuHistory] = useState<string[]>(["user_terrain"]);
   const activeMenu = menuHistory[menuHistory.length - 1] || "user_terrain";
 
+  // Reset scrolling of all panels/containers inside AdminCentre when switching views
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const scrollableElements = document.querySelectorAll('.overflow-y-auto');
+    scrollableElements.forEach(el => {
+      (el as HTMLElement).scrollTop = 0;
+    });
+  }, [activeMenu]);
+
   // Native Chrome Android Back Swipe Integration using popstate listeners
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
@@ -2989,7 +2998,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             onScroll={(e) => {
               scrollPositionsRef.current["user_terrain"] = e.currentTarget.scrollTop;
             }}
-            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overflow-x-hidden afri-container afri-section scrollbar-none animate-fadeIn text-left scroll-smooth [-webkit-overflow-scrolling:touch]" : "hidden"}
+            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container afri-section pb-24 scrollbar-none animate-fadeIn text-left scroll-smooth [-webkit-overflow-scrolling:touch]" : "hidden"}
             style={{ overscrollBehaviorY: "contain" }}
           >
             <UserTerrainLandingPage

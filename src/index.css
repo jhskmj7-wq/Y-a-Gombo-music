@@ -11,7 +11,19 @@ html, body {
   height: 100%;
 }
 
-/* Global Fix for Chrome Android Glitch: Disable backdrop-filter */
+body {
+  -webkit-font-smoothing: antialiased;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+#root, main, .app-container {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Global Fix for Chrome Android Glitch: Disable backdrop-filter and -webkit-mask-image */
+.backdrop-blur-xs,
 .backdrop-blur-sm,
 .backdrop-blur,
 .backdrop-blur-md,
@@ -23,15 +35,30 @@ html, body {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Fallback for blurred elements to maintain readability */
-.bg-black\/80.backdrop-blur-sm,
-.bg-black\/60.backdrop-blur-sm,
-.bg-afri-bg\/80.backdrop-blur-sm {
-  background-color: rgba(13, 13, 13, 0.95) !important;
+[class*="backdrop-blur-"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-.bg-white\/10.backdrop-blur-md {
-  background-color: rgba(255, 255, 255, 0.15) !important;
+/* Remplacer par des couleurs solides ou opaques simples pour fonds sombres */
+.imperial [class*="backdrop-blur"],
+.dark [class*="backdrop-blur"],
+.imperial [class*="bg-black/"],
+.dark [class*="bg-black/"],
+.imperial [class*="bg-afri-bg/"],
+.dark [class*="bg-afri-bg/"] {
+  background-color: var(--afri-bg, #050505) !important;
+}
+
+.imperial [class*="bg-afri-bg-sec/"],
+.dark [class*="bg-afri-bg-sec/"] {
+  background-color: var(--afri-bg-sec, #111111) !important;
+}
+
+/* Supprimer -webkit-mask-image sur les fonds sombres/contraintes GPU */
+.imperial *, .dark * {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
 }
 
 html, body {
@@ -64,15 +91,15 @@ html, body {
 }
 
 .light {
-  --afri-bg: #EAEAEA;
-  --afri-bg-sec: #F5F5F5;
-  --afri-bg-ter: #DCDCDC;
-  --afri-bg-action: #CCCCCC;
-  --afri-bar: #BDBDBD;
-  --afri-text: #222222;
+  --afri-bg: #F8F9FA;
+  --afri-bg-sec: #FFFFFF;
+  --afri-bg-ter: #F2F0EB;
+  --afri-bg-action: #EBE8E0;
+  --afri-bar: #FFFFFF;
+  --afri-text: #1A1A1A;
   --afri-text-sec: #555555;
-  --afri-text-muted: #888888;
-  --afri-border: #D1D1D1;
+  --afri-text-muted: #8E8B82;
+  --afri-border: rgba(212, 175, 55, 0.25);
 }
 
 /* Smooth 250-300ms transitions for colors, backgrounds, borders and shadows when theme is changed */

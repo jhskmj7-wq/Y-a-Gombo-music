@@ -342,18 +342,18 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       {!isKycApproved ? (
         currentUserProfile.kycStatus === "pending" ? (
           /* Demande en cours d'analyse */
-          <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-[#111111] border-2 border-amber-500/30 shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10">
+          <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-white dark:bg-[#111111] border-2 border-amber-500/30 text-gray-900 dark:text-white shadow-[0_10px_25px_rgba(0,0,0,0.05)] dark:shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10">
             <div className="absolute inset-0 bg-afri-gold/2 opacity-[0.03] pointer-events-none" />
             <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center animate-pulse">
-              <Clock className="w-7 h-7 text-amber-400 stroke-[1.8]" />
+              <Clock className="w-7 h-7 text-amber-500 dark:text-amber-400 stroke-[1.8]" />
             </div>
             <div className="space-y-1">
-              <span className="text-[9px] font-mono font-black text-amber-400 uppercase tracking-[0.2em] block">Dossier Transmis</span>
-              <h3 className="text-[17px] xs:text-[19px] font-sans font-black text-afri-text tracking-wide uppercase">
+              <span className="text-[9px] font-mono font-black text-amber-500 dark:text-amber-400 uppercase tracking-[0.2em] block">Dossier Transmis</span>
+              <h3 className="text-[17px] xs:text-[19px] font-sans font-black tracking-wide uppercase text-gray-900 dark:text-afri-text">
                 DEMANDE EN COURS D'ANALYSE
               </h3>
             </div>
-            <p className="text-[10px] xs:text-[11px] text-afri-text-sec max-w-[320px] mx-auto leading-relaxed font-sans">
+            <p className="text-[10px] xs:text-[11px] text-gray-600 dark:text-afri-text-sec max-w-[320px] mx-auto leading-relaxed font-sans">
               Votre demande est en cours d'évaluation par le comité artistique AFRIGOMBO. Notre équipe procède à la vérification de vos pièces.
             </p>
             <div className="pt-2">
@@ -375,13 +375,13 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                 }).length}/7)
               </button>
             </div>
-            <p className="text-[9px] text-afri-text-sec font-mono uppercase tracking-wider">
+            <p className="text-[9px] text-gray-500 dark:text-afri-text-sec font-mono uppercase tracking-wider">
               ⏱️ Temps de réponse moyen : &lt; 24 heures
             </p>
           </div>
         ) : (
           /* OBTENIR MON GOMBO ID */
-          <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-[#111111] border-2 border-afri-gold shadow-[0_15px_30px_rgba(212,175,55,0.08)] text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10">
+          <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-white dark:bg-[#111111] border-2 border-afri-gold text-gray-900 dark:text-white shadow-[0_15px_30px_rgba(212,175,55,0.06)] dark:shadow-[0_15px_30px_rgba(212,175,55,0.08)] text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10">
             {/* Elegant glowing lights in margins */}
             <div className="absolute -top-10 -right-10 w-28 h-28 bg-afri-gold/5 rounded-full blur-2xl pointer-events-none" />
             
@@ -392,7 +392,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
             {/* Title & Subtitle */}
             <div className="space-y-1">
-              <h3 className="text-[18px] xs:text-[20px] font-sans font-black text-afri-text tracking-[0.1em] uppercase">
+              <h3 className="text-[18px] xs:text-[20px] font-sans font-black tracking-[0.1em] uppercase text-gray-900 dark:text-afri-text">
                 OBTENIR MON GOMBO ID
               </h3>
               <p className="text-[9.5px] xs:text-[10.5px] font-mono font-black text-afri-gold uppercase tracking-widest">
@@ -401,7 +401,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             </div>
 
             {/* Text details */}
-            <p className="text-[10px] xs:text-[11px] text-afri-text-sec max-w-[340px] mx-auto leading-relaxed font-sans">
+            <p className="text-[10px] xs:text-[11px] text-gray-600 dark:text-afri-text-sec max-w-[340px] mx-auto leading-relaxed font-sans">
               Le GOMBO ID est attribué uniquement après vérification complète de votre identité et de votre activité musicale.
             </p>
 
@@ -412,7 +412,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
                   setPanelView("certification");
                   try { audioSynth.playTamTam(true); } catch (_) {}
                 }}
-                className="w-full xs:w-auto px-8 py-3 bg-afri-gold hover:brightness-110 text-black font-sans font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg hover:scale-101 active:scale-98 transition-all cursor-pointer"
+                className="w-full xs:w-auto px-8 py-3 bg-amber-400 hover:bg-amber-500 text-black font-sans font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg hover:scale-101 active:scale-98 transition-all cursor-pointer"
               >
                 COMMENCER MA CERTIFICATION
               </button>
@@ -421,15 +421,15 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         )
       ) : (
         /* VERIFIED / CERTIFIED GOMBO ID CARD */
-        <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-[#111111] border-2 border-emerald-500/35 shadow-[0_15px_30px_rgba(16,185,129,0.08)] text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10">
+        <div className="relative overflow-hidden rounded-[32px] p-6 xs:p-7 bg-white dark:bg-[#111111] border-2 border-emerald-500/35 text-gray-900 dark:text-white shadow-[0_15px_30px_rgba(16,185,129,0.06)] dark:shadow-[0_15px_30px_rgba(16,185,129,0.08)] text-center space-y-4 antialiased transform-none translate-z-0 [backface-visibility:hidden] z-10">
           <div className="absolute inset-0 bg-emerald-500/[0.01] pointer-events-none" />
           
           {/* Golden Shield & Verified Badge */}
           <div className="flex flex-col items-center gap-2">
             <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-              <ShieldCheck className="w-7 h-7 text-emerald-400" />
+              <ShieldCheck className="w-7 h-7 text-emerald-500 dark:text-emerald-400" />
             </div>
-            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded-full text-[8.5px] font-mono font-black uppercase tracking-widest">
+            <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded-full text-[8.5px] font-mono font-black uppercase tracking-widest">
               ✓ ARTISTE CERTIFIÉ
             </span>
           </div>
