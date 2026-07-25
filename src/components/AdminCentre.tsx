@@ -247,7 +247,7 @@ function UserReelsView({ users, setReelsVideoId, setReelsVideoUrl }: UserReelsVi
 
 
   return (
-    <div className="space-y-6 pb-24 text-left animate-fadeIn">
+    <div className="space-y-6 text-left animate-fadeIn">
       <div className="bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg p-6 rounded-3xl border border-afri-gold/30 shadow-2xl relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-[30%] opacity-25 flex items-center justify-center">
           <Video className="w-40 h-40 text-afri-gold animate-pulse" />
@@ -918,9 +918,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   // Plus Menu overlay states
   const [isPlusMenuOpen, setIsPlusMenuOpen] = useState<boolean>(false);
+  const [showHowWorksPopup, setShowHowWorksPopup] = useState<boolean>(false);
+
+  const isAnyAdminModalOpen = isPlusMenuOpen || isAuthModalOpen || isChangelogModalOpen || showGoogleLoginRequiredModal || isEventsModalOpen || isAcademyModalOpen || showHeritageLoginRequired || showHowWorksPopup || showPendingPaymentModal;
 
   useEffect(() => {
-    if (isPlusMenuOpen) {
+    if (isAnyAdminModalOpen) {
       const scrollY = window.scrollY;
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollY}px`;
@@ -928,12 +931,31 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       document.body.style.overflow = 'hidden';
 
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Escape") setIsPlusMenuOpen(false);
+        if (e.key === "Escape") {
+          setIsPlusMenuOpen(false);
+          setIsAuthModalOpen(false);
+          setIsChangelogModalOpen(false);
+          setShowGoogleLoginRequiredModal(false);
+          setIsEventsModalOpen(false);
+          setIsAcademyModalOpen(false);
+          setShowHeritageLoginRequired(false);
+          setShowHowWorksPopup(false);
+          setShowPendingPaymentModal(false);
+        }
       };
       window.addEventListener("keydown", handleKeyDown);
-      const handlePopState = () => setIsPlusMenuOpen(false);
+      const handlePopState = () => {
+        setIsPlusMenuOpen(false);
+        setIsAuthModalOpen(false);
+        setIsChangelogModalOpen(false);
+        setShowGoogleLoginRequiredModal(false);
+        setIsEventsModalOpen(false);
+        setIsAcademyModalOpen(false);
+        setShowHeritageLoginRequired(false);
+        setShowHowWorksPopup(false);
+        setShowPendingPaymentModal(false);
+      };
       window.addEventListener("popstate", handlePopState);
-      window.history.pushState({ plusModal: true }, "");
 
       return () => {
         document.body.style.position = '';
@@ -945,11 +967,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         window.removeEventListener("popstate", handlePopState);
       };
     }
-  }, [isPlusMenuOpen]);
+  }, [isAnyAdminModalOpen]);
   const [activePublishType, setActivePublishType] = useState<"gombo" | "reel" | "demo" | "renfort" | "recherche">("gombo");
   const [selectedPublishTags, setSelectedPublishTags] = useState<string[]>([]);
   const [multiplePublishPhotos, setMultiplePublishPhotos] = useState<string[]>([]);
-  const [showHowWorksPopup, setShowHowWorksPopup] = useState<boolean>(false);
   
   // Real contract active tracking states
   const [contractRepsConfirmed, setContractRepsConfirmed] = useState<Record<string, number>>({});
@@ -3055,7 +3076,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
                 className={`h-full w-full overflow-y-auto overflow-x-hidden afri-container scrollbar-none scroll-smooth [-webkit-overflow-scrolling:touch] ${
-                  activeMenu === "super_admin" ? "pt-0 pb-32 space-y-6" : "afri-section"
+                  activeMenu === "super_admin" ? "pt-0 pb-20 space-y-6" : "afri-section"
                 }`}
                 style={{ overscrollBehaviorY: "contain" }}
               >
@@ -3106,7 +3127,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                 // Toast status when applying
                 return (
-                  <div className="afri-container space-y-6 xs:space-y-8 animate-fadeIn pb-24">
+                  <div className="afri-container space-y-6 xs:space-y-8 animate-fadeIn">
                     {/* STATISTIQUES PRESTIGE EN TEMPS RÉEL (STYLE IMAGE PARFAIT) */}
                     <div className="grid grid-cols-4 divide-x divide-zinc-800/60 bg-afri-bg/40 border border-afri-gold/15 rounded-xl xs:rounded-2xl py-1.5 xs:py-3 px-0.5 xs:px-1 sm:p-4 select-none mb-4 xs:mb-6">
                       {/* ARTISTES */}
@@ -4370,7 +4391,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {/* 1.5. L'ÉCOSYSTÈME 2.0 - UNIVERSE OF RICH SERVICES */}
               {activeMenu === "user_ecosystem" && (() => {
                 return (
-                  <div className="space-y-6 animate-fadeIn pb-24 text-left">
+                  <div className="space-y-6 animate-fadeIn text-left">
                     <div className="border-b border-afri-gold/20 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
                         <h3 className="text-xl font-display font-black text-afri-gold uppercase flex items-center gap-2">
@@ -4410,7 +4431,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 );
 
                 return (
-                  <div className="space-y-6 animate-fadeIn pb-24">
+                  <div className="space-y-6 animate-fadeIn">
                     <div className="p-5 rounded-2xl bg-afri-bg-sec border border-afri-gold/15 relative overflow-hidden">
                       <div className="relative z-10">
                         <h3 className="text-md font-sans font-black text-afri-text uppercase tracking-wide">
@@ -4696,8 +4717,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 };
 
                 return (
-                  <div className="afri-container h-full w-full overflow-y-auto overflow-x-hidden pb-32 pt-4 xs:pt-6 scrollbar-none">
-                    <div className="max-w-2xl mx-auto space-y-4 xs:space-y-6 animate-fadeIn pb-24 relative select-none">
+                  <div className="afri-container h-full w-full overflow-y-auto overflow-x-hidden pt-4 xs:pt-6 scrollbar-none">
+                    <div className="max-w-2xl mx-auto space-y-4 xs:space-y-6 animate-fadeIn relative select-none">
                     
                     {/* Draft restoration alert banner */}
                     {publishDraftDetected && (
@@ -5254,7 +5275,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const followedArtistsList = users.filter(u => followedArtists.includes(u.id));
 
                 return (
-                  <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                  <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
                     <div className="border-b border-afri-border pb-4 flex justify-between items-center">
                       <div>
                         <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
@@ -5373,7 +5394,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {activeMenu === "user_history" && (() => {
                 const myContracts = transactions || [];
                 return (
-                  <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                  <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
                     <div className="border-b border-afri-border pb-4 flex justify-between items-center">
                       <div>
                         <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
@@ -5447,7 +5468,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 };
 
                 return (
-                  <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                  <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
                     <div className="border-b border-afri-border pb-4 flex justify-between items-center">
                       <div>
                         <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
@@ -5537,7 +5558,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 };
 
                 return (
-                  <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                  <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
                     <div className="border-b border-afri-border pb-4 flex justify-between items-center">
                       <div>
                         <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
@@ -5592,14 +5613,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 7. CONTRATS AFRIGOMBO (USER) */}
               {activeMenu === "user_contracts" && (
-                <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
                   <GomboContractsDashboard currentUser={profile || (currentUser as any)} />
                 </div>
               )}
 
               {/* 7b. PORTESECURE / AFRIGOMBO WALLET (USER) */}
               {activeMenu === "user_wallet" && (
-                <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
                   <AfrigomboWalletDashboard 
                     currentUserProfile={profile || (currentUser as any)} 
                     addToTerminal={addToTerminal}
@@ -5610,7 +5631,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 7d. ÉVÉNEMENTS (USER) */}
               {activeMenu === "user_events" && (
-                <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
                   <EventsView 
                     onBack={() => goBackMenu()} 
                     addToTerminal={addToTerminal}
@@ -5619,7 +5640,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_help_center" && (
-                <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
                   <AfrigomboHelpCenter onClose={() => goBackMenu()} />
                 </div>
               )}
@@ -5636,7 +5657,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               )}
 
               {activeMenu === "user_heritage" && (
-                <div className="afri-container h-full overflow-y-auto pb-24 scrollbar-none animate-fadeIn">
+                <div className="afri-container h-full overflow-y-auto scrollbar-none animate-fadeIn">
                   <HeritagePage 
                     onNavigateView={(view, tab) => {
                       if (view === "heritage") setActiveMenu("user_heritage");
@@ -5717,7 +5738,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 };
 
                 return (
-                  <div className="afri-container py-4 xs:py-6 space-y-4 xs:space-y-6 animate-fadeIn pb-32">
+                  <div className="afri-container py-4 xs:py-6 space-y-4 xs:space-y-6 animate-fadeIn">
                     <div className="pb-3 border-b border-afri-border px-1">
                       <h3 className="text-[11px] xs:text-sm font-display font-black uppercase text-afri-gold tracking-widest">
                         💼 Cycle de Contrats & Prestations
@@ -6155,7 +6176,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
                 if (!currentArtist) return <p className="text-afri-text-sec">Aucun artiste disponible.</p>;
                 return (
-                  <div className="space-y-6 animate-fadeIn pb-24 text-left">
+                  <div className="space-y-6 animate-fadeIn text-left">
                     <NotificationCenter 
                       currentUserProfile={profile || currentArtist} 
                       notifications={allNotifications}
@@ -6209,7 +6230,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 const currentActiveUserForChat = currentUser ? { uid: currentUser.uid } : { uid: activeArtistId };
                 const currentProfileForChat = profile || (users.find(u => u.id === activeArtistId) || users[0]);
                 return (
-                  <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left">
+                  <div className="afri-container space-y-6 animate-fadeIn text-left">
                     <MessagesView
                       currentUser={currentActiveUserForChat}
                       currentProfile={currentProfileForChat}
@@ -6232,7 +6253,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 );
               })()}
 
-              <div className="pb-24">
+              <div>
                 {activeMenu === "user_subscription_management" && (
                   <div className="animate-fadeIn">
                     <MonAbonnementView 
@@ -6254,28 +6275,26 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               </div>
 
               {activeMenu === "user_edit_profile" && (
-                <div className="fixed inset-0 z-[100] bg-afri-bg/90 backdrop-blur-md overflow-y-auto">
-                  <div className="min-h-screen flex items-end sm:items-center justify-center p-0 sm:p-4">
-                    <div className="w-full max-w-2xl bg-afri-bg rounded-t-3xl sm:rounded-2xl border border-afri-gold/20 p-6 shadow-2xl relative">
-                      {profile ? (
-                        <HeritagePage 
-                          onNavigateView={(view) => {
-                            setActiveMenu("user_heritage"); // Always return to heritage after edit
-                          }}
-                          initialPanelView="edit"
-                        />
-                      ) : (
-                        <div className="p-12 text-center space-y-4">
-                          <p className="text-afri-text-sec font-mono">Profil non chargé...</p>
-                          <button 
-                            onClick={() => setActiveMenu("user_heritage")}
-                            className="px-6 py-2 bg-afri-gold text-black font-black uppercase rounded-xl"
-                          >
-                            Retour
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                <div className="fixed inset-0 z-[100] bg-afri-bg/90 backdrop-blur-md overflow-y-auto overscroll-contain flex items-center justify-center p-4">
+                  <div className="w-full max-w-2xl bg-afri-bg rounded-2xl border border-afri-gold/20 p-6 shadow-2xl relative my-auto">
+                    {profile ? (
+                      <HeritagePage 
+                        onNavigateView={(view) => {
+                          setActiveMenu("user_heritage"); // Always return to heritage after edit
+                        }}
+                        initialPanelView="edit"
+                      />
+                    ) : (
+                      <div className="p-12 text-center space-y-4">
+                        <p className="text-afri-text-sec font-mono">Profil non chargé...</p>
+                        <button 
+                          onClick={() => setActiveMenu("user_heritage")}
+                          className="px-6 py-2 bg-afri-gold text-black font-black uppercase rounded-xl"
+                        >
+                          Retour
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -6314,7 +6333,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 VIEW: CONTRATS & LITIGES (ADMIN)
                   ---------------------------------------------------- */}
               {activeMenu === "contracts" && (
-                <div className="space-y-6 animate-fadeIn pb-24 text-left p-6">
+                <div className="space-y-6 animate-fadeIn text-left p-6">
                   <div className="flex items-center justify-between gap-4 mb-8">
                     <div>
                       <h2 className="text-2xl font-sans font-black text-afri-text uppercase tracking-tighter">CENTRE DES CONTRATS</h2>
@@ -7204,7 +7223,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 VIEW: ANALYTICS & COURBES
                   ---------------------------------------------------- */}
               {activeMenu === "analytics" && (
-                <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6">
+                <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
                   <div className="flex justify-between items-center mb-4 border-b border-afri-border pb-4 px-1">
                     <h3 className="text-sm font-mono uppercase tracking-[0.2em] font-black text-[#D4A017]">
                       Intelligence & Data
@@ -7220,7 +7239,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 VIEW: PLUS (PARAMÈTRES ET OUTILS ADMINISTRATIFS)
                   ---------------------------------------------------- */}
               {activeMenu === "plus" && (
-                <div className="afri-container space-y-6 animate-fadeIn pb-24 py-4 xs:py-6">
+                <div className="afri-container space-y-6 animate-fadeIn py-4 xs:py-6">
                   <h3 className="text-[11px] xs:text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-text flex items-center gap-1.5 pb-2 border-b border-afri-border px-1">
                     <Settings className="w-5 h-5 text-afri-text-sec" />
                     Outils d'Administration & Système
@@ -7386,7 +7405,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 ].sort((a,b) => b.count - a.count);
 
                 return (
-                  <div className="afri-container space-y-6 py-4 xs:py-6 pb-24">
+                  <div className="afri-container space-y-6 py-4 xs:py-6">
                     {/* TOP DOCK OF NUMERICS */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="p-5 rounded-lg border border-afri-gold/20 bg-afri-bg/40 shadow-md">

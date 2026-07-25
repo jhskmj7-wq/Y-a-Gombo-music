@@ -1020,7 +1020,7 @@ export default function AdminFounderThrone({
   };
 
   return (
-    <div className="text-left pb-28 font-sans text-afri-text select-none bg-transparent min-h-screen pt-0">
+    <div className="text-left font-sans text-afri-text select-none bg-transparent pt-0">
       
       {/* ----------------------------------------------------
            HEADER IMPÉRIAL DU TRÔNE DU FONDATEUR (PLIABLE)

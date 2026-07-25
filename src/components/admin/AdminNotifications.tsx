@@ -172,7 +172,7 @@ export default function AdminNotifications({ adminEmail = "Fondateur" }: AdminNo
   const activeNotifs = notifications.filter(n => n.status === "published").length;
 
   return (
-    <div className="min-h-screen bg-afri-bg-sec text-left pb-24 overflow-x-hidden relative">
+    <div className="w-full bg-afri-bg-sec text-left overflow-x-hidden relative">
       {/* IMPERIAL OVERLAY */}
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-[#D4AF37]/5 to-transparent pointer-events-none" />
       

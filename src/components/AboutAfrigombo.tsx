@@ -40,7 +40,7 @@ interface AboutAfrigomboProps {
 
 export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProps) {
   return (
-    <div className="min-h-screen bg-afri-bg text-afri-text pb-20">
+    <div className="w-full bg-afri-bg text-afri-text">
       {/* HEADER WITH BACK BUTTON */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center pointer-events-none">
         <button 
@@ -60,7 +60,7 @@ export default function AboutAfrigombo({ onBack, onSupport }: AboutAfrigomboProp
       </div>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
+      <section className="relative pt-20 pb-8 px-6 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-amber-500/20 to-transparent blur-3xl -z-10" />
         
         <div className="max-w-4xl mx-auto text-center space-y-6">

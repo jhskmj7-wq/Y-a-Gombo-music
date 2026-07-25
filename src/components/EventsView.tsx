@@ -356,7 +356,7 @@ export default function EventsView({ onBack, addToTerminal }: EventsViewProps) {
   };
 
   return (
-    <div className="flex flex-col space-y-6 w-full max-w-5xl mx-auto px-4 pb-24 text-left animate-fadeIn">
+    <div className="flex flex-col space-y-6 w-full max-w-5xl mx-auto px-4 text-left animate-fadeIn">
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-afri-border pb-5">
         <div className="flex items-center gap-3">

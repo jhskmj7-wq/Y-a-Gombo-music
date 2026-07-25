@@ -47,7 +47,7 @@ export const AdminStats: React.FC<AdminStatsProps> = ({ users = [], gombos = [],
   }, [users, transactions]);
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-24">
+    <div className="space-y-6 animate-fadeIn">
       <div className="p-5 rounded-lg bg-afri-bg/40 border border-[#D4AF37]/20">
         <h4 className="text-xs uppercase font-mono text-[#D4AF37] tracking-wider mb-4">
           Revenus & Enregistrements de la semaine (Par jour)

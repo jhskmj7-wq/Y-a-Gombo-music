@@ -216,7 +216,7 @@ export default function FounderThrone({
         {/* LOCKED MAIN REGION (SCALES DOWN ON SMALLER WINDOWS) */}
         <main className="flex-1 w-full flex bg-transparent p-4 pb-0 items-start justify-center relative overflow-y-auto custom-scrollbar">
           
-          <div className="w-full xl:max-w-[1500px] 2xl:max-w-[1800px] mx-auto flex flex-col xl:flex-row gap-5 pb-20">
+          <div className="w-full xl:max-w-[1500px] 2xl:max-w-[1800px] mx-auto flex flex-col xl:flex-row gap-5">
             
             {/* LEFT COLUMN (WIDER) */}
             <div className="flex flex-col gap-5 w-full xl:w-[60%] 2xl:w-[65%] min-h-0">

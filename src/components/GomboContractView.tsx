@@ -475,7 +475,7 @@ export default function GomboContractView({ contractId, currentUser, onBack, onU
   const statusInfo = getStatusDisplay();
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-24 text-left">
+    <div className="max-w-4xl mx-auto space-y-8 text-left">
       {/* Header Actions */}
       <div className="flex items-center justify-between">
         <button 

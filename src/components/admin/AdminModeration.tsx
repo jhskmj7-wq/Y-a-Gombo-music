@@ -47,7 +47,7 @@ export default function AdminModeration({
   };
 
   return (
-    <div className="space-y-6 text-left pb-24 animate-fadeIn">
+    <div className="space-y-6 text-left animate-fadeIn">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-afri-border pb-4">
         <div>

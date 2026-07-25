@@ -232,7 +232,7 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
   const currentSelectedPlanObj = plans.find(p => p.id === selectedPlan) || plans[2];
 
   return (
-    <div className="min-h-screen bg-afri-bg text-afri-text font-sans pb-16 transition-colors duration-300">
+    <div className="w-full bg-afri-bg text-afri-text font-sans transition-colors duration-300">
       {/* HEADER SECTION - COMPACT & EXPRESSIVE */}
       <div className="relative overflow-hidden bg-gradient-to-b from-afri-bg-ter to-afri-bg border-b border-afri-border px-4 py-6 sm:py-8 text-center">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-[#D4AF37]/5 rounded-full blur-[90px] pointer-events-none"></div>

@@ -185,8 +185,16 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const [todayEventsCount, setTodayEventsCount] = useState<number>(0);
   const [isPlusMenuOpen, setIsPlusMenuOpen] = useState<boolean>(false);
 
+  const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState<boolean>(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
+  const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState<boolean>(false);
+  const [leaderboardSearch, setLeaderboardSearch] = useState<string>("");
+  const [localComingSoonKey, setLocalComingSoonKey] = useState<string | null>(null);
+
+  const isAnyTerrainModalOpen = isPlusMenuOpen || isFavoritesModalOpen || isHistoryModalOpen || isLeaderboardModalOpen || !!localComingSoonKey;
+
   useEffect(() => {
-    if (isPlusMenuOpen) {
+    if (isAnyTerrainModalOpen) {
       const scrollY = window.scrollY;
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollY}px`;
@@ -194,12 +202,23 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       document.body.style.overflow = 'hidden';
 
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Escape") setIsPlusMenuOpen(false);
+        if (e.key === "Escape") {
+          setIsPlusMenuOpen(false);
+          setIsFavoritesModalOpen(false);
+          setIsHistoryModalOpen(false);
+          setIsLeaderboardModalOpen(false);
+          setLocalComingSoonKey(null);
+        }
       };
       window.addEventListener("keydown", handleKeyDown);
-      const handlePopState = () => setIsPlusMenuOpen(false);
+      const handlePopState = () => {
+        setIsPlusMenuOpen(false);
+        setIsFavoritesModalOpen(false);
+        setIsHistoryModalOpen(false);
+        setIsLeaderboardModalOpen(false);
+        setLocalComingSoonKey(null);
+      };
       window.addEventListener("popstate", handlePopState);
-      window.history.pushState({ plusModal: true }, "");
 
       return () => {
         document.body.style.position = '';
@@ -211,12 +230,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         window.removeEventListener("popstate", handlePopState);
       };
     }
-  }, [isPlusMenuOpen]);
-  const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState<boolean>(false);
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
-  const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState<boolean>(false);
-  const [leaderboardSearch, setLeaderboardSearch] = useState<string>("");
-  const [localComingSoonKey, setLocalComingSoonKey] = useState<string | null>(null);
+  }, [isAnyTerrainModalOpen]);
   const [emailInput, setEmailInput] = useState<string>("");
   const [waitlistStatus, setWaitlistStatus] = useState<"idle" | "loading" | "success">("idle");
 
@@ -659,7 +673,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       onTouchStart={onTouchStartHandler}
       onTouchMove={onTouchMoveHandler}
       onTouchEnd={onTouchEndHandler}
-      className="space-y-6 pb-24 text-left animate-fadeIn font-sans"
+      className="space-y-6 text-left animate-fadeIn font-sans"
     >
       
       {/* ==========================================

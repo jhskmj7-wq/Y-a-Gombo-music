@@ -65,7 +65,7 @@ export default function WhatsNew({ onBack }: WhatsNewProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-afri-bg text-afri-text pb-32">
+    <div className="w-full bg-afri-bg text-afri-text">
       {/* Header */}
       <div className="pt-8 pb-8 px-6">
         <div className="max-w-4xl mx-auto space-y-4">

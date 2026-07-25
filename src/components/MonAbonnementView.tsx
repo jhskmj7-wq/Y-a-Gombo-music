@@ -12,7 +12,7 @@ export const MonAbonnementView: React.FC<Props> = ({ isPremium, onUpgrade, onBac
 
   if (showComparison) {
     return (
-      <div className="afri-container space-y-6 animate-fadeIn pb-24 text-left py-4 xs:py-6 max-w-2xl mx-auto">
+      <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6 max-w-2xl mx-auto">
         <button 
           onClick={() => setShowComparison(false)}
           className="text-xs font-bold uppercase tracking-wider text-afri-text-sec hover:text-afri-text mb-4 inline-flex items-center gap-1"
@@ -50,7 +50,7 @@ export const MonAbonnementView: React.FC<Props> = ({ isPremium, onUpgrade, onBac
   }
 
   return (
-    <div className="afri-container space-y-3.5 animate-fadeIn pb-24 text-left py-2 xs:py-4 max-w-2xl mx-auto">
+    <div className="afri-container space-y-3.5 animate-fadeIn text-left py-2 xs:py-4 max-w-2xl mx-auto">
       <div className="text-center mb-4">
         <h2 className="text-xl font-black text-afri-text uppercase tracking-tighter mb-1">Abonnements</h2>
         <p className="text-[10px] text-afri-text-sec uppercase tracking-widest font-mono">Choisissez l'offre qui vous correspond.</p>

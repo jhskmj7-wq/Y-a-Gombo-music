@@ -181,7 +181,7 @@ export default function AdminDashboard({
   };
 
   return (
-    <div className="space-y-8 pb-24 animate-fadeIn text-left">
+    <div className="space-y-8 animate-fadeIn text-left">
       {/* 1. ENTÊTE OPÉRATIONNELLE */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-b border-afri-border pb-6">
         <div>

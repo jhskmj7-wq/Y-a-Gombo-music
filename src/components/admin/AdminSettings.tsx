@@ -49,7 +49,7 @@ export default function AdminSettings({
   };
 
   return (
-    <div className="space-y-6 text-left pb-24 animate-fadeIn">
+    <div className="space-y-6 text-left animate-fadeIn">
       {/* Header */}
       <div className="border-b border-afri-border pb-4">
         <h3 className="text-xs font-mono uppercase font-black tracking-[0.15em] text-[#D4AF37] flex items-center gap-1.5">

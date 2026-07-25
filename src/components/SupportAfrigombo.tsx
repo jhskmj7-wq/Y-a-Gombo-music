@@ -122,7 +122,7 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
   }
 
   return (
-    <div className="min-h-screen bg-afri-bg text-afri-text pb-32 transition-colors">
+    <div className="w-full bg-afri-bg text-afri-text transition-colors">
       {/* Header Back Button */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 pointer-events-none">
         <button 
