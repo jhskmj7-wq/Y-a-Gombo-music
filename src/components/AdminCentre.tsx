@@ -16,6 +16,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../lib/firebase";
 import { useNavigate } from "react-router-dom";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
+import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
 
 const AdminStats = lazyWithRetry(() => import("./AdminStats"));
 const AdminReports = lazyWithRetry(() => import("./admin/AdminReports"));
@@ -7743,135 +7744,109 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       )}
 
       {/* =========================================================================
-                                     PLUS MENU OVERLAYS (ANCHORED ABOVE '+' BUTTON)
+                                     PLUS MENU OVERLAYS (ANDROID BOTTOM SHEET)
          ========================================================================= */}
-      {isPlusMenuOpen && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pointer-events-auto">
-          {/* Dismiss background */}
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer" onClick={() => setIsPlusMenuOpen(false)} />
-          
-          <motion.div
-            initial={{ scale: 0.9, y: 15, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.9, y: 15, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="relative w-full max-w-md bg-afri-bg-sec border-2 border-afri-gold/40 rounded-3xl p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden z-10 max-h-[85vh] flex flex-col"
+      <AndroidBottomSheet
+        isOpen={isPlusMenuOpen}
+        onClose={() => setIsPlusMenuOpen(false)}
+        title="Que souhaitez-vous publier ?"
+      >
+        <div className="space-y-3 pt-2">
+          <button
+            onClick={() => {
+              setActivePublishType("gombo");
+              setActiveMenu("user_publish");
+              setIsPlusMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-4 bg-gradient-to-r from-afri-gold/10 to-transparent hover:from-afri-gold/20 border border-afri-gold/20 rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
           >
-            {/* Pointer arrow pointing towards the floating '+' button directly below */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-afri-bg-sec rotate-45 border-b-2 border-r-2 border-afri-gold/40 pointer-events-none" />
-
-            <div className="absolute top-0 right-0 p-4">
-              <button 
-                onClick={() => setIsPlusMenuOpen(false)}
-                className="text-afri-text-sec hover:text-afri-text transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-afri-gold to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
+              <Megaphone className="w-5 h-5" />
             </div>
-
-            <h3 className="text-xl font-display font-black text-afri-text mb-5 tracking-tight">Que souhaitez-vous publier ?</h3>
-            
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  setActivePublishType("gombo");
-                  setActiveMenu("user_publish");
-                  setIsPlusMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-4 bg-gradient-to-r from-afri-gold/10 to-transparent hover:from-afri-gold/20 border border-afri-gold/20 rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
-              >
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-afri-gold to-[#F1C40F] flex items-center justify-center text-black shrink-0 shadow-lg group-hover:scale-105 transition-transform">
-                  <Megaphone className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Publier un Gombo</h4>
-                  <p className="text-[10px] text-afri-text-sec font-mono">Recrutez des artistes pour vos événements.</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActivePublishType("reel");
-                  setActiveMenu("user_publish");
-                  setIsPlusMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
-              >
-                <div className="w-11 h-11 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 group-hover:scale-105 transition-transform">
-                  <Video className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Publier un Réel</h4>
-                  <p className="text-[10px] text-afri-text-sec font-mono">Partagez votre talent en vidéo courte.</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActivePublishType("demo");
-                  setActiveMenu("user_publish");
-                  setIsPlusMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
-              >
-                <div className="w-11 h-11 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/30 group-hover:scale-105 transition-transform">
-                  <Mic2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Démo Musicale</h4>
-                  <p className="text-[10px] text-afri-text-sec font-mono">Publiez une démo audio pour les recruteurs.</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActivePublishType("renfort");
-                  setActiveMenu("user_publish");
-                  setIsPlusMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group relative overflow-hidden cursor-pointer"
-              >
-                <div className="w-11 h-11 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 border border-red-500/30 group-hover:scale-105 transition-transform">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5 flex items-center gap-2">
-                    Renfort Express
-                    <span className="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded uppercase">Urgent</span>
-                  </h4>
-                  <p className="text-[10px] text-afri-text-sec font-mono">Demandez un dépannage immédiat (musicien).</p>
-                </div>
-              </button>
+            <div>
+              <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Publier un Gombo</h4>
+              <p className="text-[10px] text-afri-text-sec font-mono">Recrutez des artistes pour vos événements.</p>
             </div>
-          </motion.div>
-        </div>
-      )}
+          </button>
 
-      {showHowWorksPopup && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-afri-bg/80 backdrop-blur-sm p-4">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-sm bg-afri-bg-sec border border-afri-gold/30 rounded-2xl p-6 shadow-2xl"
+          <button
+            onClick={() => {
+              setActivePublishType("reel");
+              setActiveMenu("user_publish");
+              setIsPlusMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
           >
-            <div className="w-12 h-12 rounded-full bg-afri-gold/20 flex items-center justify-center mb-4">
-              <Info className="w-6 h-6 text-afri-gold" />
+            <div className="w-11 h-11 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 group-hover:scale-105 transition-transform">
+              <Video className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-display font-black text-afri-text mb-2">Comment fonctionne AFRIGOMBO ?</h3>
-            <p className="text-xs text-afri-text font-sans leading-relaxed mb-6">
-              AFRIGOMBO permet la mise en relation entre talents et porteurs de projets. 
-              <br/><br/>
-              Certaines options premium (marquage urgent, mise en avant, profils vérifiés) peuvent comporter des frais qui seront affichés avant validation. Les paiements garantissent la sécurité et l'engagement des deux parties.
-            </p>
-            <button 
-              onClick={() => setShowHowWorksPopup(false)}
-              className="w-full py-3 bg-gradient-to-r from-afri-gold to-[#F1C40F] text-black font-bold uppercase tracking-wider text-xs rounded-xl hover:opacity-90 transition-all"
-            >
-              J'ai compris
-            </button>
-          </motion.div>
+            <div>
+              <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Publier un Réel</h4>
+              <p className="text-[10px] text-afri-text-sec font-mono">Partagez votre talent en vidéo courte.</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              setActivePublishType("demo");
+              setActiveMenu("user_publish");
+              setIsPlusMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group cursor-pointer"
+          >
+            <div className="w-11 h-11 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/30 group-hover:scale-105 transition-transform">
+              <Mic2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5">Démo Musicale</h4>
+              <p className="text-[10px] text-afri-text-sec font-mono">Publiez une démo audio pour les recruteurs.</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              setActivePublishType("renfort");
+              setActiveMenu("user_publish");
+              setIsPlusMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-afri-border rounded-2xl p-3.5 sm:p-4 text-left transition-all group relative overflow-hidden cursor-pointer"
+          >
+            <div className="w-11 h-11 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 border border-red-500/30 group-hover:scale-105 transition-transform">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-[13px] font-sans font-bold text-afri-text uppercase tracking-wider mb-0.5 flex items-center gap-2">
+                Renfort Express
+                <span className="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded uppercase">Urgent</span>
+              </h4>
+              <p className="text-[10px] text-afri-text-sec font-mono">Demandez un dépannage immédiat (musicien).</p>
+            </div>
+          </button>
         </div>
-      )}
+      </AndroidBottomSheet>
+
+      <AndroidCenteredDialog
+        isOpen={showHowWorksPopup}
+        onClose={() => setShowHowWorksPopup(false)}
+        title="Comment fonctionne AFRIGOMBO ?"
+      >
+        <div className="text-left space-y-4 pt-2">
+          <div className="w-12 h-12 rounded-full bg-afri-gold/20 flex items-center justify-center mb-2 mx-auto">
+            <Info className="w-6 h-6 text-afri-gold" />
+          </div>
+          <p className="text-xs text-afri-text font-sans leading-relaxed">
+            AFRIGOMBO permet la mise en relation entre talents et porteurs de projets. 
+            <br/><br/>
+            Certaines options premium (marquage urgent, mise en avant, profils vérifiés) peuvent comporter des frais qui seront affichés avant validation. Les paiements garantissent la sécurité et l'engagement des deux parties.
+          </p>
+          <button 
+            onClick={() => setShowHowWorksPopup(false)}
+            className="w-full py-3 bg-gradient-to-r from-afri-gold to-[#F1C40F] text-black font-bold uppercase tracking-wider text-xs rounded-xl hover:opacity-90 transition-all cursor-pointer"
+          >
+            Compris
+          </button>
+        </div>
+      </AndroidCenteredDialog>
 
       {/* =========================================================================
                                      FIXED BOTTOM NAVIGATION BAR (FLOATING & WELL-ROUNDED)

@@ -3,6 +3,7 @@ import { Sparkles, Check, ChevronLeft, CreditCard, Award, Shield, Music, BarChar
 import { useLanguage } from "../LanguageContext";
 import { supportConfig } from "../supportConfig";
 import { createPendingSubscriptionRequest, validateAndActivatePremiumCode } from "../lib/premiumSubscriptionEngine";
+import { AndroidCenteredDialog } from "./common/GlobalPortalModal";
 
 interface AfrigomboPlusProps {
   onBack: () => void;
@@ -436,567 +437,467 @@ export default function AfrigomboPlus({ onBack, currentUserProfile, onRefreshPro
       {/* ========================================================= */}
       {/* MODAL 1: COMPARATIF DES OFFRES */}
       {/* ========================================================= */}
-      {activeModal === "compare" && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto overscroll-contain touch-pan-y"
-          onClick={() => setActiveModal(null)}
-        >
-          <div 
-            className="bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-5 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl relative my-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center border-b border-afri-border/60 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">📊</span>
-                <h3 className="text-base font-black uppercase text-afri-text tracking-wide">Comparatif des offres</h3>
-              </div>
-              <button 
-                onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Content Table */}
-            <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
-              <table className="w-full text-left border-collapse min-w-[450px]">
-                <thead>
-                  <tr className="border-b border-afri-border">
-                    <th className="py-2.5 text-afri-text-sec font-bold uppercase text-[10px] tracking-widest">Avantages</th>
-                    <th className="py-2.5 text-center text-afri-text font-black uppercase text-xs">Free</th>
-                    <th className="py-2.5 text-center text-emerald-400 font-black uppercase text-xs">Pro</th>
-                    <th className="py-2.5 text-center text-[#D4AF37] font-black uppercase text-xs">Elite</th>
+      <AndroidCenteredDialog
+        isOpen={activeModal === "compare"}
+        onClose={() => setActiveModal(null)}
+        title={
+          <div className="flex items-center gap-2">
+            <span className="text-xl">📊</span>
+            <span>Comparatif des offres</span>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
+            <table className="w-full text-left border-collapse min-w-[450px]">
+              <thead>
+                <tr className="border-b border-afri-border">
+                  <th className="py-2.5 text-afri-text-sec font-bold uppercase text-[10px] tracking-widest">Avantages</th>
+                  <th className="py-2.5 text-center text-afri-text font-black uppercase text-xs">Free</th>
+                  <th className="py-2.5 text-center text-emerald-400 font-black uppercase text-xs">Pro</th>
+                  <th className="py-2.5 text-center text-[#D4AF37] font-black uppercase text-xs">Elite</th>
+                </tr>
+              </thead>
+              <tbody className="text-xs">
+                {[
+                  { label: "Commission sur contrat", free: "2,5%", pro: "1,5%", elite: "1,5%" },
+                  { label: "Badge de profil", free: "Standard", pro: "Silver", elite: "Gold Prestige" },
+                  { label: "Publications / jour", free: "Illimité (Std)", pro: "3 / jour (Boost)", elite: "Illimité (Priorité)" },
+                  { label: "Visibilité annuaire", free: "Standard", pro: "+40%", elite: "Priorité Maximale" },
+                  { label: "Statistiques", free: "Basique", pro: "Standards", elite: "Avancées" },
+                  { label: "Candidatures", free: "Standard", pro: "Prioritaires", elite: "Ultra-Prioritaires" },
+                ].map((row, i) => (
+                  <tr key={i} className="border-b border-afri-border/50 hover:bg-afri-bg-ter/40 transition-colors">
+                    <td className="py-2.5 font-bold text-afri-text-sec">{row.label}</td>
+                    <td className="py-2.5 text-center text-afri-text-sec font-mono">{row.free}</td>
+                    <td className="py-2.5 text-center text-emerald-400 font-mono font-bold">{row.pro}</td>
+                    <td className="py-2.5 text-center text-[#D4AF37] font-mono font-bold">{row.elite}</td>
                   </tr>
-                </thead>
-                <tbody className="text-xs">
-                  {[
-                    { label: "Commission sur contrat", free: "2,5%", pro: "1,5%", elite: "1,5%" },
-                    { label: "Badge de profil", free: "Standard", pro: "Silver", elite: "Gold Prestige" },
-                    { label: "Publications / jour", free: "Illimité (Std)", pro: "3 / jour (Boost)", elite: "Illimité (Priorité)" },
-                    { label: "Visibilité annuaire", free: "Standard", pro: "+40%", elite: "Priorité Maximale" },
-                    { label: "Statistiques", free: "Basique", pro: "Standards", elite: "Avancées" },
-                    { label: "Candidatures", free: "Standard", pro: "Prioritaires", elite: "Ultra-Prioritaires" },
-                  ].map((row, i) => (
-                    <tr key={i} className="border-b border-afri-border/50 hover:bg-afri-bg-ter/40 transition-colors">
-                      <td className="py-2.5 font-bold text-afri-text-sec">{row.label}</td>
-                      <td className="py-2.5 text-center text-afri-text-sec font-mono">{row.free}</td>
-                      <td className="py-2.5 text-center text-emerald-400 font-mono font-bold">{row.pro}</td>
-                      <td className="py-2.5 text-center text-[#D4AF37] font-mono font-bold">{row.elite}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-            {/* Footer button */}
-            <div className="pt-2 border-t border-afri-border/60 text-right">
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
-              >
-                Fermer
-              </button>
-            </div>
+          <div className="pt-2 border-t border-afri-border/60 text-right">
+            <button
+              type="button"
+              onClick={() => setActiveModal(null)}
+              className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
+            >
+              Fermer
+            </button>
           </div>
         </div>
-      )}
+      </AndroidCenteredDialog>
 
       {/* ========================================================= */}
       {/* MODAL 2: POURQUOI DEVENIR PREMIUM ? */}
       {/* ========================================================= */}
-      {activeModal === "why" && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto overscroll-contain touch-pan-y"
-          onClick={() => setActiveModal(null)}
-        >
-          <div 
-            className="bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-5 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl relative my-auto max-h-[85vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center border-b border-afri-border/60 pb-3 shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">⭐</span>
-                <div>
-                  <h3 className="text-base font-black uppercase text-afri-text tracking-wide">Pourquoi devenir Premium ?</h3>
-                  <p className="text-[10px] text-afri-text-sec">Des outils conçus pour propulser votre carrière musicale</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Content Cards */}
-            <div className="overflow-y-auto space-y-3 pr-1 flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  { 
-                    title: "Badge Premium", 
-                    desc: "Soyez immédiatement reconnu comme un professionnel certifié.", 
-                    icon: Award,
-                    highlight: "Confiance & Prestige"
-                  },
-                  { 
-                    title: "Plus de visibilité", 
-                    desc: "Votre profil apparaît avant les autres dans toutes les recherches.", 
-                    icon: Sparkles,
-                    highlight: "Top 1% de l'annuaire"
-                  },
-                  { 
-                    title: "Plus d'opportunités", 
-                    desc: "Accédez aux meilleurs Gombos et aux contrats exclusifs.", 
-                    icon: Music,
-                    highlight: "Contrats Premium"
-                  },
-                  { 
-                    title: "Réduction des commissions", 
-                    desc: "Payez seulement 1,5% au lieu de 2,5% sur vos revenus.", 
-                    icon: Shield,
-                    highlight: "Économies directes"
-                  },
-                  { 
-                    title: "Statistiques avancées", 
-                    desc: "Comprenez l'évolution de votre carrière avec des rapports précis.", 
-                    icon: BarChart3,
-                    highlight: "Données analytiques"
-                  },
-                  { 
-                    title: "Priorité absolue", 
-                    desc: "Vos publications et candidatures passent avant les comptes standards.", 
-                    icon: Radio,
-                    highlight: "Vitesse & Efficacité"
-                  },
-                ].map((adv, idx) => (
-                  <div key={idx} className="p-3.5 bg-afri-bg border border-afri-border rounded-xl space-y-1.5 hover:border-[#D4AF37]/40 transition-all text-left">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] flex items-center justify-center shrink-0">
-                        <adv.icon className="w-4 h-4" />
-                      </div>
-                      <div className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">{adv.highlight}</div>
-                    </div>
-                    <h4 className="text-xs font-black text-afri-text uppercase tracking-tight">{adv.title}</h4>
-                    <p className="text-[11px] text-afri-text-sec leading-relaxed">{adv.desc}</p>
+      <AndroidCenteredDialog
+        isOpen={activeModal === "why"}
+        onClose={() => setActiveModal(null)}
+        title={
+          <div className="flex items-center gap-2">
+            <span className="text-xl">⭐</span>
+            <span>Pourquoi devenir Premium ?</span>
+          </div>
+        }
+        subtitle="Des outils conçus pour propulser votre carrière musicale"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+            {[
+              { 
+                title: "Badge Premium", 
+                desc: "Soyez immédiatement reconnu comme un professionnel certifié.", 
+                icon: Award,
+                highlight: "Confiance & Prestige"
+              },
+              { 
+                title: "Plus de visibilité", 
+                desc: "Votre profil apparaît avant les autres dans toutes les recherches.", 
+                icon: Sparkles,
+                highlight: "Top 1% de l'annuaire"
+              },
+              { 
+                title: "Plus d'opportunités", 
+                desc: "Accédez aux meilleurs Gombos et aux contrats exclusifs.", 
+                icon: Music,
+                highlight: "Contrats Premium"
+              },
+              { 
+                title: "Réduction des commissions", 
+                desc: "Payez seulement 1,5% au lieu de 2,5% sur vos revenus.", 
+                icon: Shield,
+                highlight: "Économies directes"
+              },
+              { 
+                title: "Statistiques avancées", 
+                desc: "Comprenez l'évolution de votre carrière avec des rapports précis.", 
+                icon: BarChart3,
+                highlight: "Données analytiques"
+              },
+              { 
+                title: "Priorité absolue", 
+                desc: "Vos publications et candidatures passent avant les comptes standards.", 
+                icon: Radio,
+                highlight: "Vitesse & Efficacité"
+              },
+            ].map((adv, idx) => (
+              <div key={idx} className="p-3.5 bg-afri-bg border border-afri-border rounded-xl space-y-1.5 hover:border-[#D4AF37]/40 transition-all text-left">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] flex items-center justify-center shrink-0">
+                    <adv.icon className="w-4 h-4" />
                   </div>
-                ))}
+                  <div className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">{adv.highlight}</div>
+                </div>
+                <h4 className="text-xs font-black text-afri-text uppercase tracking-tight">{adv.title}</h4>
+                <p className="text-[11px] text-afri-text-sec leading-relaxed">{adv.desc}</p>
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* Footer button */}
-            <div className="pt-2 border-t border-afri-border/60 text-right shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
-              >
-                Fermer
-              </button>
-            </div>
+          <div className="pt-2 border-t border-afri-border/60 text-right">
+            <button
+              type="button"
+              onClick={() => setActiveModal(null)}
+              className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
+            >
+              Fermer
+            </button>
           </div>
         </div>
-      )}
+      </AndroidCenteredDialog>
 
       {/* ========================================================= */}
       {/* MODAL 3: ÉCONOMISER SUR VOS CONTRATS */}
       {/* ========================================================= */}
-      {activeModal === "savings" && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto overscroll-contain touch-pan-y"
-          onClick={() => setActiveModal(null)}
-        >
-          <div 
-            className="bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-5 sm:p-6 max-w-2xl w-full space-y-4 shadow-2xl relative my-auto max-h-[85vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center border-b border-afri-border/60 pb-3 shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">💰</span>
-                <div>
-                  <h3 className="text-base font-black uppercase text-afri-text tracking-wide">Économiser sur vos contrats</h3>
-                  <p className="text-[10px] text-afri-text-sec">Taux de commission réduit à 1,5% au lieu de 2,5%</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      <AndroidCenteredDialog
+        isOpen={activeModal === "savings"}
+        onClose={() => setActiveModal(null)}
+        title={
+          <div className="flex items-center gap-2">
+            <span className="text-xl">💰</span>
+            <span>Économiser sur vos contrats</span>
+          </div>
+        }
+        subtitle="Taux de commission réduit à 1,5% au lieu de 2,5%"
+      >
+        <div className="space-y-4 text-left">
+          <p className="text-xs text-afri-text-sec leading-relaxed">
+            Le Premium réduit vos propres commissions sur les contrats (<strong className="text-[#D4AF37]">1,5% au lieu de 2,5%</strong>).
+          </p>
 
-            {/* Content Calculator */}
-            <div className="overflow-y-auto space-y-4 pr-1 flex-1 text-left">
-              <p className="text-xs text-afri-text-sec leading-relaxed">
-                Le Premium réduit vos propres commissions sur les contrats (<strong className="text-[#D4AF37]">1,5% au lieu de 2,5%</strong>).
-              </p>
-
-              {/* Preset Buttons */}
-              <div className="flex flex-wrap gap-2">
-                {[50000, 100000, 250000, 500000].map((presetAmt) => (
-                  <button
-                    key={presetAmt}
-                    type="button"
-                    onClick={() => setSimAmount(presetAmt)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border ${
-                      simAmount === presetAmt 
-                        ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]" 
-                        : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-[#D4AF37]/40 hover:text-afri-text"
-                    }`}
-                  >
-                    {presetAmt.toLocaleString()} FCFA
-                  </button>
-                ))}
-              </div>
-
-              {/* Slider */}
-              <div className="space-y-2 bg-afri-bg p-3.5 rounded-xl border border-afri-border">
-                <div className="flex justify-between text-xs">
-                  <span className="text-afri-text-sec">Montant du contrat :</span>
-                  <span className="text-[#D4AF37] font-bold font-mono text-sm">{simAmount.toLocaleString()} FCFA</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="50000" 
-                  max="1000000" 
-                  step="50000"
-                  value={simAmount}
-                  onChange={(e) => setSimAmount(Number(e.target.value))}
-                  className="w-full h-1.5 bg-afri-bg-sec rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                />
-              </div>
-
-              {/* Comparison Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Standard Account */}
-                <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-2">
-                  <div className="text-xs font-bold text-afri-text-sec">Compte Standard (2.5%)</div>
-                  <div className="flex justify-between text-xs font-mono">
-                    <span className="text-afri-text-sec">Commission :</span>
-                    <span className="text-afri-text font-bold">{(simAmount * 0.025).toLocaleString()} FCFA</span>
-                  </div>
-                </div>
-
-                {/* Premium Account */}
-                <div className="p-4 bg-afri-bg border border-[#D4AF37]/40 rounded-xl space-y-2">
-                  <div className="text-xs font-bold text-[#D4AF37]">Compte Premium (1.5%)</div>
-                  <div className="flex justify-between text-xs font-mono">
-                    <span className="text-afri-text-sec">Commission :</span>
-                    <span className="text-afri-text font-bold">{(simAmount * 0.015).toLocaleString()} FCFA</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Gain Box */}
-              <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-emerald-400">Gain net immédiat</h4>
-                  <p className="text-[10px] text-afri-text-sec">Économie sur ce seul contrat</p>
-                </div>
-                <span className="text-emerald-400 text-base font-black font-mono">+{(simAmount * 0.01).toLocaleString()} FCFA</span>
-              </div>
-            </div>
-
-            {/* Footer button */}
-            <div className="pt-2 border-t border-afri-border/60 text-right shrink-0">
+          <div className="flex flex-wrap gap-2">
+            {[50000, 100000, 250000, 500000].map((presetAmt) => (
               <button
+                key={presetAmt}
                 type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
+                onClick={() => setSimAmount(presetAmt)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border ${
+                  simAmount === presetAmt 
+                    ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]" 
+                    : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-[#D4AF37]/40 hover:text-afri-text"
+                }`}
               >
-                Fermer
+                {presetAmt.toLocaleString()} FCFA
               </button>
+            ))}
+          </div>
+
+          <div className="space-y-2 bg-afri-bg p-3.5 rounded-xl border border-afri-border">
+            <div className="flex justify-between text-xs">
+              <span className="text-afri-text-sec">Montant du contrat :</span>
+              <span className="text-[#D4AF37] font-bold font-mono text-sm">{simAmount.toLocaleString()} FCFA</span>
+            </div>
+            <input 
+              type="range" 
+              min="50000" 
+              max="1000000" 
+              step="50000"
+              value={simAmount}
+              onChange={(e) => setSimAmount(Number(e.target.value))}
+              className="w-full h-1.5 bg-afri-bg-sec rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-2">
+              <div className="text-xs font-bold text-afri-text-sec">Compte Standard (2.5%)</div>
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-afri-text-sec">Commission :</span>
+                <span className="text-afri-text font-bold">{(simAmount * 0.025).toLocaleString()} FCFA</span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-afri-bg border border-[#D4AF37]/40 rounded-xl space-y-2">
+              <div className="text-xs font-bold text-[#D4AF37]">Compte Premium (1.5%)</div>
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-afri-text-sec">Commission :</span>
+                <span className="text-afri-text font-bold">{(simAmount * 0.015).toLocaleString()} FCFA</span>
+              </div>
             </div>
           </div>
+
+          <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl flex items-center justify-between">
+            <div>
+              <h4 className="text-xs font-bold text-emerald-400">Gain net immédiat</h4>
+              <p className="text-[10px] text-afri-text-sec">Économie sur ce seul contrat</p>
+            </div>
+            <span className="text-emerald-400 text-base font-black font-mono">+{(simAmount * 0.01).toLocaleString()} FCFA</span>
+          </div>
+
+          <div className="pt-2 border-t border-afri-border/60 text-right">
+            <button
+              type="button"
+              onClick={() => setActiveModal(null)}
+              className="px-5 py-2 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/50 text-afri-text font-bold text-xs uppercase rounded-xl cursor-pointer"
+            >
+              Fermer
+            </button>
+          </div>
         </div>
-      )}
+      </AndroidCenteredDialog>
 
       {/* ========================================================= */}
       {/* MODAL 4: INTERACTIVE PAYMENT POPUP (BÊTA MODE) */}
       {/* ========================================================= */}
-      {activeModal === "payment" && (
-        <div 
-          className="fixed inset-0 bg-black/85 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto overscroll-contain touch-pan-y"
-          onClick={() => {
-            if (paymentStep !== "processing") {
-              setActiveModal(null);
-            }
-          }}
-        >
-          <div 
-            className="bg-afri-bg-sec border border-[#D4AF37]/50 rounded-2xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl relative my-auto text-left"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center border-b border-afri-border/60 pb-3">
-              <div className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-[#D4AF37]" />
-                <h3 className="text-base font-black uppercase text-[#D4AF37] tracking-wide">
-                  Abonnement {currentSelectedPlanObj.name}
-                </h3>
-              </div>
-              {paymentStep !== "processing" && (
-                <button 
-                  onClick={() => setActiveModal(null)}
-                  className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {paymentStep === "idle" && (
-              <div className="space-y-4">
-                {/* Summary card */}
-                <div className="bg-afri-bg border border-afri-border rounded-xl p-3.5 space-y-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-afri-text-sec font-medium">Montant :</span>
-                    <span className="font-mono font-bold text-base text-[#D4AF37]">{currentSelectedPlanObj.priceLabel}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-afri-text-sec font-medium">Durée :</span>
-                    <span className="font-bold text-afri-text">{billingCycle === "monthly" ? "1 mois (Mensuel)" : "12 mois (Annuel -20%)"}</span>
-                  </div>
-                  <div className="pt-2 border-t border-afri-border/50">
-                    <span className="text-[10px] font-bold text-afri-text-sec uppercase tracking-wider block mb-1">Avantages inclus :</span>
-                    <ul className="space-y-1">
-                      {currentSelectedPlanObj.features.slice(0, 4).map((f, i) => (
-                        <li key={i} className="text-[11px] text-afri-text flex items-center gap-1.5">
-                          <Check className="w-3 h-3 text-[#D4AF37] shrink-0" />
-                          <span>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+      <AndroidCenteredDialog
+        isOpen={activeModal === "payment"}
+        onClose={() => {
+          if (paymentStep !== "processing") setActiveModal(null);
+        }}
+        showCloseButton={paymentStep !== "processing"}
+        title={
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-[#D4AF37]" />
+            <span className="text-[#D4AF37]">Abonnement {currentSelectedPlanObj.name}</span>
+          </div>
+        }
+      >
+        <div className="space-y-4 text-left">
+          {paymentStep === "idle" && (
+            <div className="space-y-4">
+              <div className="bg-afri-bg border border-afri-border rounded-xl p-3.5 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-afri-text-sec font-medium">Montant :</span>
+                  <span className="font-mono font-bold text-base text-[#D4AF37]">{currentSelectedPlanObj.priceLabel}</span>
                 </div>
-
-                {/* Mobile Money Payment Provider Selector */}
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
-                    Mode de Paiement
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { id: "wave", label: "Wave Money", badge: "0% frais" },
-                      { id: "orange", label: "Orange Money", badge: "Réseau CI" },
-                      { id: "mtn", label: "MTN MoMo", badge: "Réseau CI" },
-                      { id: "moov", label: "Moov Flooz", badge: "Réseau CI" }
-                    ].map((method) => (
-                      <button
-                        key={method.id}
-                        type="button"
-                        onClick={() => setPaymentOption(method.id)}
-                        className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
-                          paymentOption === method.id
-                            ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text"
-                            : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-[#D4AF37]/40"
-                        }`}
-                      >
-                        <span className="text-[11px] font-black block">{method.label}</span>
-                        <span className="text-[8px] opacity-70 uppercase">{method.badge}</span>
-                      </button>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-afri-text-sec font-medium">Durée :</span>
+                  <span className="font-bold text-afri-text">{billingCycle === "monthly" ? "1 mois (Mensuel)" : "12 mois (Annuel -20%)"}</span>
+                </div>
+                <div className="pt-2 border-t border-afri-border/50">
+                  <span className="text-[10px] font-bold text-afri-text-sec uppercase tracking-wider block mb-1">Avantages inclus :</span>
+                  <ul className="space-y-1">
+                    {currentSelectedPlanObj.features.slice(0, 4).map((f, i) => (
+                      <li key={i} className="text-[11px] text-afri-text flex items-center gap-1.5">
+                        <Check className="w-3 h-3 text-[#D4AF37] shrink-0" />
+                        <span>{f}</span>
+                      </li>
                     ))}
-                  </div>
-                </div>
-
-                {/* Phone Input */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
-                    Numéro Mobile Money
-                  </label>
-                  <input
-                    type="tel"
-                    value={phonePayment}
-                    onChange={(e) => setPhonePayment(e.target.value.replace(/[^\d+]/g, ""))}
-                    placeholder="Ex: 0700000000"
-                    className="w-full bg-afri-bg p-3 text-xs rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-wider font-bold"
-                  />
-                </div>
-
-                {/* Confirm & Cancel Buttons */}
-                <div className="space-y-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={processPayment}
-                    disabled={!phonePayment}
-                    className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
-                  >
-                    Envoyer la demande ({currentSelectedPlanObj.priceLabel})
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal(null)}
-                    className="w-full py-2 text-center text-xs font-bold text-afri-text-sec hover:text-white cursor-pointer"
-                  >
-                    Annuler
-                  </button>
+                  </ul>
                 </div>
               </div>
-            )}
 
-            {paymentStep === "processing" && (
-              <div className="py-8 text-center space-y-4">
-                <div className="w-10 h-10 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p className="text-xs font-bold text-[#D4AF37] animate-pulse">
-                  Enregistrement de votre demande Bêta...
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
+                  Mode de Paiement
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "wave", label: "Wave Money", badge: "0% frais" },
+                    { id: "orange", label: "Orange Money", badge: "Réseau CI" },
+                    { id: "mtn", label: "MTN MoMo", badge: "Réseau CI" },
+                    { id: "moov", label: "Moov Flooz", badge: "Réseau CI" }
+                  ].map((method) => (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => setPaymentOption(method.id)}
+                      className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
+                        paymentOption === method.id
+                          ? "bg-[#D4AF37]/15 border-[#D4AF37] text-afri-text"
+                          : "bg-afri-bg border-afri-border text-afri-text-sec hover:border-[#D4AF37]/40"
+                      }`}
+                    >
+                      <span className="text-[11px] font-black block">{method.label}</span>
+                      <span className="text-[8px] opacity-70 uppercase">{method.badge}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
+                  Numéro Mobile Money
+                </label>
+                <input
+                  type="tel"
+                  value={phonePayment}
+                  onChange={(e) => setPhonePayment(e.target.value.replace(/[^\d+]/g, ""))}
+                  placeholder="Ex: 0700000000"
+                  className="w-full bg-afri-bg p-3 text-xs rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-wider font-bold"
+                />
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={processPayment}
+                  disabled={!phonePayment}
+                  className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
+                >
+                  Envoyer la demande ({currentSelectedPlanObj.priceLabel})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="w-full py-2 text-center text-xs font-bold text-afri-text-sec hover:text-white cursor-pointer"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
+
+          {paymentStep === "processing" && (
+            <div className="py-8 text-center space-y-4">
+              <div className="w-10 h-10 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p className="text-xs font-bold text-[#D4AF37] animate-pulse">
+                Enregistrement de votre demande Bêta...
+              </p>
+            </div>
+          )}
+
+          {paymentStep === "pending_validation" && (
+            <div className="py-4 text-center space-y-4">
+              <div className="w-12 h-12 bg-[#D4AF37]/10 border border-[#D4AF37]/40 text-[#D4AF37] rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                📝
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-base font-black text-afri-text uppercase tracking-tight">
+                  Votre demande d'abonnement a été enregistrée.
+                </h4>
+                <p className="text-xs text-afri-text-sec leading-relaxed">
+                  Contactez le support AFRIGOMBO afin d'obtenir votre code d'activation.
                 </p>
               </div>
-            )}
 
-            {paymentStep === "pending_validation" && (
-              <div className="py-4 text-center space-y-4">
-                <div className="w-12 h-12 bg-[#D4AF37]/10 border border-[#D4AF37]/40 text-[#D4AF37] rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-                  📝
-                </div>
+              <button
+                type="button"
+                onClick={() => {
+                  supportConfig.openSupport(`Bonjour Support AFRIGOMBO 👋\nJe souhaite obtenir mon code d'activation pour mon abonnement ${currentSelectedPlanObj.name} (Tél: ${phonePayment}).`);
+                }}
+                className="w-full bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4 fill-black" />
+                <span>Contacter le support</span>
+              </button>
 
-                <div className="space-y-2">
-                  <h4 className="text-base font-black text-afri-text uppercase tracking-tight">
-                    Votre demande d'abonnement a été enregistrée.
-                  </h4>
-                  <p className="text-xs text-afri-text-sec leading-relaxed">
-                    Contactez le support AFRIGOMBO afin d'obtenir votre code d'activation.
-                  </p>
-                </div>
-
-                {/* Single Primary Button: Contacter le support via WhatsApp */}
+              <div className="pt-2 border-t border-afri-border/40 flex justify-between items-center text-xs">
                 <button
                   type="button"
                   onClick={() => {
-                    supportConfig.openSupport(`Bonjour Support AFRIGOMBO 👋\nJe souhaite obtenir mon code d'activation pour mon abonnement ${currentSelectedPlanObj.name} (Tél: ${phonePayment}).`);
+                    setActivationError("");
+                    setActivationSuccessMsg("");
+                    setInputActivationCode("");
+                    setActiveModal("activation");
                   }}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
+                  className="text-[#D4AF37] hover:underline font-bold text-[11px]"
                 >
-                  <MessageCircle className="w-4 h-4 fill-black" />
-                  <span>Contacter le support</span>
+                  J'ai déjà un code d'activation
                 </button>
 
-                <div className="pt-2 border-t border-afri-border/40 flex justify-between items-center text-xs">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActivationError("");
-                      setActivationSuccessMsg("");
-                      setInputActivationCode("");
-                      setActiveModal("activation");
-                    }}
-                    className="text-[#D4AF37] hover:underline font-bold text-[11px]"
-                  >
-                    J'ai déjà un code d'activation
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal(null)}
-                    className="text-afri-text-sec hover:text-white font-medium text-[11px]"
-                  >
-                    Fermer
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="text-afri-text-sec hover:text-white font-medium text-[11px]"
+                >
+                  Fermer
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      )}
+      </AndroidCenteredDialog>
 
       {/* ========================================================= */}
       {/* MODAL 5: CODE ACTIVATION INPUT POPUP ("Activer mon abonnement") */}
       {/* ========================================================= */}
-      {activeModal === "activation" && (
-        <div 
-          className="fixed inset-0 bg-black/85 backdrop-blur-md z-[999] flex items-center justify-center p-4 overflow-y-auto overscroll-contain touch-pan-y"
-          onClick={() => setActiveModal(null)}
-        >
-          <div 
-            className="bg-afri-bg-sec border border-[#D4AF37]/50 rounded-2xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl relative my-auto text-left"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center border-b border-afri-border/60 pb-3">
-              <div className="flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-[#D4AF37]" />
-                <h3 className="text-base font-black uppercase text-[#D4AF37] tracking-wide">
-                  Activer mon abonnement
-                </h3>
-              </div>
-              <button 
+      <AndroidCenteredDialog
+        isOpen={activeModal === "activation"}
+        onClose={() => setActiveModal(null)}
+        title={
+          <div className="flex items-center gap-2">
+            <KeyRound className="w-5 h-5 text-[#D4AF37]" />
+            <span className="text-[#D4AF37]">Activer mon abonnement</span>
+          </div>
+        }
+      >
+        <form onSubmit={handleValidateActivationCode} className="space-y-4 text-left">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
+              Code d'activation
+            </label>
+            <input
+              type="text"
+              value={inputActivationCode}
+              onChange={(e) => {
+                setInputActivationCode(e.target.value.toUpperCase());
+                setActivationError("");
+              }}
+              placeholder="Ex: AG-PRO-9842"
+              className="w-full bg-afri-bg p-3.5 text-sm rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-widest font-black uppercase text-center"
+              autoFocus
+            />
+          </div>
+
+          {activationError && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold text-center">
+              {activationError}
+            </div>
+          )}
+
+          {activationSuccessMsg && (
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold text-center space-y-2">
+              <p>{activationSuccessMsg}</p>
+              <button
+                type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border text-afri-text-sec hover:text-white flex items-center justify-center cursor-pointer"
+                className="w-full bg-[#D4AF37] text-black font-black uppercase text-[10px] py-2 rounded-lg mt-1 cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                Accéder à mon espace
               </button>
             </div>
+          )}
 
-            <form onSubmit={handleValidateActivationCode} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest block">
-                  Code d'activation
-                </label>
-                <input
-                  type="text"
-                  value={inputActivationCode}
-                  onChange={(e) => {
-                    setInputActivationCode(e.target.value.toUpperCase());
-                    setActivationError("");
-                  }}
-                  placeholder="Ex: AG-PRO-9842"
-                  className="w-full bg-afri-bg p-3.5 text-sm rounded-xl border border-afri-border text-afri-text focus:border-[#D4AF37] focus:outline-none font-mono tracking-widest font-black uppercase text-center"
-                  autoFocus
-                />
-              </div>
+          {!activationSuccessMsg && (
+            <div className="space-y-2 pt-1">
+              <button
+                type="submit"
+                disabled={isActivatingCode || !inputActivationCode.trim()}
+                className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
+              >
+                {isActivatingCode ? "Vérification..." : "Valider"}
+              </button>
 
-              {/* Requirement 7: If wrong code -> Simply "Code invalide." */}
-              {activationError && (
-                <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold text-center">
-                  {activationError}
-                </div>
-              )}
-
-              {activationSuccessMsg && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold text-center space-y-2">
-                  <p>{activationSuccessMsg}</p>
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal(null)}
-                    className="w-full bg-[#D4AF37] text-black font-black uppercase text-[10px] py-2 rounded-lg mt-1 cursor-pointer"
-                  >
-                    Accéder à mon espace
-                  </button>
-                </div>
-              )}
-
-              {!activationSuccessMsg && (
-                <div className="space-y-2 pt-1">
-                  <button
-                    type="submit"
-                    disabled={isActivatingCode || !inputActivationCode.trim()}
-                    className="w-full bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black uppercase text-xs py-3.5 tracking-widest rounded-xl transition-all cursor-pointer shadow-lg disabled:opacity-50"
-                  >
-                    {isActivatingCode ? "Vérification..." : "Valider"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      supportConfig.openSupport("Bonjour Support AFRIGOMBO 👋\nJe n'ai pas encore reçu mon code d'activation d'abonnement.");
-                    }}
-                    className="w-full py-2 text-center text-[11px] font-bold text-afri-text-sec hover:text-[#D4AF37] cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                    <span>Obtenir un code via le Support</span>
-                  </button>
-                </div>
-              )}
-            </form>
-          </div>
-        </div>
-      )}
+              <button
+                type="button"
+                onClick={() => {
+                  supportConfig.openSupport("Bonjour Support AFRIGOMBO 👋\nJe n'ai pas encore reçu mon code d'activation d'abonnement.");
+                }}
+                className="w-full py-2 text-center text-[11px] font-bold text-afri-text-sec hover:text-[#D4AF37] cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Obtenir un code via le Support</span>
+              </button>
+            </div>
+          )}
+        </form>
+      </AndroidCenteredDialog>
 
     </div>
   );

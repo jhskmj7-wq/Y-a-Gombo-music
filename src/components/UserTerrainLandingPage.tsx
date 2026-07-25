@@ -17,6 +17,7 @@ import { useAuth } from "../AuthContext";
 import { db } from "../lib/firebase";
 import { gomboDB } from "../firebase";
 import { collection, onSnapshot, addDoc } from "firebase/firestore";
+import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -1898,270 +1899,239 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       )}
 
       {/* ==========================================
-          PLUS COCKPIT POPUP (ANCHORED ABOVE '+' BUTTON)
+          PLUS COCKPIT POPUP (ANDROID BOTTOM SHEET)
          ========================================== */}
-      <AnimatePresence>
-        {isPlusMenuOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pointer-events-auto">
-            {/* Dark premium glass backdrop overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsPlusMenuOpen(false)}
-              className="absolute inset-0 bg-black/80 cursor-pointer backdrop-blur-md"
-            />
-
-            {/* Pop-up card centered */}
-            <motion.div
-              initial={{ scale: 0.9, y: 15, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 15, opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="relative w-full max-w-lg bg-afri-bg-sec border-2 border-[#D4AF37]/50 rounded-3xl z-10 p-5 sm:p-7 shadow-[0_20px_60px_rgba(0,0,0,0.9)] flex flex-col space-y-4 select-none max-h-[85vh] overflow-y-auto"
-            >
-              {/* Pointer arrow pointing towards '+' button directly below */}
-              <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-5 bg-afri-bg-sec rotate-45 border-b-2 border-r-2 border-[#D4AF37]/50 pointer-events-none" />
-
-              {/* Title Header */}
-              <div className="flex justify-between items-center border-b border-afri-border pb-3 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xl">🌟</span>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
-                      AFRIGOMBO PLUS COCKPIT
-                    </h3>
-                    <p className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Tableau des Commandes Avancées</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsPlusMenuOpen(false)}
-                  className="w-8 h-8 rounded-full bg-afri-bg border border-afri-border flex items-center justify-center text-afri-text-muted hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Modern Grid containing 11 Items */}
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 overflow-y-auto max-h-[52vh] pb-3 pr-1">
-                {/* ⭐ Booster une annonce */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    requireAuthThen(() => {
-                      setActiveMenu("user_gombo_plus");
-                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                    });
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-afri-bg-sec/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
-                    <span className="text-sm">⭐</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Booster une annonce</div>
-                    <span className="text-[7.5px] font-mono text-amber-500 uppercase tracking-widest block leading-none mt-1 font-bold">GOMBO PLUS</span>
-                  </div>
-                </button>
-
-                {/* 🎼 Mon Portfolio */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    requireAuthThen(() => {
-                      setActiveMenu("user_heritage");
-                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                    });
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500/55 transition">
-                    <span className="text-sm">🎼</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mon Portfolio</div>
-                    <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">HÉRITAGE</span>
-                  </div>
-                </button>
-
-                {/* ❤️ Mes Favoris */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    setIsFavoritesModalOpen(true);
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500/55 transition">
-                    <span className="text-sm">❤️</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mes Favoris</div>
-                    <span className="text-[7.5px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-1 font-bold">ENREGISTRÉS</span>
-                  </div>
-                </button>
-
-                {/* 🕓 Historique */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    setIsHistoryModalOpen(true);
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500/55 transition">
-                    <span className="text-sm">🕓</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Historique</div>
-                    <span className="text-[7.5px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-1 font-bold">MÉMOIRE</span>
-                  </div>
-                </button>
-
-                {/* 📢 Mes Publications */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    requireAuthThen(() => {
-                      setActiveMenu("user_mes_gombos");
-                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                    });
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 group-hover:border-indigo-500/55 transition">
-                    <span className="text-sm">📢</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mes Publications</div>
-                    <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">GOMBO ENGINE</span>
-                  </div>
-                </button>
-
-                {/* 🎥 Mes Réels */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    requireAuthThen(() => {
-                      setActiveMenu("user_reels");
-                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                    });
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20 group-hover:border-pink-500/55 transition">
-                    <span className="text-sm">🎥</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mes Réels</div>
-                    <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">DISPO</span>
-                  </div>
-                </button>
-
-                {/* 📍 Opportunités proches */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    requireAuthThen(() => {
-                      setActiveMenu("user_opportunities");
-                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                    });
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500/55 transition">
-                    <span className="text-sm">📍</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Opportunités proches</div>
-                    <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">GEOLOC</span>
-                  </div>
-                </button>
-
-                {/* 🏆 Classements */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    setIsLeaderboardModalOpen(true);
-                    try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500/55 transition">
-                    <span className="text-sm">🏆</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Classements</div>
-                    <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">LEADERBOARD</span>
-                  </div>
-                </button>
-
-                {/* ❤️ Soutenir AFRIGOMBO */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    requireAuthThen(() => {
-                      setActiveMenu("user_builders");
-                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                    });
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500/55 transition">
-                    <span className="text-sm">❤️</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Soutenir AFRIGOMBO</div>
-                    <span className="text-[7.5px] font-mono text-red-500 uppercase tracking-widest block leading-none mt-1 font-bold">BÂTISSEURS</span>
-                  </div>
-                </button>
-
-                {/* ⚙ Paramètres */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    requireAuthThen(() => {
-                      setActiveMenu("user_settings");
-                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                    });
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-afri-bg-ter/50 flex items-center justify-center border border-afri-border group-hover:border-afri-border/70 transition">
-                    <span className="text-sm">⚙</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Paramètres</div>
-                    <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">PREFERENCES</span>
-                  </div>
-                </button>
-
-                {/* ❓ Centre d'aide */}
-                <button
-                  onClick={() => {
-                    setIsPlusMenuOpen(false);
-                    requireAuthThen(() => {
-                      setActiveMenu("user_help_center");
-                      try { audioSynth?.playValidationSuccess(); } catch (_) {}
-                    });
-                  }}
-                  className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer col-span-2"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 group-hover:border-sky-500/55 transition">
-                    <span className="text-sm">❓</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Centre d'aide</div>
-                    <span className="text-[7.5px] font-mono text-sky-400 uppercase tracking-widest block leading-none mt-1 font-bold">SUPPORT CLIENT</span>
-                  </div>
-                </button>
-              </div>
-            </motion.div>
+      <AndroidBottomSheet
+        isOpen={isPlusMenuOpen}
+        onClose={() => setIsPlusMenuOpen(false)}
+        title={
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🌟</span>
+            <div>
+              <h3 className="text-xs sm:text-sm font-sans font-black text-afri-text uppercase tracking-widest leading-none">
+                AFRIGOMBO PLUS COCKPIT
+              </h3>
+              <p className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider mt-1 font-bold">Tableau des Commandes Avancées</p>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        }
+      >
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 overflow-y-auto max-h-[60vh] pb-3 pr-1">
+          {/* ⭐ Booster une annonce */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              requireAuthThen(() => {
+                setActiveMenu("user_gombo_plus");
+                try { audioSynth?.playValidationSuccess(); } catch (_) {}
+              });
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-afri-bg-sec/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37]/55 transition">
+              <span className="text-sm">⭐</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Booster une annonce</div>
+              <span className="text-[7.5px] font-mono text-amber-500 uppercase tracking-widest block leading-none mt-1 font-bold">GOMBO PLUS</span>
+            </div>
+          </button>
+
+          {/* 🎼 Mon Portfolio */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              requireAuthThen(() => {
+                setActiveMenu("user_heritage");
+                try { audioSynth?.playValidationSuccess(); } catch (_) {}
+              });
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:border-purple-500/55 transition">
+              <span className="text-sm">🎼</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mon Portfolio</div>
+              <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">HÉRITAGE</span>
+            </div>
+          </button>
+
+          {/* ❤️ Mes Favoris */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              setIsFavoritesModalOpen(true);
+              try { audioSynth?.playValidationSuccess(); } catch (_) {}
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500/55 transition">
+              <span className="text-sm">❤️</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mes Favoris</div>
+              <span className="text-[7.5px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-1 font-bold">ENREGISTRÉS</span>
+            </div>
+          </button>
+
+          {/* 🕓 Historique */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              setIsHistoryModalOpen(true);
+              try { audioSynth?.playValidationSuccess(); } catch (_) {}
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500/55 transition">
+              <span className="text-sm">🕓</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Historique</div>
+              <span className="text-[7.5px] font-mono text-afri-text-sec uppercase tracking-widest block leading-none mt-1 font-bold">MÉMOIRE</span>
+            </div>
+          </button>
+
+          {/* 📢 Mes Publications */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              requireAuthThen(() => {
+                setActiveMenu("user_mes_gombos");
+                try { audioSynth?.playValidationSuccess(); } catch (_) {}
+              });
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 group-hover:border-indigo-500/55 transition">
+              <span className="text-sm">📢</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mes Publications</div>
+              <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">GOMBO ENGINE</span>
+            </div>
+          </button>
+
+          {/* 🎥 Mes Réels */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              requireAuthThen(() => {
+                setActiveMenu("user_reels");
+                try { audioSynth?.playValidationSuccess(); } catch (_) {}
+              });
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20 group-hover:border-pink-500/55 transition">
+              <span className="text-sm">🎥</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Mes Réels</div>
+              <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">DISPO</span>
+            </div>
+          </button>
+
+          {/* 📍 Opportunités proches */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              requireAuthThen(() => {
+                setActiveMenu("user_opportunities");
+                try { audioSynth?.playValidationSuccess(); } catch (_) {}
+              });
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:border-emerald-500/55 transition">
+              <span className="text-sm">📍</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Opportunités proches</div>
+              <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">GEOLOC</span>
+            </div>
+          </button>
+
+          {/* 🏆 Classements */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              setIsLeaderboardModalOpen(true);
+              try { audioSynth?.playValidationSuccess(); } catch (_) {}
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:border-amber-500/55 transition">
+              <span className="text-sm">🏆</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Classements</div>
+              <span className="text-[7.5px] font-mono text-[#D4AF37] uppercase tracking-widest block leading-none mt-1 font-bold">LEADERBOARD</span>
+            </div>
+          </button>
+
+          {/* ❤️ Soutenir AFRIGOMBO */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              requireAuthThen(() => {
+                setActiveMenu("user_builders");
+                try { audioSynth?.playValidationSuccess(); } catch (_) {}
+              });
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:border-red-500/55 transition">
+              <span className="text-sm">❤️</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Soutenir AFRIGOMBO</div>
+              <span className="text-[7.5px] font-mono text-red-500 uppercase tracking-widest block leading-none mt-1 font-bold">BÂTISSEURS</span>
+            </div>
+          </button>
+
+          {/* ⚙ Paramètres */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              requireAuthThen(() => {
+                setActiveMenu("user_settings");
+                try { audioSynth?.playValidationSuccess(); } catch (_) {}
+              });
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-afri-bg-ter/50 flex items-center justify-center border border-afri-border group-hover:border-afri-border/70 transition">
+              <span className="text-sm">⚙</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Paramètres</div>
+              <span className="text-[7.5px] font-mono text-emerald-400 uppercase tracking-widest block leading-none mt-1 font-bold">PREFERENCES</span>
+            </div>
+          </button>
+
+          {/* ❓ Centre d'aide */}
+          <button
+            onClick={() => {
+              setIsPlusMenuOpen(false);
+              requireAuthThen(() => {
+                setActiveMenu("user_help_center");
+                try { audioSynth?.playValidationSuccess(); } catch (_) {}
+              });
+            }}
+            className="bg-afri-bg border border-afri-border/90 hover:border-[#D4AF37]/45 rounded-2xl p-4 flex flex-col justify-between items-start text-left h-24 hover:bg-afri-bg-sec/5 transition-all group relative cursor-pointer col-span-2"
+          >
+            <div className="w-8 h-8 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 group-hover:border-sky-500/55 transition">
+              <span className="text-sm">❓</span>
+            </div>
+            <div>
+              <div className="text-[11px] font-sans font-black text-afri-text tracking-wide">Centre d'aide</div>
+              <span className="text-[7.5px] font-mono text-sky-400 uppercase tracking-widest block leading-none mt-1 font-bold">SUPPORT CLIENT</span>
+            </div>
+          </button>
+        </div>
+      </AndroidBottomSheet>
 
       {/* ==========================================
           COMING SOON & WAITLIST MODAL (DURABLE FIRESTORE)
