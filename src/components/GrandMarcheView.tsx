@@ -232,10 +232,10 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 space-y-5 text-left py-2 xs:py-4 pb-32 animate-fadeIn">
+    <div className="w-full px-3 sm:px-6 space-y-5 text-left py-2 xs:py-4 pb-32 animate-fadeIn">
       
       {/* HEADER SECTION */}
-      <div className="bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+      <div className="w-full bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
           <div className="flex items-center gap-3">
             {onBack && (
@@ -252,7 +252,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
                 <h1 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-tight">
                   Le Grand Marché
                 </h1>
-                <span className="px-2 py-0.5 bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-[9px] font-mono font-black uppercase rounded-md tracking-wider">
+                <span className="text-[10px] sm:text-xs px-2.5 py-1 whitespace-nowrap overflow-hidden text-ellipsis bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] font-mono font-black uppercase rounded-md tracking-wider">
                   SÉCURISÉ AFRI-TRUST
                 </span>
               </div>
@@ -333,7 +333,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
 
         {/* CATEGORY CHIPS */}
         {activeTab === "catalog" && (
-          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+          <div className="flex overflow-x-auto afri-no-scrollbar gap-2 pt-1 pb-2 whitespace-nowrap text-xs">
             {[
               { id: "all", label: "Tous les produits" },
               { id: "instruments", label: "🎹 Instruments" },
@@ -345,7 +345,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
                   selectedCategory === cat.id
                     ? "bg-afri-bg-ter border-[#D4AF37] text-[#D4AF37] shadow-xs"
                     : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -367,7 +367,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
             <p className="text-xs text-afri-text-sec">Essayez une autre recherche ou modifiez vos filtres.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
             {filteredItems.map((item) => (
               <div
                 key={item.id}
@@ -375,26 +375,26 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               >
                 <div>
                   {/* IMAGE PREVIEW */}
-                  <div className="relative h-44 w-full bg-black overflow-hidden">
+                  <div className="relative h-36 sm:h-44 w-full bg-black overflow-hidden">
                     <img
                       src={item.image}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-black/80 backdrop-blur-md rounded-lg border border-white/10 text-[10px] font-bold font-mono text-[#D4AF37] uppercase">
+                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-black/80 backdrop-blur-md rounded-lg border border-white/10 text-[10px] font-bold font-mono text-[#D4AF37] uppercase truncate">
                       {item.condition}
                     </div>
-                    <div className="absolute top-2 right-2 px-2.5 py-1 bg-[#D4AF37] text-black rounded-lg text-xs font-black font-mono shadow-md">
+                    <div className="absolute top-2 right-2 px-2.5 py-1 bg-[#D4AF37] text-black rounded-lg text-xs font-black font-mono shadow-md truncate">
                       {item.price.toLocaleString()} FCFA
                     </div>
                   </div>
 
                   {/* ITEM DETAILS */}
-                  <div className="p-4 space-y-2.5">
-                    <h3 className="text-sm font-black text-afri-text line-clamp-1 group-hover:text-[#D4AF37] transition-colors">
+                  <div className="p-3 sm:p-4 space-y-2">
+                    <h3 className="text-xs sm:text-sm font-black text-afri-text truncate group-hover:text-[#D4AF37] transition-colors">
                       {item.title}
                     </h3>
-                    <p className="text-xs text-afri-text-sec line-clamp-2 leading-relaxed">
+                    <p className="text-[10px] sm:text-xs text-afri-text-sec truncate leading-relaxed">
                       {item.description}
                     </p>
 
@@ -409,31 +409,31 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
                         <img
                           src={item.sellerAvatar}
                           alt={item.sellerName}
-                          className="w-6 h-6 rounded-full object-cover border border-[#D4AF37]/40"
+                          className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-[#D4AF37]/40"
                         />
-                        <span className="text-[11px] font-bold text-afri-text truncate max-w-[110px]">
+                        <span className="text-[10px] sm:text-[11px] font-bold text-afri-text truncate max-w-[80px] sm:max-w-[110px]">
                           {item.sellerName}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                      <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1.5 sm:px-2 py-0.5 rounded border border-emerald-500/20">
                         <ShieldCheck className="w-3 h-3" />
-                        <span>TRUST {item.sellerTrustScore}%</span>
+                        <span>{item.sellerTrustScore}%</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* CARD FOOTER */}
-                <div className="p-3 bg-afri-bg border-t border-afri-border/60 flex items-center gap-2">
+                <div className="p-2 sm:p-3 bg-afri-bg border-t border-afri-border/60 flex items-center gap-2">
                   <button
                     onClick={() => setSelectedItem(item)}
-                    className="flex-1 py-2 bg-afri-bg-ter hover:bg-[#D4AF37] hover:text-black text-[#D4AF37] text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center"
+                    className="flex-1 py-1.5 sm:py-2 bg-afri-bg-ter hover:bg-[#D4AF37] hover:text-black text-[#D4AF37] text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center"
                   >
-                    Voir détails
+                    Voir
                   </button>
                   <button
                     onClick={() => handleBuyItem(item)}
-                    className="px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-black border border-emerald-500/40 rounded-xl transition-all cursor-pointer font-black text-xs uppercase"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-black border border-emerald-500/40 rounded-xl transition-all cursor-pointer font-black text-[10px] sm:text-xs uppercase"
                     title="Acheter directement"
                   >
                     Acheter

@@ -284,10 +284,10 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 space-y-5 text-left py-2 xs:py-4 pb-32 animate-fadeIn">
+    <div className="w-full px-3 sm:px-6 space-y-5 text-left py-2 xs:py-4 pb-32 animate-fadeIn">
       
       {/* HEADER SECTION */}
-      <div className="bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+      <div className="w-full bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
           <div className="flex items-center gap-3">
             {onBack && (
@@ -304,7 +304,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                 <h1 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-tight">
                   L'Académie AFRIGOMBO
                 </h1>
-                <span className="px-2 py-0.5 bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-[9px] font-mono font-black uppercase rounded-md tracking-wider">
+                <span className="text-[10px] sm:text-xs px-2.5 py-1 whitespace-nowrap overflow-hidden text-ellipsis bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] font-mono font-black uppercase rounded-md tracking-wider">
                   MASTERCLASSES & GUIDES
                 </span>
               </div>
@@ -385,7 +385,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
 
         {/* CATEGORY CHIPS */}
         {activeTab === "catalog" && (
-          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+          <div className="flex overflow-x-auto afri-no-scrollbar gap-2 pt-1 pb-2 whitespace-nowrap text-xs">
             {[
               { id: "all", label: "Toutes les formations" },
               { id: "mao", label: "🎹 M.A.O & Beatmaking" },
@@ -397,7 +397,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
                   selectedCategory === cat.id
                     ? "bg-afri-bg-ter border-[#D4AF37] text-[#D4AF37] shadow-xs"
                     : "bg-afri-bg border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -419,7 +419,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
             <p className="text-xs text-afri-text-sec">Essayez une autre recherche ou modifiez les filtres de catégorie.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
             {filteredCourses.map((course) => {
               const isEnrolled = enrolledCourseIds.includes(course.id);
               return (
@@ -429,7 +429,7 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                 >
                   <div>
                     {/* MEDIA PREVIEW */}
-                    <div className="relative h-48 w-full bg-black overflow-hidden">
+                    <div className="relative h-36 sm:h-44 w-full bg-black overflow-hidden">
                       <img
                         src={course.previewVideoUrl || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800"}
                         alt={course.title}
@@ -437,22 +437,22 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
                       
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                        <span className="px-2.5 py-1 bg-black/80 backdrop-blur-md border border-white/10 text-[10px] font-bold text-[#D4AF37] uppercase rounded-lg">
+                      <div className="absolute top-2 left-2 flex items-center gap-1">
+                        <span className="px-2 py-0.5 bg-black/80 backdrop-blur-md border border-white/10 text-[9px] font-bold text-[#D4AF37] uppercase rounded-lg truncate">
                           {course.level}
                         </span>
-                        <span className="px-2.5 py-1 bg-black/80 backdrop-blur-md border border-white/10 text-[10px] font-mono font-bold text-afri-text uppercase rounded-lg">
+                        <span className="px-2 py-0.5 bg-black/80 backdrop-blur-md border border-white/10 text-[9px] font-mono font-bold text-afri-text uppercase rounded-lg truncate">
                           {course.format}
                         </span>
                       </div>
 
-                      <div className="absolute top-3 right-3">
+                      <div className="absolute top-2 right-2">
                         {course.price === 0 ? (
-                          <span className="px-3 py-1 bg-emerald-500 text-black text-xs font-black uppercase rounded-lg shadow-md">
+                          <span className="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-black uppercase rounded-lg shadow-md truncate">
                             GRATUIT
                           </span>
                         ) : (
-                          <span className="px-3 py-1 bg-[#D4AF37] text-black text-xs font-black font-mono rounded-lg shadow-md">
+                          <span className="px-2 py-0.5 bg-[#D4AF37] text-black text-[9px] font-black font-mono rounded-lg shadow-md truncate">
                             {course.price.toLocaleString()} FCFA
                           </span>
                         )}
@@ -462,50 +462,46 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                       <div className="absolute inset-0 flex items-center justify-center">
                         <button
                           onClick={() => setSelectedCourse(course)}
-                          className="w-12 h-12 rounded-full bg-[#D4AF37]/90 text-black flex items-center justify-center hover:scale-110 transition-all shadow-xl cursor-pointer"
+                          className="w-10 h-10 rounded-full bg-[#D4AF37]/90 text-black flex items-center justify-center hover:scale-110 transition-all shadow-xl cursor-pointer"
                         >
-                          <Play className="w-5 h-5 fill-black ml-0.5" />
+                          <Play className="w-4 h-4 fill-black ml-0.5" />
                         </button>
                       </div>
                     </div>
 
                     {/* DETAILS */}
-                    <div className="p-4 space-y-2.5">
-                      <h3 className="text-sm font-black text-afri-text group-hover:text-[#D4AF37] transition-colors leading-snug">
+                    <div className="p-3 sm:p-4 space-y-2">
+                      <h3 className="text-xs sm:text-sm font-black text-afri-text group-hover:text-[#D4AF37] transition-colors leading-snug truncate">
                         {course.title}
                       </h3>
-                      <p className="text-xs text-afri-text-sec line-clamp-2 leading-relaxed">
+                      <p className="text-[10px] sm:text-xs text-afri-text-sec truncate leading-relaxed">
                         {course.subtitle}
                       </p>
 
-                      <div className="flex items-center gap-4 text-[10px] text-afri-text-sec font-mono pt-1 border-t border-afri-border/40">
+                      <div className="flex items-center gap-2 sm:gap-4 text-[9px] sm:text-[10px] text-afri-text-sec font-mono pt-1 border-t border-afri-border/40">
                         <div className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
+                          <Clock className="w-3 h-3 text-[#D4AF37]" />
                           <span>{course.duration}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
-                          <span>{course.lessonsCount} leçons</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="w-3.5 h-3.5 text-[#D4AF37]" />
-                          <span>{course.studentsCount} élèves</span>
+                          <Users className="w-3 h-3 text-[#D4AF37]" />
+                          <span>{course.studentsCount}</span>
                         </div>
                       </div>
 
                       {/* INSTRUCTOR BADGE */}
                       <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <img
                             src={course.instructorAvatar}
                             alt={course.instructorName}
-                            className="w-6 h-6 rounded-full object-cover border border-[#D4AF37]/40"
+                            className="w-5 h-5 rounded-full object-cover border border-[#D4AF37]/40"
                           />
-                          <span className="text-[11px] font-bold text-afri-text truncate max-w-[140px]">
+                          <span className="text-[10px] font-bold text-afri-text truncate max-w-[80px] sm:max-w-[140px]">
                             {course.instructorName}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1 text-[10px] text-amber-400 font-bold">
+                        <div className="flex items-center gap-1 text-[9px] text-amber-400 font-bold">
                           <Star className="w-3 h-3 fill-amber-400" />
                           <span>{course.rating.toFixed(1)}</span>
                         </div>
@@ -514,22 +510,22 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
                   </div>
 
                   {/* FOOTER */}
-                  <div className="p-3 bg-afri-bg border-t border-afri-border/60 flex items-center gap-2">
+                  <div className="p-2 sm:p-3 bg-afri-bg border-t border-afri-border/60 flex items-center gap-2">
                     <button
                       onClick={() => setSelectedCourse(course)}
-                      className="flex-1 py-2 bg-afri-bg-ter hover:bg-[#D4AF37] hover:text-black text-[#D4AF37] text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center"
+                      className="flex-1 py-1.5 sm:py-2 bg-afri-bg-ter hover:bg-[#D4AF37] hover:text-black text-[#D4AF37] text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer text-center"
                     >
-                      Aperçu du cours
+                      Voir
                     </button>
                     {isEnrolled ? (
-                      <span className="px-3 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold uppercase flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span className="px-2 sm:px-3 py-1.5 sm:py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-[10px] sm:text-xs font-bold uppercase flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
                         <span>Inscrit</span>
                       </span>
                     ) : (
                       <button
                         onClick={() => handleEnrollInCourse(course)}
-                        className="px-4 py-2 bg-[#D4AF37] hover:bg-amber-400 text-black font-black text-xs uppercase rounded-xl transition-all cursor-pointer shadow-md"
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#D4AF37] hover:bg-amber-400 text-black font-black text-[10px] sm:text-xs uppercase rounded-xl transition-all cursor-pointer shadow-md"
                       >
                         Rejoindre
                       </button>
