@@ -104,7 +104,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="w-full max-w-xl mx-auto space-y-6 pt-2 text-left"
+      className="w-full max-w-xl mx-auto space-y-6 pt-2 text-left min-h-screen pb-32"
     >
       
       {/* FOUNDER COMMAND CENTER CARD */}

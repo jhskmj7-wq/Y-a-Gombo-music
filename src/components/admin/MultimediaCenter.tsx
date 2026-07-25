@@ -36,6 +36,7 @@ import {
   Maximize2
 } from "lucide-react";
 import { db, gomboDB } from "../../firebase";
+import { getAudioUrl } from "../../lib/audioUtils";
 import { SystemMedia, SourceType } from "../../types";
 import {
   collection,
@@ -257,6 +258,12 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
 
     // 1.b Listen to system_media (New Core Collection)
     const unsubSystemMedia = gomboDB.listenSystemMedia((media) => {
+      // Client-side sorting as fallback for Firestore index
+      media.sort((a, b) => {
+        if (b.priority !== a.priority) return b.priority - a.priority;
+        return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
+      });
+
       setSystemMedia(media);
       const assets: Record<string, MediaAsset> = {};
       media.forEach((m) => {
@@ -314,7 +321,11 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
   };
 
   // Play preview handler with volume settings
-  const togglePlayAudio = (id: string, url: string, customVolume?: number) => {
+  const togglePlayAudio = (asset: MediaAsset) => {
+    const id = asset.id;
+    const url = getAudioUrl(asset.sourceType, asset.githubPath || asset.externalUrl || asset.storagePath);
+    const customVolume = asset.volume;
+
     incrementPlayCount(id);
 
     if (activePreviewId === id) {
@@ -327,6 +338,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         audioPlayer.pause();
       }
       const audioObj = new Audio(url);
+      audioObj.crossOrigin = "anonymous";
       audioObj.volume = customVolume !== undefined ? customVolume : 0.8;
       audioObj.preload = "metadata"; // Progressive streaming preload
       audioObj.play().catch((err) => console.warn("Playback blocked:", err));
@@ -750,7 +762,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
         setActivePreviewId(null);
       }
 
-      await deleteDoc(doc(db, "media", id));
+      await gomboDB.deleteSystemMedia(id);
       await logAudit(
         id,
         asset.title,
@@ -997,7 +1009,7 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
                         🎵 {asset.title}
                       </span>
                       <button
-                        onClick={() => togglePlayAudio(spot.id, asset.downloadURL, asset.volume)}
+                        onClick={() => togglePlayAudio(asset)}
                         className={`p-2 rounded-lg cursor-pointer border transition-all ${
                           isPlaying
                             ? "bg-afri-bg-sec text-black border-[#D4AF37]"

@@ -1383,7 +1383,7 @@ export const gomboDB = {
   // FALLBACK MEDIA SYSTEM (FIRESTORE)
   async getSystemMedia(): Promise<SystemMedia[]> {
     if (db) {
-      const q = query(collection(db, "system_media"), orderBy("priority", "desc"), orderBy("updatedAt", "desc"));
+      const q = query(collection(db, "system_media"), orderBy("priority", "desc"));
       const snap = await getDocs(q);
       return snap.docs.map(d => ({ id: d.id, ...d.data() } as SystemMedia));
     }
@@ -1392,7 +1392,7 @@ export const gomboDB = {
 
   listenSystemMedia(callback: (media: SystemMedia[]) => void) {
     if (db) {
-      const q = query(collection(db, "system_media"), orderBy("priority", "desc"), orderBy("updatedAt", "desc"));
+      const q = query(collection(db, "system_media"), orderBy("priority", "desc"));
       return onSnapshot(q, (snap) => {
         callback(snap.docs.map(d => ({ id: d.id, ...d.data() } as SystemMedia)));
       });
