@@ -25,6 +25,7 @@ interface AudioContextType {
   stop: () => void;
   seek: (seconds: number) => void;
   setVolume: (vol: number) => void;
+  setIsMuted: (muted: boolean) => void;
   toggleMute: () => void;
 }
 
@@ -110,6 +111,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Update volume and mute on the audio element when state changes
   useEffect(() => {
     if (audioRef.current) {
+      audioRef.current.muted = isMuted;
       audioRef.current.volume = isMuted ? 0 : volume;
     }
     try {
@@ -285,6 +287,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         stop,
         seek,
         setVolume,
+        setIsMuted,
         toggleMute,
       }}
     >

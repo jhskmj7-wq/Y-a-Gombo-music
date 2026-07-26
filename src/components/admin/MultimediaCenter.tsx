@@ -298,9 +298,6 @@ export default function MultimediaCenter({ adminEmail, isAuthorizedSuperFounder 
     return () => {
       unsubMedia();
       unsubLogs();
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-      }
     };
   }, []);
 

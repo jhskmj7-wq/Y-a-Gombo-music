@@ -22,7 +22,7 @@ body {
   backface-visibility: hidden;
 }
 
-/* Global Fix for Chrome Android Glitch: Disable backdrop-filter and -webkit-mask-image */
+/* Global Fix for Chrome Android Glitch: Disable backdrop-filter and -webkit-mask-image globally */
 .backdrop-blur-xs,
 .backdrop-blur-sm,
 .backdrop-blur,
@@ -30,17 +30,13 @@ body {
 .backdrop-blur-lg,
 .backdrop-blur-xl,
 .backdrop-blur-2xl,
-.backdrop-blur-3xl {
+.backdrop-blur-3xl,
+[class*="backdrop-blur"] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-[class*="backdrop-blur-"] {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-/* Remplacer par des couleurs solides ou opaques simples pour fonds sombres */
+/* Remplacer par des couleurs solides ou opaques simples */
 .imperial [class*="backdrop-blur"],
 .dark [class*="backdrop-blur"],
 .imperial [class*="bg-black/"],
@@ -65,6 +61,8 @@ html, body {
   overflow-x: hidden;
   max-width: 100vw;
   width: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -91,15 +89,15 @@ html, body {
 }
 
 .light {
-  --afri-bg: #F8F9FA;
+  --afri-bg: #F9F8F6;
   --afri-bg-sec: #FFFFFF;
-  --afri-bg-ter: #F2F0EB;
+  --afri-bg-ter: #F2EFE9;
   --afri-bg-action: #EBE8E0;
   --afri-bar: #FFFFFF;
-  --afri-text: #1A1A1A;
-  --afri-text-sec: #555555;
+  --afri-text: #1C1917;
+  --afri-text-sec: #57534E;
   --afri-text-muted: #8E8B82;
-  --afri-border: rgba(212, 175, 55, 0.25);
+  --afri-border: #DDD8CF;
 }
 
 /* Smooth 250-300ms transitions for colors, backgrounds, borders and shadows when theme is changed */
@@ -325,106 +323,173 @@ img {
   background: var(--color-afri-gold-light);
 }
 
-/* Premium Light Mode Overrides */
+/* Premium Light Mode Comprehensive Overrides */
 .light,
 .light body,
-.light #root {
-  background-color: var(--afri-bg) !important;
-  color: var(--afri-text) !important;
+.light #root,
+.light main,
+.light .app-container {
+  background-color: var(--afri-bg, #F9F8F6) !important;
+  color: var(--afri-text, #1C1917) !important;
 }
 
-/* Base text overrides for light mode to ensure no gray-on-white */
-.light p, .light span, .light div, .light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
-  color: var(--afri-text);
-}
-
-.light .text-zinc-500, .light .text-zinc-400, .light .text-gray-500, .light .text-neutral-500 {
-  color: var(--afri-text-sec) !important;
-}
-
-.light .text-zinc-600, .light .text-gray-600 {
-  color: var(--afri-text) !important;
-}
-
-.light .bg-black,
-.light .bg-\[\#030303\],
-.light .bg-\[\#050505\],
-.light .bg-\[\#09090A\],
-.light .bg-zinc-950,
-.light .bg-zinc-900\/90,
-.light .bg-zinc-950\/90,
-.light .bg-\[\#050505\]\/95,
-.light .bg-neutral-950 {
-  background-color: var(--afri-bg) !important;
-}
-
-.light .bg-\[\#0A0A0A\],
-.light .bg-\[\#111111\],
-.light .bg-\[\#141414\],
-.light .bg-\[\#181818\],
-.light .bg-\[\#1a1a1a\],
-.light .bg-\[\#0B0B0C\],
-.light .bg-\[\#060606\],
-.light .bg-zinc-900,
-.light .bg-zinc-850,
-.light .bg-zinc-800,
-.light .bg-neutral-900,
-.light .bg-[#0A0A0A] {
-  background-color: var(--afri-bg-sec) !important;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08) !important;
-  border-color: var(--afri-border) !important;
+/* Base text overrides for light mode */
+.light p, .light span, .light div, .light h1, .light h2, .light h3, .light h4, .light h5, .light h6, .light label, .light a, .light li {
+  color: var(--afri-text, #1C1917);
 }
 
 .light .text-white,
+.light .text-zinc-50,
 .light .text-zinc-100,
 .light .text-zinc-200,
 .light .text-zinc-300,
-.light .text-neutral-200,
+.light .text-neutral-50,
 .light .text-neutral-100,
+.light .text-neutral-200,
+.light .text-gray-50,
+.light .text-gray-100,
+.light .text-gray-200,
+.light .text-stone-50,
+.light .text-stone-100,
+.light .text-stone-200,
+.light .text-slate-50,
+.light .text-slate-100,
+.light .text-slate-200,
 .light .text-\[\#F5F5F5\],
 .light .text-\[\#f5f5f5\] {
-  color: var(--afri-text) !important;
+  color: var(--afri-text, #1C1917) !important;
 }
 
-.light .border-zinc-900,
-.light .border-zinc-850,
-.light .border-zinc-800,
-.light .border-zinc-700,
-.light .border-neutral-900,
-.light .border-neutral-800,
-.light .border-white\/5,
-.light .border-white\/10 {
-  border-color: var(--afri-border) !important;
+.light .text-zinc-400,
+.light .text-zinc-500,
+.light .text-gray-400,
+.light .text-gray-500,
+.light .text-neutral-400,
+.light .text-neutral-500,
+.light .text-stone-400,
+.light .text-stone-500,
+.light .text-slate-400,
+.light .text-slate-500,
+.light .text-afri-text-sec {
+  color: var(--afri-text-sec, #57534E) !important;
+}
+
+/* All dark backgrounds in light mode convert to white or ivory surface */
+.light .bg-black,
+.light .bg-\[\#000\],
+.light .bg-\[\#000000\],
+.light .bg-\[\#030303\],
+.light .bg-\[\#050505\],
+.light .bg-\[\#060606\],
+.light .bg-\[\#09090A\],
+.light .bg-\[\#0A0A0A\],
+.light .bg-\[\#0B0B0C\],
+.light .bg-\[\#0F0F12\],
+.light .bg-\[\#111\],
+.light .bg-\[\#111111\],
+.light .bg-\[\#121217\],
+.light .bg-\[\#141414\],
+.light .bg-\[\#161616\],
+.light .bg-\[\#181818\],
+.light .bg-\[\#1a1a1a\],
+.light .bg-zinc-950,
+.light .bg-zinc-900,
+.light .bg-zinc-850,
+.light .bg-zinc-800,
+.light .bg-neutral-950,
+.light .bg-neutral-900,
+.light .bg-neutral-850,
+.light .bg-stone-950,
+.light .bg-stone-900,
+.light .bg-gray-950,
+.light .bg-gray-900,
+.light .bg-slate-950,
+.light .bg-slate-900 {
+  background-color: var(--afri-bg-sec, #FFFFFF) !important;
+  color: var(--afri-text, #1C1917) !important;
+  border-color: var(--afri-border, #DDD8CF) !important;
 }
 
 .light .bg-black\/40,
 .light .bg-black\/50,
 .light .bg-zinc-950\/50,
 .light .bg-black\/60,
-.light .bg-black\/80 {
-  background-color: rgba(255, 255, 255, 0.8) !important;
-  border-color: var(--afri-border) !important;
-  backdrop-filter: blur(12px);
+.light .bg-black\/80,
+.light .bg-black\/90,
+.light [class*="bg-black/"],
+.light [class*="bg-zinc-950/"],
+.light [class*="bg-zinc-900/"],
+.light [class*="bg-neutral-900/"] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  color: var(--afri-text, #1C1917) !important;
+  border-color: var(--afri-border, #DDD8CF) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
+/* Page level containers */
+.light .bg-afri-bg {
+  background-color: var(--afri-bg, #F9F8F6) !important;
+}
+
+.light .bg-afri-bg-sec {
+  background-color: var(--afri-bg-sec, #FFFFFF) !important;
+}
+
+.light .bg-afri-bg-ter {
+  background-color: var(--afri-bg-ter, #F2EFE9) !important;
+}
+
+/* Borders in light mode */
+.light .border-zinc-900,
+.light .border-zinc-850,
+.light .border-zinc-800,
+.light .border-zinc-700,
+.light .border-neutral-900,
+.light .border-neutral-800,
+.light .border-gray-900,
+.light .border-gray-800,
+.light .border-stone-900,
+.light .border-stone-800,
+.light .border-white\/5,
+.light .border-white\/10,
+.light .border-white\/15,
+.light .border-white\/20,
+.light .border-white\/30 {
+  border-color: var(--afri-border, #DDD8CF) !important;
+}
+
+/* Form inputs & controls */
 .light input,
 .light select,
 .light textarea {
-  background-color: var(--afri-bg-sec) !important;
-  color: var(--afri-text) !important;
-  border-color: var(--afri-border) !important;
+  background-color: #FFFFFF !important;
+  color: #1C1917 !important;
+  border-color: #DDD8CF !important;
 }
 
-.light aside {
-  background-color: var(--afri-bg-sec) !important;
-  border-color: var(--afri-border) !important;
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #8E8B82 !important;
+}
+
+/* Sidebars, Headers, Navbars, Footers */
+.light aside,
+.light header,
+.light footer,
+.light nav {
+  background-color: #FFFFFF !important;
+  border-color: #DDD8CF !important;
 }
 
 .light .afri-card {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+  background-color: #FFFFFF !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+  border-color: #DDD8CF !important;
 }
 
 .light .afri-card-inset {
-  background-color: var(--afri-bg-ter) !important;
+  background-color: #F2EFE9 !important;
+  border-color: #DDD8CF !important;
 }
 

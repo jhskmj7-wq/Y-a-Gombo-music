@@ -31,14 +31,14 @@ export const themeColors: Record<Theme, ThemeColors> = {
     warning: "#F59E0B"
   },
   light: {
-    background: "#FAF9F6", // Ivory white
-    surface: "#F2EFE8",    // Warm gray / Beige menu
-    card: "#FFFFFF",       // White cards
+    background: "#F9F8F6", // Blanc Ivoire
+    surface: "#FFFFFF",    // Blanc Pur (Cartes, Navbar, Modales)
+    card: "#F2EFE9",       // Gris très clair nuancé / Marron glacé
     primary: "#D4AF37",    // Gold AFRIGOMBO
-    secondary: "#555555",
-    text: "#111111",       // Dark charcoal text
-    textSecondary: "#666666", // Medium gray
-    border: "#DDD8CF",     // Light gray
+    secondary: "#57534E",
+    text: "#1C1917",       // Charcoal / Stone-900 (Sombres et contrastés)
+    textSecondary: "#57534E", // Medium charcoal
+    border: "#DDD8CF",     // Bordure beige/gris
     gold: "#D4AF37",
     error: "#DC2626",
     success: "#16A34A",

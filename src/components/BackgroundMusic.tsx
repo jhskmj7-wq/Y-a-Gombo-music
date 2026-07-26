@@ -5,6 +5,7 @@ import { usePerformance } from '../services/performanceService';
 import { db } from '../firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { getCachedAudioUrl } from '../lib/audioManager';
+import { useAudio } from '../context/AudioContext';
 
 // Curated static fallback tracks for the ambient experience
 const DEFAULT_PLAYLIST = [
@@ -68,6 +69,7 @@ const DEFAULT_PLAYLIST = [
 
 export const BackgroundMusic: React.FC = () => {
   const { areSoundsReduced } = usePerformance();
+  const { isMuted, toggleMute, setIsMuted, volume: globalVolume, setVolume: setGlobalVolume } = useAudio();
   const [isPlaying, setIsPlaying] = useState(false);
   const [playlist, setPlaylist] = useState<any[]>(DEFAULT_PLAYLIST);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -142,12 +144,13 @@ export const BackgroundMusic: React.FC = () => {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Sync volume with performance states
+  // Sync volume and mute with audio element and global state
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = areSoundsReduced ? volume * 0.4 : volume;
+      audioRef.current.muted = isMuted;
+      audioRef.current.volume = isMuted ? 0 : (areSoundsReduced ? volume * 0.4 : volume);
     }
-  }, [volume, areSoundsReduced]);
+  }, [volume, isMuted, areSoundsReduced]);
 
   const wasPlayingRef = useRef(false);
   const transitionRef = useRef<boolean>(false);
@@ -233,6 +236,7 @@ export const BackgroundMusic: React.FC = () => {
     // Create persistent HTML5 Audio tag
     const audio = new Audio();
     audio.loop = false;
+    audio.muted = isMuted;
     audio.volume = 0; // Starts at zero for smooth transition
     audioRef.current = audio;
 
@@ -405,21 +409,23 @@ export const BackgroundMusic: React.FC = () => {
         <motion.button 
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={togglePlay}
+          onClick={toggleMute}
           className={`w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-all duration-500 border ${
-            isPlaying 
-              ? 'bg-afri-bg-sec/90 border-[#D4AF37] text-[#D4AF37] shadow-lg shadow-[#D4AF37]/25' 
-              : 'bg-afri-bg/80 border-afri-border text-afri-text/55 hover:text-afri-text hover:border-white/35'
+            !isMuted 
+              ? 'bg-afri-bg-sec/90 border-[#D4AF37] text-[#D4AF37] shadow-lg shadow-[#D4AF37]/25 ring-2 ring-[#D4AF37]/20' 
+              : 'bg-afri-bg/80 border-afri-border text-zinc-500 hover:text-afri-text hover:border-white/35'
           }`}
-          title={isPlaying ? "Couper l'ambiance musicale" : "Activer l'ambiance musicale"}
+          title={!isMuted ? "Son global activé (Cliquer pour désactiver le son global)" : "Son global coupé (Cliquer pour réactiver le son)"}
         >
-          {isPlaying ? (
+          {!isMuted ? (
             <div className="relative flex items-center justify-center">
-              <Volume2 size={15} />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+              <Volume2 size={16} className="text-[#D4AF37]" />
+              {isPlaying && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+              )}
             </div>
           ) : (
-            <VolumeX size={15} />
+            <VolumeX size={16} className="text-zinc-500" />
           )}
         </motion.button>
 
@@ -565,18 +571,37 @@ export const BackgroundMusic: React.FC = () => {
             </div>
 
             <div className="mt-3 pt-2 border-t border-afri-border flex items-center gap-2 text-afri-text-sec">
-              <VolumeX size={11} />
+              <button 
+                onClick={toggleMute}
+                className="p-1 hover:text-[#D4AF37] transition-colors cursor-pointer"
+                title={isMuted ? "Activer le son global" : "Couper le son global"}
+              >
+                <VolumeX size={12} className={isMuted ? "text-red-400 font-bold" : "text-zinc-500"} />
+              </button>
               <input
                 type="range"
                 min="0"
                 max="1"
                 step="0.05"
-                value={volume}
-                onChange={(e) => setVolume(parseFloat(e.target.value))}
+                value={isMuted ? 0 : volume}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setVolume(val);
+                  setGlobalVolume(val);
+                  if (val > 0 && isMuted) {
+                    setIsMuted(false);
+                  }
+                }}
                 className="w-full h-1 bg-afri-bg-ter rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                title="Volume de l'ambiance"
+                title="Volume du son global"
               />
-              <Volume2 size={11} className="text-[#D4AF37]" />
+              <button 
+                onClick={toggleMute}
+                className="p-1 hover:text-[#D4AF37] transition-colors cursor-pointer"
+                title={isMuted ? "Activer le son global" : "Couper le son global"}
+              >
+                <Volume2 size={12} className={!isMuted ? "text-[#D4AF37]" : "text-zinc-500"} />
+              </button>
             </div>
           </motion.div>
         )}

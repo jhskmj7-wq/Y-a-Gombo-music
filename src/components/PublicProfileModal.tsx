@@ -119,9 +119,6 @@ export function PublicProfileModal({
 
     return () => {
       unsubProfile();
-      if (audioElement) {
-        audioElement.pause();
-      }
     };
   }, [isOpen, targetUserId, currentUser?.uid]);
 
