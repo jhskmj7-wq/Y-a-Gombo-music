@@ -6,7 +6,7 @@ import {
   Globe, FileText, Star, LogOut, Settings, 
   Database, Video, Radio, Sparkles, MessageSquare, 
   ChevronRight, AlertTriangle, Play, Pause, Square, HelpCircle as HelpIcon,
-  Smartphone as PhoneIcon, Mail, Laptop
+  Smartphone as PhoneIcon, Mail, Laptop, Key, WifiOff, RefreshCw
 } from "lucide-react";
 import AfrigomboHelpCenter from "./AfrigomboHelpCenter";
 import { CGUContent, PrivacyContent } from "./LegalContent";
@@ -14,11 +14,10 @@ import { useLanguage, Language } from "../LanguageContext";
 import { useAuth } from "../AuthContext";
 import { gomboDB } from "../firebase";
 import { audioSynth } from "../lib/audio";
-import { playSound } from "../services/audioService";
-import { triggerSettingsSaved } from "../services/performanceService";
 import { globalAudioManager, AudioState } from "../lib/audioManager";
 import { supportConfig } from "../supportConfig";
 import { useTheme } from "../context/ThemeContext";
+import { useAppSettings, ThemeMode } from "../context/AppSettingsContext";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -63,7 +62,7 @@ const modalTranslations: Record<string, Record<string, string>> = {
     storage_title: "💾 Données & Stockage Local",
     cache_label: "Cache Application:",
     photos_label: "Photos & Multimédia:",
-    clear_cache: "Vider cache",
+    clear_cache: "Vider le cache",
     refresh_data: "Actualiser données",
     multimedia_title: "🎵 Expérience Musicale & Multimédia",
     autoplay_video: "Lecture automatique des vidéos",
@@ -175,20 +174,30 @@ export default function SettingsModal({
   const { t, language: currentLang, setLanguage } = useLanguage();
   const { currentUser, profile } = useAuth();
   
+  // App Global Settings Store Context
   const {
-    theme,
-    setTheme,
+    themeMode,
+    setThemeMode,
+    themePreset,
+    setThemePreset,
     textSize,
     setTextSize,
-    notificationsEnabled,
-    setNotificationsEnabled,
-    musicEnabled,
-    setMusicEnabled,
-    soundsEnabled,
-    setSoundsEnabled,
-    vibrationsEnabled,
-    setVibrationsEnabled
-  } = useTheme();
+    notifications,
+    updateNotificationPref,
+    audio,
+    updateAudioPref,
+    language,
+    setLanguagePref,
+    dataSaver,
+    setDataSaver,
+    privacy,
+    updatePrivacyPref,
+    cacheSizeMo,
+    mediaSizeMo,
+    clearAppCache,
+    sendPasswordReset,
+    showToast
+  } = useAppSettings();
 
   const langCode = (currentLang === "en" || currentLang === "fr") ? currentLang : "fr";
   const mt = (key: string) => modalTranslations[langCode]?.[key] || modalTranslations["fr"][key] || key;
@@ -211,77 +220,7 @@ export default function SettingsModal({
     }
   }
 
-  // Language State Selection
-  const [langSelection, setLangSelection] = useState<Language>(currentLang);
-
-  const handleLanguageChange = (lang: Language) => {
-    setLangSelection(lang);
-    setLanguage(lang);
-    try { audioSynth.playValidationSuccess(); } catch (_) {}
-  };
-
-  // Notification States
-  const [notifMessages, setNotifMessages] = useState(() => {
-    if (profile?.notificationPrefs?.messages !== undefined) return profile.notificationPrefs.messages;
-    return localStorage.getItem("gombo_pref_notif_messages") !== "false";
-  });
-  const [notifOpps, setNotifOpps] = useState(() => {
-    if (profile?.notificationPrefs?.opportunities !== undefined) return profile.notificationPrefs.opportunities;
-    return localStorage.getItem("gombo_pref_notif_opps") !== "false";
-  });
-  const [notifPayments, setNotifPayments] = useState(() => {
-    if (profile?.notificationPrefs?.payments !== undefined) return profile.notificationPrefs.payments;
-    return localStorage.getItem("gombo_pref_notif_payments") !== "false";
-  });
-  const [notifContracts, setNotifContracts] = useState(() => {
-    if (profile?.notificationPrefs?.contracts !== undefined) return profile.notificationPrefs.contracts;
-    return localStorage.getItem("gombo_pref_notif_contracts") !== "false";
-  });
-  const [notifGomboId, setNotifGomboId] = useState(() => {
-    if (profile?.notificationPrefs?.gomboId !== undefined) return profile.notificationPrefs.gomboId;
-    return localStorage.getItem("gombo_pref_notif_gombo_id") !== "false";
-  });
-  const [notifPremium, setNotifPremium] = useState(() => {
-    if (profile?.notificationPrefs?.premium !== undefined) return profile.notificationPrefs.premium;
-    return localStorage.getItem("gombo_pref_notif_premium") !== "false";
-  });
-  const [notifNews, setNotifNews] = useState(() => {
-    if (profile?.notificationPrefs?.news !== undefined) return profile.notificationPrefs.news;
-    return localStorage.getItem("gombo_pref_notif_news") !== "false";
-  });
-
-  // Keep state in-sync with profile data when it loads
-  useEffect(() => {
-    if (profile?.notificationPrefs) {
-      const prefs = profile.notificationPrefs;
-      if (prefs.messages !== undefined) setNotifMessages(prefs.messages);
-      if (prefs.opportunities !== undefined) setNotifOpps(prefs.opportunities);
-      if (prefs.payments !== undefined) setNotifPayments(prefs.payments);
-      if (prefs.contracts !== undefined) setNotifContracts(prefs.contracts);
-      if (prefs.gomboId !== undefined) setNotifGomboId(prefs.gomboId);
-      if (prefs.premium !== undefined) setNotifPremium(prefs.premium);
-      if (prefs.news !== undefined) setNotifNews(prefs.news);
-    }
-  }, [profile?.notificationPrefs]);
-
-  // Privacy States
-  const [privacyProfile, setPrivacyProfile] = useState(() => localStorage.getItem("gombo_pref_privacy_profile") || "public");
-  const [privacyMsg, setPrivacyMsg] = useState(() => localStorage.getItem("gombo_pref_privacy_msg") || "all");
-  const [privacyOnline, setPrivacyOnline] = useState(() => localStorage.getItem("gombo_pref_privacy_online") !== "false");
-  const [privacyCommune, setPrivacyCommune] = useState(() => localStorage.getItem("gombo_pref_privacy_commune") !== "false");
-  const [privacyPhone, setPrivacyPhone] = useState(() => localStorage.getItem("gombo_pref_privacy_phone") !== "false");
-
-  // Storage States
-  const [cacheSize, setCacheSize] = useState(24.5);
-  const [photosSize, setPhotosSize] = useState(12.2);
-  const [isClearing, setIsClearing] = useState(false);
-
-  // Multimedia States
-  const [autoPlayVideo, setAutoPlayVideo] = useState(() => localStorage.getItem("gombo_pref_autoplay_video") === "true");
-  const [autoPlayAudio, setAutoPlayAudio] = useState(() => localStorage.getItem("gombo_pref_autoplay_audio") !== "false");
-  const [audioQuality, setAudioQuality] = useState(() => localStorage.getItem("gombo_pref_audio_quality") || "standard");
-
-  // Audio volume / Muted
+  // Audio state subscription for music controls
   const [audioState, setAudioState] = useState<AudioState>(globalAudioManager.getState());
 
   useEffect(() => {
@@ -304,69 +243,25 @@ export default function SettingsModal({
   const [activeSupportPage, setActiveSupportPage] = useState<"none" | "help" | "issue" | "terms" | "privacy_policy" | "about">("none");
   const [issueText, setIssueText] = useState("");
   const [issueSent, setIssueSent] = useState(false);
+  const [isTransmittingIssue, setIsTransmittingIssue] = useState(false);
 
-  // Quick State Save & Firestore Sync
-  useEffect(() => {
-    localStorage.setItem("gombo_pref_notif_messages", notifMessages.toString());
-    localStorage.setItem("gombo_pref_notif_opps", notifOpps.toString());
-    localStorage.setItem("gombo_pref_notif_payments", notifPayments.toString());
-    localStorage.setItem("gombo_pref_notif_contracts", notifContracts.toString());
-    localStorage.setItem("gombo_pref_notif_gombo_id", notifGomboId.toString());
-    localStorage.setItem("gombo_pref_notif_premium", notifPremium.toString());
-    localStorage.setItem("gombo_pref_notif_news", notifNews.toString());
-    
-    localStorage.setItem("gombo_pref_privacy_profile", privacyProfile);
-    localStorage.setItem("gombo_pref_privacy_msg", privacyMsg);
-    localStorage.setItem("gombo_pref_privacy_online", privacyOnline.toString());
-    localStorage.setItem("gombo_pref_privacy_commune", privacyCommune.toString());
-    localStorage.setItem("gombo_pref_privacy_phone", privacyPhone.toString());
-
-    localStorage.setItem("gombo_pref_autoplay_video", autoPlayVideo.toString());
-    localStorage.setItem("gombo_pref_autoplay_audio", autoPlayAudio.toString());
-    localStorage.setItem("gombo_pref_audio_quality", audioQuality);
-
-    if (profile?.uid) {
-      gomboDB.updateUserProfile(profile.uid, {
-        notificationPrefs: {
-          messages: notifMessages,
-          opportunities: notifOpps,
-          payments: notifPayments,
-          contracts: notifContracts,
-          gomboId: notifGomboId,
-          premium: notifPremium,
-          news: notifNews,
-          masterEnabled: notificationsEnabled
-        }
-      }).catch(err => console.error("Error saving notification preferences to Firestore:", err));
+  const handleLanguageChange = (lang: "fr" | "en" | "nouchi") => {
+    setLanguagePref(lang);
+    if (lang === "fr" || lang === "en") {
+      setLanguage(lang);
     }
-  }, [
-    notifMessages, notifOpps, notifPayments, notifContracts, notifGomboId, notifPremium, notifNews,
-    notificationsEnabled,
-    privacyProfile, privacyMsg, privacyOnline, privacyCommune,
-    privacyPhone, autoPlayVideo, autoPlayAudio, audioQuality,
-    profile?.uid
-  ]);
-
-  const handleClearCache = () => {
-    setIsClearing(true);
-    try { audioSynth.playTamTam(true); } catch (_) {}
-    setTimeout(() => {
-      setCacheSize(0);
-      setPhotosSize(0);
-      setIsClearing(false);
-      alert(langCode === "en" ? "✨ App cache successfully cleared!" : "✨ Cache de l'application vidé avec succès !");
-    }, 1500);
+    try { audioSynth.playValidationSuccess(); } catch (_) {}
   };
 
   const handleSendIssue = (e: React.FormEvent) => {
     e.preventDefault();
     if (!issueText.trim()) return;
-    setIsClearing(true);
+    setIsTransmittingIssue(true);
     const textToReport = issueText;
     setTimeout(() => {
       setIssueSent(true);
       setIssueText("");
-      setIsClearing(false);
+      setIsTransmittingIssue(false);
       supportConfig.openSupport("Signalement : " + textToReport);
     }, 1000);
   };
@@ -376,7 +271,7 @@ export default function SettingsModal({
     setIsDeleting(true);
     try {
       await gomboDB.deleteUserProfile(currentUser.uid);
-      alert(mt("delete_success"));
+      showToast(mt("delete_success"), "info");
       if (onLogout) {
         onLogout();
       } else {
@@ -384,7 +279,7 @@ export default function SettingsModal({
       }
     } catch (err) {
       console.error("Failed to delete account:", err);
-      alert("Error deleting account. Please try again.");
+      showToast("Erreur lors de la suppression du compte. Réessayez.", "warning");
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -394,14 +289,14 @@ export default function SettingsModal({
   return (
     <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-afri-bg text-afri-text font-sans pb-28 pt-4 px-4 sm:px-6 relative select-none">
       
-      {/* 2. HEADER BAR - CLEAN */}
+      {/* HEADER BAR */}
       <div className="max-w-xl mx-auto flex items-center justify-between pb-5 border-b border-afri-border sticky top-0 bg-afri-bg/95 backdrop-blur-md z-30 mb-6">
         <button 
           onClick={onClose}
           className="flex items-center gap-2 text-xs font-bold text-afri-text hover:text-afri-gold transition-colors cursor-pointer"
         >
-          <ChevronRight className="w-5 h-5 rotate-180" />
-          <h1 className="text-sm sm:text-base font-black uppercase tracking-tight">PARAMÈTRES</h1>
+          <ChevronRight className="w-5 h-5 rotate-180 text-afri-gold" />
+          <h1 className="text-sm sm:text-base font-black uppercase tracking-tight">PARAMÈTRES & PRÉFÉRENCES</h1>
         </button>
       </div>
 
@@ -412,8 +307,8 @@ export default function SettingsModal({
             <div className="flex justify-between items-center border-b border-afri-border pb-4">
               <h2 className="text-sm font-black text-afri-text uppercase flex items-center gap-2">
                 <span className="text-afri-gold">●</span>
-                {activeSupportPage === "help" && "Centre d'aide"}
-                {activeSupportPage === "issue" && "Signaler un problème"}
+                {activeSupportPage === "help" && "Centre d'aide d'Abidjan"}
+                {activeSupportPage === "issue" && "Signaler un problème technique"}
                 {activeSupportPage === "terms" && "Conditions d'utilisation (CGU)"}
                 {activeSupportPage === "privacy_policy" && "Politique de confidentialité"}
                 {activeSupportPage === "about" && "À propos d'AFRIGOMBO"}
@@ -454,10 +349,10 @@ export default function SettingsModal({
                       />
                       <button
                         type="submit"
-                        disabled={isClearing}
+                        disabled={isTransmittingIssue}
                         className="w-full py-3 rounded-2xl bg-afri-gold text-black font-sans font-black uppercase text-xs hover:scale-[1.01] transition-all disabled:opacity-50"
                       >
-                        {isClearing ? "Transmission..." : "Envoyer le rapport d'anomalie"}
+                        {isTransmittingIssue ? "Transmission..." : "Envoyer le rapport d'anomalie"}
                       </button>
                     </form>
                   )}
@@ -519,7 +414,7 @@ export default function SettingsModal({
       {/* MAIN CONTAINER CONFIG */}
       <div className="max-w-xl mx-auto space-y-6">
 
-        {/* 3. SECTION COMPTE */}
+        {/* 1. SECTION COMPTE & SÉCURITÉ MOT DE PASSE */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-afri-gold/5 to-transparent pointer-events-none rounded-bl-full"></div>
           
@@ -567,10 +462,11 @@ export default function SettingsModal({
               {mt("modifier_profil")}
             </button>
             <button 
-              onClick={() => onClose()}
-              className="py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-[10.5px] text-center transition-all cursor-pointer"
+              onClick={() => sendPasswordReset()}
+              className="py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-[10.5px] text-center transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
-              {mt("changer_photo")}
+              <Key className="w-3.5 h-3.5 text-afri-gold" />
+              Réinitialiser Pass
             </button>
             <button 
               onClick={() => onClose()}
@@ -590,105 +486,45 @@ export default function SettingsModal({
           </button>
         </div>
 
-        {/* 4. LANGUE SECTION */}
-        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-3.5 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            {mt("langue_title")}
-          </h2>
-          
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { id: "fr", label: "Français", desc: "🇫🇷 Standard" },
-              { id: "en", label: "English", desc: "🇬🇧 US / UK" },
-              { id: "nouchi", label: "Nouchi", desc: "🇨🇮 Local 225" }
-            ].map((lang) => {
-              const isSelected = langSelection === lang.id;
-              return (
-                <button
-                  key={lang.id}
-                  type="button"
-                  onClick={() => handleLanguageChange(lang.id as any)}
-                  className={`flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border text-center transition-all cursor-pointer ${
-                    isSelected 
-                      ? "bg-afri-gold/10 border-afri-gold text-afri-gold" 
-                      : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
-                  }`}
-                >
-                  <span className="text-[11px] font-black uppercase tracking-tight">{lang.label}</span>
-                  <span className="text-[8px] font-mono opacity-50 mt-0.5">{lang.desc}</span>
-                  {isSelected && (
-                    <div className="w-1 h-1 rounded-full bg-afri-gold mt-1.5" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 5. NOTIFICATIONS SECTION */}
+        {/* 2. APPARENCE & THÈME */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            {mt("notif_title")}
-          </h2>
-
-          <div className="space-y-3">
-            {/* MASTER SWITCH */}
-            <label className="flex items-center justify-between cursor-pointer group pb-2 border-b border-afri-border/50">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("notif_all")}</span>
-                <p className="text-[9px] text-afri-text-muted leading-none">{mt("notif_all_desc")}</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={notificationsEnabled}
-                onChange={(e) => {
-                  setNotificationsEnabled(e.target.checked);
-                  try { audioSynth.playValidationSuccess(); } catch (_) {}
-                }}
-                className="sr-only peer"
-              />
-              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
-            </label>
-
-            {[
-              { label: "Messages & Chats", desc: "Discussions en direct pour les bails de gombos", value: notifMessages && notificationsEnabled, set: setNotifMessages },
-              { label: "Opportunités Showbiz", desc: "Annonces de scènes, concerts et castings", value: notifOpps && notificationsEnabled, set: setNotifOpps },
-              { label: "Paiements & Dépôts", desc: "Alertes d'encaissement, séquestre et transferts", value: notifPayments && notificationsEnabled, set: setNotifPayments },
-              { label: "Contrats de Gombos", desc: "Statuts de contrats, validations et signatures", value: notifContracts && notificationsEnabled, set: setNotifContracts },
-              { label: "Gombo ID & Badges", desc: "Suivi de validation KYC et certifications", value: notifGomboId && notificationsEnabled, set: setNotifGomboId },
-              { label: "Prestige Premium & VIP", desc: "Souscriptions, promotions et cadeaux", value: notifPremium && notificationsEnabled, set: setNotifPremium },
-              { label: "Actualités AFRIGOMBO", desc: "Nouvelles fonctionnalités de l'écosystème", value: notifNews && notificationsEnabled, set: setNotifNews }
-            ].map((n, i) => (
-              <label key={i} className={`flex items-center justify-between cursor-pointer group ${!notificationsEnabled ? "opacity-35 pointer-events-none" : ""}`}>
-                <div className="space-y-0.5">
-                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{n.label}</span>
-                  <p className="text-[9px] text-afri-text-muted leading-none">{n.desc}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={n.value}
-                  onChange={(e) => {
-                    n.set(e.target.checked);
-                    try { audioSynth.playValidationSuccess(); } catch (_) {}
-                  }}
-                  className="sr-only peer"
-                />
-                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* 6. APPARENCE SECTION */}
-        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
-          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            APPARENCE
+            🎨 APPARENCE & MODE VISUEL
           </h2>
 
           <div className="space-y-4">
+            {/* SWITCH MODE SOMBRE / CLAIR / AUTO */}
+            <div className="space-y-1.5">
+              <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest block">Mode d'affichage</span>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: "dark", label: "Sombre", icon: Moon },
+                  { id: "light", label: "Clair", icon: Sun },
+                  { id: "system", label: "Auto (Système)", icon: Laptop }
+                ].map((m) => {
+                  const Icon = m.icon;
+                  const isSelected = themeMode === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setThemeMode(m.id as ThemeMode)}
+                      className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer ${
+                        isSelected 
+                          ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-bold" 
+                          : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 mb-1" />
+                      <span className="text-[10px] uppercase font-bold">{m.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* PRESET DE PALETTES COULEURS */}
             <div className="space-y-1.5">
               <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest block">{mt("theme_label")}</span>
               <div className="grid grid-cols-2 gap-2">
@@ -701,7 +537,7 @@ export default function SettingsModal({
                   { id: "studio", label: "Violet Impérial", premium: true, icon: "🌌" },
                   { id: "rouge", label: "Rouge Prestige", premium: true, icon: "❤️" }
                 ].map((th) => {
-                  const isSelected = theme === th.id;
+                  const isSelected = themePreset === th.id;
                   const locked = th.premium && !isPremium;
                   return (
                     <button
@@ -709,11 +545,10 @@ export default function SettingsModal({
                       type="button"
                       onClick={() => {
                         if (locked) {
-                          alert("Disponible avec AFRIGOMBO Premium.");
+                          showToast("Thème réservé aux membres AFRIGOMBO Premium.", "warning");
                           return;
                         }
-                        setTheme(th.id as any);
-                        try { audioSynth.playValidationSuccess(); } catch (_) {}
+                        setThemePreset(th.id as any);
                       }}
                       className={`flex items-center justify-between gap-2 p-3 rounded-xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
                         isSelected 
@@ -737,7 +572,7 @@ export default function SettingsModal({
                       )}
                       
                       {isFounder && th.premium && (
-                        <span className="absolute bottom-1 right-1 text-[7px] text-afri-gold font-bold uppercase">Accès Fondateur</span>
+                        <span className="absolute bottom-1 right-1 text-[7px] text-afri-gold font-bold uppercase">Fondateur</span>
                       )}
                     </button>
                   );
@@ -745,6 +580,7 @@ export default function SettingsModal({
               </div>
             </div>
 
+            {/* TAILLE DE TEXTE */}
             <div className="space-y-1.5">
               <span className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest block">{mt("text_size_label")}</span>
               <div className="grid grid-cols-3 gap-2">
@@ -758,10 +594,7 @@ export default function SettingsModal({
                     <button
                       key={ts.id}
                       type="button"
-                      onClick={() => {
-                        setTextSize(ts.id as any);
-                        try { audioSynth.playValidationSuccess(); } catch (_) {}
-                      }}
+                      onClick={() => setTextSize(ts.id as any)}
                       className={`py-2 px-3 rounded-xl border text-[11px] font-bold text-center transition-all cursor-pointer ${
                         isSelected 
                           ? "bg-afri-gold/10 border-afri-gold text-afri-gold" 
@@ -777,7 +610,215 @@ export default function SettingsModal({
           </div>
         </div>
 
-        {/* 7. CONFIDENTIALITÉ SECTION */}
+        {/* 3. PRÉFÉRENCES AUDIO & LECTURE */}
+        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+            🔊 PRÉFÉRENCES AUDIO & LECTURE
+          </h2>
+
+          <div className="space-y-4">
+            {/* EFFETS SONORES & CLAPS */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Effets Sonores de l'Application</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Djembe, claps et retours d'actions sonores</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={audio.soundEffects}
+                onChange={(e) => updateAudioPref('soundEffects', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* VIBRATIONS TACTILES */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Vibrations Tactiles</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Ressentir des pulsations haptiques aux clics</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={audio.vibrations}
+                onChange={(e) => updateAudioPref('vibrations', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* LECTURE AUTOMATIQUE DÉMOS */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Lecture automatique des démos</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Écouter les extraits audio dès l'ouverture des profils</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={audio.autoPlayDemos}
+                onChange={(e) => updateAudioPref('autoPlayDemos', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* QUALITÉ AUDIO */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Haute Qualité Audio (HD Lossless)</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Prioriser la fidélité sonore pour les démos studio</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={audio.highQuality}
+                onChange={(e) => updateAudioPref('highQuality', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {/* MASTER MUSIQUE D'AMBIANCE */}
+            <div className="pt-2 border-t border-afri-border space-y-3">
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("toggle_music")}</span>
+                  <p className="text-[9px] text-afri-text-muted leading-none">{mt("toggle_music_desc")}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={!audio.musicMuted}
+                  onChange={(e) => updateAudioPref('musicMuted', !e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              </label>
+
+              <div className={`space-y-2.5 ${audio.musicMuted ? "opacity-35 pointer-events-none" : ""}`}>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => globalAudioManager.playIntro(true)}
+                    className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      activeMusicPlay === "intro"
+                        ? "bg-afri-gold/20 border-afri-gold text-afri-text"
+                        : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-gold"
+                    }`}
+                  >
+                    {activeMusicPlay === "intro" ? (isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />) : <Play className="w-3 h-3" />}
+                    {mt("play_intro")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeMusicPlay === "hymne") {
+                        if (isPaused) globalAudioManager.resume();
+                        else globalAudioManager.pause();
+                      } else {
+                        globalAudioManager.playHymn();
+                      }
+                    }}
+                    className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      activeMusicPlay === "hymne"
+                        ? "bg-afri-gold/20 border-afri-gold text-afri-text"
+                        : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-gold"
+                    }`}
+                  >
+                    {activeMusicPlay === "hymne" ? (isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />) : <Play className="w-3 h-3" />}
+                    {mt("play_hymne")}
+                  </button>
+                </div>
+
+                {activeMusicPlay !== "none" && (
+                  <button
+                    type="button"
+                    onClick={() => globalAudioManager.stop()}
+                    className="w-full py-1.5 bg-red-950/20 hover:bg-red-950/35 border border-red-900/30 text-red-400 rounded-lg text-[9.5px] font-bold uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Square className="w-3 h-3 fill-current" />
+                    {mt("stop_music")}
+                  </button>
+                )}
+
+                {/* SLIDER VOLUME */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-muted">
+                    <span>{mt("volume_label")}</span>
+                    <span className="text-afri-gold font-bold">{Math.round((audio.musicVolume || 0.8) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={(audio.musicVolume || 0.8) * 100}
+                    onChange={(e) => {
+                      const vol = parseFloat(e.target.value) / 100;
+                      updateAudioPref('musicVolume', vol);
+                    }}
+                    className="w-full h-1.5 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-afri-gold"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. NOTIFICATIONS & ALERTES */}
+        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
+          <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
+            {mt("notif_title")}
+          </h2>
+
+          <div className="space-y-3">
+            {/* MASTER SWITCH */}
+            <label className="flex items-center justify-between cursor-pointer group pb-2 border-b border-afri-border/50">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("notif_all")}</span>
+                <p className="text-[9px] text-afri-text-muted leading-none">{mt("notif_all_desc")}</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={notifications.masterEnabled}
+                onChange={(e) => updateNotificationPref('masterEnabled', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
+
+            {[
+              { key: "gombos", label: "Nouveaux Gombos & Offres", desc: "Annonces de prestations et remplacements urgents" },
+              { key: "recruitment", label: "Alertes Recrutement & Candidatures", desc: "Suivi des castings, validations et sélections" },
+              { key: "messages", label: "Messages & Chats Directs", desc: "Discussions en direct pour les bails de gombos" },
+              { key: "opportunities", label: "Opportunités Showbiz", desc: "Annonces de scènes, festivals et concerts" },
+              { key: "payments", label: "Paiements & Séquestre", desc: "Alertes d'encaissement, garanties et transferts Mobile Money" },
+              { key: "contracts", label: "Contrats & Signatures", desc: "Statuts de contrats, validations et signatures" },
+              { key: "gomboId", label: "Gombo ID & Badges", desc: "Suivi de validation KYC et certifications" },
+              { key: "premium", label: "Prestige Premium & VIP", desc: "Souscriptions, promotions et avantages" },
+              { key: "news", label: "Actualités AFRIGOMBO", desc: "Mises à jour de l'écosystème d'Abidjan" }
+            ].map((n) => {
+              const k = n.key as keyof typeof notifications;
+              const isChecked = notifications[k] && notifications.masterEnabled;
+              return (
+                <label key={n.key} className={`flex items-center justify-between cursor-pointer group ${!notifications.masterEnabled ? "opacity-35 pointer-events-none" : ""}`}>
+                  <div className="space-y-0.5">
+                    <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{n.label}</span>
+                    <p className="text-[9px] text-afri-text-muted leading-none">{n.desc}</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={(e) => updateNotificationPref(k, e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 5. CONFIDENTIALITÉ & SÉCURITÉ */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
@@ -789,8 +830,8 @@ export default function SettingsModal({
               <div className="space-y-1">
                 <label className="text-[8.5px] font-mono text-afri-text-muted uppercase tracking-wider block">{mt("who_sees_profile")}</label>
                 <select
-                  value={privacyProfile}
-                  onChange={(e) => setPrivacyProfile(e.target.value)}
+                  value={privacy.profileVisibility}
+                  onChange={(e) => updatePrivacyPref('profileVisibility', e.target.value)}
                   className="w-full bg-afri-bg border border-afri-border rounded-xl p-2 text-xs text-afri-text focus:outline-none"
                 >
                   <option value="public">Tout le monde</option>
@@ -802,8 +843,8 @@ export default function SettingsModal({
               <div className="space-y-1">
                 <label className="text-[8.5px] font-mono text-afri-text-muted uppercase tracking-wider block">{mt("who_can_write")}</label>
                 <select
-                  value={privacyMsg}
-                  onChange={(e) => setPrivacyMsg(e.target.value)}
+                  value={privacy.messagingVisibility}
+                  onChange={(e) => updatePrivacyPref('messagingVisibility', e.target.value)}
                   className="w-full bg-afri-bg border border-afri-border rounded-xl p-2 text-xs text-afri-text focus:outline-none"
                 >
                   <option value="all">Tout le monde</option>
@@ -814,6 +855,22 @@ export default function SettingsModal({
             </div>
 
             <div className="space-y-3 pt-2 border-t border-afri-border">
+              {/* MASQUER DES RECHERCHES */}
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Masquer mon profil des recherches publiques</span>
+                  <p className="text-[9px] text-afri-text-muted leading-none">Inaccessible via les moteurs externes</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={privacy.hidePublicSearch}
+                  onChange={(e) => updatePrivacyPref('hidePublicSearch', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+              </label>
+
+              {/* STATUT EN LIGNE */}
               <label className="flex items-center justify-between cursor-pointer group">
                 <div className="space-y-0.5">
                   <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("online_status")}</span>
@@ -821,13 +878,14 @@ export default function SettingsModal({
                 </div>
                 <input
                   type="checkbox"
-                  checked={privacyOnline}
-                  onChange={(e) => setPrivacyOnline(e.target.checked)}
+                  checked={privacy.onlineStatus}
+                  onChange={(e) => updatePrivacyPref('onlineStatus', e.target.checked)}
                   className="sr-only peer"
                 />
                 <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
               </label>
 
+              {/* COMMUNE ABIDJAN */}
               <label className="flex items-center justify-between cursor-pointer group">
                 <div className="space-y-0.5">
                   <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("commune_status")}</span>
@@ -835,13 +893,14 @@ export default function SettingsModal({
                 </div>
                 <input
                   type="checkbox"
-                  checked={privacyCommune}
-                  onChange={(e) => setPrivacyCommune(e.target.checked)}
+                  checked={privacy.showCommune}
+                  onChange={(e) => updatePrivacyPref('showCommune', e.target.checked)}
                   className="sr-only peer"
                 />
                 <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
               </label>
 
+              {/* TÉLÉPHONE */}
               <label className="flex items-center justify-between cursor-pointer group">
                 <div className="space-y-0.5">
                   <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("phone_status")}</span>
@@ -849,8 +908,8 @@ export default function SettingsModal({
                 </div>
                 <input
                   type="checkbox"
-                  checked={privacyPhone}
-                  onChange={(e) => setPrivacyPhone(e.target.checked)}
+                  checked={privacy.showPhone}
+                  onChange={(e) => updatePrivacyPref('showPhone', e.target.checked)}
                   className="sr-only peer"
                 />
                 <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
@@ -859,184 +918,103 @@ export default function SettingsModal({
           </div>
         </div>
 
-        {/* 8. STOCKAGE SECTION */}
+        {/* 6. DONNÉES, ÉCONOMISEUR & STOCKAGE */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
             {mt("storage_title")}
           </h2>
 
-          <div className="grid grid-cols-2 gap-3 bg-afri-bg border border-afri-border p-3.5 rounded-xl font-mono text-[10.5px]">
-            <div className="space-y-0.5">
-              <span className="text-afri-text-muted block uppercase text-[8.5px]">{mt("cache_label")}</span>
-              <span className="text-afri-text font-bold block">{cacheSize.toFixed(1)} Mo</span>
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-afri-text-muted block uppercase text-[8.5px]">{mt("photos_label")}</span>
-              <span className="text-afri-text font-bold block">{photosSize.toFixed(1)} Mo</span>
-            </div>
-            <div className="col-span-2 pt-2 border-t border-afri-border flex justify-between items-center">
-              <span className="text-afri-text-muted text-[9px] uppercase">Espace global mobilisé:</span>
-              <span className="text-afri-gold font-black">{(cacheSize + photosSize).toFixed(1)} Mo</span>
-            </div>
-          </div>
+          <div className="space-y-3">
+            {/* ÉCONOMISEUR DE DONNÉES */}
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors flex items-center gap-1.5">
+                  <WifiOff className="w-3.5 h-3.5 text-afri-gold" />
+                  Économiseur de données mobiles
+                </span>
+                <p className="text-[9px] text-afri-text-muted leading-none">Réduire la taille des visuels et stopper l'autobuffer vidéo sur réseau 3G/4G</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={dataSaver}
+                onChange={(e) => setDataSaver(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
+            </label>
 
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={handleClearCache}
-              disabled={isClearing}
-              className="py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 font-bold text-[10.5px] transition-all cursor-pointer disabled:opacity-40"
-            >
-              {isClearing ? "Vidage..." : mt("clear_cache")}
-            </button>
-            <button
-              onClick={() => {
-                try { audioSynth.playValidationSuccess(); } catch (_) {}
-                alert("✓ Données synchronisées avec le serveur central Firebase.");
-              }}
-              className="py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-[10.5px] transition-all cursor-pointer"
-            >
-              {mt("refresh_data")}
-            </button>
+            <div className="grid grid-cols-2 gap-3 bg-afri-bg border border-afri-border p-3.5 rounded-xl font-mono text-[10.5px]">
+              <div className="space-y-0.5">
+                <span className="text-afri-text-muted block uppercase text-[8.5px]">{mt("cache_label")}</span>
+                <span className="text-afri-text font-bold block">{cacheSizeMo.toFixed(1)} Mo</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-afri-text-muted block uppercase text-[8.5px]">{mt("photos_label")}</span>
+                <span className="text-afri-text font-bold block">{mediaSizeMo.toFixed(1)} Mo</span>
+              </div>
+              <div className="col-span-2 pt-2 border-t border-afri-border flex justify-between items-center">
+                <span className="text-afri-text-muted text-[9px] uppercase">Espace global mobilisé:</span>
+                <span className="text-afri-gold font-black">{(cacheSizeMo + mediaSizeMo).toFixed(1)} Mo</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => clearAppCache()}
+                className="py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-400 font-bold text-[10.5px] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {mt("clear_cache")}
+              </button>
+              <button
+                onClick={() => showToast("✓ Données synchronisées avec Firebase central !", "success")}
+                className="py-2.5 px-3 rounded-xl bg-afri-bg border border-afri-border hover:border-afri-gold/30 text-afri-text font-bold text-[10.5px] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-afri-gold" />
+                {mt("refresh_data")}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* 9. MUSIQUE ET AUDIO SECTION */}
-        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-4 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
+        {/* 7. LANGUE */}
+        <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-3.5 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
-            {mt("multimedia_title")}
+            {mt("langue_title")}
           </h2>
-
-          <div className="space-y-4">
-            {/* MASTER AUDIO SWITCH */}
-            <label className="flex items-center justify-between cursor-pointer group pb-2 border-b border-afri-border">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">{mt("toggle_music")}</span>
-                <p className="text-[9px] text-afri-text-muted leading-none">{mt("toggle_music_desc")}</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={musicEnabled}
-                onChange={(e) => {
-                  setMusicEnabled(e.target.checked);
-                  try { audioSynth.playValidationSuccess(); } catch (_) {}
-                }}
-                className="sr-only peer"
-              />
-              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
-            </label>
-
-            {/* SOUNDS CONTROLS */}
-            <label className="flex items-center justify-between cursor-pointer group">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Effets Sonores & Claps</span>
-                <p className="text-[9px] text-afri-text-muted leading-none">Activer les djembe, saxo, et sons d'actions</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={soundsEnabled}
-                onChange={(e) => {
-                  setSoundsEnabled(e.target.checked);
-                  try { audioSynth.playValidationSuccess(); } catch (_) {}
-                }}
-                className="sr-only peer"
-              />
-              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
-            </label>
-
-            {/* VIBRATIONS CONTROLS */}
-            <label className="flex items-center justify-between cursor-pointer group">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-afri-text group-hover:text-afri-gold transition-colors">Vibrations Tactiles</span>
-                <p className="text-[9px] text-afri-text-muted leading-none">Ressentir des pulsations à chaque interaction</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={vibrationsEnabled}
-                onChange={(e) => {
-                  setVibrationsEnabled(e.target.checked);
-                }}
-                className="sr-only peer"
-              />
-              <div className="w-8 h-4.5 bg-afri-bg peer-checked:bg-afri-gold rounded-full relative after:content-[''] after:absolute after:top-[2px] after:left-[2.5px] after:bg-zinc-400 peer-checked:after:bg-afri-bg after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:after:translate-x-3.5 border border-afri-border"></div>
-            </label>
-
-            <div className={`space-y-2.5 pt-2 border-t border-afri-border ${!musicEnabled ? "opacity-35 pointer-events-none" : ""}`}>
-              <span className="text-[9px] font-mono text-afri-gold uppercase tracking-widest block font-bold">{mt("music_label")}</span>
-              
-              <div className="grid grid-cols-2 gap-2">
+          
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: "fr", label: "Français", desc: "🇫🇷 Standard" },
+              { id: "en", label: "English", desc: "🇬🇧 US / UK" },
+              { id: "nouchi", label: "Nouchi", desc: "🇨🇮 Local 225" }
+            ].map((lang) => {
+              const isSelected = language === lang.id;
+              return (
                 <button
+                  key={lang.id}
                   type="button"
-                  onClick={() => {
-                    globalAudioManager.playIntro(true);
-                  }}
-                  className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    activeMusicPlay === "intro"
-                      ? "bg-afri-gold/20 border-afri-gold text-afri-text"
-                      : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-gold"
+                  onClick={() => handleLanguageChange(lang.id as any)}
+                  className={`flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border text-center transition-all cursor-pointer ${
+                    isSelected 
+                      ? "bg-afri-gold/10 border-afri-gold text-afri-gold" 
+                      : "bg-afri-bg border-afri-border text-afri-text-muted hover:text-afri-text-sec"
                   }`}
                 >
-                  {activeMusicPlay === "intro" ? (isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />) : <Play className="w-3 h-3" />}
-                  {mt("play_intro")}
+                  <span className="text-[11px] font-black uppercase tracking-tight">{lang.label}</span>
+                  <span className="text-[8px] font-mono opacity-50 mt-0.5">{lang.desc}</span>
+                  {isSelected && (
+                    <div className="w-1 h-1 rounded-full bg-afri-gold mt-1.5" />
+                  )}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (activeMusicPlay === "hymne") {
-                      if (isPaused) globalAudioManager.resume();
-                      else globalAudioManager.pause();
-                    } else {
-                      globalAudioManager.playHymn();
-                    }
-                  }}
-                  className={`py-2 px-2.5 rounded-xl border text-[10.5px] font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    activeMusicPlay === "hymne"
-                      ? "bg-afri-gold/20 border-afri-gold text-afri-text"
-                      : "bg-afri-bg border-afri-border text-afri-text hover:text-afri-gold"
-                  }`}
-                >
-                  {activeMusicPlay === "hymne" ? (isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />) : <Play className="w-3 h-3" />}
-                  {mt("play_hymne")}
-                </button>
-              </div>
-
-              {activeMusicPlay !== "none" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    globalAudioManager.stop();
-                  }}
-                  className="w-full py-1.5 bg-red-950/20 hover:bg-red-950/35 border border-red-900/30 text-red-400 rounded-lg text-[9.5px] font-bold uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5 mt-3"
-                >
-                  <Square className="w-3 h-3 fill-current" />
-                  {mt("stop_music")}
-                </button>
-              )}
-
-              {/* VOLUME SLIDER */}
-              <div className="space-y-1.5 pt-1">
-                <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-muted">
-                  <span>{mt("volume_label")}</span>
-                  <span className="text-afri-gold font-bold">{Math.round(musicVolume * 100)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={musicVolume * 100}
-                  onChange={(e) => {
-                    const vol = parseFloat(e.target.value) / 100;
-                    globalAudioManager.setVolume(vol);
-                  }}
-                  className="w-full h-1.5 bg-afri-bg rounded-lg appearance-none cursor-pointer accent-afri-gold"
-                />
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* 10. SUPPORT & ASSISTANCE SECTION */}
+        {/* 8. SUPPORT & ASSISTANCE */}
         <div className="rounded-2xl bg-afri-bg-sec border border-afri-border p-4 space-y-3.5 text-left shadow-[0_0_20px_rgba(212,175,55,0.01)]">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-afri-text-muted uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-afri-gold"></span>
@@ -1087,7 +1065,7 @@ export default function SettingsModal({
           </div>
         </div>
 
-        {/* 10.5 ZONE FONDATEUR */}
+        {/* 8.5 ZONE FONDATEUR */}
         {(profile?.isFounder || profile?.role === "admin" || profile?.role === "founder") && (
           <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 space-y-3.5 text-left shadow-[0_0_20px_rgba(212,175,55,0.05)] mt-4">
             <h2 className="text-[10px] font-mono font-bold tracking-widest text-amber-500 uppercase flex items-center gap-2">
@@ -1115,7 +1093,7 @@ export default function SettingsModal({
           </div>
         )}
 
-        {/* 11. VERSION DE L'APPLICATION */}
+        {/* 9. VERSION APPLICATION */}
         <div className="text-center space-y-1.5 pt-4">
           <p className="text-[11px] font-sans font-black text-afri-text uppercase tracking-wider">AFRIGOMBO</p>
           <p className="text-[9px] font-mono text-afri-text-muted uppercase tracking-widest">Version 1.0 — Elite Release</p>

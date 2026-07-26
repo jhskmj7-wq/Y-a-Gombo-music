@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./AuthContext";
 import { LanguageProvider } from "./LanguageContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { AppSettingsProvider } from "./context/AppSettingsContext";
 import { ModalProvider } from "./components/common/AfriModal";
 import { AudioProvider } from "./context/AudioContext";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -40,13 +41,15 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <BrowserRouter>
           <LanguageProvider>
-            <ThemeProvider>
-              <ModalProvider>
-                <AudioProvider>
-                  <App />
-                </AudioProvider>
-              </ModalProvider>
-            </ThemeProvider>
+            <AppSettingsProvider>
+              <ThemeProvider>
+                <ModalProvider>
+                  <AudioProvider>
+                    <App />
+                  </AudioProvider>
+                </ModalProvider>
+              </ThemeProvider>
+            </AppSettingsProvider>
           </LanguageProvider>
         </BrowserRouter>
       </AuthProvider>

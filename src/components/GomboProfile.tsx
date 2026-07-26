@@ -18,6 +18,7 @@ import { MediaGalleryManager } from "./MediaGalleryManager";
 import { GomboProfileMainView } from "./GomboProfileMainView";
 import { GomboProfileEditView } from "./GomboProfileEditView";
 import { GomboCertificationFlow } from "./GomboCertificationFlow";
+import SettingsModal from "./SettingsModal";
 import { supportConfig } from "../supportConfig";
 
 interface GomboProfileProps {
@@ -1223,25 +1224,12 @@ export default function GomboProfile({
             </div>
           </div>
         ) : (
-          <div className="afri-card p-6 space-y-4">
-            <p className="afri-text-tiny uppercase">Paramètres du compte</p>
-            <div className="space-y-2">
-              <button onClick={() => setPanelView("edit")} className="w-full text-left p-4 rounded-2xl bg-white/5 border border-afri-border flex items-center justify-between group">
-                <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 text-afri-text-sec" />
-                  <span className="text-xs font-bold text-afri-text">Modifier le profil</span>
-                </div>
-                <ChevronDown className="w-4 h-4 text-zinc-700 -rotate-90" />
-              </button>
-              
-              <button onClick={onLogout} className="w-full text-left p-4 rounded-2xl bg-red-500/5 border border-red-500/10 flex items-center justify-between group">
-                <div className="flex items-center gap-3">
-                  <LogOut className="w-5 h-5 text-red-500/60" />
-                  <span className="text-xs font-bold text-red-500">Déconnexion</span>
-                </div>
-              </button>
-            </div>
-          </div>
+          <SettingsModal 
+            isOpen={true} 
+            onClose={() => setPanelView("main")} 
+            onLogout={onLogout}
+            onNavigateToFounder={() => onNavigateView("admin")}
+          />
         )}
       </div>
     </div>
