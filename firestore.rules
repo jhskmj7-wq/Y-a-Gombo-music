@@ -268,6 +268,38 @@ service cloud.firestore {
       allow write: if isFounder();
     }
 
+    // NOTIFICATIONS
+    match /notifications/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // FORM COLLECTIONS (Support, Disputes, KYC, Bugs)
+    match /tickets_support/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /disputes/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /kyc_requests/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /bug_reports/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
     // ADMISSIONS
     match /admins/{adminId} {
       allow read: if isFounder();

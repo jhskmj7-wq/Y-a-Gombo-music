@@ -270,12 +270,17 @@ export function SupportPage({ onBack }: PublicPageProps) {
 
     setLoading(true);
     try {
-      await gomboDB.publishSupportMessage({
+      await gomboDB.submitSupportTicket({
         userId: profile?.uid || "visiteur_anonyme",
-        email: profile?.email || "contacts@yagombo.com",
-        subject,
-        message,
-        category
+        userName: profile?.nomArtistique || profile?.name || profile?.displayName || "Visiteur / Citoyen",
+        userEmail: profile?.email || "contacts@yagombo.com",
+        title: `Support: ${subject}`,
+        subject: subject,
+        message: message,
+        details: message,
+        category: category,
+        status: "PENDING",
+        createdAt: new Date().toISOString()
       });
       setSuccess(true);
       setSubject("");

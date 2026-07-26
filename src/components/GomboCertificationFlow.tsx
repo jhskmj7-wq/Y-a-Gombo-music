@@ -314,12 +314,25 @@ export const GomboCertificationFlow: React.FC<GomboCertificationFlowProps> = ({
     setSubmitLoading(true);
 
     try {
+      // 1. Submit dedicated KYC request to kyc_requests collection for Founder Throne
+      await gomboDB.submitKYCRequest({
+        userId: currentUserProfile.uid,
+        userName: currentUserProfile.nomArtistique || currentUserProfile.displayName || currentUserProfile.name || "Artiste",
+        userEmail: currentUserProfile.email || "",
+        title: "Demande de Certification GOMBO ID (KYC)",
+        details: `Dossier de verification d'identité et qualification artistique pour ${currentUserProfile.nomArtistique || currentUserProfile.displayName || 'cet artiste'}.`,
+        kycDocs: currentUserProfile.kycDocs || {},
+        status: "PENDING",
+        createdAt: new Date().toISOString()
+      });
+
+      // 2. Update user profile
       await gomboDB.updateUserProfile(currentUserProfile.uid, {
         kycStatus: "pending",
         kycSubmittedDate: new Date().toISOString()
       });
 
-      // Log activity
+      // 3. Log activity
       await gomboDB.logUserActivity({
         userId: currentUserProfile.uid,
         type: "Certification GOMBO ID",

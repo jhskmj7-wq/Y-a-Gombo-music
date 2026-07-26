@@ -5,7 +5,7 @@ import {
   Crown, ShieldCheck, UserPlus, UserX, Info, ShieldAlert,
   Activity, Users, FileText, Coins, Database, HardDrive, Lock, Server, Terminal,
   Sparkles, Wallet, CreditCard, Bell, BarChart3, Brain, DatabaseBackup, ListCollapse,
-  Play, Pause, Trash2, Volume2, Plus, ArrowUp, ArrowDown, Send, 
+  Play, Pause, Trash2, Volume2, Plus, ArrowUp, ArrowDown, Send, Mail, Wrench,
   RefreshCw, CheckCircle, XCircle, Search, HelpCircle, Save, BookOpen, Scroll, Target, Award,
   Globe, Landmark, AlertTriangle, Music, ArrowLeft, Heart, Shield, CheckSquare, Square,
   Clock, MapPin, Cloud, Zap, Sun, ChevronDown, ChevronUp, Flame, ToggleLeft, ToggleRight, UserCheck, Radio, Eye, Bot
@@ -133,6 +133,13 @@ export default function AdminFounderThrone({
   const [livePosts, setLivePosts] = useState<any[]>(posts || []);
   const [liveGombos, setLiveGombos] = useState<any[]>(gombos || []);
 
+  // Form Submissions Collections (Support, Litiges, KYC, Bugs)
+  const [formSubTab, setFormSubTab] = useState<"support" | "disputes" | "kyc" | "bugs">("support");
+  const [ticketsSupport, setTicketsSupport] = useState<any[]>([]);
+  const [disputesList, setDisputesList] = useState<any[]>([]);
+  const [kycRequests, setKycRequests] = useState<any[]>([]);
+  const [bugReports, setBugReports] = useState<any[]>([]);
+
   useEffect(() => {
     if (!db) return;
 
@@ -177,6 +184,38 @@ export default function AdminFounderThrone({
       setLiveGombos(list);
     });
 
+    // 1. Realtime Tickets Support
+    const unsubSupport = onSnapshot(collection(db, "tickets_support"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setTicketsSupport(list);
+    });
+
+    // 2. Realtime Disputes
+    const unsubDisputes = onSnapshot(collection(db, "disputes"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setDisputesList(list);
+    });
+
+    // 3. Realtime KYC Requests
+    const unsubKYC = onSnapshot(collection(db, "kyc_requests"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setKycRequests(list);
+    });
+
+    // 4. Realtime Bug Reports
+    const unsubBugs = onSnapshot(collection(db, "bug_reports"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setBugReports(list);
+    });
+
     return () => {
       unsubReg();
       unsubAutoPilot();
@@ -184,6 +223,10 @@ export default function AdminFounderThrone({
       unsubUsers();
       unsubSocialPosts();
       unsubGombos();
+      unsubSupport();
+      unsubDisputes();
+      unsubKYC();
+      unsubBugs();
     };
   }, []);
 
@@ -228,6 +271,175 @@ export default function AdminFounderThrone({
       return true;
     }
   ).length;
+
+  // Pending counts for Form Submissions
+  const pendingTicketsCount = ticketsSupport.filter(t => t.status === "PENDING" || t.status === "pending" || !t.status).length;
+  const pendingDisputesCount = disputesList.filter(d => d.status === "PENDING" || d.status === "pending" || d.status === "open" || d.status === "en_attente").length;
+  const pendingKycCount = kycRequests.filter(k => k.status === "PENDING" || k.status === "pending").length;
+  const pendingBugsCount = bugReports.filter(b => b.status === "PENDING" || b.status === "pending").length;
+  const totalThroneFormsCount = pendingTicketsCount + pendingDisputesCount + pendingKycCount + pendingBugsCount;
+
+  // Admin Actions for User Form Submissions
+  const handleApproveKYC = async (reqItem: any) => {
+    if (!db || !reqItem.id) return;
+    try {
+      // 1. Update kyc_requests document
+      await updateDoc(doc(db, "kyc_requests", reqItem.id), {
+        status: "APPROVED",
+        processedAt: new Date().toISOString(),
+        processedBy: adminEmail || "Superfondateur"
+      });
+
+      // 2. Update user profile in users collection
+      if (reqItem.userId) {
+        try {
+          await updateDoc(doc(db, "users", reqItem.userId), {
+            isVerified: true,
+            kycStatus: "approved",
+            verificationBadge: "certified_artist"
+          });
+        } catch (e) {
+          console.warn("User update error:", e);
+        }
+
+        // 3. Send notification to user
+        await addDoc(collection(db, "notifications"), {
+          userId: reqItem.userId,
+          title: "Dossier KYC Validé 🎖️",
+          message: "Félicitations ! Votre dossier de certification d'identité et de qualification artistique a été officiellement approuvé par le Trône du Fondateur.",
+          type: "kyc_approved",
+          read: false,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      logImperialAction("VALIDATION_KYC", `Dossier KYC approuvé pour ${reqItem.userName || reqItem.userId}`);
+      setSuccessMsg(`Certification KYC validée pour ${reqItem.userName || 'l\'utilisateur'}.`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      console.error("Error approving KYC:", err);
+    }
+  };
+
+  const handleRejectKYC = async (reqItem: any, reason: string = "Documents incomplets ou illegibles") => {
+    if (!db || !reqItem.id) return;
+    try {
+      await updateDoc(doc(db, "kyc_requests", reqItem.id), {
+        status: "REJECTED",
+        rejectionReason: reason,
+        processedAt: new Date().toISOString(),
+        processedBy: adminEmail || "Superfondateur"
+      });
+
+      if (reqItem.userId) {
+        try {
+          await updateDoc(doc(db, "users", reqItem.userId), {
+            kycStatus: "rejected"
+          });
+        } catch (e) {}
+
+        await addDoc(collection(db, "notifications"), {
+          userId: reqItem.userId,
+          title: "Dossier KYC Non Retenu ⚠️",
+          message: `Votre demande de certification GOMBO ID nécessite un complément d'information. Motif: ${reason}`,
+          type: "kyc_rejected",
+          read: false,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      logImperialAction("REJET_KYC", `Dossier KYC rejeté pour ${reqItem.userName || reqItem.userId}`);
+      setSuccessMsg(`Dossier KYC rejeté.`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      console.error("Error rejecting KYC:", err);
+    }
+  };
+
+  const handleResolveDispute = async (disputeItem: any, note: string = "Litige arbitré et résolu par le Fondateur") => {
+    if (!db || !disputeItem.id) return;
+    try {
+      await updateDoc(doc(db, "disputes", disputeItem.id), {
+        status: "RESOLVED",
+        resolutionNote: note,
+        resolvedAt: new Date().toISOString(),
+        resolvedBy: adminEmail || "Superfondateur"
+      });
+
+      if (disputeItem.userId) {
+        await addDoc(collection(db, "notifications"), {
+          userId: disputeItem.userId,
+          title: "Litige Arbitré et Résolu ⚖️",
+          message: `Le litige concernant votre prestation a été pris en charge et résolu par l'administration du Trône. Note: ${note}`,
+          type: "dispute_resolved",
+          read: false,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      logImperialAction("RÉSOLUTION_LITIGE", `Litige résolu pour ${disputeItem.userName || disputeItem.id}`);
+      setSuccessMsg(`Litige marqué comme résolu.`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      console.error("Error resolving dispute:", err);
+    }
+  };
+
+  const handleResolveTicketSupport = async (ticketItem: any) => {
+    if (!db || !ticketItem.id) return;
+    try {
+      await updateDoc(doc(db, "tickets_support", ticketItem.id), {
+        status: "RESOLVED",
+        resolvedAt: new Date().toISOString(),
+        resolvedBy: adminEmail || "Superfondateur"
+      });
+
+      if (ticketItem.userId && ticketItem.userId !== "anonyme" && ticketItem.userId !== "visiteur_anonyme") {
+        await addDoc(collection(db, "notifications"), {
+          userId: ticketItem.userId,
+          title: "Réponse du Support / Conseiller 💬",
+          message: `Votre demande au conseiller support ("${ticketItem.title || ticketItem.subject || 'Support'}") a été traitée avec succès.`,
+          type: "support_resolved",
+          read: false,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      logImperialAction("TRAITEMENT_SUPPORT", `Ticket support résolu pour ${ticketItem.userName || ticketItem.id}`);
+      setSuccessMsg(`Ticket support traité.`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      console.error("Error resolving support ticket:", err);
+    }
+  };
+
+  const handleResolveBugReport = async (bugItem: any) => {
+    if (!db || !bugItem.id) return;
+    try {
+      await updateDoc(doc(db, "bug_reports", bugItem.id), {
+        status: "RESOLVED",
+        resolvedAt: new Date().toISOString(),
+        resolvedBy: adminEmail || "Superfondateur"
+      });
+
+      if (bugItem.userId && bugItem.userId !== "anonyme") {
+        await addDoc(collection(db, "notifications"), {
+          userId: bugItem.userId,
+          title: "Signalement de Bug Pris en Charge 🐛",
+          message: `Merci pour votre signalement ("${bugItem.title || bugItem.subject || 'Bug'}") ! L'équipe technique a apporté les corrections nécessaires.`,
+          type: "bug_resolved",
+          read: false,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      logImperialAction("TRAITEMENT_BUG", `Bug résolu pour ${bugItem.userName || bugItem.id}`);
+      setSuccessMsg(`Rapport de bug marqué comme corrigé.`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      console.error("Error resolving bug report:", err);
+    }
+  };
 
   const logImperialAction = async (action: string, description: string) => {
     if (!db) return;
@@ -1409,20 +1621,90 @@ export default function AdminFounderThrone({
 
                 {/* 🛡 Vérifications KYC */}
                 <div
-                  onClick={() => setSelectedSection("bouclier")}
+                  onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("kyc"); }}
                   className="p-5 bg-gradient-to-br from-purple-500/15 via-afri-bg to-afri-bg border-2 border-purple-500/40 hover:border-purple-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <span className="p-2.5 bg-purple-500/20 border border-purple-500/40 rounded-2xl text-purple-400 group-hover:scale-110 transition-transform">
                       <ShieldCheck className="w-5 h-5" />
                     </span>
-                    <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full text-[9px] font-mono">
-                      KYC / ID
-                    </span>
+                    {pendingKycCount > 0 ? (
+                      <span className="px-2 py-0.5 bg-purple-500 text-white rounded-full text-[9px] font-mono font-black animate-pulse">
+                        {pendingKycCount} DOSSIERS
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full text-[9px] font-mono">KYC / ID</span>
+                    )}
                   </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Vérifications KYC</span>
-                  <strong className="text-3xl font-display font-black text-purple-400 block mt-1">{pendingCerts.length}</strong>
-                  <span className="text-[9px] font-mono text-purple-400 font-bold block mt-1">Certifier Gombo ID →</span>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Dossiers KYC (GOMBO ID)</span>
+                  <strong className="text-3xl font-display font-black text-purple-400 block mt-1">{kycRequests.length}</strong>
+                  <span className="text-[9px] font-mono text-purple-400 font-bold block mt-1">Valider / Rejeter KYC →</span>
+                </div>
+
+                {/* 📩 Tickets Support / Conseiller */}
+                <div
+                  onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("support"); }}
+                  className="p-5 bg-gradient-to-br from-indigo-500/15 via-afri-bg to-afri-bg border-2 border-indigo-500/40 hover:border-indigo-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="p-2.5 bg-indigo-500/20 border border-indigo-500/40 rounded-2xl text-indigo-400 group-hover:scale-110 transition-transform">
+                      <Mail className="w-5 h-5" />
+                    </span>
+                    {pendingTicketsCount > 0 ? (
+                      <span className="px-2 py-0.5 bg-indigo-500 text-white rounded-full text-[9px] font-mono font-black animate-pulse">
+                        {pendingTicketsCount} NOUVEAUX
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-full text-[9px] font-mono">SUPPORT</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Tickets Support / Conseiller</span>
+                  <strong className="text-3xl font-display font-black text-indigo-400 block mt-1">{ticketsSupport.length}</strong>
+                  <span className="text-[9px] font-mono text-indigo-400 font-bold block mt-1">Répondre aux messages →</span>
+                </div>
+
+                {/* ⚖️ Litiges Prestations */}
+                <div
+                  onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("disputes"); }}
+                  className="p-5 bg-gradient-to-br from-amber-600/15 via-afri-bg to-afri-bg border-2 border-amber-600/40 hover:border-amber-500 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="p-2.5 bg-amber-600/20 border border-amber-600/40 rounded-2xl text-amber-500 group-hover:scale-110 transition-transform">
+                      <AlertTriangle className="w-5 h-5 animate-pulse" />
+                    </span>
+                    {pendingDisputesCount > 0 ? (
+                      <span className="px-2 py-0.5 bg-amber-500 text-black rounded-full text-[9px] font-mono font-black animate-pulse">
+                        {pendingDisputesCount} LITIGES
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-amber-600/20 text-amber-500 border border-amber-600/30 rounded-full text-[9px] font-mono">ARBITRAGE</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Litiges Gombos & Prestations</span>
+                  <strong className="text-3xl font-display font-black text-amber-500 block mt-1">{disputesList.length}</strong>
+                  <span className="text-[9px] font-mono text-amber-500 font-bold block mt-1">Arbitrer les litiges →</span>
+                </div>
+
+                {/* 🐛 Signalements Bugs */}
+                <div
+                  onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("bugs"); }}
+                  className="p-5 bg-gradient-to-br from-rose-500/15 via-afri-bg to-afri-bg border-2 border-rose-500/40 hover:border-rose-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="p-2.5 bg-rose-500/20 border border-rose-500/40 rounded-2xl text-rose-400 group-hover:scale-110 transition-transform">
+                      <Wrench className="w-5 h-5" />
+                    </span>
+                    {pendingBugsCount > 0 ? (
+                      <span className="px-2 py-0.5 bg-rose-500 text-white rounded-full text-[9px] font-mono font-black animate-pulse">
+                        {pendingBugsCount} BUGS
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full text-[9px] font-mono">SIGNALEMENTS</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Rapports de Bugs</span>
+                  <strong className="text-3xl font-display font-black text-rose-400 block mt-1">{bugReports.length}</strong>
+                  <span className="text-[9px] font-mono text-rose-400 font-bold block mt-1">Corriger les bugs →</span>
                 </div>
               </div>
             </div>
@@ -2355,6 +2637,355 @@ export default function AdminFounderThrone({
                     </div>
                   </div>
 
+                </div>
+              </div>
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: 🏛 DEMANDES & FORMULAIRES DU TRÔNE DU FONDATEUR
+                 ========================================================= */}
+            {selectedSection === "throne_forms" && (
+              <div className="space-y-6">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/30 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-[0_0_25px_rgba(212,175,55,0.08)]">
+                  <div className="flex items-center gap-4">
+                    <Crown className="w-8 h-8 text-[#D4AF37] shrink-0 animate-pulse" />
+                    <div>
+                      <h3 className="text-sm font-display font-black text-[#D4AF37] uppercase tracking-wider">
+                        Trône du Fondateur — Centre des Formulaires & Recours
+                      </h3>
+                      <p className="text-xs text-afri-text-sec font-mono mt-0.5">
+                        Écoute temps réel des soumissions directes: Support, Litiges, Certification KYC, et Signalements de Bugs.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedSection(null)}
+                    className="px-4 py-2 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-xs font-mono font-bold text-afri-text rounded-2xl transition-all cursor-pointer"
+                  >
+                    ← Retour au Tableau Souverain
+                  </button>
+                </div>
+
+                {/* SUB TABS NAVIGATION */}
+                <div className="flex flex-wrap items-center gap-2 border-b border-afri-border pb-3">
+                  <button
+                    onClick={() => setFormSubTab("support")}
+                    className={`px-4 py-2.5 rounded-2xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                      formSubTab === "support"
+                        ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20"
+                        : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border"
+                    }`}
+                  >
+                    <Mail className="w-4 h-4" />
+                    <span>Support / Conseiller</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/20 font-black">
+                      {ticketsSupport.length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setFormSubTab("disputes")}
+                    className={`px-4 py-2.5 rounded-2xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                      formSubTab === "disputes"
+                        ? "bg-amber-600 text-white shadow-lg shadow-amber-600/20"
+                        : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border"
+                    }`}
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Litiges Gombos</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/20 font-black">
+                      {disputesList.length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setFormSubTab("kyc")}
+                    className={`px-4 py-2.5 rounded-2xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                      formSubTab === "kyc"
+                        ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
+                        : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border"
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Dossiers KYC (ID)</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/20 font-black">
+                      {kycRequests.length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setFormSubTab("bugs")}
+                    className={`px-4 py-2.5 rounded-2xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                      formSubTab === "bugs"
+                        ? "bg-rose-600 text-white shadow-lg shadow-rose-600/20"
+                        : "bg-afri-bg-sec text-afri-text-sec hover:text-afri-text border border-afri-border"
+                    }`}
+                  >
+                    <Wrench className="w-4 h-4" />
+                    <span>Signalements Bugs</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/20 font-black">
+                      {bugReports.length}
+                    </span>
+                  </button>
+                </div>
+
+                {/* SUB TAB CONTENT */}
+                <div className="space-y-4">
+                  {/* 1. TICKETS SUPPORT */}
+                  {formSubTab === "support" && (
+                    <div className="space-y-4">
+                      {ticketsSupport.length === 0 ? (
+                        <div className="p-12 text-center bg-afri-bg border border-afri-border rounded-3xl text-afri-text-sec font-mono text-xs">
+                          Aucun ticket de support enregistré dans `tickets_support`.
+                        </div>
+                      ) : (
+                        ticketsSupport.map((ticket: any) => (
+                          <div
+                            key={ticket.id}
+                            className={`p-5 rounded-3xl border transition-all ${
+                              ticket.status === "RESOLVED"
+                                ? "bg-afri-bg/50 border-afri-border opacity-70"
+                                : "bg-afri-bg border-indigo-500/40 shadow-lg"
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
+                              <div>
+                                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 uppercase tracking-widest inline-block mb-1.5">
+                                  {ticket.subject || ticket.category || "Support"}
+                                </span>
+                                <h4 className="text-sm font-bold text-afri-text font-sans">
+                                  {ticket.title || ticket.subject || "Message Support"}
+                                </h4>
+                                <span className="text-[11px] font-mono text-afri-text-sec block">
+                                  Par: <strong>{ticket.userName || "Citoyen"}</strong> ({ticket.userEmail || "Non renseigné"}) • UID: {ticket.userId}
+                                </span>
+                              </div>
+                              <span
+                                className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold ${
+                                  ticket.status === "RESOLVED"
+                                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                    : "bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse"
+                                }`}
+                              >
+                                {ticket.status === "RESOLVED" ? "RÉSOLU" : "EN ATTENTE"}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-afri-text bg-afri-bg-sec/50 p-3 rounded-2xl border border-afri-border font-sans leading-relaxed my-3">
+                              {ticket.message || ticket.details || "Pas de message spécifique."}
+                            </p>
+
+                            <div className="flex items-center justify-between text-[10px] font-mono text-afri-text-sec pt-2 border-t border-afri-border/50">
+                              <span>Reçu le: {new Date(ticket.createdAt).toLocaleString("fr-FR")}</span>
+                              {ticket.status !== "RESOLVED" && (
+                                <button
+                                  onClick={() => handleResolveTicketSupport(ticket)}
+                                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold cursor-pointer transition-all shadow-md"
+                                >
+                                  ✓ Marquer comme Traité & Notifier
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* 2. LITIGES GOMBOS */}
+                  {formSubTab === "disputes" && (
+                    <div className="space-y-4">
+                      {disputesList.length === 0 ? (
+                        <div className="p-12 text-center bg-afri-bg border border-afri-border rounded-3xl text-afri-text-sec font-mono text-xs">
+                          Aucun litige enregistré dans `disputes`.
+                        </div>
+                      ) : (
+                        disputesList.map((dispute: any) => (
+                          <div
+                            key={dispute.id}
+                            className={`p-5 rounded-3xl border transition-all ${
+                              dispute.status === "RESOLVED"
+                                ? "bg-afri-bg/50 border-afri-border opacity-70"
+                                : "bg-afri-bg border-amber-500/50 shadow-lg"
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
+                              <div>
+                                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-widest inline-block mb-1.5">
+                                  Litige Gombo #{dispute.gomboId || "GÉNÉRAL"}
+                                </span>
+                                <h4 className="text-sm font-bold text-afri-text font-sans">
+                                  Raison: {dispute.reason || dispute.title || "Litige de prestation"}
+                                </h4>
+                                <span className="text-[11px] font-mono text-afri-text-sec block">
+                                  Déclaré par: <strong>{dispute.userName || "Utilisateur"}</strong> ({dispute.userEmail || "Sans email"}) • ID: {dispute.userId}
+                                </span>
+                              </div>
+                              <span
+                                className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold ${
+                                  dispute.status === "RESOLVED"
+                                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                    : "bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse"
+                                }`}
+                              >
+                                {dispute.status === "RESOLVED" ? "LITIGE RÉSOLU" : "ARBITRAGE REQUIS"}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-afri-text bg-afri-bg-sec/50 p-3 rounded-2xl border border-afri-border font-sans leading-relaxed my-3">
+                              {dispute.message || dispute.details || "Détails du litige non fournis."}
+                            </p>
+
+                            <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono text-afri-text-sec pt-2 border-t border-afri-border/50">
+                              <span>Déclaré le: {new Date(dispute.createdAt).toLocaleString("fr-FR")}</span>
+                              {dispute.status !== "RESOLVED" && (
+                                <button
+                                  onClick={() => handleResolveDispute(dispute)}
+                                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-black font-black rounded-xl cursor-pointer transition-all shadow-md"
+                                >
+                                  ⚖️ Arbitrer & Résoudre le Litige
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* 3. DOSSIERS KYC */}
+                  {formSubTab === "kyc" && (
+                    <div className="space-y-4">
+                      {kycRequests.length === 0 ? (
+                        <div className="p-12 text-center bg-afri-bg border border-afri-border rounded-3xl text-afri-text-sec font-mono text-xs">
+                          Aucun dossier KYC enregistré dans `kyc_requests`.
+                        </div>
+                      ) : (
+                        kycRequests.map((kyc: any) => (
+                          <div
+                            key={kyc.id}
+                            className={`p-5 rounded-3xl border transition-all ${
+                              kyc.status === "APPROVED"
+                                ? "bg-afri-bg/50 border-emerald-500/30"
+                                : kyc.status === "REJECTED"
+                                ? "bg-afri-bg/50 border-red-500/30"
+                                : "bg-afri-bg border-purple-500/50 shadow-lg"
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
+                              <div>
+                                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30 uppercase tracking-widest inline-block mb-1.5">
+                                  GOMBO ID — Certification KYC
+                                </span>
+                                <h4 className="text-sm font-bold text-afri-text font-sans">
+                                  {kyc.userName || "Artiste / Citoyen"}
+                                </h4>
+                                <span className="text-[11px] font-mono text-afri-text-sec block">
+                                  Email: {kyc.userEmail || "Non fourni"} • UID: {kyc.userId}
+                                </span>
+                              </div>
+                              <span
+                                className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold ${
+                                  kyc.status === "APPROVED"
+                                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                    : kyc.status === "REJECTED"
+                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                    : "bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse"
+                                }`}
+                              >
+                                {kyc.status === "APPROVED" ? "VALIDÉ 🎖️" : kyc.status === "REJECTED" ? "REJETÉ ⚠️" : "EN ATTENTE"}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-afri-text bg-afri-bg-sec/50 p-3 rounded-2xl border border-afri-border font-sans leading-relaxed my-3">
+                              {kyc.details || "Dossier d'identité soumis pour audit artistique."}
+                            </p>
+
+                            <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono text-afri-text-sec pt-2 border-t border-afri-border/50">
+                              <span>Soumis le: {new Date(kyc.createdAt).toLocaleString("fr-FR")}</span>
+                              {kyc.status !== "APPROVED" && (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleRejectKYC(kyc)}
+                                    className="px-3 py-1.5 bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 rounded-xl font-bold cursor-pointer transition-all"
+                                  >
+                                    Rejeter ⚠️
+                                  </button>
+                                  <button
+                                    onClick={() => handleApproveKYC(kyc)}
+                                    className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-black cursor-pointer transition-all shadow-md"
+                                  >
+                                    🎖️ Valider KYC & Certifier GOMBO ID
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* 4. RAPPORTS BUGS */}
+                  {formSubTab === "bugs" && (
+                    <div className="space-y-4">
+                      {bugReports.length === 0 ? (
+                        <div className="p-12 text-center bg-afri-bg border border-afri-border rounded-3xl text-afri-text-sec font-mono text-xs">
+                          Aucun rapport de bug enregistré dans `bug_reports`.
+                        </div>
+                      ) : (
+                        bugReports.map((bug: any) => (
+                          <div
+                            key={bug.id}
+                            className={`p-5 rounded-3xl border transition-all ${
+                              bug.status === "RESOLVED"
+                                ? "bg-afri-bg/50 border-afri-border opacity-70"
+                                : "bg-afri-bg border-rose-500/50 shadow-lg"
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
+                              <div>
+                                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 uppercase tracking-widest inline-block mb-1.5">
+                                  Bug: {bug.subject || bug.title || "Interface"}
+                                </span>
+                                <h4 className="text-sm font-bold text-afri-text font-sans">
+                                  {bug.title || "Signalement de dysfonctionnement"}
+                                </h4>
+                                <span className="text-[11px] font-mono text-afri-text-sec block">
+                                  Rapporté par: <strong>{bug.userName || "Citoyen"}</strong> ({bug.userEmail || "Pas d'email"}) • UID: {bug.userId}
+                                </span>
+                              </div>
+                              <span
+                                className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold ${
+                                  bug.status === "RESOLVED"
+                                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                    : "bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse"
+                                }`}
+                              >
+                                {bug.status === "RESOLVED" ? "CORRIGÉ 🐛" : "À CORRIGER"}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-afri-text bg-afri-bg-sec/50 p-3 rounded-2xl border border-afri-border font-sans leading-relaxed my-3">
+                              {bug.message || bug.details || "Description du bug non fournie."}
+                            </p>
+
+                            <div className="flex items-center justify-between text-[10px] font-mono text-afri-text-sec pt-2 border-t border-afri-border/50">
+                              <span>Signalé le: {new Date(bug.createdAt).toLocaleString("fr-FR")}</span>
+                              {bug.status !== "RESOLVED" && (
+                                <button
+                                  onClick={() => handleResolveBugReport(bug)}
+                                  className="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold cursor-pointer transition-all shadow-md"
+                                >
+                                  ✓ Marquer comme Corrigé & Notifier
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

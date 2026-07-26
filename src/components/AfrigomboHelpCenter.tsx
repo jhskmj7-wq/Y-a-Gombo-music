@@ -80,16 +80,19 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
     if (!bugDesc.trim()) return;
     setLoading(true);
     try {
-      await gomboDB.submitBetaFeedback({
-        type: 'bug',
-        category: bugType,
-        description: bugDesc,
-        userId: profile?.uid || currentUser?.uid || "anonymous",
-        userName: profile?.nomArtistique || profile?.displayName || "Anonyme",
+      await gomboDB.submitBugReport({
+        title: `Bug: ${bugType || 'Dysfonctionnement'}`,
+        subject: bugType || "Dysfonctionnement",
+        message: bugDesc,
+        details: bugDesc,
+        userId: profile?.uid || currentUser?.uid || "anonyme",
+        userName: profile?.nomArtistique || profile?.name || profile?.displayName || currentUser?.displayName || "Anonyme",
+        userEmail: profile?.email || currentUser?.email || "",
+        status: "PENDING",
         createdAt: new Date().toISOString()
       });
       try { audioSynth?.playValidationSuccess?.(); } catch(e){}
-      setSuccessMsg("Rapport de bug transmis avec succès au Superfondateur !");
+      setSuccessMsg("Rapport de bug transmis avec succès au Trône du Fondateur !");
       setTimeout(() => {
         setSuccessMsg("");
         setActiveModal("none");
@@ -107,15 +110,19 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
     if (!suggestionText.trim()) return;
     setLoading(true);
     try {
-      await gomboDB.submitBetaFeedback({
-        type: 'suggestion',
-        description: suggestionText,
-        userId: profile?.uid || currentUser?.uid || "anonymous",
-        userName: profile?.nomArtistique || profile?.displayName || "Anonyme",
+      await gomboDB.submitBugReport({
+        title: "Suggestion Bêta / Amélioration",
+        subject: "Suggestion",
+        message: suggestionText,
+        details: suggestionText,
+        userId: profile?.uid || currentUser?.uid || "anonyme",
+        userName: profile?.nomArtistique || profile?.name || profile?.displayName || currentUser?.displayName || "Anonyme",
+        userEmail: profile?.email || currentUser?.email || "",
+        status: "PENDING",
         createdAt: new Date().toISOString()
       });
       try { audioSynth?.playValidationSuccess?.(); } catch(e){}
-      setSuccessMsg("Suggestion enregistrée avec succès. Merci !");
+      setSuccessMsg("Suggestion enregistrée avec succès dans le Trône du Fondateur !");
       setTimeout(() => {
         setSuccessMsg("");
         setActiveModal("none");
@@ -133,17 +140,20 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
     if (!disputeDesc.trim()) return;
     setLoading(true);
     try {
-      await gomboDB.submitBetaFeedback({
-        type: 'dispute_report',
+      await gomboDB.submitDispute({
+        title: `Litige Gombo: ${disputeGomboId || 'Prestation'}`,
         gomboId: disputeGomboId || "GOMBO-GENERAL",
-        reason: disputeReason,
-        description: disputeDesc,
-        userId: profile?.uid || currentUser?.uid || "anonymous",
-        userName: profile?.nomArtistique || profile?.displayName || "Anonyme",
+        reason: disputeReason || "Litige Prestation",
+        message: disputeDesc,
+        details: disputeDesc,
+        userId: profile?.uid || currentUser?.uid || "anonyme",
+        userName: profile?.nomArtistique || profile?.name || profile?.displayName || currentUser?.displayName || "Anonyme",
+        userEmail: profile?.email || currentUser?.email || "",
+        status: "PENDING",
         createdAt: new Date().toISOString()
       });
       try { audioSynth?.playValidationSuccess?.(); } catch(e){}
-      setSuccessMsg("Litige transmis au Tableau de Bord Superfondateur. Traitement prioritaire en cours.");
+      setSuccessMsg("Litige transmis au Tableau de Bord du Fondateur. Traitement prioritaire en cours.");
       setTimeout(() => {
         setSuccessMsg("");
         setActiveModal("none");

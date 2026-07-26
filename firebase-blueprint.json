@@ -199,6 +199,76 @@
       },
       "required": ["id", "userId", "type", "status", "createdAt"]
     },
+    "TicketSupport": {
+      "title": "Support Ticket",
+      "description": "Messages sent to AFRIGOMBO support / advisor",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "title": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "details": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "status", "createdAt"]
+    },
+    "Dispute": {
+      "title": "Dispute Record",
+      "description": "Gombo and performance disputes raised for arbitration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "title": { "type": "string" },
+        "reason": { "type": "string" },
+        "message": { "type": "string" },
+        "details": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "status", "createdAt"]
+    },
+    "KycRequest": {
+      "title": "KYC Request",
+      "description": "Identity verification dossiers for GOMBO ID certification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "title": { "type": "string" },
+        "details": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "status", "createdAt"]
+    },
+    "BugReport": {
+      "title": "Bug Report",
+      "description": "User reported system bugs and feedback",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "title": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "details": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "status", "createdAt"]
+    },
     "Payment": {
       "title": "Financial Transaction Log",
       "description": "Simulated or actual payments records",
@@ -666,6 +736,22 @@
     "/reports/{reportId}": {
       "schema": "Report",
       "description": "Reports raised by users against posts or comments"
+    },
+    "/tickets_support/{ticketId}": {
+      "schema": "TicketSupport",
+      "description": "Messages sent to support or advisor"
+    },
+    "/disputes/{disputeId}": {
+      "schema": "Dispute",
+      "description": "Gombo and performance disputes"
+    },
+    "/kyc_requests/{requestId}": {
+      "schema": "KycRequest",
+      "description": "Identity verification dossiers for GOMBO ID certification"
+    },
+    "/bug_reports/{bugId}": {
+      "schema": "BugReport",
+      "description": "Bug reports submitted by users"
     }
   }
 }

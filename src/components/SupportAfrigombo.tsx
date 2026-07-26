@@ -87,6 +87,21 @@ export default function SupportAfrigombo({ onBack }: SupportAfrigomboProps) {
         isAnonymous,
         createdAt: new Date().toISOString()
       });
+
+      if (message && message.trim()) {
+        await gomboDB.submitSupportTicket({
+          userId: profile.uid || "anonyme",
+          userName: isAnonymous ? "Mécène Anonyme" : (profile.artisticName || profile.name || "Mécène"),
+          userEmail: profile.email || "",
+          title: `Soutien Mécène (${selectedLevel.badge || selectedLevel.id})`,
+          subject: "Soutien Plateforme",
+          message: message,
+          details: `Contribution de ${amount || 0} FCFA - Niveau: ${selectedLevel.badge || selectedLevel.id}. Message: ${message}`,
+          status: "PENDING",
+          createdAt: new Date().toISOString()
+        });
+      }
+
       setSuccess(true);
     } catch (error) {
       console.error("Support error:", error);

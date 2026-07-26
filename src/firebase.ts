@@ -1214,6 +1214,88 @@ export const gomboDB = {
         ...message,
         createdAt: new Date().toISOString()
       });
+      await addDoc(collection(db, "tickets_support"), {
+        userId: message.userId || message.uid || "anonyme",
+        userName: message.userName || message.displayName || "Utilisateur",
+        userEmail: message.userEmail || message.email || "",
+        title: message.subject || message.title || "Message Support",
+        subject: message.subject || "Support",
+        message: message.message || message.details || "",
+        details: message.details || message.message || "",
+        category: message.category || "General",
+        status: "PENDING",
+        createdAt: new Date().toISOString()
+      });
+    }
+  },
+
+  async submitSupportTicket(ticket: any) {
+    if (db) {
+      const payload = {
+        userId: ticket.userId || ticket.uid || "anonyme",
+        userName: ticket.userName || ticket.displayName || "Utilisateur",
+        userEmail: ticket.userEmail || ticket.email || "",
+        title: ticket.title || ticket.subject || "Demande de Support",
+        subject: ticket.subject || ticket.title || "Support",
+        message: ticket.message || ticket.details || "",
+        details: ticket.details || ticket.message || "",
+        status: "PENDING",
+        createdAt: new Date().toISOString()
+      };
+      await addDoc(collection(db, "tickets_support"), payload);
+      await addDoc(collection(db, "support_messages"), payload);
+    }
+  },
+
+  async submitDispute(dispute: any) {
+    if (db) {
+      const payload = {
+        userId: dispute.userId || dispute.uid || "anonyme",
+        userName: dispute.userName || dispute.displayName || "Utilisateur",
+        userEmail: dispute.userEmail || dispute.email || "",
+        title: dispute.title || dispute.reason || "Ouverture de Litige",
+        reason: dispute.reason || dispute.title || "Raison non spécifiée",
+        message: dispute.message || dispute.details || dispute.description || "",
+        details: dispute.details || dispute.message || dispute.description || "",
+        gomboId: dispute.gomboId || dispute.contractId || "",
+        status: "PENDING",
+        createdAt: new Date().toISOString()
+      };
+      await addDoc(collection(db, "disputes"), payload);
+      await addDoc(collection(db, "litiges"), { ...payload, status: "en_attente" });
+    }
+  },
+
+  async submitKYCRequest(kycData: any) {
+    if (db) {
+      const payload = {
+        userId: kycData.userId || kycData.uid || "anonyme",
+        userName: kycData.userName || kycData.displayName || "Utilisateur",
+        userEmail: kycData.userEmail || kycData.email || "",
+        title: kycData.title || "Demande de Certification GOMBO ID (KYC)",
+        details: kycData.details || kycData.message || "Dossier KYC soumis pour analyse",
+        kycDocs: kycData.kycDocs || {},
+        status: "PENDING",
+        createdAt: new Date().toISOString()
+      };
+      await addDoc(collection(db, "kyc_requests"), payload);
+    }
+  },
+
+  async submitBugReport(bugData: any) {
+    if (db) {
+      const payload = {
+        userId: bugData.userId || bugData.uid || "anonyme",
+        userName: bugData.userName || bugData.displayName || "Utilisateur",
+        userEmail: bugData.userEmail || bugData.email || "",
+        title: bugData.title || `Rapport de Bug: ${bugData.category || bugData.type || "Général"}`,
+        subject: bugData.subject || bugData.category || bugData.type || "Bug",
+        message: bugData.message || bugData.details || bugData.description || "",
+        details: bugData.details || bugData.message || bugData.description || "",
+        status: "PENDING",
+        createdAt: new Date().toISOString()
+      };
+      await addDoc(collection(db, "bug_reports"), payload);
     }
   },
 
@@ -2636,10 +2718,35 @@ export const gomboDB = {
   },
   async submitBetaFeedback(feedback: any) {
     if (db) {
+      const payload = {
+        userId: feedback.userId || feedback.uid || "anonyme",
+        userName: feedback.userName || feedback.displayName || "Utilisateur",
+        userEmail: feedback.userEmail || feedback.email || "",
+        title: feedback.title || feedback.subject || (feedback.type === 'bug' ? `Bug: ${feedback.category || 'Interface'}` : feedback.type === 'dispute_report' ? `Litige: ${feedback.gomboId || 'Gombo'}` : 'Feedback Bêta'),
+        subject: feedback.category || feedback.type || "Feedback",
+        message: feedback.description || feedback.message || feedback.details || "",
+        details: feedback.description || feedback.message || feedback.details || "",
+        status: "PENDING",
+        createdAt: new Date().toISOString()
+      };
+
       await addDoc(collection(db, "beta_feedback"), {
         ...feedback,
+        status: "PENDING",
         createdAt: new Date().toISOString()
       });
+
+      if (feedback.type === 'bug' || feedback.type === 'bug_report') {
+        await addDoc(collection(db, "bug_reports"), payload);
+      } else if (feedback.type === 'dispute' || feedback.type === 'dispute_report') {
+        await addDoc(collection(db, "disputes"), {
+          ...payload,
+          gomboId: feedback.gomboId || "",
+          reason: feedback.reason || feedback.category || "Litige Bêta"
+        });
+      } else if (feedback.type === 'support' || feedback.type === 'ticket') {
+        await addDoc(collection(db, "tickets_support"), payload);
+      }
     }
   },
   async getPayments(userId?: string): Promise<any[]> {
