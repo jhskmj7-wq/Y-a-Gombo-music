@@ -658,16 +658,16 @@ export default function AfrigomboWalletDashboard({
       {/* MODAL: MOBILE MONEY DEPOSIT */}
       <AnimatePresence>
         {showDepositModal && (
-          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 w-full max-w-md space-y-6 relative text-left"
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 w-full max-w-md my-auto max-h-[90vh] overflow-y-auto space-y-6 relative text-left shadow-2xl"
             >
               <button 
                 onClick={() => { setShowDepositModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-muted hover:text-afri-text"
+                className="absolute top-4 right-4 text-afri-text-muted hover:text-afri-text p-1 rounded-full bg-afri-bg/50"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -812,16 +812,16 @@ export default function AfrigomboWalletDashboard({
       {/* MODAL: MOBILE MONEY WITHDRAWAL */}
       <AnimatePresence>
         {showWithdrawModal && (
-          <div className="fixed inset-0 bg-afri-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 w-full max-w-md space-y-6 relative text-left"
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 w-full max-w-md my-auto max-h-[90vh] overflow-y-auto space-y-6 relative text-left shadow-2xl"
             >
               <button 
                 onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
-                className="absolute top-4 right-4 text-afri-text-muted hover:text-afri-text"
+                className="absolute top-4 right-4 text-afri-text-muted hover:text-afri-text p-1 rounded-full bg-afri-bg/50"
               >
                 <X className="w-5 h-5" />
               </button>

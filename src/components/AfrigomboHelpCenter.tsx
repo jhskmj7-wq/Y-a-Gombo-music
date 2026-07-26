@@ -500,13 +500,13 @@ export default function AfrigomboHelpCenter({ onClose, currentUser, profile, aud
             ) : (
               <form onSubmit={handleDisputeSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">ID du Gombo / Contrat concerné</label>
+                  <label className="block text-[10px] font-bold text-afri-text-sec uppercase mb-2">Réf Gombo / N° de Référence</label>
                   <input 
                     type="text"
                     required
                     value={disputeGomboId}
                     onChange={(e) => setDisputeGomboId(e.target.value)}
-                    placeholder="Ex: GOMBO-REF-9824 ou ID Contrat"
+                    placeholder="Entrez la Réf Gombo concernée (ex: #GMB-881)"
                     className="w-full bg-[#111] border border-gray-800 rounded-lg p-3 text-xs text-afri-text focus:border-afri-gold/50 focus:outline-none placeholder-gray-600"
                   />
                 </div>

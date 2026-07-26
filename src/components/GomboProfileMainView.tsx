@@ -49,21 +49,28 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
 
   if (!currentUserProfile) return null;
 
-  const isKycApproved = currentUserProfile.kycStatus === "approved" || currentUserProfile.isCertified === true || currentUserProfile.isVerified === true;
+  const isKycApproved = currentUserProfile.kycStatus === "approved" || currentUserProfile.isCertified === true || currentUserProfile.isVerified === true || currentUserProfile.hasGomboId === true;
   
   // Clean, trust-centric Gombo ID resolution
-  const gomboId = isKycApproved 
-    ? (currentUserProfile.gomboIdNumber || (typeof currentUserProfile.gomboId === "string" ? currentUserProfile.gomboId : currentUserProfile.gomboId?.id) || "GMB-ELITE-ID")
-    : "GOMBO ID non attribué";
+  const gomboId = (currentUserProfile.gomboIdNumber || (typeof currentUserProfile.gomboId === "string" ? currentUserProfile.gomboId : currentUserProfile.gomboId?.id) || "GBO-225-8904X");
+
+  const showCopyToast = (msg: string = "Gombo ID copié !") => {
+    if (typeof window === "undefined") return;
+    const existing = document.getElementById("gombo-copy-toast");
+    if (existing) existing.remove();
+    const toast = document.createElement("div");
+    toast.id = "gombo-copy-toast";
+    toast.textContent = `✓ ${msg}`;
+    toast.className = "fixed bottom-8 left-1/2 -translate-x-1/2 z-[99999] bg-emerald-600 text-white font-mono font-bold text-xs uppercase px-5 py-2.5 rounded-full shadow-lg border border-emerald-400/40 animate-bounce";
+    document.body.appendChild(toast);
+    setTimeout(() => toast?.remove(), 2500);
+  };
 
   const handleCopyId = () => {
-    if (!isKycApproved) {
-      try { audioSynth.playKoraNote(220.00, 0, 0.1, 0.3); } catch (_) {}
-      return;
-    }
     try {
       navigator.clipboard.writeText(gomboId);
       setCopiedId(true);
+      showCopyToast("Gombo ID copié !");
       try { audioSynth.playKoraNote(523.25, 0, 0.1, 0.5); } catch (_) {}
       setTimeout(() => setCopiedId(false), 2000);
     } catch (err) {
@@ -83,6 +90,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
       } else {
         navigator.clipboard.writeText(text);
         setShareSuccess(true);
+        showCopyToast("Lien de profil copié !");
         try { audioSynth.playKoraNote(523.25, 0, 0.1, 0.5); } catch (_) {}
         setTimeout(() => setShareSuccess(false), 2500);
       }
@@ -97,7 +105,11 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
     }
   };
 
-  const isPremium = currentUserProfile.isPro || currentUserProfile.isVip || currentUserProfile.balance !== undefined;
+  const isSubscribed = currentUserProfile.isSubscribed === true || 
+                       currentUserProfile.isPremium === true || 
+                       currentUserProfile.isPro === true || 
+                       currentUserProfile.isVip === true ||
+                       (!!currentUserProfile.subscriptionStatus && currentUserProfile.subscriptionStatus.toUpperCase() !== 'FREE');
 
   return (
     <motion.div 
@@ -112,27 +124,25 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative overflow-hidden rounded-[28px] border-2 border-emerald-500/50 bg-afri-bg p-6 shadow-[0_15px_40px_rgba(16,185,129,0.15)] space-y-4"
+          className="relative overflow-hidden rounded-2xl border border-emerald-500/40 dark:border-emerald-500/20 bg-white dark:bg-[#111111] p-6 shadow-md space-y-4"
         >
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none" />
-          
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
-              <Crown className="w-8 h-8 text-emerald-400" />
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+              <Crown className="w-7 h-7 text-emerald-500" />
             </div>
             <div className="space-y-0.5">
-              <span className="text-[10px] font-mono font-black text-emerald-400 uppercase tracking-[0.2em]">👑 Rang Suprême</span>
-              <h3 className="text-lg font-sans font-black text-afri-text uppercase tracking-tight">Centre de Commandement</h3>
+              <span className="text-[10px] font-mono font-black text-emerald-500 uppercase tracking-[0.2em]">👑 Rang Suprême</span>
+              <h3 className="text-base font-sans font-black text-gray-900 dark:text-white uppercase tracking-tight">Centre de Commandement</h3>
             </div>
           </div>
           
-          <p className="text-[11px] text-afri-text-sec leading-relaxed font-sans text-left">
+          <p className="text-xs text-gray-800 dark:text-gray-200 leading-relaxed font-sans text-left">
             Piloter l'ensemble de l'écosystème AFRIGOMBO. Accès exclusif aux serveurs, statistiques globales et modération de haut niveau.
           </p>
           
           <button 
             onClick={() => onNavigateView("dashboard")}
-            className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-sans font-black text-xs uppercase tracking-[0.1em] rounded-2xl shadow-lg hover:scale-[1.02] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-sans font-black text-xs uppercase tracking-[0.1em] rounded-xl shadow-sm hover:scale-[1.01] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <ShieldAlert className="w-4 h-4" />
             Entrer dans le Centre de Commandement
@@ -140,55 +150,72 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
         </motion.div>
       )}
 
-      {/* 👑 AFRIGOMBO PREMIUM CARD */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative overflow-hidden rounded-[28px] border-2 border-afri-gold bg-afri-bg p-6 shadow-[0_15px_40px_rgba(212,175,55,0.15)] space-y-4"
-      >
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-afri-gold/20 blur-[50px] rounded-full pointer-events-none" />
-        
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="w-14 h-14 rounded-2xl bg-afri-gold/20 border border-afri-gold/30 flex items-center justify-center">
-            <span className="text-3xl">👑</span>
+      {/* 👑 AFRIGOMBO PREMIUM BANNER / CARD - CONDITIONNEL (Requirement #3) */}
+      {isSubscribed ? (
+        /* S'IL EST DÉJÀ ABONNÉ: Carte discrète MEMBRE PREMIUM ACTIF */
+        <div className="flex items-center justify-between px-5 py-3.5 rounded-2xl bg-white dark:bg-[#111111] border border-amber-400/40 dark:border-amber-500/20 shadow-md text-gray-800 dark:text-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 font-bold shrink-0">
+              👑
+            </div>
+            <div>
+              <span className="text-[9.5px] font-mono font-black text-amber-500 uppercase tracking-widest block">Statut VIP</span>
+              <span className="text-xs font-black uppercase text-gray-900 dark:text-white">MEMBRE PREMIUM ACTIF</span>
+            </div>
           </div>
-          <div className="space-y-0.5">
-            <span className="text-[10px] font-mono font-black text-afri-gold uppercase tracking-[0.2em]">Abonnement</span>
-            <h3 className="text-lg font-sans font-black text-afri-text uppercase tracking-tight">AFRIGOMBO PREMIUM</h3>
-          </div>
-        </div>
-        
-        <p className="text-[11px] text-afri-text-sec leading-relaxed font-sans text-left relative z-10">
-          Passez au niveau supérieur. Multipliez vos gombos, démarquez-vous des autres virtuoses et débloquez les fonctionnalités exclusives de l'élite.
-        </p>
-        
-        <div className="flex flex-col sm:flex-row gap-3 mt-4 relative z-10">
           <button 
-            onClick={() => onNavigateView("user_gombo_plus")}
-            className="flex-1 py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+            onClick={() => onNavigateView("user_subscription_management")}
+            className="px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-[9px] font-black uppercase tracking-wider rounded-lg transition-colors cursor-pointer"
           >
-            <span>✨ Découvrir Premium</span>
+            Gérer
           </button>
+        </div>
+      ) : (
+        /* S'IL N'EST PAS ABONNÉ: Carte d'incitation à l'abonnement */
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative overflow-hidden rounded-2xl border border-amber-400/40 dark:border-amber-500/20 bg-white dark:bg-[#111111] p-6 shadow-md space-y-4"
+        >
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
+              <span className="text-3xl">👑</span>
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-mono font-black text-amber-500 uppercase tracking-[0.2em]">Abonnement</span>
+              <h3 className="text-lg font-sans font-black text-gray-900 dark:text-white uppercase tracking-tight">AFRIGOMBO PREMIUM</h3>
+            </div>
+          </div>
           
-          <button 
-            onClick={() => onNavigateView("user_mes_gombos")}
-            className="flex-1 py-3 bg-afri-bg-ter border border-afri-gold text-afri-gold hover:bg-afri-gold/10 font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
-          >
-            Booster une publication
-          </button>
-        </div>
-      </motion.div>
+          <p className="text-xs text-gray-800 dark:text-gray-200 leading-relaxed font-sans text-left relative z-10">
+            Passez au niveau supérieur. Multipliez vos gombos, démarquez-vous des autres virtuoses et débloquez les fonctionnalités exclusives de l'élite.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-3 mt-4 relative z-10">
+            <button 
+              onClick={() => onNavigateView("user_gombo_plus")}
+              className="flex-1 py-3 bg-[#D4AF37] hover:bg-amber-400 text-black font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>✨ Découvrir Premium</span>
+            </button>
+            
+            <button 
+              onClick={() => onNavigateView("user_mes_gombos")}
+              className="flex-1 py-3 bg-gray-100 dark:bg-zinc-900 border border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-sans font-black text-xs uppercase tracking-widest rounded-xl shadow-sm hover:scale-[1.01] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              Booster une publication
+            </button>
+          </div>
+        </motion.div>
+      )}
 
-      {/* 1. GRANDE CARTE PROFIL PREMIUM (SCREENSHOT STYLE) - COMPACT ANDROID OPTIMIZED */}
-      <div className="relative overflow-hidden rounded-[24px] border-2 border-afri-gold/35 bg-afri-bg shadow-[0_8px_25px_rgba(0,0,0,0.8)] p-3.5 xs:p-4 sm:p-5">
-        {/* Subtle interior gold light */}
-        <div className="absolute top-0 right-0 w-28 h-28 bg-afri-gold/5 blur-[40px] rounded-full pointer-events-none" />
-
+      {/* 1. GRANDE CARTE PROFIL PREMIUM (CLEAN LIGHT/DARK BACKGROUND, NO GPU BLUR) */}
+      <div className="relative overflow-hidden rounded-2xl border border-amber-400/40 dark:border-amber-500/20 bg-white dark:bg-[#111111] shadow-md p-3.5 xs:p-4 sm:p-5">
         <div className="flex flex-row items-start gap-3 xs:gap-4 sm:gap-5">
           {/* LEFT: Premium double-ring avatar frame */}
           <div className="relative shrink-0 select-none">
-            <div className="w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 rounded-full border-2 border-afri-gold p-0.5 bg-afri-bg">
-              <div className="w-full h-full rounded-full border border-afri-gold/45 overflow-hidden bg-afri-bg">
+            <div className="w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 rounded-full border-2 border-amber-400 p-0.5 bg-white dark:bg-[#111111]">
+              <div className="w-full h-full rounded-full border border-amber-400/45 overflow-hidden bg-gray-100 dark:bg-zinc-800">
                 <img 
                   src={currentUserProfile.avatarUrl || currentUserProfile.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
                   alt="Artist Avatar" 
@@ -201,7 +228,7 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
               </div>
             </div>
             {/* Crown Badge */}
-            <div className="absolute -top-1 -right-1 bg-gradient-to-br from-[#7e22ce] to-[#a855f7] border border-afri-gold rounded-full w-5.5 h-5.5 flex items-center justify-center shadow-md">
+            <div className="absolute -top-1 -right-1 bg-gradient-to-br from-[#7e22ce] to-[#a855f7] border border-amber-400 rounded-full w-5.5 h-5.5 flex items-center justify-center shadow-sm">
               <span className="text-[9px] leading-none">👑</span>
             </div>
           </div>
@@ -210,28 +237,28 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
           <div className="flex flex-col text-left space-y-1.5 w-full min-w-0">
             {/* Artist Name & badges row */}
             <div className="flex flex-wrap items-center gap-1.5 xs:gap-2">
-              <h2 className="text-[15px] xs:text-[17px] sm:text-[20px] font-serif font-black italic tracking-wide uppercase leading-none text-afri-text truncate max-w-full">
+              <h2 className="text-[15px] xs:text-[17px] sm:text-[20px] font-serif font-black italic tracking-wide uppercase leading-none text-gray-900 dark:text-white truncate max-w-full">
                 {currentUserProfile.artisticName || `${currentUserProfile.firstName || "Artiste"} ${currentUserProfile.lastName || ""}`.trim()}
               </h2>
               {currentUserProfile.role === "founder" && (
                 <div className="w-full mt-0.5">
-                  <span className="afri-badge afri-badge-gold px-2.5 py-0.5 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.15)] inline-flex items-center gap-1">
+                  <span className="afri-badge afri-badge-gold px-2.5 py-0.5 rounded-full shadow-sm inline-flex items-center gap-1">
                     👑 Fondateur AFRIGOMBO
                   </span>
                 </div>
               )}
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-afri-border bg-afri-bg-sec text-[8px] font-bold text-afri-text-sec font-mono shrink-0">
-                <Shield className="w-2.5 h-2.5 text-afri-text-sec" />
-                <span>STANDARD</span>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-gray-200 dark:border-zinc-800 bg-gray-100 dark:bg-zinc-900 text-[8px] font-bold text-gray-700 dark:text-gray-300 font-mono shrink-0">
+                <Shield className="w-2.5 h-2.5 text-amber-500" />
+                <span>{isSubscribed ? "PREMIUM" : "STANDARD"}</span>
               </span>
-              <span className="text-[8px] xs:text-[9px] font-bold font-mono text-afri-gold tracking-tight shrink-0">
-                TRUST : {currentUserProfile.trustScore ?? 96}/100 (ARGENT)
+              <span className="text-[8px] xs:text-[9px] font-bold font-mono text-amber-600 dark:text-amber-400 tracking-tight shrink-0">
+                TRUST : {currentUserProfile.trustScore ?? 96}/100
               </span>
-              <Flame className="w-3 h-3 text-afri-gold/80 shrink-0 ml-auto animate-pulse" />
+              <Flame className="w-3 h-3 text-amber-500 shrink-0 ml-auto animate-pulse" />
             </div>
 
             {/* Elite Subtext */}
-            <div className="flex items-center gap-1 text-[8.5px] xs:text-[9.5px] font-black text-afri-gold tracking-[0.15em] uppercase">
+            <div className="flex items-center gap-1 text-[8.5px] xs:text-[9.5px] font-black text-amber-500 tracking-[0.15em] uppercase">
               <span>★ ELITE</span>
             </div>
 
@@ -239,54 +266,48 @@ export const GomboProfileMainView: React.FC<GomboProfileMainViewProps> = ({
             {isKycApproved ? (
               <div 
                 onClick={handleCopyId}
-                className="bg-gradient-to-r from-amber-500 via-afri-gold to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[8.5px] xs:text-[9.5px] font-mono font-black tracking-widest px-2.5 py-0.5 rounded shadow-md uppercase inline-flex items-center gap-1 border border-amber-400/40 w-fit cursor-pointer"
+                className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[8.5px] xs:text-[9.5px] font-mono font-black tracking-widest px-2.5 py-0.5 rounded shadow-sm uppercase inline-flex items-center gap-1 border border-amber-400/40 w-fit cursor-pointer"
               >
                 <span>🎼 {gomboId}</span>
               </div>
             ) : (
               <div 
                 onClick={handleCopyId}
-                className="bg-gradient-to-r from-amber-500 via-afri-gold to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[8.5px] xs:text-[9.5px] font-mono font-black tracking-widest px-2.5 py-0.5 rounded shadow-md uppercase inline-flex items-center gap-1 border border-amber-400/40 w-fit cursor-pointer"
+                className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:brightness-110 active:scale-98 transition-all text-black text-[8.5px] xs:text-[9.5px] font-mono font-black tracking-widest px-2.5 py-0.5 rounded shadow-sm uppercase inline-flex items-center gap-1 border border-amber-400/40 w-fit cursor-pointer"
               >
                 <span>ID NON ATTRIBUÉ</span>
               </div>
             )}
 
             {/* Subscription status */}
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-afri-border/80 bg-afri-bg-ter text-[8px] xs:text-[9px] text-afri-text-sec font-bold tracking-wide uppercase w-fit">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 text-[8px] xs:text-[9px] text-gray-700 dark:text-gray-300 font-bold tracking-wide uppercase w-fit">
               <span className="text-amber-500">👑</span>
-              <span>ABONNEMENT : {isPremium ? "PREMIUM ELITE" : "STANDARD (GRATUIT)"}</span>
+              <span>ABONNEMENT : {isSubscribed ? "PREMIUM ELITE" : "STANDARD (GRATUIT)"}</span>
             </div>
 
             {/* KYC status badge */}
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-afri-border/80 bg-afri-bg-ter text-[8px] xs:text-[9px] text-afri-text-sec font-bold tracking-wide uppercase w-fit">
-              <span className={isKycApproved ? "text-emerald-400" : "text-amber-500"}>🛡️</span>
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 text-[8px] xs:text-[9px] text-gray-700 dark:text-gray-300 font-bold tracking-wide uppercase w-fit">
+              <span className={isKycApproved ? "text-emerald-500" : "text-amber-500"}>🛡️</span>
               <span>KYC : {isKycApproved ? "VÉRIFIÉ" : "NON VÉRIFIÉ"}</span>
-            </div>
-
-            {/* Timer status */}
-            <div className="flex items-center gap-1 text-[8px] font-mono font-bold text-afri-text-sec tracking-wide uppercase">
-              <Clock className="w-2.5 h-2.5" />
-              <span>0M / 30M (EC)</span>
             </div>
 
             {/* Actions: BIO OK & MON STATUT & Portfolio Public */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-[8px] xs:text-[8.5px] font-black text-emerald-400 uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-[8px] xs:text-[8.5px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                 ✓ BIO OK
               </span>
               <button 
                 onClick={() => setShowStatusModal(true)}
-                className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 via-afri-gold to-amber-300 hover:brightness-115 text-black text-[8.5px] xs:text-[9px] font-black uppercase tracking-wider shadow-md hover:scale-102 active:scale-98 transition-all cursor-pointer inline-flex items-center gap-1"
+                className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:brightness-115 text-black text-[8.5px] xs:text-[9px] font-black uppercase tracking-wider shadow-sm hover:scale-102 active:scale-98 transition-all cursor-pointer inline-flex items-center gap-1"
               >
                 <span>👑 Mon Statut</span>
               </button>
               <button 
                 onClick={() => onViewPublicPortfolio?.(currentUserProfile.uid)}
-                className="px-3 py-1 rounded-full bg-afri-bg-sec border border-afri-gold text-afri-gold hover:bg-afri-gold/10 text-[8.5px] xs:text-[9px] font-black uppercase tracking-wider shadow-md hover:scale-102 active:scale-98 transition-all cursor-pointer inline-flex items-center gap-1"
+                className="px-3 py-1 rounded-full bg-gray-100 dark:bg-zinc-800 border border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 text-[8.5px] xs:text-[9px] font-black uppercase tracking-wider shadow-sm hover:scale-102 active:scale-98 transition-all cursor-pointer inline-flex items-center gap-1"
               >
-                <Eye className="w-3 h-3 text-afri-gold" />
-                <span>Voir mon Portfolio Public (Vitrine)</span>
+                <Eye className="w-3 h-3 text-amber-500" />
+                <span>Voir mon Portfolio Public</span>
               </button>
             </div>
           </div>

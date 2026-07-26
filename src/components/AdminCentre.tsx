@@ -614,9 +614,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         setPublicProfileTargetUserId(e.detail.userId);
       }
     };
+    const handleOpenWalletDeposit = () => {
+      setActiveMenu("user_wallet");
+    };
     window.addEventListener("open-public-profile" as any, handleOpenPublicProfile as any);
+    window.addEventListener("open_wallet_deposit", handleOpenWalletDeposit);
     return () => {
       window.removeEventListener("open-public-profile" as any, handleOpenPublicProfile as any);
+      window.removeEventListener("open_wallet_deposit", handleOpenWalletDeposit);
     };
   }, []);
   
@@ -862,6 +867,34 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     const dateB = new Date(b.createdAt || 0).getTime();
     return dateB - dateA;
   });
+
+  const unreadNotifsCount = allNotifications.filter(n => !(n as any).isRead && !n.read).length;
+
+  // Banner Toast logic for Admin Announcements / Founder Decrees
+  const [dismissedBanners, setDismissedBanners] = useState<Set<string>>(new Set());
+  const [activeAdminBanner, setActiveAdminBanner] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!allNotifications || allNotifications.length === 0) return;
+    const latestAnnouncement = allNotifications.find(n => {
+      if (dismissedBanners.has(n.id)) return false;
+      const typeStr = String(n.type || n.category || "").toUpperCase();
+      const isGlobalOrFounder = n.fromFounder || n.isGlobal || typeStr.includes("ANNOUNCE") || typeStr.includes("INFO") || typeStr.includes("URGENT") || typeStr.includes("SYSTÈME") || typeStr.includes("LITIGE") || typeStr.includes("KYC");
+      return isGlobalOrFounder;
+    });
+
+    if (latestAnnouncement) {
+      const createdAtMs = new Date(latestAnnouncement.createdAt || Date.now()).getTime();
+      const ageInSec = (Date.now() - createdAtMs) / 1000;
+      if (ageInSec < 900 && (!latestAnnouncement.read && !(latestAnnouncement as any).isRead)) {
+        setActiveAdminBanner(latestAnnouncement);
+        const timer = setTimeout(() => {
+          setActiveAdminBanner(null);
+        }, 12000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [allNotifications, dismissedBanners]);
 
   // Le Terrain, Vibes, and dynamic publishing interactions states
   const [terrainTab, setTerrainTab] = useState<"all" | "musicien" | "contrat">("all");
@@ -2606,18 +2639,21 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                               🛠 Système
                             </span>
                             {renderMenuItem("menu_notifications", "Notifications", "🔔", () => {
-                              requireAuthThen(() => {
+                              requireAuthThen(async () => {
                                 setPerspective("user");
                                 setActiveMenu("user_notifications");
+                                if (currentUser?.uid) {
+                                  try {
+                                    await gomboDB.markAllUserNotificationsAsRead(currentUser.uid);
+                                    setRealNotifications(prev => prev.map(n => ({ ...n, read: true, isRead: true })));
+                                  } catch (e) {}
+                                }
                               });
-                            }, false, (() => {
-                              const unreadCount = allNotifications.filter(n => !(n as any).isRead && !n.read).length;
-                              return unreadCount > 0 ? (
-                                <span className="bg-red-500 text-afri-text font-mono font-black text-[9px] px-1.5 py-0.5 rounded-full animate-bounce shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.5)]">
-                                  {unreadCount}
-                                </span>
-                              ) : null;
-                            })())}
+                            }, false, unreadNotifsCount > 0 ? (
+                              <span className="bg-gradient-to-r from-red-600 to-amber-500 text-white font-mono font-black text-[9px] px-1.5 py-0.5 rounded-full animate-pulse shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                                {unreadNotifsCount > 9 ? "9+" : unreadNotifsCount}
+                              </span>
+                            ) : null)}
                             {renderMenuItem("menu_history", "Historique", "🕓", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
@@ -2694,6 +2730,49 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         className="flex-1 min-w-0 w-full max-w-full bg-afri-bg flex flex-col overflow-hidden"
       >
         
+        {/* FLOATING ADMIN ANNOUNCEMENT TOAST BANNER */}
+        <AnimatePresence>
+          {activeAdminBanner && (
+            <motion.div
+              initial={{ opacity: 0, y: -60, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -60, scale: 0.95 }}
+              className="fixed top-4 inset-x-4 max-w-lg mx-auto z-[9999] bg-[#111111]/95 border-2 border-[#D4AF37] rounded-2xl p-4 shadow-[0_12px_40px_rgba(212,175,55,0.35)] backdrop-blur-md flex items-start gap-3.5"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-amber-600 flex items-center justify-center text-black shrink-0 font-bold shadow-md">
+                📢
+              </div>
+              <div className="flex-1 text-left min-w-0 pr-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-[9px] font-mono font-black text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/15 px-2 py-0.5 rounded border border-[#D4AF37]/30">
+                    {activeAdminBanner.type || activeAdminBanner.category || "ANNONCE TRÔNE"}
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-mono">
+                    {activeAdminBanner.createdAt ? new Date(activeAdminBanner.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "À l'instant"}
+                  </span>
+                </div>
+                <h4 className="text-xs sm:text-sm font-black text-white truncate">
+                  {activeAdminBanner.title || activeAdminBanner.titre || activeAdminBanner.subject || "Message de l'Administration"}
+                </h4>
+                <p className="text-[11px] text-zinc-300 font-medium leading-relaxed line-clamp-2 mt-0.5">
+                  {activeAdminBanner.message || activeAdminBanner.description || activeAdminBanner.body}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  if (activeAdminBanner.id) {
+                    setDismissedBanners(prev => new Set(prev).add(activeAdminBanner.id));
+                  }
+                  setActiveAdminBanner(null);
+                }}
+                className="text-zinc-400 hover:text-white p-1 rounded-lg bg-zinc-800/60 hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* ELITE UPPER STATUS BAR (AFRIGOMBO PREMIUM HEADER OR EXCLUSIVE ADMIN HEADER) */}
         {activeMenu !== "super_admin" && (
           perspective === "admin" ? (
@@ -6188,7 +6267,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <NotificationCenter 
                       currentUserProfile={profile || currentArtist} 
                       notifications={allNotifications}
-                      onRefreshProfile={() => {}}
+                      onRefreshProfile={() => {
+                        if (currentUser?.uid) {
+                          setRealNotifications(prev => prev.map(n => ({ ...n, read: true, isRead: true })));
+                        }
+                      }}
                       onNavigateHome={() => {
                         setActiveMenu("user_terrain");
                         try { audioSynth.playValidationSuccess(); } catch (err) {}

@@ -1079,15 +1079,19 @@ export const gomboDB = {
 
   async markNotificationAsRead(notifId: string) {
     if (db) {
-      await updateDoc(doc(db, "notifications", notifId), { isRead: true });
+      await updateDoc(doc(db, "notifications", notifId), { isRead: true, read: true });
     }
   },
 
   async markAllUserNotificationsAsRead(userId: string) {
     if (db) {
-      const q = query(collection(db, "notifications"), where("userId", "==", userId), where("isRead", "==", false));
-      const snap = await getDocs(q);
-      const batchPromises = snap.docs.map(d => updateDoc(doc(db, "notifications", d.id), { isRead: true }));
+      const q1 = query(collection(db, "notifications"), where("userId", "==", userId), where("isRead", "==", false));
+      const q2 = query(collection(db, "notifications"), where("userId", "==", userId), where("read", "==", false));
+      const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+      const docsMap = new Map<string, any>();
+      snap1.docs.forEach(d => docsMap.set(d.id, d));
+      snap2.docs.forEach(d => docsMap.set(d.id, d));
+      const batchPromises = Array.from(docsMap.values()).map(d => updateDoc(doc(db, "notifications", d.id), { isRead: true, read: true }));
       await Promise.all(batchPromises);
     }
   },
@@ -3330,17 +3334,24 @@ export const gomboDB = {
         artistId = cData.artistId || "";
       }
 
-      // 1. Create Litige dossier
-      const litigeRef = await addDoc(collection(db, "litiges"), {
+      // 1. Create Litige dossier in both disputes and litiges collections
+      const disputePayload = {
+        userId: openedById,
+        userName: openedByName,
+        type: "litige_contrat",
+        title: `Litige Contrat: ${gomboTitle}`,
+        reason: reason,
+        description: `Litige ouvert sur contrat ${contractId} (${gomboTitle}) par ${openedByName}. Motif: ${reason}`,
+        details: reason,
         contractId,
-        openedBy: openedById,
-        openedByName,
-        reason,
-        status: "en_attente",
-        amount,
         gomboTitle,
+        amount,
+        status: "PENDING",
         createdAt: now
-      });
+      };
+
+      await addDoc(collection(db, "disputes"), disputePayload);
+      const litigeRef = await addDoc(collection(db, "litiges"), { ...disputePayload, openedBy: openedById, openedByName, status: "en_attente" });
 
       // 2. Mark escrow as disputed
       await updateDoc(doc(db, "escrow", contractId), {
