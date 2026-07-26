@@ -20,6 +20,7 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { gomboDB } from "./firebase";
 import { app } from "./lib/firebase";
 import { AfriGomboLogo } from "./components/AfriGomboLogo";
+import ScrollToTop from "./components/ScrollToTop";
 
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 
@@ -180,6 +181,7 @@ function App() {
   return (
     <ErrorBoundary>
       <div className="h-screen overflow-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text">
+        <ScrollToTop />
         
         {/* Main application layer, rendered cleanly */}
         <Routes>

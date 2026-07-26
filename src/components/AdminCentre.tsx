@@ -7961,7 +7961,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
           )}
 
           {/* MAIN FLOATING BOTTOM NAVIGATION BAR */}
-          <div className={`fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 w-[94%] xs:w-[92%] max-w-[425px] h-[64px] sm:h-[72px] bg-afri-bg-sec/95 backdrop-blur-xl border border-afri-border p-1 px-2 xs:px-3 sm:px-4 flex justify-between items-center z-40 rounded-[24px] sm:rounded-[28px] shadow-[0_12px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none transition-transform duration-300 ease-in-out ${
+          <div className={`fixed bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 w-[94%] xs:w-[92%] max-w-[425px] h-14 sm:h-16 bg-afri-bg-sec/95 backdrop-blur-xl border border-afri-border py-1.5 px-3 flex justify-between items-center z-40 rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.85)] select-none transition-transform duration-300 ease-in-out ${
             isNavCollapsed ? "-translate-x-[150%] opacity-0 pointer-events-none" : "translate-x-[-50%] opacity-100"
           }`}>
             {/* TOGGLE COLLAPSE BUTTON ON THE SIDE (Left edge) */}
