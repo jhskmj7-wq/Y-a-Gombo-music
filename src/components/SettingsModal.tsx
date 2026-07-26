@@ -287,19 +287,8 @@ export default function SettingsModal({
   };
 
   return (
-    <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-afri-bg text-afri-text font-sans pb-28 pt-4 px-4 sm:px-6 relative select-none">
+    <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-afri-bg text-afri-text font-sans pt-4 px-4 sm:px-6 pb-24 relative select-none">
       
-      {/* HEADER BAR */}
-      <div className="max-w-xl mx-auto flex items-center justify-between pb-5 border-b border-afri-border sticky top-0 bg-afri-bg/95 backdrop-blur-md z-30 mb-6">
-        <button 
-          onClick={onClose}
-          className="flex items-center gap-2 text-xs font-bold text-afri-text hover:text-afri-gold transition-colors cursor-pointer"
-        >
-          <ChevronRight className="w-5 h-5 rotate-180 text-afri-gold" />
-          <h1 className="text-sm sm:text-base font-black uppercase tracking-tight">PARAMÈTRES & PRÉFÉRENCES</h1>
-        </button>
-      </div>
-
       {/* OVERLAY FOR SECONDARY ASSISTANCE VIEWS */}
       {activeSupportPage !== "none" && (
         <div className="fixed inset-0 z-[60] bg-afri-bg p-5 flex flex-col h-full overflow-y-auto text-left">

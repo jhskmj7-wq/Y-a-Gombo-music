@@ -1191,6 +1191,17 @@ export default function GomboProfile({
     );
   }
 
+  if (panelView === "settings") {
+    return (
+      <SettingsModal 
+        isOpen={true} 
+        onClose={() => setPanelView("main")} 
+        onLogout={onLogout}
+        onNavigateToFounder={() => onNavigateView("admin")}
+      />
+    );
+  }
+
   return (
     <div className="afri-scroll-safe afri-container">
       <div className="afri-section">
@@ -1198,39 +1209,30 @@ export default function GomboProfile({
           <button onClick={() => setPanelView("main")} className="afri-btn-ghost p-2">
             <ArrowLeft className="w-5 h-5 text-afri-text" />
           </button>
-          <h3 className="afri-title-md">{panelView === "support" ? "Support Assistance Gombo" : "Réglages"}</h3>
+          <h3 className="afri-title-md">Support Assistance Gombo</h3>
         </div>
         
-        {panelView === "support" ? (
-          <div className="afri-card p-6 space-y-6">
-            <div className="text-center space-y-2">
-              <div className="inline-flex p-3 bg-orange-100 dark:bg-orange-950 text-[#D4AF37] rounded-full">
-                <HelpCircle className="w-10 h-10" />
-              </div>
-              <h2 className="afri-title-lg text-afri-text text-center">SUPPORT ASSISTANCE GOMBO</h2>
-              <p className="afri-text-body text-afri-text-sec text-center">Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO est disponible 24/7.</p>
+        <div className="afri-card p-6 space-y-6">
+          <div className="text-center space-y-2">
+            <div className="inline-flex p-3 bg-orange-100 dark:bg-orange-950 text-[#D4AF37] rounded-full">
+              <HelpCircle className="w-10 h-10" />
             </div>
-            
-            <div className="space-y-3">
-              <button 
-                onClick={() => supportConfig.openSupport("Aide générale")} 
-                className="afri-btn-primary py-4 text-center bg-afri-bg-sec border-[#25D366] flex items-center justify-center gap-2 cursor-pointer w-full"
-              >
-                <MessageSquare className="w-4 h-4" /> Contacter le Support AFRIGOMBO
-              </button>
-              <div className="text-center pt-2">
-                <p className="text-[10px] text-[#B9B9B9] font-mono">Assistance AFRIGOMBO 24h/7</p>
-              </div>
+            <h2 className="afri-title-lg text-afri-text text-center">SUPPORT ASSISTANCE GOMBO</h2>
+            <p className="afri-text-body text-afri-text-sec text-center">Besoin d'aide pour une transaction Wave suspendue ou une annulation de gombo de dernière minute ? Le support d'AFRIGOMBO est disponible 24/7.</p>
+          </div>
+          
+          <div className="space-y-3">
+            <button 
+              onClick={() => supportConfig.openSupport("Aide générale")} 
+              className="afri-btn-primary py-4 text-center bg-afri-bg-sec border-[#25D366] flex items-center justify-center gap-2 cursor-pointer w-full"
+            >
+              <MessageSquare className="w-4 h-4" /> Contacter le Support AFRIGOMBO
+            </button>
+            <div className="text-center pt-2">
+              <p className="text-[10px] text-[#B9B9B9] font-mono">Assistance AFRIGOMBO 24h/7</p>
             </div>
           </div>
-        ) : (
-          <SettingsModal 
-            isOpen={true} 
-            onClose={() => setPanelView("main")} 
-            onLogout={onLogout}
-            onNavigateToFounder={() => onNavigateView("admin")}
-          />
-        )}
+        </div>
       </div>
     </div>
   );

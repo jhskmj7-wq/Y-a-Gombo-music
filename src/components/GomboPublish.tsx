@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Calendar, Clock, DollarSign, MapPin, AlignLeft, Check, 
   Music, Sparkles, Image as ImageIcon, Briefcase, MessageSquare, 
-  Upload, X, AlertCircle, Award, Star, Radio, Lock, ShieldCheck, Zap
+  Upload, X, AlertCircle, Award, Star, Radio, Lock, ShieldCheck, Zap,
+  Wallet, ArrowUpRight, CheckCircle2
 } from "lucide-react";
-import { gomboDB } from "../firebase";
+import { db, gomboDB } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { UserProfile, SocialPost } from "../types";
 import GomboSecureModal from "./GomboSecureModal";
 import { supportConfig } from "../supportConfig";
@@ -54,6 +56,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   // States
   const [loading, setLoading] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [publishOutcome, setPublishOutcome] = useState<"idle" | "success_published" | "insufficient_funds">("idle");
   const [depositDetails, setDepositDetails] = useState<{
     cachet: number;
     fee: number;
@@ -63,7 +66,8 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     typeName: string;
     authorName: string;
     title: string;
-  }>({ cachet: 0, fee: 0, total: 0, requiresDeposit: false, refId: "", typeName: "", authorName: "", title: "" });
+    userSolde?: number;
+  }>({ cachet: 0, fee: 0, total: 0, requiresDeposit: false, refId: "", typeName: "", authorName: "", title: "", userSolde: 0 });
   const [errorMsg, setErrorMsg] = useState("");
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [uploadingState, setUploadingState] = useState<{ [key: string]: boolean }>({});
@@ -176,12 +180,71 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       }
 
       const cachetVal = budget ? Number(budget) : (selectedType === "opportunite" || selectedType === "renfort" ? 25000 : 0);
-      const requiresDeposit = true;
-      const postStatus = "pending_deposit";
       const feeAmount = Math.round(cachetVal * 0.025);
       const totalAmountToDeposit = cachetVal + feeAmount;
+      const reqAmount = totalAmountToDeposit > 0 ? totalAmountToDeposit : cachetVal;
 
       const postTag = PUBLICATION_TYPES.find(t => t.id === selectedType)?.label || selectedType;
+
+      // Check User Wallet Balance in Firestore
+      let liveSolde = 0;
+      try {
+        const uSnap = await getDoc(doc(db, "users", currentUserProfile.uid));
+        if (uSnap.exists()) {
+          liveSolde = uSnap.data()?.wallet?.soldeDisponible ?? 0;
+        } else {
+          liveSolde = (currentUserProfile as any)?.wallet?.soldeDisponible ?? 0;
+        }
+      } catch (_) {
+        liveSolde = (currentUserProfile as any)?.wallet?.soldeDisponible ?? 0;
+      }
+
+      // CAS 2 : Solde Insuffisant -> Bloquer la publication directe
+      if (reqAmount > 0 && liveSolde < reqAmount) {
+        setDepositDetails({
+          cachet: cachetVal,
+          fee: feeAmount,
+          total: reqAmount,
+          requiresDeposit: true,
+          refId: `PUB-${Date.now()}`,
+          typeName: postTag,
+          authorName: authorName,
+          title: title.trim(),
+          userSolde: liveSolde
+        } as any);
+        setPublishOutcome("insufficient_funds");
+        setShowSuccessOverlay(true);
+        setLoading(false);
+        return;
+      }
+
+      // CAS 1 : Solde Suffisant -> PAIÉ ET PUBLIÉ IMMÉDIATEMENT
+      let newSolde = liveSolde;
+      if (reqAmount > 0) {
+        newSolde = Math.max(0, liveSolde - reqAmount);
+        // Débiter le solde dans Firestore
+        await setDoc(doc(db, "users", currentUserProfile.uid), {
+          wallet: {
+            soldeDisponible: newSolde,
+            soldeBloque: (currentUserProfile as any)?.wallet?.soldeBloque || 0
+          }
+        }, { merge: true });
+
+        // Enregistrer la transaction de débit
+        const txId = "tx_pub_" + Date.now();
+        await setDoc(doc(db, "transactions", txId), {
+          id: txId,
+          userId: currentUserProfile.uid,
+          userName: authorName,
+          type: "payment",
+          amount: reqAmount,
+          status: "success",
+          description: `Débit automatique & Publication du gombo "${title.trim()}"`,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      const postStatus = "PUBLISHED";
 
       // 2. Publish in system posts (Le Terrain)
       const postPayload: any = {
@@ -209,15 +272,15 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         urgent: selectedType === "renfort",
         commentsCount: 0,
         status: postStatus,
-        paymentMethod: "manual_beta",
-        paymentStatus: "waiting",
-        visible: false,
-        adminValidated: false,
-        publishedAt: null,
-        paymentProvider: "manual_beta",
+        paymentMethod: "wallet_debit",
+        paymentStatus: "paid",
+        visible: true,
+        adminValidated: true,
+        publishedAt: new Date().toISOString(),
+        paymentProvider: "coffre_afrigombo",
         feeAmount: feeAmount,
         totalAmountToDeposit: totalAmountToDeposit,
-        depositConfirmed: false,
+        depositConfirmed: true,
         createdAt: new Date().toISOString()
       };
 
@@ -241,51 +304,32 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           urgent: selectedType === "renfort",
           type: gomboCategory,
           status: postStatus,
-          paymentMethod: "manual_beta",
-          paymentStatus: "waiting",
-          visible: false,
-          adminValidated: false,
-          publishedAt: null,
-          paymentProvider: "manual_beta",
+          paymentMethod: "wallet_debit",
+          paymentStatus: "paid",
+          visible: true,
+          adminValidated: true,
+          publishedAt: new Date().toISOString(),
+          paymentProvider: "coffre_afrigombo",
           feeAmount: feeAmount,
           totalAmountToDeposit: totalAmountToDeposit,
-          depositConfirmed: false
+          depositConfirmed: true
         }) || "";
-      }
-
-      // If deposit is required, record transaction in Firestore transactions collection for admin validation
-      if (requiresDeposit) {
-        try {
-          const { createBetaTransaction } = await import("../lib/betaEscrowEngine");
-          await createBetaTransaction({
-            contractId: createdPostId || "",
-            gomboId: createdGomboId || createdPostId || "",
-            gomboTitle: title.trim(),
-            promoterId: currentUserProfile.uid,
-            promoterName: authorName,
-            artistId: "tous_les_musiciens",
-            artistName: "Musiciens AFRIGOMBO",
-            amount: cachetVal,
-            notes: `Dépôt Bêta - Cachet: ${cachetVal} FCFA | Frais (2.5%): ${feeAmount} FCFA | Total: ${totalAmountToDeposit} FCFA`
-          });
-        } catch (txErr) {
-          console.warn("Beta transaction creation notice:", txErr);
-        }
       }
 
       // Save calculated details to state for modal overlay
       setDepositDetails({
         cachet: cachetVal,
         fee: feeAmount,
-        total: totalAmountToDeposit,
-        requiresDeposit,
+        total: reqAmount,
+        requiresDeposit: true,
         refId: createdPostId || createdGomboId || `PUB-${Date.now()}`,
         typeName: postTag,
         authorName: authorName,
-        title: title.trim()
-      });
+        title: title.trim(),
+        userSolde: newSolde
+      } as any);
 
-      // Show Overlay state
+      setPublishOutcome("success_published");
       setShowSuccessOverlay(true);
     } catch (err) {
       console.error(err);
@@ -317,118 +361,120 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl w-full max-w-lg p-6 sm:p-8 overflow-y-auto max-h-[85vh] relative pb-10 shadow-2xl space-y-5 flex flex-col"
+                className="bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl w-full max-w-lg p-6 sm:p-8 overflow-y-auto max-h-[85vh] relative shadow-2xl space-y-5 flex flex-col text-center"
               >
-                {/* Top Banner */}
-                <div className="text-center space-y-2 pt-2 shrink-0">
-                  <div className="w-12 h-12 mx-auto bg-amber-500/10 border border-[#D4AF37] rounded-2xl flex items-center justify-center text-2xl shadow-md shadow-[#D4AF37]/20">
-                    🛡️
-                  </div>
-                  <span className="inline-block text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
-                    ⏳ EN ATTENTE DE VALIDATION
-                  </span>
-                  <h3 className="text-lg sm:text-xl font-black text-afri-text uppercase tracking-wide">
-                    Validation de votre Gombo (Bêta Test)
-                  </h3>
-                  <p className="text-xs text-afri-text-sec max-w-sm mx-auto leading-relaxed font-medium">
-                    Pour la bêta test, un conseiller vous assistera pour finaliser et valider la publication de votre gombo.
-                  </p>
-                </div>
-
-                {/* Details Summary Card */}
-                <div className="bg-afri-bg border border-afri-border rounded-xl p-4 space-y-3 text-left">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-afri-text-sec">Titre :</span>
-                    <span className="font-bold text-afri-text truncate max-w-[180px]">{depositDetails.title}</span>
-                  </div>
-                  {depositDetails.cachet ? (
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-afri-text-sec">Cachet :</span>
-                      <span className="font-mono font-bold text-[#D4AF37]">{depositDetails.cachet.toLocaleString()} FCFA</span>
-                    </div>
-                  ) : null}
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-afri-text-sec">Réf ID :</span>
-                    <span className="font-mono text-[10px] bg-afri-bg-sec px-2 py-0.5 rounded text-afri-text-sec border border-white/5">{depositDetails.refId}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-afri-text-sec">Statut :</span>
-                    <span className="font-bold text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30 text-[10px] uppercase">
-                      ⏳ En attente de validation
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action 1: Contact Support / Conseiller */}
-                <div className="space-y-2.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      supportConfig.openSupport(`Bonjour, je souhaite finaliser et valider la publication de mon gombo "${depositDetails.title}" (Réf: ${depositDetails.refId})`);
-                    }}
-                    className="w-full px-4 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-black font-black text-xs uppercase rounded-xl transition-all shadow-md shadow-[#25D366]/20 cursor-pointer flex items-center justify-center gap-2 active:scale-98"
-                  >
-                    <span>💬 Joindre le support / un conseiller</span>
-                  </button>
-                  <p className="text-[10px] text-center text-afri-text-sec font-medium">
-                    Contactez directement un conseiller pour obtenir votre code de validation ou faire valider votre gombo.
-                  </p>
-                </div>
-
-                {/* Action 2: Input Validation Code Form */}
-                <div className="bg-afri-bg/50 border border-[#D4AF37]/30 rounded-xl p-4 space-y-3 text-left">
-                  <label className="block text-[11px] font-black uppercase text-[#D4AF37] tracking-wider flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-[#D4AF37]" /> Saisir un Code de Validation
-                  </label>
-                  <p className="text-[10px] text-afri-text-sec leading-relaxed">
-                    Saisissez le code fourni par votre conseiller pour valider et publier votre gombo dans le fil général.
-                  </p>
-                  <form onSubmit={handleValidateCode} className="space-y-3 pt-1">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={enteredCode}
-                        onChange={(e) => setEnteredCode(e.target.value.toUpperCase())}
-                        placeholder="Ex: AG-849201"
-                        className="w-full bg-afri-bg-sec border border-afri-border focus:border-[#D4AF37] rounded-lg px-3 py-2.5 text-xs font-mono tracking-wider font-bold text-afri-text uppercase outline-none transition-colors"
-                      />
+                {publishOutcome === "insufficient_funds" ? (
+                  <>
+                    <div className="w-16 h-16 mx-auto bg-amber-500/10 border border-amber-500 rounded-2xl flex items-center justify-center text-amber-400 text-3xl shadow-lg">
+                      <AlertCircle className="w-10 h-10 text-amber-400" />
                     </div>
 
-                    {codeErrorMsg && (
-                      <div className="text-[10px] text-red-400 font-bold bg-red-950/30 p-2 rounded border border-red-900/50">
-                        ⚠️ {codeErrorMsg}
-                      </div>
-                    )}
+                    <div className="space-y-2">
+                      <span className="inline-block text-[10px] font-mono font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
+                        🔒 PUBLICATION BLOQUÉE
+                      </span>
+                      <h3 className="text-lg font-black text-afri-text uppercase tracking-wide">
+                        SOLDE INSUFFISANT DANS VOTRE COFFRE
+                      </h3>
+                      <p className="text-xs text-afri-text-sec leading-relaxed max-w-sm mx-auto">
+                        Solde insuffisant dans votre Coffre Afrigombo (Solde : <strong>{(depositDetails.userSolde || 0).toLocaleString()} FCFA</strong>). Veuillez recharger votre wallet pour publier.
+                      </p>
+                    </div>
 
-                    {codeSuccessMsg && (
-                      <div className="text-[10px] text-emerald-400 font-bold bg-emerald-950/30 p-2 rounded border border-emerald-900/50">
-                        {codeSuccessMsg}
+                    {/* Summary Box */}
+                    <div className="bg-afri-bg border border-afri-border rounded-xl p-4 space-y-2.5 text-left text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-afri-text-sec">Gombo :</span>
+                        <span className="font-bold text-afri-text truncate max-w-[180px]">{depositDetails.title}</span>
                       </div>
-                    )}
+                      <div className="flex justify-between items-center">
+                        <span className="text-afri-text-sec">Cachet / Budget :</span>
+                        <span className="font-mono font-bold text-afri-text">{depositDetails.cachet.toLocaleString()} FCFA</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-1 border-t border-afri-border">
+                        <span className="text-afri-text-sec">Montant Requis :</span>
+                        <span className="font-mono font-black text-amber-400">{depositDetails.total.toLocaleString()} FCFA</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-afri-text-sec">Votre Solde Actuel :</span>
+                        <span className="font-mono font-black text-red-400">{(depositDetails.userSolde || 0).toLocaleString()} FCFA</span>
+                      </div>
+                    </div>
+
+                    {/* Prominent Action Button */}
+                    <div className="space-y-2.5 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSuccessOverlay(false);
+                          window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
+                          onCancel();
+                        }}
+                        className="w-full py-4 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer active:scale-98 flex items-center justify-center gap-2"
+                      >
+                        <Wallet className="w-4 h-4" />
+                        <span>RECHARGER MON WALLET</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowSuccessOverlay(false)}
+                        className="w-full py-2.5 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text-sec text-[10px] font-mono uppercase rounded-xl transition-colors cursor-pointer"
+                      >
+                        Modifier l'annonce
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-16 h-16 mx-auto bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-center text-emerald-400 text-3xl shadow-lg animate-bounce">
+                      <CheckCircle2 className="w-10 h-10" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="inline-block text-[10px] font-mono font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+                        ✅ VALIDATION ET PUBLICATION IMMÉDIATE
+                      </span>
+                      <h3 className="text-lg font-black text-afri-text uppercase tracking-wide">
+                        GOMBO PUBLIÉ AVEC SUCCÈS SUR LE TERRAIN !
+                      </h3>
+                      <p className="text-xs text-afri-text-sec leading-relaxed max-w-sm mx-auto">
+                        Votre gombo a été publié en direct sur Le Terrain. Un montant de <strong>{depositDetails.total.toLocaleString()} FCFA</strong> a été prélevé de votre Coffre Afrigombo.
+                      </p>
+                    </div>
+
+                    {/* Details Summary Card */}
+                    <div className="bg-afri-bg border border-afri-border rounded-xl p-4 space-y-2.5 text-left text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-afri-text-sec">Titre :</span>
+                        <span className="font-bold text-afri-text truncate max-w-[180px]">{depositDetails.title}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-afri-text-sec">Montant prélevé :</span>
+                        <span className="font-mono font-black text-[#D4AF37]">{depositDetails.total.toLocaleString()} FCFA</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-afri-text-sec">Réf ID :</span>
+                        <span className="font-mono text-[10px] bg-afri-bg-sec px-2 py-0.5 rounded text-afri-text-sec border border-white/5">{depositDetails.refId}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-afri-text-sec">Nouveau solde Coffre :</span>
+                        <span className="font-mono font-bold text-emerald-400">{(depositDetails.userSolde || 0).toLocaleString()} FCFA</span>
+                      </div>
+                    </div>
 
                     <button
-                      type="submit"
-                      disabled={validatingCode || !enteredCode.trim()}
-                      className="w-full py-3 bg-[#D4AF37] hover:bg-amber-400 active:scale-98 text-black font-black text-xs uppercase rounded-lg transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                      type="button"
+                      onClick={() => {
+                        setShowSuccessOverlay(false);
+                        onSuccess();
+                      }}
+                      className="w-full py-4 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer active:scale-98"
                     >
-                      {validatingCode ? "Vérification..." : "⚡ Valider et Publier le Gombo"}
+                      Voir la publication sur Le Terrain
                     </button>
-                  </form>
-                </div>
-
-                {/* Secondary return button */}
-                <div className="pt-2 text-center pb-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowSuccessOverlay(false);
-                      onSuccess();
-                    }}
-                    className="text-xs font-bold text-afri-text-sec hover:text-white underline cursor-pointer transition-colors"
-                  >
-                    Retourner au Terrain (Validation ultérieure)
-                  </button>
-                </div>
+                  </>
+                )}
               </motion.div>
             </motion.div>
           )}

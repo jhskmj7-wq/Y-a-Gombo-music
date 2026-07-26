@@ -17,12 +17,14 @@ import {
   RefreshCw, 
   TrendingUp, 
   ChevronRight,
-  FileText
+  FileText,
+  MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { db, gomboDB } from "../firebase";
-import { collection, query, where, getDocs, addDoc, onSnapshot, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, onSnapshot, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { BetaEscrowInfoButton } from "./BetaEscrowInfoModal";
+import { supportConfig } from "../supportConfig";
 
 interface AfrigomboWalletDashboardProps {
   currentUserProfile: any;
@@ -207,7 +209,9 @@ export default function AfrigomboWalletDashboard({
     reconcileWallet().catch(err => console.error("Reconciler error", err));
   }, [contracts, transactions, loading, uid]);
 
-  // MOBILE MONEY DEPOSIT HANDLER
+  // MOBILE MONEY DEPOSIT HANDLER (BÊTA TEST: Direct Support Redirection)
+  const [createdDepositRef, setCreatedDepositRef] = useState<string>("");
+
   const handleDepositSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || Number(amount) <= 0 || processing) return;
@@ -215,74 +219,55 @@ export default function AfrigomboWalletDashboard({
     setProcessing(true);
     playSound("click");
 
-    // Phase 1: Simulate OTP verification
-    setTimeout(() => {
-      setStep("otp");
+    try {
+      const depositAmount = Number(amount);
+      const now = new Date().toISOString();
+      const depId = "dep_" + Date.now();
+
+      // a) Create a document in Firestore in `wallet_deposits` collection
+      const depositPayload = {
+        id: depId,
+        userId: uid,
+        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
+        operator: operator,
+        phone: phoneNumber,
+        amount: depositAmount,
+        status: "PENDING",
+        createdAt: serverTimestamp(),
+        createdAtIso: now
+      };
+      await setDoc(doc(db, "wallet_deposits", depId), depositPayload);
+
+      // b) Transmit a real-time alert log to Founder Dashboard (imperial_logs)
+      await addDoc(collection(db, "imperial_logs"), {
+        type: "WALLET_DEPOSIT_REQUEST",
+        title: "💳 REQUÊTE DE RECHARGEMENT WALLET",
+        message: `Le membre ${currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo"} sollicite un rechargement de ${depositAmount.toLocaleString()} FCFA via ${operator.toUpperCase()} (${phoneNumber}).`,
+        userId: uid,
+        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
+        amount: depositAmount,
+        operator: operator,
+        phone: phoneNumber,
+        timestamp: Date.now(),
+        severity: "NORMAL"
+      });
+
+      setCreatedDepositRef(depId);
+      addToTerminal(`[WALLET] 📥 Rechargement de ${depositAmount.toLocaleString()} FCFA enregistré (Réf: ${depId}). Redirection Support...`);
+      playSound("success");
+
+      // c) Switch directly to Beta Test confirmation view (No OTP / reCAPTCHA required)
+      setStep("success");
+    } catch (err) {
+      console.error("Deposit error", err);
+    } finally {
       setProcessing(false);
-    }, 1500);
-  };
-
-  const confirmOtp = async () => {
-    if (!otpCode || processing) return;
-    setProcessing(true);
-    playSound("click");
-
-    // Phase 2: Simulate network connection and secure deposit
-    setTimeout(async () => {
-      try {
-        const depositAmount = Number(amount);
-        const now = new Date().toISOString();
-        const txId = "tx_dep_" + Date.now();
-
-        // 1. Create a factual deposit transaction record
-        const transactionPayload = {
-          id: txId,
-          userId: uid,
-          userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
-          type: "deposit",
-          amount: depositAmount,
-          status: "success",
-          provider: operator,
-          phoneNumber: phoneNumber,
-          description: `Rechargement Wallet AFRIGOMBO via ${operator.toUpperCase()} (+225 ${phoneNumber})`,
-          createdAt: now
-        };
-        await setDoc(doc(db, "transactions", txId), transactionPayload);
-
-        // 2. Also register in the general payments collection for audit logs
-        const paymentId = "pay_dep_" + Date.now();
-        await setDoc(doc(db, "payments", paymentId), {
-          id: paymentId,
-          userId: uid,
-          userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
-          amount: depositAmount,
-          purpose: `rechargement_wallet_${operator.toUpperCase()}`,
-          provider: operator,
-          status: "Paiement reçu",
-          createdAt: now
-        });
-
-        // 3. Update the user profile wallet balances
-        const userRef = doc(db, "users", uid);
-        await setDoc(userRef, {
-          wallet: {
-            soldeDisponible: wallet.soldeDisponible + depositAmount,
-            soldeBloque: wallet.soldeBloque
-          }
-        }, { merge: true });
-
-        addToTerminal(`[WALLET] 📥 Rechargement de ${depositAmount.toLocaleString()} FCFA réussi via ${operator.toUpperCase()}`);
-        playSound("success");
-        setStep("success");
-      } catch (err) {
-        console.error("Deposit error", err);
-      } finally {
-        setProcessing(false);
-      }
-    }, 1800);
+    }
   };
 
   // MOBILE MONEY WITHDRAWAL HANDLER
+  const [withdrawSubmitted, setWithdrawSubmitted] = useState<boolean>(false);
+
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const withdrawAmount = Number(amount);
@@ -291,46 +276,46 @@ export default function AfrigomboWalletDashboard({
     setProcessing(true);
     playSound("click");
 
-    setTimeout(async () => {
-      try {
-        const now = new Date().toISOString();
-        const txId = "tx_with_" + Date.now();
+    try {
+      const now = new Date().toISOString();
+      const withId = "with_" + Date.now();
 
-        // 1. Create a withdrawal transaction record
-        const transactionPayload = {
-          id: txId,
-          userId: uid,
-          userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
-          type: "withdrawal",
-          amount: withdrawAmount,
-          status: "success",
-          provider: operator,
-          phoneNumber: phoneNumber,
-          description: `Retrait Wallet AFRIGOMBO vers ${operator.toUpperCase()} (+225 ${phoneNumber})`,
-          createdAt: now
-        };
-        await setDoc(doc(db, "transactions", txId), transactionPayload);
+      // 1. Save withdrawal request in Firestore `wallet_withdrawals` with status PENDING
+      const withdrawalPayload = {
+        id: withId,
+        userId: uid,
+        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
+        operator: operator,
+        phone: phoneNumber,
+        amount: withdrawAmount,
+        status: "PENDING",
+        createdAt: serverTimestamp(),
+        createdAtIso: now
+      };
+      await setDoc(doc(db, "wallet_withdrawals", withId), withdrawalPayload);
 
-        // 2. Update user profile wallet
-        const userRef = doc(db, "users", uid);
-        await setDoc(userRef, {
-          wallet: {
-            soldeDisponible: Math.max(0, wallet.soldeDisponible - withdrawAmount),
-            soldeBloque: wallet.soldeBloque
-          }
-        }, { merge: true });
+      // 2. Generate URGENT alert in Founder Throne (imperial_logs)
+      await addDoc(collection(db, "imperial_logs"), {
+        type: "URGENT_WITHDRAWAL_REQUEST",
+        title: "🚨 DEMANDE DE RETRAIT URGENTE",
+        message: `Le membre ${currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo"} a soumis une demande de retrait de ${withdrawAmount.toLocaleString()} FCFA vers ${operator.toUpperCase()} (${phoneNumber}).`,
+        userId: uid,
+        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
+        amount: withdrawAmount,
+        operator: operator,
+        phone: phoneNumber,
+        timestamp: Date.now(),
+        severity: "URGENT"
+      });
 
-        addToTerminal(`[WALLET] 📤 Retrait de ${withdrawAmount.toLocaleString()} FCFA exécuté vers ${operator.toUpperCase()}`);
-        playSound("success");
-        setShowWithdrawModal(false);
-        setAmount("");
-        // Refresh component
-      } catch (err) {
-        console.error("Withdrawal error", err);
-      } finally {
-        setProcessing(false);
-      }
-    }, 2000);
+      addToTerminal(`[WALLET] 📤 Demande de retrait de ${withdrawAmount.toLocaleString()} FCFA transmise à la gouvernance.`);
+      playSound("success");
+      setWithdrawSubmitted(true);
+    } catch (err) {
+      console.error("Withdrawal error", err);
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const openDeposit = () => {
@@ -343,6 +328,7 @@ export default function AfrigomboWalletDashboard({
 
   const openWithdraw = () => {
     setAmount("");
+    setWithdrawSubmitted(false);
     setShowWithdrawModal(true);
     playSound("click");
   };
@@ -776,64 +762,46 @@ export default function AfrigomboWalletDashboard({
                 </form>
               )}
 
-              {step === "otp" && (
-                <div className="space-y-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-afri-bg flex items-center justify-center text-afri-text-muted mx-auto animate-pulse">
-                    <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-black text-afri-text uppercase tracking-wider">
-                      Veuillez approuver la notification Push
-                    </h3>
-                    <p className="text-afri-text-sec text-[11px] font-mono max-w-sm mx-auto leading-relaxed">
-                      Un code OTP a été généré pour votre sécurité. Veuillez entrer un code quelconque à 4 chiffres pour valider la transaction.
-                    </p>
-                  </div>
-
-                  <div className="max-w-[200px] mx-auto">
-                    <input 
-                      type="text" 
-                      maxLength={4}
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                      placeholder="XXXX"
-                      className="w-full text-center tracking-[0.5em] bg-afri-bg border-2 border-afri-border rounded-xl py-3 text-afri-text font-mono text-lg font-black focus:outline-none focus:border-afri-gold"
-                    />
-                  </div>
-
-                  <button
-                    onClick={confirmOtp}
-                    disabled={processing || otpCode.length < 4}
-                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-afri-text font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer"
-                  >
-                    {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Confirmer le paiement sécurisé"}
-                  </button>
-                </div>
-              )}
-
               {step === "success" && (
                 <div className="space-y-6 text-center py-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto animate-bounce">
-                    <CheckCircle2 className="w-10 h-10" />
+                  <div className="w-16 h-16 rounded-full bg-afri-gold/15 border border-afri-gold/30 flex items-center justify-center text-afri-gold mx-auto shadow-lg">
+                    <ShieldCheck className="w-9 h-9" />
                   </div>
+                  
                   <div className="space-y-2">
+                    <span className="inline-block text-[10px] font-mono font-black text-afri-gold uppercase tracking-widest bg-afri-gold/10 px-3 py-1 rounded-full border border-afri-gold/30">
+                      BÊTA TEST - DEMANDE ENREGISTRÉE
+                    </span>
                     <h3 className="text-base font-black text-afri-text uppercase tracking-wider">
-                      DÉPÔT EFFECTUÉ AVEC SUCCÈS
+                      RECHARGEMENT EN ATTENTE DE FINALISATION
                     </h3>
-                    <p className="text-[#D4AF37] font-mono text-sm font-black">
+                    <p className="text-afri-gold font-mono text-base font-black">
                       +{Number(amount).toLocaleString()} FCFA
                     </p>
-                    <p className="text-afri-text-sec text-[11px] font-mono leading-relaxed max-w-xs mx-auto">
-                      Les fonds ont été déposés sur votre solde disponible et sont instantanément exploitables.
+                    <p className="text-afri-text-sec text-xs leading-relaxed max-w-sm mx-auto">
+                      Votre demande de rechargement de <strong>{Number(amount).toLocaleString()} FCFA</strong> via <strong>{operator.toUpperCase()}</strong> ({phoneNumber}) est enregistrée. Cliquez ci-dessous pour contacter un conseiller et finaliser le paiement.
                     </p>
                   </div>
 
-                  <button
-                    onClick={() => { setShowDepositModal(false); playSound("click"); }}
-                    className="w-full py-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-[10px] tracking-widest rounded-xl transition-colors cursor-pointer"
-                  >
-                    Fermer le guichet
-                  </button>
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        supportConfig.openSupport(`Bonjour, ma demande de rechargement wallet de ${Number(amount).toLocaleString()} FCFA via ${operator.toUpperCase()} (${phoneNumber}) est enregistrée (Réf: ${createdDepositRef || "dep_beta"}).`);
+                      }}
+                      className="w-full py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-black font-black text-xs uppercase rounded-xl transition-all shadow-md shadow-[#25D366]/20 cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>JOINDRE LE SUPPORT WHATSAPP</span>
+                    </button>
+
+                    <button
+                      onClick={() => { setShowDepositModal(false); playSound("click"); }}
+                      className="w-full py-2.5 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text-sec text-[10px] font-mono uppercase rounded-xl transition-colors cursor-pointer"
+                    >
+                      Fermer le guichet
+                    </button>
+                  </div>
                 </div>
               )}
             </motion.div>
@@ -858,99 +826,129 @@ export default function AfrigomboWalletDashboard({
                 <X className="w-5 h-5" />
               </button>
 
-              <form onSubmit={handleWithdrawSubmit} className="space-y-6">
-                <div className="text-center space-y-2">
-                  <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mx-auto">
-                    <ArrowDownLeft className="w-6 h-6" />
+              {withdrawSubmitted ? (
+                <div className="space-y-6 text-center py-4">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto shadow-lg">
+                    <CheckCircle2 className="w-9 h-9" />
                   </div>
-                  <h3 className="text-base font-black text-afri-text uppercase tracking-wider">
-                    RETRAIT DE FONDS SOUVERAINS
-                  </h3>
-                  <p className="text-[11px] text-afri-text-sec font-mono">
-                    Retirez l'argent disponible vers votre compte Mobile Money
-                  </p>
+
+                  <div className="space-y-2">
+                    <span className="inline-block text-[10px] font-mono font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+                      DEMANDE TRANSMISE
+                    </span>
+                    <h3 className="text-base font-black text-afri-text uppercase tracking-wider">
+                      DEMANDE DE RETRAIT ENREGISTRÉE
+                    </h3>
+                    <p className="text-emerald-400 font-mono text-base font-black">
+                      -{Number(amount).toLocaleString()} FCFA ({operator.toUpperCase()})
+                    </p>
+                    <p className="text-afri-text-sec text-xs leading-relaxed max-w-sm mx-auto">
+                      Votre demande de retrait a été transmise à la gouvernance. Elle sera traitée sous peu.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => { setShowWithdrawModal(false); playSound("click"); }}
+                    className="w-full py-3 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text font-bold uppercase font-mono text-[10px] tracking-widest rounded-xl transition-colors cursor-pointer"
+                  >
+                    Fermer le guichet
+                  </button>
                 </div>
-
-                {/* Operator Choice */}
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
-                    Opérateur de Destination
-                  </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { id: "wave", name: "Wave", color: "border-blue-500 text-blue-500" },
-                      { id: "orange", name: "Orange", color: "border-orange-500 text-orange-500" },
-                      { id: "mtn", name: "MTN", color: "border-yellow-500 text-yellow-600" },
-                      { id: "moov", name: "Moov", color: "border-emerald-500 text-emerald-500" }
-                    ].map(op => (
-                      <button
-                        key={op.id}
-                        type="button"
-                        onClick={() => { setOperator(op.id as any); playSound("click"); }}
-                        className={`py-2 text-[10px] font-black uppercase rounded-xl border text-center transition-all ${
-                          operator === op.id 
-                            ? `${op.color} bg-afri-bg font-black scale-102` 
-                            : "border-afri-border text-afri-text-muted hover:border-afri-text-sec"
-                        }`}
-                      >
-                        {op.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Fields */}
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest">
-                        Montant à retirer (FCFA)
-                      </label>
-                      <span className="text-[9px] font-mono text-afri-text-muted">
-                        Max disponible : {wallet.soldeDisponible.toLocaleString()} FCFA
-                      </span>
+              ) : (
+                <form onSubmit={handleWithdrawSubmit} className="space-y-6">
+                  <div className="text-center space-y-2">
+                    <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mx-auto">
+                      <ArrowDownLeft className="w-6 h-6" />
                     </div>
-                    <div className="relative">
-                      <Coins className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
-                      <input 
-                        type="number" 
-                        required
-                        min="100"
-                        max={wallet.soldeDisponible}
-                        value={amount} 
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="Ex: 25000" 
-                        className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
-                      />
-                    </div>
+                    <h3 className="text-base font-black text-afri-text uppercase tracking-wider">
+                      RETRAIT DE FONDS SOUVERAINS
+                    </h3>
+                    <p className="text-[11px] text-afri-text-sec font-mono">
+                      Retirez l'argent disponible vers votre compte Mobile Money
+                    </p>
                   </div>
 
-                  <div className="space-y-1">
+                  {/* Operator Choice */}
+                  <div className="space-y-2">
                     <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
-                      Numéro de téléphone du destinataire (+225)
+                      Opérateur de Destination
                     </label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
-                      <input 
-                        type="tel" 
-                        required
-                        value={phoneNumber} 
-                        onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                        placeholder="0707070707" 
-                        className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
-                      />
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { id: "wave", name: "Wave", color: "border-blue-500 text-blue-500" },
+                        { id: "orange", name: "Orange", color: "border-orange-500 text-orange-500" },
+                        { id: "mtn", name: "MTN", color: "border-yellow-500 text-yellow-600" },
+                        { id: "moov", name: "Moov", color: "border-emerald-500 text-emerald-500" }
+                      ].map(op => (
+                        <button
+                          key={op.id}
+                          type="button"
+                          onClick={() => { setOperator(op.id as any); playSound("click"); }}
+                          className={`py-2 text-[10px] font-black uppercase rounded-xl border text-center transition-all ${
+                            operator === op.id 
+                              ? `${op.color} bg-afri-bg font-black scale-102` 
+                              : "border-afri-border text-afri-text-muted hover:border-afri-text-sec"
+                          }`}
+                        >
+                          {op.name}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={processing || !amount || Number(amount) > wallet.soldeDisponible || !phoneNumber}
-                  className="w-full py-4 bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer"
-                >
-                  {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Déclencher le virement sécurisé"}
-                </button>
-              </form>
+                  {/* Fields */}
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest">
+                          Montant à retirer (FCFA)
+                        </label>
+                        <span className="text-[9px] font-mono text-afri-text-muted">
+                          Max disponible : {wallet.soldeDisponible.toLocaleString()} FCFA
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <Coins className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
+                        <input 
+                          type="number" 
+                          required
+                          min="100"
+                          max={wallet.soldeDisponible}
+                          value={amount} 
+                          onChange={(e) => setAmount(e.target.value)}
+                          placeholder="Ex: 25000" 
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
+                        Numéro de téléphone du destinataire (+225)
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
+                        <input 
+                          type="tel" 
+                          required
+                          value={phoneNumber} 
+                          onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
+                          placeholder="0707070707" 
+                          className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={processing || !amount || Number(amount) > wallet.soldeDisponible || !phoneNumber}
+                    className="w-full py-4 bg-afri-bg-sec hover:bg-afri-bg-sec text-black font-black uppercase font-mono text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    {processing ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Soumettre la demande de retrait"}
+                  </button>
+                </form>
+              )}
             </motion.div>
           </div>
         )}
