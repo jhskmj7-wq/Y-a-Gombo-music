@@ -169,6 +169,13 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
     localStorage.setItem("afrigombo_market_items", JSON.stringify(items));
   }, [items]);
 
+  // Ensure fallback items if empty or invalid
+  useEffect(() => {
+    if (!Array.isArray(items) || items.length === 0) {
+      setItems(INITIAL_MARKET_ITEMS);
+    }
+  }, []);
+
   // Compute Seller Eligibility
   const trustScore = currentUserProfile?.trustScore ?? currentUserProfile?.gomboId?.scoreConfiance ?? 50;
   const isPremium = currentUserProfile?.isPremium || currentUserProfile?.isPro || currentUserProfile?.isVip;
@@ -240,9 +247,9 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-afri-bg z-10 flex flex-col overflow-hidden animate-fadeIn">
-      {/* HEADER & FILTERS (FIXED) */}
-      <div className="flex-shrink-0 w-full px-3 sm:px-6 pt-4 pb-2 bg-afri-bg space-y-5">
+    <div className="w-full flex flex-col space-y-6 text-left animate-fadeIn text-afri-text pb-12">
+      {/* HEADER & FILTERS */}
+      <div className="w-full space-y-5">
         {/* HEADER SECTION */}
         <div className="w-full bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
@@ -368,11 +375,10 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
         </div>
       </div>
 
-      {/* INDEPENDENT SCROLLABLE CONTENT */}
+      {/* CONTENT AREA */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-6 pb-32 afri-no-scrollbar"
-        style={{ WebkitOverflowScrolling: "touch" }}
+        className="w-full space-y-6"
       >
         {activeTab === "catalog" ? (
           filteredItems.length === 0 ? (

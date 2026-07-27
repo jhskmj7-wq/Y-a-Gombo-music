@@ -4102,12 +4102,25 @@ export default function AdminFounderThrone({
 
                   {/* Profile View Modal */}
                   {viewingUser && (
-                    <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-[150] flex items-center justify-center p-4">
-                      <div className="bg-afri-bg border border-[#D4AF37]/30 max-w-lg w-full rounded-3xl p-6 space-y-6 shadow-2xl relative overflow-hidden text-zinc-900 dark:text-afri-text">
+                    <div 
+                      onClick={() => setViewingUser(null)}
+                      className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-[150] flex items-center justify-center p-4 cursor-pointer"
+                    >
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-afri-bg border border-[#D4AF37]/30 max-w-lg w-full rounded-3xl p-6 space-y-6 shadow-2xl relative overflow-hidden text-zinc-900 dark:text-afri-text cursor-default"
+                      >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl"></div>
                         <div className="flex items-start justify-between">
                           <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider">Profil Impérial Détaillé</h3>
-                          <button onClick={() => setViewingUser(null)} className="text-zinc-500 hover:text-afri-text font-mono text-xs cursor-pointer">Fermer [X]</button>
+                          <button 
+                            type="button"
+                            onClick={() => setViewingUser(null)} 
+                            className="w-8 h-8 rounded-full bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] flex items-center justify-center text-zinc-400 hover:text-afri-text transition-all cursor-pointer text-sm font-bold"
+                            title="Fermer le profil"
+                          >
+                            ✕
+                          </button>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#D4AF37] shrink-0 bg-afri-bg-sec flex items-center justify-center">
@@ -4160,6 +4173,17 @@ export default function AdminFounderThrone({
                               {viewingUser.bio || "Aucune biographie fournie."}
                             </p>
                           </div>
+                        </div>
+
+                        {/* Footer Close Button */}
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setViewingUser(null)}
+                            className="w-full py-3 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
+                          >
+                            <span>Fermer le profil</span>
+                          </button>
                         </div>
                       </div>
                     </div>
