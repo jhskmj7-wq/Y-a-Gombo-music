@@ -34,6 +34,7 @@ const AfrigomboBuilders = lazyWithRetry(() => import("./AfrigomboBuilders"));
 const AfrigomboBuildersAdminDashboard = lazyWithRetry(() => import("./AfrigomboBuildersAdminDashboard"));
 const ThroneCinematicIntro = lazyWithRetry(() => import("./admin/ThroneCinematicIntro"));
 const BetaTransactionsAdminPanel = lazyWithRetry(() => import("./admin/BetaTransactionsAdminPanel"));
+const UserCommentsView = lazyWithRetry(() => import("./UserCommentsView"));
 
 import { useAuth } from "../AuthContext";
 import { useLanguage } from "../LanguageContext";
@@ -536,7 +537,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     user_vibes: "user_terrain",
     user_reels: "user_terrain",
     user_mes_gombos: "user_heritage",
-    user_mes_groupes: "user_heritage"
+    user_mes_groupes: "user_heritage",
+    user_comments: "user_terrain",
+    user_downloads: "user_heritage",
+    user_history: "user_heritage"
   };
 
   const setActiveMenu = (menu: string) => {
@@ -815,6 +819,75 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   const [realNotifications, setRealNotifications] = useState<any[]>([]);
   const [globalNotifications, setGlobalNotifications] = useState<any[]>([]);
+  const [localReadIds, setLocalReadIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem(`afrigombo_read_notifs_${currentUser?.uid || "guest"}`);
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  });
+
+  useEffect(() => {
+    if (currentUser?.uid) {
+      try {
+        const saved = localStorage.getItem(`afrigombo_read_notifs_${currentUser.uid}`);
+        if (saved) {
+          setLocalReadIds(new Set(JSON.parse(saved)));
+        } else {
+          setLocalReadIds(new Set());
+        }
+      } catch (e) {
+        setLocalReadIds(new Set());
+      }
+    }
+  }, [currentUser?.uid]);
+
+  const handleMarkSingleNotifRead = async (notifId: string) => {
+    if (!notifId) return;
+    setLocalReadIds(prev => {
+      const next = new Set(prev);
+      next.add(notifId);
+      if (currentUser?.uid) {
+        try {
+          localStorage.setItem(`afrigombo_read_notifs_${currentUser.uid}`, JSON.stringify(Array.from(next)));
+        } catch (e) {}
+      }
+      return next;
+    });
+
+    setRealNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true, isRead: true } : n));
+    setGlobalNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true, isRead: true } : n));
+
+    try {
+      await gomboDB.markNotificationAsRead(notifId);
+    } catch (e) {}
+  };
+
+  const handleMarkAllNotifsRead = async () => {
+    const allIds = allNotifications.map(n => n.id).filter(Boolean);
+    setLocalReadIds(prev => {
+      const next = new Set([...prev, ...allIds]);
+      if (currentUser?.uid) {
+        try {
+          localStorage.setItem(`afrigombo_read_notifs_${currentUser.uid}`, JSON.stringify(Array.from(next)));
+        } catch (e) {}
+      }
+      return next;
+    });
+
+    setRealNotifications(prev => prev.map(n => ({ ...n, read: true, isRead: true })));
+    setGlobalNotifications(prev => prev.map(n => ({ ...n, read: true, isRead: true })));
+
+    if (currentUser?.uid) {
+      try {
+        await gomboDB.markAllUserNotificationsAsRead(currentUser.uid);
+      } catch (e) {}
+    }
+  };
+
+  const [pubFilter, setPubFilter] = useState<"all" | "en_cours" | "valide" | "termine" | "annule">("all");
+  const [historyFilter, setHistoryFilter] = useState<"all" | "connections" | "transactions" | "applications">("all");
   
   useEffect(() => {
     if (currentUser?.uid) {
@@ -862,6 +935,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
       return false;
     }
     return true;
+  }).map(n => {
+    const isLocallyRead = n.id && localReadIds.has(n.id);
+    if (isLocallyRead || n.read || n.isRead) {
+      return { ...n, read: true, isRead: true };
+    }
+    return n;
   }).sort((a, b) => {
     const dateA = new Date(a.createdAt || 0).getTime();
     const dateB = new Date(b.createdAt || 0).getTime();
@@ -2603,12 +2682,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                             }, false)}
                             {renderMenuItem("menu_pubs", "Publications", "📝", () => {
                               setPerspective("user");
-                              setActiveMenu("user_terrain");
+                              setActiveMenu("user_mes_gombos");
                             }, false)}
                             {renderMenuItem("menu_comms", "Commentaires", "💬", () => {
                               requireAuthThen(() => {
                                 setPerspective("user");
-                                setActiveMenu("user_notifications");
+                                setActiveMenu("user_comments");
                               });
                             }, false)}
                             {renderMenuItem("menu_settings", "Paramètres", "⚙", () => {
@@ -2901,10 +2980,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           addToTerminal("[CLOCHE] Ouverture des notifications d'actualité.");
                        }} 
                        className="relative p-1.5 sm:p-2 text-afri-gold hover:scale-110 transition-transform cursor-pointer shrink-0"
+                       title="Notifications"
+                       aria-label={`Notifications (${unreadNotifsCount} non lue${unreadNotifsCount > 1 ? 's' : ''})`}
                      >
                        <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-                       {realNotifications.some(n => !n.read) && (
-                         <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-2 h-2 sm:w-2.5 bg-red-600 rounded-full border border-black shadow-[0_0_5px_rgba(220,38,38,0.5)]" />
+                       {unreadNotifsCount > 0 && (
+                         <span className="absolute -top-1 -right-1 sm:-top-0.5 sm:-right-0.5 bg-red-600 text-white font-mono font-black text-[9px] sm:text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-black shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse">
+                           {unreadNotifsCount > 99 ? "99+" : unreadNotifsCount}
+                         </span>
                        )}
                      </button>
 
@@ -2983,6 +3066,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         case "user_vibes": return "Afrigombo Vibes";
                         case "user_reels": return "Les Vibes";
                         case "user_notifications": return "Notifications";
+                        case "user_comments": return "Commentaires";
+                        case "user_downloads": return "Téléchargements";
+                        case "user_history": return "Historique";
                         case "user_publish": return "Publier";
                         case "user_contracts": return "Mes Contrats";
                         case "user_events": return "Calendrier";
@@ -5454,62 +5540,85 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               {/* 6c. HISTORIQUE SECTION */}
               {activeMenu === "user_history" && (() => {
                 const myContracts = transactions || [];
+                
+                const activities = [
+                  { id: "h1", type: "connections", date: "Aujourd'hui, 09:42", label: "Connexion souveraine établie", detail: "Session authentifiée avec succès depuis Abidjan (Mobile Android)", status: "Succès" },
+                  { id: "h2", type: "transactions", date: "Hier, 18:15", label: "Cachet en Séquestre reçu", detail: "Dépôt de 150.000 FCFA bloqué en garantie pour Concert Marcory", status: "Crédit" },
+                  { id: "h3", type: "applications", date: "24/07/2026, 14:00", label: "Candidature transmise", detail: "Postulation au Gombo : Guitariste Solo pour Session Studio", status: "En cours" },
+                  { id: "h4", type: "connections", date: "22/07/2026, 11:30", label: "Audit de sécurité Gombo ID", detail: "Empreinte numérique et badge vérifiés avec succès", status: "Validé" },
+                  { id: "h5", type: "transactions", date: "20/07/2026, 16:45", label: "Retrait Mobile Money", detail: "Transfert de 75.000 FCFA vers votre compte Wave", status: "Débit" }
+                ];
+
+                const filteredHistory = activities.filter(a => {
+                  if (historyFilter === "all") return true;
+                  return a.type === historyFilter;
+                });
+
                 return (
-                  <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
-                    <div className="border-b border-afri-border pb-4 flex justify-between items-center">
-                      <div>
-                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
-                          🕓 Historique de l'Artiste
-                        </h3>
-                        <p className="text-xs text-afri-text-sec mt-1">Vos bails passés, les activations et les mouvements de gombo.</p>
+                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-28">
+                    {/* Header */}
+                    <div className="p-4 sm:p-5 bg-afri-bg border border-[#D4AF37]/30 rounded-3xl space-y-3 shadow-lg">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-sm sm:text-base font-black uppercase text-[#D4AF37] tracking-widest flex items-center gap-2">
+                            <span>🕓</span> Historique Global des Activités
+                          </h3>
+                          <p className="text-xs text-afri-text-sec mt-1">
+                            Journal chronologique de vos connexions, mouvements financiers et candidatures.
+                          </p>
+                        </div>
+                        <button onClick={() => goBackMenu()} className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text text-xs font-mono font-bold uppercase rounded-xl transition cursor-pointer self-start sm:self-auto">
+                          ✕ Fermer
+                        </button>
                       </div>
-                      <button onClick={() => goBackMenu()} className="text-xs text-afri-text-sec hover:text-afri-text font-mono">✕ Fermer</button>
+
+                      {/* Filter buttons */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-2 border-t border-afri-border">
+                        {[
+                          { id: "all", label: "Toutes les activités" },
+                          { id: "connections", label: "Connexions & Sécurité" },
+                          { id: "transactions", label: "Transactions" },
+                          { id: "applications", label: "Candidatures" }
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setHistoryFilter(tab.id as any)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer transition-all border ${
+                              historyFilter === tab.id
+                                ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md font-black"
+                                : "bg-afri-bg-sec/70 border-afri-border text-zinc-400 hover:text-afri-text"
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <div className="bg-afri-bg border border-afri-border p-4 rounded-2xl">
-                        <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-widest block mb-2">Activités sur le terrain</span>
-                        <div className="space-y-3.5 font-mono text-xs">
-                          <div className="flex items-start gap-2 text-afri-text-sec border-l border-afri-gold/35 pl-3 relative py-1">
-                            <span className="w-2 h-2 rounded-full bg-afri-gold absolute -left-[4.5px] top-[9px]"></span>
-                            <div>
-                              <span className="text-afri-text-sec font-bold">[AUJOURD'HUI]</span> Connexion souveraine établie avec succès.
+                    {/* Timeline list */}
+                    <div className="space-y-3">
+                      {filteredHistory.map((act) => (
+                        <div key={act.id} className="p-4 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm transition-all">
+                          <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-afri-bg-sec border border-[#D4AF37]/30 flex items-center justify-center shrink-0 text-base">
+                              {act.type === "connections" ? "🔐" : act.type === "transactions" ? "💳" : "📝"}
                             </div>
-                          </div>
-                          <div className="flex items-start gap-2 text-afri-text-sec border-l border-afri-gold/35 pl-3 relative py-1">
-                            <span className="w-2 h-2 rounded-full bg-afri-gold absolute -left-[4.5px] top-[9px]"></span>
                             <div>
-                              <span className="text-afri-text-sec font-bold">[HIER]</span> Consultation de l'Héritage Certifié et audit de sécurité.
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-2 text-afri-text-sec border-l border-afri-border pl-3 relative py-1">
-                            <span className="w-2 h-2 rounded-full bg-afri-bg-ter absolute -left-[4.5px] top-[9px]"></span>
-                            <div>
-                              <span className="text-afri-text-sec font-bold">[15/07/2026]</span> Intégration dans le réseau prestigieux d'Abidjan.
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-afri-bg border border-afri-border p-4 rounded-2xl space-y-3">
-                        <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-widest block">Flux des transactions</span>
-                        {myContracts.length === 0 ? (
-                          <p className="text-xs text-afri-text-sec text-center py-4">Aucune transaction enregistrée.</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {myContracts.slice(0, 5).map((tx, idx) => (
-                              <div key={idx} className="flex justify-between items-center p-2.5 bg-afri-bg/40 rounded-xl border border-zinc-950 font-mono text-xs">
-                                <div>
-                                  <span className="text-afri-text-sec">[{tx.date || "RÉCENT"}]</span> <span className="text-afri-text font-bold">{tx.label || tx.description || "Transfert"}</span>
-                                </div>
-                                <span className={tx.type === "credit" ? "text-emerald-400 font-bold" : "text-red-400 font-bold"}>
-                                  {tx.type === "credit" ? "+" : "-"}{tx.amount?.toLocaleString()} F
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="text-xs sm:text-sm font-bold text-afri-text">{act.label}</h4>
+                                <span className="px-1.5 py-0.2 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 text-[8.5px] font-mono font-bold uppercase rounded">
+                                  {act.status}
                                 </span>
                               </div>
-                            ))}
+                              <p className="text-xs text-afri-text-sec mt-0.5">{act.detail}</p>
+                            </div>
                           </div>
-                        )}
-                      </div>
+                          <span className="text-[10px] font-mono text-zinc-500 self-end sm:self-auto shrink-0">
+                            {act.date}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );
@@ -5517,8 +5626,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 6d. DOWNLOADS SECTION */}
               {activeMenu === "user_downloads" && (() => {
-                const handleDownload = (filename: string, content: string) => {
-                  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+                const handleDownload = (filename: string, content: string, mime: string = "text/plain") => {
+                  const blob = new Blob([content], { type: `${mime};charset=utf-8` });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
@@ -5528,48 +5637,101 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   try { audioSynth.playValidationSuccess(); } catch (_) {}
                 };
 
+                const downloadsList = [
+                  {
+                    id: "d1",
+                    category: "Contrat Légal",
+                    title: "Modèle de Contrat de Prestation Standard",
+                    description: "Document officiel encadrant les prestations musicales avec clause de séquestre et arbitrage.",
+                    filename: `Contrat_Prestation_Afrigombo_${profile?.artisticName || "Artiste"}.txt`,
+                    content: `=== CONTRAT DE PRESTATION MUSICALE AFRIGOMBO ===\n\nNom de l'Artiste : ${profile?.artisticName || "Artiste Certifié"}\nGombo ID : ${profile?.gomboIdNumber || "AG-CERTIFIED"}\nDate : ${new Date().toLocaleDateString()}\n\nCe document garantit l'engagement bilatéral et le blocage sécurisé du cachet en compte de séquestre.`,
+                    icon: "📜",
+                    badge: "PDF / TXT"
+                  },
+                  {
+                    id: "d2",
+                    category: "Attestation Officielle",
+                    title: "Certificat d'Identité Gombo ID",
+                    description: "Attestation officielle prouvant la certification de votre profil et votre niveau de garantie.",
+                    filename: `Attestation_Gombo_ID_${profile?.artisticName || "Artiste"}.txt`,
+                    content: `=== ATTESTATION OFFICIELLE GOMBO ID ===\n\nTitulaire : ${profile?.artisticName || "Artiste Certifié"}\nStatut : VÉRIFIÉ & CONFORME\nSecteur : Musiques & Spectacles Abidjan\nValide jusqu'en 2027.`,
+                    icon: "🆔",
+                    badge: "ATTESTATION"
+                  },
+                  {
+                    id: "d3",
+                    category: "Audio & Maquette",
+                    title: "Pack Demo Audio & Extrait Studio",
+                    description: "Pistes et ressources audio téléchargeables associées à vos projets et maquettes.",
+                    filename: "Pack_Audio_Demo_Afrigombo.txt",
+                    content: `=== RESSOURCES AUDIO AFRIGOMBO ===\n\nPistes audio associées à votre profil.\nFormat recommandé : MP3 320kbps / WAV 24-bit.\nContact Support pour tout besoin de mastering.`,
+                    icon: "🎵",
+                    badge: "AUDIO"
+                  },
+                  {
+                    id: "d4",
+                    category: "Kit Graphique",
+                    title: "Kit Média & Badges Certifiés (SVG)",
+                    description: "Logo officiel et badges à intégrer sur vos affiches et réseaux sociaux.",
+                    filename: "Badge_GomboID_Officiel.svg",
+                    content: `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#0D0D0D" rx="20"/><circle cx="100" cy="100" r="70" fill="none" stroke="#D4AF37" stroke-width="4"/><text x="100" y="105" fill="#D4AF37" font-family="sans-serif" font-weight="bold" font-size="16" text-anchor="middle">GOMBO ID</text></svg>`,
+                    icon: "🖼️",
+                    mime: "image/svg+xml",
+                    badge: "SVG / KIT"
+                  }
+                ];
+
                 return (
-                  <div className="afri-container space-y-6 animate-fadeIn text-left py-4 xs:py-6">
-                    <div className="border-b border-afri-border pb-4 flex justify-between items-center">
-                      <div>
-                        <h3 className="text-sm font-mono uppercase font-black tracking-[0.15em] text-afri-gold">
-                          📥 Téléchargements Officiels
-                        </h3>
-                        <p className="text-xs text-afri-text-sec mt-1">Téléchargez vos contrats officiels et attestations d'artiste certifié.</p>
+                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-28">
+                    {/* Header */}
+                    <div className="p-4 sm:p-5 bg-afri-bg border border-[#D4AF37]/30 rounded-3xl space-y-3 shadow-lg">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-sm sm:text-base font-black uppercase text-[#D4AF37] tracking-widest flex items-center gap-2">
+                            <span>📥</span> Centre de Téléchargements Officiels
+                          </h3>
+                          <p className="text-xs text-afri-text-sec mt-1">
+                            Accédez à vos documents juridiques, maquettes audio, badges et attestations officielles.
+                          </p>
+                        </div>
+                        <button onClick={() => goBackMenu()} className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] text-afri-text text-xs font-mono font-bold uppercase rounded-xl transition cursor-pointer self-start sm:self-auto">
+                          ✕ Fermer
+                        </button>
                       </div>
-                      <button onClick={() => goBackMenu()} className="text-xs text-afri-text-sec hover:text-afri-text font-mono">✕ Fermer</button>
                     </div>
 
+                    {/* Grid of downloads */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Item 1 */}
-                      <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl flex flex-col justify-between">
-                        <div>
-                          <span className="text-[8.5px] font-mono text-afri-text-sec uppercase font-bold tracking-wider">OFFICIEL • PDF CONTRAT</span>
-                          <h4 className="text-xs font-bold text-afri-text mt-1">Modèle de Contrat de Prestation Standard</h4>
-                          <p className="text-[11px] text-afri-text-sec mt-1">Le contrat légal utilisé pour garantir vos cachets en séquestre.</p>
-                        </div>
-                        <button
-                          onClick={() => handleDownload("Modele_Contrat_Prestation_Afrigombo.txt", `=== CONTRAT OFFICIEL AFRIGOMBO ===\n\nPrestataire : ${profile?.artisticName || "Artiste Elite"}\nNiveau : GOMBO ID Certifié\nPlateforme : AFRIGOMBO CI\n\nCe document atteste que l'artiste est habilité à prester via le système d'accord sécurisé et d'arbitrage de proximité d'AFRIGOMBO.`)}
-                          className="mt-4 w-full py-2 bg-afri-gold/10 hover:bg-afri-gold/15 border border-afri-gold/35 text-afri-gold font-bold text-xs uppercase rounded-xl tracking-wider transition-all cursor-pointer"
-                        >
-                          Télécharger (TXT)
-                        </button>
-                      </div>
+                      {downloadsList.map((item) => (
+                        <div key={item.id} className="p-4 sm:p-5 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/40 rounded-2xl flex flex-col justify-between gap-4 shadow-md transition-all">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[9px] font-mono font-black text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 px-2 py-0.5 rounded-md border border-[#D4AF37]/20">
+                                {item.category}
+                              </span>
+                              <span className="text-[9px] font-mono font-bold text-zinc-400 bg-afri-bg-sec px-2 py-0.5 rounded-md">
+                                {item.badge}
+                              </span>
+                            </div>
+                            <h4 className="text-xs sm:text-sm font-bold text-afri-text flex items-center gap-2">
+                              <span>{item.icon}</span>
+                              <span>{item.title}</span>
+                            </h4>
+                            <p className="text-xs text-afri-text-sec leading-relaxed">
+                              {item.description}
+                            </p>
+                          </div>
 
-                      {/* Item 2 */}
-                      <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl flex flex-col justify-between">
-                        <div>
-                          <span className="text-[8.5px] font-mono text-afri-text-sec uppercase font-bold tracking-wider">CERTIFICAT D'ÉLITE</span>
-                          <h4 className="text-xs font-bold text-afri-text mt-1">Certificat de Gombo ID Officiel</h4>
-                          <p className="text-[11px] text-afri-text-sec mt-1">Attestation numérique d'identité certifiée sur la plateforme.</p>
+                          <button
+                            type="button"
+                            onClick={() => handleDownload(item.filename, item.content, item.mime || "text/plain")}
+                            className="w-full py-2.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-extrabold text-xs uppercase tracking-wider rounded-xl border border-[#D4AF37]/40 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                          >
+                            <span>Télécharger le fichier</span>
+                            <span>📥</span>
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleDownload("Attestation_Gombo_ID.txt", `=== ATTESTATION GOMBO ID ===\n\nNom d'Artiste : ${profile?.artisticName || "Artiste Elite"}\nGombo ID : ${profile?.gomboIdNumber || "AG-0001258"}\nStatut : Certifié & Actif\nLieu : Abidjan, Côte d'Ivoire`)}
-                          className="mt-4 w-full py-2 bg-afri-gold/10 hover:bg-afri-gold/15 border border-afri-gold/35 text-afri-gold font-bold text-xs uppercase rounded-xl tracking-wider transition-all cursor-pointer"
-                        >
-                          Télécharger (TXT)
-                        </button>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 );
@@ -5805,6 +5967,23 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
                 const myGombos = gombos.filter(g => g.organizerId === currentArtist.id || g.applicantIds?.includes(currentArtist.id) || g.selectedTalentId === currentArtist.id);
 
+                const filteredGombos = myGombos.filter(g => {
+                  if (pubFilter === "all") return true;
+                  if (pubFilter === "en_cours") {
+                    return ["publie", "candidatures_ouvertes", "artiste_selectionne", "en_cours", "pending", "pending_deposit"].includes(g.status || "");
+                  }
+                  if (pubFilter === "valide") {
+                    return ["contrat_accepte", "contrat_confirme", "paiement_recu"].includes(g.status || "");
+                  }
+                  if (pubFilter === "termine") {
+                    return ["mission_terminee", "termine", "paiement_effectue"].includes(g.status || "");
+                  }
+                  if (pubFilter === "annule") {
+                    return ["contrat_refuse", "mission_annulee"].includes(g.status || "");
+                  }
+                  return true;
+                });
+
                 const getStatusLabel = (status: string | undefined) => {
                   switch(status) {
                     case "pending_deposit": return "🟡 En attente de dépôt";
@@ -5825,159 +6004,259 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 };
 
                 return (
-                  <div className="afri-container py-4 xs:py-6 space-y-4 xs:space-y-6 animate-fadeIn">
-                    <div className="pb-3 border-b border-afri-border px-1">
-                      <h3 className="text-[11px] xs:text-sm font-display font-black uppercase text-afri-gold tracking-widest">
-                        💼 Cycle de Contrats & Prestations
-                      </h3>
-                      <p className="text-[10px] xs:text-xs text-afri-text-sec">Suivez vos gombos réservés, contrats signés et notez mutuellement vos collaborateurs.</p>
+                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-28">
+                    {/* Header */}
+                    <div className="p-4 sm:p-5 bg-afri-bg border border-[#D4AF37]/30 rounded-3xl space-y-3 shadow-lg">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-sm sm:text-base font-black uppercase text-[#D4AF37] tracking-widest flex items-center gap-2">
+                            <span>📝</span> Mes Publications & Gombos
+                          </h3>
+                          <p className="text-xs text-afri-text-sec mt-1">
+                            Gérez vos annonces publiées, suivez l'avancement des candidatures et gérez vos contrats.
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPerspective("user");
+                            setActiveMenu("user_publish");
+                          }}
+                          className="px-4 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-md flex items-center justify-center gap-2 shrink-0 cursor-pointer active:scale-95"
+                        >
+                          <span>+ Créer une Publication</span>
+                        </button>
+                      </div>
+
+                      {/* Filter tabs */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-2 border-t border-afri-border">
+                        {[
+                          { id: "all", label: "Toutes", count: myGombos.length },
+                          { id: "en_cours", label: "En cours", count: myGombos.filter(g => ["publie", "candidatures_ouvertes", "artiste_selectionne", "en_cours", "pending", "pending_deposit"].includes(g.status || "")).length },
+                          { id: "valide", label: "Validés", count: myGombos.filter(g => ["contrat_accepte", "contrat_confirme", "paiement_recu"].includes(g.status || "")).length },
+                          { id: "termine", label: "Terminés", count: myGombos.filter(g => ["mission_terminee", "termine", "paiement_effectue"].includes(g.status || "")).length },
+                          { id: "annule", label: "Annulés", count: myGombos.filter(g => ["contrat_refuse", "mission_annulee"].includes(g.status || "")).length }
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setPubFilter(tab.id as any)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer transition-all flex items-center gap-1.5 border ${
+                              pubFilter === tab.id
+                                ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-md font-black"
+                                : "bg-afri-bg-sec/70 border-afri-border text-zinc-400 hover:text-afri-text"
+                            }`}
+                          >
+                            <span>{tab.label}</span>
+                            <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${pubFilter === tab.id ? "bg-black text-[#D4AF37]" : "bg-afri-bg text-zinc-400"}`}>
+                              {tab.count}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Prestations list */}
                     <div className="space-y-4">
-                      {myGombos.length === 0 ? (
+                      {filteredGombos.length === 0 ? (
                         <PremiumEmptyState 
-                          message="Aucun Contrat en cours." 
-                          submessage="Trouvez des opportunités sur Le Terrain." 
+                          message="Aucune publication trouvée." 
+                          submessage="Créez une annonce ou découvrez les opportunités sur Le Terrain." 
                           icon={Briefcase}
                         />
                       ) : (
-                        myGombos.map((gombo, index) => (
-                          <div key={gombo.id} className="p-4 bg-afri-bg border border-afri-border rounded-xl space-y-3">
-                            <div className="flex justify-between items-start flex-wrap gap-2">
-                            <div>
-                              <strong className="text-sm text-afri-text block">{gombo.title}</strong>
-                              <span className="text-[10px] text-afri-text-sec font-mono">Organisé par : {gombo.organizerName} • {gombo.location}</span>
-                            </div>
-                            <div className="flex flex-col items-end gap-1">
-                              <span className="px-2.5 py-1 rounded bg-afri-gold/10 text-afri-gold text-[10px] font-bold uppercase">
-                                Cachet : {gombo.budget ? gombo.budget.toLocaleString() : "À DÉBATTRE"} FCFA
-                              </span>
-                              <span className="text-[9px] font-mono uppercase bg-afri-bg-sec text-afri-text px-1.5 py-0.5 rounded">
-                                {getStatusLabel(gombo.status)}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Action Buttons if user is organizer or selected talent */}
-                          <div className="flex flex-wrap gap-2 pt-2 border-t border-afri-border">
-                            {(gombo.status === "pending_deposit" || gombo.status === "pending" || gombo.adminValidated === false) && gombo.organizerId === currentArtist.id && (
-                              <button 
-                                onClick={() => {
-                                  setPendingPaymentItem({
-                                    id: gombo.id!,
-                                    title: gombo.title,
-                                    budget: gombo.budget,
-                                    collectionName: "gombos"
-                                  });
-                                  setShowPendingPaymentModal(true);
-                                }} 
-                                className="px-3 py-1.5 bg-[#D4AF37] text-black text-[9px] font-black uppercase rounded shadow-md shadow-[#D4AF37]/20 flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
-                              >
-                                🔑 Contacter Support / Activer par Code
-                              </button>
-                            )}
-
-                            {(gombo.status === "publie" || gombo.status === "candidatures_ouvertes") && gombo.organizerId === currentArtist.id && (
-                              <button onClick={() => setActiveMenu("user_dashboard")} className="px-3 py-1.5 bg-afri-gold text-black text-[9px] font-bold uppercase rounded hover:bg-afri-bg-sec">
-                                Sélectionner un Candidat
-                              </button>
-                            )}
-                            
-                            {/* Actions requested for published items */}
-                            {gombo.organizerId === currentArtist.id && (
-                              <div className="w-full flex flex-wrap gap-2 mt-2">
-                                <button className="px-3 py-1.5 bg-afri-bg-ter border border-afri-border text-afri-text text-[9px] font-bold uppercase rounded hover:bg-afri-bg-ter">Modifier</button>
-                                <button className="px-3 py-1.5 bg-afri-bg-ter border border-afri-border text-afri-text text-[9px] font-bold uppercase rounded hover:bg-afri-bg-ter">Partager</button>
-                                <button className="px-3 py-1.5 bg-afri-bg-ter border border-afri-border text-afri-text text-[9px] font-bold uppercase rounded hover:bg-afri-bg-ter">Statistiques</button>
-                                <button onClick={() => {if(window.confirm('Supprimer cette publication ?')) alert('En cours...');}} className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-500 text-[9px] font-bold uppercase rounded hover:bg-red-500/20">Supprimer</button>
-                                <button onClick={() => setActiveBoostItem({id: gombo.id!, type: 'gombo'})} className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-afri-gold text-black text-[9px] font-black uppercase rounded shadow-md shadow-afri-gold/20 flex items-center gap-1 active:scale-95 transition-transform"><Sparkles className="w-3 h-3" /> 🚀 Booster</button>
+                        filteredGombos.map((gombo) => (
+                          <div key={gombo.id} className="p-4 sm:p-5 bg-afri-bg border border-afri-border hover:border-[#D4AF37]/30 rounded-2xl space-y-3 shadow-md">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-afri-border/60 pb-3">
+                              <div>
+                                <strong className="text-sm font-bold text-afri-text block">{gombo.title}</strong>
+                                <span className="text-[10px] text-zinc-400 font-mono block mt-0.5">Organisé par : {gombo.organizerName} • {gombo.location || "Abidjan"}</span>
                               </div>
-                            )}
+                              <div className="flex items-center gap-2 self-start sm:self-auto">
+                                <span className="px-2.5 py-1 rounded-lg bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-black uppercase font-mono">
+                                  {gombo.budget ? `${gombo.budget.toLocaleString()} FCFA` : "A DÉBATTRE"}
+                                </span>
+                                <span className="text-[9px] font-mono uppercase bg-afri-bg-sec text-afri-text px-2 py-0.5 rounded-lg border border-afri-border font-bold">
+                                  {getStatusLabel(gombo.status)}
+                                </span>
+                              </div>
+                            </div>
 
-                            {gombo.contractId && (
-                              <button 
-                                onClick={() => {
-                                  setActiveMenu("user_contracts");
-                                  try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                }} 
-                                className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[9px] font-bold uppercase rounded hover:bg-purple-500/30 flex items-center gap-1"
-                              >
-                                🤝 Gérer le Contrat
-                              </button>
-                            )}
-
-                            {gombo.selectedTalentId === currentArtist.id && gombo.status === "artiste_selectionne" && (
-                              <>
-                                <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_accepte")} className="px-3 py-1.5 bg-emerald-500 text-black text-[9px] font-bold uppercase rounded hover:bg-emerald-400">
-                                  Accepter le Contrat
+                            {/* Action Buttons */}
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              {(gombo.status === "pending_deposit" || gombo.status === "pending" || gombo.adminValidated === false) && gombo.organizerId === currentArtist.id && (
+                                <button 
+                                  onClick={() => {
+                                    setPendingPaymentItem({
+                                      id: gombo.id!,
+                                      title: gombo.title,
+                                      budget: gombo.budget,
+                                      collectionName: "gombos"
+                                    });
+                                    setShowPendingPaymentModal(true);
+                                  }} 
+                                  className="px-3 py-1.5 bg-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
+                                >
+                                  🔑 Activer la publication
                                 </button>
-                                <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_refuse")} className="px-3 py-1.5 bg-red-900 text-red-100 text-[9px] font-bold uppercase rounded hover:bg-red-800">
-                                  Refuser
+                              )}
+
+                              {(gombo.status === "publie" || gombo.status === "candidatures_ouvertes") && gombo.organizerId === currentArtist.id && (
+                                <button onClick={() => setActiveMenu("user_dashboard")} className="px-3 py-1.5 bg-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl hover:bg-amber-400 transition cursor-pointer">
+                                  🎯 Sélectionner Candidat
                                 </button>
-                              </>
-                            )}
-                            {gombo.organizerId === currentArtist.id && (gombo.status === "contrat_accepte" || gombo.status === "contrat_confirme") && (
-                              <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "mission_terminee")} className="px-3 py-1.5 bg-blue-500 text-afri-text text-[9px] font-bold uppercase rounded hover:bg-blue-400">
-                                Valider la Prestation
-                              </button>
-                            )}
-                            {gombo.organizerId === currentArtist.id && gombo.status === "mission_terminee" && (
-                              <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "paiement_effectue")} className="px-3 py-1.5 bg-green-500 text-black text-[9px] font-bold uppercase rounded hover:bg-green-400">
-                                Libérer le Paiement
-                              </button>
-                            )}
-                            {(gombo.organizerId === currentArtist.id || gombo.selectedTalentId === currentArtist.id) && gombo.selectedTalentId && (
-                               <button 
-                                 onClick={() => {
-                                   const targetId = gombo.organizerId === currentArtist.id ? gombo.selectedTalentId : gombo.organizerId;
-                                   setOpenConvoWithUserId(targetId!);
-                                   setOpenConvoWithGomboId(gombo.id!);
-                                   setActiveMenu("user_messages");
-                                   try { audioSynth.playValidationSuccess(); } catch (_) {}
-                                 }} 
-                                 className="px-3 py-1.5 bg-afri-bg-ter text-afri-text text-[9px] font-bold uppercase rounded hover:bg-zinc-700 flex items-center gap-1.5"
-                               >
-                                 <MessageSquare className="w-3.5 h-3.5 text-afri-gold" /> Discuter
-                               </button>
-                            )}
+                              )}
+                              
+                              {/* Management actions for organizer */}
+                              {gombo.organizerId === currentArtist.id && (
+                                <div className="w-full flex flex-wrap gap-2 mt-2">
+                                  <button 
+                                    onClick={() => {
+                                      const newTitle = prompt("Modifier le titre de l'annonce :", gombo.title);
+                                      if (newTitle && newTitle !== gombo.title && gombo.id) {
+                                        gomboDB.updateGombo(gombo.id, { title: newTitle });
+                                        setGombos(prev => prev.map(g => g.id === gombo.id ? { ...g, title: newTitle } : g));
+                                        addToTerminal(`[MODIFICATION] Titre mis à jour : ${newTitle}`);
+                                      }
+                                    }}
+                                    className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text text-[10px] font-bold uppercase rounded-xl hover:border-[#D4AF37] transition cursor-pointer"
+                                  >
+                                    ✏️ Modifier
+                                  </button>
 
-                            {gombo.applicantIds?.includes(currentArtist.id) && gombo.status === "publie" && (
-                              <button onClick={() => setActiveBoostItem({id: gombo.id!, type: 'candidature'})} className="px-3 py-1.5 mt-2 bg-gradient-to-r from-amber-500 to-afri-gold text-black text-[9px] font-black uppercase rounded shadow-md shadow-afri-gold/20 flex items-center gap-1 active:scale-95 transition-transform">
-                                <Sparkles className="w-3 h-3" /> ⚡ Booster ma candidature
-                              </button>
-                            )}
-                          </div>
+                                  <button 
+                                    onClick={() => {
+                                      if (navigator.share) {
+                                        navigator.share({
+                                          title: gombo.title,
+                                          text: `Consultez cette offre sur AFRIGOMBO : ${gombo.title}`,
+                                          url: window.location.href
+                                        }).catch(() => {});
+                                      } else {
+                                        navigator.clipboard.writeText(window.location.href);
+                                        alert("Lien de la publication copié !");
+                                      }
+                                    }}
+                                    className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text text-[10px] font-bold uppercase rounded-xl hover:border-[#D4AF37] transition cursor-pointer"
+                                  >
+                                    🔗 Partager
+                                  </button>
 
-                          {/* Reciprocal feedback review trigger (only when mission completed) */}
-                          {(gombo.status === "mission_terminee" || gombo.status === "paiement_effectue") && (
-                            <div className="p-3 bg-afri-gold/5 border border-afri-gold/10 rounded-lg space-y-2 mt-2">
-                              <span className="text-[10px] uppercase font-mono text-afri-gold block font-bold">✍️ Évaluation Réciproque :</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-afri-text">Note Accordée :</span>
-                                <div className="flex gap-1 text-afri-gold">
-                                  {[1, 2, 3, 4, 5].map(n => (
-                                    <Star key={n} className="w-3.5 h-3.5 fill-current cursor-pointer" />
-                                  ))}
+                                  <button 
+                                    onClick={() => setActiveBoostItem({id: gombo.id!, type: 'gombo'})} 
+                                    className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
+                                  >
+                                    <Sparkles className="w-3.5 h-3.5" /> 🚀 Booster
+                                  </button>
+
+                                  <button 
+                                    onClick={async () => {
+                                      if (window.confirm("Êtes-vous sûr de vouloir supprimer définitivement cette publication ?")) {
+                                        try {
+                                          if (gombo.id) {
+                                            await gomboDB.deleteGombo(gombo.id);
+                                            setGombos(prev => prev.filter(g => g.id !== gombo.id));
+                                            addToTerminal(`[SUPPRESSION] Publication ${gombo.id} supprimée.`);
+                                          }
+                                        } catch (err) {
+                                          alert("Erreur lors de la suppression.");
+                                        }
+                                      }
+                                    }} 
+                                    className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase rounded-xl hover:bg-red-500/20 transition cursor-pointer"
+                                  >
+                                    🗑️ Supprimer
+                                  </button>
                                 </div>
-                              </div>
-                              <textarea
-                                rows={2}
-                                placeholder="Avis sur la collaboration..."
-                                className="w-full bg-afri-bg border border-afri-border rounded-lg p-2 text-xs text-afri-text placeholder:text-afri-text-sec focus:outline-none focus:border-afri-gold"
-                              />
-                              <button
-                                onClick={() => {
-                                  addToTerminal(`[ÉVALUATION] Évaluation transmise pour Gombo ${gombo.id}`);
-                                  alert("⭐ Votre avis a été enregistré avec succès !");
-                                }}
-                                className="px-4 py-1.5 bg-afri-gold hover:bg-afri-bg-sec text-black text-[10px] font-mono font-bold uppercase rounded transition-all"
-                              >
-                                Soumettre l'avis
-                              </button>
+                              )}
+
+                              {gombo.contractId && (
+                                <button 
+                                  onClick={() => {
+                                    setActiveMenu("user_contracts");
+                                    try { audioSynth.playValidationSuccess(); } catch (_) {}
+                                  }} 
+                                  className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[10px] font-bold uppercase rounded-xl hover:bg-purple-500/30 flex items-center gap-1 cursor-pointer"
+                                >
+                                  🤝 Gérer le Contrat
+                                </button>
+                              )}
+
+                              {gombo.selectedTalentId === currentArtist.id && gombo.status === "artiste_selectionne" && (
+                                <>
+                                  <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_accepte")} className="px-3 py-1.5 bg-emerald-500 text-black text-[10px] font-bold uppercase rounded-xl hover:bg-emerald-400 cursor-pointer">
+                                    Accepter le Contrat
+                                  </button>
+                                  <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "contrat_refuse")} className="px-3 py-1.5 bg-red-900 text-red-100 text-[10px] font-bold uppercase rounded-xl hover:bg-red-800 cursor-pointer">
+                                    Refuser
+                                  </button>
+                                </>
+                              )}
+
+                              {gombo.organizerId === currentArtist.id && (gombo.status === "contrat_accepte" || gombo.status === "contrat_confirme") && (
+                                <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "mission_terminee")} className="px-3 py-1.5 bg-blue-500 text-white text-[10px] font-bold uppercase rounded-xl hover:bg-blue-400 cursor-pointer">
+                                  Valider la Prestation
+                                </button>
+                              )}
+
+                              {gombo.organizerId === currentArtist.id && gombo.status === "mission_terminee" && (
+                                <button onClick={() => gomboDB.updateGomboStatus(gombo.id!, "paiement_effectue")} className="px-3 py-1.5 bg-green-500 text-black text-[10px] font-bold uppercase rounded-xl hover:bg-green-400 cursor-pointer">
+                                  Libérer le Paiement
+                                </button>
+                              )}
+
+                              {(gombo.organizerId === currentArtist.id || gombo.selectedTalentId === currentArtist.id) && gombo.selectedTalentId && (
+                                <button 
+                                  onClick={() => {
+                                    const targetId = gombo.organizerId === currentArtist.id ? gombo.selectedTalentId : gombo.organizerId;
+                                    setOpenConvoWithUserId(targetId!);
+                                    setOpenConvoWithGomboId(gombo.id!);
+                                    setActiveMenu("user_messages");
+                                    try { audioSynth.playValidationSuccess(); } catch (_) {}
+                                  }} 
+                                  className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border text-afri-text text-[10px] font-bold uppercase rounded-xl hover:border-[#D4AF37] flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5 text-[#D4AF37]" /> Discuter
+                                </button>
+                              )}
+
+                              {gombo.applicantIds?.includes(currentArtist.id) && gombo.status === "publie" && (
+                                <button onClick={() => setActiveBoostItem({id: gombo.id!, type: 'candidature'})} className="px-3 py-1.5 mt-2 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black text-[10px] font-black uppercase rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-all cursor-pointer">
+                                  <Sparkles className="w-3.5 h-3.5" /> ⚡ Booster ma candidature
+                                </button>
+                              )}
                             </div>
-                          )}
-                        </div>
+
+                            {/* Reciprocal feedback review trigger (only when mission completed) */}
+                            {(gombo.status === "mission_terminee" || gombo.status === "paiement_effectue") && (
+                              <div className="p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/15 rounded-xl space-y-2 mt-2">
+                                <span className="text-[10px] uppercase font-mono text-[#D4AF37] block font-bold">✍️ Évaluation Réciproque :</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-afri-text">Note Accordée :</span>
+                                  <div className="flex gap-1 text-[#D4AF37]">
+                                    {[1, 2, 3, 4, 5].map(n => (
+                                      <Star key={n} className="w-3.5 h-3.5 fill-current cursor-pointer" />
+                                    ))}
+                                  </div>
+                                </div>
+                                <textarea
+                                  rows={2}
+                                  placeholder="Avis sur la collaboration..."
+                                  className="w-full bg-afri-bg border border-afri-border rounded-xl p-2 text-xs text-afri-text placeholder:text-afri-text-sec focus:outline-none focus:border-[#D4AF37]"
+                                />
+                                <button
+                                  onClick={() => {
+                                    addToTerminal(`[ÉVALUATION] Évaluation transmise pour Gombo ${gombo.id}`);
+                                    alert("⭐ Votre avis a été enregistré avec succès !");
+                                  }}
+                                  className="px-4 py-1.5 bg-[#D4AF37] hover:bg-amber-400 text-black text-[10px] font-bold uppercase rounded-xl transition-all cursor-pointer"
+                                >
+                                  Soumettre l'avis
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         ))
                       )}
                     </div>
@@ -6267,11 +6546,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     <NotificationCenter 
                       currentUserProfile={profile || currentArtist} 
                       notifications={allNotifications}
-                      onRefreshProfile={() => {
-                        if (currentUser?.uid) {
-                          setRealNotifications(prev => prev.map(n => ({ ...n, read: true, isRead: true })));
-                        }
-                      }}
+                      onRefreshProfile={() => handleMarkAllNotifsRead()}
+                      onMarkNotificationAsRead={(id) => handleMarkSingleNotifRead(id)}
+                      onMarkAllAsRead={() => handleMarkAllNotifsRead()}
                       onNavigateHome={() => {
                         setActiveMenu("user_terrain");
                         try { audioSynth.playValidationSuccess(); } catch (err) {}
@@ -6289,6 +6566,26 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       }}
                     />
                   </div>
+                );
+              })()}
+
+              {activeMenu === "user_comments" && (() => {
+                const currentArtist = users.find(u => u.id === activeArtistId) || users[0];
+                return (
+                  <Suspense fallback={
+                    <div className="p-12 text-center text-[#D4AF37] font-mono animate-pulse">
+                      Chargement de l'Espace Commentaires...
+                    </div>
+                  }>
+                    <UserCommentsView
+                      currentUserProfile={profile || currentArtist}
+                      onBack={() => goBackMenu()}
+                      onNavigateTo={(menu) => {
+                        setPerspective("user");
+                        setActiveMenu(menu);
+                      }}
+                    />
+                  </Suspense>
                 );
               })()}
 
