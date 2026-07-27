@@ -3285,7 +3285,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <div className="flex flex-col">
                           <span className="text-[5.5px] xs:text-[7.5px] sm:text-[9px] font-mono tracking-tighter xs:tracking-widest text-afri-text-sec font-bold uppercase block leading-none">ARTISTES</span>
                           <strong className="text-[9px] xs:text-xs sm:text-base font-display font-black text-afri-text block mt-0.5 sm:mt-1">
-                            {(users.length + 12450).toLocaleString("fr-FR")}
+                            {users.length.toLocaleString("fr-FR")}
                           </strong>
                         </div>
                       </div>
@@ -3298,7 +3298,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <div className="flex flex-col">
                           <span className="text-[5.5px] xs:text-[7.5px] sm:text-[9px] font-mono tracking-tighter xs:tracking-widest text-afri-gold/95 font-bold uppercase block leading-none">CACHETS</span>
                           <strong className="text-[9px] xs:text-xs sm:text-base font-display font-black text-afri-text block mt-0.5 sm:mt-1">
-                            {(gombos.length + 2840).toLocaleString("fr-FR")}
+                            {gombos.length.toLocaleString("fr-FR")}
                           </strong>
                         </div>
                       </div>
@@ -3311,7 +3311,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <div className="flex flex-col">
                           <span className="text-[5.5px] xs:text-[7.5px] sm:text-[9px] font-mono tracking-tighter xs:tracking-widest text-afri-text-sec font-bold uppercase block leading-none">OPPS</span>
                           <strong className="text-[9px] xs:text-xs sm:text-base font-display font-black text-afri-text block mt-0.5 sm:mt-1">
-                            {(gombos.length + posts.length + 360).toLocaleString("fr-FR")}
+                            {(gombos.length + posts.length).toLocaleString("fr-FR")}
                           </strong>
                         </div>
                       </div>
@@ -3324,7 +3324,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                         <div className="flex flex-col">
                           <span className="text-[5.5px] xs:text-[7.5px] sm:text-[9px] font-mono tracking-tighter xs:tracking-widest text-afri-text-sec font-bold uppercase block leading-none">ID</span>
                           <strong className="text-[9px] xs:text-xs sm:text-base font-display font-black text-afri-text block mt-0.5 sm:mt-1">
-                            {(users.filter(u => u.kycStatus === "approved").length + 960).toLocaleString("fr-FR")}
+                            {users.filter(u => u.kycStatus === "approved" || u.isVerified || u.gomboId).length.toLocaleString("fr-FR")}
                           </strong>
                         </div>
                       </div>

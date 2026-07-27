@@ -13,6 +13,7 @@ import {
 import { BetaTransactionsAdminPanel } from "./BetaTransactionsAdminPanel";
 import { PendingPublicationsAdminPanel } from "./PendingPublicationsAdminPanel";
 import { ImperialMessageModal } from "./ImperialMessageModal";
+import { AdminDecouvertesCentre } from "./AdminDecouvertesCentre";
 import { globalAudioManager, isDirectAudioFile, AudioConfig, AudioState } from "../../lib/audioManager";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../AuthContext";
@@ -1889,6 +1890,14 @@ export default function AdminFounderThrone({
               {/* Troisième ligne */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 <button
+                  onClick={() => setSelectedSection("decouvertes")}
+                  className="p-3.5 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 border border-[#D4AF37]/50 hover:border-[#D4AF37] text-[#D4AF37] rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <Sparkles className="w-4 h-4 fill-current animate-pulse" />
+                  <span>✨ Administrer Fil Découvertes (Marché & Académie)</span>
+                </button>
+
+                <button
                   onClick={toggleAutoPilot}
                   className={`p-3.5 border rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm active:scale-95 ${autoPilotEnabled ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'bg-afri-bg-sec/5 border-afri-border/60 hover:bg-afri-bg-sec/20 hover:border-[#D4AF37]/50 text-afri-text'}`}
                 >
@@ -3121,6 +3130,13 @@ export default function AdminFounderThrone({
                   />
                 </div>
               </div>
+            )}
+
+            {/* =========================================================
+                 DETAILED VIEW: ✨ Fil Découvertes (Marché & Académie)
+                 ========================================================= */}
+            {selectedSection === "decouvertes" && (
+              <AdminDecouvertesCentre audioSynth={audioSynth} />
             )}
 
             {/* =========================================================

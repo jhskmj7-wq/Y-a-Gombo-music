@@ -14,6 +14,7 @@ import { usePerformance } from "../services/performanceService";
 import { globalAudioManager, AudioState } from "../lib/audioManager";
 import PremiumEmptyState from "./PremiumEmptyState";
 import TendancesSection from "./TendancesSection";
+import FilDecouvertesSection from "./FilDecouvertesSection";
 import { useAuth } from "../AuthContext";
 import { db } from "../lib/firebase";
 import { gomboDB } from "../firebase";
@@ -1598,6 +1599,27 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             </motion.div>
           ))}
         </div>
+      </div>
+
+      {/* ==========================================
+          8. ✨ FIL DÉCOUVERTES (GRAND MARCHÉ & ACADÉMIE)
+         ========================================== */}
+      <div className="pt-2">
+        <FilDecouvertesSection
+          userCommune={
+            profile?.commune || 
+            (typeof profile?.location === "string" ? profile.location : profile?.location?.city) || 
+            "Abidjan"
+          }
+          audioSynth={audioSynth}
+          onNavigateToSection={(sec) => {
+            if (sec === "grand_marche") {
+              setActiveMenu("grand_marche");
+            } else if (sec === "academie") {
+              setActiveMenu("academie");
+            }
+          }}
+        />
       </div>
       </>
       ) : (

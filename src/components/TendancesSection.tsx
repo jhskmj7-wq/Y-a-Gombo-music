@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Flame, Music, Mic, Zap, Calendar, MapPin, ShieldCheck, Crown, 
   ThumbsUp, MessageSquare, Share2, Star, Eye, Info, AlertTriangle, 
-  Search, CheckCircle2, RefreshCw, ChevronRight, UserCheck
+  Search, CheckCircle2, RefreshCw, ChevronRight, UserCheck, Sparkles, TrendingUp
 } from "lucide-react";
 import { Gombo, Post, User } from "../types";
 import { 
@@ -12,8 +12,12 @@ import {
   filterAndRankTendances, 
   calculateAfrigomboScore,
   isInteractionAllowed,
-  recordUniqueViewInSession
+  recordUniqueViewInSession,
+  calculateTrendingScore,
+  recordTrendingInteraction
 } from "../lib/tendancesEngine";
+import { db } from "../firebase";
+import { collection, onSnapshot, query } from "firebase/firestore";
 
 interface TendancesSectionProps {
   gombos: Gombo[];
@@ -47,6 +51,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedScoreExplainer, setSelectedScoreExplainer] = useState<TendancesItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [firestoreTrendingMap, setFirestoreTrendingMap] = useState<Record<string, any>>({});
 
   // User commune for proximity matching
   const userCommune = extractCommuneString(currentUserProfile?.commune || currentUserProfile?.location);
@@ -64,13 +69,29 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
     hasFavorited: boolean;
   }>>({});
 
+  // Real-time listener for Firestore `trending/` collection
+  useEffect(() => {
+    const q = query(collection(db, "trending"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const map: Record<string, any> = {};
+      snapshot.forEach(doc => {
+        map[doc.id] = doc.data();
+      });
+      setFirestoreTrendingMap(map);
+    }, (err) => {
+      console.warn("Firestore trending snapshot error:", err);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Helper to trigger toast messages
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Map raw Gombos and Posts into standardized TendancesItems
+  // Map raw Gombos and Posts into standardized TendancesItems merged with Firestore real-time data
   const allTendancesItems: TendancesItem[] = useMemo(() => {
     const items: TendancesItem[] = [];
 
@@ -78,6 +99,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
     gombos.forEach(g => {
       const gomboId = g.id || `gombo_${Math.random()}`;
       const local = localInteractions[gomboId];
+      const firestoreDoc = firestoreTrendingMap[gomboId];
 
       const author = users.find(u => u.id === g.userId || u.uid === g.userId || u.id === g.clientId);
       const isVerified = author?.isCertified || author?.isVerified || false;
@@ -98,38 +120,47 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
         category = "musique";
       }
 
-      // Parse timestamp
-      let createdAt = Date.now() - 3600000 * 4; // Default 4h ago
+      let createdAt = Date.now() - 3600000 * 4;
       if (g.createdAt) {
         createdAt = new Date(g.createdAt).getTime();
       } else if (g.timestamp) {
         createdAt = new Date(g.timestamp).getTime();
       }
 
+      const likesCount = local?.likesCount ?? (firestoreDoc?.likesCount || g.likesCount || (g as any).likes || 12);
+      const candidaturesCount = local?.candidaturesCount ?? (firestoreDoc?.candidaturesCount || g.applicantsCount || 4);
+      const viewsCount = local?.viewsCount ?? (firestoreDoc?.viewsCount || (g as any).viewsCount || 85);
+      const discussionsCount = local?.discussionsCount ?? (firestoreDoc?.discussionsCount || (g as any).commentsCount || 6);
+      const sharesCount = local?.sharesCount ?? (firestoreDoc?.sharesCount || (g as any).sharesCount || 3);
+      const favoritesCount = local?.favoritesCount ?? (firestoreDoc?.favoritesCount || (g as any).favoritesCount || 5);
+
       items.push({
         id: gomboId,
         type: "gombo",
-        title: g.title || "Gombo Musique Live",
-        description: g.description || "Prestation artistique de haut niveau.",
-        category,
-        commune: extractCommuneString(g.commune || g.location),
+        title: firestoreDoc?.title || g.title || "Gombo Musique Live",
+        description: firestoreDoc?.description || g.description || "Prestation artistique de haut niveau.",
+        category: (firestoreDoc?.category as any) || category,
+        commune: extractCommuneString(firestoreDoc?.commune || g.commune || g.location),
         authorUid: g.userId || g.clientId,
-        authorName: g.clientName || g.organizerName || author?.artisticName || author?.displayName || "Organisateur AFRIGOMBO",
-        authorAvatar: g.organizerAvatar || author?.photoURL || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150",
+        authorName: firestoreDoc?.authorName || g.clientName || g.organizerName || author?.artisticName || author?.displayName || "Organisateur AFRIGOMBO",
+        authorAvatar: firestoreDoc?.authorAvatar || g.organizerAvatar || author?.photoURL || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150",
         isGomboIdVerified: isVerified,
         isPremium,
         budget: g.budget || 50000,
-        imageUrl: g.mediaUrl || g.mediaURL || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
+        imageUrl: firestoreDoc?.imageUrl || g.mediaUrl || g.mediaURL || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
         audioUrl: g.audioUrl,
         date: g.date || "Immédiat",
         createdAt,
-        likesCount: local?.likesCount ?? (g.likesCount || (g as any).likes || 12),
-        candidaturesCount: local?.candidaturesCount ?? (g.applicantsCount || 4),
-        viewsCount: local?.viewsCount ?? ((g as any).viewsCount || 85),
-        discussionsCount: local?.discussionsCount ?? ((g as any).commentsCount || 6),
-        sharesCount: local?.sharesCount ?? ((g as any).sharesCount || 3),
-        favoritesCount: local?.favoritesCount ?? ((g as any).favoritesCount || 5),
+        likesCount,
+        candidaturesCount,
+        viewsCount,
+        discussionsCount,
+        sharesCount,
+        favoritesCount,
         reportsCount: (g as any).reportsCount || 0,
+        mode: firestoreDoc?.mode || "auto",
+        pinned: !!firestoreDoc?.pinned,
+        sponsored: !!firestoreDoc?.sponsored,
         rawItem: g
       });
     });
@@ -138,6 +169,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
     posts.forEach(p => {
       const postId = p.id || `post_${Math.random()}`;
       const local = localInteractions[postId];
+      const firestoreDoc = firestoreTrendingMap[postId];
       const author = users.find(u => u.id === p.userId || u.uid === p.userId);
       const isVerified = author?.isCertified || author?.isVerified || false;
       const isPremium = author?.isPremium || p.isBoosted || false;
@@ -147,39 +179,50 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
         createdAt = new Date(p.timestamp).getTime();
       }
 
+      const likesCount = local?.likesCount ?? (firestoreDoc?.likesCount || p.likes || 18);
+      const candidaturesCount = 0;
+      const viewsCount = local?.viewsCount ?? (firestoreDoc?.viewsCount || 110);
+      const discussionsCount = local?.discussionsCount ?? (firestoreDoc?.discussionsCount || p.comments || 8);
+      const sharesCount = local?.sharesCount ?? (firestoreDoc?.sharesCount || 5);
+      const favoritesCount = local?.favoritesCount ?? (firestoreDoc?.favoritesCount || 7);
+
       items.push({
         id: postId,
         type: "post",
-        title: p.authorArtisticName || p.authorName ? `Publication de ${p.authorArtisticName || p.authorName}` : "Publication Vibe",
-        description: p.content || "Vibe d'artiste sur le Terrain.",
+        title: firestoreDoc?.title || (p.authorArtisticName || p.authorName ? `Publication de ${p.authorArtisticName || p.authorName}` : "Publication Vibe"),
+        description: firestoreDoc?.description || p.content || "Vibe d'artiste sur le Terrain.",
         category: "musique",
         commune: extractCommuneString(author?.commune || author?.location),
         authorUid: p.userId,
-        authorName: p.authorArtisticName || p.authorName || "Artiste Virtuose",
-        authorAvatar: p.authorAvatar || author?.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+        authorName: firestoreDoc?.authorName || p.authorArtisticName || p.authorName || "Artiste Virtuose",
+        authorAvatar: firestoreDoc?.authorAvatar || p.authorAvatar || author?.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
         isGomboIdVerified: isVerified,
         isPremium,
-        imageUrl: p.mediaUrl || "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&auto=format&fit=crop&q=80",
+        imageUrl: firestoreDoc?.imageUrl || p.mediaUrl || "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&auto=format&fit=crop&q=80",
         createdAt,
-        likesCount: local?.likesCount ?? (p.likes || 18),
-        candidaturesCount: 0,
-        viewsCount: local?.viewsCount ?? 110,
-        discussionsCount: local?.discussionsCount ?? (p.comments || 8),
-        sharesCount: local?.sharesCount ?? 5,
-        favoritesCount: local?.favoritesCount ?? 7,
+        likesCount,
+        candidaturesCount,
+        viewsCount,
+        discussionsCount,
+        sharesCount,
+        favoritesCount,
         reportsCount: p.isFlagged ? 1 : 0,
+        mode: firestoreDoc?.mode || "auto",
+        pinned: !!firestoreDoc?.pinned,
+        sponsored: !!firestoreDoc?.sponsored,
         rawItem: p
       });
     });
 
     return items;
-  }, [gombos, posts, users, localInteractions]);
+  }, [gombos, posts, users, localInteractions, firestoreTrendingMap]);
 
   // Record unique views on mount for top items
   useEffect(() => {
     allTendancesItems.slice(0, 10).forEach(item => {
       const isFirst = recordUniqueViewInSession(item.id);
       if (isFirst) {
+        recordTrendingInteraction(item.id, "view");
         setLocalInteractions(prev => {
           const current = prev[item.id] || {
             likesCount: item.likesCount,
@@ -209,6 +252,20 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
     return filterAndRankTendances(allTendancesItems, activeTab, userCommune, searchTerm);
   }, [allTendancesItems, activeTab, userCommune, searchTerm]);
 
+  // Top 6 Automatic Trends for the horizontal carousel
+  const top6Trends = useMemo(() => {
+    // Sort pinned items first, then by score descending
+    return [...allTendancesItems]
+      .sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        const scoreA = calculateTrendingScore(a);
+        const scoreB = calculateTrendingScore(b);
+        return scoreB - scoreA;
+      })
+      .slice(0, 6);
+  }, [allTendancesItems]);
+
   // Handle J'honore (Like) action
   const handleToggleLike = (item: TendancesItem) => {
     requireAuthThen(() => {
@@ -222,6 +279,8 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
         showToast(`🛡️ ${reason}`);
         return;
       }
+
+      recordTrendingInteraction(item.id, "jhonore");
 
       setLocalInteractions(prev => {
         const current = prev[item.id] || {
@@ -250,7 +309,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
       });
 
       try { audioSynth?.playTamTam?.(false); } catch (_) {}
-      showToast("👍 'J'honore' enregistré ! +5 pts au Score AFRIGOMBO");
+      showToast("👍 'J'honore' enregistré ! +12 pts au Score AFRIGOMBO");
     });
   };
 
@@ -266,6 +325,8 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
       showToast(`🛡️ ${reason}`);
       return;
     }
+
+    recordTrendingInteraction(item.id, "share");
 
     setLocalInteractions(prev => {
       const current = prev[item.id] || {
@@ -299,12 +360,14 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
     }
 
     try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
-    showToast("📤 Publication partagée ! +7 pts au Score AFRIGOMBO");
+    showToast("📤 Publication partagée ! +10 pts au Score AFRIGOMBO");
   };
 
   // Handle Favorite action
   const handleFavorite = (item: TendancesItem) => {
     requireAuthThen(() => {
+      recordTrendingInteraction(item.id, "favorite");
+
       setLocalInteractions(prev => {
         const current = prev[item.id] || {
           likesCount: item.likesCount,
@@ -330,7 +393,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
       });
 
       try { audioSynth?.playTamTam?.(false); } catch (_) {}
-      showToast("⭐ Favori mis à jour ! +6 pts au Score AFRIGOMBO");
+      showToast("⭐ Favori mis à jour ! +5 pts au Score AFRIGOMBO");
     });
   };
 
@@ -371,10 +434,10 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
               </span>
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-wider">
-                  SECTION TENDANCES
+                  CENTRE DES TENDANCES
                 </h2>
                 <p className="text-xs text-afri-text-sec">
-                  Mise en avant par l'engagement réel, la fraîcheur et la proximité d'Abidjan.
+                  Calculateur de score dynamique en temps réel & Carrousel interactif.
                 </p>
               </div>
             </div>
@@ -382,8 +445,118 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
 
           <div className="flex items-center gap-2 bg-afri-bg/60 border border-afri-border px-3 py-1.5 rounded-2xl text-[11px] text-afri-text-sec">
             <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-            <span>Score dynamique temps réel • Équité garantie</span>
+            <span>Algorithme temps réel • Firestore sync</span>
           </div>
+        </div>
+      </div>
+
+      {/* REQUIREMENT 3 & 7: HORIZONTAL TOP 6 TRENDS CAROUSEL */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <Flame className="w-4 h-4 text-[#D4AF37] fill-current animate-pulse" />
+            <h3 className="text-xs font-mono font-black text-[#D4AF37] uppercase tracking-wider">
+              TOP 6 TENDANCES AUTOMATIQUES — DEFILEMENT HORIZONTAL
+            </h3>
+          </div>
+          <span className="text-[10px] font-mono text-afri-text-sec">← Glisser sur Android →</span>
+        </div>
+
+        {/* Scrollable Horizontal Container */}
+        <div 
+          className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-3 touch-pan-x [-webkit-overflow-scrolling:touch]"
+          style={{ scrollSnapType: "x mandatory" }}
+        >
+          {top6Trends.map((item, index) => {
+            const score = calculateTrendingScore(item);
+            const isSponsored = item.sponsored;
+            const isPinned = item.pinned;
+            const isRising = score > 100;
+            const isPopular = item.viewsCount > 100;
+
+            return (
+              <motion.div
+                key={`top6_${item.id}`}
+                whileHover={{ scale: 1.02 }}
+                className="min-w-[280px] sm:min-w-[320px] max-w-[340px] shrink-0 snap-start bg-afri-bg-sec border border-[#D4AF37]/30 rounded-2xl p-4 flex flex-col justify-between shadow-xl relative overflow-hidden group"
+              >
+                {/* Background glow */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-2xl group-hover:bg-[#D4AF37]/10 transition-all pointer-events-none"></div>
+
+                <div className="space-y-3 relative z-10">
+                  {/* Badges Bar */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-mono font-black uppercase flex items-center gap-1">
+                      🔥 #{index + 1} Tendance
+                    </span>
+
+                    {isSponsored && (
+                      <span className="px-2 py-0.5 rounded-full bg-[#D4AF37] text-black text-[9px] font-mono font-black uppercase flex items-center gap-1 shadow-sm">
+                        ⭐ Sponsorisé
+                      </span>
+                    )}
+
+                    {isPinned && (
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[9px] font-mono font-black uppercase">
+                        👑 Choix AFRIGOMBO
+                      </span>
+                    )}
+
+                    {isRising && (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-mono font-black uppercase">
+                        🚀 Monte
+                      </span>
+                    )}
+
+                    {isPopular && (
+                      <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40 text-[9px] font-mono font-black uppercase">
+                        📈 Populaire
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Image & Title */}
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.title} 
+                      className="w-14 h-14 rounded-xl object-cover border border-afri-border shrink-0" 
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h4 
+                        onClick={() => {
+                          if (item.type === "gombo" && item.rawItem && onSelectGomboDetails) {
+                            onSelectGomboDetails(item.rawItem as Gombo);
+                          }
+                        }}
+                        className="text-sm font-black text-afri-text truncate cursor-pointer hover:text-[#D4AF37] transition-colors"
+                      >
+                        {item.title}
+                      </h4>
+                      <p className="text-[10px] text-afri-text-sec truncate mt-0.5">{item.authorName} • {item.commune}</p>
+                      <span className="text-xs font-mono font-black text-[#D4AF37] block mt-1">
+                        Score : {score} pts
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Engagement Bar */}
+                <div className="mt-4 pt-3 border-t border-afri-border/60 flex items-center justify-between text-[10px] font-mono text-afri-text-sec">
+                  <span className="flex items-center gap-1">👀 {item.viewsCount}</span>
+                  <span className="flex items-center gap-1">👍 {item.likesCount}</span>
+                  <span className="flex items-center gap-1">💬 {item.discussionsCount}</span>
+                  <span className="flex items-center gap-1">📤 {item.sharesCount}</span>
+                  <button
+                    onClick={() => handleToggleLike(item)}
+                    className="px-2 py-1 rounded-lg bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-bold transition-all cursor-pointer"
+                  >
+                    J'honore
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 
@@ -506,16 +679,28 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                           {item.title}
                         </h3>
 
+                        {item.sponsored && (
+                          <span className="bg-[#D4AF37] text-black text-[9px] font-bold px-2 py-0.5 rounded-full uppercase font-mono shadow-xs">
+                            ⭐ Sponsorisé
+                          </span>
+                        )}
+
+                        {item.pinned && (
+                          <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase font-mono">
+                            👑 Choix AFRIGOMBO
+                          </span>
+                        )}
+
                         {/* Badges */}
                         {item.isGomboIdVerified && (
-                          <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider font-mono" title="Gombo ID Vérifié (+10 pts)">
+                          <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider font-mono" title="Gombo ID Vérifié">
                             <ShieldCheck className="w-3 h-3 text-emerald-400" />
                             <span>Vérifié</span>
                           </span>
                         )}
 
                         {item.isPremium && (
-                          <span className="inline-flex items-center gap-1 bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider font-mono" title="Compte Premium (Bonus équitable +10 pts)">
+                          <span className="inline-flex items-center gap-1 bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider font-mono" title="Compte Premium">
                             <Crown className="w-3 h-3 text-[#D4AF37]" />
                             <span>Premium</span>
                           </span>
@@ -572,7 +757,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                             ? "bg-[#D4AF37] text-black shadow-md" 
                             : "bg-afri-bg border border-afri-border text-afri-text-sec hover:text-[#D4AF37]"
                         }`}
-                        title="J'honore (+5 pts)"
+                        title="J'honore (+12 pts)"
                       >
                         <ThumbsUp className="w-3.5 h-3.5 fill-current" />
                         <span className="text-[10px] font-mono">{item.likesCount}</span>
@@ -582,7 +767,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                       <button
                         onClick={() => handleShare(item)}
                         className="p-2 rounded-xl bg-afri-bg border border-afri-border text-afri-text-sec hover:text-[#D4AF37] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                        title="Partager (+7 pts)"
+                        title="Partager (+10 pts)"
                       >
                         <Share2 className="w-3.5 h-3.5" />
                         <span className="text-[10px] font-mono">{item.sharesCount}</span>
@@ -596,7 +781,7 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                             ? "bg-amber-500 text-black shadow-md" 
                             : "bg-afri-bg border border-afri-border text-afri-text-sec hover:text-amber-400"
                         }`}
-                        title="Favori (+6 pts)"
+                        title="Favori (+5 pts)"
                       >
                         <Star className={`w-3.5 h-3.5 ${hasFavorited ? "fill-current" : ""}`} />
                       </button>
@@ -648,89 +833,50 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
                       <p className="text-[10px] text-afri-text-sec font-mono">Décomposition officielle du classement</p>
                     </div>
                   </div>
-                  <button
+                  <button 
                     onClick={() => setSelectedScoreExplainer(null)}
-                    className="text-afri-text-sec hover:text-afri-text text-lg font-bold"
+                    className="p-1 rounded-lg text-afri-text-sec hover:text-afri-text font-mono text-xs cursor-pointer"
                   >
                     ✕
                   </button>
                 </div>
 
-                {/* Score Big Display */}
-                <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 text-center space-y-1">
-                  <span className="text-3xl font-black text-[#D4AF37]">{scoreBreakdown.finalScore} PTS</span>
-                  <p className="text-[10px] text-afri-text-sec">
-                    Score final = Base ({scoreBreakdown.baseScore} pts) × Fraîcheur ({freshnessPct}%)
-                  </p>
-                </div>
-
-                {/* Breakdown List */}
+                {/* Score Breakdown List */}
                 <div className="space-y-2 text-xs font-mono">
-                  <div className="flex justify-between items-center p-2 rounded-xl bg-afri-bg/50">
-                    <span className="flex items-center gap-2 text-afri-text-sec">👍 J'honore ({item.likesCount})</span>
-                    <span className="text-[#D4AF37] font-bold">+{item.likesCount * 5} pts</span>
+                  <div className="flex justify-between p-2 bg-afri-bg rounded-xl">
+                    <span className="text-afri-text-sec">👀 Vues ({item.viewsCount})</span>
+                    <span className="text-afri-text font-bold">+{item.viewsCount * 1} pts</span>
+                  </div>
+                  <div className="flex justify-between p-2 bg-afri-bg rounded-xl">
+                    <span className="text-afri-text-sec">⭐ Favoris ({item.favoritesCount})</span>
+                    <span className="text-afri-text font-bold">+{item.favoritesCount * 5} pts</span>
+                  </div>
+                  <div className="flex justify-between p-2 bg-afri-bg rounded-xl">
+                    <span className="text-afri-text-sec">💬 Commentaires ({item.discussionsCount})</span>
+                    <span className="text-afri-text font-bold">+{item.discussionsCount * 8} pts</span>
+                  </div>
+                  <div className="flex justify-between p-2 bg-afri-bg rounded-xl">
+                    <span className="text-afri-text-sec">📤 Partages ({item.sharesCount})</span>
+                    <span className="text-afri-text font-bold">+{item.sharesCount * 10} pts</span>
+                  </div>
+                  <div className="flex justify-between p-2 bg-afri-bg rounded-xl">
+                    <span className="text-afri-text-sec">👍 J'honore ({item.likesCount})</span>
+                    <span className="text-afri-text font-bold">+{item.likesCount * 12} pts</span>
+                  </div>
+                  <div className="flex justify-between p-2 bg-afri-bg rounded-xl">
+                    <span className="text-afri-text-sec">🤝 Candidatures ({item.candidaturesCount})</span>
+                    <span className="text-afri-text font-bold">+{item.candidaturesCount * 20} pts</span>
                   </div>
 
-                  <div className="flex justify-between items-center p-2 rounded-xl bg-afri-bg/50">
-                    <span className="flex items-center gap-2 text-afri-text-sec">🤝 Candidatures ({item.candidaturesCount})</span>
-                    <span className="text-[#D4AF37] font-bold">+{item.candidaturesCount * 10} pts</span>
+                  <div className="pt-2 border-t border-afri-border flex justify-between items-center text-sm font-sans">
+                    <span className="font-bold text-afri-text">Score Total Calculé</span>
+                    <span className="font-black text-[#D4AF37] text-lg">{calculateTrendingScore(item)} pts</span>
                   </div>
-
-                  <div className="flex justify-between items-center p-2 rounded-xl bg-afri-bg/50">
-                    <span className="flex items-center gap-2 text-afri-text-sec">👀 Consultations ({item.viewsCount})</span>
-                    <span className="text-[#D4AF37] font-bold">+{Math.floor(item.viewsCount / 5)} pts</span>
-                  </div>
-
-                  <div className="flex justify-between items-center p-2 rounded-xl bg-afri-bg/50">
-                    <span className="flex items-center gap-2 text-afri-text-sec">📤 Partages ({item.sharesCount})</span>
-                    <span className="text-[#D4AF37] font-bold">+{item.sharesCount * 7} pts</span>
-                  </div>
-
-                  <div className="flex justify-between items-center p-2 rounded-xl bg-afri-bg/50">
-                    <span className="flex items-center gap-2 text-afri-text-sec">⭐ Favoris ({item.favoritesCount})</span>
-                    <span className="text-[#D4AF37] font-bold">+{item.favoritesCount * 6} pts</span>
-                  </div>
-
-                  {item.commune.toLowerCase().trim() === userCommune.toLowerCase().trim() && (
-                    <div className="flex justify-between items-center p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-                      <span>📍 Proximité ({item.commune})</span>
-                      <span className="font-bold">+15 pts</span>
-                    </div>
-                  )}
-
-                  {item.isGomboIdVerified && (
-                    <div className="flex justify-between items-center p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-                      <span>🛡️ Gombo ID Vérifié</span>
-                      <span className="font-bold">+10 pts</span>
-                    </div>
-                  )}
-
-                  {item.isPremium && (
-                    <div className="flex justify-between items-center p-2 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37]">
-                      <span>👑 Compte Premium (Bonus équitable)</span>
-                      <span className="font-bold">+10 pts</span>
-                    </div>
-                  )}
-
-                  {item.reportsCount > 0 && (
-                    <div className="flex justify-between items-center p-2 rounded-xl bg-red-500/10 text-red-400">
-                      <span>🚨 Signalements ({item.reportsCount})</span>
-                      <span className="font-bold">-{item.reportsCount * 30} pts</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer Note */}
-                <div className="p-3 bg-afri-bg rounded-2xl text-[10px] text-afri-text-sec leading-relaxed border border-afri-border">
-                  <p className="font-bold text-[#D4AF37]">🛡️ RÈGLE D'ÉQUITÉ AFRIGOMBO :</p>
-                  <p>
-                    Le statut Premium offre uniquement un avantage modéré (+10 pts) pour garantir que l'engagement réel de la communauté reste le facteur déterminant du classement.
-                  </p>
                 </div>
 
                 <button
                   onClick={() => setSelectedScoreExplainer(null)}
-                  className="w-full py-2.5 bg-[#D4AF37] text-black font-black text-xs uppercase tracking-wider rounded-xl cursor-pointer hover:opacity-90"
+                  className="w-full py-2.5 bg-[#D4AF37] text-black rounded-xl font-bold text-xs uppercase tracking-wider cursor-pointer hover:bg-[#b8952b]"
                 >
                   Fermer
                 </button>
@@ -739,7 +885,6 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
           );
         })()}
       </AnimatePresence>
-
     </div>
   );
 };

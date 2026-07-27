@@ -1,4 +1,36 @@
 import { Gombo, Post } from "../types";
+import { db } from "../firebase";
+import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
+
+export interface TrendingDoc {
+  id: string; // publicationId
+  publicationId: string;
+  type: "gombo" | "post";
+  title: string;
+  description: string;
+  score: number;
+  mode: "auto" | "manuel" | "sponsor";
+  pinned: boolean;
+  sponsored: boolean;
+  viewsCount: number;
+  favoritesCount: number;
+  sharesCount: number;
+  discussionsCount: number;
+  candidaturesCount: number;
+  likesCount: number; // jhonore
+  reportsCount?: number;
+  createdAt: string | number;
+  updatedAt: string | number;
+  authorName?: string;
+  authorAvatar?: string;
+  category?: string;
+  commune?: string;
+  budget?: number;
+  imageUrl?: string;
+  audioUrl?: string;
+  isGomboIdVerified?: boolean;
+  isPremium?: boolean;
+}
 
 export interface TendancesItem {
   id: string;
@@ -19,14 +51,19 @@ export interface TendancesItem {
   createdAt: number; // timestamp in ms
   
   // Engagement metrics
-  likesCount: number;        // 👍 J'honore (+5)
-  candidaturesCount: number; // 🤝 Candidatures (+10)
-  viewsCount: number;        // 👀 Consultations (+1 per 5 views)
-  discussionsCount: number;  // 💬 Discussions (+8)
-  sharesCount: number;       // 📤 Partages (+7)
-  favoritesCount: number;    // ⭐ Favoris (+6)
-  reportsCount: number;      // 🚨 Signalements (-30)
+  likesCount: number;        // 👍 J'honore (x12)
+  candidaturesCount: number; // 🤝 Candidatures (x20)
+  viewsCount: number;        // 👀 Consultations (x1)
+  discussionsCount: number;  // 💬 Discussions/Commentaires (x8)
+  sharesCount: number;       // 📤 Partages (x10)
+  favoritesCount: number;    // ⭐ Favoris (x5)
+  reportsCount: number;      // 🚨 Signalements
   
+  // Trending mode & badges flags
+  mode?: "auto" | "manuel" | "sponsor";
+  pinned?: boolean;
+  sponsored?: boolean;
+
   // Calculated properties
   baseScore?: number;
   afrigomboScore?: number;
@@ -43,45 +80,217 @@ export type TendancesCategoryTab =
   | "pres_de_moi"; // 📍 Près de moi
 
 /**
+ * EXACT SCORE FORMULA REQUIRED BY SPEC:
+ * score = (views * 1) + (favorites * 5) + (shares * 10) + (comments * 8) + (applications * 20) + (jhonore * 12)
+ */
+export function calculateTrendingScore(metrics: {
+  viewsCount?: number;
+  favoritesCount?: number;
+  sharesCount?: number;
+  discussionsCount?: number;
+  candidaturesCount?: number;
+  likesCount?: number;
+}): number {
+  const views = Math.max(0, metrics.viewsCount || 0);
+  const favorites = Math.max(0, metrics.favoritesCount || 0);
+  const shares = Math.max(0, metrics.sharesCount || 0);
+  const comments = Math.max(0, metrics.discussionsCount || 0);
+  const candidatures = Math.max(0, metrics.candidaturesCount || 0);
+  const jhonore = Math.max(0, metrics.likesCount || 0);
+
+  return (views * 1) + (favorites * 5) + (shares * 10) + (comments * 8) + (candidatures * 20) + (jhonore * 12);
+}
+
+/**
  * Calculate the raw base engagement score before time decay
  */
 export function calculateBaseScore(
   item: Partial<TendancesItem>,
   userCommune?: string
 ): number {
-  let score = 0;
+  const score = calculateTrendingScore({
+    viewsCount: item.viewsCount,
+    favoritesCount: item.favoritesCount,
+    sharesCount: item.sharesCount,
+    discussionsCount: item.discussionsCount,
+    candidaturesCount: item.candidaturesCount,
+    likesCount: item.likesCount
+  });
 
-  // 1. Engagement Metrics
-  score += (item.likesCount || 0) * 5;           // 👍 +5
-  score += (item.candidaturesCount || 0) * 10;   // 🤝 +10
-  score += Math.floor((item.viewsCount || 0) / 5); // 👀 +1 per 5 views
-  score += (item.discussionsCount || 0) * 8;     // 💬 +8
-  score += (item.sharesCount || 0) * 7;          // 📤 +7
-  score += (item.favoritesCount || 0) * 6;       // ⭐ +6
-
-  // 2. Geographic Proximity Bonus (📍 +15 pts)
+  let bonus = 0;
+  // Geographic Proximity Bonus
   if (
     userCommune &&
     item.commune &&
     userCommune.trim().toLowerCase() === item.commune.trim().toLowerCase()
   ) {
-    score += 15;
+    bonus += 15;
   }
+  if (item.isGomboIdVerified) bonus += 10;
+  if (item.isPremium) bonus += 10;
+  const penalty = (item.reportsCount || 0) * 30;
 
-  // 3. Verified Gombo ID Bonus (🛡️ +10 pts)
-  if (item.isGomboIdVerified) {
-    score += 10;
+  return Math.max(0, score + bonus - penalty);
+}
+
+/**
+ * Save or update a trending document in Firestore collection `trending/`
+ */
+export async function saveOrUpdateTrendingDoc(data: Partial<TrendingDoc>): Promise<void> {
+  if (!data.publicationId) return;
+  const docId = data.publicationId;
+  const now = new Date().toISOString();
+
+  const score = calculateTrendingScore({
+    viewsCount: data.viewsCount || 0,
+    favoritesCount: data.favoritesCount || 0,
+    sharesCount: data.sharesCount || 0,
+    discussionsCount: data.discussionsCount || 0,
+    candidaturesCount: data.candidaturesCount || 0,
+    likesCount: data.likesCount || 0
+  });
+
+  const payload: TrendingDoc = {
+    id: docId,
+    publicationId: docId,
+    type: data.type || "gombo",
+    title: data.title || "Publication Tendance",
+    description: data.description || "",
+    score,
+    mode: data.mode || "auto",
+    pinned: !!data.pinned,
+    sponsored: !!data.sponsored,
+    viewsCount: data.viewsCount || 0,
+    favoritesCount: data.favoritesCount || 0,
+    sharesCount: data.sharesCount || 0,
+    discussionsCount: data.discussionsCount || 0,
+    candidaturesCount: data.candidaturesCount || 0,
+    likesCount: data.likesCount || 0,
+    reportsCount: data.reportsCount || 0,
+    createdAt: data.createdAt || now,
+    updatedAt: now,
+    authorName: data.authorName || "Artiste AFRIGOMBO",
+    authorAvatar: data.authorAvatar || "",
+    category: data.category || "general",
+    commune: data.commune || "Abidjan",
+    budget: data.budget || 0,
+    imageUrl: data.imageUrl || "",
+    audioUrl: data.audioUrl || "",
+    isGomboIdVerified: !!data.isGomboIdVerified,
+    isPremium: !!data.isPremium
+  };
+
+  try {
+    await setDoc(doc(db, "trending", docId), payload, { merge: true });
+  } catch (err) {
+    console.error("Failed to save trending document to Firestore:", err);
   }
+}
 
-  // 4. Premium Account Bonus (👑 +10 pts ONLY - Fair boost)
-  if (item.isPremium) {
-    score += 10;
+/**
+ * Toggle pinned status for a publication in `trending/`
+ */
+export async function togglePinTrendingDoc(publicationId: string, pinned: boolean): Promise<void> {
+  try {
+    await setDoc(doc(db, "trending", publicationId), {
+      pinned,
+      mode: "manuel",
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+  } catch (err) {
+    console.error("Failed to toggle pin in trending:", err);
   }
+}
 
-  // 5. Reports Penalty (🚨 -30 pts per signalement)
-  score -= (item.reportsCount || 0) * 30;
+/**
+ * Toggle sponsored status for a publication in `trending/`
+ * Enforces max 3 sponsored publications.
+ */
+export async function toggleSponsorTrendingDoc(publicationId: string, sponsored: boolean): Promise<{ success: boolean; message?: string }> {
+  try {
+    if (sponsored) {
+      const snap = await getDocs(collection(db, "trending"));
+      const currentSponsored = snap.docs.filter(d => d.data().sponsored === true && d.id !== publicationId);
+      if (currentSponsored.length >= 3) {
+        return { success: false, message: "Limite atteinte : Maximum 3 publications sponsorisées autorisées simultanément !" };
+      }
+    }
 
-  return Math.max(0, score);
+    await setDoc(doc(db, "trending", publicationId), {
+      sponsored,
+      mode: sponsored ? "sponsor" : "manuel",
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    return { success: true };
+  } catch (err) {
+    console.error("Failed to toggle sponsor in trending:", err);
+    return { success: false, message: "Erreur lors de la mise à jour sponsorisée." };
+  }
+}
+
+/**
+ * Remove publication from `trending/`
+ */
+export async function removeTrendingDoc(publicationId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, "trending", publicationId));
+  } catch (err) {
+    console.error("Failed to remove doc from trending collection:", err);
+  }
+}
+
+/**
+ * Record interaction and recalculate score in Firestore
+ */
+export async function recordTrendingInteraction(
+  publicationId: string,
+  type: "view" | "favorite" | "share" | "comment" | "application" | "jhonore"
+): Promise<void> {
+  try {
+    const ref = doc(db, "trending", publicationId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+
+    const data = snap.data() as TrendingDoc;
+    let viewsCount = data.viewsCount || 0;
+    let favoritesCount = data.favoritesCount || 0;
+    let sharesCount = data.sharesCount || 0;
+    let discussionsCount = data.discussionsCount || 0;
+    let candidaturesCount = data.candidaturesCount || 0;
+    let likesCount = data.likesCount || 0;
+
+    switch (type) {
+      case "view": viewsCount += 1; break;
+      case "favorite": favoritesCount += 1; break;
+      case "share": sharesCount += 1; break;
+      case "comment": discussionsCount += 1; break;
+      case "application": candidaturesCount += 1; break;
+      case "jhonore": likesCount += 1; break;
+    }
+
+    const newScore = calculateTrendingScore({
+      viewsCount,
+      favoritesCount,
+      sharesCount,
+      discussionsCount,
+      candidaturesCount,
+      likesCount
+    });
+
+    await setDoc(ref, {
+      viewsCount,
+      favoritesCount,
+      sharesCount,
+      discussionsCount,
+      candidaturesCount,
+      likesCount,
+      score: newScore,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+  } catch (err) {
+    console.warn("Failed to record trending interaction in Firestore:", err);
+  }
 }
 
 /**
