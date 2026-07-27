@@ -105,6 +105,7 @@ export default function AdminFounderThrone({
 
   // Header Folded state
   const [isHeaderFolded, setIsHeaderFolded] = useState<boolean>(false);
+  const [isCriticalZoneFolded, setIsCriticalZoneFolded] = useState<boolean>(false);
 
   // Quick Action Modal States
   const [quickPremiumModalOpen, setQuickPremiumModalOpen] = useState<boolean>(false);
@@ -1684,233 +1685,286 @@ export default function AdminFounderThrone({
             className="space-y-8"
           >
             {/* 1. ZONE CRITIQUE (TOUJOURS EN HAUT) */}
-            <div className="space-y-3">
+            <div className="p-4 sm:p-5 bg-afri-bg-sec/40 border border-[#D4AF37]/40 rounded-3xl space-y-4 shadow-xl">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-mono uppercase font-black text-amber-500 tracking-widest flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-500 animate-pulse" />
-                  ZONE CRITIQUE (SOUVERAINETÉ PRIORITAIRE)
-                </h3>
-                <span className="text-[10px] font-mono text-emerald-400 font-bold flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" /> Sync Temps Réel Firebase
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                    <Zap className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-mono uppercase font-black text-amber-500 tracking-widest">
+                      ZONE CRITIQUE (SOUVERAINETÉ PRIORITAIRE)
+                    </h3>
+                    <p className="text-[10px] text-afri-text-sec font-mono">
+                      {isCriticalZoneFolded ? (
+                        <span className="text-amber-400 font-bold">
+                          {pendingPostsCount} publications en attente • {highAlertsCount} signalement(s) • {displayUsers.length} utilisateurs • {pendingBetaTransactions.length} dépôts
+                        </span>
+                      ) : (
+                        <span>Sync Temps Réel Firebase • Vue d'ensemble stratégique</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="hidden sm:inline-flex text-[10px] font-mono text-emerald-400 font-bold items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" /> Live
+                  </span>
+                  <button
+                    onClick={() => setIsCriticalZoneFolded(!isCriticalZoneFolded)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] rounded-xl text-xs font-mono font-bold transition-all cursor-pointer"
+                  >
+                    {isCriticalZoneFolded ? (
+                      <>
+                        <span>DÉPLIER</span>
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </>
+                    ) : (
+                      <>
+                        <span>PLIER</span>
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
-              <div 
-                className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-thin scrollbar-thumb-[#D4AF37]/40 flex-nowrap select-none touch-pan-x"
-                style={{ WebkitOverflowScrolling: 'touch' }}
-              >
-                {/* 🔥 Centre des Tendances (NEW) */}
-                <div
-                  onClick={() => setSelectedSection("tendances")}
-                  className="p-5 bg-gradient-to-br from-amber-500/20 via-afri-bg to-afri-bg border-2 border-[#D4AF37] hover:border-[#D4AF37] rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="p-2.5 bg-amber-500/20 border border-[#D4AF37]/40 rounded-2xl text-amber-400 group-hover:scale-110 transition-transform">
-                      <Flame className="w-5 h-5 animate-pulse" />
-                    </span>
-                    <span className="px-2 py-0.5 bg-amber-500 text-black rounded-full text-[9px] font-mono font-black animate-pulse">
-                      TENDANCES
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Centre des Tendances</span>
-                  <strong className="text-3xl font-display font-black text-amber-400 block mt-1">
-                    {featuredContentList.length || displayPosts.length || 0}
-                  </strong>
-                  <span className="text-[9px] font-mono text-amber-400 font-bold block mt-1">Gérer les tendances →</span>
-                </div>
-
-                {/* 👥 Utilisateurs connectés */}
-                <div
-                  onClick={() => setSelectedSection("users")}
-                  className="p-5 bg-gradient-to-br from-amber-500/15 via-afri-bg to-afri-bg border-2 border-[#D4AF37]/50 hover:border-[#D4AF37] rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="p-2.5 bg-amber-500/20 border border-[#D4AF37]/40 rounded-2xl text-[#D4AF37] group-hover:scale-110 transition-transform">
-                      <Users className="w-5 h-5" />
-                    </span>
-                    <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[9px] font-mono font-bold">
-                      LIVE
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Utilisateurs connectés</span>
-                  <strong className="text-3xl font-display font-black text-[#D4AF37] block mt-1">{displayUsers.length}</strong>
-                  <span className="text-[9px] font-mono text-emerald-400 font-bold block mt-1">Gérer les citoyens →</span>
-                </div>
-
-                {/* 📝 Publications en attente */}
-                <div
-                  onClick={() => setSelectedSection("publications")}
-                  className="p-5 bg-gradient-to-br from-sky-500/15 via-afri-bg to-afri-bg border-2 border-sky-500/40 hover:border-sky-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="p-2.5 bg-sky-500/20 border border-sky-500/40 rounded-2xl text-sky-400 group-hover:scale-110 transition-transform">
-                      <FileText className="w-5 h-5" />
-                    </span>
-                    {pendingPostsCount > 0 ? (
-                      <span className="px-2 py-0.5 bg-amber-500 text-black rounded-full text-[9px] font-mono font-black animate-pulse">
-                        {pendingPostsCount} ATTENTE
+              {!isCriticalZoneFolded && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 pt-1">
+                  {/* 🔥 Centre des Tendances */}
+                  <div
+                    onClick={() => setSelectedSection("tendances")}
+                    className="p-3.5 bg-gradient-to-br from-amber-500/15 via-afri-bg to-afri-bg border border-[#D4AF37]/60 hover:border-[#D4AF37] rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="p-2 bg-amber-500/20 border border-[#D4AF37]/40 rounded-xl text-amber-400 group-hover:scale-105 transition-transform">
+                        <Flame className="w-4 h-4 animate-pulse" />
                       </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-full text-[9px] font-mono">OK</span>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Publications en attente</span>
-                  <strong className="text-3xl font-display font-black text-sky-400 block mt-1">{pendingPostsCount}</strong>
-                  <span className="text-[9px] font-mono text-sky-400 font-bold block mt-1">Valider les publications →</span>
-                </div>
-
-                {/* 💳 Dépôts à valider */}
-                <div
-                  onClick={() => setSelectedSection("beta_escrow")}
-                  className="p-5 bg-gradient-to-br from-emerald-500/15 via-afri-bg to-afri-bg border-2 border-emerald-500/40 hover:border-emerald-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="p-2.5 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-emerald-400 group-hover:scale-110 transition-transform">
-                      <CreditCard className="w-5 h-5 animate-pulse" />
-                    </span>
-                    {pendingBetaTransactions.length > 0 ? (
-                      <span className="px-2 py-0.5 bg-emerald-500 text-black rounded-full text-[9px] font-mono font-black animate-pulse">
-                        {pendingBetaTransactions.length} À VALIDER
+                      <span className="px-1.5 py-0.5 bg-amber-500 text-black rounded text-[8px] font-mono font-black animate-pulse">
+                        TENDANCES
                       </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[9px] font-mono">ACTIF</span>
-                    )}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Tendances</span>
+                      <strong className="text-2xl font-display font-black text-amber-400 block mt-0.5">
+                        {featuredContentList.length || displayPosts.length || 0}
+                      </strong>
+                      <span className="text-[8px] font-mono text-amber-400 font-bold block mt-1">Gérer →</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Dépôts à valider</span>
-                  <strong className="text-3xl font-display font-black text-emerald-400 block mt-1">{pendingBetaTransactions.length}</strong>
-                  <span className="text-[9px] font-mono text-emerald-400 font-bold block mt-1">Valider les dépôts Bêta →</span>
-                </div>
 
-                {/* 🚨 Signalements urgents */}
-                <div
-                  onClick={() => setSelectedSection("veille")}
-                  className="p-5 bg-gradient-to-br from-red-500/15 via-afri-bg to-afri-bg border-2 border-red-500/40 hover:border-red-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="p-2.5 bg-red-500/20 border border-red-500/40 rounded-2xl text-red-400 group-hover:scale-110 transition-transform">
-                      <ShieldAlert className="w-5 h-5 animate-bounce" />
-                    </span>
-                    {highAlertsCount > 0 && (
-                      <span className="px-2 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-mono font-black animate-ping">
-                        URGENT
+                  {/* 👥 Utilisateurs connectés */}
+                  <div
+                    onClick={() => setSelectedSection("users")}
+                    className="p-3.5 bg-gradient-to-br from-amber-500/10 via-afri-bg to-afri-bg border border-[#D4AF37]/40 hover:border-[#D4AF37] rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="p-2 bg-amber-500/20 border border-[#D4AF37]/40 rounded-xl text-[#D4AF37] group-hover:scale-105 transition-transform">
+                        <Users className="w-4 h-4" />
                       </span>
-                    )}
+                      <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[8px] font-mono font-bold">
+                        LIVE
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Citoyens</span>
+                      <strong className="text-2xl font-display font-black text-[#D4AF37] block mt-0.5">{displayUsers.length}</strong>
+                      <span className="text-[8px] font-mono text-emerald-400 font-bold block mt-1">Gérer →</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Signalements urgents</span>
-                  <strong className="text-3xl font-display font-black text-red-400 block mt-1">{highAlertsCount}</strong>
-                  <span className="text-[9px] font-mono text-red-400 font-bold block mt-1">Traiter la veille critique →</span>
-                </div>
 
-                {/* 🛡 Vérifications KYC */}
-                <div
-                  onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("kyc"); }}
-                  className="p-5 bg-gradient-to-br from-purple-500/15 via-afri-bg to-afri-bg border-2 border-purple-500/40 hover:border-purple-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="p-2.5 bg-purple-500/20 border border-purple-500/40 rounded-2xl text-purple-400 group-hover:scale-110 transition-transform">
-                      <ShieldCheck className="w-5 h-5" />
-                    </span>
-                    {pendingKycCount > 0 ? (
-                      <span className="px-2 py-0.5 bg-purple-500 text-white rounded-full text-[9px] font-mono font-black animate-pulse">
-                        {pendingKycCount} DOSSIERS
+                  {/* 📝 Publications en attente */}
+                  <div
+                    onClick={() => setSelectedSection("publications")}
+                    className="p-3.5 bg-gradient-to-br from-sky-500/10 via-afri-bg to-afri-bg border border-sky-500/40 hover:border-sky-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="p-2 bg-sky-500/20 border border-sky-500/40 rounded-xl text-sky-400 group-hover:scale-105 transition-transform">
+                        <FileText className="w-4 h-4" />
                       </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full text-[9px] font-mono">KYC / ID</span>
-                    )}
+                      {pendingPostsCount > 0 ? (
+                        <span className="px-1.5 py-0.5 bg-amber-500 text-black rounded text-[8px] font-mono font-black animate-pulse">
+                          {pendingPostsCount} ATTENTE
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded text-[8px] font-mono">OK</span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Publications</span>
+                      <strong className="text-2xl font-display font-black text-sky-400 block mt-0.5">{pendingPostsCount}</strong>
+                      <span className="text-[8px] font-mono text-sky-400 font-bold block mt-1">Valider →</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Dossiers KYC (GOMBO ID)</span>
-                  <strong className="text-3xl font-display font-black text-purple-400 block mt-1">{kycRequests.length}</strong>
-                  <span className="text-[9px] font-mono text-purple-400 font-bold block mt-1">Valider / Rejeter KYC →</span>
-                </div>
 
-                {/* 📩 Tickets Support / Conseiller */}
-                <div
-                  onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("support"); }}
-                  className="p-5 bg-gradient-to-br from-indigo-500/15 via-afri-bg to-afri-bg border-2 border-indigo-500/40 hover:border-indigo-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="p-2.5 bg-indigo-500/20 border border-indigo-500/40 rounded-2xl text-indigo-400 group-hover:scale-110 transition-transform">
-                      <Mail className="w-5 h-5" />
-                    </span>
-                    {pendingTicketsCount > 0 ? (
-                      <span className="px-2 py-0.5 bg-indigo-500 text-white rounded-full text-[9px] font-mono font-black animate-pulse">
-                        {pendingTicketsCount} NOUVEAUX
+                  {/* 💳 Dépôts à valider */}
+                  <div
+                    onClick={() => setSelectedSection("beta_escrow")}
+                    className="p-3.5 bg-gradient-to-br from-emerald-500/10 via-afri-bg to-afri-bg border border-emerald-500/40 hover:border-emerald-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="p-2 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-400 group-hover:scale-105 transition-transform">
+                        <CreditCard className="w-4 h-4 animate-pulse" />
                       </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-full text-[9px] font-mono">SUPPORT</span>
-                    )}
+                      {pendingBetaTransactions.length > 0 ? (
+                        <span className="px-1.5 py-0.5 bg-emerald-500 text-black rounded text-[8px] font-mono font-black animate-pulse">
+                          {pendingBetaTransactions.length} VALIDER
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[8px] font-mono">ACTIF</span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Dépôts Bêta</span>
+                      <strong className="text-2xl font-display font-black text-emerald-400 block mt-0.5">{pendingBetaTransactions.length}</strong>
+                      <span className="text-[8px] font-mono text-emerald-400 font-bold block mt-1">Valider →</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Tickets Support / Conseiller</span>
-                  <strong className="text-3xl font-display font-black text-indigo-400 block mt-1">{ticketsSupport.length}</strong>
-                  <span className="text-[9px] font-mono text-indigo-400 font-bold block mt-1">Répondre aux messages →</span>
-                </div>
 
-                {/* ⚖️ Litiges Prestations */}
-                <div
-                  onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("disputes"); }}
-                  className="p-5 bg-gradient-to-br from-amber-600/15 via-afri-bg to-afri-bg border-2 border-amber-600/40 hover:border-amber-500 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="p-2.5 bg-amber-600/20 border border-amber-600/40 rounded-2xl text-amber-500 group-hover:scale-110 transition-transform">
-                      <AlertTriangle className="w-5 h-5 animate-pulse" />
-                    </span>
-                    {pendingDisputesCount > 0 ? (
-                      <span className="px-2 py-0.5 bg-amber-500 text-black rounded-full text-[9px] font-mono font-black animate-pulse">
-                        {pendingDisputesCount} LITIGES
+                  {/* 🚨 Signalements urgents */}
+                  <div
+                    onClick={() => setSelectedSection("veille")}
+                    className="p-3.5 bg-gradient-to-br from-red-500/10 via-afri-bg to-afri-bg border border-red-500/40 hover:border-red-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="p-2 bg-red-500/20 border border-red-500/40 rounded-xl text-red-400 group-hover:scale-105 transition-transform">
+                        <ShieldAlert className="w-4 h-4 animate-bounce" />
                       </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-amber-600/20 text-amber-500 border border-amber-600/30 rounded-full text-[9px] font-mono">ARBITRAGE</span>
-                    )}
+                      {highAlertsCount > 0 && (
+                        <span className="px-1.5 py-0.5 bg-red-500 text-white rounded text-[8px] font-mono font-black animate-ping">
+                          URGENT
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Signalements</span>
+                      <strong className="text-2xl font-display font-black text-red-400 block mt-0.5">{highAlertsCount}</strong>
+                      <span className="text-[8px] font-mono text-red-400 font-bold block mt-1">Traiter →</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Litiges Gombos & Prestations</span>
-                  <strong className="text-3xl font-display font-black text-amber-500 block mt-1">{disputesList.length}</strong>
-                  <span className="text-[9px] font-mono text-amber-500 font-bold block mt-1">Arbitrer les litiges →</span>
-                </div>
 
-                {/* 🐛 Signalements Bugs */}
-                <div
-                  onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("bugs"); }}
-                  className="p-5 bg-gradient-to-br from-rose-500/15 via-afri-bg to-afri-bg border-2 border-rose-500/40 hover:border-rose-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="p-2.5 bg-rose-500/20 border border-rose-500/40 rounded-2xl text-rose-400 group-hover:scale-110 transition-transform">
-                      <Wrench className="w-5 h-5" />
-                    </span>
-                    {pendingBugsCount > 0 ? (
-                      <span className="px-2 py-0.5 bg-rose-500 text-white rounded-full text-[9px] font-mono font-black animate-pulse">
-                        {pendingBugsCount} BUGS
+                  {/* 🛡 Vérifications KYC */}
+                  <div
+                    onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("kyc"); }}
+                    className="p-3.5 bg-gradient-to-br from-purple-500/10 via-afri-bg to-afri-bg border border-purple-500/40 hover:border-purple-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="p-2 bg-purple-500/20 border border-purple-500/40 rounded-xl text-purple-400 group-hover:scale-105 transition-transform">
+                        <ShieldCheck className="w-4 h-4" />
                       </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full text-[9px] font-mono">SIGNALEMENTS</span>
-                    )}
+                      {pendingKycCount > 0 ? (
+                        <span className="px-1.5 py-0.5 bg-purple-500 text-white rounded text-[8px] font-mono font-black animate-pulse">
+                          {pendingKycCount} KYC
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded text-[8px] font-mono">ID</span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Dossiers KYC</span>
+                      <strong className="text-2xl font-display font-black text-purple-400 block mt-0.5">{kycRequests.length}</strong>
+                      <span className="text-[8px] font-mono text-purple-400 font-bold block mt-1">Vérifier →</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Rapports de Bugs</span>
-                  <strong className="text-3xl font-display font-black text-rose-400 block mt-1">{bugReports.length}</strong>
-                  <span className="text-[9px] font-mono text-rose-400 font-bold block mt-1">Corriger les bugs →</span>
-                </div>
 
-                {/* 🔔 Centre de Notifications */}
-                <div
-                  onClick={() => setSelectedSection("notifications_hub")}
-                  className="p-5 bg-gradient-to-br from-amber-500/15 via-afri-bg to-afri-bg border-2 border-[#D4AF37]/50 hover:border-[#D4AF37] rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="p-2.5 bg-amber-500/20 border border-[#D4AF37]/40 rounded-2xl text-[#D4AF37] group-hover:scale-110 transition-transform">
-                      <Bell className="w-5 h-5 animate-pulse" />
-                    </span>
-                    {unreadNotifsCount > 0 ? (
-                      <span className="px-2 py-0.5 bg-[#D4AF37] text-black rounded-full text-[9px] font-mono font-black animate-pulse">
-                        {unreadNotifsCount} ALERTS
+                  {/* 📩 Tickets Support */}
+                  <div
+                    onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("support"); }}
+                    className="p-3.5 bg-gradient-to-br from-indigo-500/10 via-afri-bg to-afri-bg border border-indigo-500/40 hover:border-indigo-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="p-2 bg-indigo-500/20 border border-indigo-500/40 rounded-xl text-indigo-400 group-hover:scale-105 transition-transform">
+                        <Mail className="w-4 h-4" />
                       </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 rounded-full text-[9px] font-mono">DÉCENTRALISÉ</span>
-                    )}
+                      {pendingTicketsCount > 0 ? (
+                        <span className="px-1.5 py-0.5 bg-indigo-500 text-white rounded text-[8px] font-mono font-black animate-pulse">
+                          {pendingTicketsCount} NOUVEAU
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded text-[8px] font-mono">SUPPORT</span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Tickets Support</span>
+                      <strong className="text-2xl font-display font-black text-indigo-400 block mt-0.5">{ticketsSupport.length}</strong>
+                      <span className="text-[8px] font-mono text-indigo-400 font-bold block mt-1">Répondre →</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Centre de Notifications</span>
-                  <strong className="text-3xl font-display font-black text-[#D4AF37] block mt-1">{unreadNotifsCount}</strong>
-                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-1">Consulter les alertes →</span>
+
+                  {/* ⚖️ Litiges Prestations */}
+                  <div
+                    onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("disputes"); }}
+                    className="p-3.5 bg-gradient-to-br from-amber-600/10 via-afri-bg to-afri-bg border border-amber-600/40 hover:border-amber-500 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="p-2 bg-amber-600/20 border border-amber-600/40 rounded-xl text-amber-500 group-hover:scale-105 transition-transform">
+                        <AlertTriangle className="w-4 h-4 animate-pulse" />
+                      </span>
+                      {pendingDisputesCount > 0 ? (
+                        <span className="px-1.5 py-0.5 bg-amber-500 text-black rounded text-[8px] font-mono font-black animate-pulse">
+                          {pendingDisputesCount} LITIGE
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 bg-amber-600/20 text-amber-500 border border-amber-600/30 rounded text-[8px] font-mono">ARBITRAGE</span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Litiges Prestations</span>
+                      <strong className="text-2xl font-display font-black text-amber-500 block mt-0.5">{disputesList.length}</strong>
+                      <span className="text-[8px] font-mono text-amber-500 font-bold block mt-1">Arbitrer →</span>
+                    </div>
+                  </div>
+
+                  {/* 🐛 Signalements Bugs */}
+                  <div
+                    onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("bugs"); }}
+                    className="p-3.5 bg-gradient-to-br from-rose-500/10 via-afri-bg to-afri-bg border border-rose-500/40 hover:border-rose-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="p-2 bg-rose-500/20 border border-rose-500/40 rounded-xl text-rose-400 group-hover:scale-105 transition-transform">
+                        <Wrench className="w-4 h-4" />
+                      </span>
+                      {pendingBugsCount > 0 ? (
+                        <span className="px-1.5 py-0.5 bg-rose-500 text-white rounded text-[8px] font-mono font-black animate-pulse">
+                          {pendingBugsCount} BUG
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded text-[8px] font-mono">BUGS</span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Rapports de Bugs</span>
+                      <strong className="text-2xl font-display font-black text-rose-400 block mt-0.5">{bugReports.length}</strong>
+                      <span className="text-[8px] font-mono text-rose-400 font-bold block mt-1">Corriger →</span>
+                    </div>
+                  </div>
+
+                  {/* 🔔 Centre de Notifications */}
+                  <div
+                    onClick={() => setSelectedSection("notifications_hub")}
+                    className="p-3.5 bg-gradient-to-br from-amber-500/10 via-afri-bg to-afri-bg border border-[#D4AF37]/40 hover:border-[#D4AF37] rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="p-2 bg-amber-500/20 border border-[#D4AF37]/40 rounded-xl text-[#D4AF37] group-hover:scale-105 transition-transform">
+                        <Bell className="w-4 h-4 animate-pulse" />
+                      </span>
+                      {unreadNotifsCount > 0 ? (
+                        <span className="px-1.5 py-0.5 bg-[#D4AF37] text-black rounded text-[8px] font-mono font-black animate-pulse">
+                          {unreadNotifsCount} ALERTS
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 rounded text-[8px] font-mono">NOTIFS</span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Notifications</span>
+                      <strong className="text-2xl font-display font-black text-[#D4AF37] block mt-0.5">{unreadNotifsCount}</strong>
+                      <span className="text-[8px] font-mono text-[#D4AF37] font-bold block mt-1">Consulter →</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* 2. ACTIONS RAPIDES DU FONDATEUR */}
@@ -5073,7 +5127,7 @@ export default function AdminFounderThrone({
       {/* =========================================================================
                       SUPER FOUNDER FIXED BOTTOM NAVIGATION BAR
          ========================================================================= */}
-      <div className={`fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-2 px-4 sm:px-6 flex items-center z-45 sm:rounded-2xl w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1 sm:gap-4 select-none ${
+      <div className={`fixed bottom-0 sm:bottom-4 left-0 sm:left-1/2 right-0 sm:right-auto sm:-translate-x-1/2 backdrop-blur-md border-t sm:border border-[#D4AF37]/50 p-1.5 px-3 sm:px-6 flex items-center z-45 sm:rounded-2xl w-full sm:w-auto min-w-[320px] max-w-full sm:max-w-4xl mx-auto overflow-x-auto scrollbar-none flex-nowrap gap-1.5 sm:gap-4 select-none pr-6 ${
         isDark ? 'bg-afri-bg/95 shadow-[0_8px_35px_rgba(212,175,55,0.35)]' : 'bg-[#EDEDED]/95 shadow-[0_8px_35px_rgba(0,0,0,0.15)]'
       }`}>
         {/* 1. TRÔNE */}
@@ -5083,12 +5137,12 @@ export default function AdminFounderThrone({
             setSelectedSection(null);
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
-          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2.5 sm:px-4 rounded-lg ${
             selectedSection === null ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
-          <Crown className="w-4.5 h-4.5" />
-          <span className="text-[9px] font-mono uppercase tracking-wider">Le Trône</span>
+          <Crown className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider whitespace-nowrap">Le Trône</span>
         </button>
 
         {/* 2. VISION */}
@@ -5098,12 +5152,12 @@ export default function AdminFounderThrone({
             setSelectedSection("vision");
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
-          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2.5 sm:px-4 rounded-lg ${
             selectedSection === "vision" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
-          <Globe className="w-4.5 h-4.5" />
-          <span className="text-[9px] font-mono uppercase tracking-wider">Vision</span>
+          <Globe className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider whitespace-nowrap">Vision</span>
         </button>
 
         {/* 3. UNIVERS */}
@@ -5113,12 +5167,12 @@ export default function AdminFounderThrone({
             setSelectedSection("univers");
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
-          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2.5 sm:px-4 rounded-lg ${
             selectedSection === "univers" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
-          <Landmark className="w-4.5 h-4.5" />
-          <span className="text-[9px] font-mono uppercase tracking-wider">Univers</span>
+          <Landmark className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider whitespace-nowrap">Univers</span>
         </button>
 
         {/* 4. BOUCLIER */}
@@ -5128,12 +5182,12 @@ export default function AdminFounderThrone({
             setSelectedSection("bouclier");
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
-          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2.5 sm:px-4 rounded-lg ${
             selectedSection === "bouclier" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
-          <ShieldCheck className="w-4.5 h-4.5" />
-          <span className="text-[9px] font-mono uppercase tracking-wider">Bouclier</span>
+          <ShieldCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider whitespace-nowrap">Bouclier</span>
         </button>
 
         {/* 5. REVENUS */}
@@ -5143,12 +5197,12 @@ export default function AdminFounderThrone({
             setSelectedSection("revenus");
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
-          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2.5 sm:px-4 rounded-lg ${
             selectedSection === "revenus" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
-          <Coins className="w-4.5 h-4.5" />
-          <span className="text-[9px] font-mono uppercase tracking-wider">Revenus</span>
+          <Coins className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider whitespace-nowrap">Revenus</span>
         </button>
 
         {/* 6. INTELLIGENCE */}
@@ -5158,12 +5212,12 @@ export default function AdminFounderThrone({
             setSelectedSection("intelligence");
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
-          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2.5 sm:px-4 rounded-lg ${
             selectedSection === "intelligence" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
-          <Brain className="w-4.5 h-4.5" />
-          <span className="text-[9px] font-mono uppercase tracking-wider">Console</span>
+          <Brain className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider whitespace-nowrap">Console</span>
         </button>
 
         {/* 7. JOURNAL */}
@@ -5173,12 +5227,12 @@ export default function AdminFounderThrone({
             setSelectedSection("journal");
             try { audioSynth?.playValidationSuccess(); } catch (_) {}
           }}
-          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg ${
+          className={`flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2.5 sm:px-4 rounded-lg ${
             selectedSection === "journal" ? "text-[#D4AF37] scale-105 bg-afri-bg-sec/10 font-black" : "text-afri-text-sec hover:text-afri-text"
           }`}
         >
-          <Scroll className="w-4.5 h-4.5" />
-          <span className="text-[9px] font-mono uppercase tracking-wider">Journal</span>
+          <Scroll className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider whitespace-nowrap">Journal</span>
         </button>
 
         {/* 8. QUITTER */}
@@ -5187,10 +5241,10 @@ export default function AdminFounderThrone({
           onClick={() => {
             if (onExit) onExit();
           }}
-          className="flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-3 sm:px-4 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-950/20"
+          className="flex-none flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 outline-none py-1 px-2.5 sm:px-4 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-950/20 mr-4"
         >
-          <ArrowLeft className="w-4.5 h-4.5" />
-          <span className="text-[9px] font-mono uppercase tracking-wider">Quitter</span>
+          <ArrowLeft className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider whitespace-nowrap">Quitter</span>
         </button>
       </div>
 
