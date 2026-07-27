@@ -224,10 +224,10 @@ export function PublicProfileModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ type: "spring", stiffness: 350, damping: 28 }}
-          className="relative w-full max-w-2xl bg-[#0F0F12] border border-afri-gold/30 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden my-auto max-h-[92vh] flex flex-col font-sans text-afri-text"
+          className="relative w-full max-w-2xl bg-afri-bg-sec border border-afri-gold/30 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden my-auto max-h-[92vh] flex flex-col font-sans text-afri-text"
         >
           {/* Header Bar */}
-          <div className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3.5 bg-[#0F0F12]/90 backdrop-blur-md border-b border-afri-border/60">
+          <div className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3.5 bg-afri-bg-sec/90 backdrop-blur-md border-b border-afri-border/60">
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono font-black text-afri-gold tracking-wider uppercase">
                 FICHE PUBLIQUE • CV MUSICAL
@@ -241,7 +241,7 @@ export function PublicProfileModal({
 
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-afri-bg-sec border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-white hover:bg-red-500/20 hover:border-red-500/40 transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-afri-bg-sec border border-afri-border flex items-center justify-center text-afri-text-sec hover:text-afri-text hover:bg-red-500/20 hover:border-red-500/40 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -270,7 +270,7 @@ export function PublicProfileModal({
             ) : (
               <>
                 {/* 1. TOP CARRIER CARD */}
-                <div className="relative overflow-hidden rounded-2xl border-2 border-afri-gold/40 bg-gradient-to-br from-[#16161C] via-[#0F0F12] to-[#16161C] p-4 xs:p-5 sm:p-6 shadow-xl space-y-4">
+                <div className="relative overflow-hidden rounded-2xl border-2 border-afri-gold/40 bg-gradient-to-br from-afri-bg-sec via-afri-bg to-afri-bg-sec p-4 xs:p-5 sm:p-6 shadow-xl space-y-4">
                   {/* Glowing background accent */}
                   <div className="absolute top-0 right-0 w-36 h-36 bg-afri-gold/10 blur-[60px] rounded-full pointer-events-none" />
 
@@ -708,14 +708,14 @@ export function PublicProfileModal({
       {/* REPORT DIALOG MODAL */}
       {showReportDialog && (
         <div className="fixed inset-0 z-[10005] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="w-full max-w-md bg-[#121217] border border-red-500/40 rounded-2xl p-5 space-y-4 shadow-2xl font-sans">
+          <div className="w-full max-w-md bg-afri-bg-sec border border-red-500/40 rounded-2xl p-5 space-y-4 shadow-2xl font-sans text-afri-text">
             <div className="flex items-center justify-between border-b border-afri-border/60 pb-3">
               <h3 className="text-sm font-black text-red-400 uppercase tracking-wider flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4" /> Signaler ce membre
               </h3>
               <button
                 onClick={() => setShowReportDialog(false)}
-                className="text-afri-text-sec hover:text-white cursor-pointer"
+                className="text-afri-text-sec hover:text-afri-text cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>

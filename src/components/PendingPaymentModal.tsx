@@ -83,7 +83,7 @@ export const PendingPaymentModal: React.FC<PendingPaymentModalProps> = ({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1 rounded-full bg-afri-bg-ter text-afri-text-sec hover:text-white transition-colors"
+            className="absolute top-4 right-4 p-1 rounded-full bg-afri-bg-ter text-afri-text-sec hover:text-afri-text transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

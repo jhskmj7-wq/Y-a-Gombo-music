@@ -604,47 +604,61 @@ export default function AfrigomboWalletDashboard({
         ) : (
           <div className="divide-y divide-afri-border">
             {filteredTxs.map(tx => {
-              const isFlowIn = tx.type === "deposit" || tx.type === "release" || tx.type === "refund";
-              
+              const isFlowIn = tx.type === "deposit" || tx.type === "depot" || tx.type === "release" || tx.type === "deblocage_cachet" || tx.type === "refund" || tx.type === "remboursement";
+              const typeLabel = 
+                tx.type === "depot" || tx.type === "deposit" ? "Dépôt" :
+                tx.type === "debit_publication" ? "Débit publication" :
+                tx.type === "commission_plateforme" || tx.type === "commission" ? "Commission AFRIGOMBO" :
+                tx.type === "fonds_bloques" ? "Fonds bloqués" :
+                tx.type === "deblocage_cachet" || tx.type === "release" ? "Déblocage cachet" :
+                tx.type === "remboursement" || tx.type === "refund" ? "Remboursement" :
+                tx.type;
+
               return (
-                <div key={tx.id} className="py-4 flex justify-between items-center gap-4">
+                <div key={tx.id} className="py-3.5 flex justify-between items-center gap-4">
                   <div className="flex items-start gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center border shrink-0 mt-0.5 ${
-                      tx.type === "deposit" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
-                      tx.type === "withdrawal" ? "bg-amber-500/10 border-amber-500/20 text-amber-500" :
-                      tx.type === "release" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
-                      tx.type === "refund" ? "bg-red-500/10 border-red-500/20 text-red-400" :
+                      isFlowIn ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+                      tx.type === "commission_plateforme" || tx.type === "commission" ? "bg-amber-500/10 border-amber-500/20 text-amber-500" :
+                      tx.type === "fonds_bloques" ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" :
                       "bg-afri-bg border-afri-border text-afri-text-sec"
                     }`}>
-                      {tx.type === "deposit" ? <ArrowUpRight className="w-4 h-4" /> :
+                      {isFlowIn ? <ArrowUpRight className="w-4 h-4" /> :
                        tx.type === "withdrawal" ? <ArrowDownLeft className="w-4 h-4" /> :
-                       tx.type === "release" ? <Unlock className="w-4 h-4" /> :
-                       tx.type === "refund" ? <ArrowDownLeft className="w-4 h-4" /> :
-                       <Lock className="w-4 h-4" />}
+                       tx.type === "fonds_bloques" || tx.type === "debit_publication" ? <Lock className="w-4 h-4" /> :
+                       <ShieldCheck className="w-4 h-4" />}
                     </div>
 
-                    <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-afri-text">{tx.description || "Opération financière"}</p>
+                    <div className="space-y-0.5 text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-mono font-extrabold uppercase px-1.5 py-0.5 bg-afri-bg border border-afri-border text-[#D4AF37] rounded">
+                          {typeLabel}
+                        </span>
+                        <p className="text-xs font-bold text-afri-text truncate max-w-[200px] sm:max-w-[300px]">
+                          {tx.description || "Opération financière"}
+                        </p>
+                      </div>
                       <div className="flex items-center gap-2 text-[9px] font-mono text-afri-text-muted">
-                        <span>{tx.id}</span>
+                        <span>ID: {tx.id}</span>
                         <span>•</span>
-                        <span>{tx.createdAt ? new Date(tx.createdAt).toLocaleString("fr-FR") : "Date inconnue"}</span>
-                        {tx.provider && (
-                          <>
-                            <span>•</span>
-                            <span className="uppercase text-afri-text-sec font-bold">{tx.provider}</span>
-                          </>
-                        )}
+                        <span>{tx.createdAt ? new Date(tx.createdAt).toLocaleString("fr-FR") : "Date récente"}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-right space-y-1">
+                  <div className="text-right space-y-1 shrink-0">
                     <span className={`text-xs font-mono font-black ${isFlowIn ? "text-emerald-400" : "text-amber-500"}`}>
-                      {isFlowIn ? "+" : "-"}{tx.amount?.toLocaleString()} FCFA
+                      {isFlowIn ? "+" : "-"}{(tx.amount || 0).toLocaleString()} FCFA
                     </span>
-                    <span className="block text-[8px] font-mono py-0.5 px-1.5 bg-afri-bg text-afri-text-sec rounded border border-afri-border text-center max-w-[80px] ml-auto uppercase font-bold">
-                      {tx.status || "Terminé"}
+                    <span className={`block text-[8px] font-mono py-0.5 px-1.5 rounded border text-center uppercase font-bold ${
+                      tx.status === "success" || tx.status === "fonds_liberes" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                      tx.status === "fonds_bloques" ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" :
+                      "bg-afri-bg text-afri-text-sec border-afri-border"
+                    }`}>
+                      {tx.status === "fonds_bloques" ? "Séquestre" :
+                       tx.status === "fonds_liberes" ? "Libéré" :
+                       tx.status === "success" ? "Succès" :
+                       tx.status || "Terminé"}
                     </span>
                   </div>
                 </div>
@@ -778,9 +792,14 @@ export default function AfrigomboWalletDashboard({
                     <p className="text-afri-gold font-mono text-base font-black">
                       +{Number(amount).toLocaleString()} FCFA
                     </p>
-                    <p className="text-afri-text-sec text-xs leading-relaxed max-w-sm mx-auto">
-                      Votre demande de rechargement de <strong>{Number(amount).toLocaleString()} FCFA</strong> via <strong>{operator.toUpperCase()}</strong> ({phoneNumber}) est enregistrée. Cliquez ci-dessous pour contacter un conseiller et finaliser le paiement.
-                    </p>
+                    <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl space-y-1 my-2">
+                      <p className="text-[#D4AF37] text-xs font-bold leading-relaxed max-w-sm mx-auto">
+                        Pour effectuer un dépôt pendant la phase Bêta, veuillez contacter le support AFRIGOMBO.
+                      </p>
+                      <p className="text-afri-text-sec text-[10px] leading-tight">
+                        Demande de {Number(amount).toLocaleString()} FCFA via {operator.toUpperCase()} ({phoneNumber}) enregistrée.
+                      </p>
+                    </div>
                   </div>
 
                   <div className="space-y-2">

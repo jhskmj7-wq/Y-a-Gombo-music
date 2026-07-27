@@ -83,10 +83,10 @@ export default function AuthDiagnosticModal({ isOpen, onClose }: AuthDiagnosticM
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl bg-[#0F0F12] border border-[#D4AF37]/40 rounded-2xl shadow-[0_10px_50px_rgba(0,0,0,0.9)] overflow-hidden text-afri-text p-6 space-y-5 my-auto"
+        className="w-full max-w-2xl bg-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl shadow-[0_10px_50px_rgba(0,0,0,0.9)] overflow-hidden text-afri-text p-6 space-y-5 my-auto"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex items-center justify-between border-b border-afri-border pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
               <Terminal className="w-5 h-5" />
@@ -95,14 +95,14 @@ export default function AuthDiagnosticModal({ isOpen, onClose }: AuthDiagnosticM
               <h2 className="text-base font-mono font-black uppercase tracking-wider text-[#D4AF37]">
                 Diagnostic Authentification Firebase & Google SSO
               </h2>
-              <p className="text-[11px] text-zinc-400">
+              <p className="text-[11px] text-afri-text-sec">
                 Outil de stabilisation session & persistance Chrome Android / Web
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-zinc-400 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition"
+            className="p-2 text-afri-text-sec hover:text-afri-text rounded-lg bg-afri-bg hover:bg-afri-bg/80 border border-afri-border transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -110,29 +110,29 @@ export default function AuthDiagnosticModal({ isOpen, onClose }: AuthDiagnosticM
 
         {/* Status Badges */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-          <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-            <span className="text-zinc-500 block text-[9px] uppercase">Firebase Auth</span>
+          <div className="bg-afri-bg p-2.5 rounded-xl border border-afri-border">
+            <span className="text-afri-text-sec block text-[9px] uppercase">Firebase Auth</span>
             <span className={`font-bold ${auth ? "text-emerald-400" : "text-rose-400"}`}>
               {auth ? "✅ Opérationnel" : "❌ Indisponible"}
             </span>
           </div>
 
-          <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-            <span className="text-zinc-500 block text-[9px] uppercase">Persistance</span>
+          <div className="bg-afri-bg p-2.5 rounded-xl border border-afri-border">
+            <span className="text-afri-text-sec block text-[9px] uppercase">Persistance</span>
             <span className="font-bold text-amber-400">
               IndexedDB / Local
             </span>
           </div>
 
-          <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-            <span className="text-zinc-500 block text-[9px] uppercase">Session Active</span>
+          <div className="bg-afri-bg p-2.5 rounded-xl border border-afri-border">
+            <span className="text-afri-text-sec block text-[9px] uppercase">Session Active</span>
             <span className={`font-bold ${currentUser ? "text-emerald-400" : "text-rose-400"}`}>
               {currentUser ? "✅ Connecté" : "❌ Déconnecté"}
             </span>
           </div>
 
-          <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-            <span className="text-zinc-500 block text-[9px] uppercase">Profil Firestore</span>
+          <div className="bg-afri-bg p-2.5 rounded-xl border border-afri-border">
+            <span className="text-afri-text-sec block text-[9px] uppercase">Profil Firestore</span>
             <span className={`font-bold ${profile ? "text-emerald-400" : "text-rose-400"}`}>
               {profile ? "✅ Chargé" : "❌ Indisponible"}
             </span>
@@ -140,35 +140,35 @@ export default function AuthDiagnosticModal({ isOpen, onClose }: AuthDiagnosticM
         </div>
 
         {/* Inspection Table */}
-        <div className="bg-black/50 border border-white/10 rounded-xl p-4 space-y-3 font-mono text-xs overflow-x-auto">
-          <div className="flex justify-between border-b border-white/10 pb-2 text-zinc-400 font-bold uppercase text-[10px]">
+        <div className="bg-afri-bg border border-afri-border rounded-xl p-4 space-y-3 font-mono text-xs overflow-x-auto">
+          <div className="flex justify-between border-b border-afri-border pb-2 text-afri-text-sec font-bold uppercase text-[10px]">
             <span>Propriété</span>
             <span>Valeur Enregistrée</span>
           </div>
 
           <div className="space-y-2">
-            <div className="flex justify-between items-center py-1 border-b border-white/5">
-              <span className="text-zinc-400">UID :</span>
-              <span className="text-amber-300 font-bold">{currentUser?.uid || profile?.uid || "Non défini"}</span>
+            <div className="flex justify-between items-center py-1 border-b border-afri-border/50">
+              <span className="text-afri-text-sec">UID :</span>
+              <span className="text-amber-400 font-bold">{currentUser?.uid || profile?.uid || "Non défini"}</span>
             </div>
 
-            <div className="flex justify-between items-center py-1 border-b border-white/5">
-              <span className="text-zinc-400">Nom Complet :</span>
-              <span className="text-white font-bold">{currentUser?.displayName || profile?.displayName || "Aucun"}</span>
+            <div className="flex justify-between items-center py-1 border-b border-afri-border/50">
+              <span className="text-afri-text-sec">Nom Complet :</span>
+              <span className="text-afri-text font-bold">{currentUser?.displayName || profile?.displayName || "Aucun"}</span>
             </div>
 
-            <div className="flex justify-between items-center py-1 border-b border-white/5">
-              <span className="text-zinc-400">Email :</span>
-              <span className="text-cyan-300 font-bold">{currentUser?.email || profile?.email || "Aucun"}</span>
+            <div className="flex justify-between items-center py-1 border-b border-afri-border/50">
+              <span className="text-afri-text-sec">Email :</span>
+              <span className="text-cyan-400 font-bold">{currentUser?.email || profile?.email || "Aucun"}</span>
             </div>
 
-            <div className="flex justify-between items-center py-1 border-b border-white/5">
-              <span className="text-zinc-400">Fournisseur :</span>
-              <span className="text-indigo-300 font-bold">{profile?.provider || currentUser?.providerData?.[0]?.providerId || "google.com"}</span>
+            <div className="flex justify-between items-center py-1 border-b border-afri-border/50">
+              <span className="text-afri-text-sec">Fournisseur :</span>
+              <span className="text-indigo-400 font-bold">{profile?.provider || currentUser?.providerData?.[0]?.providerId || "google.com"}</span>
             </div>
 
-            <div className="flex justify-between items-start py-1 border-b border-white/5 gap-2">
-              <span className="text-zinc-400 shrink-0">Photo / Avatar :</span>
+            <div className="flex justify-between items-start py-1 border-b border-afri-border/50 gap-2">
+              <span className="text-afri-text-sec shrink-0">Photo / Avatar :</span>
               <div className="flex items-center gap-2 overflow-hidden text-right">
                 {(currentUser?.photoURL || profile?.photoURL || profile?.avatarUrl) ? (
                   <img
@@ -177,24 +177,24 @@ export default function AuthDiagnosticModal({ isOpen, onClose }: AuthDiagnosticM
                     className="w-6 h-6 rounded-full border border-amber-400 object-cover"
                   />
                 ) : (
-                  <span className="text-zinc-500">Aucune photo</span>
+                  <span className="text-afri-text-sec">Aucune photo</span>
                 )}
-                <span className="text-[10px] text-zinc-400 truncate max-w-[200px]">
+                <span className="text-[10px] text-afri-text-sec truncate max-w-[200px]">
                   {currentUser?.photoURL || profile?.photoURL || profile?.avatarUrl || "—"}
                 </span>
               </div>
             </div>
 
-            <div className="flex justify-between items-center py-1 border-b border-white/5">
-              <span className="text-zinc-400">Rôle :</span>
+            <div className="flex justify-between items-center py-1 border-b border-afri-border/50">
+              <span className="text-afri-text-sec">Rôle :</span>
               <span className="text-amber-400 font-bold uppercase">{profile?.role || "Non défini"}</span>
             </div>
           </div>
         </div>
 
         {/* Redirect Result & Diagnostic Log */}
-        <div className="bg-zinc-950 p-3 rounded-xl border border-white/10 text-xs font-mono">
-          <span className="text-zinc-500 block text-[9px] uppercase font-bold mb-1">
+        <div className="bg-afri-bg p-3 rounded-xl border border-afri-border text-xs font-mono">
+          <span className="text-afri-text-sec block text-[9px] uppercase font-bold mb-1">
             Résultat Redirection / Test
           </span>
           <p className="text-emerald-400 break-words">{redirectLog}</p>
@@ -213,7 +213,7 @@ export default function AuthDiagnosticModal({ isOpen, onClose }: AuthDiagnosticM
 
           <button
             onClick={runRedirectCheck}
-            className="flex-1 min-w-[140px] px-3 py-2.5 bg-white/10 text-white font-mono font-bold text-xs uppercase rounded-xl hover:bg-white/20 transition flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-1 min-w-[140px] px-3 py-2.5 bg-afri-bg text-afri-text font-mono font-bold text-xs uppercase rounded-xl border border-afri-border hover:bg-afri-bg/80 transition flex items-center justify-center gap-2 cursor-pointer"
           >
             <Database className="w-4 h-4 text-amber-400" />
             Vérifier Redirection
@@ -221,14 +221,14 @@ export default function AuthDiagnosticModal({ isOpen, onClose }: AuthDiagnosticM
 
           <button
             onClick={async () => await refreshProfile()}
-            className="px-3 py-2.5 bg-white/5 border border-white/10 text-zinc-300 font-mono font-bold text-xs uppercase rounded-xl hover:bg-white/10 transition flex items-center justify-center gap-2 cursor-pointer"
+            className="px-3 py-2.5 bg-afri-bg border border-afri-border text-afri-text font-mono font-bold text-xs uppercase rounded-xl hover:bg-afri-bg/80 transition flex items-center justify-center gap-2 cursor-pointer"
           >
             Rafraîchir Profil
           </button>
 
           <button
             onClick={copyReport}
-            className="px-3 py-2.5 bg-white/5 border border-white/10 text-amber-400 font-mono font-bold text-xs uppercase rounded-xl hover:bg-white/10 transition flex items-center justify-center gap-2 cursor-pointer"
+            className="px-3 py-2.5 bg-afri-bg border border-afri-border text-amber-400 font-mono font-bold text-xs uppercase rounded-xl hover:bg-afri-bg/80 transition flex items-center justify-center gap-2 cursor-pointer"
           >
             {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
             {copied ? "Copié !" : "Copier Rapport"}

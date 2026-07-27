@@ -7,10 +7,11 @@ import {
   Wallet, ArrowUpRight, CheckCircle2
 } from "lucide-react";
 import { db, gomboDB } from "../firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, addDoc, collection } from "firebase/firestore";
 import { UserProfile, SocialPost } from "../types";
 import GomboSecureModal from "./GomboSecureModal";
 import { supportConfig } from "../supportConfig";
+import { calculatePlatformFee, calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
 
 const ABIDJAN_COMMUNES = [
@@ -180,23 +181,29 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       }
 
       const cachetVal = budget ? Number(budget) : (selectedType === "opportunite" || selectedType === "renfort" ? 25000 : 0);
-      const feeAmount = Math.round(cachetVal * 0.025);
-      const totalAmountToDeposit = cachetVal + feeAmount;
+      const financials = calculatePublicationFinancials(cachetVal);
+      const feeAmount = financials.fee;
+      const totalAmountToDeposit = financials.total;
       const reqAmount = totalAmountToDeposit > 0 ? totalAmountToDeposit : cachetVal;
 
       const postTag = PUBLICATION_TYPES.find(t => t.id === selectedType)?.label || selectedType;
 
       // Check User Wallet Balance in Firestore
       let liveSolde = 0;
+      let liveBloque = 0;
       try {
         const uSnap = await getDoc(doc(db, "users", currentUserProfile.uid));
         if (uSnap.exists()) {
-          liveSolde = uSnap.data()?.wallet?.soldeDisponible ?? 0;
+          const uData = uSnap.data();
+          liveSolde = uData?.wallet?.soldeDisponible ?? 0;
+          liveBloque = uData?.wallet?.soldeBloque ?? 0;
         } else {
           liveSolde = (currentUserProfile as any)?.wallet?.soldeDisponible ?? 0;
+          liveBloque = (currentUserProfile as any)?.wallet?.soldeBloque ?? 0;
         }
       } catch (_) {
         liveSolde = (currentUserProfile as any)?.wallet?.soldeDisponible ?? 0;
+        liveBloque = (currentUserProfile as any)?.wallet?.soldeBloque ?? 0;
       }
 
       // CAS 2 : Solde Insuffisant -> Bloquer la publication directe
@@ -220,28 +227,62 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
       // CAS 1 : Solde Suffisant -> PAIÉ ET PUBLIÉ IMMÉDIATEMENT
       let newSolde = liveSolde;
+      let newBloque = liveBloque;
       if (reqAmount > 0) {
         newSolde = Math.max(0, liveSolde - reqAmount);
-        // Débiter le solde dans Firestore
+        newBloque = liveBloque + cachetVal; // Placer le cachet en séquestre
+
+        // Débiter le solde et bloquer le cachet dans Firestore
         await setDoc(doc(db, "users", currentUserProfile.uid), {
           wallet: {
             soldeDisponible: newSolde,
-            soldeBloque: (currentUserProfile as any)?.wallet?.soldeBloque || 0
+            soldeBloque: newBloque
           }
         }, { merge: true });
 
-        // Enregistrer la transaction de débit
-        const txId = "tx_pub_" + Date.now();
-        await setDoc(doc(db, "transactions", txId), {
-          id: txId,
+        // Enregistrer la transaction de débit globale
+        await recordWalletTransaction({
           userId: currentUserProfile.uid,
           userName: authorName,
-          type: "payment",
+          type: "debit_publication",
           amount: reqAmount,
           status: "success",
-          description: `Débit automatique & Publication du gombo "${title.trim()}"`,
-          createdAt: new Date().toISOString()
+          description: `Débit publication : Gombo "${title.trim()}" (Cachet: ${cachetVal.toLocaleString()} FCFA, Comm: ${feeAmount.toLocaleString()} FCFA)`
         });
+
+        // Enregistrer la commission comme revenu de la plateforme
+        if (feeAmount > 0) {
+          await recordWalletTransaction({
+            userId: currentUserProfile.uid,
+            userName: authorName,
+            type: "commission_plateforme",
+            amount: feeAmount,
+            status: "success",
+            description: `Commission AFRIGOMBO (2,5%) pour le gombo "${title.trim()}"`
+          });
+
+          await addDoc(collection(db, "commissions"), {
+            userId: currentUserProfile.uid,
+            userName: authorName,
+            amount: feeAmount,
+            cachet: cachetVal,
+            gomboTitle: title.trim(),
+            rate: 0.025,
+            createdAt: new Date().toISOString()
+          });
+        }
+
+        // Enregistrer le blocage en séquestre du cachet
+        if (cachetVal > 0) {
+          await recordWalletTransaction({
+            userId: currentUserProfile.uid,
+            userName: authorName,
+            type: "fonds_bloques",
+            amount: cachetVal,
+            status: "fonds_bloques",
+            description: `Fonds bloqués en séquestre pour le gombo "${title.trim()}"`
+          });
+        }
       }
 
       const postStatus = "PUBLISHED";
@@ -744,11 +785,11 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           </div>
 
           {/* Form Actions Buttons */}
-          <div className="flex items-center justify-between gap-4 pt-4 border-t border-white/[0.05]">
+          <div className="flex items-center justify-between gap-4 pt-4 border-t border-afri-border/50">
             <button
               type="button"
               onClick={onCancel}
-              className="px-5 py-3 whitespace-nowrap bg-white/[0.05] hover:bg-white/[0.1] text-gray-200 font-extrabold text-[10px] sm:text-xs uppercase rounded-xl transition-all tracking-wider cursor-pointer"
+              className="px-5 py-3 whitespace-nowrap bg-afri-bg hover:bg-afri-bg/80 border border-afri-border text-afri-text font-extrabold text-[10px] sm:text-xs uppercase rounded-xl transition-all tracking-wider cursor-pointer"
             >
               Retourner au Terrain
             </button>
@@ -758,7 +799,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               disabled={loading || uploadingState.image || uploadingState.audio}
               className={`flex-1 px-6 py-3.5 font-extrabold text-[#0B0B0B] font-sans text-xs uppercase rounded-xl shadow-lg transition-all active:scale-97 cursor-pointer text-center font-black tracking-widest flex items-center justify-center gap-2 ${
                 gomboCategory === "securise" 
-                  ? "bg-afri-bg-sec animate-pulse shadow-[0_0_20px_rgba(212,175,55,0.4)]" 
+                  ? "bg-[#D4AF37] animate-pulse shadow-[0_0_20px_rgba(212,175,55,0.4)]" 
                   : "bg-emerald-500"
               }`}
             >

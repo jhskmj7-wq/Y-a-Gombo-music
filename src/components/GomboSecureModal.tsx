@@ -72,7 +72,7 @@ export default function GomboSecureModal({ isOpen, onClose }: GomboSecureModalPr
                   </div>
                   <button
                     onClick={onClose}
-                    className="w-full bg-afri-text text-afri-bg py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-afri-bg-sec hover:text-black transition-all"
+                    className="w-full bg-[#D4AF37] text-black py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-amber-400 transition-all"
                   >
                     Fermer
                   </button>
@@ -80,9 +80,9 @@ export default function GomboSecureModal({ isOpen, onClose }: GomboSecureModalPr
               ) : (
                 <>
                   <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="w-20 h-20 rounded-3xl bg-afri-bg-sec/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] relative">
+                    <div className="w-20 h-20 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] relative">
                       <ShieldCheck className="w-10 h-10" />
-                      <div className="absolute -top-2 -right-2 bg-afri-bg-sec text-black text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-tighter">Bientôt</div>
+                      <div className="absolute -top-2 -right-2 bg-[#D4AF37] text-black text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-tighter">Bientôt</div>
                     </div>
                     <div className="space-y-2">
                       <h2 className="text-3xl font-black font-mono uppercase tracking-tighter leading-none text-afri-text">
@@ -139,7 +139,7 @@ export default function GomboSecureModal({ isOpen, onClose }: GomboSecureModalPr
                     <button
                       onClick={handleJoinWaitlist}
                       disabled={loading}
-                      className="w-full bg-afri-bg-sec text-black py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-105 transition-transform shadow-[0_10px_30px_rgba(212,175,55,0.3)] group"
+                      className="w-full bg-[#D4AF37] text-black py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-105 transition-transform shadow-[0_10px_30px_rgba(212,175,55,0.3)] group cursor-pointer"
                     >
                       {loading ? (
                         <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />

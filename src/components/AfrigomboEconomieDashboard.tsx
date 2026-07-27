@@ -11,12 +11,16 @@ import {
   FileText, 
   Clock,
   ArrowUpRight,
-  TrendingDown
+  TrendingDown,
+  Percent,
+  CheckCircle,
+  RefreshCw
 } from "lucide-react";
 import { Sliders } from "lucide-react";
 import { motion } from "motion/react";
 import { db } from "../firebase";
-import { collection, onSnapshot, doc, setDoc, query, limit } from "firebase/firestore";
+import { collection, onSnapshot, doc, setDoc, getDoc } from "firebase/firestore";
+import { fetchPlatformFeeRate, updatePlatformFeeRate } from "../lib/financial";
 
 interface AfrigomboEconomieDashboardProps {
   onBack?: () => void;
@@ -36,19 +40,49 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
     litigesActifs: 0,
     litigesResolus: 0,
     premiumCount: 0,
-    // New Launch Prep stats
     totalUsers: 0,
     secureWaitlistCount: 0,
     totalSupports: 0,
     totalSupportAmount: 0,
     gombosLibresCount: 0,
-    betaProgression: 65 // Hardcoded for now or derived
+    gombosPublies: 0,
+    paiementsTermines: 0,
+    totalRemboursements: 0,
+    betaProgression: 75
   });
 
   const [escrowList, setEscrowList] = useState<any[]>([]);
   const [recentCommissions, setRecentCommissions] = useState<any[]>([]);
   const [litigesList, setLitigesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Commission Rate Config
+  const [currentRatePct, setCurrentRatePct] = useState<number>(2.5);
+  const [savingRate, setSavingRate] = useState(false);
+  const [rateSavedMsg, setRateSavedMsg] = useState("");
+
+  // Fetch initial commission rate
+  useEffect(() => {
+    fetchPlatformFeeRate().then(rate => {
+      setCurrentRatePct(rate * 100);
+    });
+  }, []);
+
+  const handleSaveCommissionRate = async (newPct: number) => {
+    setSavingRate(true);
+    setRateSavedMsg("");
+    try {
+      const rateVal = newPct / 100;
+      await updatePlatformFeeRate(rateVal);
+      setCurrentRatePct(newPct);
+      setRateSavedMsg(`Taux de commission mis à jour avec succès : ${newPct}%`);
+      setTimeout(() => setRateSavedMsg(""), 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingRate(false);
+    }
+  };
 
   // Real-time listener for the entire platform economy
   useEffect(() => {
@@ -180,10 +214,36 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
       }));
     });
 
-    // 8. Listen to Gombos Libres (from gombos collection where type is 'libre')
-    const unsubGombosLibres = onSnapshot(collection(db, "gombos"), (snap) => {
+    // 8. Listen to Gombos (Published & Libres)
+    const unsubGombos = onSnapshot(collection(db, "gombos"), (snap) => {
       const libreCount = snap.docs.filter(d => d.data().type === "libre").length;
-      setStats((prev) => ({ ...prev, gombosLibresCount: libreCount }));
+      setStats((prev) => ({ 
+        ...prev, 
+        gombosLibresCount: libreCount,
+        gombosPublies: snap.size
+      }));
+    });
+
+    // 9. Listen to Transactions (Payments completed & Refunds)
+    const unsubTransactions = onSnapshot(collection(db, "transactions"), (snap) => {
+      let refundsSum = 0;
+      let completedPaymentsCount = 0;
+
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.type === "remboursement" || data.type === "refund") {
+          refundsSum += (data.amount || 0);
+        }
+        if (data.type === "deblocage_cachet" || data.type === "release" || data.status === "fonds_liberes" || data.status === "success") {
+          completedPaymentsCount++;
+        }
+      });
+
+      setStats((prev) => ({
+        ...prev,
+        paiementsTermines: completedPaymentsCount,
+        totalRemboursements: refundsSum
+      }));
     });
 
     return () => {
@@ -194,7 +254,8 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
       unsubUsers();
       unsubWaitlist();
       unsubSupports();
-      unsubGombosLibres();
+      unsubGombos();
+      unsubTransactions();
     };
   }, []);
 
@@ -234,67 +295,82 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
         </div>
       ) : (
         <div className="space-y-6">
+
+          {/* COMMISSION RATE MANAGEMENT CARD */}
+          <div className="bg-afri-bg border border-[#D4AF37]/30 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Percent className="w-4 h-4 text-[#D4AF37]" />
+                  <span className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest">
+                    CONFIGURATEUR DE COMMISSION AFRIGOMBO
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-afri-text">
+                  Taux de commission plateforme actuel : <span className="text-[#D4AF37] font-mono font-black text-base">{currentRatePct}%</span>
+                </h3>
+                <p className="text-[10px] text-afri-text-sec font-mono">
+                  Calculé automatiquement sur chaque publication via <code className="text-[#D4AF37]">calculatePlatformFee(amount)</code>.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {[2.5, 3.0, 4.0, 5.0].map(rate => (
+                  <button
+                    key={rate}
+                    disabled={savingRate}
+                    onClick={() => handleSaveCommissionRate(rate)}
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold transition-all ${
+                      currentRatePct === rate
+                        ? "bg-[#D4AF37] text-black font-black shadow-md"
+                        : "bg-afri-bg-sec border border-afri-border text-afri-text hover:border-[#D4AF37]/50"
+                    }`}
+                  >
+                    {rate}%
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {rateSavedMsg && (
+              <div className="mt-3 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-[10px] font-mono font-bold flex items-center gap-2">
+                <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{rateSavedMsg}</span>
+              </div>
+            )}
+          </div>
           
-          {/* Main Grid: Real-time Stats Cards */}
+          {/* Main Grid: 7 Real-time Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
-            {/* NEW: Préparation du Lancement Card */}
-            <div className="bg-gradient-to-br from-indigo-950/40 to-afri-bg-action border border-indigo-500/30 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg group hover:border-indigo-400/50 transition-all">
-              <div className="absolute -top-4 -right-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
-              <div className="space-y-4 relative z-10">
+            {/* Stat 1: Total des commissions */}
+            <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-[#D4AF37]/30 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-mono text-indigo-400 uppercase tracking-wider font-black flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3" />
-                    Préparation du Lancement
+                  <span className="text-[9px] font-mono text-[#D4AF37] uppercase tracking-wider font-black">
+                    Total des Commissions
                   </span>
-                  <div className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-[8px] font-black text-indigo-300 uppercase">
-                    Bêta {stats.betaProgression}%
+                  <div className="w-7 h-7 rounded-full bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/20">
+                    <TrendingUp className="w-3.5 h-3.5" />
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-y-3 gap-x-2">
-                  <div className="space-y-0.5">
-                    <span className="text-[8px] text-afri-text-sec font-mono uppercase block">Inscrits</span>
-                    <span className="text-sm font-black text-afri-text font-mono">{stats.totalUsers}</span>
-                  </div>
-                  <div className="space-y-0.5">
-                    <span className="text-[8px] text-afri-text-sec font-mono uppercase block">Attente Sécurisé</span>
-                    <span className="text-sm font-black text-[#D4AF37] font-mono">{stats.secureWaitlistCount}</span>
-                  </div>
-                  <div className="space-y-0.5">
-                    <span className="text-[8px] text-afri-text-sec font-mono uppercase block">Soutiens</span>
-                    <span className="text-sm font-black text-emerald-400 font-mono">{stats.totalSupports}</span>
-                  </div>
-                  <div className="space-y-0.5">
-                    <span className="text-[8px] text-afri-text-sec font-mono uppercase block">Gombos Libres</span>
-                    <span className="text-sm font-black text-indigo-400 font-mono">{stats.gombosLibresCount}</span>
-                  </div>
-                </div>
-
-                {/* Progress bar */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[7px] font-mono text-afri-text-sec uppercase">
-                    <span>Progression Bêta</span>
-                    <span>{stats.betaProgression}%</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-afri-bg-ter rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${stats.betaProgression}%` }}
-                      className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400"
-                    />
-                  </div>
+                <div>
+                  <span className="text-2xl font-black text-[#D4AF37] font-mono tracking-tight block">
+                    {stats.totalCommissions.toLocaleString()} <span className="text-xs text-afri-text-sec font-sans font-normal">FCFA</span>
+                  </span>
+                  <span className="text-[9px] text-afri-text-sec font-mono block mt-1">
+                    Revenus nets perçus par la plateforme.
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Card 1: Argent Bloqué (Séquestre Actif) */}
+            {/* Stat 2: Fonds actuellement bloqués */}
             <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-afri-border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 rounded-full blur-2xl"></div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black">
-                    Argent Bloqué (Séquestre)
+                  <span className="text-[9px] font-mono text-amber-500 uppercase tracking-wider font-black">
+                    Fonds Bloqués (Séquestre)
                   </span>
                   <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
                     <Lock className="w-3.5 h-3.5" />
@@ -305,78 +381,101 @@ export default function AfrigomboEconomieDashboard({ onBack }: AfrigomboEconomie
                     {stats.argentBloque.toLocaleString()} <span className="text-xs text-afri-text-sec font-sans font-normal">FCFA</span>
                   </span>
                   <span className="text-[9px] text-afri-text-sec font-mono block mt-1">
-                    Garantie d'exécution active en coffre.
+                    Garantie d'exécution sécurisée en coffre.
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Card 2: Argent Libéré (Revenus Musiciens) */}
+            {/* Stat 3: Gombos publiés */}
             <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-afri-border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl"></div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black">
-                    Argent Libéré (Payé)
+                  <span className="text-[9px] font-mono text-indigo-400 uppercase tracking-wider font-black">
+                    Gombos Publiés
+                  </span>
+                  <div className="w-7 h-7 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                    <FileText className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <div>
+                  <span className="text-2xl font-black text-afri-text font-mono tracking-tight block">
+                    {stats.gombosPublies} <span className="text-xs text-afri-text-sec font-sans font-normal">annonces</span>
+                  </span>
+                  <span className="text-[9px] text-afri-text-sec font-mono block mt-1">
+                    Offres sur le marché AFRIGOMBO.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Stat 4: Paiements terminés */}
+            <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-afri-border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-mono text-emerald-400 uppercase tracking-wider font-black">
+                    Paiements Terminés
                   </span>
                   <div className="w-7 h-7 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
                     <Unlock className="w-3.5 h-3.5" />
                   </div>
                 </div>
                 <div>
-                  <span className="text-2xl font-black text-afri-text font-mono tracking-tight block">
-                    {stats.argentLibere.toLocaleString()} <span className="text-xs text-afri-text-sec font-sans font-normal">FCFA</span>
+                  <span className="text-2xl font-black text-emerald-400 font-mono tracking-tight block">
+                    {stats.paiementsTermines} <span className="text-xs text-afri-text-sec font-sans font-normal">libérés</span>
                   </span>
                   <span className="text-[9px] text-afri-text-sec font-mono block mt-1">
-                    Fonds reversés avec succès aux artistes.
+                    Cachets versés aux artistes.
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Card 3: Revenus Plateforme (Commissions Totales) */}
-            <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-[#D4AF37]/20 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-afri-bg-sec/5 rounded-full blur-2xl"></div>
+            {/* Stat 5: Remboursements */}
+            <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-afri-border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-mono text-[#D4AF37] uppercase tracking-wider font-black">
-                    Revenus Cumulés
+                  <span className="text-[9px] font-mono text-red-400 uppercase tracking-wider font-black">
+                    Remboursements
                   </span>
-                  <div className="w-7 h-7 rounded-full bg-afri-bg-sec/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/20">
-                    <TrendingUp className="w-3.5 h-3.5" />
+                  <div className="w-7 h-7 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 border border-red-500/20">
+                    <TrendingDown className="w-3.5 h-3.5" />
                   </div>
                 </div>
                 <div>
-                  <span className="text-2xl font-black text-[#D4AF37] font-mono tracking-tight block">
-                    {stats.totalCommissions.toLocaleString()} <span className="text-xs text-afri-text-sec font-sans font-normal">FCFA</span>
+                  <span className="text-2xl font-black text-red-400 font-mono tracking-tight block">
+                    {stats.totalRemboursements.toLocaleString()} <span className="text-xs text-afri-text-sec font-sans font-normal">FCFA</span>
                   </span>
-                  <span className="text-[9px] text-[#D4AF37]/60 font-mono block mt-1">
-                    Total des commissions prélevées.
+                  <span className="text-[9px] text-afri-text-sec font-mono block mt-1">
+                    Total des sommes restituées.
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Card 4: Commissions Périodiques */}
-            <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-afri-border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full blur-2xl"></div>
+            {/* Stat 6 & 7: Revenus journaliers et mensuels */}
+            <div className="bg-gradient-to-br from-afri-bg-action to-afri-bg-action border border-afri-border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg col-span-1 sm:col-span-2">
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black">
-                    Revenus du Jour / Mois
+                  <span className="text-[9px] font-mono text-blue-400 uppercase tracking-wider font-black">
+                    Revenus Périodiques (Jour & Mois)
                   </span>
                   <div className="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
                     <Coins className="w-3.5 h-3.5" />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-mono text-afri-text-sec">Ce jour:</span>
-                    <span className="text-xs font-bold text-emerald-400 font-mono">+{stats.revenusJour.toLocaleString()} FCFA</span>
+                <div className="grid grid-cols-2 gap-4 pt-1">
+                  <div>
+                    <span className="text-[9px] text-afri-text-sec font-mono block uppercase">Aujourd'hui</span>
+                    <span className="text-xl font-black text-emerald-400 font-mono">
+                      +{stats.revenusJour.toLocaleString()} FCFA
+                    </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-mono text-afri-text-sec">Ce mois:</span>
-                    <span className="text-xs font-bold text-afri-text font-mono">+{stats.revenusMois.toLocaleString()} FCFA</span>
+                  <div>
+                    <span className="text-[9px] text-afri-text-sec font-mono block uppercase">Ce Mois</span>
+                    <span className="text-xl font-black text-[#D4AF37] font-mono">
+                      +{stats.revenusMois.toLocaleString()} FCFA
+                    </span>
                   </div>
                 </div>
               </div>
