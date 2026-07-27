@@ -1326,6 +1326,113 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       </div>
 
       {/* ==========================================
+           5. 📹 RÉELS D'ARTISTES (LIVELY VIDEO PREVIEW GALLERY)
+          ========================================== */}
+      <div className="space-y-3 pt-2 select-none">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[#D4AF37]">📹</span>
+            <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
+              RÉELS D'ARTISTES
+            </h3>
+          </div>
+          <button
+            onClick={() => {
+              setCurrentSection("reels");
+              try { audioSynth.playTamTam(false); } catch (_) {}
+            }}
+            className="text-xs text-[#D4AF37] font-bold bg-transparent border-none cursor-pointer hover:underline"
+          >
+            Voir tout
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2.5">
+          {[
+            {
+              id: "local-reel-1",
+              title: "Intro Solo Saxophone",
+              artist: "Thierry Sax d'Abidjan",
+              views: "1.2K vues",
+              url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
+              thumbnail: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200"
+            },
+            {
+              id: "local-reel-2",
+              title: "Improvisation Batterie",
+              artist: "Sékou Batterie d'or",
+              views: "890 vues",
+              url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4",
+              thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=200"
+            },
+            {
+              id: "local-reel-3",
+              title: "Vocalises Rumba",
+              artist: "Fanta D'Abobo",
+              views: "2.4K vues",
+              url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
+              thumbnail: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200"
+            }
+          ].map((reel, index) => (
+            <motion.div
+              key={reel.id}
+              whileHover={{ scale: 1.02 }}
+              onClick={() => {
+                setReelsVideoUrl(reel.url);
+                try { audioSynth.playValidationSuccess(); } catch(_) {}
+              }}
+              className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-afri-bg-sec border border-afri-border group cursor-pointer"
+            >
+              <img
+                src={reel.thumbnail}
+                alt={reel.title}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-60"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-afri-bg via-afri-bg/35 to-transparent" />
+              
+              {/* Play icon overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-full bg-afri-bg/60 border border-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <span className="text-[#D4AF37] text-[10px] pl-0.5">▶</span>
+                </div>
+              </div>
+
+              {/* Bottom text overlays */}
+              <div className="absolute bottom-2 left-2 right-2 text-left">
+                <p className="text-[7.5px] font-sans font-black text-afri-text uppercase leading-none truncate mb-0.5">
+                  {reel.title}
+                </p>
+                <p className="text-[6.5px] text-afri-text-sec font-mono truncate leading-none">
+                  {reel.artist}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* ==========================================
+           6. 🌍 UNIVERS AFRIGOMBO (FIL DÉCOUVERTES)
+          ========================================== */}
+      <div className="pt-2">
+        <FilDecouvertesSection
+          userCommune={
+            profile?.commune || 
+            (typeof profile?.location === "string" ? profile.location : profile?.location?.city) || 
+            "Abidjan"
+          }
+          audioSynth={audioSynth}
+          onNavigateToSection={(sec) => {
+            if (sec === "grand_marche") {
+              setActiveMenu("grand_marche");
+            } else if (sec === "academie") {
+              setActiveMenu("academie");
+            }
+          }}
+        />
+      </div>
+
+      {/* ==========================================
           5. 🎼 GOMBOS RÉCENTS (HORIZONTAL ROWS)
          ========================================== */}
       <div className="space-y-3 pt-2">

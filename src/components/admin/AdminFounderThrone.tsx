@@ -135,6 +135,86 @@ export default function AdminFounderThrone({
   const [livePosts, setLivePosts] = useState<any[]>(posts || []);
   const [liveGombos, setLiveGombos] = useState<any[]>(gombos || []);
   const [notificationsList, setNotificationsList] = useState<any[]>([]);
+  const [featuredContentList, setFeaturedContentList] = useState<any[]>([]);
+  const [trendFilter, setTrendFilter] = useState<string>("ALL");
+
+  const handleToggleFeature = async (item: any) => {
+    if (!db) return;
+    try {
+      const isFeat = !item.featured;
+      if (item.id && item.type) {
+        await updateDoc(doc(db, "featuredContent", item.id), { featured: isFeat, updatedAt: Date.now() });
+      } else {
+        await addDoc(collection(db, "featuredContent"), {
+          type: item.contentType || 'gombo',
+          sourceId: item.id || Math.random().toString(),
+          title: item.title || item.name || 'Contenu Populaire',
+          author: item.author || item.displayName || 'Artiste',
+          views: item.views || 120,
+          likes: item.likes || 15,
+          comments: item.comments || 5,
+          shares: item.shares || 2,
+          saved: item.saved || 3,
+          pinned: item.pinned || false,
+          featured: isFeat,
+          hidden: false,
+          score: (item.views || 100) * (item.likes || 10),
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        });
+      }
+      setSuccessMsg("Statut 'Mis en avant' mis à jour.");
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } catch (err: any) {
+      setErrorMsg("Erreur mise en avant: " + err.message);
+      setTimeout(() => setErrorMsg(""), 3000);
+    }
+  };
+
+  const handleTogglePin = async (item: any) => {
+    if (!db) return;
+    try {
+      const isPinned = !item.pinned;
+      if (item.id) {
+        await updateDoc(doc(db, "featuredContent", item.id), { pinned: isPinned, updatedAt: Date.now() });
+      }
+      setSuccessMsg(isPinned ? "Contenu épinglé au sommet." : "Contenu désépinglé.");
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } catch (err: any) {
+      setErrorMsg("Erreur épinglage: " + err.message);
+      setTimeout(() => setErrorMsg(""), 3000);
+    }
+  };
+
+  const handleToggleHide = async (item: any) => {
+    if (!db) return;
+    try {
+      const isHidden = !item.hidden;
+      if (item.id) {
+        await updateDoc(doc(db, "featuredContent", item.id), { hidden: isHidden, updatedAt: Date.now() });
+      }
+      setSuccessMsg(isHidden ? "Contenu masqué." : "Contenu affiché.");
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } catch (err: any) {
+      setErrorMsg("Erreur masquage: " + err.message);
+      setTimeout(() => setErrorMsg(""), 3000);
+    }
+  };
+
+  const handleDeleteContent = async (item: any) => {
+    if (!db) return;
+    if (!window.confirm("Êtes-vous sûr de vouloir retirer ce contenu du Centre des Tendances ?")) return;
+    try {
+      if (item.id) {
+        await deleteDoc(doc(db, "featuredContent", item.id));
+      }
+      setSuccessMsg("Contenu retiré avec succès.");
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } catch (err: any) {
+      setErrorMsg("Erreur suppression: " + err.message);
+      setTimeout(() => setErrorMsg(""), 3000);
+    }
+  };
 
   // Form Submissions Collections (Support, Litiges, KYC, Bugs)
   const [formSubTab, setFormSubTab] = useState<"support" | "disputes" | "kyc" | "bugs">("support");
@@ -236,6 +316,14 @@ export default function AdminFounderThrone({
       setNotificationsList(list);
     });
 
+    // 6. Realtime Featured Content / Trending
+    const unsubFeatured = onSnapshot(collection(db, "featuredContent"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.score || b.views || 0) - (a.score || a.views || 0));
+      setFeaturedContentList(list);
+    });
+
     return () => {
       unsubReg();
       unsubAutoPilot();
@@ -248,6 +336,7 @@ export default function AdminFounderThrone({
       unsubKYC();
       unsubBugs();
       unsubNotifications();
+      unsubFeatured();
     };
   }, []);
 
@@ -1606,11 +1695,34 @@ export default function AdminFounderThrone({
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div 
+                className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-thin scrollbar-thumb-[#D4AF37]/40 flex-nowrap select-none touch-pan-x"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                {/* 🔥 Centre des Tendances (NEW) */}
+                <div
+                  onClick={() => setSelectedSection("tendances")}
+                  className="p-5 bg-gradient-to-br from-amber-500/20 via-afri-bg to-afri-bg border-2 border-[#D4AF37] hover:border-[#D4AF37] rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="p-2.5 bg-amber-500/20 border border-[#D4AF37]/40 rounded-2xl text-amber-400 group-hover:scale-110 transition-transform">
+                      <Flame className="w-5 h-5 animate-pulse" />
+                    </span>
+                    <span className="px-2 py-0.5 bg-amber-500 text-black rounded-full text-[9px] font-mono font-black animate-pulse">
+                      TENDANCES
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Centre des Tendances</span>
+                  <strong className="text-3xl font-display font-black text-amber-400 block mt-1">
+                    {featuredContentList.length || displayPosts.length || 0}
+                  </strong>
+                  <span className="text-[9px] font-mono text-amber-400 font-bold block mt-1">Gérer les tendances →</span>
+                </div>
+
                 {/* 👥 Utilisateurs connectés */}
                 <div
                   onClick={() => setSelectedSection("users")}
-                  className="p-5 bg-gradient-to-br from-amber-500/15 via-afri-bg to-afri-bg border-2 border-[#D4AF37]/50 hover:border-[#D4AF37] rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                  className="p-5 bg-gradient-to-br from-amber-500/15 via-afri-bg to-afri-bg border-2 border-[#D4AF37]/50 hover:border-[#D4AF37] rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <span className="p-2.5 bg-amber-500/20 border border-[#D4AF37]/40 rounded-2xl text-[#D4AF37] group-hover:scale-110 transition-transform">
@@ -1628,7 +1740,7 @@ export default function AdminFounderThrone({
                 {/* 📝 Publications en attente */}
                 <div
                   onClick={() => setSelectedSection("publications")}
-                  className="p-5 bg-gradient-to-br from-sky-500/15 via-afri-bg to-afri-bg border-2 border-sky-500/40 hover:border-sky-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                  className="p-5 bg-gradient-to-br from-sky-500/15 via-afri-bg to-afri-bg border-2 border-sky-500/40 hover:border-sky-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <span className="p-2.5 bg-sky-500/20 border border-sky-500/40 rounded-2xl text-sky-400 group-hover:scale-110 transition-transform">
@@ -1650,7 +1762,7 @@ export default function AdminFounderThrone({
                 {/* 💳 Dépôts à valider */}
                 <div
                   onClick={() => setSelectedSection("beta_escrow")}
-                  className="p-5 bg-gradient-to-br from-emerald-500/15 via-afri-bg to-afri-bg border-2 border-emerald-500/40 hover:border-emerald-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                  className="p-5 bg-gradient-to-br from-emerald-500/15 via-afri-bg to-afri-bg border-2 border-emerald-500/40 hover:border-emerald-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <span className="p-2.5 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl text-emerald-400 group-hover:scale-110 transition-transform">
@@ -1672,7 +1784,7 @@ export default function AdminFounderThrone({
                 {/* 🚨 Signalements urgents */}
                 <div
                   onClick={() => setSelectedSection("veille")}
-                  className="p-5 bg-gradient-to-br from-red-500/15 via-afri-bg to-afri-bg border-2 border-red-500/40 hover:border-red-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                  className="p-5 bg-gradient-to-br from-red-500/15 via-afri-bg to-afri-bg border-2 border-red-500/40 hover:border-red-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <span className="p-2.5 bg-red-500/20 border border-red-500/40 rounded-2xl text-red-400 group-hover:scale-110 transition-transform">
@@ -1692,7 +1804,7 @@ export default function AdminFounderThrone({
                 {/* 🛡 Vérifications KYC */}
                 <div
                   onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("kyc"); }}
-                  className="p-5 bg-gradient-to-br from-purple-500/15 via-afri-bg to-afri-bg border-2 border-purple-500/40 hover:border-purple-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                  className="p-5 bg-gradient-to-br from-purple-500/15 via-afri-bg to-afri-bg border-2 border-purple-500/40 hover:border-purple-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <span className="p-2.5 bg-purple-500/20 border border-purple-500/40 rounded-2xl text-purple-400 group-hover:scale-110 transition-transform">
@@ -1714,7 +1826,7 @@ export default function AdminFounderThrone({
                 {/* 📩 Tickets Support / Conseiller */}
                 <div
                   onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("support"); }}
-                  className="p-5 bg-gradient-to-br from-indigo-500/15 via-afri-bg to-afri-bg border-2 border-indigo-500/40 hover:border-indigo-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                  className="p-5 bg-gradient-to-br from-indigo-500/15 via-afri-bg to-afri-bg border-2 border-indigo-500/40 hover:border-indigo-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <span className="p-2.5 bg-indigo-500/20 border border-indigo-500/40 rounded-2xl text-indigo-400 group-hover:scale-110 transition-transform">
@@ -1736,7 +1848,7 @@ export default function AdminFounderThrone({
                 {/* ⚖️ Litiges Prestations */}
                 <div
                   onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("disputes"); }}
-                  className="p-5 bg-gradient-to-br from-amber-600/15 via-afri-bg to-afri-bg border-2 border-amber-600/40 hover:border-amber-500 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                  className="p-5 bg-gradient-to-br from-amber-600/15 via-afri-bg to-afri-bg border-2 border-amber-600/40 hover:border-amber-500 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <span className="p-2.5 bg-amber-600/20 border border-amber-600/40 rounded-2xl text-amber-500 group-hover:scale-110 transition-transform">
@@ -1758,7 +1870,7 @@ export default function AdminFounderThrone({
                 {/* 🐛 Signalements Bugs */}
                 <div
                   onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("bugs"); }}
-                  className="p-5 bg-gradient-to-br from-rose-500/15 via-afri-bg to-afri-bg border-2 border-rose-500/40 hover:border-rose-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                  className="p-5 bg-gradient-to-br from-rose-500/15 via-afri-bg to-afri-bg border-2 border-rose-500/40 hover:border-rose-400 rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <span className="p-2.5 bg-rose-500/20 border border-rose-500/40 rounded-2xl text-rose-400 group-hover:scale-110 transition-transform">
@@ -1780,7 +1892,7 @@ export default function AdminFounderThrone({
                 {/* 🔔 Centre de Notifications */}
                 <div
                   onClick={() => setSelectedSection("notifications_hub")}
-                  className="p-5 bg-gradient-to-br from-amber-500/15 via-afri-bg to-afri-bg border-2 border-[#D4AF37]/50 hover:border-[#D4AF37] rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                  className="p-5 bg-gradient-to-br from-amber-500/15 via-afri-bg to-afri-bg border-2 border-[#D4AF37]/50 hover:border-[#D4AF37] rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden min-w-[260px] max-w-[280px] shrink-0 snap-start"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <span className="p-2.5 bg-amber-500/20 border border-[#D4AF37]/40 rounded-2xl text-[#D4AF37] group-hover:scale-110 transition-transform">
@@ -4639,6 +4751,191 @@ export default function AdminFounderThrone({
                       })}
                     </div>
                   )}
+                </div>
+              );
+            })()}
+
+            {/* =========================================================
+                 DETAILED VIEW: 🔥 Centre des Tendances (Souveraineté & Mise en Avant)
+                 ========================================================= */}
+            {selectedSection === "tendances" && (() => {
+
+              
+              const allTrending = [
+                ...featuredContentList,
+                ...displayGombos.map((g: any) => ({ ...g, contentType: 'gombo', views: g.views || 145, likes: g.likes || 24, comments: g.comments || 8, shares: g.shares || 5, saved: g.saved || 12 })),
+                ...displayPosts.map((p: any) => ({ ...p, contentType: 'post', views: p.views || 98, likes: p.likes || 16, comments: p.comments || 4, shares: p.shares || 2, saved: p.saved || 6 }))
+              ];
+
+              const filteredTrending = allTrending.filter(item => {
+                if (trendFilter === "ALL") return true;
+                return item.contentType === trendFilter || item.category === trendFilter;
+              });
+
+              return (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 bg-afri-bg/90 border-2 border-amber-500/40 rounded-3xl shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                        <Flame className="w-6 h-6 animate-pulse" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-display font-black text-afri-text tracking-wider uppercase">
+                          🔥 Centre des Tendances — Souveraineté & Mise en Avant
+                        </h2>
+                        <p className="text-xs font-mono text-afri-text-sec mt-0.5">
+                          Pilotez en temps réel les Gombos, Réels, Produits, Formations, Artistes et Événements populaires de l'Empire.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedSection(null)}
+                      className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-400 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-2"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Retour au Trône</span>
+                    </button>
+                  </div>
+
+                  {/* Filter Tabs */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {[
+                      { id: "ALL", label: "🌟 Tous les contenus" },
+                      { id: "gombo", label: "🔥 Gombos" },
+                      { id: "post", label: "🎥 Réels & Posts" },
+                      { id: "product", label: "🛒 Grand Marché" },
+                      { id: "course", label: "🎓 Académie" },
+                      { id: "artist", label: "⭐ Artistes" },
+                      { id: "event", label: "📅 Événements" }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setTrendFilter(tab.id)}
+                        className={`px-4 py-2 rounded-2xl font-mono text-xs font-bold transition-all cursor-pointer ${
+                          trendFilter === tab.id
+                            ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                            : 'bg-afri-bg border border-afri-border text-afri-text hover:border-amber-500/40'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Trending Items List */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredTrending.length === 0 ? (
+                      <div className="col-span-full py-16 text-center text-afri-text-sec font-mono text-xs border border-dashed border-afri-border rounded-3xl">
+                        Aucun contenu populaire enregistré dans le Centre des Tendances pour le moment.
+                      </div>
+                    ) : (
+                      filteredTrending.map((item, idx) => (
+                        <div 
+                          key={item.id || idx}
+                          className="p-5 bg-afri-bg border border-afri-border hover:border-amber-500/50 rounded-3xl space-y-4 shadow-md transition-all relative overflow-hidden group"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl text-[10px] font-mono font-bold uppercase flex items-center gap-1.5">
+                              <Flame className="w-3.5 h-3.5 text-amber-400" />
+                              {item.contentType || item.category || 'Gombo'}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              {item.pinned && (
+                                <span className="px-2 py-0.5 bg-red-500/20 text-red-400 border border-red-500/40 rounded-full text-[9px] font-mono font-bold">
+                                  ⭐ ÉPINGLÉ
+                                </span>
+                              )}
+                              {item.featured && (
+                                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full text-[9px] font-mono font-bold">
+                                  📌 EN AVANT
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="text-sm font-sans font-black text-afri-text group-hover:text-amber-400 transition-colors line-clamp-1">
+                              {item.title || item.name || 'Titre non spécifié'}
+                            </h4>
+                            <p className="text-[11px] font-mono text-afri-text-sec mt-0.5">
+                              Auteur / Créateur : <strong className="text-afri-text">{item.author || item.displayName || item.artist || 'Souverain'}</strong>
+                            </p>
+                          </div>
+
+                          {/* Metrics Grid */}
+                          <div className="grid grid-cols-5 gap-1 p-3 bg-afri-bg-sec/10 border border-afri-border/60 rounded-2xl text-center font-mono">
+                            <div>
+                              <span className="text-[8px] text-afri-text-sec block uppercase">Vues</span>
+                              <strong className="text-xs font-black text-amber-400">{item.views || 142}</strong>
+                            </div>
+                            <div>
+                              <span className="text-[8px] text-afri-text-sec block uppercase">Likes</span>
+                              <strong className="text-xs font-black text-emerald-400">{item.likes || 24}</strong>
+                            </div>
+                            <div>
+                              <span className="text-[8px] text-afri-text-sec block uppercase">Favoris</span>
+                              <strong className="text-xs font-black text-purple-400">{item.saved || 12}</strong>
+                            </div>
+                            <div>
+                              <span className="text-[8px] text-afri-text-sec block uppercase">Comm.</span>
+                              <strong className="text-xs font-black text-sky-400">{item.comments || 6}</strong>
+                            </div>
+                            <div>
+                              <span className="text-[8px] text-afri-text-sec block uppercase">Part.</span>
+                              <strong className="text-xs font-black text-amber-300">{item.shares || 3}</strong>
+                            </div>
+                          </div>
+
+                          {/* Founder Actions */}
+                          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-afri-border">
+                            <button
+                              onClick={() => handleToggleFeature(item)}
+                              className={`flex-1 py-2 px-2.5 rounded-xl font-mono text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                                item.featured 
+                                  ? 'bg-emerald-500 text-black shadow-md' 
+                                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              }`}
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              <span>{item.featured ? "En avant" : "Mettre en avant"}</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleTogglePin(item)}
+                              className={`py-2 px-2.5 rounded-xl font-mono text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                                item.pinned 
+                                  ? 'bg-amber-500 text-black shadow-md' 
+                                  : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              }`}
+                              title="Épingler au sommet"
+                            >
+                              <span>⭐ {item.pinned ? "Épinglé" : "Épingler"}</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleToggleHide(item)}
+                              className={`py-2 px-2.5 rounded-xl font-mono text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                                item.hidden 
+                                  ? 'bg-zinc-700 text-white' 
+                                  : 'bg-zinc-500/10 hover:bg-zinc-500/20 text-zinc-300 border border-zinc-500/30'
+                              }`}
+                              title="Masquer / Afficher"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteContent(item)}
+                              className="py-2 px-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl font-mono text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center"
+                              title="Retirer du Centre des Tendances"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               );
             })()}
