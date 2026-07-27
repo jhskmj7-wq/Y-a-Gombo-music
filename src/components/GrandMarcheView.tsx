@@ -247,28 +247,20 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-col space-y-6 text-left animate-fadeIn text-afri-text pb-12">
+    <div className="w-full flex flex-col space-y-6 text-left animate-fadeIn text-afri-text pb-32">
       {/* HEADER & FILTERS */}
       <div className="w-full space-y-5">
         {/* HEADER SECTION */}
         <div className="w-full bg-gradient-to-r from-afri-bg-sec via-afri-bg to-afri-bg-sec border border-[#D4AF37]/40 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
-            <div className="flex items-center gap-3">
-              {onBack && (
-                <button
-                  onClick={onBack}
-                  className="w-9 h-9 rounded-xl bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text flex items-center justify-center transition-all cursor-pointer shrink-0"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-              )}
-              <div>
-                <div className="flex items-center gap-2">
-                  <Store className="w-6 h-6 text-[#D4AF37]" />
-                  <h1 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-tight">
+            <div className="flex items-start gap-3 w-full sm:w-auto">
+              <div className="w-full">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Store className="w-5 h-5 sm:w-6 sm:h-6 text-[#D4AF37] shrink-0" />
+                  <h1 className="text-lg sm:text-2xl font-black text-afri-text uppercase tracking-tight">
                     Le Grand Marché
                   </h1>
-                  <span className="text-[10px] sm:text-xs px-2.5 py-1 whitespace-nowrap overflow-hidden text-ellipsis bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] font-mono font-black uppercase rounded-md tracking-wider">
+                  <span className="text-[9px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] font-mono font-black uppercase rounded-md tracking-wider">
                     SÉCURISÉ AFRI-TRUST
                   </span>
                 </div>
@@ -279,20 +271,20 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
             </div>
 
             {/* ACTION BUTTONS */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setIsInfoModalOpen(true)}
-                className="w-9 h-9 rounded-xl bg-afri-bg-ter border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black transition-all flex items-center justify-center cursor-pointer shadow-sm"
-                title="Règles & Sécurité du Grand Marché"
-              >
-                <Info className="w-4.5 h-4.5" />
-              </button>
+            <div className="w-full sm:w-auto shrink-0 flex justify-center sm:justify-end">
               <button
                 onClick={() => setIsPublishModalOpen(true)}
-                className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-afri-gold hover:brightness-110 text-black font-black uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-500 to-afri-gold hover:brightness-110 text-black font-black uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
                 <span>Vendre un article</span>
+                <Info 
+                  className="w-4 h-4 ml-1.5 hover:scale-110 transition-transform text-black/85 cursor-pointer shrink-0" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsInfoModalOpen(true);
+                  }}
+                />
               </button>
             </div>
           </div>
@@ -349,7 +341,7 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
 
           {/* CATEGORY CHIPS */}
           {activeTab === "catalog" && (
-            <div className="flex overflow-x-auto afri-no-scrollbar gap-2 pt-1 pb-2 whitespace-nowrap text-xs">
+            <div className="flex overflow-x-auto scrollbar-hide gap-1.5 sm:gap-2 pt-1 pb-2 whitespace-nowrap text-xs w-full max-w-full select-none">
               {[
                 { id: "all", label: "Tous les produits" },
                 { id: "instruments", label: "🎹 Instruments" },

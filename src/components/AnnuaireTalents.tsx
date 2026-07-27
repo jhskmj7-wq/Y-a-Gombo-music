@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { gomboDB } from "../firebase";
+import { motion, AnimatePresence } from "motion/react";
+import { useAudio } from "../context/AudioContext";
 
 interface AnnuaireTalentsProps {
   currentUserProfile: UserProfile | null;
@@ -45,17 +47,32 @@ const VILLES_CI = [
 // Spécialités
 const SPECIALTIES_FILTER = [
   { label: "Tous", value: "all", icon: "🎵" },
+  { label: "Beatmakers", value: "Beatmaker", icon: "🎹" },
+  { label: "Réalisateurs", value: "Réalisateur", icon: "🎬" },
   { label: "Chanteurs", value: "Chanteur", icon: "🎤" },
+  { label: "Certifiés Gombo ID", value: "certified_gombo", icon: "🛡️" },
   { label: "Pianistes", value: "Pianiste", icon: "🎹" },
   { label: "Guitaristes", value: "Guitariste", icon: "🎸" },
   { label: "Bassistes", value: "Bassiste", icon: "🎸" },
   { label: "Batteurs", value: "Batteur", icon: "🥁" },
-  { label: "DJs", value: "DJ", icon: "🎧" },
-  { label: "Choristes", value: "Choriste", icon: "🎼" },
-  { label: "Saxophonistes", value: "Saxophoniste", icon: "🎷" },
-  { label: "Trompettistes", value: "Trompettiste", icon: "🎺" },
-  { label: "Violonistes", value: "Violoniste", icon: "🎻" }
+  { label: "DJs", value: "DJ", icon: "🎧" }
 ];
+
+const DEMO_TRACKS = [
+  "https://assets.mixkit.co/music/preview/mixkit-african-spirit-140.mp3",
+  "https://assets.mixkit.co/music/preview/mixkit-african-safari-loop-267.mp3",
+  "https://assets.mixkit.co/music/preview/mixkit-tribal-rhythm-263.mp3",
+  "https://assets.mixkit.co/music/preview/mixkit-slow-trail-1217.mp3"
+];
+
+const getFallbackAudioUrl = (uid: string, specialty?: string) => {
+  let hash = 0;
+  for (let i = 0; i < uid.length; i++) {
+    hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % DEMO_TRACKS.length;
+  return DEMO_TRACKS[index];
+};
 
 // Fallback high-quality avatars for complete looking look
 const AVATARS = [
@@ -114,6 +131,10 @@ export default function AnnuaireTalents({
   const [contactMessage, setContactMessage] = useState("");
   const [contactSuccess, setContactSuccess] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
+  
+  // Audio player hook and Alliance toggle integration
+  const { currentTrack, isPlaying, isPaused, playTrack, pause, resume } = useAudio();
+  const [isAllianceProposal, setIsAllianceProposal] = useState(false);
 
   // Load all talents
   useEffect(() => {
@@ -264,10 +285,14 @@ export default function AnnuaireTalents({
 
     // 2. Specialty Quick buttons Filter
     if (selectedSpecialty !== "all") {
-      const spec = selectedSpecialty.toLowerCase();
-      const sMatch = (t.specialty || "").toLowerCase().includes(spec);
-      const sMultMatch = t.specialties?.some(el => el.toLowerCase().includes(spec)) ?? false;
-      if (!sMatch && !sMultMatch) return false;
+      if (selectedSpecialty === "certified_gombo") {
+        if (t.kycStatus !== "approved") return false;
+      } else {
+        const spec = selectedSpecialty.toLowerCase();
+        const sMatch = (t.specialty || "").toLowerCase().includes(spec);
+        const sMultMatch = t.specialties?.some(el => el.toLowerCase().includes(spec)) ?? false;
+        if (!sMatch && !sMultMatch) return false;
+      }
     }
 
     // 3. Abidjan Communes Filter
@@ -684,16 +709,32 @@ export default function AnnuaireTalents({
                         </div>
 
                         {/* Name and specialty */}
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <span className="font-extrabold text-[#7C3AED] text-[10px] bg-purple-100/60 dark:bg-purple-950/40 px-1.5 py-0.5 rounded leading-none">
-                              {talent.specialty || "Musicien"}
-                            </span>
-                            {talent.badges?.includes("⭐ Talent Certifié") && (
-                              <span title="Talent Certifié">⭐</span>
+                        <div className="space-y-1 min-w-0 flex-grow">
+                          <div className="flex flex-wrap gap-1 items-center">
+                            {/* Live Status Badge */}
+                            {status === "disponible" ? (
+                              <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded-full border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                                Disponible
+                              </span>
+                            ) : status === "occupe" ? (
+                              <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded-full border border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/5 flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-amber-500" />
+                                Occupé
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded-full border border-red-500/30 text-red-600 dark:text-red-400 bg-red-500/5 flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-red-500" />
+                                Indisponible
+                              </span>
                             )}
+
+                            {/* Specialties with elegant gold/bronze border */}
+                            <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded-full border border-[#D4AF37]/40 text-[#D4AF37] bg-[#D4AF37]/5 dark:bg-[#D4AF37]/10 shadow-xs">
+                              🎹 {talent.specialty || "Musicien"}
+                            </span>
                           </div>
-                          <h3 className="text-sm font-black text-gray-950 dark:text-afri-text group-hover:text-[#7C3AED] transition-colors">
+                          <h3 className="text-sm font-black text-gray-950 dark:text-afri-text group-hover:text-[#7C3AED] transition-colors truncate">
                             {talent.firstName} {talent.lastName} {talent.artistName && `(${talent.artistName})`}
                           </h3>
                           <p className="text-[10px] text-afri-text-sec font-bold flex items-center gap-1">
@@ -709,27 +750,89 @@ export default function AnnuaireTalents({
                       </p>
 
                       {/* Footer interactive card indicators */}
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-50 dark:border-gray-800/60 text-xs">
-                        <span className="text-[10px] font-black text-[#D4AF37] flex items-center gap-1 uppercase tracking-wider">
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>{viewCount} Vues</span>
-                        </span>
+                      <div className="flex flex-col gap-2.5 pt-3 border-t border-gray-50 dark:border-gray-800/60">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-[10px] font-black text-[#D4AF37] flex items-center gap-1 uppercase tracking-wider">
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>{viewCount} Vues</span>
+                          </span>
 
-                        <div className="flex items-center gap-1">
-                          <button 
-                            onClick={(e) => toggleFavorite(talent.uid, e)}
-                            className={`p-1.5 rounded-full border transition cursor-pointer ${
-                              isFavorited 
-                                ? "bg-rose-50 border-rose-100 text-rose-600 dark:bg-rose-950/20" 
-                                : "bg-gray-50 text-afri-text-sec hover:text-rose-600 dark:bg-gray-800"
-                            }`}
-                          >
-                            <Heart className={`w-3.5 h-3.5 ${isFavorited ? "fill-current" : ""}`} />
-                          </button>
-                          
                           <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded uppercase leading-none">
                             🟢 ACTIF
                           </span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                          <div className="flex items-center gap-1.5">
+                            {/* Play demo track button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const isCurrent = currentTrack?.id === talent.uid;
+                                if (isCurrent && isPlaying) {
+                                  pause();
+                                } else if (isCurrent && isPaused) {
+                                  resume();
+                                } else {
+                                  const trackUrl = talent.audioUrl || getFallbackAudioUrl(talent.uid, talent.specialty);
+                                  playTrack({
+                                    id: talent.uid,
+                                    url: trackUrl,
+                                    title: `Démo - ${talent.artistName || talent.firstName}`,
+                                    artist: talent.specialty || "Musicien Élite",
+                                    artwork: talent.avatarUrl || talent.photoURL
+                                  }).catch(err => console.log("Failed to play track", err));
+                                }
+                              }}
+                              className={`px-3 py-1.5 text-[10px] font-black rounded-xl transition duration-200 flex items-center gap-1 border cursor-pointer select-none ${
+                                currentTrack?.id === talent.uid && isPlaying
+                                  ? "bg-amber-500/20 border-amber-500 text-amber-600 dark:text-amber-400 animate-pulse"
+                                  : "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20 text-[#D4AF37]"
+                              }`}
+                              title="Écouter un extrait audio"
+                            >
+                              {currentTrack?.id === talent.uid && isPlaying ? (
+                                <>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                                  <span>⏸ Pause</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>▶ Extrait</span>
+                                </>
+                              )}
+                            </button>
+
+                            {/* Proposer Alliance Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!currentUserProfile) {
+                                  alert("Veuillez vous connecter pour proposer une alliance.");
+                                  return;
+                                }
+                                setContactingTalent(talent);
+                                setIsAllianceProposal(true);
+                                setContactMessage(`PROPOSITION D'ALLIANCE 🤝 : Salut ${talent.firstName}, j'admire beaucoup ton talent et ta présence sur l'écosystème AfriGombo. J'aimerais te proposer une alliance exclusive pour collaborer sur mes productions musicales et futurs spectacles.`);
+                              }}
+                              className="px-2.5 py-1.5 bg-[#D4AF37] hover:bg-[#B89423] text-black text-[10px] font-black rounded-xl transition-all flex items-center gap-1 shadow-sm cursor-pointer border border-[#D4AF37]/35"
+                            >
+                              <span>Alliance 🤝</span>
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button 
+                              onClick={(e) => toggleFavorite(talent.uid, e)}
+                              className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                                isFavorited 
+                                  ? "bg-rose-50 border-rose-100 text-rose-600 dark:bg-rose-950/20" 
+                                  : "bg-gray-50 text-afri-text-sec hover:text-rose-600 dark:bg-gray-800"
+                              }`}
+                            >
+                              <Heart className={`w-3.5 h-3.5 ${isFavorited ? "fill-current" : ""}`} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -808,17 +911,38 @@ export default function AnnuaireTalents({
                           </div>
 
                           <div className="space-y-1 min-w-0 flex-grow">
-                            <div className="flex items-center gap-1 flex-wrap">
-                              <span className="text-[9px] font-black uppercase text-purple-650 bg-purple-50 dark:bg-purple-950/20 px-1.5 py-0.5 rounded leading-none">
-                                {talent.specialty || "Musicien"}
+                            <div className="flex flex-wrap gap-1 items-center">
+                              {/* Live Status Badge */}
+                              {status === "disponible" ? (
+                                <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded-full border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 flex items-center gap-1">
+                                  <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                                  Disponible
+                                </span>
+                              ) : status === "occupe" ? (
+                                <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded-full border border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/5 flex items-center gap-1">
+                                  <span className="w-1 h-1 rounded-full bg-amber-500" />
+                                  Occupé
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded-full border border-red-500/30 text-red-600 dark:text-red-400 bg-red-500/5 flex items-center gap-1">
+                                  <span className="w-1 h-1 rounded-full bg-red-500" />
+                                  Indisponible
+                                </span>
+                              )}
+
+                              {/* Specialties under fluid gold/bronze border */}
+                              <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded-full border border-[#D4AF37]/40 text-[#D4AF37] bg-[#D4AF37]/5 dark:bg-[#D4AF37]/10 shadow-xs">
+                                🎹 {talent.specialty || "Musicien"}
                               </span>
+
                               {talent.kycStatus === "approved" && (
-                                <span className="text-[8px] font-black bg-afri-bg-sec text-black px-1.5 py-0.5 rounded leading-none border border-[#D4AF37]/10 flex items-center gap-0.5">
+                                <span className="text-[8.5px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full leading-none border border-emerald-500/30 flex items-center gap-0.5">
                                   🎼 GOMBO ID
                                 </span>
                               )}
+
                               {talent.badge && talent.badge !== "Standard" && (
-                                <span className="text-[8.5px] font-black uppercase tracking-widest bg-afri-bg-sec/10 text-[#D4AF37] px-1.5 py-0.5 rounded leading-none border border-[#D4AF37]/20">
+                                <span className="text-[8.5px] font-black uppercase tracking-widest bg-[#D4AF37]/10 text-[#D4AF37] px-2 py-0.5 rounded-full leading-none border border-[#D4AF37]/30">
                                   {talent.badge === "Référence AFRIGOMBO" && "👑 Référence"}
                                   {talent.badge === "Artiste Premium" && "🏆 Premium"}
                                   {talent.badge === "Excellence" && "🥇 Excellence"}
@@ -826,13 +950,6 @@ export default function AnnuaireTalents({
                                   {talent.badge === "Fiable" && "🥉 Fiable"}
                                 </span>
                               )}
-                              {talent.badges?.filter(b => b !== "Certifié" && b !== "Vérifié").map((badge, idx) => {
-                                return (
-                                  <span key={idx} className="text-[8px] font-black px-1.5 py-0.5 rounded leading-none border bg-zinc-100 dark:bg-afri-bg-ter text-zinc-650 dark:text-afri-text border-zinc-200 dark:border-afri-border">
-                                    {badge}
-                                  </span>
-                                );
-                              })}
                             </div>
                             
                             <h3 className="text-sm font-black text-gray-950 dark:text-afri-text truncate mt-1">
@@ -864,53 +981,123 @@ export default function AnnuaireTalents({
                       </div>
 
                       {/* Card layout bottom controls */}
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-50 dark:border-[#1a1a1f] text-xs">
-                        <span className="text-[9.5px] text-afri-text-sec font-bold">
-                          💼 {talent.gombosCompleted || talent.gigsCompleted || (talent.experience === "Professionnel" ? 6 : 2)} gombos
-                        </span>
+                      <div className="flex flex-col gap-2.5 pt-3 border-t border-gray-50 dark:border-[#1a1a1f]">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-[9.5px] text-afri-text-sec font-bold">
+                            💼 {talent.gombosCompleted || talent.gigsCompleted || (talent.experience === "Professionnel" ? 6 : 2)} gombos
+                          </span>
+                          
+                          {/* Live Status Badge next to it */}
+                          <span className="text-[9px] font-black text-[#D4AF37] flex items-center gap-1 uppercase tracking-wider">
+                            ★ {talent.averageRating !== undefined ? talent.averageRating : "4.5"} ({talent.ratingCount || 0})
+                          </span>
+                        </div>
 
-                        <div className="flex items-center gap-1.5 onClickPrevent">
-                          {/* WhatsApp button */}
-                          <a 
-                            href={`https://wa.me/${talent.phone.replace(/[^0-9]/g, "")}?text=Bonjour%20${talent.firstName}%20!%20J%27ai%20vu%20ton%20profil%20sur%2520Y%27A%20GOMBO%20MUSIC.`}
-                            target="_blank"
-                            rel="no-referrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-1.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 transition"
-                            title="Contacter par WhatsApp"
-                          >
-                            <Smartphone className="w-3.5 h-3.5" />
-                          </a>
+                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                          {/* Left-aligned audio player and Alliance buttons */}
+                          <div className="flex items-center gap-1.5">
+                            {/* Play demo track button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const isCurrent = currentTrack?.id === talent.uid;
+                                if (isCurrent && isPlaying) {
+                                  pause();
+                                } else if (isCurrent && isPaused) {
+                                  resume();
+                                } else {
+                                  const trackUrl = talent.audioUrl || getFallbackAudioUrl(talent.uid, talent.specialty);
+                                  playTrack({
+                                    id: talent.uid,
+                                    url: trackUrl,
+                                    title: `Démo - ${talent.artistName || talent.firstName}`,
+                                    artist: talent.specialty || "Musicien Élite",
+                                    artwork: talent.avatarUrl || talent.photoURL
+                                  }).catch(err => console.log("Failed to play track", err));
+                                }
+                              }}
+                              className={`px-3 py-1.5 text-[10px] font-black rounded-xl transition duration-200 flex items-center gap-1 border cursor-pointer select-none ${
+                                currentTrack?.id === talent.uid && isPlaying
+                                  ? "bg-amber-500/20 border-amber-500 text-amber-600 dark:text-amber-400 animate-pulse"
+                                  : "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20 text-[#D4AF37]"
+                              }`}
+                              title="Écouter un extrait audio"
+                            >
+                              {currentTrack?.id === talent.uid && isPlaying ? (
+                                <>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                                  <span>⏸ Pause</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>▶ Extrait</span>
+                                </>
+                              )}
+                            </button>
 
-                          {/* Contact modal trigger */}
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!currentUserProfile) {
-                                alert("Veuillez vous connecter pour envoyer un message.");
-                                return;
-                              }
-                              setContactingTalent(talent);
-                              setContactMessage(`Salut ${talent.firstName}, j'ai vu ton profil d'artiste sur l'Annuaire Premium. J'ai un projet de gombo musical pour toi...`);
-                            }}
-                            className="p-1.5 bg-afri-bg-sec/10 text-[#D4AF37] dark:bg-afri-bg-sec/20 dark:text-[#D4AF37] rounded-lg hover:bg-afri-bg-sec/35 transition cursor-pointer"
-                            title="Envoyer un message direct"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                          </button>
+                            {/* Proposer Alliance Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!currentUserProfile) {
+                                  alert("Veuillez vous connecter pour proposer une alliance.");
+                                  return;
+                                }
+                                setContactingTalent(talent);
+                                setIsAllianceProposal(true);
+                                setContactMessage(`PROPOSITION D'ALLIANCE 🤝 : Salut ${talent.firstName}, j'admire beaucoup ton talent et ta présence sur l'écosystème AfriGombo. J'aimerais te proposer une alliance exclusive pour collaborer sur mes productions musicales et futurs spectacles.`);
+                              }}
+                              className="px-2.5 py-1.5 bg-[#D4AF37] hover:bg-[#B89423] text-black text-[10px] font-black rounded-xl transition-all flex items-center gap-1 shadow-sm cursor-pointer border border-[#D4AF37]/35"
+                            >
+                              <span>Alliance 🤝</span>
+                            </button>
+                          </div>
 
-                          {/* Heart favorite button */}
-                          <button 
-                            onClick={(e) => toggleFavorite(talent.uid, e)}
-                            className={`p-1.5 rounded-lg border transition cursor-pointer ${
-                              isFavorited 
-                                ? "bg-rose-50 border-rose-100 text-rose-600 dark:bg-rose-950/20" 
-                                : "bg-gray-50 border-gray-150 text-afri-text-sec hover:text-rose-600 dark:bg-gray-850"
-                            }`}
-                            title="Ajouter aux favoris"
-                          >
-                            <Heart className={`w-3.5 h-3.5 ${isFavorited ? "fill-current" : ""}`} />
-                          </button>
+                          {/* Right-aligned messenger and social buttons */}
+                          <div className="flex items-center gap-1">
+                            {/* WhatsApp button */}
+                            <a 
+                              href={`https://wa.me/${talent.phone.replace(/[^0-9]/g, "")}?text=Bonjour%20${talent.firstName}%20!%20J%27ai%20vu%20ton%20profil%20sur%2520Y%27A%20GOMBO%20MUSIC.`}
+                              target="_blank"
+                              rel="no-referrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-1.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 transition"
+                              title="Contacter par WhatsApp"
+                            >
+                              <Smartphone className="w-3.5 h-3.5" />
+                            </a>
+
+                            {/* Contact message button */}
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!currentUserProfile) {
+                                  alert("Veuillez vous connecter pour envoyer un message.");
+                                  return;
+                                }
+                                setContactingTalent(talent);
+                                setIsAllianceProposal(false);
+                                setContactMessage(`Salut ${talent.firstName}, j'ai vu ton profil d'artiste sur l'Annuaire Premium. J'ai un projet de gombo musical pour toi...`);
+                              }}
+                              className="p-1.5 bg-afri-bg-sec/10 text-[#D4AF37] dark:bg-afri-bg-sec/20 dark:text-[#D4AF37] rounded-lg hover:bg-afri-bg-sec/35 transition cursor-pointer"
+                              title="Envoyer un message direct"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Favorite toggle */}
+                            <button 
+                              onClick={(e) => toggleFavorite(talent.uid, e)}
+                              className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                                isFavorited 
+                                  ? "bg-rose-50 border-rose-100 text-rose-600 dark:bg-rose-950/20" 
+                                  : "bg-gray-50 border-gray-150 text-afri-text-sec hover:text-rose-600 dark:bg-gray-850"
+                              }`}
+                              title="Ajouter aux favoris"
+                            >
+                              <Heart className={`w-3.5 h-3.5 ${isFavorited ? "fill-current" : ""}`} />
+                            </button>
+                          </div>
                         </div>
                       </div>
 
@@ -925,74 +1112,118 @@ export default function AnnuaireTalents({
         </div>
       )}
 
-      {/* DIRECT MESSAGING CONTACT OVERLAY MODAL */}
-      {contactingTalent && (
-        <div className="fixed inset-0 bg-afri-bg/55 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white dark:bg-afri-bg-sec border border-gray-100 dark:border-gray-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            
-            <div className="flex justify-between items-start pb-2 border-b border-gray-50 dark:border-gray-850">
-              <div>
-                <span className="text-[10px] font-black uppercase text-[#D4AF37]">Mise en relation Showbiz</span>
-                <h3 className="text-base font-black text-gray-950 dark:text-afri-text uppercase leading-tight">
-                  Contacter {contactingTalent.firstName}
-                </h3>
+      {/* DIRECT MESSAGING CONTACT BOTTOM SHEET MODAL */}
+      <AnimatePresence>
+        {contactingTalent && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-end justify-center z-50">
+            {/* Click backdrop to close */}
+            <div 
+              className="absolute inset-0 cursor-pointer" 
+              onClick={() => setContactingTalent(null)} 
+            />
+
+            {/* Bottom Sheet container */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="relative w-full max-w-lg bg-white dark:bg-[#111111] border-t border-x border-[#D4AF37]/30 rounded-t-[32px] p-6 pb-8 space-y-5 shadow-[0_-8px_40px_rgba(0,0,0,0.4)] z-10 text-left"
+            >
+              {/* Handlebar for dragging feeling */}
+              <div className="w-12 h-1.5 bg-gray-300 dark:bg-zinc-800 rounded-full mx-auto mb-2" />
+
+              <div className="flex justify-between items-start pb-2 border-b border-gray-100 dark:border-zinc-900">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-wider font-mono">
+                    {isAllianceProposal ? "🤝 ALLIANCE & COLLABORATION SOUVERAINE" : "💬 DIRECT MESSAGING CONTACT"}
+                  </span>
+                  <h3 className="text-lg font-black text-gray-950 dark:text-afri-text uppercase leading-tight mt-0.5">
+                    {isAllianceProposal ? `Proposer une Alliance à ${contactingTalent.firstName}` : `Contacter ${contactingTalent.firstName}`}
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setContactingTalent(null)}
+                  className="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-900 hover:bg-gray-200 dark:hover:bg-zinc-800 text-gray-650 dark:text-gray-300 flex items-center justify-center font-black transition cursor-pointer"
+                >
+                  ✕
+                </button>
               </div>
-              <button 
-                onClick={() => setContactingTalent(null)}
-                className="text-afri-text-sec hover:text-gray-800 font-black text-xs uppercase"
-              >
-                Fermer
-              </button>
-            </div>
 
-            {contactSuccess ? (
-              <div className="py-8 text-center space-y-3">
-                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/35 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                  <Check className="w-6 h-6 stroke-[3]" />
+              {contactSuccess ? (
+                <div className="py-8 text-center space-y-3">
+                  <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-950/35 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                    <Check className="w-7 h-7 stroke-[3]" />
+                  </div>
+                  <h4 className="text-base font-black text-gray-950 dark:text-afri-text uppercase">Demande Transmise !</h4>
+                  <p className="text-xs text-afri-text-sec max-w-xs mx-auto">
+                    {isAllianceProposal 
+                      ? "Votre proposition d'Alliance a été envoyée. Elle a fait vibrer les tambours du showbiz !" 
+                      : "Votre message a été transmis avec succès à l'artiste."}
+                  </p>
                 </div>
-                <h4 className="text-sm font-black text-gray-950 dark:text-afri-text uppercase">Message Envoyé !</h4>
-                <p className="text-xs text-afri-text-sec max-w-xs mx-auto">
-                  Votre proposition d'embauche a été envoyée. Retrouvez la discussion en direct dans l'onglet Messagerie.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleSendMessageSubmit} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-afri-text-sec block">Votre Message :</label>
-                  <textarea 
-                    value={contactMessage}
-                    onChange={(e) => setContactMessage(e.target.value)}
-                    rows={4}
-                    className="w-full p-3 bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#D4AF37] dark:text-afri-text"
-                    placeholder="Écrivez les conditions de date, de cachet de vos spectacles..."
-                    required
-                  />
-                </div>
+              ) : (
+                <form onSubmit={handleSendMessageSubmit} className="space-y-4">
+                  {/* Artist Mini Card */}
+                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-950 p-3 rounded-2xl border border-gray-100 dark:border-zinc-900">
+                    <img 
+                      src={contactingTalent.avatarUrl || contactingTalent.photoURL || AVATARS[0]} 
+                      alt="" 
+                      className="w-11 h-11 rounded-xl object-cover border border-[#D4AF37]/35"
+                    />
+                    <div>
+                      <h4 className="text-xs font-black text-gray-950 dark:text-white uppercase">
+                        {contactingTalent.firstName} {contactingTalent.lastName}
+                      </h4>
+                      <p className="text-[10px] text-afri-gold font-bold font-mono">
+                        🎹 {contactingTalent.specialty || "Artiste Gombo"} • {contactingTalent.commune || "Abidjan"}
+                      </p>
+                    </div>
+                  </div>
 
-                <div className="flex gap-2.5 pt-1">
-                  <button 
-                    type="button"
-                    disabled={sendingMessage}
-                    onClick={() => setContactingTalent(null)}
-                    className="flex-1 py-3 border border-gray-150 text-gray-700 dark:text-gray-300 dark:border-gray-850 hover:bg-gray-50 rounded-xl text-xs font-bold font-sans cursor-pointer disabled:opacity-50"
-                  >
-                    Annuler
-                  </button>
-                  <button 
-                    type="submit"
-                    disabled={sendingMessage}
-                    className="flex-1 py-3 bg-afri-bg-sec hover:bg-afri-bg-sec text-[#0B0B0B] rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{sendingMessage ? "Envoi..." : "Envoyer la demande"}</span>
-                  </button>
-                </div>
-              </form>
-            )}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase text-afri-text-sec block tracking-wider">
+                      {isAllianceProposal ? "Contenu de votre proposition d'Alliance :" : "Votre Message :"}
+                    </label>
+                    <textarea 
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      rows={4}
+                      className="w-full p-4.5 bg-gray-50 dark:bg-zinc-950 border border-gray-150 dark:border-zinc-850 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-2xl text-xs font-semibold focus:outline-none dark:text-afri-text transition-all resize-none shadow-inner animate-none focus:ring-offset-0"
+                      placeholder={isAllianceProposal ? "Proposez un projet d'alliance (album, concert, répétition, co-production)..." : "Écrivez votre message..."}
+                      required
+                    />
+                  </div>
 
+                  <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setContactingTalent(null);
+                        if (onNavigateView) onNavigateView("messages");
+                      }}
+                      className="flex-1 py-3 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-850 text-gray-850 dark:text-gray-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border border-transparent dark:border-zinc-800"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>Aller aux discussions</span>
+                    </button>
+
+                    <button 
+                      type="submit"
+                      disabled={sendingMessage}
+                      className="flex-1 py-3 bg-[#D4AF37] hover:bg-[#B89423] text-black rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 border border-[#D4AF37]/20"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{sendingMessage ? "Transmission..." : isAllianceProposal ? "Proposer l'Alliance 🤝" : "Envoyer le message"}</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
     </div>
   );

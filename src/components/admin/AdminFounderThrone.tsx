@@ -1731,236 +1731,274 @@ export default function AdminFounderThrone({
               </div>
 
               {!isCriticalZoneFolded && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 pt-1">
-                  {/* 🔥 Centre des Tendances */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 pt-1">
+                  {/* 1. 🔥 Centre des Tendances */}
                   <div
                     onClick={() => setSelectedSection("tendances")}
-                    className="p-3.5 bg-gradient-to-br from-amber-500/15 via-afri-bg to-afri-bg border border-[#D4AF37]/60 hover:border-[#D4AF37] rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                    className="p-2.5 bg-gradient-to-br from-amber-500/10 via-zinc-950/20 to-zinc-950/40 border border-[#D4AF37]/50 hover:border-[#D4AF37] rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="p-2 bg-amber-500/20 border border-[#D4AF37]/40 rounded-xl text-amber-400 group-hover:scale-105 transition-transform">
-                        <Flame className="w-4 h-4 animate-pulse" />
+                    <div className="flex justify-between items-center">
+                      <span className="p-1 bg-amber-500/10 border border-[#D4AF37]/30 rounded-lg text-amber-400">
+                        <Flame className="w-3.5 h-3.5 animate-pulse" />
                       </span>
-                      <span className="px-1.5 py-0.5 bg-amber-500 text-black rounded text-[8px] font-mono font-black animate-pulse">
-                        TENDANCES
+                      <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-400 rounded-[4px] text-[8px] font-mono font-bold">
+                        BUZZ
                       </span>
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Tendances</span>
-                      <strong className="text-2xl font-display font-black text-amber-400 block mt-0.5">
-                        {featuredContentList.length || displayPosts.length || 0}
-                      </strong>
-                      <span className="text-[8px] font-mono text-amber-400 font-bold block mt-1">Gérer →</span>
+                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Tendances</span>
+                      <div className="flex items-baseline justify-between mt-0.5">
+                        <strong className="text-lg font-display font-black text-amber-400 leading-none">
+                          {featuredContentList.length || displayPosts.length || 0}
+                        </strong>
+                        <span className="text-[8.5px] font-mono text-amber-400 font-bold group-hover:underline">Gérer →</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* 👥 Utilisateurs connectés */}
+                  {/* 2. 👥 Utilisateurs connectés */}
                   <div
                     onClick={() => setSelectedSection("users")}
-                    className="p-3.5 bg-gradient-to-br from-amber-500/10 via-afri-bg to-afri-bg border border-[#D4AF37]/40 hover:border-[#D4AF37] rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                    className="p-2.5 bg-gradient-to-br from-[#D4AF37]/5 via-zinc-950/20 to-zinc-950/40 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="p-2 bg-amber-500/20 border border-[#D4AF37]/40 rounded-xl text-[#D4AF37] group-hover:scale-105 transition-transform">
-                        <Users className="w-4 h-4" />
+                    <div className="flex justify-between items-center">
+                      <span className="p-1 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-lg text-[#D4AF37]">
+                        <Users className="w-3.5 h-3.5" />
                       </span>
-                      <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[8px] font-mono font-bold">
+                      <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[4px] text-[8px] font-mono font-bold animate-pulse">
                         LIVE
                       </span>
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Citoyens</span>
-                      <strong className="text-2xl font-display font-black text-[#D4AF37] block mt-0.5">{displayUsers.length}</strong>
-                      <span className="text-[8px] font-mono text-emerald-400 font-bold block mt-1">Gérer →</span>
+                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Membres</span>
+                      <div className="flex items-baseline justify-between mt-0.5">
+                        <strong className="text-lg font-display font-black text-[#D4AF37] leading-none">
+                          {displayUsers.length}
+                        </strong>
+                        <span className="text-[8.5px] font-mono text-emerald-400 font-bold group-hover:underline">Voir →</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* 📝 Publications en attente */}
+                  {/* 3. 📝 Publications en attente */}
                   <div
                     onClick={() => setSelectedSection("publications")}
-                    className="p-3.5 bg-gradient-to-br from-sky-500/10 via-afri-bg to-afri-bg border border-sky-500/40 hover:border-sky-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                    className="p-2.5 bg-gradient-to-br from-sky-500/10 via-zinc-950/20 to-zinc-950/40 border border-sky-500/30 hover:border-sky-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="p-2 bg-sky-500/20 border border-sky-500/40 rounded-xl text-sky-400 group-hover:scale-105 transition-transform">
-                        <FileText className="w-4 h-4" />
+                    <div className="flex justify-between items-center">
+                      <span className="p-1 bg-sky-500/10 border border-sky-500/20 rounded-lg text-sky-400">
+                        <FileText className="w-3.5 h-3.5" />
                       </span>
                       {pendingPostsCount > 0 ? (
-                        <span className="px-1.5 py-0.5 bg-amber-500 text-black rounded text-[8px] font-mono font-black animate-pulse">
-                          {pendingPostsCount} ATTENTE
+                        <span className="px-1 py-0.5 bg-amber-500 text-black rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                          {pendingPostsCount} REQ
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.5 bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded text-[8px] font-mono">OK</span>
+                        <span className="px-1 py-0.5 bg-sky-500/10 text-sky-400 rounded-[4px] text-[7.5px] font-mono leading-none">RAS</span>
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Publications</span>
-                      <strong className="text-2xl font-display font-black text-sky-400 block mt-0.5">{pendingPostsCount}</strong>
-                      <span className="text-[8px] font-mono text-sky-400 font-bold block mt-1">Valider →</span>
+                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Publications</span>
+                      <div className="flex items-baseline justify-between mt-0.5">
+                        <strong className="text-lg font-display font-black text-sky-400 leading-none">
+                          {pendingPostsCount}
+                        </strong>
+                        <span className="text-[8.5px] font-mono text-sky-400 font-bold group-hover:underline">Valider →</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* 💳 Dépôts à valider */}
+                  {/* 4. 💳 Dépôts à valider */}
                   <div
                     onClick={() => setSelectedSection("beta_escrow")}
-                    className="p-3.5 bg-gradient-to-br from-emerald-500/10 via-afri-bg to-afri-bg border border-emerald-500/40 hover:border-emerald-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                    className="p-2.5 bg-gradient-to-br from-emerald-500/10 via-zinc-950/20 to-zinc-950/40 border border-emerald-500/30 hover:border-emerald-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="p-2 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-400 group-hover:scale-105 transition-transform">
-                        <CreditCard className="w-4 h-4 animate-pulse" />
+                    <div className="flex justify-between items-center">
+                      <span className="p-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400">
+                        <CreditCard className="w-3.5 h-3.5" />
                       </span>
                       {pendingBetaTransactions.length > 0 ? (
-                        <span className="px-1.5 py-0.5 bg-emerald-500 text-black rounded text-[8px] font-mono font-black animate-pulse">
-                          {pendingBetaTransactions.length} VALIDER
+                        <span className="px-1 py-0.5 bg-emerald-500 text-black rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                          {pendingBetaTransactions.length} PAY
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[8px] font-mono">ACTIF</span>
+                        <span className="px-1 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-[4px] text-[7.5px] font-mono leading-none">ACTIF</span>
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Dépôts Bêta</span>
-                      <strong className="text-2xl font-display font-black text-emerald-400 block mt-0.5">{pendingBetaTransactions.length}</strong>
-                      <span className="text-[8px] font-mono text-emerald-400 font-bold block mt-1">Valider →</span>
+                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Dépôts Bêta</span>
+                      <div className="flex items-baseline justify-between mt-0.5">
+                        <strong className="text-lg font-display font-black text-emerald-400 leading-none">
+                          {pendingBetaTransactions.length}
+                        </strong>
+                        <span className="text-[8.5px] font-mono text-emerald-400 font-bold group-hover:underline">Traiter →</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* 🚨 Signalements urgents */}
+                  {/* 5. 🚨 Signalements urgents */}
                   <div
                     onClick={() => setSelectedSection("veille")}
-                    className="p-3.5 bg-gradient-to-br from-red-500/10 via-afri-bg to-afri-bg border border-red-500/40 hover:border-red-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                    className="p-2.5 bg-gradient-to-br from-red-500/10 via-zinc-950/20 to-zinc-950/40 border border-red-500/30 hover:border-red-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="p-2 bg-red-500/20 border border-red-500/40 rounded-xl text-red-400 group-hover:scale-105 transition-transform">
-                        <ShieldAlert className="w-4 h-4 animate-bounce" />
+                    <div className="flex justify-between items-center">
+                      <span className="p-1 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400">
+                        <ShieldAlert className="w-3.5 h-3.5 animate-bounce" />
                       </span>
                       {highAlertsCount > 0 && (
-                        <span className="px-1.5 py-0.5 bg-red-500 text-white rounded text-[8px] font-mono font-black animate-ping">
-                          URGENT
+                        <span className="px-1 py-0.5 bg-red-500 text-white rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                          ALERTE
                         </span>
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Signalements</span>
-                      <strong className="text-2xl font-display font-black text-red-400 block mt-0.5">{highAlertsCount}</strong>
-                      <span className="text-[8px] font-mono text-red-400 font-bold block mt-1">Traiter →</span>
+                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Signalements</span>
+                      <div className="flex items-baseline justify-between mt-0.5">
+                        <strong className="text-lg font-display font-black text-red-400 leading-none">
+                          {highAlertsCount}
+                        </strong>
+                        <span className="text-[8.5px] font-mono text-red-400 font-bold group-hover:underline">Résoudre →</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* 🛡 Vérifications KYC */}
+                  {/* 6. 🛡 Vérifications KYC */}
                   <div
                     onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("kyc"); }}
-                    className="p-3.5 bg-gradient-to-br from-purple-500/10 via-afri-bg to-afri-bg border border-purple-500/40 hover:border-purple-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                    className="p-2.5 bg-gradient-to-br from-purple-500/10 via-zinc-950/20 to-zinc-950/40 border border-purple-500/30 hover:border-purple-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="p-2 bg-purple-500/20 border border-purple-500/40 rounded-xl text-purple-400 group-hover:scale-105 transition-transform">
-                        <ShieldCheck className="w-4 h-4" />
+                    <div className="flex justify-between items-center">
+                      <span className="p-1 bg-purple-500/10 border border-purple-500/20 rounded-lg text-purple-400">
+                        <ShieldCheck className="w-3.5 h-3.5" />
                       </span>
                       {pendingKycCount > 0 ? (
-                        <span className="px-1.5 py-0.5 bg-purple-500 text-white rounded text-[8px] font-mono font-black animate-pulse">
-                          {pendingKycCount} KYC
+                        <span className="px-1 py-0.5 bg-purple-500 text-white rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                          {pendingKycCount} NEW
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded text-[8px] font-mono">ID</span>
+                        <span className="px-1 py-0.5 bg-purple-500/10 text-purple-400 rounded-[4px] text-[7.5px] font-mono leading-none">OK</span>
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Dossiers KYC</span>
-                      <strong className="text-2xl font-display font-black text-purple-400 block mt-0.5">{kycRequests.length}</strong>
-                      <span className="text-[8px] font-mono text-purple-400 font-bold block mt-1">Vérifier →</span>
+                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Gombo IDs</span>
+                      <div className="flex items-baseline justify-between mt-0.5">
+                        <strong className="text-lg font-display font-black text-purple-400 leading-none">
+                          {kycRequests.length}
+                        </strong>
+                        <span className="text-[8.5px] font-mono text-purple-400 font-bold group-hover:underline">Vérifier →</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* 📩 Tickets Support */}
+                  {/* 7. 📩 Tickets Support */}
                   <div
                     onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("support"); }}
-                    className="p-3.5 bg-gradient-to-br from-indigo-500/10 via-afri-bg to-afri-bg border border-indigo-500/40 hover:border-indigo-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                    className="p-2.5 bg-gradient-to-br from-indigo-500/10 via-zinc-950/20 to-zinc-950/40 border border-indigo-500/30 hover:border-indigo-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="p-2 bg-indigo-500/20 border border-indigo-500/40 rounded-xl text-indigo-400 group-hover:scale-105 transition-transform">
-                        <Mail className="w-4 h-4" />
+                    <div className="flex justify-between items-center">
+                      <span className="p-1 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-indigo-400">
+                        <Mail className="w-3.5 h-3.5" />
                       </span>
                       {pendingTicketsCount > 0 ? (
-                        <span className="px-1.5 py-0.5 bg-indigo-500 text-white rounded text-[8px] font-mono font-black animate-pulse">
-                          {pendingTicketsCount} NOUVEAU
+                        <span className="px-1 py-0.5 bg-indigo-500 text-white rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                          {pendingTicketsCount} MSG
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded text-[8px] font-mono">SUPPORT</span>
+                        <span className="px-1 py-0.5 bg-indigo-500/10 text-indigo-400 rounded-[4px] text-[7.5px] font-mono leading-none">TICKET</span>
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Tickets Support</span>
-                      <strong className="text-2xl font-display font-black text-indigo-400 block mt-0.5">{ticketsSupport.length}</strong>
-                      <span className="text-[8px] font-mono text-indigo-400 font-bold block mt-1">Répondre →</span>
+                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Support</span>
+                      <div className="flex items-baseline justify-between mt-0.5">
+                        <strong className="text-lg font-display font-black text-indigo-400 leading-none">
+                          {ticketsSupport.length}
+                        </strong>
+                        <span className="text-[8.5px] font-mono text-indigo-400 font-bold group-hover:underline">Ouvrir →</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* ⚖️ Litiges Prestations */}
+                  {/* 8. ⚖️ Litiges Prestations */}
                   <div
                     onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("disputes"); }}
-                    className="p-3.5 bg-gradient-to-br from-amber-600/10 via-afri-bg to-afri-bg border border-amber-600/40 hover:border-amber-500 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                    className="p-2.5 bg-gradient-to-br from-amber-600/10 via-zinc-950/20 to-zinc-950/40 border border-amber-600/30 hover:border-amber-500 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="p-2 bg-amber-600/20 border border-amber-600/40 rounded-xl text-amber-500 group-hover:scale-105 transition-transform">
-                        <AlertTriangle className="w-4 h-4 animate-pulse" />
+                    <div className="flex justify-between items-center">
+                      <span className="p-1 bg-amber-600/10 border border-amber-600/20 rounded-lg text-amber-500">
+                        <AlertTriangle className="w-3.5 h-3.5 animate-pulse" />
                       </span>
                       {pendingDisputesCount > 0 ? (
-                        <span className="px-1.5 py-0.5 bg-amber-500 text-black rounded text-[8px] font-mono font-black animate-pulse">
-                          {pendingDisputesCount} LITIGE
+                        <span className="px-1 py-0.5 bg-amber-500 text-black rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                          {pendingDisputesCount} JUG
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.5 bg-amber-600/20 text-amber-500 border border-amber-600/30 rounded text-[8px] font-mono">ARBITRAGE</span>
+                        <span className="px-1 py-0.5 bg-amber-600/10 text-amber-500 rounded-[4px] text-[7.5px] font-mono leading-none">AFRIQUE</span>
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Litiges Prestations</span>
-                      <strong className="text-2xl font-display font-black text-amber-500 block mt-0.5">{disputesList.length}</strong>
-                      <span className="text-[8px] font-mono text-amber-500 font-bold block mt-1">Arbitrer →</span>
+                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Litiges</span>
+                      <div className="flex items-baseline justify-between mt-0.5">
+                        <strong className="text-lg font-display font-black text-amber-500 leading-none">
+                          {disputesList.length}
+                        </strong>
+                        <span className="text-[8.5px] font-mono text-amber-500 font-bold group-hover:underline">Arbitrer →</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* 🐛 Signalements Bugs */}
+                  {/* 9. 🐛 Signalements Bugs */}
                   <div
                     onClick={() => { setSelectedSection("throne_forms"); setFormSubTab("bugs"); }}
-                    className="p-3.5 bg-gradient-to-br from-rose-500/10 via-afri-bg to-afri-bg border border-rose-500/40 hover:border-rose-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                    className="p-2.5 bg-gradient-to-br from-rose-500/10 via-zinc-950/20 to-zinc-950/40 border border-rose-500/30 hover:border-rose-400 rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="p-2 bg-rose-500/20 border border-rose-500/40 rounded-xl text-rose-400 group-hover:scale-105 transition-transform">
-                        <Wrench className="w-4 h-4" />
+                    <div className="flex justify-between items-center">
+                      <span className="p-1 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400">
+                        <Wrench className="w-3.5 h-3.5" />
                       </span>
                       {pendingBugsCount > 0 ? (
-                        <span className="px-1.5 py-0.5 bg-rose-500 text-white rounded text-[8px] font-mono font-black animate-pulse">
-                          {pendingBugsCount} BUG
+                        <span className="px-1 py-0.5 bg-rose-500 text-white rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                          {pendingBugsCount} FIX
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded text-[8px] font-mono">BUGS</span>
+                        <span className="px-1 py-0.5 bg-rose-500/10 text-rose-400 rounded-[4px] text-[7.5px] font-mono leading-none">RAS</span>
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Rapports de Bugs</span>
-                      <strong className="text-2xl font-display font-black text-rose-400 block mt-0.5">{bugReports.length}</strong>
-                      <span className="text-[8px] font-mono text-rose-400 font-bold block mt-1">Corriger →</span>
+                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Bugs reports</span>
+                      <div className="flex items-baseline justify-between mt-0.5">
+                        <strong className="text-lg font-display font-black text-rose-400 leading-none">
+                          {bugReports.length}
+                        </strong>
+                        <span className="text-[8.5px] font-mono text-rose-400 font-bold group-hover:underline">Corriger →</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* 🔔 Centre de Notifications */}
+                  {/* 10. 🔔 Centre de Notifications */}
                   <div
                     onClick={() => setSelectedSection("notifications_hub")}
-                    className="p-3.5 bg-gradient-to-br from-amber-500/10 via-afri-bg to-afri-bg border border-[#D4AF37]/40 hover:border-[#D4AF37] rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-md group relative overflow-hidden flex flex-col justify-between"
+                    className="p-2.5 bg-gradient-to-br from-[#D4AF37]/5 via-zinc-950/20 to-zinc-950/40 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-200 hover:scale-[1.01] cursor-pointer shadow-sm group relative flex flex-col justify-between h-[100px]"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="p-2 bg-amber-500/20 border border-[#D4AF37]/40 rounded-xl text-[#D4AF37] group-hover:scale-105 transition-transform">
-                        <Bell className="w-4 h-4 animate-pulse" />
+                    <div className="flex justify-between items-center">
+                      <span className="p-1 bg-amber-500/10 border border-[#D4AF37]/20 rounded-lg text-[#D4AF37]">
+                        <Bell className="w-3.5 h-3.5 animate-pulse" />
                       </span>
                       {unreadNotifsCount > 0 ? (
-                        <span className="px-1.5 py-0.5 bg-[#D4AF37] text-black rounded text-[8px] font-mono font-black animate-pulse">
-                          {unreadNotifsCount} ALERTS
+                        <span className="px-1 py-0.5 bg-[#D4AF37] text-black rounded-[4px] text-[7.5px] font-mono font-black animate-pulse leading-none">
+                          {unreadNotifsCount} ALRT
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.5 bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 rounded text-[8px] font-mono">NOTIFS</span>
+                        <span className="px-1 py-0.5 bg-amber-500/10 text-[#D4AF37] rounded-[4px] text-[7.5px] font-mono leading-none">SYS</span>
                       )}
                     </div>
                     <div>
-                      <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider block">Notifications</span>
-                      <strong className="text-2xl font-display font-black text-[#D4AF37] block mt-0.5">{unreadNotifsCount}</strong>
-                      <span className="text-[8px] font-mono text-[#D4AF37] font-bold block mt-1">Consulter →</span>
+                      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider block">Notifications</span>
+                      <div className="flex items-baseline justify-between mt-0.5">
+                        <strong className="text-lg font-display font-black text-[#D4AF37] leading-none">
+                          {unreadNotifsCount}
+                        </strong>
+                        <span className="text-[8.5px] font-mono text-[#D4AF37] font-bold group-hover:underline">Consulter →</span>
+                      </div>
                     </div>
                   </div>
                 </div>

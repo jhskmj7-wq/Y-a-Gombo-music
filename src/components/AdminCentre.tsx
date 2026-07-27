@@ -3048,12 +3048,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             ) : (
               <header className="flex items-center justify-between px-4 py-3 bg-afri-bg border-b border-afri-border/50 z-[40] relative shrink-0 shadow-md">
                 <div className="flex items-center gap-3">
-                  <button 
-                    onClick={goBackMenu} 
-                    className="p-1.5 sm:p-2 bg-afri-bg-sec/40 rounded-xl text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-ter transition-colors border border-afri-border/80 active:scale-95"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
+                  {!["user_terrain", "user_vibes", "user_mes_gombos", "user_heritage", "user_publish", "dashboard", "users", "notifications", "contracts", "reports", "revenue"].includes(activeMenu) && (
+                    <button 
+                      onClick={goBackMenu} 
+                      className="p-1.5 sm:p-2 bg-afri-bg-sec/40 rounded-xl text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-ter transition-colors border border-afri-border/80 active:scale-95 shrink-0"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
+                  )}
                   <h1 className="text-lg font-black text-afri-text tracking-tight uppercase">
                     {(() => {
                       switch(activeMenu) {
@@ -6744,14 +6746,14 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                   </Suspense>
                 ) : (
                   <div className="flex flex-col">
-                    {/* Tab Switcher for Super Founder - Directly attached at the top */}
-                    <div className="flex gap-2 pb-2 border-b border-afri-border sticky top-0 bg-afri-bg/95 backdrop-blur-md z-30 pt-0">
+                    {/* Tab Switcher for Super Founder - Directly attached at the top with fluid horizontal scroll */}
+                    <div className="flex gap-1.5 pb-2 border-b border-afri-border sticky top-0 bg-afri-bg/95 backdrop-blur-md z-30 pt-0 overflow-x-auto scrollbar-hide flex-nowrap scroll-smooth select-none">
                       <button
                         onClick={() => {
                           setSuperAdminTab("throne");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
                           superAdminTab === "throne"
                             ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
                             : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -6764,7 +6766,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           setSuperAdminTab("beta_transactions");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border flex items-center gap-1.5 ${
+                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
                           superAdminTab === "beta_transactions"
                             ? "bg-emerald-500/20 border-emerald-400 text-emerald-400 font-black shadow-lg"
                             : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -6782,7 +6784,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           setSuperAdminTab("economie");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
                           superAdminTab === "economie"
                             ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
                             : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -6795,7 +6797,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           setSuperAdminTab("media");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
                           superAdminTab === "media"
                             ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
                             : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -6808,7 +6810,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                           setSuperAdminTab("batisseurs");
                           try { audioSynth.playValidationSuccess(); } catch (_) {}
                         }}
-                        className={`px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border ${
+                        className={`px-2.5 py-1.5 rounded-xl text-[8.5px] font-mono uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0 whitespace-nowrap ${
                           superAdminTab === "batisseurs"
                             ? "bg-afri-gold/15 border-afri-gold text-afri-gold font-black"
                             : "bg-afri-bg/40 border-afri-border text-afri-text-sec hover:text-afri-text"
@@ -6816,6 +6818,9 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       >
                         🏛 Bâtisseurs
                       </button>
+                      
+                      {/* End of course spacing to prevent final element cutoff */}
+                      <div className="w-4 shrink-0 pr-4" />
                     </div>
 
                     {/* DIAGNOSTIC BOUTON - Small and discreet */}
