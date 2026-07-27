@@ -58,20 +58,16 @@ export default function AfrigomboBuildersAdminDashboard() {
 
       const uniqueBuilders = userTotals.size;
       const badgesDistributed: Record<string, number> = {
-        "👑 Grand Mécène": 0,
-        "💎 Gardien du Temple": 0,
-        "🥇 Protecteur": 0,
-        "🥈 Bâtisseur": 0,
-        "🥉 Ami d'AFRIGOMBO": 0
+        "🏛️ Parrain du Temple": 0,
+        "🏗️ Bâtisseur": 0,
+        "🤝 Ami du Temple": 0
       };
 
       const getBadgeLabel = (total: number) => {
-        if (total >= 100000) return "👑 Grand Mécène";
-        if (total >= 50000) return "💎 Gardien du Temple";
-        if (total >= 20000) return "🥇 Protecteur";
-        if (total >= 5000) return "🥈 Bâtisseur";
-        if (total >= 1000) return "🥉 Ami d'AFRIGOMBO";
-        return "Sympathisant";
+        if (total >= 50000) return "🏛️ Parrain du Temple";
+        if (total >= 10000) return "🏗️ Bâtisseur";
+        if (total > 0) return "🤝 Ami du Temple";
+        return "🙏 Sympathisant du Temple";
       };
 
       userTotals.forEach((total) => {
@@ -188,7 +184,7 @@ export default function AfrigomboBuildersAdminDashboard() {
           
           <h3 className="text-xs font-black text-afri-text uppercase tracking-wider mb-6 mt-8 flex items-center gap-2">
             <Trophy className="w-4 h-4 text-emerald-500" />
-            Distribution des Badges
+            Distribution des Titres Honorifiques
           </h3>
           <div className="space-y-4">
             {Object.entries(stats.badgesDistributed).map(([badge, count]) => (
