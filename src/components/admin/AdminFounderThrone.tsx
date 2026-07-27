@@ -19,6 +19,7 @@ import { useAuth } from "../../AuthContext";
 import { 
   collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDocs 
 } from "firebase/firestore";
+import { gomboDB } from "../../firebase";
 
 interface AdminFounderThroneProps {
   theme?: string;
@@ -132,13 +133,23 @@ export default function AdminFounderThrone({
   const [liveUsers, setLiveUsers] = useState<any[]>(users);
   const [livePosts, setLivePosts] = useState<any[]>(posts || []);
   const [liveGombos, setLiveGombos] = useState<any[]>(gombos || []);
+  const [notificationsList, setNotificationsList] = useState<any[]>([]);
 
   // Form Submissions Collections (Support, Litiges, KYC, Bugs)
   const [formSubTab, setFormSubTab] = useState<"support" | "disputes" | "kyc" | "bugs">("support");
   const [ticketsSupport, setTicketsSupport] = useState<any[]>([]);
   const [disputesList, setDisputesList] = useState<any[]>([]);
   const [kycRequests, setKycRequests] = useState<any[]>([]);
+
+  // States for user management, filters and view/edit
+  const [userCommuneFilter, setUserCommuneFilter] = useState<string>("ALL");
+  const [userLevelFilter, setUserLevelFilter] = useState<string>("ALL");
+  const [userVerifiedFilter, setUserVerifiedFilter] = useState<string>("ALL");
+  const [userDateFilter, setUserDateFilter] = useState<string>("ALL");
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [viewingUser, setViewingUser] = useState<any | null>(null);
   const [bugReports, setBugReports] = useState<any[]>([]);
+  const [notifFilter, setNotifFilter] = useState<string>("ALL");
 
   useEffect(() => {
     if (!db) return;
@@ -216,6 +227,14 @@ export default function AdminFounderThrone({
       setBugReports(list);
     });
 
+    // 5. Realtime Notifications
+    const unsubNotifications = onSnapshot(collection(db, "notifications"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setNotificationsList(list);
+    });
+
     return () => {
       unsubReg();
       unsubAutoPilot();
@@ -227,6 +246,7 @@ export default function AdminFounderThrone({
       unsubDisputes();
       unsubKYC();
       unsubBugs();
+      unsubNotifications();
     };
   }, []);
 
@@ -277,6 +297,7 @@ export default function AdminFounderThrone({
   const pendingDisputesCount = disputesList.filter(d => d.status === "PENDING" || d.status === "pending" || d.status === "open" || d.status === "en_attente").length;
   const pendingKycCount = kycRequests.filter(k => k.status === "PENDING" || k.status === "pending").length;
   const pendingBugsCount = bugReports.filter(b => b.status === "PENDING" || b.status === "pending").length;
+  const unreadNotifsCount = notificationsList.filter(n => !n.isRead && !n.read).length;
   const totalThroneFormsCount = pendingTicketsCount + pendingDisputesCount + pendingKycCount + pendingBugsCount;
 
   // Admin Actions for User Form Submissions
@@ -502,6 +523,26 @@ export default function AdminFounderThrone({
         isBanned: nextBanned,
         status: nextBanned ? "banned" : "active"
       });
+      
+      try {
+        await gomboDB.createFounderNotification({
+          type: "SUSPENSION",
+          category: "UTILISATEUR",
+          title: nextBanned ? "🚫 Compte Utilisateur Suspendu" : "✅ Compte Utilisateur Réactivé",
+          message: `Le compte de ${u.displayName || u.artisticName || u.email} a été ${nextBanned ? "suspendu" : "réactivé"} par l'administrateur.`,
+          senderUid: u.id || u.uid,
+          priority: nextBanned ? "HIGH" : "NORMAL",
+          source: "ADMIN_CONSOLE",
+          data: {
+            userId: u.id || u.uid,
+            userName: u.displayName || u.artisticName || u.email,
+            banned: nextBanned
+          }
+        });
+      } catch (errNotif) {
+        console.warn("Could not notify suspension:", errNotif);
+      }
+
       await logImperialAction("Modération Utilisateur", `${nextBanned ? "Bannissement" : "Débannissement"} de ${u.displayName || u.artisticName || u.email}`);
       setSuccessMsg(`Utilisateur ${nextBanned ? "banni" : "débanni"} avec succès.`);
       setTimeout(() => setSuccessMsg(""), 3000);
@@ -551,6 +592,34 @@ export default function AdminFounderThrone({
       });
       await logImperialAction("Gombo ID Souverain", `Gombo ID ${nextCert ? "Validé" : "Révoqué"} pour ${u.displayName || u.artisticName || u.email}`);
       setSuccessMsg(`Gombo ID ${nextCert ? "validé" : "révoqué"}.`);
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const handleDeleteUser = async (u: any) => {
+    if (!window.confirm(`Êtes-vous absolument sûr de vouloir supprimer définitivement le compte de ${u.displayName || u.artisticName || u.email} ? Cette action est irréversible.`)) {
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, "users", u.id || u.uid));
+      await logImperialAction("Suppression de compte", `Compte de ${u.displayName || u.artisticName || u.email} supprimé définitivement par le Super Fondateur.`);
+      setSuccessMsg("Compte supprimé avec succès.");
+      setTimeout(() => setSuccessMsg(""), 3000);
+      try { audioSynth?.playValidationSuccess(); } catch (_) {}
+    } catch (err: any) {
+      setErrorMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const handleSaveUserProfile = async (uId: string, updatedFields: any) => {
+    try {
+      await updateDoc(doc(db, "users", uId), updatedFields);
+      await logImperialAction("Modification de profil", `Profil de l'utilisateur ${updatedFields.displayName || uId} mis à jour par le Super Fondateur.`);
+      setSuccessMsg("Profil utilisateur mis à jour avec succès.");
+      setEditingUser(null);
       setTimeout(() => setSuccessMsg(""), 3000);
       try { audioSynth?.playValidationSuccess(); } catch (_) {}
     } catch (err: any) {
@@ -1705,6 +1774,28 @@ export default function AdminFounderThrone({
                   <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Rapports de Bugs</span>
                   <strong className="text-3xl font-display font-black text-rose-400 block mt-1">{bugReports.length}</strong>
                   <span className="text-[9px] font-mono text-rose-400 font-bold block mt-1">Corriger les bugs →</span>
+                </div>
+
+                {/* 🔔 Centre de Notifications */}
+                <div
+                  onClick={() => setSelectedSection("notifications_hub")}
+                  className="p-5 bg-gradient-to-br from-amber-500/15 via-afri-bg to-afri-bg border-2 border-[#D4AF37]/50 hover:border-[#D4AF37] rounded-3xl transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl group relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="p-2.5 bg-amber-500/20 border border-[#D4AF37]/40 rounded-2xl text-[#D4AF37] group-hover:scale-110 transition-transform">
+                      <Bell className="w-5 h-5 animate-pulse" />
+                    </span>
+                    {unreadNotifsCount > 0 ? (
+                      <span className="px-2 py-0.5 bg-[#D4AF37] text-black rounded-full text-[9px] font-mono font-black animate-pulse">
+                        {unreadNotifsCount} ALERTS
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 rounded-full text-[9px] font-mono">DÉCENTRALISÉ</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-wider block">Centre de Notifications</span>
+                  <strong className="text-3xl font-display font-black text-[#D4AF37] block mt-1">{unreadNotifsCount}</strong>
+                  <span className="text-[9px] font-mono text-[#D4AF37] font-bold block mt-1">Consulter les alertes →</span>
                 </div>
               </div>
             </div>
@@ -3748,6 +3839,853 @@ export default function AdminFounderThrone({
                 </div>
               );
             })()}
+
+            {/* =========================================================
+                 DETAILED VIEW: 👥 Gestion des Utilisateurs
+                 ========================================================= */}
+            {selectedSection === "users" && (() => {
+              const uniqueCommunes = Array.from(new Set(displayUsers.map((u: any) => u.commune).filter(Boolean))) as string[];
+              
+              const isWithinDays = (dateField: any, days: number) => {
+                if (!dateField) return false;
+                const t = typeof dateField === "number" ? dateField : (dateField.toMillis ? dateField.toMillis() : new Date(dateField).getTime());
+                const diff = Date.now() - t;
+                return diff >= 0 && diff <= days * 24 * 60 * 60 * 1000;
+              };
+
+              const filteredUsers = displayUsers.filter((u: any) => {
+                const q = globalUserSearch.toLowerCase().trim();
+                if (q) {
+                  const nameMatch = (u.displayName && u.displayName.toLowerCase().includes(q));
+                  const artMatch = (u.artisticName && u.artisticName.toLowerCase().includes(q));
+                  const emailMatch = (u.email && u.email.toLowerCase().includes(q));
+                  const idMatch = (u.id && u.id.toLowerCase().includes(q));
+                  const gomboMatch = (u.gomboId?.numero && u.gomboId.numero.toLowerCase().includes(q));
+                  if (!nameMatch && !artMatch && !emailMatch && !idMatch && !gomboMatch) return false;
+                }
+
+                if (userCommuneFilter !== "ALL" && u.commune !== userCommuneFilter) return false;
+
+                if (userLevelFilter !== "ALL") {
+                  if (userLevelFilter === "ADMIN" && !u.isAdmin && u.role !== "admin") return false;
+                  if (userLevelFilter === "PREMIUM" && !u.isPremium && u.subscriptionType !== "elite" && u.subscriptionType !== "pro") return false;
+                  if (userLevelFilter === "MUSICIAN" && u.role !== "musician" && u.role !== "artist") return false;
+                  if (userLevelFilter === "PROMOTER" && u.role !== "promoter") return false;
+                  if (userLevelFilter === "USER" && (u.role === "admin" || u.isAdmin)) return false;
+                }
+
+                if (userVerifiedFilter !== "ALL") {
+                  const isCert = Boolean(u.isCertified || u.gomboId?.certifie || u.kycStatus === "approved");
+                  if (userVerifiedFilter === "VERIFIED" && !isCert) return false;
+                  if (userVerifiedFilter === "UNVERIFIED" && isCert) return false;
+                }
+
+                if (userDateFilter !== "ALL") {
+                  const dateField = u.createdAt || u.registrationDate;
+                  if (userDateFilter === "TODAY" && !isWithinDays(dateField, 1)) return false;
+                  if (userDateFilter === "WEEK" && !isWithinDays(dateField, 7)) return false;
+                  if (userDateFilter === "MONTH" && !isWithinDays(dateField, 30)) return false;
+                }
+
+                return true;
+              });
+
+              return (
+                <div className="space-y-6">
+                  {/* Title card */}
+                  <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                    <Users className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5" />
+                    <div className="text-xs text-afri-text leading-relaxed font-mono">
+                      <strong>👥 CONTRÔLE GÉNÉRAL DES UTILISATEURS :</strong> Supervisez tous les artistes, producteurs, promoteurs et membres de la communauté. Modifiez les profils, suspendez les comptes et gérez les privilèges souverains.
+                    </div>
+                  </div>
+
+                  {/* Filters block */}
+                  <div className="bg-afri-bg border border-afri-border rounded-3xl p-5 space-y-4">
+                    <div className="flex flex-col md:flex-row gap-4">
+                      {/* Search */}
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          placeholder="Rechercher par nom, email, Gombo ID, UID..."
+                          value={globalUserSearch}
+                          onChange={(e) => setGlobalUserSearch(e.target.value)}
+                          className="w-full bg-afri-bg-sec border border-afri-border rounded-2xl pl-10 pr-4 py-2.5 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
+                        />
+                        <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3" />
+                      </div>
+                    </div>
+
+                    {/* Filters selects */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {/* Commune */}
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Commune / Ville</label>
+                        <select
+                          value={userCommuneFilter}
+                          onChange={(e) => setUserCommuneFilter(e.target.value)}
+                          className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-[11px] text-zinc-900 dark:text-afri-text font-mono focus:outline-none"
+                        >
+                          <option value="ALL">Toutes les communes</option>
+                          {uniqueCommunes.map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Niveau */}
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Niveau / Rôle</label>
+                        <select
+                          value={userLevelFilter}
+                          onChange={(e) => setUserLevelFilter(e.target.value)}
+                          className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-[11px] text-zinc-900 dark:text-afri-text font-mono focus:outline-none"
+                        >
+                          <option value="ALL">Tous les niveaux</option>
+                          <option value="ADMIN">Administrateurs</option>
+                          <option value="PREMIUM">Adhérents Premium / Elite</option>
+                          <option value="MUSICIAN">Artistes / Musiciens</option>
+                          <option value="PROMOTER">Promoteurs / Clients</option>
+                          <option value="USER">Utilisateurs standards</option>
+                        </select>
+                      </div>
+
+                      {/* Certifié */}
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Vérification Gombo ID</label>
+                        <select
+                          value={userVerifiedFilter}
+                          onChange={(e) => setUserVerifiedFilter(e.target.value)}
+                          className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-[11px] text-zinc-900 dark:text-afri-text font-mono focus:outline-none"
+                        >
+                          <option value="ALL">Tous les statuts</option>
+                          <option value="VERIFIED">Vérifiés (Certifiés)</option>
+                          <option value="UNVERIFIED">Non vérifiés</option>
+                        </select>
+                      </div>
+
+                      {/* Date */}
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Date d'Inscription</label>
+                        <select
+                          value={userDateFilter}
+                          onChange={(e) => setUserDateFilter(e.target.value)}
+                          className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-[11px] text-zinc-900 dark:text-afri-text font-mono focus:outline-none"
+                        >
+                          <option value="ALL">Toutes les dates</option>
+                          <option value="TODAY">Aujourd'hui</option>
+                          <option value="WEEK">7 derniers jours</option>
+                          <option value="MONTH">30 derniers jours</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Users grid list */}
+                  {filteredUsers.length === 0 ? (
+                    <div className="p-12 text-center text-zinc-500 font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
+                      📭 Aucune donnée disponible
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {filteredUsers.map((u: any) => {
+                        const isCert = Boolean(u.isCertified || u.gomboId?.certifie || u.kycStatus === "approved");
+                        const regDate = u.createdAt || u.registrationDate;
+                        const formattedRegDate = regDate ? (typeof regDate === "number" ? new Date(regDate).toLocaleDateString() : (regDate.toMillis ? new Date(regDate.toMillis()).toLocaleDateString() : new Date(regDate).toLocaleDateString())) : "Inconnue";
+                        
+                        return (
+                          <div
+                            key={u.id || u.uid}
+                            className={`p-5 rounded-3xl border transition-all flex flex-col justify-between ${u.isBanned ? 'bg-red-500/5 border-red-500/20' : 'bg-afri-bg border-afri-border hover:border-afri-border/60'}`}
+                          >
+                            <div>
+                              {/* User Header */}
+                              <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 rounded-full overflow-hidden border border-[#D4AF37]/30 shrink-0 bg-afri-bg-sec flex items-center justify-center">
+                                  {u.photoURL || u.avatar ? (
+                                    <img src={u.photoURL || u.avatar} alt={u.displayName || u.artisticName} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="font-mono text-lg font-bold text-[#D4AF37]">
+                                      {(u.artisticName || u.displayName || u.email || "U").charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="space-y-0.5 flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <h4 className="text-xs font-sans font-black text-zinc-900 dark:text-afri-text truncate">
+                                      {u.artisticName || u.displayName || "Sans nom artistique"}
+                                    </h4>
+                                    {isCert && (
+                                      <span className="text-[8px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded uppercase font-black">
+                                        VÉRIFIÉ
+                                      </span>
+                                    )}
+                                    {u.isPremium && (
+                                      <span className="text-[8px] font-mono bg-amber-500/10 text-[#D4AF37] border border-[#D4AF37]/20 px-1.5 py-0.5 rounded uppercase font-black">
+                                        💎 ELITE
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec truncate font-mono">Nom: {u.displayName || "Non spécifié"} • {u.email}</p>
+                                  <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec truncate font-mono">Ville: {u.commune || "Non spécifiée"} • Activité: {u.musicalActivity || u.musicalGenre || "Aucune"}</p>
+                                </div>
+                              </div>
+
+                              {/* Technical IDs */}
+                              <div className="mt-4 grid grid-cols-2 gap-2 p-3 bg-afri-bg-sec/10 border border-afri-border rounded-2xl font-mono text-[9px] text-zinc-600 dark:text-afri-text-sec">
+                                <div>
+                                  <span className="opacity-50 block uppercase text-[7px]">GOMBO ID</span>
+                                  <span className="font-bold text-zinc-900 dark:text-afri-text">{u.gomboId?.numero || "Non certifié"}</span>
+                                </div>
+                                <div>
+                                  <span className="opacity-50 block uppercase text-[7px]">AFRI ID</span>
+                                  <span className="font-bold text-zinc-900 dark:text-afri-text truncate block">{u.afriId || u.id || u.uid || "Aucun"}</span>
+                                </div>
+                                <div>
+                                  <span className="opacity-50 block uppercase text-[7px]">Inscription</span>
+                                  <span className="font-bold text-zinc-900 dark:text-afri-text">{formattedRegDate}</span>
+                                </div>
+                                <div>
+                                  <span className="opacity-50 block uppercase text-[7px]">Rôle / Niveau</span>
+                                  <span className="font-bold text-[#D4AF37] uppercase">{u.role || "Utilisateur"}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Actions block */}
+                            <div className="mt-4 pt-3 border-t border-afri-border flex flex-wrap gap-2 justify-end">
+                              <button
+                                onClick={() => setViewingUser(u)}
+                                className="px-2.5 py-1.5 bg-afri-bg-sec border border-afri-border hover:border-zinc-400 text-zinc-900 dark:text-afri-text rounded-lg text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer"
+                              >
+                                Voir
+                              </button>
+                              <button
+                                onClick={() => setEditingUser(u)}
+                                className="px-2.5 py-1.5 bg-afri-bg-sec border border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-lg text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer"
+                              >
+                                Modifier
+                              </button>
+                              <button
+                                onClick={() => handleBanUser(u)}
+                                className={`px-2.5 py-1.5 rounded-lg text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer border ${u.isBanned ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'}`}
+                              >
+                                {u.isBanned ? "Réactiver" : "Suspendre"}
+                              </button>
+                              {u.role === "admin" || u.isAdmin ? (
+                                <button
+                                  onClick={() => handleChangeRole(u, "musician")}
+                                  className="px-2.5 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20 rounded-lg text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer"
+                                >
+                                  Retirer Admin
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleChangeRole(u, "admin")}
+                                  className="px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer"
+                                >
+                                  Promouvoir Admin
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteUser(u)}
+                                className="px-2.5 py-1.5 bg-zinc-950/20 border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-lg text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer"
+                              >
+                                Supprimer
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Profile View Modal */}
+                  {viewingUser && (
+                    <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-[150] flex items-center justify-center p-4">
+                      <div className="bg-afri-bg border border-[#D4AF37]/30 max-w-lg w-full rounded-3xl p-6 space-y-6 shadow-2xl relative overflow-hidden text-zinc-900 dark:text-afri-text">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl"></div>
+                        <div className="flex items-start justify-between">
+                          <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider">Profil Impérial Détaillé</h3>
+                          <button onClick={() => setViewingUser(null)} className="text-zinc-500 hover:text-afri-text font-mono text-xs cursor-pointer">Fermer [X]</button>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#D4AF37] shrink-0 bg-afri-bg-sec flex items-center justify-center">
+                            {viewingUser.photoURL || viewingUser.avatar ? (
+                              <img src={viewingUser.photoURL || viewingUser.avatar} alt={viewingUser.displayName} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="font-mono text-2xl font-bold text-[#D4AF37]">
+                                {(viewingUser.artisticName || viewingUser.displayName || "U").charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-sans font-black text-zinc-900 dark:text-afri-text uppercase flex items-center gap-2">
+                              {viewingUser.artisticName || "Sans nom artistique"}
+                              {viewingUser.isPremium && <span className="text-[8px] bg-amber-500/15 text-[#D4AF37] px-1.5 py-0.5 rounded">ELITE</span>}
+                            </h4>
+                            <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec font-mono">{viewingUser.displayName || "Aucun nom complet"} • {viewingUser.email}</p>
+                            <p className="text-[9px] text-zinc-500 dark:text-afri-text-sec font-mono">Dernier accès: {viewingUser.lastActive ? new Date(viewingUser.lastActive).toLocaleString() : "Non enregistré"}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 p-4 bg-afri-bg-sec/10 border border-afri-border rounded-2xl font-mono text-[10px] text-zinc-600 dark:text-afri-text-sec">
+                          <div>
+                            <span className="opacity-50 block text-[8px] uppercase">GOMBO ID</span>
+                            <span className="font-bold text-zinc-900 dark:text-afri-text">{viewingUser.gomboId?.numero || "Non généré"}</span>
+                          </div>
+                          <div>
+                            <span className="opacity-50 block text-[8px] uppercase">AFRI ID</span>
+                            <span className="font-bold text-zinc-900 dark:text-afri-text truncate block">{viewingUser.id || viewingUser.uid}</span>
+                          </div>
+                          <div>
+                            <span className="opacity-50 block text-[8px] uppercase">Rôle / Genre</span>
+                            <span className="font-bold text-zinc-900 dark:text-afri-text uppercase">{viewingUser.role || "user"}</span>
+                          </div>
+                          <div>
+                            <span className="opacity-50 block text-[8px] uppercase">Commune / Ville</span>
+                            <span className="font-bold text-zinc-900 dark:text-afri-text">{viewingUser.commune || "Non spécifiée"}</span>
+                          </div>
+                          <div>
+                            <span className="opacity-50 block text-[8px] uppercase">Genre / Style musical</span>
+                            <span className="font-bold text-zinc-900 dark:text-afri-text">{viewingUser.musicalActivity || viewingUser.musicalGenre || "Aucun"}</span>
+                          </div>
+                          <div>
+                            <span className="opacity-50 block text-[8px] uppercase">Téléphone</span>
+                            <span className="font-bold text-zinc-900 dark:text-afri-text">{viewingUser.phone || "Non spécifié"}</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="opacity-50 block text-[8px] uppercase">Biographie</span>
+                            <p className="text-[10px] text-zinc-900 dark:text-afri-text mt-1 leading-relaxed bg-afri-bg-sec/20 p-2.5 rounded-xl border border-afri-border">
+                              {viewingUser.bio || "Aucune biographie fournie."}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Profile Edit Modal */}
+                  {editingUser && (
+                    <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-[150] flex items-center justify-center p-4">
+                      <div className="bg-afri-bg border border-[#D4AF37]/30 max-w-lg w-full rounded-3xl p-6 space-y-4 shadow-2xl relative text-zinc-900 dark:text-afri-text">
+                        <div className="flex items-start justify-between">
+                          <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider">Modifier le Profil Impérial</h3>
+                          <button onClick={() => setEditingUser(null)} className="text-zinc-500 hover:text-afri-text font-mono text-xs cursor-pointer">Annuler [X]</button>
+                        </div>
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            const form = e.currentTarget;
+                            const fd = new FormData(form);
+                            const updated = {
+                              displayName: fd.get("displayName") as string,
+                              artisticName: fd.get("artisticName") as string,
+                              email: fd.get("email") as string,
+                              commune: fd.get("commune") as string,
+                              musicalActivity: fd.get("musicalActivity") as string,
+                              role: fd.get("role") as string,
+                            };
+                            handleSaveUserProfile(editingUser.id || editingUser.uid, updated);
+                          }}
+                          className="space-y-4 text-left"
+                        >
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Nom Artistique</label>
+                            <input type="text" name="artisticName" defaultValue={editingUser.artisticName || ""} className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Nom Complet</label>
+                            <input type="text" name="displayName" defaultValue={editingUser.displayName || ""} className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Email</label>
+                            <input type="email" name="email" defaultValue={editingUser.email || ""} className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Commune / Ville</label>
+                            <input type="text" name="commune" defaultValue={editingUser.commune || ""} className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Activité Musicale</label>
+                            <input type="text" name="musicalActivity" defaultValue={editingUser.musicalActivity || editingUser.musicalGenre || ""} className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-mono uppercase text-zinc-650 dark:text-afri-text-sec">Niveau / Rôle</label>
+                            <select name="role" defaultValue={editingUser.role || "musician"} className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none">
+                              <option value="user">Utilisateur standard</option>
+                              <option value="musician">Artiste / Musicien</option>
+                              <option value="promoter">Promoteur / Client</option>
+                              <option value="admin">Administrateur</option>
+                            </select>
+                          </div>
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button type="button" onClick={() => setEditingUser(null)} className="px-4 py-2 bg-zinc-950/25 border border-afri-border rounded-xl text-[10px] font-mono uppercase cursor-pointer">Annuler</button>
+                            <button type="submit" className="px-5 py-2 bg-[#D4AF37] hover:bg-[#D4AF37]/80 text-black font-bold rounded-xl text-[10px] font-mono uppercase cursor-pointer">Sauvegarder</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* =========================================================
+                 DETAILED VIEW: 💎 Gestion des Abonnés Premium
+                 ========================================================= */}
+            {selectedSection === "premium" && (() => {
+              const premiumUsers = displayUsers.filter((u: any) => {
+                const isPrem = Boolean(u.isPremium || u.subscriptionType === "elite" || u.subscriptionType === "pro");
+                if (!isPrem) return false;
+                
+                const q = globalUserSearch.toLowerCase().trim();
+                if (q) {
+                  const nameMatch = (u.displayName && u.displayName.toLowerCase().includes(q));
+                  const artMatch = (u.artisticName && u.artisticName.toLowerCase().includes(q));
+                  const emailMatch = (u.email && u.email.toLowerCase().includes(q));
+                  if (!nameMatch && !artMatch && !emailMatch) return false;
+                }
+                return true;
+              });
+
+              return (
+                <div className="space-y-6">
+                  <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                    <Crown className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5" />
+                    <div className="text-xs text-afri-text leading-relaxed font-mono">
+                      <strong>👑 GESTION DES ABONNÉS ELITE & PREMIUM :</strong> Supervisez tous les membres ayant souscrit à un abonnement premium. Octroyez ou révoquez manuellement le badge de distinction impériale.
+                    </div>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="bg-afri-bg border border-afri-border rounded-3xl p-5">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Rechercher parmi les adhérents premium..."
+                        value={globalUserSearch}
+                        onChange={(e) => setGlobalUserSearch(e.target.value)}
+                        className="w-full bg-afri-bg-sec border border-afri-border rounded-2xl pl-10 pr-4 py-2.5 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
+                      />
+                      <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3" />
+                    </div>
+                  </div>
+
+                  {/* Premium Users list */}
+                  {premiumUsers.length === 0 ? (
+                    <div className="p-12 text-center text-zinc-500 font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
+                      📭 Aucune donnée disponible
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {premiumUsers.map((u: any) => (
+                        <div
+                          key={u.id || u.uid}
+                          className="p-5 rounded-3xl border border-afri-border bg-afri-bg hover:border-[#D4AF37]/30 transition-all flex items-start justify-between gap-4"
+                        >
+                          <div className="flex items-start gap-4 min-w-0">
+                            <div className="w-12 h-12 rounded-full overflow-hidden border border-[#D4AF37]/30 shrink-0 bg-afri-bg-sec flex items-center justify-center">
+                              {u.photoURL || u.avatar ? (
+                                <img src={u.photoURL || u.avatar} alt={u.displayName} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="font-mono text-lg font-bold text-[#D4AF37]">
+                                  {(u.artisticName || u.displayName || "U").charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            <div className="space-y-0.5 min-w-0">
+                              <h4 className="text-xs font-sans font-black text-zinc-900 dark:text-afri-text truncate uppercase">
+                                {u.artisticName || u.displayName || "Sans nom"}
+                              </h4>
+                              <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec truncate font-mono">{u.email}</p>
+                              <span className="inline-block text-[8px] font-mono bg-amber-500/10 text-[#D4AF37] border border-[#D4AF37]/25 px-2 py-0.5 rounded-full font-black uppercase">
+                                💎 {u.subscriptionType?.toUpperCase() || "ELITE"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleTogglePremium(u)}
+                            className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-xl text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap shrink-0 animate-none"
+                          >
+                            Révoquer
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* =========================================================
+                 DETAILED VIEW: 🛂 Gombo ID Certifications
+                 ========================================================= */}
+            {selectedSection === "gombo_id" && (() => {
+              const gomboIdUsers = displayUsers.filter((u: any) => {
+                const q = globalUserSearch.toLowerCase().trim();
+                if (q) {
+                  const nameMatch = (u.displayName && u.displayName.toLowerCase().includes(q));
+                  const artMatch = (u.artisticName && u.artisticName.toLowerCase().includes(q));
+                  const emailMatch = (u.email && u.email.toLowerCase().includes(q));
+                  const gomboMatch = (u.gomboId?.numero && u.gomboId.numero.toLowerCase().includes(q));
+                  if (!nameMatch && !artMatch && !emailMatch && !gomboMatch) return false;
+                }
+                return true;
+              });
+
+              return (
+                <div className="space-y-6">
+                  <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                    <Award className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5" />
+                    <div className="text-xs text-afri-text leading-relaxed font-mono">
+                      <strong>🛂 ATTRIBUTION GOMBO ID SOUVERAIN :</strong> Validez ou révoquez les certificats de passeport souverain des artistes d'élite pour la certification de leur identité numérique.
+                    </div>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="bg-afri-bg border border-afri-border rounded-3xl p-5">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Rechercher par nom, Gombo ID..."
+                        value={globalUserSearch}
+                        onChange={(e) => setGlobalUserSearch(e.target.value)}
+                        className="w-full bg-afri-bg-sec border border-afri-border rounded-2xl pl-10 pr-4 py-2.5 text-xs text-zinc-900 dark:text-afri-text font-mono focus:outline-none focus:border-[#D4AF37]"
+                      />
+                      <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3" />
+                    </div>
+                  </div>
+
+                  {/* Certified/Pending list */}
+                  {gomboIdUsers.length === 0 ? (
+                    <div className="p-12 text-center text-zinc-500 font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
+                      📭 Aucune donnée disponible
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {gomboIdUsers.map((u: any) => {
+                        const isCert = Boolean(u.isCertified || u.gomboId?.certifie || u.kycStatus === "approved");
+                        return (
+                          <div
+                            key={u.id || u.uid}
+                            className="p-5 rounded-3xl border border-afri-border bg-afri-bg hover:border-[#D4AF37]/30 transition-all flex items-start justify-between gap-4"
+                          >
+                            <div className="flex items-start gap-4 min-w-0">
+                              <div className="w-12 h-12 rounded-full overflow-hidden border border-[#D4AF37]/30 shrink-0 bg-afri-bg-sec flex items-center justify-center">
+                                {u.photoURL || u.avatar ? (
+                                  <img src={u.photoURL || u.avatar} alt={u.displayName} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="font-mono text-lg font-bold text-[#D4AF37]">
+                                    {(u.artisticName || u.displayName || "U").charAt(0).toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="space-y-0.5 min-w-0">
+                                <h4 className="text-xs font-sans font-black text-zinc-900 dark:text-afri-text truncate uppercase">
+                                  {u.artisticName || u.displayName || "Sans nom"}
+                                </h4>
+                                <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec truncate font-mono">{u.email}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={`text-[8px] font-mono px-2 py-0.5 rounded-full font-black uppercase ${isCert ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'}`}>
+                                    {isCert ? '🛂 CERTIFIÉ' : '❌ NON CERTIFIÉ'}
+                                  </span>
+                                  {u.gomboId?.numero && (
+                                    <span className="text-[8px] font-mono text-zinc-500">
+                                      {u.gomboId.numero}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => handleToggleGomboId(u)}
+                              className={`px-3 py-1.5 rounded-xl text-[8px] font-mono uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap shrink-0 border ${isCert ? 'bg-zinc-950/20 border-red-500/30 text-red-400 hover:bg-red-500/10' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'}`}
+                            >
+                              {isCert ? "Révoquer" : "Certifier"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* =========================================================
+                 DETAILED VIEW: 🔔 Centre de Notifications
+                 ========================================================= */}
+            {selectedSection === "notifications_hub" && (() => {
+              const handleMarkAllAsRead = async () => {
+                if (!db) return;
+                try {
+                  const unread = notificationsList.filter(n => !n.isRead && !n.read);
+                  const batchPromises = unread.map(n => updateDoc(doc(db, "notifications", n.id), { isRead: true, read: true }));
+                  await Promise.all(batchPromises);
+                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+                  setSuccessMsg(`${unread.length} alertes marquées comme lues.`);
+                  setTimeout(() => setSuccessMsg(""), 3000);
+                } catch (err: any) {
+                  setErrorMsg(`Erreur : ${err.message}`);
+                }
+              };
+
+              const handleMarkSingleAsRead = async (id: string) => {
+                if (!db) return;
+                try {
+                  await updateDoc(doc(db, "notifications", id), { isRead: true, read: true });
+                  try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+                } catch (err: any) {
+                  setErrorMsg(`Erreur : ${err.message}`);
+                }
+              };
+
+              const filteredNotifs = notificationsList.filter(n => {
+                if (notifFilter === "UNREAD") return !n.isRead && !n.read;
+                if (notifFilter === "REPORT") return n.type === "REPORT" || n.category === "SIGNALEMENT";
+                if (notifFilter === "LITIGE") return n.type === "LITIGE" || n.category === "LITIGE";
+                if (notifFilter === "RECOMMANDATION") return n.type === "RECOMMANDATION" || n.category === "RECOMMANDATION";
+                if (notifFilter === "CERTIFICATION") return n.type === "CERTIFICATION" || n.category === "CERTIFICATION";
+                if (notifFilter === "PREMIUM") return n.type === "PREMIUM" || n.category === "PREMIUM";
+                if (notifFilter === "PAYMENT") return n.type === "PAYMENT" || n.category === "PAIEMENT";
+                if (notifFilter === "SYSTEM") return n.type === "SYSTEM" || n.type === "SYSTEM_ERROR" || n.category === "SYSTEM";
+                return true;
+              });
+
+              return (
+                <div className="space-y-6 animate-fadeIn">
+                  {/* Title & Stats */}
+                  <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                    <div className="flex gap-4">
+                      <Bell className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5 animate-pulse" />
+                      <div className="text-xs text-afri-text leading-relaxed font-mono">
+                        <strong>🔔 CENTRE DES NOTIFICATIONS ET SOUVERAINETÉ :</strong> Suivi en temps réel de toutes les remontées d'informations prioritaires de la plateforme.
+                      </div>
+                    </div>
+                    {unreadNotifsCount > 0 && (
+                      <button
+                        onClick={handleMarkAllAsRead}
+                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-[#D4AF37] text-black font-sans font-black uppercase text-[10px] tracking-wider rounded-xl hover:opacity-90 shadow-lg cursor-pointer transition-all"
+                      >
+                        Tout marquer comme lu ({unreadNotifsCount})
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filters Horizontal Navigation */}
+                  <div className="flex flex-wrap gap-2 border-b border-afri-border pb-3">
+                    {[
+                      { key: "ALL", label: "Toutes", count: notificationsList.length },
+                      { key: "UNREAD", label: "Non lues", count: unreadNotifsCount },
+                      { key: "REPORT", label: "🚨 Signalements", count: notificationsList.filter(n => n.type === "REPORT" || n.category === "SIGNALEMENT").length },
+                      { key: "LITIGE", label: "⚖️ Litiges", count: notificationsList.filter(n => n.type === "LITIGE" || n.category === "LITIGE").length },
+                      { key: "RECOMMANDATION", label: "💡 Suggestions", count: notificationsList.filter(n => n.type === "RECOMMANDATION" || n.category === "RECOMMANDATION").length },
+                      { key: "CERTIFICATION", label: "🛂 Certifs", count: notificationsList.filter(n => n.type === "CERTIFICATION" || n.category === "CERTIFICATION").length },
+                      { key: "PREMIUM", label: "💎 Premium", count: notificationsList.filter(n => n.type === "PREMIUM" || n.category === "PREMIUM").length },
+                      { key: "PAYMENT", label: "💰 Paiements", count: notificationsList.filter(n => n.type === "PAYMENT" || n.category === "PAIEMENT").length },
+                      { key: "SYSTEM", label: "⚙️ Système", count: notificationsList.filter(n => n.type === "SYSTEM" || n.type === "SYSTEM_ERROR" || n.category === "SYSTEM").length }
+                    ].map(f => (
+                      <button
+                        key={f.key}
+                        onClick={() => setNotifFilter(f.key)}
+                        className={`px-3 py-1.5 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border ${notifFilter === f.key ? 'bg-[#D4AF37] text-black border-[#D4AF37] font-black' : 'bg-afri-bg-sec border-afri-border text-zinc-900 dark:text-afri-text-sec hover:border-[#D4AF37]/50'}`}
+                      >
+                        <span>{f.label}</span>
+                        <span className={`px-1.5 py-0.5 rounded-full text-[8px] ${notifFilter === f.key ? 'bg-black/25 text-black' : 'bg-zinc-500/10 text-zinc-500'}`}>{f.count}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* List of Notifications */}
+                  {filteredNotifs.length === 0 ? (
+                    <div className="p-16 text-center text-zinc-500 font-mono text-sm border border-afri-border rounded-3xl bg-afri-bg/40">
+                      📭 Aucune notification dans cette catégorie
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {filteredNotifs.map((n: any) => {
+                        const isRead = Boolean(n.isRead || n.read);
+                        const isReport = n.type === "REPORT" || n.category === "SIGNALEMENT";
+                        const isLitige = n.type === "LITIGE" || n.category === "LITIGE";
+                        const isCert = n.type === "CERTIFICATION" || n.category === "CERTIFICATION";
+                        const isPremium = n.type === "PREMIUM" || n.category === "PREMIUM";
+                        const isPayment = n.type === "PAYMENT" || n.category === "PAIEMENT";
+
+                        let iconColor = "text-[#D4AF37] bg-amber-500/10 border-amber-500/20";
+                        if (isReport) iconColor = "text-red-500 bg-red-500/10 border-red-500/20";
+                        else if (isLitige) iconColor = "text-orange-500 bg-orange-500/10 border-orange-500/20";
+                        else if (isCert) iconColor = "text-purple-500 bg-purple-500/10 border-purple-500/20";
+                        else if (isPremium) iconColor = "text-sky-400 bg-sky-500/10 border-sky-500/20";
+                        else if (isPayment) iconColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+
+                        return (
+                          <div
+                            key={n.id}
+                            className={`p-5 rounded-3xl border transition-all ${isRead ? 'bg-afri-bg/50 border-afri-border' : 'bg-gradient-to-r from-amber-500/5 to-transparent border-[#D4AF37]/35 shadow-md'}`}
+                          >
+                            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                              <div className="flex items-start gap-4">
+                                <span className={`p-2.5 rounded-2xl border shrink-0 ${iconColor}`}>
+                                  {isReport && <ShieldAlert className="w-5 h-5" />}
+                                  {isLitige && <AlertTriangle className="w-5 h-5" />}
+                                  {isCert && <ShieldCheck className="w-5 h-5" />}
+                                  {isPremium && <Sparkles className="w-5 h-5" />}
+                                  {isPayment && <CreditCard className="w-5 h-5" />}
+                                  {!isReport && !isLitige && !isCert && !isPremium && !isPayment && <Bell className="w-5 h-5" />}
+                                </span>
+
+                                <div className="space-y-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h4 className="text-xs font-sans font-black text-zinc-900 dark:text-afri-text uppercase">
+                                      {n.title || n.titre || "Alerte Système"}
+                                    </h4>
+                                    <span className={`text-[8px] font-mono px-2 py-0.5 rounded-full font-black uppercase ${n.priority === "HIGH" ? 'bg-red-500/15 text-red-400' : 'bg-zinc-500/15 text-zinc-400'}`}>
+                                      {n.priority || "NORMAL"}
+                                    </span>
+                                    <span className="text-[8px] font-mono text-zinc-500">
+                                      {n.source || "WEB"}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-zinc-600 dark:text-afri-text-sec font-mono">
+                                    {n.message}
+                                  </p>
+                                  <p className="text-[9px] text-zinc-400 font-mono">
+                                    Reçu le : {new Date(n.createdAt || 0).toLocaleString('fr-FR')}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+                                {!isRead && (
+                                  <button
+                                    onClick={() => handleMarkSingleAsRead(n.id)}
+                                    className="px-3 py-1.5 bg-afri-bg-sec border border-afri-border hover:border-zinc-400 rounded-xl text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer"
+                                  >
+                                    Marquer lu
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Render payload details dynamically (No mock stubs, real transparency!) */}
+                            {n.data && Object.keys(n.data).length > 0 && (
+                              <div className="mt-4 p-4 bg-afri-bg-sec/5 border border-afri-border rounded-2xl space-y-2">
+                                <span className="text-[8px] font-mono uppercase text-[#D4AF37] tracking-widest block font-black border-b border-afri-border pb-1">Détails de la transaction / Remontée</span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                  {Object.entries(n.data).map(([key, val]: [string, any]) => {
+                                    if (typeof val === 'object' && val !== null) {
+                                      return (
+                                        <div key={key} className="space-y-0.5">
+                                          <span className="text-[8px] font-mono uppercase opacity-55 block">{key}</span>
+                                          <span className="text-[9px] font-mono font-bold block truncate">{JSON.stringify(val)}</span>
+                                        </div>
+                                      );
+                                    }
+                                    return (
+                                      <div key={key} className="space-y-0.5">
+                                        <span className="text-[8px] font-mono uppercase opacity-55 block">{key}</span>
+                                        <span className="text-[9px] font-mono font-bold block truncate text-zinc-800 dark:text-afri-text">{String(val)}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* =========================================================
+                 DETAILED VIEW: ⚙️ Paramètres Système
+                 ========================================================= */}
+            {selectedSection === "system_settings" && (
+              <div className="space-y-6">
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                  <Wrench className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5 animate-pulse" />
+                  <div className="text-xs text-afri-text leading-relaxed font-mono">
+                    <strong>⚙️ PARAMÈTRES ET CONFIGURATION DE L'EMPIRE :</strong> Ajustez en temps réel les variables d'exécution globales de la plateforme AFRIGOMBO ELITE.
+                  </div>
+                </div>
+
+                <div className="bg-afri-bg border border-afri-border rounded-3xl p-6 space-y-6">
+                  <h3 className="text-sm font-sans font-black text-[#D4AF37] uppercase tracking-wider border-b border-afri-border pb-2">
+                    Variables Systèmes Globales (Temps Réel)
+                  </h3>
+
+                  <div className="space-y-4">
+                    {/* Inscriptions */}
+                    <div className="flex items-center justify-between p-4 bg-afri-bg-sec/5 border border-afri-border rounded-2xl">
+                      <div>
+                        <h4 className="text-xs font-sans font-bold text-zinc-900 dark:text-afri-text uppercase">Inscriptions des membres</h4>
+                        <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec font-mono mt-1">Permet ou bloque l'arrivée de nouveaux artistes et promoteurs sur la plateforme.</p>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const nextReg = !registrationsEnabled;
+                            await setDoc(doc(db, "system_settings", "registrations"), { enabled: nextReg }, { merge: true });
+                            setRegistrationsEnabled(nextReg);
+                            await logImperialAction("Configuration Système", `Inscriptions ${nextReg ? "Activées" : "Désactivées"}`);
+                            setSuccessMsg(`Inscriptions ${nextReg ? "activées" : "désactivées"} avec succès.`);
+                            setTimeout(() => setSuccessMsg(""), 3000);
+                            try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+                          } catch (err: any) {
+                            setErrorMsg(`Erreur : ${err.message}`);
+                          }
+                        }}
+                        className="focus:outline-none"
+                      >
+                        {registrationsEnabled ? (
+                          <ToggleRight className="w-12 h-12 text-[#D4AF37] cursor-pointer" />
+                        ) : (
+                          <ToggleLeft className="w-12 h-12 text-zinc-650 cursor-pointer" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Auto Pilot */}
+                    <div className="flex items-center justify-between p-4 bg-afri-bg-sec/5 border border-afri-border rounded-2xl">
+                      <div>
+                        <h4 className="text-xs font-sans font-bold text-zinc-900 dark:text-afri-text uppercase">Mode Auto-Pilotage (Validation automatique)</h4>
+                        <p className="text-[10px] text-zinc-500 dark:text-afri-text-sec font-mono mt-1">Valide automatiquement les publications, les contrats et les certifications de base sans intervention humaine.</p>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const nextAuto = !autoPilotEnabled;
+                            await setDoc(doc(db, "system_settings", "autopilot"), { enabled: nextAuto }, { merge: true });
+                            setAutoPilotEnabled(nextAuto);
+                            await logImperialAction("Configuration Système", `Mode Auto-Pilot ${nextAuto ? "Activé" : "Désactivé"}`);
+                            setSuccessMsg(`Mode Auto-Pilot ${nextAuto ? "activé" : "désactivé"} avec succès.`);
+                            setTimeout(() => setSuccessMsg(""), 3000);
+                            try { if (audioSynth) audioSynth.playValidationSuccess(); } catch (_) {}
+                          } catch (err: any) {
+                            setErrorMsg(`Erreur : ${err.message}`);
+                          }
+                        }}
+                        className="focus:outline-none"
+                      >
+                        {autoPilotEnabled ? (
+                          <ToggleRight className="w-12 h-12 text-emerald-400 cursor-pointer" />
+                        ) : (
+                          <ToggleLeft className="w-12 h-12 text-zinc-650 cursor-pointer" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </motion.div>
         )}

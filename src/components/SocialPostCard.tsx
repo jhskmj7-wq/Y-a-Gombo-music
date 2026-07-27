@@ -171,9 +171,13 @@ export default function SocialPostCard({
       return;
     }
 
-    if (!window.confirm("Voulez-vous vraiment signaler cette publication pour contenu inapproprié ou abusif ?")) {
+    const reason = window.prompt("Motif du signalement (ex: Contenu abusif, Harcèlement, Fraude...) :", "Contenu abusif");
+    if (reason === null) {
+      // User cancelled
       return;
     }
+
+    const comment = window.prompt("Commentaire ou précision supplémentaire (facultatif) :", "") || "Aucune précision";
 
     let updatedReportedBy = post.reportedBy ? [...post.reportedBy] : [];
     const newReportsCount = (post.reportsCount || 0) + 1;
@@ -181,13 +185,38 @@ export default function SocialPostCard({
 
     setHasReported(true);
 
-    // Save update in DB
-    await gomboDB.updateSocialPost(post.id, {
-      reportsCount: newReportsCount,
-      reportedBy: updatedReportedBy
-    });
+    try {
+      // Save update in DB
+      await gomboDB.updateSocialPost(post.id, {
+        reportsCount: newReportsCount,
+        reportedBy: updatedReportedBy
+      });
 
-    alert("Merci d'avoir signalé cette publication. Notre équipe d'Abidjan l'examinera dans les plus brefs délais.");
+      // Send actual REPORT notification to Super Founder
+      await gomboDB.createFounderNotification({
+        type: "REPORT",
+        category: "SIGNALEMENT",
+        title: "Nouveau signalement de publication",
+        message: `La publication de ${post.userName || 'un artiste'} a été signalée par ${currentUser.displayName || currentUser.email || 'un utilisateur'}. Motif: "${reason}".`,
+        senderUid: currentUser.uid,
+        priority: "HIGH",
+        source: "WEB_CLIENT",
+        data: {
+          postId: post.id,
+          postText: post.text || post.title || post.caption || "Contenu multimédia",
+          reportedByUid: currentUser.uid,
+          reportedByName: currentUser.displayName || currentUser.email || "Utilisateur",
+          reason: reason || "Contenu abusif",
+          comment: comment,
+          createdAt: new Date().toISOString()
+        }
+      });
+
+      alert("Merci d'avoir signalé cette publication. Notre équipe d'Abidjan l'examinera dans les plus brefs délais.");
+    } catch (err) {
+      console.error("Error reporting post:", err);
+      alert("Une erreur est survenue lors de l'enregistrement du signalement.");
+    }
   };
 
   // Action mapped to handle "🎤 Répondre au Gombo"

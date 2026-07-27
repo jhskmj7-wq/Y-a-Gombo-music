@@ -121,6 +121,21 @@ export const gomboAuth = {
       userProfile.uid = res.user.uid;
 
       await setDoc(doc(db, "users", res.user.uid), userProfile);
+      
+      try {
+        await gomboDB.createFounderNotification({
+          type: "NEW_USER",
+          category: "UTILISATEUR",
+          title: "Nouvel utilisateur inscrit",
+          message: `L'utilisateur ${details.firstName} ${details.lastName} (${email}) s'est inscrit en tant que ${role === 'musicien' ? 'Artiste/Musicien' : 'Client'}.`,
+          senderUid: res.user.uid,
+          source: "WEB_CLIENT",
+          data: userProfile
+        });
+      } catch (errNotif) {
+        console.warn("Could not notify admin of new user:", errNotif);
+      }
+
       pendingSignUpProfile = null;
       return { uid: res.user.uid, email };
     }
@@ -910,6 +925,21 @@ export const gomboDB = {
         comments: [],
         createdAt: new Date().toISOString()
       });
+
+      try {
+        await this.createFounderNotification({
+          type: "NEW_POST",
+          category: "PUBLICATION",
+          title: "Nouvelle publication créée",
+          message: `L'artiste/utilisateur ${post.artistName || post.userId || 'Utilisateur'} a publié un contenu : "${post.text || post.title || 'Sans texte'}"`,
+          senderUid: post.userId,
+          source: "WEB_CLIENT",
+          data: { ...post, id: ref.id }
+        });
+      } catch (errNotif) {
+        console.warn("Could not notify admin of new post:", errNotif);
+      }
+
       return ref.id;
     }
   },
@@ -1017,6 +1047,42 @@ export const gomboDB = {
         isRead: false,
         createdAt: new Date().toISOString()
       });
+    }
+  },
+
+  async createFounderNotification(data: {
+    type: string;
+    category: string;
+    title: string;
+    message: string;
+    senderUid?: string;
+    priority?: string;
+    source?: string;
+    data?: any;
+  }) {
+    if (db) {
+      try {
+        const notif = {
+          type: data.type,
+          category: data.category,
+          catégorie: data.category,
+          title: data.title,
+          titre: data.title,
+          message: data.message,
+          senderUid: data.senderUid || "system",
+          receiverUid: "SUPER_FOUNDER",
+          userId: "SUPER_FOUNDER",
+          isRead: false,
+          read: false,
+          createdAt: new Date().toISOString(),
+          priority: data.priority || "NORMAL",
+          source: data.source || "SYSTEM",
+          data: data.data || {},
+        };
+        await addDoc(collection(db, "notifications"), notif);
+      } catch (err) {
+        console.warn("Could not create founder notification:", err);
+      }
     }
   },
 
@@ -1204,10 +1270,38 @@ export const gomboDB = {
           userId: payment.userId,
           type: "payment_received",
           title: "💰 Paiement reçu",
-          message: `Votre paiement de ${payment.amount ? payment.amount.toLocaleString() : "0"} FCFA pour "${payment.label || payment.description || "Prestation"}" a été enregistré !`,
+          message: `Votre paiement de ${payment.amount ? payment.amount.toLocaleString() : "0"} FCFA pour "${payment.purpose || payment.label || payment.description || "Prestation"}" a été enregistré !`,
           relatedId: docRef.id,
           priority: "high"
         });
+      }
+
+      try {
+        await this.createFounderNotification({
+          type: "PAYMENT",
+          category: "PAIEMENT",
+          title: "Nouveau paiement reçu",
+          message: `Un paiement de ${payment.amount ? payment.amount.toLocaleString() : "0"} FCFA a été effectué par ${payment.userName || 'un utilisateur'} pour "${payment.purpose || payment.label || 'Prestation'}"`,
+          senderUid: payment.userId,
+          priority: "NORMAL",
+          source: "WEB_CLIENT",
+          data: { ...payment, paymentId: docRef.id }
+        });
+
+        if ((payment.purpose && payment.purpose.includes("Premium")) || (payment.label && payment.label.includes("Premium"))) {
+          await this.createFounderNotification({
+            type: "PREMIUM",
+            category: "PREMIUM",
+            title: "💎 Adhésion Premium Activée",
+            message: `L'adhésion Premium de ${payment.userName || 'un utilisateur'} a été activée suite au paiement de ${payment.amount ? payment.amount.toLocaleString() : "0"} FCFA.`,
+            senderUid: payment.userId,
+            priority: "HIGH",
+            source: "WEB_CLIENT",
+            data: { ...payment, paymentId: docRef.id }
+          });
+        }
+      } catch (errNotif) {
+        console.warn("Could not notify admin of payment:", errNotif);
       }
     }
   },
@@ -1267,6 +1361,21 @@ export const gomboDB = {
       };
       await addDoc(collection(db, "disputes"), payload);
       await addDoc(collection(db, "litiges"), { ...payload, status: "en_attente" });
+
+      try {
+        await this.createFounderNotification({
+          type: "LITIGE",
+          category: "LITIGE",
+          title: "Nouveau litige déclaré",
+          message: `Un litige a été déclaré par ${payload.userName} concernant l'opportunité ${payload.gomboId || 'Gombo'}.`,
+          senderUid: payload.userId,
+          priority: "HIGH",
+          source: "WEB_CLIENT",
+          data: payload
+        });
+      } catch (errNotif) {
+        console.warn("Could not notify admin of dispute:", errNotif);
+      }
     }
   },
 
@@ -1283,6 +1392,21 @@ export const gomboDB = {
         createdAt: new Date().toISOString()
       };
       await addDoc(collection(db, "kyc_requests"), payload);
+
+      try {
+        await this.createFounderNotification({
+          type: "CERTIFICATION",
+          category: "CERTIFICATION",
+          title: "Demande de Certification GOMBO ID",
+          message: `Dossier de certification GOMBO ID (KYC) soumis par ${payload.userName} (${payload.userEmail}).`,
+          senderUid: payload.userId,
+          priority: "HIGH",
+          source: "WEB_CLIENT",
+          data: payload
+        });
+      } catch (errNotif) {
+        console.warn("Could not notify admin of KYC:", errNotif);
+      }
     }
   },
 
@@ -2748,8 +2872,60 @@ export const gomboDB = {
           gomboId: feedback.gomboId || "",
           reason: feedback.reason || feedback.category || "Litige Bêta"
         });
+
+        try {
+          await this.createFounderNotification({
+            type: "LITIGE",
+            category: "LITIGE",
+            title: "Nouveau litige déclaré",
+            message: `Un litige a été déclaré par ${payload.userName} concernant l'opportunité ${feedback.gomboId || 'Gombo'}.`,
+            senderUid: payload.userId,
+            priority: "HIGH",
+            source: "WEB_CLIENT",
+            data: {
+              ...payload,
+              gomboId: feedback.gomboId || "",
+              reason: feedback.reason || "Litige Bêta"
+            }
+          });
+        } catch (errNotif) {
+          console.warn("Could not notify admin of dispute:", errNotif);
+        }
       } else if (feedback.type === 'support' || feedback.type === 'ticket') {
         await addDoc(collection(db, "tickets_support"), payload);
+      } else if (feedback.type === 'idea' || feedback.type === 'recommendation') {
+        await addDoc(collection(db, "recommendations"), {
+          author: payload.userName,
+          auteur: payload.userName,
+          texte: payload.message,
+          message: payload.message,
+          date: payload.createdAt,
+          createdAt: payload.createdAt,
+          statut: "Nouveau",
+          status: "Nouveau",
+          userId: payload.userId
+        });
+
+        try {
+          await this.createFounderNotification({
+            type: "RECOMMANDATION",
+            category: "RECOMMANDATION",
+            title: "Nouvelle recommandation d'utilisateur",
+            message: `L'utilisateur ${payload.userName} a envoyé une idée : "${payload.message}".`,
+            senderUid: payload.userId,
+            priority: "NORMAL",
+            source: "WEB_CLIENT",
+            data: {
+              author: payload.userName,
+              texte: payload.message,
+              date: payload.createdAt,
+              statut: "Nouveau",
+              userId: payload.userId
+            }
+          });
+        } catch (errNotif) {
+          console.warn("Could not notify admin of recommendation:", errNotif);
+        }
       }
     }
   },

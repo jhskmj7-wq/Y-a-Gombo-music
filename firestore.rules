@@ -300,6 +300,18 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /recommendations/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /premiumRequests/{id} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
     // ADMISSIONS
     match /admins/{adminId} {
       allow read: if isFounder();

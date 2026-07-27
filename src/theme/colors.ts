@@ -1,5 +1,19 @@
 export type Theme = "imperial" | "light" | "royal" | "saphir" | "emeraude" | "studio" | "rouge";
 
+export function getTextColor(backgroundHex: string): string {
+  if (!backgroundHex) return "#FFFFFF";
+  let hex = backgroundHex.replace("#", "");
+  if (hex.length === 3) {
+    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+  }
+  if (hex.length !== 6) return "#FFFFFF";
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luma > 128 ? "#1A1A1A" : "#FFFFFF";
+}
+
 export interface ThemeColors {
   background: string;
   surface: string;
