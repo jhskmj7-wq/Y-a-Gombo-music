@@ -1,3 +1,4 @@
+// TEST AFRIGOMBO - ÉCRITURE DANS APP.TSX
 import GlobalNotificationBanner from "./components/GlobalNotificationBanner";
 import React, { useState, useEffect, Suspense, lazy, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
