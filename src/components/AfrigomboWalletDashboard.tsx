@@ -213,34 +213,72 @@ export default function AfrigomboWalletDashboard({
   // MOBILE MONEY DEPOSIT HANDLER
   const handleDepositSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || Number(amount) <= 0 || processing) return;
+    const depositAmount = Number(amount);
+    if (!depositAmount || depositAmount < 15000 || processing) {
+      alert("Le montant minimum de recharge est de 15 000 FCFA.");
+      return;
+    }
     
     setProcessing(true);
     playSound("click");
 
     try {
-      const depositAmount = Number(amount);
       const now = new Date().toISOString();
       const depId = "dep_" + Date.now();
+      const userName = currentUserProfile?.artisticName || currentUserProfile?.displayName || currentUserProfile?.name || "Membre Gombo";
+      const userPhoto = currentUserProfile?.photoURL || currentUserProfile?.avatarUrl || "";
+      const gomboId = currentUserProfile?.gomboId || "GB-" + Math.floor(1000 + Math.random() * 9000);
+      const afriId = currentUserProfile?.afriId || "AF-" + Math.floor(1000 + Math.random() * 9000);
+      const reference = "DEP-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-      // Record transaction in unified Firestore `transactions` collection
+      // 1. Create document in walletDepositRequests
+      await setDoc(doc(db, "walletDepositRequests", depId), {
+        id: depId,
+        uid: uid,
+        userName: userName,
+        userPhoto: userPhoto,
+        gomboId: gomboId,
+        afriId: afriId,
+        montant: depositAmount,
+        amount: depositAmount,
+        status: "pending",
+        statut: "pending",
+        createdAt: now,
+        createdAtIso: now,
+        whatsappContacted: false,
+        reference: reference,
+        operator: operator,
+        phoneNumber: phoneNumber
+      });
+
+      // 2. Record transaction in unified Firestore `transactions` collection
       await recordWalletTransaction({
         userId: uid,
-        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
+        userName: userName,
         type: "recharge_wallet",
         amount: depositAmount,
         status: "pending",
-        description: `Recharge Wallet via ${operator.toUpperCase()} (${phoneNumber})`,
-        userConcerned: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo"
+        reference: reference,
+        description: `Recharge Wallet via ${operator.toUpperCase()} (${phoneNumber})`
       });
 
-      // Transmit real-time alert log to Founder Dashboard (imperial_logs)
+      // 3. Create notification for admin / founder
+      await addDoc(collection(db, "notifications"), {
+        userId: "founder_admin",
+        title: "🔔 Nouvelle recharge Wallet",
+        message: `Demande de rechargement de ${depositAmount.toLocaleString('fr-FR')} FCFA par ${userName}`,
+        type: "wallet_deposit_request",
+        createdAt: now,
+        isRead: false
+      });
+
+      // 4. Transmit real-time alert log to Founder Dashboard (imperial_logs)
       await addDoc(collection(db, "imperial_logs"), {
         type: "WALLET_DEPOSIT_REQUEST",
         title: "💳 REQUÊTE DE RECHARGEMENT WALLET",
-        message: `Le membre ${currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo"} sollicite un rechargement de ${depositAmount.toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}).`,
+        message: `Le membre ${userName} sollicite un rechargement de ${depositAmount.toLocaleString('fr-FR')} FCFA via ${operator.toUpperCase()} (${phoneNumber}).`,
         userId: uid,
-        userName: currentUserProfile?.artisticName || currentUserProfile?.displayName || "Membre Gombo",
+        userName: userName,
         amount: depositAmount,
         operator: operator,
         phone: phoneNumber,
@@ -248,8 +286,8 @@ export default function AfrigomboWalletDashboard({
         severity: "NORMAL"
       });
 
-      setCreatedDepositRef(depId);
-      addToTerminal(`[WALLET] 📥 Rechargement de ${depositAmount.toLocaleString('fr-FR')} FCFA enregistré (Réf: ${depId}). Redirection Support...`);
+      setCreatedDepositRef(reference);
+      addToTerminal(`[WALLET] 📥 Rechargement de ${depositAmount.toLocaleString('fr-FR')} FCFA enregistré (Réf: ${reference}). Redirection Support...`);
       playSound("success");
       setStep("success");
     } catch (err) {
@@ -806,18 +844,19 @@ export default function AfrigomboWalletDashboard({
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest block">
-                        Montant du rechargement (FCFA)
+                      <label className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest flex justify-between">
+                        <span>Montant du rechargement (FCFA)</span>
+                        <span className="text-[#D4AF37]">Min: 15 000 FCFA</span>
                       </label>
                       <div className="relative">
                         <Coins className="absolute left-4 top-3.5 w-4 h-4 text-afri-text-muted" />
                         <input 
                           type="number" 
                           required
-                          min="500"
+                          min="15000"
                           value={amount} 
                           onChange={(e) => setAmount(e.target.value)}
-                          placeholder="Ex: 50000" 
+                          placeholder="Ex: 25000" 
                           className="w-full bg-afri-bg border border-afri-border rounded-xl pl-11 pr-4 py-3 text-afri-text font-mono text-sm focus:outline-none focus:border-afri-gold"
                         />
                       </div>

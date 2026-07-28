@@ -6,51 +6,42 @@ import {
   XCircle, 
   Clock, 
   Search, 
-  User, 
-  DollarSign, 
-  Calendar, 
   ShieldAlert, 
-  Sparkles,
   RefreshCw,
-  ExternalLink,
-  Zap
+  EyeOff,
+  Eye,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 import { db } from "../../lib/firebase";
-import { collection, query, onSnapshot, doc, updateDoc, addDoc, getDocs, where } from "firebase/firestore";
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { audioSynth } from "../../lib/audio";
 
-export interface PendingPublication {
+export interface ModeratedPublication {
   id: string;
   collectionName: "social_posts" | "gombos";
   title: string;
   authorName: string;
   authorId: string;
   budget?: number;
-  totalAmountToDeposit?: number;
   createdAt: string;
   status: string;
-  paymentMethod?: string;
-  paymentProvider?: string;
-  paymentStatus?: string;
-  adminValidated?: boolean;
   visible?: boolean;
-  activationCode?: string;
   commune?: string;
   type?: string;
   isFlagged?: boolean;
   reportsCount?: number;
+  reportReason?: string;
 }
 
 interface PendingPublicationsAdminPanelProps {
   currentUser?: any;
-  autoPilotEnabled?: boolean;
 }
 
 export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPanelProps> = ({
-  currentUser,
-  autoPilotEnabled
+  currentUser
 }) => {
-  const [items, setItems] = useState<PendingPublication[]>([]);
+  const [items, setItems] = useState<ModeratedPublication[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -71,259 +62,112 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
 
     // Realtime listener for social_posts
     const unsubPosts = onSnapshot(collection(db, "social_posts"), (snap) => {
-      const socialList: PendingPublication[] = [];
+      const list: ModeratedPublication[] = [];
       snap.forEach((d) => {
         const data = d.data();
-        const isPending = 
-          data.status === "pending_deposit" || 
-          data.status === "pending" || 
-          data.adminValidated === false || 
-          data.visible === false;
-        
-        if (isPending && data.status !== "rejected" && data.status !== "refuse" && data.status !== "cancelled") {
-          socialList.push({
-            id: d.id,
-            collectionName: "social_posts",
-            title: data.title || data.caption || "Publication sans titre",
-            authorName: data.authorName || data.userName || "Utilisateur Anonyme",
-            authorId: data.authorId || data.userId || "",
-            budget: Number(data.budget || data.feeAmount || 0),
-            totalAmountToDeposit: Number(data.totalAmountToDeposit || data.budget || 0),
-            createdAt: data.createdAt || new Date().toISOString(),
-            status: data.status || "pending_deposit",
-            paymentMethod: data.paymentMethod || "manual_beta",
-            paymentProvider: data.paymentProvider || "manual_beta",
-            paymentStatus: data.paymentStatus || "waiting",
-            adminValidated: !!data.adminValidated,
-            visible: !!data.visible,
-            activationCode: data.activationCode,
-            commune: data.commune || "",
-            type: data.type || data.postCategory || "Annonce",
-            isFlagged: !!data.isFlagged,
-            reportsCount: Number(data.reportsCount || 0)
-          });
-        }
+        list.push({
+          id: d.id,
+          collectionName: "social_posts",
+          title: data.title || data.caption || "Publication sans titre",
+          authorName: data.authorName || data.userName || "Utilisateur",
+          authorId: data.authorId || data.userId || "",
+          budget: Number(data.budget || data.feeAmount || 0),
+          createdAt: data.createdAt || new Date().toISOString(),
+          status: data.status || "published",
+          visible: data.visible !== false,
+          commune: data.commune || "",
+          type: data.type || data.postCategory || "Annonce",
+          isFlagged: !!data.isFlagged,
+          reportsCount: Number(data.reportsCount || 0),
+          reportReason: data.reportReason || data.motifs || ""
+        });
       });
 
       // Realtime listener for gombos
       const unsubGombos = onSnapshot(collection(db, "gombos"), (snapGombos) => {
-        const gombosList: PendingPublication[] = [];
         snapGombos.forEach((d) => {
           const data = d.data();
-          const isPending = 
-            data.status === "pending_deposit" || 
-            data.status === "pending" || 
-            data.adminValidated === false || 
-            data.visible === false;
-          
-          if (isPending && data.status !== "rejected" && data.status !== "refuse" && data.status !== "cancelled") {
-            // Avoid duplicate if already included from social_posts with same title & authorId
-            const existsInSocial = socialList.some(
-              p => (p?.title ?? "").toLowerCase() === (data?.title ?? "").toLowerCase() && p.authorId === (data.clientId || data.authorId)
-            );
-            
-            if (!existsInSocial) {
-              gombosList.push({
-                id: d.id,
-                collectionName: "gombos",
-                title: data.title || "Gombo sans titre",
-                authorName: data.clientName || data.organizerName || "Client Gombo",
-                authorId: data.clientId || data.organizerId || "",
-                budget: Number(data.budget || 0),
-                totalAmountToDeposit: Number(data.totalAmountToDeposit || data.budget || 0),
-                createdAt: data.createdAt || new Date().toISOString(),
-                status: data.status || "pending_deposit",
-                paymentMethod: data.paymentMethod || "manual_beta",
-                paymentProvider: data.paymentProvider || "manual_beta",
-                paymentStatus: data.paymentStatus || "waiting",
-                adminValidated: !!data.adminValidated,
-                visible: !!data.visible,
-                activationCode: data.activationCode,
-                commune: data.commune || "",
-                type: data.eventType || "Gombo",
-                isFlagged: !!data.isFlagged,
-                reportsCount: Number(data.reportsCount || 0)
-              });
-            }
+          const exists = list.some(p => p.id === d.id);
+          if (!exists) {
+            list.push({
+              id: d.id,
+              collectionName: "gombos",
+              title: data.title || "Gombo sans titre",
+              authorName: data.clientName || data.organizerName || "Client",
+              authorId: data.clientId || data.organizerId || "",
+              budget: Number(data.budget || 0),
+              createdAt: data.createdAt || new Date().toISOString(),
+              status: data.status || "published",
+              visible: data.visible !== false,
+              commune: data.commune || "",
+              type: data.eventType || "Gombo",
+              isFlagged: !!data.isFlagged,
+              reportsCount: Number(data.reportsCount || 0),
+              reportReason: data.reportReason || data.motifs || ""
+            });
           }
         });
 
-        const merged = [...socialList, ...gombosList].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-        setItems(merged);
+        setItems(list);
         setLoading(false);
       }, (err) => {
-        console.warn("Gombos listener warning:", err);
-        setItems(socialList);
+        console.warn("Gombos moderation sync error:", err);
         setLoading(false);
       });
 
       return () => unsubGombos();
     }, (err) => {
-      console.warn("Social posts listener warning:", err);
+      console.warn("Social posts moderation sync error:", err);
       setLoading(false);
     });
 
     return () => unsubPosts();
   }, []);
 
-  // Mode Auto-Pilotage Effect
-  useEffect(() => {
-    if (!autoPilotEnabled || !db || items.length === 0) return;
-
-    const autoValidateItems = async () => {
-      for (const item of items) {
-        // Skip flagged items
-        if (item.isFlagged || (item.reportsCount && item.reportsCount > 0)) {
-          continue;
-        }
-
-        try {
-          const docRef = doc(db, item.collectionName, item.id);
-          await updateDoc(docRef, {
-            status: "published",
-            adminValidated: true,
-            visible: true,
-            publishedAt: new Date().toISOString()
-          });
-
-          await addDoc(collection(db, "imperial_logs"), {
-            action: "Auto-Validation",
-            description: `Publication ${item.title} validée automatiquement (Auto-Pilotage).`,
-            timestamp: Date.now(),
-            executor: "Système"
-          });
-        } catch (err) {
-          console.error("Auto-validation failed for", item.id, err);
-        }
-      }
-    };
-
-    autoValidateItems();
-  }, [autoPilotEnabled, items]);
-
-  // Validation Action
-  const handleValidate = async (item: PendingPublication) => {
+  const handleHide = async (item: ModeratedPublication) => {
     setActionLoadingId(item.id);
-    const now = new Date().toISOString();
     try {
-      if (!db) throw new Error("Base de données non initialisée");
-
-      // Update primary document
-      const docRef = doc(db, item.collectionName, item.id);
-      await updateDoc(docRef, {
-        status: "published",
-        paymentStatus: "paid",
-        adminValidated: true,
-        visible: true,
-        publishedAt: now,
-        depositConfirmed: true,
-        depositConfirmedAt: now
-      });
-
-      // Dual sync update on complementary collection if exists
-      if (item.collectionName === "social_posts") {
-        try {
-          const qGombos = query(collection(db, "gombos"), where("clientId", "==", item.authorId), where("status", "==", "pending_deposit"));
-          const snapGombos = await getDocs(qGombos);
-          snapGombos.forEach((d) => {
-            updateDoc(d.ref, {
-              status: "published",
-              paymentStatus: "paid",
-              adminValidated: true,
-              visible: true,
-              publishedAt: now,
-              depositConfirmed: true,
-              depositConfirmedAt: now
-            }).catch(() => {});
-          });
-        } catch (_) {}
-      } else {
-        try {
-          const qPosts = query(collection(db, "social_posts"), where("userId", "==", item.authorId), where("status", "==", "pending_deposit"));
-          const snapPosts = await getDocs(qPosts);
-          snapPosts.forEach((d) => {
-            updateDoc(d.ref, {
-              status: "published",
-              paymentStatus: "paid",
-              adminValidated: true,
-              visible: true,
-              publishedAt: now,
-              depositConfirmed: true,
-              depositConfirmedAt: now
-            }).catch(() => {});
-          });
-        } catch (_) {}
-      }
-
-      // Send confirmation notification to author
-      if (item.authorId) {
-        await addDoc(collection(db, "notifications"), {
-          userId: item.authorId,
-          title: "🎉 Publication Validée !",
-          body: `Votre publication "${item.title}" a été validée par le Fondateur et est maintenant visible sur Le Terrain.`,
-          type: "publication_validated",
-          read: false,
-          createdAt: now
-        }).catch(() => {});
-      }
-
-      try { audioSynth.playValidationSuccess(); } catch (_) {}
-      showToast(`✅ Publication "${item.title}" validée avec succès ! Elle est désormais visible.`);
+      await updateDoc(doc(db, item.collectionName, item.id), { visible: false });
+      showToast(`👁️ Publication "${item.title}" masquée.`);
     } catch (err: any) {
-      showToast(`❌ Erreur : ${err.message}`);
+      showToast(`❌ Erreur: ${err.message}`);
     } finally {
       setActionLoadingId(null);
     }
   };
 
-  // Generate Code Action
-  const handleGenerateCode = async (item: PendingPublication) => {
+  const handleSuspend = async (item: ModeratedPublication) => {
     setActionLoadingId(item.id);
     try {
-      const { createValidationCodeForPost } = await import("../../lib/validationCodeEngine");
-      const code = await createValidationCodeForPost(item.id, item.collectionName);
-      showToast(`🔑 Code de validation généré : ${code} pour "${item.title}".`);
+      await updateDoc(doc(db, item.collectionName, item.id), { status: "suspended", visible: false });
+      showToast(`🛑 Publication "${item.title}" suspendue.`);
     } catch (err: any) {
-      showToast(`❌ Erreur lors de la génération du code : ${err.message}`);
+      showToast(`❌ Erreur: ${err.message}`);
     } finally {
       setActionLoadingId(null);
     }
   };
 
-  // Refusal Action
-  const handleRefuse = async (item: PendingPublication) => {
+  const handleRestore = async (item: ModeratedPublication) => {
     setActionLoadingId(item.id);
-    const now = new Date().toISOString();
     try {
-      if (!db) throw new Error("Base de données non initialisée");
-
-      const docRef = doc(db, item.collectionName, item.id);
-      await updateDoc(docRef, {
-        status: "rejected",
-        paymentStatus: "rejected",
-        adminValidated: false,
-        visible: false,
-        updatedAt: now
-      });
-
-      if (item.authorId) {
-        await addDoc(collection(db, "notifications"), {
-          userId: item.authorId,
-          title: "❌ Publication Non Validée",
-          body: `Votre publication "${item.title}" n'a pas été validée. Contactez le Support AFRIGOMBO pour plus d'informations.`,
-          type: "publication_rejected",
-          read: false,
-          createdAt: now
-        }).catch(() => {});
-      }
-
-      try { audioSynth.playKoraNote(200, 0, 0.2, 0.4); } catch (_) {}
-      showToast(`❌ Publication "${item.title}" refusée.`);
+      await updateDoc(doc(db, item.collectionName, item.id), { status: "PUBLISHED", visible: true });
+      showToast(`✅ Publication "${item.title}" restaurée.`);
     } catch (err: any) {
-      showToast(`❌ Erreur : ${err.message}`);
+      showToast(`❌ Erreur: ${err.message}`);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleDelete = async (item: ModeratedPublication) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer définitivement "${item.title}" ?`)) return;
+    setActionLoadingId(item.id);
+    try {
+      await deleteDoc(doc(db, item.collectionName, item.id));
+      showToast(`🗑️ Publication "${item.title}" supprimée.`);
+    } catch (err: any) {
+      showToast(`❌ Erreur: ${err.message}`);
     } finally {
       setActionLoadingId(null);
     }
@@ -331,195 +175,169 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
 
   const filteredItems = items.filter((item) => {
     if (!searchTerm.trim()) return true;
-    const q = (searchTerm || "").toLowerCase();
+    const q = searchTerm.toLowerCase();
     return (
       (item?.title ?? "").toLowerCase().includes(q) ||
       (item?.authorName ?? "").toLowerCase().includes(q) ||
       (item?.commune ?? "").toLowerCase().includes(q) ||
-      (item?.id ?? "").toLowerCase().includes(q) ||
-      (item?.status ?? "").toLowerCase().includes(q)
+      (item?.id ?? "").toLowerCase().includes(q)
     );
   });
 
   return (
-    <div className="space-y-5">
-      {/* Toast Notification */}
+    <div className="space-y-6 text-left font-sans select-none">
       <AnimatePresence>
         {toastMsg && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="p-4 bg-[#D4AF37] text-black font-mono text-xs font-black rounded-2xl shadow-xl flex items-center justify-between border border-amber-300"
+            className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-afri-bg-sec border border-[#D4AF37] text-afri-text px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 text-xs font-bold"
           >
+            <ShieldAlert className="w-4 h-4 text-[#D4AF37]" />
             <span>{toastMsg}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Control Header & Search Bar */}
-      <div className="p-4 bg-afri-bg/90 border border-sky-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="p-2.5 bg-sky-500/10 border border-sky-500/30 rounded-xl text-sky-400">
-            <FileText className="w-5 h-5" />
+      {/* Header Banner */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-afri-bg-sec via-afri-bg-sec/90 to-afri-bg-ter/40 border border-sky-500/30 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="p-2 bg-sky-500/15 border border-sky-500/30 text-sky-400 rounded-2xl">
+                <ShieldAlert className="w-6 h-6" />
+              </span>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-wider">
+                  MODÉRATION DES PUBLICATIONS
+                </h2>
+                <p className="text-xs text-afri-text-sec">
+                  Masquez, suspendez, restaurez ou supprimez les publications signalées ou non conformes
+                </p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-display font-black text-afri-text uppercase tracking-wider">
-              Publications en attente ({items.length})
-            </h3>
-            <p className="text-[10px] text-afri-text-sec font-mono">
-              Validation manuelle Escrow Bêta — Fournisseur actuel : <span className="text-[#D4AF37] font-bold">manual_beta</span>
-            </p>
-          </div>
-        </div>
 
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-afri-text-sec absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Rechercher titre, auteur..."
-            className="w-full pl-9 pr-3 py-2 bg-afri-bg-sec border border-afri-border rounded-xl text-xs text-afri-text placeholder:text-afri-text-sec/60 focus:outline-none focus:border-sky-400 font-mono"
-          />
+          <div className="flex items-center gap-3 bg-afri-bg/70 border border-afri-border px-3.5 py-2 rounded-2xl text-xs font-mono text-afri-text-sec">
+            <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-ping" />
+            <span>Modération Active</span>
+          </div>
         </div>
       </div>
 
-      {/* Main List */}
-      {loading ? (
-        <div className="p-12 text-center text-xs font-mono text-afri-text-sec flex flex-col items-center justify-center gap-2">
-          <RefreshCw className="w-6 h-6 text-sky-400 animate-spin" />
-          <span>Chargement des publications en attente...</span>
-        </div>
-      ) : filteredItems.length === 0 ? (
-        <div className="p-10 bg-afri-bg border border-afri-border rounded-3xl text-center space-y-2">
-          <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center text-emerald-400 mx-auto text-xl">
-            ✨
+      {/* Search Bar */}
+      <div className="relative w-full sm:w-72">
+        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-afri-text-sec" />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Rechercher titre, auteur, commune..."
+          className="w-full pl-10 pr-4 py-2 bg-afri-bg-sec border border-afri-border focus:border-sky-400 rounded-2xl text-xs text-afri-text outline-none"
+        />
+      </div>
+
+      {/* List */}
+      <div className="space-y-4">
+        {loading ? (
+          <div className="p-12 text-center bg-afri-bg-sec border border-afri-border rounded-3xl space-y-2">
+            <RefreshCw className="w-6 h-6 text-sky-400 animate-spin mx-auto" />
+            <p className="text-xs text-afri-text-sec font-mono">Chargement des publications...</p>
           </div>
-          <h4 className="text-xs font-mono uppercase font-black text-afri-text">
-            Toutes les publications sont traitées
-          </h4>
-          <p className="text-[10px] text-afri-text-sec font-mono max-w-sm mx-auto">
-            Aucune publication n'est actuellement en attente de validation du dépôt.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredItems.map((item) => {
-            const isProcessing = actionLoadingId === item.id;
+        ) : filteredItems.length === 0 ? (
+          <div className="p-10 text-center bg-afri-bg-sec border border-afri-border rounded-3xl space-y-2">
+            <FileText className="w-8 h-8 text-afri-text-sec/40 mx-auto" />
+            <p className="text-sm font-bold text-afri-text">Aucune publication trouvée.</p>
+          </div>
+        ) : (
+          filteredItems.map((item) => {
+            const isLoading = actionLoadingId === item.id;
+
             return (
               <motion.div
-                key={`${item.collectionName}_${item.id}`}
+                key={item.id}
                 layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-5 bg-afri-bg border-2 border-sky-500/30 hover:border-sky-400 rounded-3xl space-y-4 shadow-xl transition-all relative overflow-hidden"
+                className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-sky-400/40 transition-all shadow-md"
               >
-                {/* Status bar */}
-                <div className="flex items-center justify-between border-b border-afri-border/70 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-400 font-mono font-black text-[9px] uppercase tracking-wider flex items-center gap-1.5">
-                      <Clock className="w-3 h-3 animate-pulse" />
-                      🟡 EN ATTENTE DE DÉPÔT
+                <div className="space-y-1.5 max-w-xl">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 uppercase">
+                      {item.type || item.collectionName}
                     </span>
-                    <span className="text-[9px] font-mono text-afri-text-sec bg-afri-bg-sec px-2 py-0.5 rounded-md border border-afri-border">
-                      {item.type}
-                    </span>
-                  </div>
-
-                  <span className="text-[9px] font-mono text-afri-text-sec">
-                    Provider: <strong className="text-sky-400">{item.paymentProvider || "manual_beta"}</strong>
-                  </span>
-                </div>
-
-                {/* Grid details */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs font-mono">
-                  {/* Title & Commune */}
-                  <div className="md:col-span-2 space-y-1">
-                    <span className="text-[9px] text-afri-text-sec uppercase tracking-wider block">Titre de la publication</span>
-                    <strong className="text-sm font-display font-black text-afri-text block leading-snug">
-                      {item.title}
-                    </strong>
-                    {item.commune && (
-                      <span className="text-[10px] text-sky-400 font-bold block">
-                        📍 Commune : {item.commune}
+                    <h4 className="text-sm font-black text-afri-text">{item.title}</h4>
+                    {!item.visible && (
+                      <span className="text-[9px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded">
+                        Masqué
+                      </span>
+                    )}
+                    {item.status === "suspended" && (
+                      <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded">
+                        Suspendu
                       </span>
                     )}
                   </div>
 
-                  {/* Author */}
-                  <div className="space-y-1">
-                    <span className="text-[9px] text-afri-text-sec uppercase tracking-wider block">Auteur / Promoteur</span>
-                    <div className="flex items-center gap-1.5 text-afri-text font-bold">
-                      <User className="w-3.5 h-3.5 text-[#D4AF37]" />
-                      <span className="truncate">{item.authorName}</span>
-                    </div>
-                  </div>
+                  <p className="text-xs font-mono text-afri-text-sec">
+                    Par <strong className="text-afri-text">{item.authorName}</strong> {item.commune ? `• Commune : ${item.commune}` : ""} {item.budget ? `• Budget : ${item.budget.toLocaleString('fr-FR')} FCFA` : ""}
+                  </p>
 
-                  {/* Budget & Date */}
-                  <div className="space-y-1 text-right md:text-left">
-                    <span className="text-[9px] text-afri-text-sec uppercase tracking-wider block">Cachet & Date</span>
-                    <div className="text-[#D4AF37] font-black text-sm">
-                      {item.budget ? `${item.budget.toLocaleString()} FCFA` : "Gratuit / Démo"}
+                  {(item.isFlagged || (item.reportsCount && item.reportsCount > 0) || item.reportReason) && (
+                    <div className="flex items-center gap-2 p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      <span>Signalements : {item.reportsCount || 1} {item.reportReason ? `— Motif : ${item.reportReason}` : ""}</span>
                     </div>
-                    <div className="text-[9px] text-afri-text-sec flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(item.createdAt).toLocaleDateString("fr-FR", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="pt-2 border-t border-afri-border/70 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span className="text-[9.5px] font-mono text-afri-text-sec italic">
-                    💡 La validation rendra cette publication immédiatement publique sur Le Terrain.
-                  </span>
-
-                  <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                  {item.visible !== false && item.status !== "suspended" ? (
                     <button
-                      disabled={isProcessing}
-                      onClick={() => handleGenerateCode(item)}
-                      className="flex-1 sm:flex-none px-3.5 py-2.5 bg-purple-500/10 hover:bg-purple-500/25 border border-purple-500/40 text-purple-300 font-mono text-xs font-black uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
-                      title="Générer un code de validation à transmettre au client via WhatsApp"
+                      onClick={() => handleHide(item)}
+                      disabled={isLoading}
+                      className="px-3 py-2 bg-afri-bg hover:bg-afri-bg-ter border border-afri-border text-afri-text text-xs font-mono font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                     >
-                      <Zap className="w-4 h-4 text-purple-400" />
-                      <span>{item.activationCode ? `Code: ${item.activationCode}` : "Générer Code"}</span>
+                      <EyeOff className="w-3.5 h-3.5" />
+                      <span>Masquer</span>
                     </button>
-
+                  ) : (
                     <button
-                      disabled={isProcessing}
-                      onClick={() => handleRefuse(item)}
-                      className="flex-1 sm:flex-none px-4 py-2.5 bg-red-500/10 hover:bg-red-500/25 border border-red-500/40 text-red-400 font-mono text-xs font-black uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+                      onClick={() => handleRestore(item)}
+                      disabled={isLoading}
+                      className="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                     >
-                      <XCircle className="w-4 h-4" />
-                      <span>Refuser</span>
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Restaurer</span>
                     </button>
+                  )}
 
+                  {item.status !== "suspended" && (
                     <button
-                      disabled={isProcessing}
-                      onClick={() => handleValidate(item)}
-                      className="flex-1 sm:flex-none px-6 py-2.5 bg-[#D4AF37] hover:bg-amber-400 text-black font-mono text-xs font-black uppercase rounded-xl transition-all shadow-lg shadow-[#D4AF37]/25 cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+                      onClick={() => handleSuspend(item)}
+                      disabled={isLoading}
+                      className="px-3 py-2 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                     >
-                      {isProcessing ? (
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="w-4 h-4" />
-                      )}
-                      <span>Valider la publication</span>
+                      <XCircle className="w-3.5 h-3.5" />
+                      <span>Suspendre</span>
                     </button>
-                  </div>
+                  )}
+
+                  <button
+                    onClick={() => handleDelete(item)}
+                    disabled={isLoading}
+                    className="px-3 py-2 bg-rose-600/20 hover:bg-rose-600/40 border border-rose-500/40 text-rose-300 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Supprimer</span>
+                  </button>
                 </div>
               </motion.div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
     </div>
   );
 };
+
+export default PendingPublicationsAdminPanel;

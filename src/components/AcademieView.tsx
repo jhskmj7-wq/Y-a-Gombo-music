@@ -409,11 +409,16 @@ export const AcademieView: React.FC<AcademieViewProps> = ({
             <div className="flex overflow-x-auto scrollbar-hide gap-1.5 sm:gap-2 pt-1 pb-2 whitespace-nowrap text-xs w-full max-w-full select-none">
               {[
                 { id: "all", label: "Toutes les formations" },
-                { id: "mao", label: "🎹 M.A.O & Beatmaking" },
-                { id: "mixage", label: "🎛️ Mixage & Mastering" },
-                { id: "burida", label: "⚖️ Droit & BURIDA" },
-                { id: "vocal", label: "🎙️ Vocaux & Chant" },
-                { id: "business", label: "💼 Music Business" },
+                { id: "chant", label: "🎤 Chant" },
+                { id: "piano", label: "🎹 Piano" },
+                { id: "batterie", label: "🥁 Batterie" },
+                { id: "guitare", label: "🎸 Guitare" },
+                { id: "composition", label: "🎼 Composition" },
+                { id: "production", label: "🎧 Production" },
+                { id: "mixage", label: "🎙 Mixage" },
+                { id: "mastering", label: "📀 Mastering" },
+                { id: "marketing", label: "📱 Marketing musical" },
+                { id: "business", label: "💰 Business musical" },
               ].map((cat) => (
                 <button
                   key={cat.id}

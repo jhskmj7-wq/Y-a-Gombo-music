@@ -409,15 +409,14 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
               <div className="flex overflow-x-auto scrollbar-hide gap-1.5 sm:gap-2 pt-1 pb-2 whitespace-nowrap text-xs w-full max-w-full select-none">
                 {[
                   { id: "all", label: "Tous les produits" },
-                  { id: "instruments", label: "🎹 Instruments" },
-                  { id: "sonorisation", label: "🎛️ Sonorisation" },
-                  { id: "studio", label: "🎙️ Studio & M.A.O" },
-                  { id: "lumieres", label: "💡 Lumières" },
-                  { id: "location", label: "📦 Location" },
-                  { id: "prestations", label: "🎭 Prestations" },
-                  { id: "accessoires", label: "🔌 Accessoires" },
-                  { id: "formation", label: "🎓 Formation" },
-                  { id: "services", label: "🎧 Services & Mix" },
+                  { id: "instruments", label: "🎵 Instruments" },
+                  { id: "studio", label: "🎙 Studios" },
+                  { id: "sonorisation", label: "🎧 Matériel Audio" },
+                  { id: "accessoires", label: "👕 Mode & Accessoires" },
+                  { id: "beats", label: "📀 Beats" },
+                  { id: "services", label: "🎼 Services" },
+                  { id: "location", label: "🏠 Locations" },
+                  { id: "prestations", label: "💼 Prestations" },
                 ].map((cat) => (
                   <button
                     key={cat.id}
@@ -651,20 +650,36 @@ export const GrandMarcheView: React.FC<GrandMarcheViewProps> = ({
         <div className="space-y-6 text-left">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
-              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Articles Publiés</p>
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">📦 Produits publiés</p>
               <p className="text-lg font-black text-afri-text font-mono">{myItems.length}</p>
             </div>
             <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
-              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Articles Vendus</p>
-              <p className="text-lg font-black text-emerald-400 font-mono">2</p>
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">❤️ Favoris</p>
+              <p className="text-lg font-black text-rose-400 font-mono">{favoriteIds.length * 6}</p>
             </div>
             <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
-              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Revenus Ventes</p>
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">👁 Nombre de vues</p>
+              <p className="text-lg font-black text-emerald-400 font-mono">1 420</p>
+            </div>
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">💬 Questions reçues</p>
+              <p className="text-lg font-black text-[#D4AF37] font-mono">14</p>
+            </div>
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">⭐ Note moyenne</p>
+              <p className="text-lg font-black text-amber-400 font-mono">4.9 / 5.0</p>
+            </div>
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">📈 Produits tendance</p>
+              <p className="text-xs font-black text-afri-text truncate">Yamaha Motif XF8</p>
+            </div>
+            <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">💰 Revenus générés</p>
               <p className="text-lg font-black text-[#D4AF37] font-mono">230 000 FCFA</p>
             </div>
             <div className="p-3.5 bg-afri-bg-sec border border-afri-border rounded-2xl space-y-1">
-              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">Taux Satisfaction</p>
-              <p className="text-lg font-black text-emerald-400 font-mono">100%</p>
+              <p className="text-[10px] text-afri-text-sec font-mono uppercase font-bold">📦 Produits vendus</p>
+              <p className="text-lg font-black text-emerald-400 font-mono">2</p>
             </div>
           </div>
 

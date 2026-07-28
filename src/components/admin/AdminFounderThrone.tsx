@@ -3268,42 +3268,38 @@ export default function AdminFounderThrone({
             )}
 
             {/* =========================================================
-                 DETAILED VIEW: 📢 Publications en attente
+                 DETAILED VIEW: 📢 Modération des Publications
                  ========================================================= */}
             {selectedSection === "publications" && (
               <div className="space-y-6">
                 <div className="p-6 bg-afri-bg/80 border border-sky-500/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(14,165,233,0.05)]">
                   <FileText className="w-8 h-8 text-sky-400 shrink-0 mt-0.5 animate-pulse" />
                   <div className="text-xs text-afri-text leading-relaxed font-mono">
-                    <strong>CENTRE DE COMMANDEMENT — PUBLICATIONS EN ATTENTE :</strong> Validez ou refusez manuellement les demandes de publication enregistrées. Une fois validée par vos soins, la publication est immédiatement publiée et devient visible sur Le Terrain.
+                    <strong>MODÉRATION DES PUBLICATIONS :</strong> Masquez, suspendez, restaurez ou supprimez les publications signalées ou non conformes. Les Gombos et annonces sont publiés automatiquement si le Wallet est approvisionné et le formulaire valide.
                   </div>
                 </div>
 
                 <div className="p-1 sm:p-4 bg-afri-bg border border-afri-border rounded-3xl">
-                  <PendingPublicationsAdminPanel currentUser={profile} autoPilotEnabled={autoPilotEnabled} />
+                  <PendingPublicationsAdminPanel currentUser={profile} />
                 </div>
               </div>
             )}
 
             {/* =========================================================
-                 DETAILED VIEW: 🛡 Transactions Bêta (Escrow Pilotage)
+                 DETAILED VIEW: 🛡 Recharges Wallet (Bêta)
                  ========================================================= */}
             {selectedSection === "beta_escrow" && (
               <div className="space-y-6">
-                <div className="p-6 bg-afri-bg/80 border border-emerald-500/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(52,211,153,0.05)]">
-                  <ShieldCheck className="w-8 h-8 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
+                <div className="p-6 bg-afri-bg/80 border border-[#D4AF37]/25 rounded-3xl flex gap-4 shadow-[0_0_20px_rgba(212,175,55,0.05)]">
+                  <ShieldCheck className="w-8 h-8 text-[#D4AF37] shrink-0 mt-0.5 animate-pulse" />
                   <div className="text-xs text-afri-text leading-relaxed font-mono">
-                    <strong>PILOTAGE SÉQUESTRE — TRANSACTIONS BÊTA :</strong> Bienvenue dans le Centre de Commandement Bêta. Ici, vous validez manuellement les dépôts après vérification du paiement Mobile Money et libérez les fonds une fois la prestation accomplie.
+                    <strong>RECHARGES WALLET (BÊTA) :</strong> Validez ou refusez instantanément les demandes de rechargement Mobile Money. La validation crédite automatiquement le solde disponible du membre.
                   </div>
                 </div>
 
                 <div className="p-1 sm:p-4 bg-afri-bg border border-afri-border rounded-3xl">
                   <BetaTransactionsAdminPanel 
                     currentUser={profile} 
-                    onOpenSupportChat={(targetUser) => {
-                      // Switch to intelligence for terminal support or just show toast
-                      setSelectedSection("intelligence");
-                    }}
                   />
                 </div>
               </div>
