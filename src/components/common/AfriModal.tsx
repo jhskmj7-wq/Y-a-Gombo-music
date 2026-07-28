@@ -56,15 +56,11 @@ export function useBodyScrollLock(isOpen: boolean) {
   useEffect(() => {
     if (!isOpen) return;
 
-    const originalOverflow = document.body.style.overflow;
-    const originalTouchAction = document.body.style.touchAction;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalDocOverflow = document.documentElement.style.overflow;
     
     document.body.style.overflow = "hidden";
-    
-    // Android back button / history handling
-    const handlePopState = () => {
-      // Optional back button close trigger
-    };
+    document.documentElement.style.overflow = "hidden";
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -72,13 +68,11 @@ export function useBodyScrollLock(isOpen: boolean) {
       }
     };
 
-    window.addEventListener("popstate", handlePopState);
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = originalOverflow || "";
-      document.body.style.touchAction = originalTouchAction || "";
-      window.removeEventListener("popstate", handlePopState);
+      document.body.style.overflow = originalBodyOverflow || "";
+      document.documentElement.style.overflow = originalDocOverflow || "";
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);

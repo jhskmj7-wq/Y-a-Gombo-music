@@ -76,28 +76,37 @@ export async function updatePlatformFeeRate(newRate: number): Promise<void> {
 export async function recordWalletTransaction(payload: {
   userId: string;
   userName?: string;
-  type: "depot" | "debit_publication" | "commission_plateforme" | "fonds_bloques" | "deblocage_cachet" | "remboursement";
+  type: "depot" | "debit_publication" | "commission_plateforme" | "fonds_bloques" | "deblocage_cachet" | "remboursement" | "recharge_wallet" | "prime_bonus" | "abonnement_premium";
   amount: number;
   status: "success" | "pending" | "fonds_bloques" | "fonds_liberes" | "rembourse";
   description: string;
   gomboId?: string;
   contractId?: string;
+  userConcerned?: string;
 }): Promise<string> {
-  const now = new Date().toISOString();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const heureStr = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const txId = `tx_${payload.type}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
   const txData = {
     id: txId,
+    reference: txId,
     userId: payload.userId,
     userName: payload.userName || "Membre Gombo",
+    userConcerned: payload.userConcerned || payload.userName || "Membre Gombo",
     type: payload.type,
     amount: payload.amount,
+    montant: payload.amount,
     status: payload.status,
+    statut: payload.status,
     description: payload.description,
     gomboId: payload.gomboId || "",
     contractId: payload.contractId || "",
-    createdAt: now,
-    updatedAt: now,
+    date: dateStr,
+    heure: heureStr,
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
     timestamp: Date.now()
   };
 
