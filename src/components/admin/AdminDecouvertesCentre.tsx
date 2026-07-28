@@ -71,9 +71,9 @@ export const AdminDecouvertesCentre: React.FC<AdminDecouvertesCentreProps> = ({ 
       if (!searchTerm) return true;
       const term = searchTerm.toLowerCase();
       return (
-        item.title.toLowerCase().includes(term) ||
-        item.description.toLowerCase().includes(term) ||
-        item.city.toLowerCase().includes(term)
+        (item?.title ?? "").toLowerCase().includes(term) ||
+        (item?.description ?? "").toLowerCase().includes(term) ||
+        (item?.city ?? "").toLowerCase().includes(term)
       );
     })
     .sort((a, b) => {

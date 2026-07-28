@@ -19,10 +19,11 @@ export default function AdminModeration({
   const [filter, setFilter] = useState<"all" | "flagged" | "standard">("all");
 
   const filteredPosts = posts.filter((p) => {
+    const term = (searchTerm || "").toLowerCase();
     const matchesSearch =
-      p.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.authorArtisticName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.authorName?.toLowerCase().includes(searchTerm.toLowerCase());
+      (p?.content ?? "").toLowerCase().includes(term) ||
+      (p?.authorArtisticName ?? "").toLowerCase().includes(term) ||
+      (p?.authorName ?? "").toLowerCase().includes(term);
 
     const matchesFilter =
       filter === "all" ||

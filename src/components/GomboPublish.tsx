@@ -145,50 +145,18 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
     setLoading(true);
 
     try {
-      let uploadedImageUrl = "";
-      let uploadedAudioUrl = "";
-
       const authorName = currentUserProfile.displayName || currentUserProfile.name || "Artiste Gombo";
       const authorPhoto = currentUserProfile.photoURL || currentUserProfile.avatarUrl || "";
 
-      // 1. Upload files if present
-      if (imageFile) {
-        setUploadingState(p => ({ ...p, image: true }));
-        try {
-          uploadedImageUrl = await gomboDB.uploadFile(
-            imageFile,
-            `posts_assets/images/${Date.now()}_${imageFile.name}`
-          );
-        } catch (err) {
-          console.error("⚠️ Cover image upload failed:", err);
-          throw new Error("Échec de l'importation de la photo de couverture. Veuillez vérifier votre connexion.");
-        }
-        setUploadingState(p => ({ ...p, image: false }));
-      }
-
-      if (audioFile) {
-        setUploadingState(p => ({ ...p, audio: true }));
-        try {
-          uploadedAudioUrl = await gomboDB.uploadFile(
-            audioFile,
-            `posts_assets/audios/${Date.now()}_${audioFile.name}`
-          );
-        } catch (err) {
-          console.error("⚠️ Audio file upload failed:", err);
-          throw new Error("Échec de l'importation de la piste audio. Veuillez vérifier votre connexion.");
-        }
-        setUploadingState(p => ({ ...p, audio: false }));
-      }
-
+      // 1. CALCUL AUTOMATIQUE DU MONTANT + COMMISSION
       const cachetVal = budget ? Number(budget) : (selectedType === "opportunite" || selectedType === "renfort" ? 25000 : 0);
       const financials = calculatePublicationFinancials(cachetVal);
       const feeAmount = financials.fee;
       const totalAmountToDeposit = financials.total;
       const reqAmount = totalAmountToDeposit > 0 ? totalAmountToDeposit : cachetVal;
-
       const postTag = PUBLICATION_TYPES.find(t => t.id === selectedType)?.label || selectedType;
 
-      // Check User Wallet Balance in Firestore
+      // 2. LIRE LE SOLDE RÉEL DU WALLET FIRESTORE
       let liveSolde = 0;
       let liveBloque = 0;
       try {
@@ -206,8 +174,9 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         liveBloque = (currentUserProfile as any)?.wallet?.soldeBloque ?? 0;
       }
 
-      // CAS 2 : Solde Insuffisant -> Bloquer la publication directe
+      // 3. VÉRIFICATION DU SOLDE WALLET
       if (reqAmount > 0 && liveSolde < reqAmount) {
+        // AUCUNE PUBLICATION NE DOIT ÊTRE CRÉÉE. AUCUN DOCUMENT FIRESTORE. AUCUN FICHIER UPLOADÉ.
         setDepositDetails({
           cachet: cachetVal,
           fee: feeAmount,
@@ -222,10 +191,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         setPublishOutcome("insufficient_funds");
         setShowSuccessOverlay(true);
         setLoading(false);
-        return;
+        return; // ARRÊT IMMÉDIAT DU WORKFLOW
       }
 
-      // CAS 1 : Solde Suffisant -> PAIÉ ET PUBLIÉ IMMÉDIATEMENT
+      // 4. SI LE WALLET EST SUFFISANT : DÉBITER IMMÉDIATEMENT ET METTRE À JOUR LE WALLET
       let newSolde = liveSolde;
       let newBloque = liveBloque;
       if (reqAmount > 0) {
@@ -250,7 +219,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           description: `Débit publication : Gombo "${title.trim()}" (Cachet: ${cachetVal.toLocaleString()} FCFA, Comm: ${feeAmount.toLocaleString()} FCFA)`
         });
 
-        // Enregistrer la commission comme revenu de la plateforme
+        // Enregistrer la commission
         if (feeAmount > 0) {
           await recordWalletTransaction({
             userId: currentUserProfile.uid,
@@ -285,9 +254,41 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         }
       }
 
+      // 5. IMPORTATION DES FICHIERS (Uniquement après validation et débit du Wallet)
+      let uploadedImageUrl = "";
+      let uploadedAudioUrl = "";
+
+      if (imageFile) {
+        setUploadingState(p => ({ ...p, image: true }));
+        try {
+          uploadedImageUrl = await gomboDB.uploadFile(
+            imageFile,
+            `posts_assets/images/${Date.now()}_${imageFile.name}`
+          );
+        } catch (err) {
+          console.error("⚠️ Cover image upload failed:", err);
+          throw new Error("Échec de l'importation de la photo de couverture. Veuillez vérifier votre connexion.");
+        }
+        setUploadingState(p => ({ ...p, image: false }));
+      }
+
+      if (audioFile) {
+        setUploadingState(p => ({ ...p, audio: true }));
+        try {
+          uploadedAudioUrl = await gomboDB.uploadFile(
+            audioFile,
+            `posts_assets/audios/${Date.now()}_${audioFile.name}`
+          );
+        } catch (err) {
+          console.error("⚠️ Audio file upload failed:", err);
+          throw new Error("Échec de l'importation de la piste audio. Veuillez vérifier votre connexion.");
+        }
+        setUploadingState(p => ({ ...p, audio: false }));
+      }
+
+      // 6. CRÉER ENSUITE SEULEMENT LA PUBLICATION FIRESTORE
       const postStatus = "PUBLISHED";
 
-      // 2. Publish in system posts (Le Terrain)
       const postPayload: any = {
         userId: currentUserProfile.uid,
         userName: authorName,
@@ -328,7 +329,6 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       const createdPostId = await gomboDB.publishSocialPost(postPayload);
 
       let createdGomboId = "";
-      // 3. Dual sync to Gombos marketplace list if type is Opportunité or Renfort Express
       if (selectedType === "opportunite" || selectedType === "renfort" || selectedType === "casting") {
         createdGomboId = await gomboDB.publishGombo({
           clientId: currentUserProfile.uid,
@@ -357,7 +357,6 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         }) || "";
       }
 
-      // Save calculated details to state for modal overlay
       setDepositDetails({
         cachet: cachetVal,
         fee: feeAmount,
@@ -410,15 +409,15 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                       <AlertCircle className="w-10 h-10 text-amber-400" />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <span className="inline-block text-[10px] font-mono font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
-                        🔒 PUBLICATION BLOQUÉE
+                        🔒 PUBLICATION IMPOSSIBLE - WALLET INSUFFISANT
                       </span>
-                      <h3 className="text-lg font-black text-afri-text uppercase tracking-wide">
-                        SOLDE INSUFFISANT DANS VOTRE COFFRE
+                      <h3 className="text-xl font-black text-afri-text uppercase tracking-wide pt-1">
+                        Solde insuffisant.
                       </h3>
-                      <p className="text-xs text-afri-text-sec leading-relaxed max-w-sm mx-auto">
-                        Solde insuffisant dans votre Coffre Afrigombo (Solde : <strong>{(depositDetails.userSolde || 0).toLocaleString()} FCFA</strong>). Veuillez recharger votre wallet pour publier.
+                      <p className="text-sm font-bold text-amber-400 leading-relaxed max-w-sm mx-auto">
+                        Rechargez votre Wallet pour publier cette opportunité.
                       </p>
                     </div>
 
@@ -429,32 +428,34 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                         <span className="font-bold text-afri-text truncate max-w-[180px]">{depositDetails.title}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-afri-text-sec">Cachet / Budget :</span>
+                        <span className="text-afri-text-sec">Montant du Gombo :</span>
                         <span className="font-mono font-bold text-afri-text">{depositDetails.cachet.toLocaleString()} FCFA</span>
                       </div>
-                      <div className="flex justify-between items-center pt-1 border-t border-afri-border">
-                        <span className="text-afri-text-sec">Montant Requis :</span>
-                        <span className="font-mono font-black text-amber-400">{depositDetails.total.toLocaleString()} FCFA</span>
-                      </div>
                       <div className="flex justify-between items-center">
+                        <span className="text-afri-text-sec">Commission AFRIGOMBO (2,5%) :</span>
+                        <span className="font-mono text-afri-text-sec">{depositDetails.fee.toLocaleString()} FCFA</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-afri-border">
+                        <span className="text-afri-text font-extrabold">Montant Total à Débiter :</span>
+                        <span className="font-mono font-black text-amber-400 text-sm">{depositDetails.total.toLocaleString()} FCFA</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-1 border-t border-afri-border/50">
                         <span className="text-afri-text-sec">Votre Solde Actuel :</span>
-                        <span className="font-mono font-black text-red-400">{(depositDetails.userSolde || 0).toLocaleString()} FCFA</span>
+                        <span className="font-mono font-black text-rose-500">{(depositDetails.userSolde || 0).toLocaleString()} FCFA</span>
                       </div>
                     </div>
 
-                    {/* Prominent Action Button */}
+                    {/* Prominent Action Buttons */}
                     <div className="space-y-2.5 pt-2">
                       <button
                         type="button"
                         onClick={() => {
-                          setShowSuccessOverlay(false);
-                          window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
-                          onCancel();
+                          supportConfig.openSupport(`Bonjour 👋\n\nJe souhaite recharger mon Wallet AFRIGOMBO pour publier l'opportunité : "${depositDetails.title}"\n- Montant Gombo : ${depositDetails.cachet.toLocaleString()} FCFA\n- Commission : ${depositDetails.fee.toLocaleString()} FCFA\n- Montant Total requis : ${depositDetails.total.toLocaleString()} FCFA\n- Mon Solde Actuel : ${(depositDetails.userSolde || 0).toLocaleString()} FCFA`);
                         }}
                         className="w-full py-4 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer active:scale-98 flex items-center justify-center gap-2"
                       >
                         <Wallet className="w-4 h-4" />
-                        <span>RECHARGER MON WALLET</span>
+                        <span>Recharger mon Wallet</span>
                       </button>
 
                       <button

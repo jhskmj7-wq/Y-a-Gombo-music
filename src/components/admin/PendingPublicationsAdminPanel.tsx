@@ -119,7 +119,7 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
           if (isPending && data.status !== "rejected" && data.status !== "refuse" && data.status !== "cancelled") {
             // Avoid duplicate if already included from social_posts with same title & authorId
             const existsInSocial = socialList.some(
-              p => p.title.toLowerCase() === (data.title || "").toLowerCase() && p.authorId === (data.clientId || data.authorId)
+              p => (p?.title ?? "").toLowerCase() === (data?.title ?? "").toLowerCase() && p.authorId === (data.clientId || data.authorId)
             );
             
             if (!existsInSocial) {
@@ -331,13 +331,13 @@ export const PendingPublicationsAdminPanel: React.FC<PendingPublicationsAdminPan
 
   const filteredItems = items.filter((item) => {
     if (!searchTerm.trim()) return true;
-    const q = searchTerm.toLowerCase();
+    const q = (searchTerm || "").toLowerCase();
     return (
-      item.title.toLowerCase().includes(q) ||
-      item.authorName.toLowerCase().includes(q) ||
-      item.commune?.toLowerCase().includes(q) ||
-      item.id.toLowerCase().includes(q) ||
-      item.status.toLowerCase().includes(q)
+      (item?.title ?? "").toLowerCase().includes(q) ||
+      (item?.authorName ?? "").toLowerCase().includes(q) ||
+      (item?.commune ?? "").toLowerCase().includes(q) ||
+      (item?.id ?? "").toLowerCase().includes(q) ||
+      (item?.status ?? "").toLowerCase().includes(q)
     );
   });
 

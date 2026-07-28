@@ -5,8 +5,11 @@ import {
   Flame, Sparkles, Filter, Check, X, Phone, Users, 
   ChevronDown, MessageCircle, AlertCircle, RefreshCw, Send, Trash2
 } from "lucide-react";
-import { gomboDB } from "../firebase";
+import { db, gomboDB } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Renfort, RenfortApplication, UserProfile } from "../types";
+import { supportConfig } from "../supportConfig";
+import { calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
 
 // Static Options
 const REQUEST_TYPES = [
@@ -158,6 +161,45 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
     }
 
     try {
+      const cachetVal = Number(budget) || 0;
+      const financials = calculatePublicationFinancials(cachetVal);
+      const reqAmount = financials.total; // cachet + commission
+
+      if (reqAmount > 0) {
+        let liveSolde = 0;
+        let liveBloque = 0;
+        try {
+          const uSnap = await getDoc(doc(db, "users", currentUserProfile.uid));
+          if (uSnap.exists()) {
+            const uData = uSnap.data();
+            liveSolde = uData?.wallet?.soldeDisponible ?? 0;
+            liveBloque = uData?.wallet?.soldeBloque ?? 0;
+          }
+        } catch (_) {}
+
+        if (liveSolde < reqAmount) {
+          triggerToast("error", "Solde insuffisant dans votre Wallet. Veuillez recharger votre Wallet pour publier.");
+          supportConfig.openSupport(`Bonjour 👋\n\nJe souhaite recharger mon Wallet AFRIGOMBO pour publier une demande de Renfort Express ("${title}")\n- Montant : ${cachetVal.toLocaleString()} FCFA\n- Commission : ${financials.fee.toLocaleString()} FCFA\n- Total Requis : ${reqAmount.toLocaleString()} FCFA\n- Mon Solde Actuel : ${liveSolde.toLocaleString()} FCFA`);
+          return;
+        }
+
+        // Débit du wallet
+        const newSolde = Math.max(0, liveSolde - reqAmount);
+        const newBloque = liveBloque + cachetVal;
+        await setDoc(doc(db, "users", currentUserProfile.uid), {
+          wallet: { soldeDisponible: newSolde, soldeBloque: newBloque }
+        }, { merge: true });
+
+        await recordWalletTransaction({
+          userId: currentUserProfile.uid,
+          userName: `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Artiste",
+          type: "debit_publication",
+          amount: reqAmount,
+          status: "success",
+          description: `Débit publication Renfort Express : "${title.trim()}"`
+        });
+      }
+
       await gomboDB.publishRenfort({
         userId: currentUserProfile.uid,
         userName: `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Artiste",

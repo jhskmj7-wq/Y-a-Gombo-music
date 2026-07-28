@@ -286,7 +286,7 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
                 <div className="text-[9px] text-afri-text-sec font-mono space-y-0.5 min-w-0">
                   <div className="flex items-center gap-1 truncate">
                     <MapPin className="w-3 h-3 text-[#D4AF37] shrink-0" />
-                    <span className="truncate">{item.city}</span>
+                    <span className="truncate">{item.city || "Abidjan"}</span>
                   </div>
                   
                   {!isMarket && item.duration && (
@@ -347,7 +347,7 @@ export const FilDecouvertesSection: React.FC<FilDecouvertesSectionProps> = ({
                   </h3>
                   <p className="text-xs text-afri-text-sec flex items-center gap-1 mt-0.5">
                     <MapPin className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <span>{selectedDetail.city}</span>
+                    <span>{selectedDetail.city || "Abidjan"}</span>
                   </p>
                 </div>
 

@@ -170,15 +170,15 @@ export const BetaTransactionsAdminPanel: React.FC<BetaTransactionsAdminPanelProp
 
   // Filtered list
   const filteredTransactions = transactions.filter((tx) => {
-    const term = searchTerm.toLowerCase();
+    const term = (searchTerm || "").toLowerCase();
     const matchesSearch = 
-      (tx.promoterName || "").toLowerCase().includes(term) ||
-      (tx.artistName || "").toLowerCase().includes(term) ||
-      (tx.gomboTitle || "").toLowerCase().includes(term) ||
-      (tx.id || "").toLowerCase().includes(term) ||
-      (tx.status || "").toLowerCase().includes(term) ||
-      (tx.buyerPhoneNumber || "").toLowerCase().includes(term) ||
-      (tx.paymentPhoneNumber || "").toLowerCase().includes(term);
+      (tx?.promoterName ?? "").toLowerCase().includes(term) ||
+      (tx?.artistName ?? "").toLowerCase().includes(term) ||
+      (tx?.gomboTitle ?? "").toLowerCase().includes(term) ||
+      (tx?.id ?? "").toLowerCase().includes(term) ||
+      (tx?.status ?? "").toLowerCase().includes(term) ||
+      (tx?.buyerPhoneNumber ?? "").toLowerCase().includes(term) ||
+      (tx?.paymentPhoneNumber ?? "").toLowerCase().includes(term);
 
     const matchesStatus = selectedStatusFilter === "all" || tx.status === selectedStatusFilter;
 

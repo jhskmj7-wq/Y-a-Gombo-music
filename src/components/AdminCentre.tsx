@@ -813,7 +813,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
     "jhs.kmj7@gmail.com"
   ], []);
 
-  const userEmail = currentUser?.email?.toLowerCase() || "";
+  const userEmail = (currentUser?.email ?? "").toLowerCase();
   const isAuthorizedAdmin = React.useMemo(() => !!(currentUser && (AUTHORIZED_ADMIN_EMAILS.includes(userEmail) || profile?.role === "founder" || profile?.isFounder)), [currentUser, userEmail, profile?.role, profile?.isFounder, AUTHORIZED_ADMIN_EMAILS]);
   const isAuthorizedSuperFounder = React.useMemo(() => !!(currentUser && (userEmail === "jhs.kmj7@gmail.com" || profile?.isFounder)), [currentUser, userEmail, profile?.isFounder]);
 
@@ -2344,11 +2344,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
   // --- FILTERED DATA FOR MAIN VIEWS ---
   const filteredUsers = users.filter(user => {
-    const s = globalSearchTerm.toLowerCase();
+    const s = (globalSearchTerm || "").toLowerCase();
     return (
-      (user.name || "").toLowerCase().includes(s) ||
-      (user.artisticName || "").toLowerCase().includes(s) ||
-      (user.commune || "").toLowerCase().includes(s)
+      (user?.name ?? "").toLowerCase().includes(s) ||
+      (user?.artisticName ?? "").toLowerCase().includes(s) ||
+      (user?.commune ?? "").toLowerCase().includes(s)
     );
   });
 
@@ -3653,12 +3653,12 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                   />
                                   <button
                                     onClick={() => {
-                                      const text = verifyGomboIdInput.toLowerCase().trim();
+                                      const text = (verifyGomboIdInput || "").toLowerCase().trim();
                                       if (!text) return;
                                       const found = users.find(u => 
-                                        String(u.id || "").toLowerCase().includes(text) || 
-                                        String(u.artisticName || "").toLowerCase().includes(text) ||
-                                        String(u.name || "").toLowerCase().includes(text)
+                                        (u?.id ?? "").toLowerCase().includes(text) || 
+                                        (u?.artisticName ?? "").toLowerCase().includes(text) ||
+                                        (u?.name ?? "").toLowerCase().includes(text)
                                       );
                                       setVerifyGomboIdResult(found || "not_found");
                                       addToTerminal(`[SCANNER] Gombo ID scanner de sécurité interrogé pour: ${verifyGomboIdInput}`);

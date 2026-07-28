@@ -160,9 +160,10 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
 
   // Filtered list
   const filteredDocs = trendingDocs.filter(d => {
-    const matchesSearch = d.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          d.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (d.authorName || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const term = (searchTerm || "").toLowerCase();
+    const matchesSearch = (d?.title ?? "").toLowerCase().includes(term) ||
+                          (d?.description ?? "").toLowerCase().includes(term) ||
+                          (d?.authorName ?? "").toLowerCase().includes(term);
     if (!matchesSearch) return false;
 
     if (filterMode === "pinned") return d.pinned;
@@ -498,7 +499,7 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
 
               <div className="max-h-60 overflow-y-auto space-y-2 pr-1 scrollbar-none">
                 {gombos
-                  .filter(g => (g.title || "").toLowerCase().includes(publicationSearch.toLowerCase()))
+                  .filter(g => (g?.title ?? "").toLowerCase().includes((publicationSearch || "").toLowerCase()))
                   .map(g => {
                     const isSelected = selectedPublication?.pub.id === g.id;
                     return (
@@ -522,7 +523,7 @@ export const AdminTendancesCentre: React.FC<AdminTendancesCentreProps> = ({
                   })}
 
                 {posts
-                  .filter(p => (p.content || "").toLowerCase().includes(publicationSearch.toLowerCase()))
+                  .filter(p => (p?.content ?? "").toLowerCase().includes((publicationSearch || "").toLowerCase()))
                   .map(p => {
                     const isSelected = selectedPublication?.pub.id === p.id;
                     return (

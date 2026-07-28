@@ -67,11 +67,11 @@ export default function AdminUsers({
   
   const displayedUsers = filteredUsers.filter((u) => {
     if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    const name = u.displayName?.toLowerCase() || u.artisticName?.toLowerCase() || "";
-    const id = u.id?.toLowerCase() || u.uid?.toLowerCase() || "";
-    const phone = u.phone?.toLowerCase() || "";
-    const status = u.kycStatus?.toLowerCase() || "";
+    const q = (searchQuery || "").toLowerCase();
+    const name = (u?.displayName ?? "").toLowerCase() || (u?.artisticName ?? "").toLowerCase() || "";
+    const id = (u?.id ?? "").toLowerCase() || (u?.uid ?? "").toLowerCase() || "";
+    const phone = (u?.phone ?? "").toLowerCase() || "";
+    const status = (u?.kycStatus ?? "").toLowerCase() || "";
     
     return name.includes(q) || id.includes(q) || phone.includes(q) || status.includes(q);
   });

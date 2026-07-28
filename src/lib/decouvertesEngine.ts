@@ -19,7 +19,7 @@ export interface FeaturedContentDoc {
   description: string;
   price: number;
   priceText?: string;
-  city: string; // Commune or location e.g. "Cocody, Abidjan"
+  city?: string; // Commune or location e.g. "Cocody, Abidjan"
   duration?: string; // e.g. "4h 30m" for courses
   level?: string; // e.g. "Débutant", "Intermédiaire", "Masterclass"
   category?: "instruments" | "studio" | "sonorisation" | "services" | "accessoires" | "mao" | "mixage" | "burida" | "vocal" | "business";
@@ -200,17 +200,17 @@ export function calculateDecouvertesScore(
   item: FeaturedContentDoc,
   userLocation: string = "Abidjan"
 ): number {
-  let score = item.priority * 10;
+  let score = (item.priority || 0) * 10;
 
   // 1. Pinned bonus
   if (item.pinned) score += 500;
 
   // 2. Proximity match
-  const locLower = userLocation.toLowerCase().trim();
-  const cityLower = item.city.toLowerCase().trim();
-  if (locLower && cityLower.includes(locLower)) {
+  const locLower = (userLocation || "").toLowerCase().trim();
+  const cityLower = (item.city || "").toLowerCase().trim();
+  if (locLower && cityLower && cityLower.includes(locLower)) {
     score += 40;
-  } else if (cityLower.includes("abidjan")) {
+  } else if (cityLower && cityLower.includes("abidjan")) {
     score += 15;
   }
 
