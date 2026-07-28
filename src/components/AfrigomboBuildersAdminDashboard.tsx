@@ -105,56 +105,58 @@ export default function AfrigomboBuildersAdminDashboard() {
   }, []);
 
   return (
-    <div className="space-y-6 text-left pb-12">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-afri-bg-sec border border-afri-border rounded-3xl p-6 shadow-xl">
-        <div className="space-y-1">
+    <div className="space-y-4 text-left pb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-afri-bg-sec border border-afri-border rounded-3xl p-4 sm:p-5 shadow-xl">
+        <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 bg-afri-bg-sec rounded-full animate-pulse" />
-            <span className="text-[10px] font-mono text-[#D4AF37] tracking-widest font-black uppercase">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-[9px] font-mono text-[#D4AF37] tracking-widest font-black uppercase whitespace-nowrap">
               CONSOLE DES BÂTISSEURS
             </span>
           </div>
-          <h2 className="text-xl font-black text-afri-text tracking-tight font-sans">
+          <h2 className="text-lg sm:text-xl font-black text-afri-text tracking-tight font-sans">
             Mécénat & Communauté
           </h2>
-          <p className="text-[10px] text-afri-text-muted font-mono">
+          <p className="text-[9px] text-afri-text-muted font-mono">
             Suivi en temps réel du programme de soutien communautaire d'AFRIGOMBO.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-5 relative overflow-hidden shadow-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-lg">
           <div className="absolute top-0 right-0 w-20 h-20 bg-afri-bg-sec/5 rounded-full blur-2xl"></div>
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black">Fonds Récoltés</span>
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black whitespace-nowrap">Fonds Récoltés</span>
             <Coins className="w-4 h-4 text-[#D4AF37]" />
           </div>
-          <span className="text-2xl font-black text-[#D4AF37] font-mono">{stats.totalAmount.toLocaleString()} <span className="text-xs text-afri-text-sec font-sans">FCFA</span></span>
+          <span className="text-xl sm:text-2xl font-black text-[#D4AF37] font-mono block whitespace-nowrap">
+            {stats.totalAmount.toLocaleString()} <span className="text-[10px] text-afri-text-sec font-sans uppercase">FCFA</span>
+          </span>
         </div>
 
-        <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-5">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black">Bâtisseurs Uniques</span>
+        <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 sm:p-5">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black whitespace-nowrap">Bâtisseurs Uniques</span>
             <Users className="w-4 h-4 text-blue-400" />
           </div>
-          <span className="text-2xl font-black text-afri-text font-mono">{stats.uniqueBuilders}</span>
+          <span className="text-xl sm:text-2xl font-black text-afri-text font-mono block whitespace-nowrap">{stats.uniqueBuilders}</span>
         </div>
 
-        <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-5">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black">Soutiens Mensuels</span>
+        <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 sm:p-5">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black whitespace-nowrap">Soutiens Mensuels</span>
             <Shield className="w-4 h-4 text-emerald-400" />
           </div>
-          <span className="text-2xl font-black text-afri-text font-mono">{stats.monthlySubscribers}</span>
+          <span className="text-xl sm:text-2xl font-black text-afri-text font-mono block whitespace-nowrap">{stats.monthlySubscribers}</span>
         </div>
 
-        <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-5">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black">Total Contributions</span>
+        <div className="bg-afri-bg-sec border border-afri-border rounded-2xl p-4 sm:p-5">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-[9px] font-mono text-afri-text-sec uppercase tracking-wider font-black whitespace-nowrap">Total Contributions</span>
             <ArrowUpRight className="w-4 h-4 text-amber-500" />
           </div>
-          <span className="text-2xl font-black text-afri-text font-mono">{stats.totalCount}</span>
+          <span className="text-xl sm:text-2xl font-black text-afri-text font-mono block whitespace-nowrap">{stats.totalCount}</span>
         </div>
       </div>
 

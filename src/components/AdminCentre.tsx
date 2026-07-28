@@ -3224,8 +3224,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
-                className={`h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container scrollbar-none [-webkit-overflow-scrolling:touch] ${
-                  activeMenu === "super_admin" ? "pt-0 pb-32 sm:pb-36 space-y-6" : "afri-section pb-24"
+                className={`h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none [-webkit-overflow-scrolling:touch] ${
+                  activeMenu === "super_admin" || activeMenu === "user_builders"
+                    ? "px-4 xs:px-5 sm:px-8 max-w-5xl mx-auto w-full pt-0 pb-32 sm:pb-36 space-y-6"
+                    : "afri-container afri-section pb-24"
                 }`}
                 style={{ overscrollBehaviorY: "contain" }}
               >
@@ -5711,7 +5713,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 });
 
                 return (
-                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-28">
+                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-6">
                     {/* Header */}
                     <div className="p-4 sm:p-5 bg-afri-bg border border-[#D4AF37]/30 rounded-3xl space-y-3 shadow-lg">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -5838,7 +5840,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 ];
 
                 return (
-                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-28">
+                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-6">
                     {/* Header */}
                     <div className="p-4 sm:p-5 bg-afri-bg border border-[#D4AF37]/30 rounded-3xl space-y-3 shadow-lg">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -6063,7 +6065,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
               {/* 7c. BÂTISSEURS (USER) */}
               {activeMenu === "user_builders" && (
-                <div className="afri-container animate-fadeIn py-4 xs:py-6">
+                <div className="w-full max-w-5xl mx-auto px-1 sm:px-4 animate-fadeIn py-4 xs:py-6">
                   <AfrigomboBuilders
                     currentUser={profile || (currentUser as any)}
                     onBack={() => goBackMenu()}
@@ -6172,7 +6174,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 };
 
                 return (
-                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-28">
+                  <div className="w-full max-w-full overflow-x-hidden space-y-5 py-3 sm:py-5 px-2.5 sm:px-4 text-afri-text pb-6">
                     {/* Header */}
                     <div className="p-4 sm:p-5 bg-afri-bg border border-[#D4AF37]/30 rounded-3xl space-y-3 shadow-lg">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

@@ -190,29 +190,29 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
       )}
 
       {/* HEADER: TITLE & SUBTITLE */}
-      <div className="text-center space-y-2 mb-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[11px] font-black uppercase tracking-wider">
+      <div className="text-center space-y-1 mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
           <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
           <span>Bêta Publique AFRIGOMBO</span>
         </div>
-        <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-afri-text uppercase flex items-center justify-center gap-2">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-afri-text uppercase flex items-center justify-center gap-2 px-1">
           ❤️ Devenir Bâtisseur AFRIGOMBO
         </h1>
-        <p className="text-xs sm:text-sm text-afri-text-sec font-medium max-w-lg mx-auto leading-relaxed italic">
+        <p className="text-[11px] sm:text-xs text-afri-text-sec font-medium max-w-lg mx-auto leading-normal italic">
           Ensemble, construisons la plus grande plateforme musicale africaine.
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* SECTION 1 — NOTRE MISSION */}
-        <div className="bg-afri-bg-sec border border-[#D4AF37]/40 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-left space-y-4">
+        <div className="bg-afri-bg-sec border border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden text-left space-y-3">
           <div className="absolute top-0 right-0 w-48 h-48 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
           
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-2xl bg-amber-500/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+              <ShieldCheck className="w-4.5 h-4.5" />
             </div>
-            <h2 className="text-lg sm:text-xl font-black text-afri-text uppercase tracking-tight">
+            <h2 className="text-base sm:text-lg font-black text-afri-text uppercase tracking-tight">
               Pourquoi contribuer ?
             </h2>
           </div>
@@ -224,55 +224,55 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
             Votre soutien participe directement à l'évolution de la plateforme.
           </p>
 
-          <div className="pt-2">
+          <div className="pt-1">
             <button
               onClick={scrollToSection2}
-              className="px-6 py-3 bg-gradient-to-r from-amber-500 via-[#D4AF37] to-amber-400 text-black font-black text-xs uppercase tracking-wider rounded-2xl hover:opacity-95 transition-all shadow-lg shadow-[#D4AF37]/20 flex items-center gap-2 cursor-pointer active:scale-95"
+              className="px-5 py-2.5 bg-gradient-to-r from-amber-500 via-[#D4AF37] to-amber-400 text-black font-black text-[11px] uppercase tracking-wider rounded-2xl hover:opacity-95 transition-all shadow-lg shadow-[#D4AF37]/20 flex items-center gap-2 cursor-pointer active:scale-95"
             >
-              <Heart className="w-4 h-4 fill-black" />
+              <Heart className="w-3.5 h-3.5 fill-black" />
               <span>Je contribue</span>
             </button>
           </div>
         </div>
 
         {/* SECTION 2 — CHOISIR SA CONTRIBUTION */}
-        <div ref={section2Ref} className="space-y-4 text-left pt-2">
+        <div ref={section2Ref} className="space-y-3 text-left pt-1">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-black text-afri-text uppercase tracking-wider">
+            <h2 className="text-sm sm:text-base font-black text-afri-text uppercase tracking-wider">
               Choisir sa contribution
             </h2>
-            <span className="text-[10px] font-mono font-bold text-[#D4AF37] uppercase bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-[#D4AF37]/30">
+            <span className="text-[9px] font-mono font-bold text-[#D4AF37] uppercase bg-amber-500/10 px-2.5 py-1 rounded-full border border-[#D4AF37]/30 whitespace-nowrap">
               4 Formules
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {CONTRIBUTION_OPTIONS.map((opt) => (
               <div
                 key={opt.id}
                 onClick={() => handleSelectContribution(opt)}
-                className="bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] rounded-3xl p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer space-y-3 relative group overflow-hidden"
+                className="bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37] rounded-3xl p-4.5 shadow-lg hover:shadow-xl transition-all cursor-pointer space-y-3 relative group overflow-hidden"
               >
                 <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-[#D4AF37]/30 flex items-center justify-center text-2xl">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-[#D4AF37]/30 flex items-center justify-center text-xl">
                     {opt.emoji}
                   </div>
-                  <span className="text-xs font-mono font-black text-[#D4AF37] bg-afri-bg px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                  <span className="text-xs font-mono font-black text-[#D4AF37] bg-afri-bg px-2.5 py-1 rounded-full border border-[#D4AF37]/30 whitespace-nowrap">
                     {opt.isCustom ? "Libre" : `${opt.suggestedAmount.toLocaleString()} FCFA`}
                   </span>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
+                  <h3 className="text-xs sm:text-sm font-black text-afri-text group-hover:text-[#D4AF37] transition-colors">
                     {opt.title}
                   </h3>
-                  <p className="text-xs text-afri-text-sec font-medium leading-relaxed pt-1">
+                  <p className="text-[11px] text-afri-text-sec font-medium leading-relaxed pt-0.5">
                     {opt.description}
                   </p>
                 </div>
 
-                <button className="w-full py-2.5 bg-afri-bg group-hover:bg-[#D4AF37] group-hover:text-black border border-afri-border group-hover:border-[#D4AF37] text-afri-text font-black text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2">
-                  <Heart className="w-3.5 h-3.5" />
+                <button className="w-full py-2 bg-afri-bg group-hover:bg-[#D4AF37] group-hover:text-black border border-afri-border group-hover:border-[#D4AF37] text-afri-text font-black text-[10px] uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2">
+                  <Heart className="w-3 h-3" />
                   <span>Contribuer</span>
                 </button>
               </div>
@@ -281,36 +281,36 @@ export default function AfrigomboBuilders({ currentUser, onBack, audioSynth }: A
         </div>
 
         {/* SECTION 3 — IMPACT */}
-        <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-6 sm:p-8 shadow-xl text-left space-y-5">
-          <div className="flex items-center justify-between border-b border-afri-border/60 pb-3">
-            <h2 className="text-base sm:text-lg font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
-              <Users className="w-5 h-5 text-[#D4AF37]" />
+        <div className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 sm:p-6 shadow-xl text-left space-y-4">
+          <div className="flex items-center justify-between border-b border-afri-border/60 pb-2">
+            <h2 className="text-sm sm:text-base font-black text-afri-text uppercase tracking-wider flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#D4AF37]" />
               <span>Votre impact</span>
             </h2>
-            <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+            <span className="text-[9px] font-mono text-emerald-400 font-bold uppercase bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap">
               ● Firestore En Direct
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-1">
-              <p className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">👥 Nombre de Bâtisseurs</p>
-              <p className="text-xl font-black text-afri-text font-mono">{stats.buildersCount}</p>
+            <div className="p-3 bg-afri-bg border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[8.5px] font-mono text-afri-text-sec uppercase font-bold truncate">👥 Bâtisseurs</p>
+              <p className="text-lg font-black text-afri-text font-mono">{stats.buildersCount}</p>
             </div>
 
-            <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-1">
-              <p className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">❤️ Contributions reçues</p>
-              <p className="text-xl font-black text-[#D4AF37] font-mono">{stats.totalContributions.toLocaleString()} FCFA</p>
+            <div className="p-3 bg-afri-bg border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[8.5px] font-mono text-afri-text-sec uppercase font-bold truncate">❤️ Contributions</p>
+              <p className="text-lg font-black text-[#D4AF37] font-mono">{stats.totalContributions.toLocaleString()} FCFA</p>
             </div>
 
-            <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-1">
-              <p className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">🚀 Fonctionnalités financées</p>
-              <p className="text-xl font-black text-emerald-400 font-mono">{stats.featuresFunded}</p>
+            <div className="p-3 bg-afri-bg border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[8.5px] font-mono text-afri-text-sec uppercase font-bold truncate">🚀 Financements</p>
+              <p className="text-lg font-black text-emerald-400 font-mono">{stats.featuresFunded}</p>
             </div>
 
-            <div className="p-4 bg-afri-bg border border-afri-border rounded-2xl space-y-1">
-              <p className="text-[10px] font-mono text-afri-text-sec uppercase font-bold">🛠 Dernière amélioration</p>
-              <p className="text-xs font-bold text-afri-text truncate pt-1">{stats.latestImprovement}</p>
+            <div className="p-3 bg-afri-bg border border-afri-border rounded-2xl space-y-1">
+              <p className="text-[8.5px] font-mono text-afri-text-sec uppercase font-bold truncate">🛠 Amélioration</p>
+              <p className="text-xs font-bold text-afri-text truncate pt-0.5">{stats.latestImprovement}</p>
             </div>
           </div>
         </div>

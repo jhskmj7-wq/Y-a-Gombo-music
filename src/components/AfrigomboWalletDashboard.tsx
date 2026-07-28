@@ -641,7 +641,7 @@ export default function AfrigomboWalletDashboard({
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           4. HISTORIQUE (LISTE CHRONOLOGIQUE)
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div ref={historyRef} className="bg-afri-bg-sec border border-afri-border rounded-3xl p-5 sm:p-6 space-y-4">
+      <div ref={historyRef} className="bg-afri-bg-sec border border-afri-border rounded-3xl p-3 sm:p-5 space-y-4">
         
         {/* Header & Filter tabs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-afri-border/80 pb-4">
@@ -663,11 +663,8 @@ export default function AfrigomboWalletDashboard({
               <button
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id as any); playSound("click"); }}
-                className={`py-1 px-3 rounded-full text-[9px] font-mono font-extrabold uppercase transition-all cursor-pointer ${
-                  activeTab === tab.id 
-                    ? "bg-[#D4AF37] text-black font-black shadow-md" 
-                    : "bg-afri-bg text-afri-text-sec hover:text-afri-text border border-afri-border"
-                }`}
+                className="py-1 px-2.5 sm:py-1 sm:px-3 rounded-full text-[9px] font-mono font-extrabold uppercase transition-all cursor-pointer bg-afri-bg text-afri-text-sec hover:text-afri-text border border-afri-border"
+                style={activeTab === tab.id ? { backgroundColor: '#D4AF37', color: '#000000', fontWeight: '900' } : undefined}
               >
                 {tab.label}
               </button>
@@ -685,8 +682,8 @@ export default function AfrigomboWalletDashboard({
             {filteredTxs.map((tx) => {
               const isFlowIn = tx.type === "deposit" || tx.type === "depot" || tx.type === "recharge_wallet" || tx.type === "release" || tx.type === "deblocage_cachet" || tx.type === "refund" || tx.type === "remboursement" || tx.type === "prime_bonus";
               const typeLabel = 
-                tx.type === "depot" || tx.type === "deposit" || tx.type === "recharge_wallet" ? "Recharge / Dépôt" :
-                tx.type === "debit_publication" ? "Paiement Gombo" :
+                tx.type === "depot" || tx.type === "deposit" || tx.type === "recharge_wallet" ? "Recharge" :
+                tx.type === "debit_publication" ? "Paiement" :
                 tx.type === "commission_plateforme" || tx.type === "commission" ? "Commission" :
                 tx.type === "fonds_bloques" ? "Séquestre" :
                 tx.type === "deblocage_cachet" || tx.type === "release" ? "Déblocage" :
@@ -700,50 +697,50 @@ export default function AfrigomboWalletDashboard({
               const txAmount = Number(tx.amount || tx.montant || 0);
 
               return (
-                <div key={tx.id || tx.reference} className="py-3 flex items-center justify-between gap-3 text-left hover:bg-afri-bg/30 px-2 rounded-xl transition-colors">
+                <div key={tx.id || tx.reference} className="py-2.5 flex items-center justify-between gap-2 text-left hover:bg-afri-bg/30 px-1.5 rounded-xl transition-colors">
                   
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center border shrink-0 ${
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 pr-1.5">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border shrink-0 ${
                       isFlowIn ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" :
                       tx.type === "commission_plateforme" || tx.type === "commission" ? "bg-amber-500/10 border-amber-500/30 text-amber-400" :
                       tx.type === "fonds_bloques" ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400" :
                       "bg-afri-bg border-afri-border text-afri-text-sec"
                     }`}>
-                      {isFlowIn ? <ArrowUpRight className="w-4 h-4 stroke-[2.5]" /> :
-                       tx.type === "withdrawal" || tx.type === "retrait" ? <ArrowDownLeft className="w-4 h-4 stroke-[2.5]" /> :
-                       tx.type === "fonds_bloques" || tx.type === "debit_publication" ? <Lock className="w-4 h-4" /> :
-                       <ShieldCheck className="w-4 h-4" />}
+                      {isFlowIn ? <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" /> :
+                       tx.type === "withdrawal" || tx.type === "retrait" ? <ArrowDownLeft className="w-3.5 h-3.5 stroke-[2.5]" /> :
+                       tx.type === "fonds_bloques" || tx.type === "debit_publication" ? <Lock className="w-3.5 h-3.5" /> :
+                       <ShieldCheck className="w-3.5 h-3.5" />}
                     </div>
 
-                    <div className="space-y-0.5 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[8px] font-mono font-black uppercase px-1.5 py-0.5 bg-afri-bg border border-afri-border text-[#D4AF37] rounded">
+                    <div className="space-y-0.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[7.5px] font-mono font-black uppercase px-1.5 py-0.5 bg-afri-bg border border-afri-border text-[#D4AF37] rounded">
                           {typeLabel}
                         </span>
-                        <p className="text-xs font-bold text-afri-text truncate max-w-[180px] sm:max-w-[320px]">
+                        <p className="text-[11px] font-bold text-afri-text truncate max-w-[130px] sm:max-w-[320px]">
                           {tx.description || "Opération financière"}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2 text-[9px] font-mono text-afri-text-muted">
-                        <span>Réf: {tx.reference || tx.id}</span>
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[8.5px] font-mono text-afri-text-muted">
+                        <span className="truncate max-w-[90px]">Réf: {tx.reference || tx.id}</span>
                         <span>•</span>
                         <span>{formattedDate} {formattedHeure}</span>
                         {tx.userConcerned && (
                           <>
                             <span>•</span>
-                            <span className="text-afri-text-sec truncate max-w-[100px]">{tx.userConcerned}</span>
+                            <span className="text-afri-text-sec truncate max-w-[80px]">{tx.userConcerned}</span>
                           </>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-right space-y-1 shrink-0">
-                    <span className={`text-xs sm:text-sm font-mono font-black block ${isFlowIn ? "text-emerald-400" : "text-amber-500"}`}>
+                  <div className="text-right space-y-0.5 shrink-0 min-w-[95px] sm:min-w-[115px]">
+                    <span className={`text-xs font-mono font-black block ${isFlowIn ? "text-emerald-400" : "text-amber-500"}`}>
                       {isFlowIn ? "+" : "-"}{txAmount.toLocaleString('fr-FR')} FCFA
                     </span>
-                    <span className={`inline-block text-[8px] font-mono py-0.5 px-2 rounded border uppercase font-bold ${
+                    <span className={`inline-block text-[7.5px] font-mono py-0.5 px-1.5 rounded border uppercase font-bold ${
                       tx.status === "success" || tx.statut === "success" || tx.status === "fonds_liberes" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25" :
                       tx.status === "fonds_bloques" ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/25" :
                       tx.status === "pending" || tx.statut === "pending" ? "bg-amber-500/10 text-amber-400 border-amber-500/25 animate-pulse" :
