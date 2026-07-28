@@ -3,6 +3,7 @@ import {
   collection,
   onSnapshot,
   getDocs,
+  getDoc,
   doc,
   setDoc,
   addDoc,
@@ -65,6 +66,7 @@ import CreatorActivityDashboard from "./CreatorActivityDashboard";
 import FirebaseDiagnostic from "./FirebaseDiagnostic";
 import { supportConfig } from "../supportConfig";
 import { validateAndPublishWithCode } from "../lib/validationCodeEngine";
+import { calculatePublicationFinancials, recordWalletTransaction } from "../lib/financial";
 import { PublicProfileModal } from "./PublicProfileModal";
 import { gomboDB } from "../firebase";
 import { usePerformance } from "../services/performanceService";
@@ -1022,6 +1024,16 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   const [createdPubRefId, setCreatedPubRefId] = useState<string>("");
   const [createdPubTitle, setCreatedPubTitle] = useState<string>("");
   const [createdPubPrice, setCreatedPubPrice] = useState<number>(0);
+  
+  // Insufficient Funds modal state
+  const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState<boolean>(false);
+  const [insufficientFundsData, setInsufficientFundsData] = useState<{
+    title: string;
+    cachet: number;
+    fee: number;
+    total: number;
+    userSolde: number;
+  } | null>(null);
   
   // Draft restoration and auto-saving logic
   useEffect(() => {
@@ -2356,7 +2368,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
   // CompleteProfile route moved to App.tsx
 
   return (
-    <div className={`flex h-screen w-full max-w-full box-border overflow-x-hidden bg-afri-bg text-afri-text font-sans antialiased overflow-hidden uppercase-none`}>
+    <div className={`flex h-full h-[100dvh] w-full max-w-full box-border bg-afri-bg text-afri-text font-sans antialiased overflow-hidden uppercase-none`}>
 
       
       {(activeMenu === "super_admin" || activeMenu === "dashboard") && (
@@ -2383,7 +2395,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="fixed inset-y-0 left-0 w-80 bg-afri-bg-sec border-r border-afri-border flex flex-col justify-between z-[1001] shrink-0 h-screen overflow-y-auto pb-8"
+              className="fixed inset-y-0 left-0 w-80 bg-afri-bg-sec border-r border-afri-border flex flex-col justify-between z-[1001] shrink-0 h-full max-h-[100dvh] overflow-y-auto overscroll-contain pb-8"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
               {/* SIDEBAR CONTAINER SCROLL */}
@@ -4760,37 +4772,143 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                       alert("Veuillez spécifier une date pour la publication !");
                       return;
                     }
+
+                    // ÉTAPE 4 : INTERDICTION ABSOLUE DES DATES PASSÉES
+                    const todayStr = new Date().toISOString().split("T")[0];
+                    const selectedDateStr = typeof newGomboDate === "string" ? newGomboDate.split("T")[0] : todayStr;
+                    if (selectedDateStr < todayStr) {
+                      alert("La date du Gombo doit être aujourd'hui ou dans le futur.");
+                      return;
+                    }
+
                     if (!newGomboPrice || newGomboPrice < 15000) {
                       alert("Le budget minimum d'une publication / contrat est réglementé à 15 000 FCFA.");
                       return;
                     }
                   }
 
+                  const cachetVal = activePublishType === "reel" ? 0 : (newGomboPrice || 0);
+                  const financials = calculatePublicationFinancials(cachetVal);
+                  const feeAmount = financials.fee;
+                  const reqAmount = financials.total; // Total à débiter = cachet + commission
+
+                  // ÉTAPE 1 : LIRE LE SOLDE RÉEL DU WALLET FIRESTORE
+                  let liveSolde = 0;
+                  let liveBloque = 0;
+                  const currentUid = currentUser.uid;
+                  try {
+                    const uSnap = await getDoc(doc(db, "users", currentUid));
+                    if (uSnap.exists()) {
+                      const uData = uSnap.data();
+                      liveSolde = uData?.wallet?.soldeDisponible ?? uData?.walletBalance ?? 0;
+                      liveBloque = uData?.wallet?.soldeBloque ?? 0;
+                    } else {
+                      liveSolde = (profile as any)?.wallet?.soldeDisponible ?? profile?.walletBalance ?? 0;
+                      liveBloque = (profile as any)?.wallet?.soldeBloque ?? 0;
+                    }
+                  } catch (_) {
+                    liveSolde = (profile as any)?.wallet?.soldeDisponible ?? profile?.walletBalance ?? 0;
+                    liveBloque = (profile as any)?.wallet?.soldeBloque ?? 0;
+                  }
+
+                  // ÉTAPE 3 : SI LE WALLET EST INSUFFISANT -> STOP IMMÉDIAT. AUCUNE CRÉATION DE DOCUMENT FIRESTORE.
+                  if (reqAmount > 0 && liveSolde < reqAmount) {
+                    setInsufficientFundsData({
+                      title: newGomboTitle.trim(),
+                      cachet: cachetVal,
+                      fee: feeAmount,
+                      total: reqAmount,
+                      userSolde: liveSolde
+                    });
+                    setShowInsufficientFundsModal(true);
+                    return; // STOP EXECUTION
+                  }
+
                   // 1. Trigger Loading State
                   setPublishLoading(true);
                   try { audioSynth.playTamTam(true); } catch (_) {}
 
-                  // Simulated upload & processing delay
-                  await new Promise(resolve => setTimeout(resolve, 2000));
-
-                  const activeArtist = users.find(u => u.id === activeArtistId) || users[0];
                   const uniqueId = "gombo_new_" + Date.now();
                   const categoryLabel = getCategoryLabel();
+
+                  // Débit automatique du Wallet Firestore
+                  if (reqAmount > 0) {
+                    const newSolde = Math.max(0, liveSolde - reqAmount);
+                    const newBloque = liveBloque + cachetVal;
+
+                    await setDoc(doc(db, "users", currentUid), {
+                      wallet: {
+                        soldeDisponible: newSolde,
+                        soldeBloque: newBloque
+                      }
+                    }, { merge: true });
+
+                    // Enregistrer la transaction de débit
+                    await recordWalletTransaction({
+                      userId: currentUid,
+                      userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
+                      type: "debit_publication",
+                      amount: reqAmount,
+                      status: "success",
+                      gomboId: uniqueId,
+                      contractId: uniqueId,
+                      description: `Débit publication : Gombo "${newGomboTitle.trim()}" (Cachet: ${cachetVal.toLocaleString('fr-FR')} FCFA, Comm: ${feeAmount.toLocaleString('fr-FR')} FCFA)`
+                    });
+
+                    // Enregistrer la commission
+                    if (feeAmount > 0) {
+                      await recordWalletTransaction({
+                        userId: currentUid,
+                        userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
+                        type: "commission_plateforme",
+                        amount: feeAmount,
+                        status: "success",
+                        gomboId: uniqueId,
+                        contractId: uniqueId,
+                        description: `Commission AFRIGOMBO (2.5%) pour "${newGomboTitle.trim()}"`
+                      });
+
+                      await addDoc(collection(db, "commissions"), {
+                        userId: currentUid,
+                        userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
+                        amount: feeAmount,
+                        cachet: cachetVal,
+                        gomboTitle: newGomboTitle.trim(),
+                        gomboId: uniqueId,
+                        rate: 0.025,
+                        createdAt: new Date().toISOString()
+                      });
+                    }
+
+                    // Enregistrer les fonds bloqués en séquestre
+                    if (cachetVal > 0) {
+                      await recordWalletTransaction({
+                        userId: currentUid,
+                        userName: profile?.artisticName || profile?.name || currentUser.displayName || "Membre Gombo",
+                        type: "fonds_bloques",
+                        amount: cachetVal,
+                        status: "fonds_bloques",
+                        gomboId: uniqueId,
+                        contractId: uniqueId,
+                        description: `Fonds bloqués en séquestre pour le gombo "${newGomboTitle.trim()}"`
+                      });
+                    }
+                  }
 
                   if (activePublishType === "reel") {
                     // Just create a reel post
                     const newPostId = "post_reel_" + Date.now();
                     const newP: Post = {
                       id: newPostId,
-                      userId: activeArtistId,
-                      authorName: activeArtist.name,
-                      authorArtisticName: activeArtist.artisticName,
-                      content: `📹 Nouveau Réel publié !\\n\\n${newGomboDesc}`,
+                      userId: currentUid,
+                      authorName: currentUser.displayName || "Artiste",
+                      authorArtisticName: profile?.artisticName || currentUser.displayName || "Artiste",
+                      content: `📹 Nouveau Réel publié !\n\n${newGomboDesc}`,
                       likes: 0,
                       comments: 0,
                       isFlagged: false,
                       timestamp: new Date().toISOString(),
-                      mediaUrl: publishAudio, // Treat audio field as video URL for simplicity here
+                      mediaUrl: publishAudio,
                       mediaType: "video"
                     } as any;
                     setPosts(prev => [newP, ...prev]);
@@ -4799,20 +4917,24 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     const newG: Gombo = {
                       id: uniqueId,
                       title: `🎖️ (${categoryLabel}) ${newGomboTitle}`,
-                      description: newGomboDesc + (selectedPublishTags.length > 0 ? `\\n\\nTags: ${selectedPublishTags.map(t => `#${t}`).join(" ")}` : ""),
+                      description: newGomboDesc + (selectedPublishTags.length > 0 ? `\n\nTags: ${selectedPublishTags.map(t => `#${t}`).join(" ")}` : ""),
                       budget: newGomboPrice,
-                      commissionRate: (activeArtist.subscriptionPlan === "pro" || activeArtist.subscriptionPlan === "elite") ? 0.015 : 0.025,
+                      commissionRate: 0.025,
                       location: `${newGomboQuartier}, ${newGomboCity}`,
                       city: newGomboCity,
                       quartier: newGomboQuartier,
                       lieuPrecis: newGomboLieuPrecis || "Sur scène",
-                      organizerId: activeArtistId,
-                      organizerName: activeArtist.artisticName || activeArtist.name,
+                      organizerId: currentUid,
+                      organizerName: profile?.artisticName || profile?.name || currentUser.displayName || "Artiste",
                       timestamp: new Date().toISOString(),
                       applicantsCount: 0,
-                      status: "pending_deposit",
-                      visible: false,
-                      adminValidated: false,
+                      status: "PUBLISHED",
+                      visible: true,
+                      adminValidated: true,
+                      depositConfirmed: true,
+                      paymentMethod: "wallet_debit",
+                      paymentStatus: "paid",
+                      publishedAt: new Date().toISOString(),
                       isBoosted: false,
                       date: newGomboDate,
                       time: `${newGomboHeureDebut} - ${newGomboHeureFin}`,
@@ -4842,10 +4964,10 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     const newPostId = "post_new_" + Date.now();
                     const newP: Post = {
                       id: newPostId,
-                      userId: activeArtistId,
-                      authorName: activeArtist.name,
-                      authorArtisticName: activeArtist.artisticName,
-                      content: `📢 [${categoryLabel}] ${newGomboTitle}\\n\\n📍 Lieu : ${newGomboQuartier}, ${newGomboCity}\\n💰 Budget : ${newGomboPrice.toLocaleString()} FCFA\\n📅 Date : ${newGomboDate}\\n\\n${newGomboDesc}`,
+                      userId: currentUid,
+                      authorName: currentUser.displayName || "Artiste",
+                      authorArtisticName: profile?.artisticName || currentUser.displayName || "Artiste",
+                      content: `📢 [${categoryLabel}] ${newGomboTitle}\n\n📍 Lieu : ${newGomboQuartier}, ${newGomboCity}\n💰 Budget : ${newGomboPrice.toLocaleString('fr-FR')} FCFA\n📅 Date : ${newGomboDate}\n\n${newGomboDesc}`,
                       likes: 0,
                       comments: 0,
                       isFlagged: false,
@@ -4855,21 +4977,75 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                     if (publishAudio) (newP as any).audioUrl = publishAudio;
                     setPosts(prev => [newP, ...prev]);
                     await saveToFirestore("posts", newP.id, newP);
-                    setCreatedPubRefId(newPostId || uniqueId);
-                    setCreatedPubTitle(newGomboTitle);
-                    setCreatedPubPrice(newGomboPrice);
                   }
 
-                  // 2. Trigger Pending Validation State
                   setPublishLoading(false);
-                  setPublishSuccess(true);
+                  clearDraft();
                   try { audioSynth.playValidationSuccess(); } catch (_) {}
+                  alert("🎉 Félicitations ! Votre publication a été débitée de votre Wallet et est désormais EN LIGNE !");
+                  setActiveMenu("user_terrain");
                 };
 
                 return (
                   <div className="afri-container h-full w-full overflow-y-auto overflow-x-hidden pt-4 xs:pt-6 scrollbar-none">
                     <div className="max-w-2xl mx-auto space-y-4 xs:space-y-6 animate-fadeIn relative select-none">
                     
+                    {/* Modal Solde Insuffisant */}
+                    {showInsufficientFundsModal && insufficientFundsData && (
+                      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+                        <div className="bg-afri-bg-sec border border-amber-500/40 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 text-center shadow-2xl relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-500 via-afri-gold to-amber-600" />
+                          <div className="w-16 h-16 mx-auto bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center text-3xl">
+                            ⚠️
+                          </div>
+                          <div className="space-y-2">
+                            <h3 className="text-xl font-black text-afri-text uppercase tracking-tight">Solde insuffisant</h3>
+                            <p className="text-xs text-afri-text-sec leading-relaxed">
+                              Votre Wallet ne contient pas suffisamment de fonds pour garantir ce contrat. Veuillez recharger votre Wallet afin de continuer.
+                            </p>
+                          </div>
+
+                          <div className="bg-afri-bg border border-afri-border rounded-2xl p-4 space-y-2 text-left text-xs font-mono">
+                            <div className="flex justify-between">
+                              <span className="text-afri-text-muted">Cachet contrat :</span>
+                              <span className="font-bold text-afri-text">{insufficientFundsData.cachet.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-afri-text-muted">Commission AFRIGOMBO (2.5%) :</span>
+                              <span className="font-bold text-afri-text">{insufficientFundsData.fee.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+                            <div className="flex justify-between border-t border-afri-border pt-2 text-sm">
+                              <span className="font-bold text-afri-gold">Total requis :</span>
+                              <span className="font-bold text-afri-gold">{insufficientFundsData.total.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+                            <div className="flex justify-between text-xs text-red-400 pt-1 border-t border-red-500/20">
+                              <span>Solde disponible :</span>
+                              <span className="font-bold">{insufficientFundsData.userSolde.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-3">
+                            <button
+                              onClick={() => {
+                                setShowInsufficientFundsModal(false);
+                                window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
+                                window.open("https://wa.me/2250700000000?text=Bonjour%20Support%20AFRIGOMBO%2C%20je%20souhaite%20recharger%20mon%20Wallet%20pour%20publier%20mon%20Gombo.", "_blank");
+                              }}
+                              className="w-full py-3.5 bg-gradient-to-r from-afri-gold to-amber-500 text-black font-black uppercase tracking-wider rounded-xl hover:brightness-110 transition-all text-xs flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                            >
+                              🟡 Recharger mon Wallet
+                            </button>
+                            <button
+                              onClick={() => setShowInsufficientFundsModal(false)}
+                              className="w-full py-3 bg-afri-bg border border-afri-border text-afri-text-sec hover:text-afri-text font-bold text-xs rounded-xl transition-all cursor-pointer"
+                            >
+                              ⚪ Annuler
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Draft restoration alert banner */}
                     {publishDraftDetected && (
                       <div className="bg-afri-gold/15 border border-afri-gold/30 rounded-2xl p-4 text-xs text-afri-text flex items-center justify-between animate-slideDown">
@@ -5210,6 +5386,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 <label className="text-[10px] font-mono uppercase text-afri-text-sec block font-bold">DATE PRÉVUE :</label>
                                 <input
                                   type="date"
+                                  min={new Date().toISOString().split("T")[0]}
                                   value={newGomboDate}
                                   onChange={(e) => {
                                     setNewGomboDate(e.target.value);

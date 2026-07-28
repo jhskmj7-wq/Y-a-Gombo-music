@@ -69,7 +69,7 @@ function CompleteProfileView() {
   }
   
   return (
-    <div className="w-full h-screen max-h-screen bg-afri-bg flex items-center justify-center py-6 overflow-y-auto overscroll-contain touch-pan-y px-4 font-sans select-none">
+    <div className="w-full h-full h-[100dvh] bg-afri-bg flex items-center justify-center py-6 overflow-y-auto overscroll-contain touch-pan-y px-4 font-sans select-none">
       <CompleteProfile 
         currentUserProfile={profile} 
         onComplete={async () => {
@@ -181,7 +181,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="h-screen overflow-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text">
+      <div className="h-full h-[100dvh] w-full overflow-hidden font-sans antialiased transition-colors duration-300 bg-afri-bg text-afri-text flex flex-col">
         <ScrollToTop />
         
         {/* Main application layer, rendered cleanly */}
