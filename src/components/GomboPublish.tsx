@@ -73,40 +73,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [uploadingState, setUploadingState] = useState<{ [key: string]: boolean }>({});
 
-  // Code validation state
-  const [enteredCode, setEnteredCode] = useState("");
-  const [validatingCode, setValidatingCode] = useState(false);
-  const [codeSuccessMsg, setCodeSuccessMsg] = useState("");
-  const [codeErrorMsg, setCodeErrorMsg] = useState("");
-
-  const handleValidateCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!enteredCode.trim()) {
-      setCodeErrorMsg("Veuillez entrer votre code de validation.");
-      return;
-    }
-    setCodeErrorMsg("");
-    setCodeSuccessMsg("");
-    setValidatingCode(true);
-
-    try {
-      const res = await validateAndPublishWithCode(enteredCode, depositDetails.refId, currentUserProfile.uid);
-      if (res.success) {
-        setCodeSuccessMsg(res.message);
-        setTimeout(() => {
-          setShowSuccessOverlay(false);
-          onSuccess();
-        }, 1500);
-      } else {
-        setCodeErrorMsg(res.message);
-      }
-    } catch (err: any) {
-      setCodeErrorMsg("Erreur lors de la vérification du code.");
-    } finally {
-      setValidatingCode(false);
-    }
-  };
-
+  // Image and Audio input refs
   const imageInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
@@ -136,8 +103,27 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       return;
     }
 
-    if (!title.trim() || !description.trim()) {
-      setErrorMsg("Veuillez remplir le titre et la description !");
+    // 1. VALIDATIONS OBLIGATOIRES DES CHAMPS
+    if (!title.trim()) {
+      setErrorMsg("Veuillez renseigner le titre de la publication !");
+      return;
+    }
+
+    if (!description.trim()) {
+      setErrorMsg("Veuillez renseigner la description !");
+      return;
+    }
+
+    if (!commune || !commune.trim()) {
+      setErrorMsg("Veuillez renseigner la commune ou la ville !");
+      return;
+    }
+
+    // 2. VALIDATION STRICTE DE LA DATE (≥ AUJOURD'HUI)
+    const todayStr = new Date().toISOString().split("T")[0];
+    const selectedDateStr = (typeof date === "string" && date) ? date.split("T")[0] : todayStr;
+    if (selectedDateStr < todayStr) {
+      setErrorMsg("La date du Gombo doit être aujourd'hui ou dans le futur.");
       return;
     }
 
@@ -148,7 +134,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       const authorName = currentUserProfile.displayName || currentUserProfile.name || "Artiste Gombo";
       const authorPhoto = currentUserProfile.photoURL || currentUserProfile.avatarUrl || "";
 
-      // 1. CALCUL AUTOMATIQUE DU MONTANT + COMMISSION
+      // 3. CALCUL AUTOMATIQUE DU MONTANT + COMMISSION
       const cachetVal = budget ? Number(budget) : (selectedType === "opportunite" || selectedType === "renfort" ? 25000 : 0);
       const financials = calculatePublicationFinancials(cachetVal);
       const feeAmount = financials.fee;
@@ -156,7 +142,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
       const reqAmount = totalAmountToDeposit > 0 ? totalAmountToDeposit : cachetVal;
       const postTag = PUBLICATION_TYPES.find(t => t.id === selectedType)?.label || selectedType;
 
-      // 2. LIRE LE SOLDE RÉEL DU WALLET FIRESTORE
+      // 4. LIRE LE SOLDE RÉEL DU WALLET FIRESTORE
       let liveSolde = 0;
       let liveBloque = 0;
       try {
@@ -174,7 +160,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         liveBloque = (currentUserProfile as any)?.wallet?.soldeBloque ?? 0;
       }
 
-      // 3. VÉRIFICATION DU SOLDE WALLET
+      // 5. VÉRIFICATION DU SOLDE WALLET (SI INSUFFISANT : INTERDICTION DE PUBLIER)
       if (reqAmount > 0 && liveSolde < reqAmount) {
         // AUCUNE PUBLICATION NE DOIT ÊTRE CRÉÉE. AUCUN DOCUMENT FIRESTORE. AUCUN FICHIER UPLOADÉ.
         setDepositDetails({
@@ -194,67 +180,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         return; // ARRÊT IMMÉDIAT DU WORKFLOW
       }
 
-      // 4. SI LE WALLET EST SUFFISANT : DÉBITER IMMÉDIATEMENT ET METTRE À JOUR LE WALLET
-      let newSolde = liveSolde;
-      let newBloque = liveBloque;
-      if (reqAmount > 0) {
-        newSolde = Math.max(0, liveSolde - reqAmount);
-        newBloque = liveBloque + cachetVal; // Placer le cachet en séquestre
-
-        // Débiter le solde et bloquer le cachet dans Firestore
-        await setDoc(doc(db, "users", currentUserProfile.uid), {
-          wallet: {
-            soldeDisponible: newSolde,
-            soldeBloque: newBloque
-          }
-        }, { merge: true });
-
-        // Enregistrer la transaction de débit globale
-        await recordWalletTransaction({
-          userId: currentUserProfile.uid,
-          userName: authorName,
-          type: "debit_publication",
-          amount: reqAmount,
-          status: "success",
-          description: `Débit publication : Gombo "${title.trim()}" (Cachet: ${cachetVal.toLocaleString()} FCFA, Comm: ${feeAmount.toLocaleString()} FCFA)`
-        });
-
-        // Enregistrer la commission
-        if (feeAmount > 0) {
-          await recordWalletTransaction({
-            userId: currentUserProfile.uid,
-            userName: authorName,
-            type: "commission_plateforme",
-            amount: feeAmount,
-            status: "success",
-            description: `Commission AFRIGOMBO (2,5%) pour le gombo "${title.trim()}"`
-          });
-
-          await addDoc(collection(db, "commissions"), {
-            userId: currentUserProfile.uid,
-            userName: authorName,
-            amount: feeAmount,
-            cachet: cachetVal,
-            gomboTitle: title.trim(),
-            rate: 0.025,
-            createdAt: new Date().toISOString()
-          });
-        }
-
-        // Enregistrer le blocage en séquestre du cachet
-        if (cachetVal > 0) {
-          await recordWalletTransaction({
-            userId: currentUserProfile.uid,
-            userName: authorName,
-            type: "fonds_bloques",
-            amount: cachetVal,
-            status: "fonds_bloques",
-            description: `Fonds bloqués en séquestre pour le gombo "${title.trim()}"`
-          });
-        }
-      }
-
-      // 5. IMPORTATION DES FICHIERS (Uniquement après validation et débit du Wallet)
+      // 6. UPLOAD DES FICHIERS (Uniquement si le solde est suffisant)
       let uploadedImageUrl = "";
       let uploadedAudioUrl = "";
 
@@ -286,7 +212,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         setUploadingState(p => ({ ...p, audio: false }));
       }
 
-      // 6. CRÉER ENSUITE SEULEMENT LA PUBLICATION FIRESTORE
+      // 7. CRÉER LA PUBLICATION FIRESTORE
       const postStatus = "PUBLISHED";
 
       const postPayload: any = {
@@ -337,7 +263,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           description: description.trim(),
           location: locationDetail.trim() ? `${locationDetail.trim()}, ${commune}` : `Abidjan, commune de ${commune}`,
           commune: commune,
-          date: (typeof date === "string" && date) ? date.split("T")[0] : new Date().toISOString().split("T")[0],
+          date: selectedDateStr,
           time: "19:00",
           budget: cachetVal,
           eventType: selectedType === "renfort" ? "⚡ Renfort Express" : (selectedType === "casting" ? "🎤 Casting Pro" : "💼 Contrat Gombo Pro"),
@@ -357,12 +283,80 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         }) || "";
       }
 
+      const pubRefId = createdGomboId || createdPostId || `PUB-${Date.now()}`;
+
+      // 8. DÉBITER AUTOMATIQUEMENT LE WALLET FIRESTORE
+      let newSolde = liveSolde;
+      let newBloque = liveBloque;
+      if (reqAmount > 0) {
+        newSolde = Math.max(0, liveSolde - reqAmount);
+        newBloque = liveBloque + cachetVal; // Placer le cachet en séquestre
+
+        await setDoc(doc(db, "users", currentUserProfile.uid), {
+          wallet: {
+            soldeDisponible: newSolde,
+            soldeBloque: newBloque
+          }
+        }, { merge: true });
+
+        // Enregistrer la transaction de débit globale avec Référence et ID de publication
+        await recordWalletTransaction({
+          userId: currentUserProfile.uid,
+          userName: authorName,
+          type: "debit_publication",
+          amount: reqAmount,
+          status: "success",
+          gomboId: pubRefId,
+          contractId: pubRefId,
+          description: `Débit publication : Gombo "${title.trim()}" (Cachet: ${cachetVal.toLocaleString()} FCFA, Comm: ${feeAmount.toLocaleString()} FCFA)`
+        });
+
+        // Enregistrer la commission
+        if (feeAmount > 0) {
+          await recordWalletTransaction({
+            userId: currentUserProfile.uid,
+            userName: authorName,
+            type: "commission_plateforme",
+            amount: feeAmount,
+            status: "success",
+            gomboId: pubRefId,
+            contractId: pubRefId,
+            description: `Commission AFRIGOMBO (2,5%) pour le gombo "${title.trim()}"`
+          });
+
+          await addDoc(collection(db, "commissions"), {
+            userId: currentUserProfile.uid,
+            userName: authorName,
+            amount: feeAmount,
+            cachet: cachetVal,
+            gomboTitle: title.trim(),
+            gomboId: pubRefId,
+            rate: 0.025,
+            createdAt: new Date().toISOString()
+          });
+        }
+
+        // Enregistrer le blocage en séquestre du cachet
+        if (cachetVal > 0) {
+          await recordWalletTransaction({
+            userId: currentUserProfile.uid,
+            userName: authorName,
+            type: "fonds_bloques",
+            amount: cachetVal,
+            status: "fonds_bloques",
+            gomboId: pubRefId,
+            contractId: pubRefId,
+            description: `Fonds bloqués en séquestre pour le gombo "${title.trim()}"`
+          });
+        }
+      }
+
       setDepositDetails({
         cachet: cachetVal,
         fee: feeAmount,
         total: reqAmount,
         requiresDeposit: true,
-        refId: createdPostId || createdGomboId || `PUB-${Date.now()}`,
+        refId: pubRefId,
         typeName: postTag,
         authorName: authorName,
         title: title.trim(),
@@ -371,9 +365,9 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
 
       setPublishOutcome("success_published");
       setShowSuccessOverlay(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setErrorMsg("Une erreur est survenue lors du lancement du gombo. Veuillez réessayer.");
+      setErrorMsg(err.message || "Une erreur est survenue lors de la publication. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -405,7 +399,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               >
                 {publishOutcome === "insufficient_funds" ? (
                   <>
-                    <div className="w-16 h-16 mx-auto bg-amber-500/10 border border-amber-500 rounded-2xl flex items-center justify-center text-amber-400 text-3xl shadow-lg">
+                    <div className="w-16 h-16 mx-auto bg-amber-500/10 border border-amber-500/40 rounded-2xl flex items-center justify-center text-amber-400 text-3xl shadow-lg">
                       <AlertCircle className="w-10 h-10 text-amber-400" />
                     </div>
 
@@ -414,10 +408,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                         🔒 PUBLICATION IMPOSSIBLE - WALLET INSUFFISANT
                       </span>
                       <h3 className="text-xl font-black text-afri-text uppercase tracking-wide pt-1">
-                        Solde insuffisant.
+                        Solde insuffisant
                       </h3>
-                      <p className="text-sm font-bold text-amber-400 leading-relaxed max-w-sm mx-auto">
-                        Rechargez votre Wallet pour publier cette opportunité.
+                      <p className="text-xs sm:text-sm font-medium text-afri-text-sec leading-relaxed max-w-sm mx-auto">
+                        Votre Wallet ne contient pas suffisamment de fonds pour garantir ce contrat.<br />Veuillez recharger votre Wallet afin de continuer.
                       </p>
                     </div>
 
@@ -452,10 +446,10 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                         onClick={() => {
                           supportConfig.openSupport(`Bonjour 👋\n\nJe souhaite recharger mon Wallet AFRIGOMBO pour publier l'opportunité : "${depositDetails.title}"\n- Montant Gombo : ${depositDetails.cachet.toLocaleString()} FCFA\n- Commission : ${depositDetails.fee.toLocaleString()} FCFA\n- Montant Total requis : ${depositDetails.total.toLocaleString()} FCFA\n- Mon Solde Actuel : ${(depositDetails.userSolde || 0).toLocaleString()} FCFA`);
                         }}
-                        className="w-full py-4 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer active:scale-98 flex items-center justify-center gap-2"
+                        className="w-full py-3.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer active:scale-98 flex items-center justify-center gap-2"
                       >
                         <Wallet className="w-4 h-4" />
-                        <span>Recharger mon Wallet</span>
+                        <span>🟡 Recharger mon Wallet</span>
                       </button>
 
                       <button
@@ -463,7 +457,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
                         onClick={() => setShowSuccessOverlay(false)}
                         className="w-full py-2.5 bg-afri-bg hover:bg-afri-bg-sec border border-afri-border text-afri-text-sec text-[10px] font-mono uppercase rounded-xl transition-colors cursor-pointer"
                       >
-                        Modifier l'annonce
+                        ⚪ Annuler
                       </button>
                     </div>
                   </>
@@ -692,6 +686,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
               <input
                 type="date"
                 required
+                min={new Date().toISOString().split("T")[0]}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full pl-9 pr-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-xs font-black text-afri-text focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"

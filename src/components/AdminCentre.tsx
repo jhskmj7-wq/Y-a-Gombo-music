@@ -2507,7 +2507,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                                 <CreditCard className="w-8 h-8 text-afri-gold" strokeWidth={1.5} />
                                 <div className="flex flex-col text-left">
                                   <span className="text-[11px] font-sans text-afri-text font-medium leading-none mb-1">Wallet</span>
-                                  <span className="text-lg font-black text-afri-gold leading-none">{profile?.walletBalance?.toLocaleString('fr-FR') || "25 000"} FCFA</span>
+                                  <span className="text-lg font-black text-afri-gold leading-none">{((profile?.wallet?.soldeDisponible ?? profile?.walletBalance ?? profile?.balance ?? 0)).toLocaleString('fr-FR')} FCFA</span>
                                 </div>
                               </div>
                               <ChevronRight className="w-5 h-5 text-afri-gold" strokeWidth={2} />

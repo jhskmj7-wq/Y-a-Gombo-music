@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Music, Calendar, Clock, MapPin, Search, Plus, User, 
   Flame, Sparkles, Filter, Check, X, Phone, Users, 
-  ChevronDown, MessageCircle, AlertCircle, RefreshCw, Send, Trash2
+  ChevronDown, MessageCircle, AlertCircle, RefreshCw, Send, Trash2, Wallet
 } from "lucide-react";
 import { db, gomboDB } from "../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -93,6 +93,16 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
   const [viewApplicantsPostId, setViewApplicantsPostId] = useState<string | null>(null);
   const [notificationMsg, setNotificationMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Insufficient funds modal state
+  const [showRenfortInsufficientModal, setShowRenfortInsufficientModal] = useState(false);
+  const [renfortInsufficientFundsDetails, setRenfortInsufficientFundsDetails] = useState<{
+    title: string;
+    cachet: number;
+    fee: number;
+    total: number;
+    userSolde: number;
+  } | null>(null);
+
   // Load and Listen to DB real-time
   useEffect(() => {
     setLoading(true);
@@ -133,8 +143,17 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
       return;
     }
 
-    if (!title || !description || !date || !time || !whatsapp) {
+    // 1. VALIDATION DES CHAMPS REQUIS
+    if (!title.trim() || !description.trim() || !date || !time || !whatsapp) {
       triggerToast("error", "Veuillez remplir tous les champs obligatoires (*)");
+      return;
+    }
+
+    // 2. VALIDATION DATE (≥ AUJOURD'HUI)
+    const todayStr = new Date().toISOString().split("T")[0];
+    const selectedDateStr = (typeof date === "string" && date) ? date.split("T")[0] : todayStr;
+    if (selectedDateStr < todayStr) {
+      triggerToast("error", "La date du Gombo doit être aujourd'hui ou dans le futur.");
       return;
     }
 
@@ -142,6 +161,10 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
     let finalLocation = selectedLocation;
     if (selectedLocation === "Autre" && customLocation) {
       finalLocation = customLocation;
+    }
+    if (!finalLocation || !finalLocation.trim()) {
+      triggerToast("error", "Veuillez renseigner la commune ou la ville.");
+      return;
     }
 
     // Process Instruments / Specialties
@@ -165,25 +188,53 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
       const financials = calculatePublicationFinancials(cachetVal);
       const reqAmount = financials.total; // cachet + commission
 
-      if (reqAmount > 0) {
-        let liveSolde = 0;
-        let liveBloque = 0;
-        try {
-          const uSnap = await getDoc(doc(db, "users", currentUserProfile.uid));
-          if (uSnap.exists()) {
-            const uData = uSnap.data();
-            liveSolde = uData?.wallet?.soldeDisponible ?? 0;
-            liveBloque = uData?.wallet?.soldeBloque ?? 0;
-          }
-        } catch (_) {}
-
-        if (liveSolde < reqAmount) {
-          triggerToast("error", "Solde insuffisant dans votre Wallet. Veuillez recharger votre Wallet pour publier.");
-          supportConfig.openSupport(`Bonjour 👋\n\nJe souhaite recharger mon Wallet AFRIGOMBO pour publier une demande de Renfort Express ("${title}")\n- Montant : ${cachetVal.toLocaleString()} FCFA\n- Commission : ${financials.fee.toLocaleString()} FCFA\n- Total Requis : ${reqAmount.toLocaleString()} FCFA\n- Mon Solde Actuel : ${liveSolde.toLocaleString()} FCFA`);
-          return;
+      // 3. VÉRIFICATION DU SOLDE EN TEMPS RÉEL
+      let liveSolde = 0;
+      let liveBloque = 0;
+      try {
+        const uSnap = await getDoc(doc(db, "users", currentUserProfile.uid));
+        if (uSnap.exists()) {
+          const uData = uSnap.data();
+          liveSolde = uData?.wallet?.soldeDisponible ?? 0;
+          liveBloque = uData?.wallet?.soldeBloque ?? 0;
         }
+      } catch (_) {}
 
-        // Débit du wallet
+      // 4. SI SOLDE INSUFFISANT : INTERDICTION DE PUBLIER + MODAL
+      if (reqAmount > 0 && liveSolde < reqAmount) {
+        setRenfortInsufficientFundsDetails({
+          title: title.trim(),
+          cachet: cachetVal,
+          fee: financials.fee,
+          total: reqAmount,
+          userSolde: liveSolde
+        });
+        setShowRenfortInsufficientModal(true);
+        return; // ARRÊT IMMÉDIAT. AUCUN DOCUMENT FIRESTORE CRÉÉ.
+      }
+
+      // 5. CRÉER LA PUBLICATION DANS FIRESTORE
+      const authorFullName = `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Artiste";
+      const createdRenfortId = await gomboDB.publishRenfort({
+        userId: currentUserProfile.uid,
+        userName: authorFullName,
+        userAvatar: currentUserProfile.avatarUrl || currentUserProfile.photoURL || "",
+        title: title.trim(),
+        description: description.trim(),
+        instrument: finalSpecialties[0], // Compat primary
+        instruments: finalSpecialties,
+        date: selectedDateStr,
+        time,
+        musiciansCount,
+        budget: cachetVal,
+        commune: finalLocation,
+        whatsapp,
+        requestType,
+        genres: finalGenres
+      }) || `RENFORT-${Date.now()}`;
+
+      // 6. DÉBITER LE WALLET FIRESTORE & ENREGISTRER L'HISTORIQUE
+      if (reqAmount > 0) {
         const newSolde = Math.max(0, liveSolde - reqAmount);
         const newBloque = liveBloque + cachetVal;
         await setDoc(doc(db, "users", currentUserProfile.uid), {
@@ -192,31 +243,41 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
 
         await recordWalletTransaction({
           userId: currentUserProfile.uid,
-          userName: `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Artiste",
+          userName: authorFullName,
           type: "debit_publication",
           amount: reqAmount,
           status: "success",
-          description: `Débit publication Renfort Express : "${title.trim()}"`
+          gomboId: createdRenfortId,
+          contractId: createdRenfortId,
+          description: `Débit publication Renfort Express : "${title.trim()}" (Cachet: ${cachetVal.toLocaleString()} FCFA, Comm: ${financials.fee.toLocaleString()} FCFA)`
         });
-      }
 
-      await gomboDB.publishRenfort({
-        userId: currentUserProfile.uid,
-        userName: `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim() || currentUserProfile.artistName || "Artiste",
-        userAvatar: currentUserProfile.avatarUrl || currentUserProfile.photoURL || "",
-        title,
-        description,
-        instrument: finalSpecialties[0], // Compat primary
-        instruments: finalSpecialties,
-        date,
-        time,
-        musiciansCount,
-        budget: Number(budget) || 0,
-        commune: finalLocation,
-        whatsapp,
-        requestType,
-        genres: finalGenres
-      });
+        if (financials.fee > 0) {
+          await recordWalletTransaction({
+            userId: currentUserProfile.uid,
+            userName: authorFullName,
+            type: "commission_plateforme",
+            amount: financials.fee,
+            status: "success",
+            gomboId: createdRenfortId,
+            contractId: createdRenfortId,
+            description: `Commission AFRIGOMBO (2,5%) Renfort Express : "${title.trim()}"`
+          });
+        }
+
+        if (cachetVal > 0) {
+          await recordWalletTransaction({
+            userId: currentUserProfile.uid,
+            userName: authorFullName,
+            type: "fonds_bloques",
+            amount: cachetVal,
+            status: "fonds_bloques",
+            gomboId: createdRenfortId,
+            contractId: createdRenfortId,
+            description: `Fonds bloqués en séquestre Renfort Express : "${title.trim()}"`
+          });
+        }
+      }
 
       // Clear Form & Close
       setTitle("");
@@ -595,6 +656,7 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
                   <input
                     type="date"
                     required
+                    min={new Date().toISOString().split("T")[0]}
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-850 dark:text-afri-text text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
@@ -1154,6 +1216,87 @@ export default function RenfortExpress({ currentUserProfile, onShowAuth }: Renfo
           })}
         </div>
       )}
+
+      {/* Modal Solde Insuffisant */}
+      <AnimatePresence>
+        {showRenfortInsufficientModal && renfortInsufficientFundsDetails && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-afri-bg-sec dark:bg-gray-900 border border-[#D4AF37]/30 rounded-3xl w-full max-w-lg p-6 sm:p-8 relative shadow-2xl space-y-5 flex flex-col text-center"
+            >
+              <div className="w-16 h-16 mx-auto bg-amber-500/10 border border-amber-500/40 rounded-2xl flex items-center justify-center text-amber-400 text-3xl shadow-lg">
+                <AlertCircle className="w-10 h-10 text-amber-400" />
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="inline-block text-[10px] font-mono font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
+                  🔒 PUBLICATION IMPOSSIBLE - WALLET INSUFFISANT
+                </span>
+                <h3 className="text-xl font-black text-afri-text uppercase tracking-wide pt-1">
+                  Solde insuffisant
+                </h3>
+                <p className="text-xs sm:text-sm font-medium text-afri-text-sec leading-relaxed max-w-sm mx-auto">
+                  Votre Wallet ne contient pas suffisamment de fonds pour garantir ce contrat.<br />Veuillez recharger votre Wallet afin de continuer.
+                </p>
+              </div>
+
+              {/* Summary Box */}
+              <div className="bg-afri-bg dark:bg-gray-850 border border-afri-border dark:border-gray-700 rounded-xl p-4 space-y-2.5 text-left text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-afri-text-sec">Renfort Express :</span>
+                  <span className="font-bold text-afri-text truncate max-w-[180px]">{renfortInsufficientFundsDetails.title}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-afri-text-sec">Montant Cachet :</span>
+                  <span className="font-mono font-bold text-afri-text">{renfortInsufficientFundsDetails.cachet.toLocaleString()} FCFA</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-afri-text-sec">Commission AFRIGOMBO :</span>
+                  <span className="font-mono text-afri-text-sec">{renfortInsufficientFundsDetails.fee.toLocaleString()} FCFA</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-afri-border">
+                  <span className="text-afri-text font-extrabold">Montant Total Requis :</span>
+                  <span className="font-mono font-black text-amber-400 text-sm">{renfortInsufficientFundsDetails.total.toLocaleString()} FCFA</span>
+                </div>
+                <div className="flex justify-between items-center pt-1 border-t border-afri-border/50">
+                  <span className="text-afri-text-sec">Votre Solde Actuel :</span>
+                  <span className="font-mono font-black text-rose-500">{renfortInsufficientFundsDetails.userSolde.toLocaleString()} FCFA</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    supportConfig.openSupport(`Bonjour 👋\n\nJe souhaite recharger mon Wallet AFRIGOMBO pour publier ma demande de Renfort Express : "${renfortInsufficientFundsDetails.title}"\n- Montant Cachet : ${renfortInsufficientFundsDetails.cachet.toLocaleString()} FCFA\n- Commission : ${renfortInsufficientFundsDetails.fee.toLocaleString()} FCFA\n- Total Requis : ${renfortInsufficientFundsDetails.total.toLocaleString()} FCFA\n- Mon Solde Actuel : ${renfortInsufficientFundsDetails.userSolde.toLocaleString()} FCFA`);
+                  }}
+                  className="w-full py-3.5 bg-gradient-to-r from-[#D4AF37] to-amber-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl transition-all shadow-lg cursor-pointer active:scale-98 flex items-center justify-center gap-2"
+                >
+                  <Wallet className="w-4 h-4" />
+                  <span>🟡 Recharger mon Wallet</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowRenfortInsufficientModal(false)}
+                  className="w-full py-2.5 bg-afri-bg dark:bg-gray-800 border border-afri-border text-afri-text-sec text-[10px] font-mono uppercase rounded-xl transition-colors cursor-pointer"
+                >
+                  ⚪ Annuler
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
