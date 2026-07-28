@@ -266,6 +266,11 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
       .slice(0, 6);
   }, [allTendancesItems]);
 
+  // Pinned/Sponsored trends highlighted by the administration
+  const pinnedTrends = useMemo(() => {
+    return allTendancesItems.filter(item => item.pinned || item.sponsored);
+  }, [allTendancesItems]);
+
   // Handle J'honore (Like) action
   const handleToggleLike = (item: TendancesItem) => {
     requireAuthThen(() => {
@@ -424,29 +429,106 @@ export const TendancesSection: React.FC<TendancesSectionProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Header Banner */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-afri-bg-sec via-afri-bg-sec/90 to-afri-bg-ter/40 border border-[#D4AF37]/20 shadow-xl relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-1">
+      {/* CADRE DES TENDANCES MISES EN AVANT */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-afri-bg-sec to-afri-bg-ter/40 border border-[#D4AF37]/35 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-36 h-36 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="relative z-10 space-y-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="p-2 bg-[#D4AF37]/15 rounded-xl text-[#D4AF37]">
-                <Flame className="w-6 h-6 fill-current" />
+              <span className="p-1.5 bg-[#D4AF37]/15 rounded-xl text-[#D4AF37]">
+                <Crown className="w-4 h-4 fill-current" />
               </span>
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-afri-text uppercase tracking-wider">
-                  CENTRE DES TENDANCES
+                <h2 className="text-xs sm:text-sm font-black text-afri-text uppercase tracking-wider flex items-center gap-1.5">
+                  Sélection du Souverain • Mises en Avant
                 </h2>
-                <p className="text-xs text-afri-text-sec">
-                  Calculateur de score dynamique en temps réel & Carrousel interactif.
+                <p className="text-[10px] text-afri-text-sec">
+                  Publications et opportunités épinglées par l'administration.
                 </p>
               </div>
             </div>
+            <span className="text-[9px] bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 px-2 py-0.5 rounded-full font-mono uppercase font-black">
+              CADRE OFFICIEL
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 bg-afri-bg/60 border border-afri-border px-3 py-1.5 rounded-2xl text-[11px] text-afri-text-sec">
-            <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-            <span>Algorithme temps réel • Firestore sync</span>
-          </div>
+          {pinnedTrends.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {pinnedTrends.slice(0, 4).map((item) => (
+                <div 
+                  key={`pinned_${item.id}`}
+                  onClick={() => item.type === "gombo" && onSelectGomboDetails && onSelectGomboDetails(item.rawItem)}
+                  className={`p-3.5 rounded-2xl bg-afri-bg/60 border border-[#D4AF37]/20 hover:border-[#D4AF37]/65 transition-all duration-200 cursor-pointer flex gap-3 items-center group relative overflow-hidden ${item.type === "gombo" ? "" : "pointer-events-none"}`}
+                >
+                  <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-afri-bg-ter relative border border-afri-border">
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.title} 
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
+                    <div className="absolute inset-0 bg-black/20" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="px-1.5 py-0.5 rounded-full bg-[#D4AF37]/15 text-[#D4AF37] text-[8px] font-mono font-black uppercase">
+                        {item.type === "gombo" ? "💼 Gombo" : "🔥 Post"}
+                      </span>
+                      {item.sponsored && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[8px] font-mono font-black uppercase border border-amber-500/20">
+                          Sponsorisé
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="text-xs font-bold text-afri-text truncate group-hover:text-[#D4AF37] transition-colors">
+                      {item.title}
+                    </h4>
+                    <p className="text-[10px] text-afri-text-sec truncate">
+                      {item.description}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#D4AF37] shrink-0 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 rounded-2xl bg-afri-bg/40 border border-afri-border text-center space-y-3">
+              <p className="text-[11px] text-afri-text-sec">
+                Aucune tendance n'est manuellement mise en avant pour le moment. L'administration peut épingler ou sponsoriser du contenu à tout moment depuis le Trône du Fondateur.
+              </p>
+              
+              {/* Suggest standard top trends as fallback elegant entries */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-left">
+                {top6Trends.slice(0, 2).map((item) => (
+                  <div 
+                    key={`fallback_pinned_${item.id}`}
+                    onClick={() => item.type === "gombo" && onSelectGomboDetails && onSelectGomboDetails(item.rawItem)}
+                    className="p-3 rounded-xl bg-afri-bg-sec/50 border border-afri-border/60 hover:border-[#D4AF37]/30 transition-all cursor-pointer flex gap-3 items-center group"
+                  >
+                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-afri-bg-ter relative">
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.title} 
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="px-1 py-0.2 rounded bg-afri-bg text-afri-text-muted text-[7px] font-mono uppercase">
+                          Suggéré • {item.type === "gombo" ? "💼" : "🔥"}
+                        </span>
+                      </div>
+                      <h4 className="text-[11px] font-bold text-afri-text truncate group-hover:text-[#D4AF37] transition-colors">
+                        {item.title}
+                      </h4>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-afri-text-muted shrink-0 group-hover:text-[#D4AF37] transition-colors" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

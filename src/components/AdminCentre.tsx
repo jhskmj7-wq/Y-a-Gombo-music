@@ -3158,7 +3158,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
         )}
 
         {/* WORKSPACE VIEWS */}
-        <div className="flex-1 overflow-hidden h-full relative">
+        <div className="flex-1 overflow-hidden relative">
           
           {/* ===================================================
               PERSISTENT CORE VIEWS (SCROLL PRESERVATION ENGINE)
@@ -3166,19 +3166,7 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
 
           {/* 1. LE TERRAIN - CENTRAL HUB FEED */}
           <div 
-            ref={(el) => {
-              if (el) {
-                const menuId = "user_terrain";
-                const savedPos = scrollPositionsRef.current[menuId] || 0;
-                if (savedPos > 0 && Math.abs(el.scrollTop - savedPos) > 15) {
-                  el.scrollTop = savedPos;
-                }
-              }
-            }}
-            onScroll={(e) => {
-              scrollPositionsRef.current["user_terrain"] = e.currentTarget.scrollTop;
-            }}
-            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container afri-section pb-24 scrollbar-none animate-fadeIn text-left scroll-smooth [-webkit-overflow-scrolling:touch]" : "hidden"}
+            className={activeMenu === "user_terrain" ? "h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container afri-section pb-24 scrollbar-none animate-fadeIn text-left [-webkit-overflow-scrolling:touch]" : "hidden"}
             style={{ overscrollBehaviorY: "contain" }}
           >
             <UserTerrainLandingPage
@@ -3232,16 +3220,11 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
             {activeMenu !== "user_terrain" && (
               <motion.div
                 key={activeMenu}
-                ref={(el) => {
-                  if (el) {
-                    el.scrollTop = 0;
-                  }
-                }}
                 initial={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: 10 }}
                 animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
                 exit={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: -10, transition: { duration: 0.1 } }}
                 transition={{ duration: areAnimationsReduced ? 0.05 : 0.20, ease: "easeOut" }}
-                className={`h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container scrollbar-none scroll-smooth [-webkit-overflow-scrolling:touch] ${
+                className={`h-full w-full overflow-y-auto overscroll-contain overflow-x-hidden afri-container scrollbar-none [-webkit-overflow-scrolling:touch] ${
                   activeMenu === "super_admin" ? "pt-0 pb-32 sm:pb-36 space-y-6" : "afri-section pb-24"
                 }`}
                 style={{ overscrollBehaviorY: "contain" }}

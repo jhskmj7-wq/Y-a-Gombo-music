@@ -193,6 +193,15 @@ export default function AdminFounderThrone({
     });
   }, []);
 
+  // Force all sub-panels and containers to reset scroll to top on section change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const scrollableElements = document.querySelectorAll('.overflow-y-auto, .overflow-auto');
+    scrollableElements.forEach(el => {
+      (el as HTMLElement).scrollTop = 0;
+    });
+  }, [selectedSection, formSubTab]);
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {

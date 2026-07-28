@@ -40,6 +40,15 @@ export const CreatorActivityDashboard: React.FC<CreatorActivityDashboardProps> =
     return () => unsubscribe();
   }, [userId]);
 
+  // Force all sub-tabs and scroll containers to reset to top on tab switch
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const scrollableElements = document.querySelectorAll('.overflow-y-auto, .overflow-auto');
+    scrollableElements.forEach(el => {
+      (el as HTMLElement).scrollTop = 0;
+    });
+  }, [activeTab]);
+
   // Subscribe to real-time user notifications
   useEffect(() => {
     if (!db) return;
