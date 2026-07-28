@@ -65,27 +65,34 @@ export function ReelsPlayer({ posts, onClose, onOpenCreate, currentSection, setC
       ];
 
   return (
-    <div className="flex-1 w-full h-full bg-black text-white font-sans flex flex-col relative overflow-hidden">
-      {/* Header / Navigation Overlay */}
-      <div className="absolute top-0 left-0 right-0 z-20 p-4 pt-6 flex flex-col gap-3 bg-gradient-to-b from-black/60 to-transparent">
+    <div className="relative w-full h-full bg-[#050505] text-white font-sans overflow-hidden">
+      {/* TOP NAVIGATION LAYER */}
+      <div className="absolute top-0 left-0 right-0 z-50 p-4 pt-6 flex flex-col gap-2 bg-gradient-to-b from-black/80 to-transparent">
         <div className="flex justify-between items-center">
-            <button onClick={onClose} className="p-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors">
+            <button onClick={onClose} className="p-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 hover:bg-white/10">
                 <ChevronLeft className="w-6 h-6" />
             </button>
-            <button onClick={onOpenCreate} className="p-2 rounded-full bg-[#D4AF37] text-black hover:bg-amber-400 transition-colors shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+            <h1 className="text-sm font-black uppercase text-white/80">Fil Réel</h1>
+            <div className="w-10" />
+        </div>
+
+        {/* Plus Button - Top right under header */}
+        <div className="flex justify-end">
+            <button onClick={onOpenCreate} className="p-2 rounded-full bg-[#D4AF37] text-black shadow-lg hover:bg-amber-400">
                 <Plus className="w-5 h-5 font-bold" />
             </button>
         </div>
-        
+
         {/* Filters Bar */}
-        <div className="flex overflow-x-auto gap-2 scrollbar-none pb-2 justify-center">
+        <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-none justify-center">
           {["🔥 Tendances", "🎵 Nouveautés", "⭐ Certifiés", "👑 Premium", "🌍 Près de moi"].map((filter) => (
-            <button key={filter} className="px-3 py-1 bg-black/40 backdrop-blur-sm border border-white/10 rounded-full text-[10px] font-bold text-white whitespace-nowrap">
+            <button key={filter} className="px-3 py-1 bg-black/60 backdrop-blur-sm border border-white/10 rounded-full text-[10px] font-bold text-white whitespace-nowrap hover:bg-[#D4AF37]/20">
               {filter}
             </button>
           ))}
         </div>
 
+        {/* Tabs Bar */}
         <div className="flex justify-center gap-2">
             <button
               onClick={() => setCurrentSection("home")}
@@ -111,117 +118,86 @@ export function ReelsPlayer({ posts, onClose, onOpenCreate, currentSection, setC
         </div>
       </div>
 
-      {/* Videos Container - Vertical Scroll Snap */}
+      {/* VIDEO LAYER - Vertical Scroll Snap */}
       <div 
         ref={containerRef}
-        className="flex-1 w-full h-full overflow-y-auto snap-y snap-mandatory scrollbar-none"
+        className="w-full h-full overflow-y-auto snap-y snap-mandatory scrollbar-none"
         onScroll={handleScroll}
       >
         {displayPosts.map((post) => (
-          <div key={post.id} className="w-full h-full snap-start relative bg-black flex justify-center items-center overflow-hidden">
+          <div key={post.id} className="relative w-full h-screen snap-start bg-black flex justify-center items-center overflow-hidden">
             <video
               src={post.mediaUrl || ""}
+              className="w-full h-full object-cover"
               loop
+              muted
               playsInline
-              muted={false}
-              className="absolute inset-0 w-full h-full object-cover aspect-[9/16]"
             />
             
-            {/* Overlay Gradient for readability */}
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+            {/* Gradation */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
-            {/* Bottom Info Overlay - BAS À GAUCHE */}
-            <div className="absolute bottom-16 left-3 right-16 z-10 text-left pointer-events-none flex flex-col justify-end">
-              <h3 className="text-sm font-black text-white mb-1 drop-shadow-md">
-                @{post.authorName?.replace(/\s+/g, '').toLowerCase() || "artiste"}
-              </h3>
-              <p className="text-xs text-white/90 line-clamp-2 mb-3 drop-shadow-md font-medium">
-                {post.content}
-              </p>
-              <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full inline-flex max-w-max pointer-events-auto">
-                <div className="w-3 h-3 rounded-full bg-[#D4AF37] animate-pulse shrink-0" />
-                <span className="text-[10px] font-mono font-bold text-white truncate max-w-[120px]">
-                  {post.authorArtisticName || "Audio original"}
-                </span>
-              </div>
-            </div>
-
-            {/* Right Interaction Sidebar - BORD DROIT */}
-            <div className="absolute bottom-16 right-3 z-10 flex flex-col items-center gap-6 pointer-events-auto">
-              {/* Profil */}
-              <div className="relative group cursor-pointer flex flex-col items-center" onClick={(e) => e.stopPropagation()} title="Voir le profil">
-                <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-white relative ring-2 ring-white/20">
-                  <img 
-                    src={post.authorAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${post.userId || '1'}`}
-                    alt="Avatar" 
-                    className="w-full h-full rounded-full object-cover bg-black"
-                  />
-                  <button className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white text-black rounded-full p-0.5 shadow-md hover:scale-110 transition-transform">
-                    <Plus className="w-3 h-3" />
-                  </button>
+            {/* Bottom-Left Overlay - User Info */}
+            <div className="absolute bottom-20 left-4 z-40 text-left pointer-events-none flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                    <img 
+                        src={post.authorAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${post.userId || '1'}`}
+                        className="w-8 h-8 rounded-full border border-[#D4AF37]" 
+                    />
+                    <span className="text-sm font-black text-white drop-shadow-md">@{post.authorName || "artiste"}</span>
+                    <button className="text-[10px] bg-[#D4AF37] text-black px-2 py-0.5 rounded-full font-bold">Suivre</button>
                 </div>
-              </div>
-
-              {/* J'honore */}
-              <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => { e.stopPropagation(); handleLike(post); }} title="J'honore">
-                <Heart className={`w-8 h-8 hover:scale-105 transition-all ${post.isLiked ? 'text-red-500 fill-current' : 'text-white'}`} />
-                <span className="text-[11px] font-bold text-white drop-shadow-md">{post.likes || 0}</span>
-              </button>
-
-              {/* Palabres */}
-              <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => e.stopPropagation()} title="Palabres">
-                <MessageCircle className="w-8 h-8 text-white hover:scale-105 transition-all" />
-                <span className="text-[11px] font-bold text-white drop-shadow-md">{post.comments || 0}</span>
-              </button>
-              
-              {/* Enregistrer (NEW) */}
-              <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => { e.stopPropagation(); }} title="Enregistrer">
-                <svg className="w-8 h-8 text-white hover:scale-105 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-                <span className="text-[11px] font-bold text-white drop-shadow-md">Enregistrer</span>
-              </button>
-
-              {/* Transmettre */}
-              <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => {
-                 e.stopPropagation();
-                 if (navigator.share) {
-                   navigator.share({ title: 'Afrigombo Réel', url: window.location.href });
-                 }
-              }} title="Transmettre">
-                <Share2 className="w-8 h-8 text-white hover:scale-105 transition-all" />
-                <span className="text-[11px] font-bold text-white drop-shadow-md">Transmettre</span>
-              </button>
-              
-              {/* Signaler (NEW) */}
-              <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => { e.stopPropagation(); }} title="Signaler">
-                <svg className="w-8 h-8 text-red-400 hover:scale-105 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                <span className="text-[11px] font-bold text-white drop-shadow-md">Signaler</span>
-              </button>
-
-              {/* Soutenir */}
-              <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => {
-                  e.stopPropagation();
-                  window.dispatchEvent(new CustomEvent("open_wallet_deposit"));
-              }} title="Soutenir">
-                <Coins className="w-9 h-9 text-[#D4AF37] hover:scale-105 transition-all" />
-                <span className="text-[11px] font-bold text-[#D4AF37] drop-shadow-md">Soutenir</span>
-              </button>
+                <p className="text-xs text-white/90 font-medium line-clamp-2 drop-shadow-md">{post.content}</p>
+                <div className="flex items-center gap-1 text-[10px] text-[#D4AF37] font-bold drop-shadow-md">
+                    <Video className="w-3 h-3" />
+                    <span>{post.title || "Titre musical"}</span>
+                </div>
             </div>
 
+            {/* Right Interaction Sidebar */}
+            <div className="absolute bottom-20 right-4 z-40 flex flex-col items-center gap-5 pointer-events-auto">
+                {/* Profil */}
+                <div className="relative cursor-pointer flex flex-col items-center" onClick={(e) => e.stopPropagation()} title="Voir le profil">
+                    <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-white relative ring-2 ring-white/20">
+                        <img 
+                            src={post.authorAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${post.userId || '1'}`}
+                            className="w-full h-full rounded-full object-cover bg-black"
+                        />
+                        <button className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white text-black rounded-full p-0.5 shadow-md hover:scale-110 transition-transform">
+                            <Plus className="w-3 h-3" />
+                        </button>
+                    </div>
+                </div>
+
+                <button className="flex flex-col items-center gap-1" onClick={(e) => { e.stopPropagation(); handleLike(post); }} title="J'honore">
+                    <Heart className={`w-8 h-8 hover:scale-105 transition-all ${post.isLiked ? 'text-red-500 fill-current' : 'text-white'}`} />
+                    <span className="text-[10px] font-bold text-white drop-shadow-md">{post.likes || 0}</span>
+                </button>
+                <button className="flex flex-col items-center gap-1">
+                    <MessageCircle className="w-8 h-8 text-white hover:scale-105 transition-all" />
+                    <span className="text-[10px] font-bold text-white drop-shadow-md">{post.comments || 0}</span>
+                </button>
+                <button className="flex flex-col items-center gap-1">
+                    <Share2 className="w-8 h-8 text-white hover:scale-105 transition-all" />
+                    <span className="text-[10px] font-bold text-white drop-shadow-md">Transmettre</span>
+                </button>
+                <button className="flex flex-col items-center gap-1">
+                    <svg className="w-8 h-8 text-white hover:scale-105 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                    <span className="text-[10px] font-bold text-white drop-shadow-md">Enregistrer</span>
+                </button>
+                <button className="flex flex-col items-center gap-1">
+                    <svg className="w-8 h-8 text-red-400 hover:scale-105 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <span className="text-[10px] font-bold text-white drop-shadow-md">Signaler</span>
+                </button>
+                <button className="flex flex-col items-center gap-1 mt-2" onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open_wallet_deposit")); }} title="Soutenir">
+                    <div className="w-10 h-10 rounded-full bg-[#D4AF37] flex items-center justify-center hover:scale-105 transition-all">
+                        <Coins className="w-6 h-6 text-black" />
+                    </div>
+                    <span className="text-[9px] font-black text-[#D4AF37] uppercase drop-shadow-md">Soutenir</span>
+                </button>
+            </div>
           </div>
         ))}
-        {/* Placeholder Banner if Empty */}
-        {!hasVideos && (
-          <div className="absolute top-24 left-1/2 -translate-x-1/2 z-10 w-[90%] max-w-sm">
-            <div className="bg-[#D4AF37]/90 backdrop-blur-md text-black px-4 py-3 rounded-2xl shadow-xl border border-white/20 text-center animate-bounce">
-              <p className="text-xs font-black uppercase tracking-wider mb-1 flex items-center justify-center gap-2">
-                <Video className="w-4 h-4" /> Aucun réel utilisateur
-              </p>
-              <p className="text-[10px] font-bold opacity-90">
-                Soyez le premier à publier votre Réel !
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

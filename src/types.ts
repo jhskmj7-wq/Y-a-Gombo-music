@@ -63,7 +63,16 @@ export interface User {
   email?: string;
   artisticName?: string;
   location?: UserLocation;
+  latitude?: number;
+  longitude?: number;
   commune?: string;
+  city?: string;
+  country?: string;
+  availability?: {
+    status: "available" | "busy";
+    expiresAt: string | null;
+    durationLabel?: string;
+  };
   avatarUrl?: string;
   photoURL?: string; // Support photoURL alias
   bio?: string;      // Support bio
@@ -202,11 +211,15 @@ export interface Gombo {
   budget?: number; // in FCFA
   commissionRate?: number; // e.g. 0.10 for 10%
   location?: string; // Commune (e.g. Cocody, Yopougon, Marcory)
-  commune?: string;
   organizerId?: string;
   organizerName?: string;
   organizerAvatar?: string;
   timestamp?: string;
+  latitude?: number;
+  longitude?: number;
+  commune?: string;
+  city?: string;
+  country?: string;
   
   // New fields for structure reinforcement
   roleWanted?: string;
@@ -230,6 +243,14 @@ export interface Gombo {
   mediaUrl?: string;
   mediaURL?: string;
   createdAt?: string;
+  isExpress?: boolean;
+  isPremium?: boolean;
+  imageUrl?: string;
+  audioUrl?: string;
+  userId?: string;
+  category?: string;
+  style?: string;
+  musicalStyle?: string;
   
   // 2026 Beta: Gombo Types
   type?: "libre" | "securise";
@@ -315,7 +336,6 @@ export interface Renfort {
   time?: string;
   musiciansCount?: number;
   budget?: number;
-  commune?: string;
   whatsapp?: string;
   requestType?: string;
   genres?: string[];
@@ -323,6 +343,11 @@ export interface Renfort {
   createdAt?: string;
   gomboId?: string;
   gomboTitle?: string;
+  latitude?: number;
+  longitude?: number;
+  commune?: string;
+  city?: string;
+  country?: string;
   applicantId?: string;
   applicantName?: string;
   applicantArtisticName?: string;

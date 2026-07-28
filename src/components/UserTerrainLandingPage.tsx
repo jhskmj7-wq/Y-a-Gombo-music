@@ -4,7 +4,7 @@ import {
   Search, Sliders, Plus, Megaphone, MessageSquare, ShieldCheck, Bell, 
   RefreshCw, Heart, X, Award, Users, Music, QrCode, LifeBuoy,
   PenTool, UserCheck, MessageCircle, History, Headphones, HelpCircle, Video,
-  Sparkles, BarChart3, FileSignature, Zap, Play, Pause, Square
+  Sparkles, BarChart3, FileSignature, Zap, Play, Pause, Square, MapPin
 } from "lucide-react";
 import { useLanguage } from "../LanguageContext";
 import { useAudio } from "../context/AudioContext";
@@ -18,9 +18,16 @@ import FilDecouvertesSection from "./FilDecouvertesSection";
 import { useAuth } from "../AuthContext";
 import { db } from "../lib/firebase";
 import { gomboDB } from "../firebase";
-import { collection, onSnapshot, addDoc } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, updateDoc, increment } from "firebase/firestore";
 import { AndroidBottomSheet, AndroidCenteredDialog } from "./common/GlobalPortalModal";
 import { ReelsPlayer } from "./ReelsPlayer";
+import { SmartAudioMenu } from "./SmartAudioMenu";
+import { SmartBlock, BlockType } from "./SmartBlock";
+import { SmartUniverseCarousel } from "./SmartUniverseCarousel";
+import { useGeoEngine } from "../hooks/useGeoEngine";
+import { GeoRadarSection } from "./GeoRadarSection";
+import { NearbyGombosSection, NearbyArtistsSection } from "./NearbyGeoSections";
+import { getDistanceLabel, calculateDistance } from "../lib/geoUtils";
 
 const IVORIAN_COMMUNES = [
   "Cocody", "Yopougon", "Marcory", "Plateau", "Treichville", 
@@ -136,7 +143,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const { t } = useLanguage();
   const { currentTrack, isPlaying, playTrack, pause } = useAudio();
   const { isDataSaveActive, areAnimationsReduced } = usePerformance();
-  const searchStr = globalSearchTerm.toLowerCase();
 
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -145,6 +151,16 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   }, []);
 
   // Internal local states for filters (only applied when clicking Valider)
+  const { profile, currentUser } = useAuth();
+  const geo = useGeoEngine(profile);
+  const [showGeoDialog, setShowGeoDialog] = useState(false);
+
+  useEffect(() => {
+    if (geo.permissionStatus === "prompt") {
+      setShowGeoDialog(true);
+    }
+  }, [geo.permissionStatus]);
+
   const [localCategory, setLocalCategory] = useState(selectedCategory);
   const [localLocation, setLocalLocation] = useState(selectedLocation);
   const [localType, setLocalType] = useState(selectedType);
@@ -185,12 +201,106 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   };
 
   // --- REAL-TIME PORT COCKPIT STATE & LISTENERS ---
-  const { currentUser, profile } = useAuth();
   const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState<number>(0);
   const [activeContractsCount, setActiveContractsCount] = useState<number>(0);
   const [todayEventsCount, setTodayEventsCount] = useState<number>(0);
   const [isPlusMenuOpen, setIsPlusMenuOpen] = useState<boolean>(false);
+
+  // --- DYNAMIC INFINITE FEED STATE ---
+  const [feedBlocks, setFeedBlocks] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Block generation logic
+  const generateBlocksFromData = (data: { gombos: any[], users: any[], posts: any[] }) => {
+    const { gombos, users, posts } = data;
+    const blockConfigs: { type: BlockType, title: string, getData: () => any[] }[] = [
+      { 
+        type: "URGENT_OPPORTUNITIES", 
+        title: "🔥 Opportunités urgentes", 
+        getData: () => gombos.filter(g => g.urgent || g.isExpress).slice(0, 6)
+      },
+      { 
+        type: "NEW_GOMBOS", 
+        title: "🎼 Nouveaux Gombos", 
+        getData: () => gombos.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 6)
+      },
+      { 
+        type: "CERTIFIED_ARTISTS", 
+        title: "⭐ Artistes certifiés", 
+        getData: () => users.filter(u => u.isCertified || u.isVerified).slice(0, 6)
+      },
+      { 
+        type: "POPULAR_REELS", 
+        title: "🎥 Réels populaires", 
+        getData: () => [
+          { id: "r1", title: "Solo Saxophone", artist: "Thierry Sax", thumbnail: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400", views: "1.2K", url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4" },
+          { id: "r2", title: "Batterie d'or", artist: "Sékou", thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=400", views: "890", url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4" }
+        ]
+      },
+      { 
+        type: "AFRIGOMBO_UNIVERSE", 
+        title: "🌍 Univers AFRIGOMBO", 
+        getData: () => [
+          { id: "u1", type: "product", title: "Micro Studio Pro", image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400", description: "Qualité exceptionnelle pour vos sessions.", tag: "Grand Marché" },
+          { id: "u2", type: "course", title: "Maîtrise du Piano", image: "https://images.unsplash.com/photo-1520529612722-68ec39750058?w=400", description: "Apprenez avec les maîtres.", tag: "Académie" },
+          { id: "u3", type: "event", title: "Festival du Trône", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400", description: "Le plus grand rassemblement musical.", tag: "Événements" }
+        ]
+      },
+      { 
+        type: "TRENDS", 
+        title: "🔥 Tendances du moment", 
+        getData: () => gombos.filter(g => g.isBoosted).slice(0, 6)
+      },
+      { 
+        type: "NEAR_YOU", 
+        title: "📍 Près de chez vous", 
+        getData: () => gombos.filter(g => g.location?.includes("Abidjan") || g.commune?.includes("Abidjan")).slice(0, 6)
+      },
+      { 
+        type: "NEW_TALENTS", 
+        title: "🚀 Nouveaux talents", 
+        getData: () => users.slice(0, 6)
+      }
+    ];
+
+    const validBlocks = blockConfigs.filter(b => b.getData().length > 0);
+    return [...validBlocks].sort(() => Math.random() - 0.5);
+  };
+
+  useEffect(() => {
+    if (gombos.length > 0 || users.length > 0) {
+      const initialBlocks = generateBlocksFromData({ gombos, users, posts });
+      setFeedBlocks(initialBlocks);
+    }
+  }, [gombos, users, posts]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore && hasMore) {
+          loadMoreBlocks();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (observerTarget.current) observer.observe(observerTarget.current);
+    return () => observer.disconnect();
+  }, [isLoadingMore, hasMore]);
+
+  const loadMoreBlocks = () => {
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      const moreBlocks = generateBlocksFromData({ gombos, users, posts });
+      setFeedBlocks(prev => [...prev, ...moreBlocks]);
+      setPage(prev => prev + 1);
+      setIsLoadingMore(false);
+      if (page >= 15) setHasMore(false);
+    }, 1200);
+  };
 
   const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState<boolean>(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
@@ -360,6 +470,8 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   const [filterVerifiedOnly, setFilterVerifiedOnly] = useState<boolean>(false);
   const [filterHasPhoto, setFilterHasPhoto] = useState<boolean>(false);
   const [filterHasAudio, setFilterHasAudio] = useState<boolean>(false);
+  const [filterMaxDistance, setFilterMaxDistance] = useState<number>(100);
+  const [filterAvailableOnly, setFilterAvailableOnly] = useState<boolean>(false);
 
   // SWIPEABLE HORIZONTAL MODULES & TABS STATE (Requirement 2)
   const [activeSection, setActiveSection] = useState<"home" | "reels">("home");
@@ -468,7 +580,16 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
   }, [selectedDateFilter]);
 
   // Filter Gombos based on selections
-  const GombosToRender = gombos.filter(g => {
+  const searchStr = globalSearchTerm.toLowerCase();
+  
+  const GombosWithDistance = gombos.map(g => ({
+    ...g,
+    distance: geo.latitude && geo.longitude && g.latitude && g.longitude
+      ? calculateDistance(geo.latitude, geo.longitude, g.latitude, g.longitude)
+      : undefined
+  }));
+
+  const GombosToRender = GombosWithDistance.filter(g => {
     // 1. Global Search Term
     const matchesSearch = !globalSearchTerm || 
       (g.title || "").toLowerCase().includes(searchStr) ||
@@ -588,7 +709,48 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       matchesAudio = !!g.audioUrl && g.audioUrl.trim() !== "";
     }
 
-    return matchesSearch && matchesCommune && matchesType && matchesBudget && matchesDate && matchesCategory && matchesPremium && matchesExpress && matchesVerified && matchesPhoto && matchesAudio;
+    // 11. Distance filter
+    let matchesDistance = true;
+    if (filterMaxDistance < 100 && g.distance !== undefined) {
+      matchesDistance = g.distance <= filterMaxDistance;
+    }
+
+    // 12. Availability filter
+    let matchesAvailability = true;
+    if (filterAvailableOnly) {
+      const author = users.find(u => u.uid === g.userId);
+      matchesAvailability = author?.availability?.status === "available";
+    }
+
+    return matchesSearch && matchesCommune && matchesType && matchesBudget && matchesDate && matchesCategory && matchesPremium && matchesExpress && matchesVerified && matchesPhoto && matchesAudio && matchesDistance && matchesAvailability;
+  }).sort((a: any, b: any) => {
+    // Requirement 7: Smart search prioritization
+    if (globalSearchTerm && a.distance !== undefined && b.distance !== undefined) {
+      return a.distance - b.distance;
+    }
+    return 0;
+  });
+
+  const UsersToRender = users.filter(u => {
+    if (!globalSearchTerm) return false;
+    const search = globalSearchTerm.toLowerCase();
+    const matchesSearch = 
+      (u.artisticName || "").toLowerCase().includes(search) ||
+      (u.displayName || "").toLowerCase().includes(search) ||
+      (u.bio || "").toLowerCase().includes(search) ||
+      (u.role || "").toLowerCase().includes(search) ||
+      (u.instrument || "").toLowerCase().includes(search);
+    return matchesSearch && u.role === "musicien";
+  }).map(u => ({
+    ...u,
+    distance: geo.latitude && geo.longitude && u.latitude && u.longitude
+      ? calculateDistance(geo.latitude, geo.longitude, u.latitude, u.longitude)
+      : undefined
+  })).sort((a: any, b: any) => {
+    if (a.distance !== undefined && b.distance !== undefined) {
+      return a.distance - b.distance;
+    }
+    return 0;
   });
 
   // Spotlight carousel slides matching requested categories
@@ -670,316 +832,10 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
       onTouchEnd={onTouchEndHandler}
       className="h-full overflow-y-auto space-y-6 text-left animate-fadeIn font-sans"
     >
-      
-            {activeSection === "home" ? (
-        <>
-{/* ==========================================
-          1. BARRE DE RECHERCHE UNIVERSELLE
-         ========================================== */}
-      <div className="relative">
-        <div className="flex items-center gap-3 bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl p-3 px-4 shadow-[0_2px_15px_rgba(212,175,55,0.05)] focus-within:border-[#D4AF37]/80 transition-all">
-          <Search className="w-5 h-5 text-[#D4AF37] shrink-0" />
-          <input
-            type="text"
-            value={globalSearchTerm}
-            onChange={(e) => {
-              setGlobalSearchTerm(e.target.value);
-              setUniversalSearchTerm(e.target.value);
-              if (e.target.value.length > 0) {
-                try { audioSynth.playTamTam(true); } catch (_) {}
-              }
-            }}
-            placeholder="Rechercher une opportunité, artiste, événement..."
-            className="w-full bg-transparent text-afri-text font-bold text-sm placeholder-zinc-500 focus:outline-none font-sans"
-          />
-          <button
-            onClick={() => {
-              setIsFiltersOpen(!isFiltersOpen);
-              try { audioSynth.playTamTam(false); } catch (_) {}
-            }}
-            className={`transition p-1 cursor-pointer ${isFiltersOpen ? "text-afri-text" : "text-[#D4AF37] hover:text-afri-text"}`}
-            title="Filtres avancés"
-          >
-            <Sliders className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Real Advanced Interactive Filter Panel */}
-        {isFiltersOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-3 bg-afri-bg-sec border border-afri-border rounded-2xl p-4 space-y-4 shadow-2xl z-30 relative text-left"
-          >
-            <div className="flex justify-between items-center pb-2 border-b border-afri-border">
-              <span className="text-xs font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-1.5">
-                🎛️ Filtres de Recherche Réels
-              </span>
-              <span className="text-[10px] font-mono text-afri-text-sec">
-                {GombosToRender.length} Gombos trouvés
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Commune select */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Commune / Ville</label>
-                <select
-                  value={filterCommune}
-                  onChange={(e) => setFilterCommune(e.target.value)}
-                  className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
-                >
-                  <option value="all">Toutes les communes</option>
-                  {IVORIAN_COMMUNES.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Category select */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Catégorie / Style</label>
-                <select
-                  value={filterCategory}
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                  className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
-                >
-                  <option value="all">Toutes les catégories</option>
-                  <option value="Zouglou">Zouglou 🇨🇮</option>
-                  <option value="Coupé-Décalé">Coupé-Décalé 🔥</option>
-                  <option value="Rap">Rap / Hip-Hop 🎤</option>
-                  <option value="Traditionnel">Musique Traditionnelle 🪘</option>
-                  <option value="Jazz">Jazz & Cabaret 🎷</option>
-                </select>
-              </div>
-
-              {/* Type select */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Type de Gombo</label>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
-                >
-                  <option value="all">Tous les types</option>
-                  <option value="concert">🎵 Concert & Live Show</option>
-                  <option value="studio">🎙️ Studio & Cabaret</option>
-                  <option value="clip">🎥 Clip & Danse</option>
-                  <option value="renfort">🚨 Renfort Express urgent</option>
-                </select>
-              </div>
-
-              {/* Budget Min & Max */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Budget (FCFA)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={filterMinBudget || ""}
-                    onChange={(e) => setFilterMinBudget(Number(e.target.value))}
-                    className="w-1/2 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={filterMaxBudget || ""}
-                    onChange={(e) => setFilterMaxBudget(Number(e.target.value))}
-                    className="w-1/2 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
-                  />
-                </div>
-              </div>
-
-              {/* Date */}
-              <div className="space-y-1 col-span-1 sm:col-span-2">
-                <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Date de l'événement</label>
-                <div className="flex gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => setFilterDateMode("all")}
-                    className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
-                      filterDateMode === "all"
-                        ? "bg-afri-bg-sec border-[#D4AF37] text-black"
-                        : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
-                    }`}
-                  >
-                    Tout
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilterDateMode("today")}
-                    className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
-                      filterDateMode === "today"
-                        ? "bg-afri-bg-sec border-[#D4AF37] text-black"
-                        : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
-                    }`}
-                  >
-                    Aujourd'hui
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilterDateMode("week")}
-                    className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
-                      filterDateMode === "week"
-                        ? "bg-afri-bg-sec border-[#D4AF37] text-black"
-                        : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
-                    }`}
-                  >
-                    Cette semaine
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilterDateMode("month")}
-                    className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
-                      filterDateMode === "month"
-                        ? "bg-afri-bg-sec border-[#D4AF37] text-black"
-                        : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
-                    }`}
-                  >
-                    Ce mois
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Checkboxes / Toggles row */}
-            <div className="flex flex-wrap gap-x-6 gap-y-3 pt-2">
-              {/* Premium toggle */}
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={filterPremium}
-                  onChange={(e) => setFilterPremium(e.target.checked)}
-                  className="rounded bg-afri-bg-sec border-afri-border text-[#D4AF37] focus:ring-[#D4AF37]"
-                />
-                <span className="text-[11px] font-bold text-afri-text">★ Uniquement Premium</span>
-              </label>
-
-              {/* Express toggle */}
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={filterExpress}
-                  onChange={(e) => setFilterExpress(e.target.checked)}
-                  className="rounded bg-afri-bg-sec border-afri-border text-[#D4AF37] focus:ring-[#D4AF37]"
-                />
-                <span className="text-[11px] font-bold text-afri-text">🚨 Renfort Express</span>
-              </label>
-
-              {/* Verified users only toggle */}
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={filterVerifiedOnly}
-                  onChange={(e) => setFilterVerifiedOnly(e.target.checked)}
-                  className="rounded bg-afri-bg border-afri-border text-[#D4AF37] focus:ring-[#D4AF37]"
-                />
-                <span className="text-[11px] font-bold text-afri-text-muted">✔ Profils d'Artistes vérifiés</span>
-              </label>
-
-              {/* With Photo toggle */}
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={filterHasPhoto}
-                  onChange={(e) => setFilterHasPhoto(e.target.checked)}
-                  className="rounded bg-afri-bg border-afri-border text-[#D4AF37] focus:ring-[#D4AF37]"
-                />
-                <span className="text-[11px] font-bold text-afri-text-muted">🖼️ Avec photo</span>
-              </label>
-
-              {/* With Audio toggle */}
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={filterHasAudio}
-                  onChange={(e) => setFilterHasAudio(e.target.checked)}
-                  className="rounded bg-afri-bg border-afri-border text-[#D4AF37] focus:ring-[#D4AF37]"
-                />
-                <span className="text-[11px] font-bold text-afri-text-muted">🔊 Avec audio</span>
-              </label>
-            </div>
-
-            {/* Close / Apply / Reset Actions */}
-            <div className="flex justify-between items-center pt-3 border-t border-afri-border">
-              <button
-                type="button"
-                onClick={() => {
-                  setFilterCommune("all");
-                  setFilterType("all");
-                  setFilterCategory("all");
-                  setFilterMinBudget(0);
-                  setFilterMaxBudget(5000000);
-                  setFilterDateMode("all");
-                  setFilterPremium(false);
-                  setFilterExpress(false);
-                  setFilterVerifiedOnly(false);
-                  setFilterHasPhoto(false);
-                  setFilterHasAudio(false);
-                  try { audioSynth.playTamTam(false); } catch (_) {}
-                }}
-                className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
-              >
-                Réinitialiser
-              </button>
-              
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsFiltersOpen(false);
-                    try { audioSynth.playTamTam(false); } catch (_) {}
-                  }}
-                  className="px-4 py-2 bg-afri-bg border border-afri-border hover:bg-afri-bg-sec text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
-                >
-                  Fermer
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsFiltersOpen(false);
-                    try { audioSynth.playTamTam(true); } catch (_) {}
-                  }}
-                  className="px-5 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-black rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-md"
-                >
-                  Appliquer ({GombosToRender.length})
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Dynamic Inline Search Results Dropdown Overlay */}
-        {globalSearchTerm.trim().length > 0 && (
-          <div className="absolute top-14 left-0 right-0 bg-afri-bg-sec border border-afri-border rounded-2xl p-4 z-50 max-h-72 overflow-y-auto space-y-2.5 shadow-2xl">
-            <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-sec font-bold">
-              <span>SANS FILTRE (TEMPS RÉEL)</span>
-              <button onClick={() => setGlobalSearchTerm("")} className="text-[#D4AF37] font-black uppercase">Fermer</button>
-            </div>
-            {GombosToRender.slice(0, 5).map((g, i) => (
-              <div
-                key={g.id || i}
-                onClick={() => {
-                  handleOpenGomboDetails(g);
-                  setGlobalSearchTerm("");
-                }}
-                className="p-2 hover:bg-afri-bg-sec rounded-xl cursor-pointer flex justify-between items-center transition"
-              >
-                <div className="text-left">
-                  <span className="text-xs text-afri-text font-bold block truncate max-w-[200px]">{g.title}</span>
-                  <span className="text-[9.5px] text-[#D4AF37] font-mono leading-none">📍 {g.location} • {(g.budget || 0).toLocaleString("fr-FR")} FCFA</span>
-                </div>
-                <span className="text-[9px] font-mono text-afri-text-sec uppercase font-bold shrink-0">Ouvrir →</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* ==========================================
-          SEGMENTED NAVIGATION & DRAG GUIDE (Requirement 2)
+          SEGMENTED NAVIGATION & DRAG GUIDE
          ========================================== */}
-      <div className="flex justify-center items-center gap-1.5 p-1 bg-afri-bg-sec/85 border border-afri-border rounded-2xl w-fit mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.5)] select-none">
+      <div className="flex justify-center items-center gap-1.5 p-1 bg-afri-bg-sec/85 border border-afri-border rounded-2xl w-fit mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.5)] select-none sticky top-2 z-[60]">
         <button
           onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
@@ -1003,7 +859,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
             try { audioSynth?.playTamTam?.(false); } catch(_) {}
           }}
           className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer relative ${
-            false
+            activeSection === "reels"
               ? "bg-afri-bg-sec text-black shadow-md scale-[1.02]"
               : "text-afri-text-sec hover:text-afri-text hover:bg-afri-bg-sec/40"
           }`}
@@ -1019,10 +875,296 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         <span>pour les réels</span>
       </div>
 
+      {activeSection === "home" ? (
+        <>
+      {/* ==========================================
+          1. BARRE DE RECHERCHE UNIVERSELLE & MENU AUDIO
+         ========================================== */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <div className="flex items-center gap-3 bg-afri-bg-sec border border-[#D4AF37]/30 rounded-3xl p-3 px-4 shadow-[0_2px_15px_rgba(212,175,55,0.05)] focus-within:border-[#D4AF37]/80 transition-all">
+            <Search className="w-5 h-5 text-[#D4AF37] shrink-0" />
+            <input
+              type="text"
+              value={globalSearchTerm}
+              onChange={(e) => {
+                setGlobalSearchTerm(e.target.value);
+                setUniversalSearchTerm(e.target.value);
+                if (e.target.value.length > 0) {
+                  try { audioSynth.playTamTam(true); } catch (_) {}
+                }
+              }}
+              placeholder="Rechercher une opportunité, artiste..."
+              className="w-full bg-transparent text-afri-text font-bold text-sm placeholder-zinc-500 focus:outline-none font-sans"
+            />
+            <button
+              onClick={() => {
+                setIsFiltersOpen(!isFiltersOpen);
+                try { audioSynth.playTamTam(false); } catch (_) {}
+              }}
+              className={`transition p-1 cursor-pointer ${isFiltersOpen ? "text-afri-text" : "text-[#D4AF37] hover:text-afri-text"}`}
+              title="Filtres avancés"
+            >
+              <Sliders className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Smart Audio Menu (Requirement 8) */}
+        <SmartAudioMenu />
+      </div>
 
-          {/* ==========================================
-              2. ACTIONS RAPIDES (STYLE PREMIUM AFRIGOMBO)
-             ========================================== */}
+      {/* Real Advanced Interactive Filter Panel */}
+      {isFiltersOpen && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 bg-afri-bg-sec border border-afri-border rounded-2xl p-4 space-y-4 shadow-2xl z-30 relative text-left"
+        >
+          <div className="flex justify-between items-center pb-2 border-b border-afri-border">
+            <span className="text-xs font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-1.5">
+              🎛️ Filtres de Recherche Réels
+            </span>
+            <span className="text-[10px] font-mono text-afri-text-sec">
+              {GombosToRender.length} Gombos trouvés
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Commune select */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Commune / Ville</label>
+              <select
+                value={filterCommune}
+                onChange={(e) => setFilterCommune(e.target.value)}
+                className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
+              >
+                <option value="all">Toutes les communes</option>
+                {IVORIAN_COMMUNES.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Category select */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Catégorie / Style</label>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
+              >
+                <option value="all">Toutes les catégories</option>
+                <option value="Zouglou">Zouglou 🇨🇮</option>
+                <option value="Coupé-Décalé">Coupé-Décalé 🔥</option>
+                <option value="Rap">Rap / Hip-Hop 🎤</option>
+                <option value="Traditionnel">Musique Traditionnelle 🪘</option>
+                <option value="Jazz">Jazz & Cabaret 🎷</option>
+              </select>
+            </div>
+
+            {/* Type select */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Type de Gombo</label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
+              >
+                <option value="all">Tous les types</option>
+                <option value="concert">🎵 Concert & Live Show</option>
+                <option value="studio">🎙️ Studio & Cabaret</option>
+                <option value="clip">🎥 Clip & Danse</option>
+                <option value="renfort">🚨 Renfort Express urgent</option>
+              </select>
+            </div>
+
+            {/* Budget Min & Max */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Budget (FCFA)</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={filterMinBudget || ""}
+                  onChange={(e) => setFilterMinBudget(Number(e.target.value))}
+                  className="w-1/2 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
+                />
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={filterMaxBudget || ""}
+                  onChange={(e) => setFilterMaxBudget(Number(e.target.value))}
+                  className="w-1/2 bg-afri-bg-sec border border-afri-border rounded-xl px-3 py-2 text-xs text-afri-text focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+            </div>
+
+            {/* Distance Filter (Requirement 8) */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Distance Max ({filterMaxDistance} km)</label>
+              <input
+                type="range"
+                min="1"
+                max="100"
+                step="5"
+                value={filterMaxDistance}
+                onChange={(e) => setFilterMaxDistance(Number(e.target.value))}
+                className="w-full accent-[#D4AF37] cursor-pointer"
+              />
+              <div className="flex justify-between text-[8px] font-mono text-afri-text-sec uppercase">
+                <span>1km</span>
+                <span>100km</span>
+              </div>
+            </div>
+
+            {/* Availability Filter (Requirement 8) */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Status</label>
+              <button
+                type="button"
+                onClick={() => setFilterAvailableOnly(!filterAvailableOnly)}
+                className={`w-full flex items-center justify-between px-3 py-2 border rounded-xl transition-all cursor-pointer ${
+                  filterAvailableOnly 
+                    ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-500" 
+                    : "bg-afri-bg-sec border-afri-border text-afri-text-sec"
+                }`}
+              >
+                <span className="text-[10px] font-black uppercase tracking-wider">Disponible maintenant</span>
+                <div className={`w-3 h-3 rounded-full ${filterAvailableOnly ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" : "bg-zinc-700"}`} />
+              </button>
+            </div>
+
+            {/* Date */}
+            <div className="space-y-1 col-span-1 sm:col-span-2">
+              <label className="text-[10px] font-mono font-black uppercase text-afri-text-sec">Date de l'événement</label>
+              <div className="flex gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setFilterDateMode("all")}
+                  className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                    filterDateMode === "all"
+                      ? "bg-afri-bg-sec border-[#D4AF37] text-black"
+                      : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
+                  }`}
+                >
+                  Tout
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterDateMode("today")}
+                  className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                    filterDateMode === "today"
+                      ? "bg-afri-bg-sec border-[#D4AF37] text-black"
+                      : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
+                  }`}
+                >
+                  Aujourd'hui
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterDateMode("week")}
+                  className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                    filterDateMode === "week"
+                      ? "bg-afri-bg-sec border-[#D4AF37] text-black"
+                      : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
+                  }`}
+                >
+                  Cette semaine
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterDateMode("month")}
+                  className={`flex-1 min-w-[60px] py-1.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
+                    filterDateMode === "month"
+                      ? "bg-afri-bg-sec border-[#D4AF37] text-black"
+                      : "bg-afri-bg-sec border-afri-border text-afri-text-sec hover:text-afri-text"
+                  }`}
+                >
+                  Ce mois
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Close / Apply / Reset Actions */}
+          <div className="flex justify-between items-center pt-3 border-t border-afri-border">
+            <button
+              type="button"
+              onClick={() => {
+                setFilterCommune("all");
+                setFilterType("all");
+                setFilterCategory("all");
+                setFilterMinBudget(0);
+                setFilterMaxBudget(5000000);
+                setFilterDateMode("all");
+                setFilterPremium(false);
+                setFilterExpress(false);
+                setFilterVerifiedOnly(false);
+                setFilterHasPhoto(false);
+                setFilterHasAudio(false);
+                try { audioSynth.playTamTam(false); } catch (_) {}
+              }}
+              className="px-4 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-afri-text-sec hover:text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
+            >
+              Réinitialiser
+            </button>
+            
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsFiltersOpen(false);
+                  try { audioSynth.playTamTam(false); } catch (_) {}
+                }}
+                className="px-4 py-2 bg-afri-bg border border-afri-border hover:bg-afri-bg-sec text-afri-text rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer"
+              >
+                Fermer
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsFiltersOpen(false);
+                  try { audioSynth.playTamTam(true); } catch (_) {}
+                }}
+                className="px-5 py-2 bg-afri-bg-sec hover:bg-afri-bg-sec text-black rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-md"
+              >
+                Appliquer ({GombosToRender.length})
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Dynamic Inline Search Results Dropdown Overlay */}
+      {globalSearchTerm.trim().length > 0 && (
+        <div className="absolute top-14 left-0 right-0 bg-afri-bg-sec border border-afri-border rounded-2xl p-4 z-50 max-h-72 overflow-y-auto space-y-2.5 shadow-2xl">
+          <div className="flex justify-between items-center text-[9px] font-mono text-afri-text-sec font-bold">
+            <span>SANS FILTRE (TEMPS RÉEL)</span>
+            <button onClick={() => setGlobalSearchTerm("")} className="text-[#D4AF37] font-black uppercase">Fermer</button>
+          </div>
+          {GombosToRender.slice(0, 5).map((g, i) => (
+            <div
+              key={g.id || i}
+              onClick={() => {
+                handleOpenGomboDetails(g);
+                setGlobalSearchTerm("");
+              }}
+              className="p-2 hover:bg-afri-bg-sec rounded-xl cursor-pointer flex justify-between items-center transition"
+            >
+              <div className="text-left">
+                <span className="text-xs text-afri-text font-bold block truncate max-w-[200px]">{g.title}</span>
+                <span className="text-[9.5px] text-[#D4AF37] font-mono leading-none">📍 {g.location} • {(g.budget || 0).toLocaleString("fr-FR")} FCFA</span>
+              </div>
+              <span className="text-[9px] font-mono text-afri-text-sec uppercase font-bold shrink-0">Ouvrir →</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ==========================================
+          2. ACTIONS RAPIDES (STYLE PREMIUM AFRIGOMBO)
+         ========================================== */}
       <div className={`afri-card transition-all duration-300 shadow-[0_4px_25px_rgba(212,175,55,0.08)] ${isQuickActionsOpen ? "p-3 sm:p-5 space-y-3 sm:space-y-4" : "py-2 px-3 sm:px-4"}`}>
         <button
           onClick={() => {
@@ -1053,666 +1195,160 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
                   staggerChildren: 0.04
                 }
               }
-            }}
-            initial="hidden"
+          }}
+          initial="hidden"
             animate={isQuickActionsOpen ? "show" : "hidden"}
             className="grid grid-cols-4 gap-1.5 xs:gap-2 sm:gap-4 w-full select-none"
           >
              {[
-               {
-                 id: "publier",
-                 label: t('qa_publier', "Publier"),
-                 emoji: "🎤",
-                 action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
-               },
-               {
-                 id: "contrats",
-                 label: t('qa_contrats', "Contrats"),
-                 emoji: "🤝",
-                 badge: activeContractsCount > 0 ? activeContractsCount : undefined,
-                 badgeColor: "bg-emerald-500 text-afri-text",
-                 action: () => requireAuthThen(() => { setActiveMenu("user_contracts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
-               },
-               {
-                 id: "calendrier",
-                 label: t('qa_calendrier', "Calendrier"),
-                 emoji: "📅",
-                 badge: todayEventsCount > 0 ? todayEventsCount : undefined,
-                 badgeColor: "bg-afri-bg-sec text-black",
-                 action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
-               },
-               {
-                 id: "messages",
-                 label: t('qa_messages', "Messages"),
-                 emoji: "💬",
-                 badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
-                 badgeColor: "bg-red-600 text-afri-text animate-pulse",
-                 action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
-               },
-               {
-                 id: "renfort",
-                 label: t('qa_renfort', "Renfort Express"),
-                 emoji: "⚡",
-                 action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
-               },
-               {
-                 id: "gombo_id",
-                 label: t('qa_gombo_id', "Mon GOMBO ID"),
-                 emoji: "🎼",
-                 action: () => requireAuthThen(() => { setActiveMenu("user_gombo_id"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
-               },
-               {
-                 id: "favoris",
-                 label: t('qa_favoris', "Favoris"),
-                 emoji: "⭐",
-                 action: () => requireAuthThen(() => { setActiveMenu("user_favorites"); try { audioSynth?.playValidationSuccess(); } catch (_) {} })
-               },
-               {
-                 id: "plus",
-                 label: t('qa_plus', "Plus"),
-                 emoji: "➕",
-                 badge: unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined,
-                 badgeColor: "bg-amber-500 text-black",
-                 action: () => setIsPlusMenuOpen(true)
-               }
-             ].map(action => {
-               const isVerified = profile?.isCertified || profile?.kycStatus === "approved";
-               const isFav = action.id === "favoris";
-               return (
-                 <motion.button
-                   key={action.id}
-                   variants={{
-                     hidden: { opacity: 0, y: 15, scale: 0.95 },
-                     show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
-                   }}
-                   whileHover={{
-                     scale: 1.04,
-                     borderColor: isFav ? "rgba(212,175,55,0.95)" : "rgba(212,175,55,0.75)",
-                     boxShadow: isFav ? "0 8px 24px rgba(212,175,55,0.18)" : "0 6px 20px rgba(212,175,55,0.12)"
-                   }}
-                   whileTap={{ scale: 0.92, y: 1 }}
-                   onTouchStart={(e) => e.stopPropagation()}
-                   onTouchMove={(e) => e.stopPropagation()}
-                   onClick={action.action}
-                   className={`aspect-square ${
-                     isFav 
-                       ? "bg-gradient-to-br from-afri-bg-sec via-afri-bg-ter to-afri-bg-action border-[#D4AF37]/50 shadow-[0_8px_32px_rgba(212,175,55,0.12)]" 
-                       : "bg-afri-bg-sec border-[#D4AF37]/25 shadow-md"
-                   } border rounded-xl xs:rounded-2xl p-1 xs:p-1.5 sm:p-3 flex flex-col items-center justify-center gap-0.5 xs:gap-1 sm:gap-2.5 hover:bg-afri-bg-sec/5 transition-all cursor-pointer relative focus:outline-none select-none group w-full h-full min-w-0`}
-                 >
-                   {/* Top Badge */}
-                   {action.badge !== undefined && (
-                     <span className={`absolute -top-1.5 -right-1.5 ${action.badgeColor} text-[7.5px] xs:text-[8.5px] font-black w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border border-afri-border shadow-md z-10`}>
-                       {action.badge}
-                     </span>
-                   )}
-
-                   {/* Verified GOMBO ID Badge */}
-                   {action.id === "gombo_id" && isVerified && (
-                     <span className="absolute -top-1 -right-1 bg-afri-bg-sec text-black w-4.5 h-4.5 xs:w-5 xs:h-5 rounded-full flex items-center justify-center border border-afri-border shadow-[0_0_8px_rgba(212,175,55,0.6)] z-10 animate-fadeIn">
-                       <ShieldCheck className="w-2.5 h-2.5 xs:w-3 xs:h-3 text-black stroke-[3.5]" />
-                     </span>
-                   )}
-
-                   {/* Icon Wrapper */}
-                   <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-14 sm:h-14 rounded-full bg-afri-bg-sec/8 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] group-hover:bg-afri-bg-sec/15 transition shrink-0 shadow-[0_4px_12px_rgba(212,175,55,0.05)]">
-                     <span className="text-[17px] xs:text-lg sm:text-2xl font-bold leading-none select-none">{action.emoji}</span>
-                   </div>
-
-                   {/* Label */}
-                   <span className="text-[7.5px] xs:text-[8.5px] sm:text-[11px] text-afri-text/90 group-hover:text-afri-text font-sans font-black tracking-wider uppercase text-center leading-[1.1] w-full px-0 mt-0.5 sm:mt-1 break-words line-clamp-2">
-                     {action.id === "renfort" ? (t('qa_renfort_short', "Renfort")) : (action.id === "gombo_id" ? (t('qa_gombo_id_short', "GOMBO ID")) : action.label)}
+               { id: "publier", label: "Publier", emoji: "🎤", action: () => requireAuthThen(() => { setActiveMenu("user_publish"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+               { id: "contrats", label: "Contrats", emoji: "🤝", badge: activeContractsCount > 0 ? activeContractsCount : undefined, badgeColor: "bg-emerald-500 text-afri-text", action: () => requireAuthThen(() => { setActiveMenu("user_contracts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+               { id: "calendrier", label: "Calendrier", emoji: "📅", badge: todayEventsCount > 0 ? todayEventsCount : undefined, badgeColor: "bg-afri-bg-sec text-black", action: () => requireAuthThen(() => { setActiveMenu("user_events"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+               { id: "messages", label: "Messages", emoji: "💬", badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined, badgeColor: "bg-red-600 text-afri-text animate-pulse", action: () => requireAuthThen(() => { setActiveMenu("user_messages"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+               { id: "renfort", label: "Renfort", emoji: "⚡", action: () => requireAuthThen(() => { setActiveMenu("user_renforts"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+               { id: "gombo_id", label: "GOMBO ID", emoji: "🎼", action: () => requireAuthThen(() => { setActiveMenu("user_gombo_id"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+               { id: "favoris", label: "Favoris", emoji: "⭐", action: () => requireAuthThen(() => { setActiveMenu("user_favorites"); try { audioSynth?.playValidationSuccess(); } catch (_) {} }) },
+               { id: "plus", label: "Plus", emoji: "➕", badge: unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined, badgeColor: "bg-amber-500 text-black", action: () => setIsPlusMenuOpen(true) },
+               ...(profile?.role === "musicien" ? [{ 
+                 id: "disponibilite", 
+                 label: profile.availability?.status === "available" ? "Dispo ✅" : "Indisponible", 
+                 emoji: "🟢", 
+                 action: () => requireAuthThen(() => setActiveQuickActionModal("set_availability")) 
+               }] : [])
+             ].map(action => (
+               <motion.button
+                 key={action.id}
+                 variants={{
+                   hidden: { opacity: 0, y: 15, scale: 0.95 },
+                   show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 350, damping: 25 } }
+                 }}
+                 whileHover={{ scale: 1.04 }}
+                 whileTap={{ scale: 0.92 }}
+                 onClick={action.action}
+                 className="bg-afri-bg-sec border border-[#D4AF37]/25 rounded-2xl p-2 flex flex-col items-center justify-center gap-1 shadow-md hover:bg-afri-bg-sec/5 transition-all cursor-pointer relative group"
+               >
+                 {action.badge !== undefined && (
+                   <span className={`absolute -top-1.5 -right-1.5 ${action.badgeColor} text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border border-afri-border shadow-md z-10`}>
+                     {action.badge}
                    </span>
-                 </motion.button>
-               );
-             })}
+                 )}
+                 <div className="w-10 h-10 rounded-full bg-afri-bg-sec/8 flex items-center justify-center border border-[#D4AF37]/20 group-hover:border-[#D4AF37] transition shrink-0">
+                   <span className="text-xl leading-none select-none">{action.emoji}</span>
+                 </div>
+                 <span className="text-[9px] text-afri-text/90 font-black tracking-wider uppercase text-center truncate w-full px-1">
+                   {action.label}
+                 </span>
+               </motion.button>
+             ))}
           </motion.div>
         </div>
       </div>
 
-      {/* BOUTON HYMNE OFFICIEL AFRIGOMBO */}
-      <div className="mt-2 text-left select-none relative">
-        <button
-          onClick={handleAnthemClick}
-          className={`w-full flex items-center justify-between p-3.5 border rounded-xl text-xs font-bold shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer group ${
-            isAnthemPlaying 
-              ? "bg-afri-bg-sec border-[#D4AF37] ring-1 ring-[#D4AF37]/50" 
-              : "bg-gradient-to-r from-afri-bg-action to-afri-bg-action border-[#D4AF37]/20 hover:border-[#D4AF37]/45"
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all shrink-0 ${
-              isAnthemPlaying 
-                ? "bg-[#D4AF37] border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.4)]" 
-                : "bg-afri-bg-sec/10 border-[#D4AF37]/30 group-hover:bg-afri-bg-sec/20"
-            }`}>
-              {isAnthemPlaying ? (
-                isAnthemPaused ? (
-                  <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-                ) : (
-                  <Pause className="w-5 h-5 text-white fill-white" />
-                )
-              ) : (
-                <Play className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37] ml-0.5" />
-              )}
-            </div>
-            <div className="flex flex-col text-left">
-              <span className={`font-black text-[14px] sm:text-[15.5px] tracking-tight transition-colors leading-none ${
-                isAnthemPlaying ? "text-[#D4AF37]" : "text-afri-text group-hover:text-[#D4AF37]"
-              }`}>
-                {isAnthemPlaying ? (isAnthemPaused ? "Hymne en pause" : "Hymne en lecture...") : "Hymne officiel AFRIGOMBO"}
-              </span>
-              <div className="flex items-center gap-2 mt-1.5">
-                {isAnthemPlaying && !isAnthemPaused && (
-                   <div className="flex gap-0.5">
-                     {[1, 2, 3, 4].map(i => (
-                       <motion.div
-                         key={i}
-                         animate={{ height: [4, 12, 4] }}
-                         transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
-                         className="w-0.5 bg-[#D4AF37] rounded-full"
-                       />
-                     ))}
-                   </div>
-                )}
-                <span className={`text-[10px] font-normal ${isAnthemPlaying ? "text-afri-text" : "text-afri-text-sec"}`}>
-                  {isAnthemPlaying ? "Fierté nationale d’AFRIGOMBO" : "Écouter l’hymne officiel d’AFRIGOMBO"}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {isAnthemPlaying && (
-              <button
-                onClick={handleStopAnthem}
-                className="p-2 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition-colors cursor-pointer"
-                title="Arrêter"
-              >
-                <Square className="w-4 h-4 fill-current" />
-              </button>
-            )}
-            <span className={`text-[8px] font-mono border px-1.5 py-0.5 rounded uppercase font-bold tracking-widest bg-afri-bg-sec/40 ${
-              isAnthemPlaying ? "text-[#D4AF37] border-[#D4AF37]/40" : "text-afri-text-sec border-afri-border/80"
-            }`}>
-              SOUVERAINETÉ
-            </span>
-          </div>
-        </button>
-      </div>
-
       {/* ==========================================
-          2B. ⚡ RENFORT EXPRESS (URGENT RECRUITMENTS)
+          DYNAMIC INFINITE FEED (Requirement 1-7, 9-12)
          ========================================== */}
-      <div className="space-y-2.5 pt-2 select-none">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-1.5">
-            <span className="text-amber-500 animate-pulse text-sm">⚡</span>
-            <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-              RENFORT EXPRESS
-            </h3>
-          </div>
-          <button
-            onClick={() => {
-              setActiveMenu("user_renforts");
-              try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
-            }}
-            className="text-[10px] font-bold text-[#D4AF37] hover:underline flex items-center gap-0.5 bg-transparent border-none cursor-pointer"
-          >
-            Voir tout <span className="text-[9px]">→</span>
-          </button>
-        </div>
-
-        {/* Dynamic / fallback small cards list */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          {(() => {
-            const expressItems = (renforts || []).filter(r => r.isExpress || r.status === "pending" || r.urgent);
-            
-            if (expressItems.length === 0) {
-              return (
-                <div className="col-span-full py-4 text-center border border-afri-border/60 rounded-xl bg-afri-bg-sec/40">
-                  <p className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest">🚨 Encore aucune donnée.</p>
-                </div>
-              );
-            }
-            
-            return expressItems.slice(0, 3).map(item => (
-              <motion.div
-                key={item.id}
-                whileHover={{ scale: 1.01, borderColor: "rgba(212,175,55,0.4)" }}
-                onTouchStart={(e) => e.stopPropagation()}
-                onTouchMove={(e) => e.stopPropagation()}
-                onClick={() => {
-                  setActiveMenu("user_renforts");
-                  try { audioSynth?.playValidationSuccess?.(); } catch (_) {}
-                }}
-                className="bg-afri-bg-sec/65 border border-afri-border rounded-xl p-3 flex flex-col justify-between text-left cursor-pointer transition-all hover:bg-afri-bg-sec/50"
-              >
-                <div className="space-y-1">
-                  <h4 className="text-[10.5px] font-sans font-black text-afri-text leading-snug line-clamp-1 flex items-center gap-1">
-                    <span className="text-red-500 shrink-0">🚨</span>
-                    {item.title}
-                  </h4>
-                  <div className="flex items-center justify-between text-[9px] text-afri-text-sec font-mono pt-1">
-                    <span className="flex items-center gap-0.5">
-                      <span>📍</span> {item.commune || "Abidjan"}
-                    </span>
-                    <span className="text-[#D4AF37] font-bold">
-                      💰 {(item.budget || 20000).toLocaleString()} FCFA
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            ));
-          })()}
-        </div>
-      </div>
-
-      {/* ==========================================
-          3. FILTRES RAPIDES ET RECHERCHE AVANCÉE (HIDDEN AS REQUESTED)
-         ========================================== */}
-      {/* Search block completely removed to save space */}
-
-      {/* ==========================================
-          4. OPPORTUNITÉS & LOGIQUE OFFICIELLE DES TENDANCES
-         ========================================== */}
-      <div className="pt-2">
-        <TendancesSection
-          gombos={gombos}
-          posts={posts}
-          users={users}
-          currentUserProfile={profile}
-          onSelectGomboDetails={handleOpenGomboDetails}
-          audioSynth={audioSynth}
-          requireAuthThen={requireAuthThen}
+      <div className="space-y-8 pb-10">
+        {/* AFRIGOMBO GEO ENGINE: NEARBY SECTIONS */}
+        <GeoRadarSection 
+          nearbyGombos={geo.getNearbyItems(gombos, 10)}
+          nearbyArtists={geo.getNearbyItems(users.filter(u => u.role === "musicien"), 15)}
+          onAction={(item) => {
+            if (item.radarType === "gombo") handleOpenGomboDetails(item);
+            else setActiveMenu("user_profile_view"); // Hypothetical, normally we'd pass artist ID
+          }}
         />
-      </div>
 
-      {/* ==========================================
-           5. 📹 RÉELS D'ARTISTES (LIVELY VIDEO PREVIEW GALLERY)
-          ========================================== */}
-      <div className="space-y-3 pt-2 select-none">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[#D4AF37]">📹</span>
-            <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-              RÉELS D'ARTISTES
+        <NearbyGombosSection 
+          gombos={geo.getNearbyItems(gombos, 25)}
+          userProfile={profile}
+          onSelect={handleOpenGomboDetails}
+        />
+
+        <NearbyArtistsSection 
+          artists={geo.getNearbyItems(users.filter(u => u.role === "musicien" && u.availability?.status === "available"), 50)}
+          userProfile={profile}
+          onContact={(artist) => {
+            requireAuthThen(() => {
+              // Open conversation
+              addToTerminal(`[MESSAGERIE] Connexion établie avec ${artist.artisticName}...`);
+              setActiveMenu("user_messages");
+            });
+          }}
+        />
+
+        {/* Artist Search Results (Requirement 7) */}
+        {globalSearchTerm && UsersToRender.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-[11px] font-black tracking-[0.2em] text-afri-text uppercase flex items-center gap-2 px-1">
+              🔍 Artistes correspondants ({UsersToRender.length})
             </h3>
-          </div>
-          <button
-            onClick={() => {
-              setActiveSection("reels");
-              try { audioSynth.playTamTam(false); } catch (_) {}
-            }}
-            className="text-xs text-[#D4AF37] font-bold bg-transparent border-none cursor-pointer hover:underline"
-          >
-            Voir tout
-          </button>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2.5">
-          {[
-            {
-              id: "local-reel-1",
-              title: "Intro Solo Saxophone",
-              artist: "Thierry Sax d'Abidjan",
-              views: "1.2K vues",
-              url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
-              thumbnail: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200"
-            },
-            {
-              id: "local-reel-2",
-              title: "Improvisation Batterie",
-              artist: "Sékou Batterie d'or",
-              views: "890 vues",
-              url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4",
-              thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=200"
-            },
-            {
-              id: "local-reel-3",
-              title: "Vocalises Rumba",
-              artist: "Fanta D'Abobo",
-              views: "2.4K vues",
-              url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
-              thumbnail: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200"
-            }
-          ].map((reel, index) => (
-            <motion.div
-              key={reel.id}
-              whileHover={{ scale: 1.02 }}
-              onClick={() => {
-                setReelsVideoUrl(reel.url);
-                try { audioSynth.playValidationSuccess(); } catch(_) {}
-              }}
-              className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-afri-bg-sec border border-afri-border group cursor-pointer"
-            >
-              <img
-                src={reel.thumbnail}
-                alt={reel.title}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-60"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-afri-bg via-afri-bg/35 to-transparent" />
-              
-              {/* Play icon overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-7 h-7 rounded-full bg-afri-bg/60 border border-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <span className="text-[#D4AF37] text-[10px] pl-0.5">▶</span>
-                </div>
-              </div>
-
-              {/* Bottom text overlays */}
-              <div className="absolute bottom-2 left-2 right-2 text-left">
-                <p className="text-[7.5px] font-sans font-black text-afri-text uppercase leading-none truncate mb-0.5">
-                  {reel.title}
-                </p>
-                <p className="text-[6.5px] text-afri-text-sec font-mono truncate leading-none">
-                  {reel.artist}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-
-      {/* ==========================================
-          5. 🎼 GOMBOS RÉCENTS (HORIZONTAL ROWS)
-         ========================================== */}
-      <div className="space-y-3 pt-2">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[#D4AF37]">🎼</span>
-            <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-              GOMBOS RÉCENTS
-            </h3>
-          </div>
-          <button
-            onClick={() => {
-              setSelectedCategory("all");
-              setSelectedLocation("all");
-              try { audioSynth.playTamTam(false); } catch (_) {}
-            }}
-            className="text-xs text-[#D4AF37] font-bold bg-transparent border-none cursor-pointer hover:underline"
-          >
-            Voir tout
-          </button>
-        </div>
-
-        {/* List representation */}
-        <div className="space-y-3.5">
-          {allRecentItems.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-afri-bg-sec border border-afri-border text-[#D4AF37]/60 text-xs font-mono shadow-[0_2px_15px_rgba(212,175,55,0.03)]">
-              Encore aucune donnée.
-            </div>
-          ) : (
-            allRecentItems.slice(0, 4).map((item) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-10px" }}
-                transition={{ duration: 0.3 }}
-                onClick={() => {
-                  try { audioSynth.playTamTam(false); } catch(_) {}
-                  const foundReal = gombos.find(g => g.id === item.id) || gombos[0];
-                  handleOpenGomboDetails(foundReal);
-                }}
-                className="flex bg-afri-bg-sec border border-afri-border hover:border-[#D4AF37]/40 rounded-2xl p-3 items-center gap-3 transition-colors cursor-pointer relative group"
-              >
-                {/* Left Thumbnail with Gold G logo overlay */}
-                <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-afri-bg border border-afri-border flex items-center justify-center">
-                  <img
-                    src={optimizeImageUrl(item.imageUrl, isDataSaveActive)}
-                    alt={item.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover"
+            <div className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-hide">
+              {UsersToRender.map((artist: any) => (
+                <div 
+                  key={artist.uid}
+                  className="min-w-[150px] max-w-[150px] afri-card p-3 space-y-2 shrink-0"
+                >
+                  <img 
+                    src={artist.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                    alt={artist.artisticName}
+                    className="w-full h-24 rounded-xl object-cover border border-afri-border"
                   />
-                  <div className="absolute bottom-0.5 left-0.5 w-4 h-4 bg-afri-bg-sec border border-afri-border rounded-full flex items-center justify-center shadow">
-                    <span className="text-[7px] font-black text-black">G</span>
+                  <h4 className="text-[10px] font-black text-afri-text uppercase truncate">{artist.artisticName || artist.displayName}</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[8px] font-bold text-afri-text-sec uppercase">{artist.commune || "Abidjan"}</span>
+                    <span className="text-[8px] font-black text-[#D4AF37] uppercase">{artist.distance ? getDistanceLabel(artist.distance) : "Dist. inconnue"}</span>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-                {/* Right detail text & Heart icon aligns */}
-                <div className="flex-1 min-w-0 h-full flex flex-col justify-between py-0.5">
-                  <div className="flex justify-between items-start gap-1">
-                    <div>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {item.isNew && (
-                          <span className="text-[6.5px] font-bold bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 px-1 py-0.5 rounded uppercase font-mono tracking-wider">
-                            NOUVEAU
-                          </span>
-                        )}
-                        {item.isPremium && (
-                          <span className="text-[6.5px] font-bold bg-afri-bg-sec/10 border border-[#D4AF37]/35 text-[#D4AF37] px-1 py-0.5 rounded uppercase font-mono tracking-wider">
-                            PREMIUM
-                          </span>
-                        )}
-                      </div>
-                      
-                      <h4 className="text-xs font-black text-afri-text hover:text-afri-text transition-all cursor-pointer tracking-wide mt-0.5 truncate max-w-[190px] sm:max-w-xs uppercase">
-                        {item.title}
-                      </h4>
-                      
-                      <p className="text-[9px] text-afri-text-sec truncate max-w-[190px] sm:max-w-xs mt-0.5 font-sans leading-none">
-                        {item.description}
-                      </p>
-                    </div>
+        {feedBlocks.map((block, idx) => {
+          if (block.type === "AFRIGOMBO_UNIVERSE") {
+            return (
+              <SmartUniverseCarousel 
+                key={`${block.type}-${idx}`}
+                items={block.getData()}
+                onAction={(item) => {
+                  if (item.type === "product") setActiveMenu("grand_marche");
+                  else if (item.type === "course") setActiveMenu("academie");
+                }}
+              />
+            );
+          }
+          return (
+            <SmartBlock 
+              key={`${block.type}-${idx}`}
+              type={block.type}
+              title={block.title}
+              data={block.getData()}
+              onAction={(item) => {
+                if (item.id.includes("reel")) {
+                  setReelsVideoUrl(item.url);
+                } else {
+                  handleOpenGomboDetails(item);
+                }
+              }}
+            />
+          );
+        })}
 
-                    {/* Heart button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleLike(item.id);
-                      }}
-                      className="transition p-1 shrink-0 bg-transparent border-none cursor-pointer"
-                    >
-                      <span className="text-[12px]">{isLiked(item.id) ? "🪘" : "🪘"}</span>
-                    </button>
-                  </div>
-
-                  {/* Location under description */}
-                  <div className="flex justify-between items-end mt-1.5 pt-1 border-t border-afri-border/40">
-                    <span className="text-[8.5px] text-afri-text-sec font-medium font-sans">
-                      📍 {item.location}
-                    </span>
-
-                    {/* Budget & Date beneath it */}
-                    <div className="text-right flex items-center gap-2">
-                      <span className="text-[8px] text-afri-text-sec font-mono tracking-tight leading-none">
-                        {item.date}
-                      </span>
-                      <span className="text-[11px] font-bold text-[#D4AF37] leading-none">
-                        {item.budget}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))
+        {/* Bottom Loading Anchor */}
+        <div ref={observerTarget} className="h-20 flex items-center justify-center">
+          {isLoadingMore && (
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-[#D4AF37] animate-spin" />
+              <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest">Chargement impérial...</span>
+            </div>
+          )}
+          {!hasMore && (
+            <span className="text-[10px] font-mono text-afri-text-sec uppercase tracking-widest">Fin de la vibration souveraine</span>
           )}
         </div>
       </div>
-
-      {/* ==========================================
-          6. ⚡ OPPORTUNITÉS URGENTES (DURABLE CLOUD SYNC)
-         ========================================== */}
-      <div className="space-y-3 pt-2 select-none">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="text-red-500 animate-pulse text-sm">🔥</span>
-            <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-              OPPORTUNITÉS URGENTES
-            </h3>
-          </div>
-          <span className="text-[8px] font-mono text-afri-text-sec tracking-wider">
-            SYNCHRONISÉ LIVE 📡
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {(() => {
-            const urgentItems = allRecentItems.filter(item => item.isNew || item.isPremium || item.title.toLowerCase().includes("urgent") || item.title.toLowerCase().includes("🚨"));
-            
-            if (urgentItems.length === 0) {
-              return (
-                <div className="col-span-full py-6 text-center border border-afri-border/60 rounded-2xl bg-afri-bg-sec/40">
-                  <p className="text-[10px] font-bold text-afri-text-sec uppercase tracking-widest">🔥 Encore aucune donnée.</p>
-                </div>
-              );
-            }
-
-            return urgentItems.slice(0, 2).map((item) => (
-              <motion.div
-                key={item.id}
-                whileHover={{ scale: 1.01 }}
-                onClick={() => {
-                  try { audioSynth.playTamTam(false); } catch(_) {}
-                  const foundReal = gombos.find(g => g.id === item.id) || gombos[0];
-                  if (foundReal) {
-                    handleOpenGomboDetails(foundReal);
-                  }
-                }}
-                className="bg-gradient-to-r from-red-950/15 to-amber-950/10 border border-red-900/40 rounded-2xl p-3.5 flex flex-col justify-between text-left cursor-pointer hover:border-red-500/50 transition-all relative overflow-hidden group"
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-full blur-xl group-hover:bg-red-500/10 transition-colors pointer-events-none" />
-                
-                <div className="space-y-1.5 relative">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[7.5px] font-black bg-red-500 text-afri-text px-2 py-0.5 rounded-lg uppercase tracking-widest font-mono">
-                      URGENT
-                    </span>
-                    <span className="text-[10px] font-black text-[#D4AF37] font-sans">
-                      {item.budget}
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-black text-afri-text group-hover:text-[#D4AF37] transition-colors leading-snug uppercase">
-                    {item.title}
-                  </h4>
-                  <p className="text-[9.5px] text-afri-text-sec line-clamp-2 leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between text-[8.5px] text-afri-text-sec font-mono pt-3 mt-2 border-t border-afri-border/60 relative">
-                  <span>📍 {item.location}</span>
-                  <span className="text-red-400 font-black flex items-center gap-1">
-                    <span>⏱</span> {item.date}
-                  </span>
-                </div>
-              </motion.div>
-            ));
-          })()}
-        </div>
-      </div>
-
-      {/* ==========================================
-          7. 📹 RÉELS D'ARTISTES (LIVELY VIDEO PREVIEW GALLERY)
-         ========================================== */}
-      <div className="space-y-3 pt-2 select-none">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[#D4AF37]">📹</span>
-            <h3 className="text-[11px] font-sans font-black tracking-widest text-afri-text uppercase">
-              RÉELS D'ARTISTES
-            </h3>
-          </div>
-          <button
-            onClick={() => {
-              setActiveSection("reels");
-              try { audioSynth.playTamTam(false); } catch (_) {}
-            }}
-            className="text-xs text-[#D4AF37] font-bold bg-transparent border-none cursor-pointer hover:underline"
-          >
-            Voir tout
-          </button>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2.5">
-          {[
-            {
-              id: "local-reel-1",
-              title: "Intro Solo Saxophone",
-              artist: "Thierry Sax d'Abidjan",
-              views: "1.2K vues",
-              url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
-              thumbnail: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200"
-            },
-            {
-              id: "local-reel-2",
-              title: "Improvisation Batterie",
-              artist: "Sékou Batterie d'or",
-              views: "890 vues",
-              url: "https://assets.mixkit.co/videos/preview/mixkit-playing-drums-closeup-34301-large.mp4",
-              thumbnail: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=200"
-            },
-            {
-              id: "local-reel-3",
-              title: "Vocalises Rumba",
-              artist: "Fanta D'Abobo",
-              views: "2.4K vues",
-              url: "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-guitarist-playing-acoustic-guitar-34232-large.mp4",
-              thumbnail: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200"
-            }
-          ].map((reel, index) => (
-            <motion.div
-              key={reel.id}
-              whileHover={{ scale: 1.02 }}
-              onClick={() => {
-                setReelsVideoUrl(reel.url);
-                try { audioSynth.playValidationSuccess(); } catch(_) {}
-              }}
-              className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-afri-bg-sec border border-afri-border group cursor-pointer"
-            >
-              <img
-                src={reel.thumbnail}
-                alt={reel.title}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-60"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-afri-bg via-afri-bg/35 to-transparent" />
-              
-              {/* Play icon overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-7 h-7 rounded-full bg-afri-bg/60 border border-[#D4AF37] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <span className="text-[#D4AF37] text-[10px] pl-0.5">▶</span>
-                </div>
-              </div>
-
-              {/* Bottom text overlays */}
-              <div className="absolute bottom-2 left-2 right-2 text-left">
-                <p className="text-[7.5px] font-sans font-black text-afri-text uppercase leading-none truncate mb-0.5">
-                  {reel.title}
-                </p>
-                <p className="text-[6.5px] text-afri-text-sec font-mono truncate leading-none">
-                  {reel.artist}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* ==========================================
-          8. ✨ FIL DÉCOUVERTES (GRAND MARCHÉ & ACADÉMIE)
-         ========================================== */}
-      <div className="pt-2">
-        <FilDecouvertesSection
-          userCommune={
-            profile?.commune || 
-            (typeof profile?.location === "string" ? profile.location : profile?.location?.city) || 
-            "Abidjan"
-          }
-          audioSynth={audioSynth}
-          onNavigateToSection={(sec) => {
-            if (sec === "grand_marche") {
-              setActiveMenu("grand_marche");
-            } else if (sec === "academie") {
-              setActiveMenu("academie");
-            }
-          }}
-        />
-      </div>
-      </>
-      ) : (
+    </>
+    ) : (
         <ReelsPlayer 
           posts={posts} 
           currentSection={activeSection}
@@ -1723,6 +1359,43 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           }}
           onOpenCreate={() => setActiveQuickActionModal("post_content")}
         />
+      )}
+
+      {/* ==========================================
+          GEO PERMISSION DIALOG
+         ========================================== */}
+      {showGeoDialog && (
+        <AndroidCenteredDialog
+          isOpen={showGeoDialog}
+          title="AUTORISATION GÉOLOCALISATION"
+          onClose={() => setShowGeoDialog(false)}
+        >
+          <div className="space-y-4 text-center p-2">
+            <div className="w-16 h-16 bg-afri-bg-ter rounded-full flex items-center justify-center mx-auto border border-afri-border">
+              <MapPin className="w-8 h-8 text-[#D4AF37] animate-bounce" />
+            </div>
+            <p className="text-xs text-afri-text-sec font-bold uppercase leading-relaxed">
+              Autoriser AFRIGOMBO à accéder à votre position afin de trouver les opportunités et artistes proches de vous.
+            </p>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setShowGeoDialog(false)}
+                className="flex-1 py-2.5 bg-afri-bg-ter border border-afri-border rounded-xl text-[10px] font-black uppercase text-afri-text-sec"
+              >
+                Plus tard
+              </button>
+              <button 
+                onClick={() => {
+                  geo.requestLocation();
+                  setShowGeoDialog(false);
+                }}
+                className="flex-1 py-2.5 bg-afri-bg-sec text-black rounded-xl text-[10px] font-black uppercase shadow-lg shadow-afri-bg-sec/20"
+              >
+                Autoriser
+              </button>
+            </div>
+          </div>
+        </AndroidCenteredDialog>
       )}
 
       {/* ==========================================
@@ -1918,6 +1591,51 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
               </div>
             )}
 
+            {/* MODAL IV: DISPONIBILITÉ MAINTENANT (Requirement 4) */}
+            {activeQuickActionModal === "set_availability" && (
+              <div className="space-y-4 text-left">
+                <div>
+                  <h3 className="text-sm font-sans font-black tracking-widest text-afri-text uppercase flex items-center gap-2">
+                    🟢 MODE DISPONIBLE MAINTENANT
+                  </h3>
+                  <p className="text-[11px] text-afri-text-sec mt-1">Les promoteurs voient immédiatement que vous êtes prêt pour un Gombo.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: "2 Heures", val: 2 },
+                      { label: "4 Heures", val: 4 },
+                      { label: "8 Heures", val: 8 },
+                      { label: "Aujourd'hui", val: "today" }
+                    ].map((opt) => (
+                      <button
+                        key={opt.label}
+                        onClick={async () => {
+                          await geo.setAvailability(opt.val as any);
+                          setActiveQuickActionModal(null);
+                          addToTerminal(`[DISPONIBILITÉ] Mode "Disponible" activé pour ${opt.label}`);
+                        }}
+                        className="p-3 bg-afri-bg border border-afri-border rounded-xl hover:border-emerald-500/50 transition text-[10px] font-black uppercase text-afri-text"
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={async () => {
+                      await geo.disableAvailability();
+                      setActiveQuickActionModal(null);
+                      addToTerminal(`[DISPONIBILITÉ] Mode "Disponible" désactivé`);
+                    }}
+                    className="w-full py-2.5 bg-red-500/10 border border-red-500/20 text-red-500 font-black text-[10px] rounded-xl uppercase"
+                  >
+                    Désactiver le mode
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

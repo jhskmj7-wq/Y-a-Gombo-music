@@ -186,7 +186,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
           amount: financials.total,
           status: "success",
           description: `Débit publication : Gombo "${title.trim()}"`,
-          createdAt: now.toISOString(),
+          createdAt: new Date().toISOString(),
           timestamp: Date.now()
         });
 
@@ -195,7 +195,7 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
         transaction.set(doc(db, "commissions", commId), {
             userId: currentUserProfile.uid,
             amount: financials.fee,
-            createdAt: now.toISOString()
+            createdAt: new Date().toISOString()
         });
 
         // Create Gombo/Post (using doc/transaction.set instead of gomboDB)
@@ -204,7 +204,12 @@ export default function GomboPublish({ currentUserProfile, onSuccess, onCancel }
             userId: currentUserProfile.uid,
             title: title.trim(),
             status: "PUBLISHED",
-            createdAt: now.toISOString()
+            latitude: currentUserProfile.latitude || null,
+            longitude: currentUserProfile.longitude || null,
+            commune: commune || currentUserProfile.commune || "",
+            city: currentUserProfile.city || "",
+            country: currentUserProfile.country || "",
+            createdAt: new Date().toISOString()
         });
       });
 
