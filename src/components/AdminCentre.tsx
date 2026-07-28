@@ -3234,15 +3234,8 @@ export default function AdminCentre({ theme, toggleTheme }: AdminCentreProps) {
                 key={activeMenu}
                 ref={(el) => {
                   if (el) {
-                    const menuId = activeMenu;
-                    const savedPos = scrollPositionsRef.current[menuId] || 0;
-                    if (savedPos > 0 && Math.abs(el.scrollTop - savedPos) > 15) {
-                      el.scrollTop = savedPos;
-                    }
+                    el.scrollTop = 0;
                   }
-                }}
-                onScroll={(e) => {
-                  scrollPositionsRef.current[activeMenu] = e.currentTarget.scrollTop;
                 }}
                 initial={areAnimationsReduced ? { opacity: 0 } : { opacity: 0, x: 10 }}
                 animate={areAnimationsReduced ? { opacity: 1 } : { opacity: 1, x: 0 }}
