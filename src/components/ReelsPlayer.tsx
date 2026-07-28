@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, Heart, MessageCircle, Share2, Plus, Coins, Video } from "lucide-react";
 import { Post } from "../types";
+import { db } from "../firebase";
+import { doc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
 
 interface ReelsPlayerProps {
   posts: Post[];
@@ -8,18 +10,33 @@ interface ReelsPlayerProps {
   onOpenCreate: () => void;
   currentSection: "home" | "reels";
   setCurrentSection: (section: "home" | "reels") => void;
+  currentUser?: any; // Add currentUser for auth
 }
 
-export function ReelsPlayer({ posts, onClose, onOpenCreate, currentSection, setCurrentSection }: ReelsPlayerProps) {
+export function ReelsPlayer({ posts, onClose, onOpenCreate, currentSection, setCurrentSection, currentUser }: ReelsPlayerProps) {
   const videoPosts = posts.filter((p) => p.mediaUrl && (p.mediaUrl.includes(".mp4") || p.mediaUrl.includes("video")));
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-
+  const [localPosts, setLocalPosts] = useState(videoPosts);
+  
   useEffect(() => {
-    if (containerRef.current) {
-        containerRef.current.scrollTop = 0;
-    }
-  }, []);
+    setLocalPosts(videoPosts);
+  }, [posts]);
+
+  // Handle Like
+  const handleLike = async (post: Post) => {
+    if (!currentUser || !post.id) return;
+    const postRef = doc(db, "social_posts", post.id);
+    const isLiked = post.likedBy?.includes(currentUser.uid);
+    
+    // Optimistic update
+    setLocalPosts(prev => prev.map(p => p.id === post.id ? { ...p, likes: (p.likes || 0) + (isLiked ? -1 : 1), likedBy: isLiked ? p.likedBy?.filter(u => u !== currentUser.uid) : [...(p.likedBy || []), currentUser.uid], isLiked: !isLiked } : p));
+    
+    await updateDoc(postRef, {
+      likesCount: increment(isLiked ? -1 : 1),
+      likedBy: isLiked ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid)
+    });
+  };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
@@ -59,6 +76,16 @@ export function ReelsPlayer({ posts, onClose, onOpenCreate, currentSection, setC
                 <Plus className="w-5 h-5 font-bold" />
             </button>
         </div>
+        
+        {/* Filters Bar */}
+        <div className="flex overflow-x-auto gap-2 scrollbar-none pb-2 justify-center">
+          {["🔥 Tendances", "🎵 Nouveautés", "⭐ Certifiés", "👑 Premium", "🌍 Près de moi"].map((filter) => (
+            <button key={filter} className="px-3 py-1 bg-black/40 backdrop-blur-sm border border-white/10 rounded-full text-[10px] font-bold text-white whitespace-nowrap">
+              {filter}
+            </button>
+          ))}
+        </div>
+
         <div className="flex justify-center gap-2">
             <button
               onClick={() => setCurrentSection("home")}
@@ -121,24 +148,23 @@ export function ReelsPlayer({ posts, onClose, onOpenCreate, currentSection, setC
 
             {/* Right Interaction Sidebar - BORD DROIT */}
             <div className="absolute bottom-16 right-3 z-10 flex flex-col items-center gap-6 pointer-events-auto">
-              {/* Mon Héritage */}
-              <div className="relative group cursor-pointer flex flex-col items-center" onClick={(e) => e.stopPropagation()} title="Mon Héritage">
+              {/* Profil */}
+              <div className="relative group cursor-pointer flex flex-col items-center" onClick={(e) => e.stopPropagation()} title="Voir le profil">
                 <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#D4AF37] to-white relative ring-2 ring-white/20">
                   <img 
                     src={post.authorAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${post.userId || '1'}`}
                     alt="Avatar" 
                     className="w-full h-full rounded-full object-cover bg-black"
                   />
-                  <button className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-red-500 text-white rounded-full p-0.5 shadow-md hover:scale-110 transition-transform">
+                  <button className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white text-black rounded-full p-0.5 shadow-md hover:scale-110 transition-transform">
                     <Plus className="w-3 h-3" />
                   </button>
                 </div>
-                <span className="text-[10px] font-bold text-white drop-shadow-md mt-1">Mon Héritage</span>
               </div>
 
               {/* J'honore */}
-              <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => { e.stopPropagation(); }} title="J'honore">
-                <Heart className="w-8 h-8 text-white hover:scale-105 transition-all" />
+              <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => { e.stopPropagation(); handleLike(post); }} title="J'honore">
+                <Heart className={`w-8 h-8 hover:scale-105 transition-all ${post.isLiked ? 'text-red-500 fill-current' : 'text-white'}`} />
                 <span className="text-[11px] font-bold text-white drop-shadow-md">{post.likes || 0}</span>
               </button>
 
@@ -148,6 +174,12 @@ export function ReelsPlayer({ posts, onClose, onOpenCreate, currentSection, setC
                 <span className="text-[11px] font-bold text-white drop-shadow-md">{post.comments || 0}</span>
               </button>
               
+              {/* Enregistrer (NEW) */}
+              <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => { e.stopPropagation(); }} title="Enregistrer">
+                <svg className="w-8 h-8 text-white hover:scale-105 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                <span className="text-[11px] font-bold text-white drop-shadow-md">Enregistrer</span>
+              </button>
+
               {/* Transmettre */}
               <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => {
                  e.stopPropagation();
@@ -157,6 +189,12 @@ export function ReelsPlayer({ posts, onClose, onOpenCreate, currentSection, setC
               }} title="Transmettre">
                 <Share2 className="w-8 h-8 text-white hover:scale-105 transition-all" />
                 <span className="text-[11px] font-bold text-white drop-shadow-md">Transmettre</span>
+              </button>
+              
+              {/* Signaler (NEW) */}
+              <button className="flex flex-col items-center gap-1 cursor-pointer group" onClick={(e) => { e.stopPropagation(); }} title="Signaler">
+                <svg className="w-8 h-8 text-red-400 hover:scale-105 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <span className="text-[11px] font-bold text-white drop-shadow-md">Signaler</span>
               </button>
 
               {/* Soutenir */}
@@ -168,6 +206,7 @@ export function ReelsPlayer({ posts, onClose, onOpenCreate, currentSection, setC
                 <span className="text-[11px] font-bold text-[#D4AF37] drop-shadow-md">Soutenir</span>
               </button>
             </div>
+
           </div>
         ))}
         {/* Placeholder Banner if Empty */}

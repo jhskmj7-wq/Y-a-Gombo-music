@@ -984,7 +984,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
           onClick={() => {
-            setCurrentSection("home");
+            setActiveSection("home");
             try { audioSynth?.playTamTam?.(false); } catch(_) {}
           }}
           className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
@@ -999,7 +999,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
           onClick={() => {
-            setCurrentSection("reels");
+            setActiveSection("reels");
             try { audioSynth?.playTamTam?.(false); } catch(_) {}
           }}
           className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 cursor-pointer relative ${
@@ -1341,7 +1341,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </div>
           <button
             onClick={() => {
-              setCurrentSection("reels");
+              setActiveSection("reels");
               try { audioSynth.playTamTam(false); } catch (_) {}
             }}
             className="text-xs text-[#D4AF37] font-bold bg-transparent border-none cursor-pointer hover:underline"
@@ -1414,26 +1414,6 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
         </div>
       </div>
 
-      {/* ==========================================
-           6. 🌍 UNIVERS AFRIGOMBO (FIL DÉCOUVERTES)
-          ========================================== */}
-      <div className="pt-2">
-        <FilDecouvertesSection
-          userCommune={
-            profile?.commune || 
-            (typeof profile?.location === "string" ? profile.location : profile?.location?.city) || 
-            "Abidjan"
-          }
-          audioSynth={audioSynth}
-          onNavigateToSection={(sec) => {
-            if (sec === "grand_marche") {
-              setActiveMenu("grand_marche");
-            } else if (sec === "academie") {
-              setActiveMenu("academie");
-            }
-          }}
-        />
-      </div>
 
       {/* ==========================================
           5. 🎼 GOMBOS RÉCENTS (HORIZONTAL ROWS)
@@ -1638,7 +1618,7 @@ export const UserTerrainLandingPage: React.FC<UserTerrainLandingPageProps> = Rea
           </div>
           <button
             onClick={() => {
-              setCurrentSection("reels");
+              setActiveSection("reels");
               try { audioSynth.playTamTam(false); } catch (_) {}
             }}
             className="text-xs text-[#D4AF37] font-bold bg-transparent border-none cursor-pointer hover:underline"
